@@ -1,0 +1,121 @@
+{% load static i18n %}
+{% load common_tags %}
+{% load mptt_tags %}
+{% if inventory_item %}
+<div class="card-header" data-object-id="{{ inventory_item.id }}"><h3>{{ inventory_item.part.name }}</h3></div>
+
+<div class="card-body">
+
+
+    <p>Serial Number: {{ inventory_item.serial_number }}
+    </p>
+
+    {% if inventory_item.old_serial_number %}
+        <p>Old Serial Number: {{ inventory_item.old_serial_number }}</p>
+    {% endif %}
+    {% if inventory_item.whoi_number %}
+        <p>WHOI Number: {{ inventory_item.whoi_number }}</p>
+    {% endif %}
+    {% if inventory_item.ooi_property_number %}
+        <p>OOI Property Number: {{ inventory_item.ooi_property_number }}</p>
+    {% endif %}
+    <p>Part Number: {{ inventory_item.part.part_number }}</p>
+    <p>Revision: {{ inventory_item.part.revision }}</p>
+    <p>Current Location: {{ inventory_item.location.name }}</p>
+
+    {% if inventory_item.deployment %}
+        <p>Current Deployment: {{ inventory_item.deployment.deployment_number }}</p>
+    {% endif %}
+
+    {% if inventory_item.parent %}
+    <p class="ajax-detail-link">Parent Assembly:
+        {% recursetree inventory_item.get_ancestors %}
+                {% if node.is_child_node %}&#187;{% endif %}
+                <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' node.id %}"
+                            data-node-id="{{ node.id }}">{{ node.part.name }} - {{ node.serial_number }}</a>
+                {% if not node.is_leaf_node %}
+                    {{ children }}
+                {% endif %}
+
+        {% endrecursetree %}
+    </p>
+    {% endif %}
+    <hr>
+    {% if inventory_item.flag %}
+    <div class="float-right ajax-detail-link"><a href="#" data-detail-url="{% url 'inventory:ajax_inventory_action' 'flag' inventory_item.id %}" role="button" class="btn btn-danger">FLAGGED</a></div>
+    {% endif %}
+
+    <!-- Check which link to display from Javascript navTreePrefix variable -->
+    <!-- Link for Inventory section -->
+    <p class="ajax-detail-link"><a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' inventory_item.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                 role="button" class="btn btn-primary">View Live Inventory Item</a> </p>
+    <!-- Link for Deployment section -->
+    <p class="no-ajax-link"><a href="{% url 'inventory:inventory_detail' inventory_item.id %}">View Live Inventory Item</a></p>
+
+
+    <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+
+        {% if inventory_item.action.all %}
+            <li class="nav-item">
+              <a class="nav-link active" id="history-tab" data-toggle="tab" href="#history" role="tab" aria-controls="history" aria-selected="true">History</a>
+            </li>
+        {% endif %}
+
+    </ul>
+
+    <div class="tab-content" id="inventory-tabs">
+
+        {% if inventory_item.action.all %}
+          <div class="tab-pane fade show active" id="history" role="tabpanel" aria-labelledby="history-tab">
+
+              <table class="table table-striped action-table">
+                  <thead>
+                    <th>Date</th>
+                    <th>Action</th>
+                    <th>Details</th>
+                    <th>Person</th>
+                    <th>Location</th>
+
+                  </thead>
+                  <tbody>
+                    {% for action in  inventory_item.action.all %}
+                      <tr>
+                          <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
+                          <td>{{ action.get_action_type_display }}</td>
+                          <td>{{ action.detail|safe }}</td>
+                          <td>{{ action.user.username }}</td>
+                          <td>{{ action.location.name }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+            </table>
+
+          </div>
+        {% endif %}
+
+
+    </div>
+
+
+
+
+</div>
+
+{% endif %}
+
+{% block javascript %}
+<script>
+    console.log(navtreePrefix);
+    if (navtreePrefix == 'deployments') {
+        $('.no-ajax-link').show();
+        $('.ajax-detail-link').hide();
+    }
+    else {
+        $('.no-ajax-link').hide();
+        $('.ajax-detail-link').show();
+    }
+
+</script>
+
+{% endblock javascript %}

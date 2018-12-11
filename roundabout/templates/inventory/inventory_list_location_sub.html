@@ -1,0 +1,22 @@
+
+{% load mptt_tags %}
+{% load inventory_tags %}
+
+
+{% get_locations_by_mooring location_pk as locations_by_mooring %}
+
+{% for location,structure in locations_by_mooring|tree_info %}
+
+    {% if structure.new_level %}<ul><li data-jstree='{"icon":"fa fa-map-marker"}'>{% else %}</li><li data-jstree='{"icon":"fa fa-map-marker"}'>{% endif %}
+        {{ location.name }}
+
+            {% if location.inventory.exists %}
+
+
+                   {% include "inventory/inventory_tree.html" with location_pk=location.id dep_pk=dep.id  %}
+
+
+            {% endif %}
+    {% for level in structure.closed_levels %}</li></ul>{% endfor %}
+
+{% endfor %}

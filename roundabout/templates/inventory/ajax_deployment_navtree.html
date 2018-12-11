@@ -1,0 +1,63 @@
+
+{% load mptt_tags %}
+
+
+
+            {% for location,structure in locations|tree_info %}
+                {% if structure.new_level %}
+                    <ul><li data-jstree='{"icon":"fa fa-map-marker"}' id="locations_{{ location.id }}">
+                {% else %}
+                    </li>
+                    <li data-jstree='{"icon":"fa fa-map-marker"}' id="locations_{{ location.id }}">
+                {% endif %}
+                        <a href="#" data-location-id='{{ location.id }}'
+                                    data-detail-url="{% url 'locations:ajax_location_detail' location.id %}"
+                                    data-node-id="{{ location.id }}"
+                                    data-node-type="location">{{ location.name }}</a>
+
+                            <!-- Check if Deployment exists for the location. If so, include mooring sub-locations -->
+                            {% if location.deployment.exists %}
+                                <ul>
+                                {% for dep in location.deployment.all %}
+                                           <li data-jstree='{"icon":"fa fa-anchor"}' id="deployments_{{ dep.id }}">
+                                               <a href="#" data-detail-url="{% url 'deployments:ajax_deployment_detail' dep.id %}"
+                                                  data-node-id="{{ dep.id }}"
+                                                  data-location-id="{{ location.id }}"
+                                                  data-node-type="detail">{{ dep.deployment_number }}
+                                                  {% if dep.final_location %} ({{ dep.final_location.location_id }}){% endif %}
+                                                  {% if dep.current_deployment_status == 'recover' %}<span class="badge badge-pill badge-warning">Recovered</span>{% endif %}
+                                                  {% if dep.current_deployment_status == 'burnin' %}<span class="badge badge-pill badge-danger">Burn In</span>{% endif %}
+                                                  {% if dep.current_deployment_status == 'create' %}<span class="badge badge-pill badge-success">Initial Build</span>{% endif %}
+                                              </a>
+
+
+                                           </li>
+                                {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                            <!-- Check if Snapshot exists for the location. If so, include Deployments -->
+                            {% if location.deployment_snapshot.exists %}
+                                <ul>
+                                {% for dep in location.deployment_snapshot.all %}
+                                           <li data-jstree='{"icon":"fa fa-anchor"}' id="deployments_snapshots_{{ dep.id }}">
+                                               <a href="#" data-detail-url="{% url 'deployments:ajax_deployment_snapshot_detail' dep.id %}"
+                                                  data-node-id="{{ dep.id }}"
+                                                  data-location-id="{{ location.id }}"
+                                                  data-node-type="detail">{{ dep.deployment.deployment_number }}
+                                                  {% if dep.deployment.final_location %} ({{ dep.deployment.final_location.location_id }}){% endif %} - {{ dep.created_at }}
+                                              </a>
+
+                                              {% include "inventory/inventory_tree_snapshot.html" with location=location part_types=part_types dep=dep %}
+
+
+                                           </li>
+                                {% endfor %}
+                                </ul>
+                            {% endif %}
+
+
+
+
+                {% for level in structure.closed_levels %}</li></ul>{% endfor %}
+            {% endfor %}

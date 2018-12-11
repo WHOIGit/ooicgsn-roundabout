@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% load mptt_tags %}
+{% load crispy_forms_tags %}
+
+{% block title %}Inventory{% endblock %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-md-5">
+            <h2>Inventory</h2>
+
+            {% include "inventory/inventory_location_list.html" %}
+        </div>
+        <div class="col-md-7 inventory-detail">
+
+            <div class="card">
+                <div class="card-header">
+                    {% if inventory_item.id %}
+                        <h3>{{ inventory_item.part.name }}</h3>
+                    {% else %}
+                        <h3>Add Inventory</h3>
+                    {% endif %}
+
+                    <p>{{ inventory_item.serial_number }}</p>
+
+                    {% if parent.id %}
+                        <h3>Add Subassembly to {{ parent.part.name }}</h3>
+                    {% endif %}
+                </div>
+
+                <div class="card-body">
+
+                    <p>The following Subassembly Inventory Items are available for this Part.</p>
+
+                <ul class="list-group list-group-flush">
+
+                {% if inventory_item %}
+
+                      {% for inventory in inventory_item %}
+
+                                  <li class="list-group-item">
+                                      <div >
+                                      {{ inventory.part.name }} - {{ inventory.serial_number }}
+
+                                      <a href="{% url 'inventory:inventory_subassembly_existing_add' inventory.id parent.id inventory.location.id %}"
+                                          class="btn btn-primary btn-sm float-right"
+                                          role="button">Add</a>
+
+
+                                      </div>
+                                  </li>
+
+                      {% endfor %}
+                {% else %}
+                    <p>NONE</p>
+                {% endif %}
+
+                  </ul>
+
+        </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock content %}
+
+{% block javascript %}
+
+
+
+<script>
+
+$(document).ready(function() {
+    {% if parent.id %}
+        var inventory_id = {{ parent.id }} ;
+    {% elif inventory_item.id %}
+        var inventory_id = {{ inventory_item.id }} ;
+        var inventory_part_id = {{ inventory_item.part.id }}
+    {% else %}
+        var inventory_id = '1' ;
+        var inventory_part_id = '';
+    {% endif %}
+
+    var part_id = '{{ current_location }}' + '_' + inventory_id ;
+    console.log(part_id);
+    $("#jstree_parts").jstree(true).select_node(part_id);
+
+    // AJAX functions for form
+
+    $("#id_location").change(function () {
+        var url_deployments = $("#inventory-action-form").attr("data-deployments-url");
+        var url_parents = $("#inventory-action-form").attr("data-parents-url");
+        var locationID = $(this).val();
+        if ( $( "#id_part" ).length ) {
+            var partID = $("#id_part").val();
+        }  else {
+            var partID = inventory_part_id;
+        }
+        console.log(partID);
+
+        $.ajax({
+            url: url_deployments,
+            data: {
+              'location': locationID
+            },
+            success: function (data) {
+              $("#id_deployment").html(data);
+            }
+        });
+
+        $.ajax({
+            url: url_parents,
+            data: {
+              'location': locationID,
+              'part': partID
+            },
+            success: function (data) {
+              $("#id_parent").html(data);
+            }
+        });
+
+    });
+
+
+    {% if not parent.id %}
+        $("#id_part").change(function () {
+            var url_deployments = $("#inventory-action-form").attr("data-deployments-url");
+            var url_parents = $("#inventory-action-form").attr("data-parents-url");
+            var partID = $(this).val();
+            if ( $( "#id_location" ).length ) {
+                var locationID = $("#id_location").val();
+            }  else {
+                var locationID = '{{ current_location }}';
+            }
+            console.log(locationID);
+
+            $.ajax({
+                url: url_deployments,
+                data: {
+                  'location': locationID
+                },
+                success: function (data) {
+                  $("#id_deployment").html(data);
+                }
+            });
+
+            $.ajax({
+                url: url_parents,
+                data: {
+                  'location': locationID,
+                  'part': partID
+                },
+                success: function (data) {
+                  $("#id_parent").html(data);
+                }
+            });
+
+        });
+    {% endif %}
+
+});
+</script>
+
+
+{% endblock javascript %}

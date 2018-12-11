@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% load mptt_tags %}
+
+
+{% block title %}Location{% endblock %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-md-5 navtree-container">
+            <h2>Location</h2>
+
+            <div id="jstree-navtree" data-navtree-url="{% url 'locations:ajax_load_locations_navtree' %}"
+                                     data-node-type="{{ node_type }}">
+                <!-- AJAX navtree inserted here! -->
+                <img src="{% static 'images/loading-icon.gif' %}" class="loading-icon"/>
+            </div>
+
+        </div>
+        <div class="col-md-7 location-detail">
+
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <div class="parts-add-btn">
+                        <a href="#" data-create-url="{% url 'locations:ajax_location_add' %}" role="button" class="btn btn-primary">Add Location</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="detail-view">
+
+                <!-- AJAX detail templates inserted here! -->
+
+            </div>
+        </div>
+    </div>
+
+
+{% endblock content %}
+
+{% block javascript %}
+
+{% endblock javascript %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% load mptt_tags %}
+{% load crispy_forms_tags %}
+
+{% block title %}Inventory{% endblock %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-md-5 navtree-container">
+
+            <div class="btn-group" id="filter-part-type" data-navtree-filter-url="{% url 'inventory:ajax_filter_inventory_navtree' %}">
+              <button class="btn btn-info btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Filter by Part Type
+              </button>
+              <div class="dropdown-menu">
+
+                  {% for p_type in part_types %}
+                  <div class="form-check dropdown-item">
+                    <input class="form-check-input filter-checkbox" type="checkbox" value="{{ p_type.id }}" id="filter-{{ p_type.id }}">
+                    <label class="form-check-label" for="filter-{{ p_type.id }}">
+                      {{ p_type.name }}
+                    </label>
+                  </div>
+                  {% endfor %}
+                  <div class="form-check dropdown-item">
+                      <small><a href="#" class="" id="filter-part-type-clear">CLEAR ALL</a></small>
+                  </div>
+              </div>
+            </div>
+
+            <h2>Inventory</h2>
+
+            <div id="jstree-navtree" data-navtree-url="{% url 'inventory:ajax_load_inventory_navtree' %}"
+                                     data-node-type="{{ node_type }}">
+                <img src="{% static 'images/loading-icon.gif' %}" class="loading-icon"/>
+                <!-- AJAX navtree inserted here! -->
+            </div>
+
+        </div>
+        <div class="col-md-7 inventory-detail">
+
+            <div class="card" id="detail-view">
+                <div class="card-header">
+                    <h3>Search Results
+                </div>
+
+                <div class="card-body">
+
+                    <p>The following Inventory Items match your search.</p>
+
+                <ul class="list-group list-group-flush">
+
+                {% if inventory_item %}
+
+                      {% for inventory in inventory_item %}
+
+                                  <li class="list-group-item">
+                                      <div >
+                                      <a href="{% url 'inventory:inventory_detail' inventory.id %}">
+                                          {{ inventory.part.name }} - {{ inventory.serial_number }}
+                                      </a>
+
+                                      <a href="{% url 'inventory:inventory_detail' inventory.id %}"
+                                          class="btn btn-primary btn-sm float-right"
+                                          role="button">View</a>
+
+
+                                      </div>
+                                  </li>
+
+                      {% endfor %}
+                {% else %}
+                    <p>NONE</p>
+                {% endif %}
+
+                  </ul>
+
+        </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock content %}
+
+{% block javascript %}
+
+{% endblock javascript %}

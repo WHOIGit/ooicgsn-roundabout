@@ -1,0 +1,73 @@
+
+{% load mptt_tags %}
+
+<div id="jstree_parts">
+
+
+            {% for location,structure in locations|tree_info %}
+                {% if structure.new_level %}
+                    <ul><li data-jstree='{"icon":"fa fa-map-marker"}' id="loc_{{ location.id }}">
+                {% else %}
+            </li><li data-jstree='{"icon":"fa fa-map-marker"}' id="loc_{{ location.id }}">
+                {% endif %}
+                    <a href="#" data-location-id='{{ location.id }}'>{{ location.name }}</a>
+                        <!-- Check if Location is Land. If Land, display inventory tree and Deployments -->
+                        {% if location.tree_id == 1 %}
+
+                            {% if location.deployment.exists %}
+                                <ul>
+                                {% for dep in location.deployment.all %}
+                                           <li data-jstree='{"icon":"fa fa-plus"}' id="{{ location.id }}_dep{{ dep.id }}">
+                                               <a href="{% url 'inventory:inventory_deployment_detail' dep.id location.id %}" data-location-id='{{ location.id }}'>{{ dep.deployment_number }}
+                                                   {% if dep.final_location %} ({{ dep.final_location.location_id }}){% endif %}
+                                               </a>
+
+                                                {% if dep.inventory.exists %}
+                                                    {% include "inventory/inventory_tree_land_deployment.html" with location_pk=location.id dep_pk=dep.id  %}
+                                                {% endif %}
+
+                                           </li>
+                                {% endfor %}
+                                </ul>
+
+                            {% else %}
+
+                                {% if location.inventory.exists %}
+
+
+                                       {% include "inventory/inventory_tree_land.html" with location_pk=location.id %}
+
+
+                                 {% endif %}
+
+                            {% endif %}
+
+                        {% else %}
+
+                            <!-- Check if Deployment exists for the location -->
+                            {% if location.deployment.exists %}
+                                <ul>
+                                {% for dep in location.deployment.all %}
+                                           <li data-jstree='{"icon":"fa fa-plus"}' id="{{ location.id }}_dep{{ dep.id }}">
+                                               <a href="{% url 'inventory:inventory_deployment_detail' dep.id location.id %}" data-location-id='{{ location.id }}'>{{ dep.deployment_number }}
+                                                   {% if dep.final_location %} ({{ dep.final_location.location_id }}){% endif %}
+                                                </a>
+                                                {% if dep.inventory.exists %}
+                                                    {% include "inventory/inventory_tree.html" with location_pk=location.id dep_pk=dep.id  %}
+                                                    <!--{% include "inventory/inventory_list_location_sub.html" with location_pk=location.id  %}-->
+                                                {% endif %}
+
+                                           </li>
+                                {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                        {% endif %}
+
+
+                {% for level in structure.closed_levels %}</li></ul>{% endfor %}
+            {% endfor %}
+
+
+
+    </div>

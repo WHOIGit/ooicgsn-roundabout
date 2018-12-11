@@ -1,0 +1,24 @@
+
+{% load mptt_tags %}
+
+
+{% for location,structure in locations|tree_info %}
+
+        {% if structure.new_level %}
+            <ul><li data-jstree='{"icon":"fa fa-map-marker"}' id="locations_{{ location.id }}">
+        {% else %}
+    </li><li data-jstree='{"icon":"fa fa-map-marker"}' id="locations_{{ location.id }}">
+        {% endif %}
+        <a href="#" data-location-id='{{ location.id }}'
+                data-detail-url="{% url 'moorings:ajax_moorings_location_detail' location.id %}"
+                data-node-id="{{ location.id }}"
+                data-node-type="location">{{ location.name }} {% if location.location_id %} ({{ location.location_id }}) {% endif %}</a>
+            {% if location.mooring_parts.exists %}
+
+                {% include "moorings/mooring_tree_parts.html" with mooring_parts=location.mooring_parts.all  %}
+
+            {% endif %}
+
+     {% for level in structure.closed_levels %}</li></ul>{% endfor %}
+
+{% endfor %}

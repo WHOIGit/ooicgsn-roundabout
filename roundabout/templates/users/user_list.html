@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% block title %}Users{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="parts-add-btn">
+      <a href="{% url 'users:user_admin_add' %}" role="button" class="btn btn-primary">Add User</a>
+  </div>
+  <h2>Users</h2>
+
+
+  <table class="table table-striped table-hover">
+      <thead>
+        <th>Username</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>User Role</th>
+
+      </thead>
+      <tbody>
+        {% for user in user_list %}
+          <tr>
+              <td><a href="{% url 'users:user_admin_detail' user.id %}">{{ user.username }}</a></td>
+              <td>{{ user.name }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.groups.all|join:", "|title }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+</table>
+</div>
+{% endblock content %}

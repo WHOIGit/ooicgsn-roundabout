@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}User: {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="row">
+    <div class="col-sm-12">
+
+      <h2>{{ user.username }}</h2>
+      {% if user.name %}
+        <p>Name: {{ user.name }}</p>
+      {% endif %}
+      <p>Email: {{ user.email }}</p>
+
+      <p>User Role: {{ user.groups.all|join:", "|title }}</p>
+
+      <p>Last Login: {{ user.last_login }}</p>
+
+    </div>
+  </div>
+
+<!-- Action buttons -->
+<div class="row">
+
+  <div class="col-sm-12">
+    <a href="{% url 'users:user_admin_update' user.id %}" class="btn btn-primary" role="button">Edit</a>
+    <a href="{% url 'users:user_admin_change_password' user.id %}" class="btn btn-primary" role="button">Change Password</a>
+    <a href="{% url 'users:user_admin_delete' user.id %}" role="button" class="btn btn-danger ml-3">Delete</a>
+
+    <!-- Your Stuff: Custom user template urls -->
+  </div>
+
+</div>
+<!-- End Action buttons -->
+
+
+</div>
+{% endblock content %}

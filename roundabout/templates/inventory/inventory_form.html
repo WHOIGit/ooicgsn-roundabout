@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Orion{% endblock %}
+
+{% block content %}
+    {% if inventory.id %}
+        <h1>Update Inventory Item</h1>
+    {% else %}
+        <h1>Add Inventory Item</h1>
+    {% endif %}
+
+  <form class="form-horizontal" method="post" action="" id="inventory-form" data-parents-url="{% url 'ajax_load_parents' %}" novalidate>
+    {% csrf_token %}
+    {{ form|crispy }}
+
+    <div class="row">
+        {% if form.errors %}
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <div class="alert alert-danger">
+                    <strong>{{ error|escape }}</strong>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+
+    </div>
+
+    <div class="control-group">
+      <div class="controls">
+        {% if inventory.id %}
+        <button type="submit" class="btn btn-primary">Update Inventory</button>
+        {% else %}
+        <button type="submit" class="btn btn-primary">Add Inventory</button>
+        {% endif %}
+      </div>
+    </div>
+  </form>
+
+  <script>
+    $("#id_part").change(function () {
+      var url = $("#inventory-form").attr("data-parents-url");  // get the url of the view
+      var partId = $(this).val();  // get the selected ID from the HTML input
+
+      $.ajax({                       // initialize an AJAX request
+        url: url,                    // set the url of the request (= localhost:8000/hr/ajax/load-cities/)
+        data: {
+          'part': partId       // add the id to the GET parameters
+        },
+        success: function (data) {   // `data` is the return of the `load_cities` view function
+          $("#id_part").html(data);  // replace the contents of the city input with the data that came from the server
+        }
+      });
+
+    });
+  </script>
+
+{% endblock %}
+
+
+{% block javascript %}
+
+
+{% endblock javascript %}

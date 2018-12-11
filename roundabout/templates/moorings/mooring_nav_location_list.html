@@ -1,0 +1,23 @@
+
+{% load mptt_tags %}
+<div id="jstree_parts">
+
+
+        {% for location,structure in locations|tree_info %}
+
+                {% if structure.new_level %}
+                    <ul><li data-jstree='{"icon":"fa fa-map-marker"}'>
+                {% else %}
+                    </li><li data-jstree='{"icon":"fa fa-map-marker"}'>
+                {% endif %}
+                    <a href="#" data-location-id='{{ location.id }}'>{{ location.name }} {% if location.location_id %} ({{ location.location_id }}) {% endif %}</a>
+                    {% if location.mooring_parts.exists %}
+
+                        {% include "moorings/mooring_nav_tree.html" with location_pk=location.id  %}
+
+                    {% endif %}
+
+             {% for level in structure.closed_levels %}</li></ul>{% endfor %}
+
+        {% endfor %}
+    </div>

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% load mptt_tags %}
+{% load crispy_forms_tags %}
+
+{% block title %}Locations{% endblock %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-md-5">
+            <h2>Locations</h2>
+
+            {% include "locations/locations_location_list.html" %}
+
+        </div>
+        <div class="col-md-7 location-detail">
+
+            <div class="card">
+                <div class="card-header">
+                    {% if location.id %}
+                    <h3>{{ location.name }}</h3>
+                    {% else %}
+                    <h3>Add Location</h3>
+                    {% endif %}
+                </div>
+
+                <div class="card-body">
+
+
+                    <form class="form-horizontal" method="post" action="" id="location-form">
+                      {% csrf_token %}
+                      {{ form|crispy }}
+
+                      <div class="row">
+                          {% if form.errors %}
+                              {% for field in form %}
+                                  {% for error in field.errors %}
+                                      <div class="alert alert-danger">
+                                          <strong>{{ error|escape }}</strong>
+                                      </div>
+                                  {% endfor %}
+                              {% endfor %}
+                              {% for error in form.non_field_errors %}
+                                  <div class="alert alert-danger">
+                                      <strong>{{ error|escape }}</strong>
+                                  </div>
+                              {% endfor %}
+                          {% endif %}
+
+
+                      </div>
+
+                      <div class="control-group">
+                        <div class="controls">
+                          {% if location.id %}
+                          <button type="submit" class="btn btn-primary">Update Location</button>
+                          {% else %}
+                          <button type="submit" class="btn btn-primary">Add Location</button>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock content %}
+
+{% block javascript %}
+
+<script>
+
+$(document).ready(function() {
+
+    var loc_id = 'loc' + '_' + '{{ location.id }}' ;
+    $('#jstree_parts_locations').jstree(true).select_node(loc_id);
+
+
+});
+</script>
+
+
+{% endblock javascript %}

@@ -1,0 +1,173 @@
+{% load static i18n %}
+{% load mptt_tags %}
+{% load humanize %}
+{% load parts_tags %}
+
+                <div class="card-header" data-object-id="{{ mooring_part.id }}"><h3>{{ mooring_part.part.name }}</h3></div>
+
+                <div class="card-body">
+
+                    <div class="dropdown float-right">
+                      <button id="action" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-primary">
+                        Choose Action
+                      </button>
+                      <div class="dropdown-menu" aria-labelledby="action">
+                            <div class="ajax-detail-link">
+                                <a class="dropdown-item" href="#"
+                                    data-detail-url="{% url 'moorings:ajax_moorings_add' mooring_part.id mooring_part.location.id %}"
+                                    data-node-id="{{ mooring_part.id }}"
+                                    data-node-type="detail">Add New Subassembly</a>
+                                <a class="dropdown-item" href="#"
+                                    data-detail-url="{% url 'moorings:ajax_moorings_update' mooring_part.id %}"
+                                    data-node-id="{{ mooring_part.id }}"
+                                    data-node-type="detail">Edit Mooring Template</a>
+                                <!--<a class="dropdown-item" href="#"
+                                    data-detail-url="{% url 'moorings:ajax_moorings_copy' mooring_part.id %}"
+                                    data-node-id="{{ mooring_part.id }}"
+                                    data-node-type="detail">Copy Mooring Template</a>-->
+                            </div>
+                            <a class="dropdown-item" href="{% url 'parts:parts_detail' mooring_part.part.id %}">Edit Part Template</a>
+
+                      </div>
+                    </div>
+
+
+                        <p>Revision: {{ mooring_part.part.revision }}</p>
+                        <p>Part Number: {{ mooring_part.part.part_number }}</p>
+                        <p>Part Type: {{ mooring_part.part.part_type }}</p>
+                        <p>Unit Cost: ${{ mooring_part.part.unit_cost|intcomma }}</p>
+                        <p>Current Inventory: {{ mooring_part.part.get_part_inventory_count }}
+                    <hr>
+                        <p>Location: {{ mooring_part.location.name }}</p>
+                        {% if mooring_part.parent.id %}
+                            <p class="ajax-detail-link">Parent Assembly:
+                                <a href="#" data-detail-url="{% url 'moorings:ajax_moorings_detail' mooring_part.parent.id %}"
+                                            data-node-id="{{ mooring_part.parent.id }}">{{ mooring_part.parent.part.name }}</a></p>
+                        {% endif %}
+
+                        {% if mooring_part.children.exists %}
+                            <p>Total Assembly Cost (Equational Field): ${{ mooring_part.get_assembly_total_cost|intcomma }}
+                        {% endif %}
+
+
+
+                    {% if mooring_part.part.documentation.all %}
+
+                       {% define "active" as active_doc_tab %}
+                       {% define "" as active_sub_tab %}
+
+                    {% else %}
+
+                       {% define "" as active_doc_tab %}
+                       {% define "active show" as active_sub_tab %}
+
+                    {% endif %}
+
+                    <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+
+                        {% if mooring_part.part.documentation.all %}
+                          <li class="nav-item">
+                            <a class="nav-link {{ active_doc_tab }}" id="documentation-tab" data-toggle="tab" href="#documentation" role="tab" aria-controls="documentation" aria-selected="false">Documentation</a>
+                          </li>
+                        {% endif %}
+
+                        {% if mooring_part.children.all %}
+                            <li class="nav-item">
+
+                                <a class="nav-link {{ active_sub_tab }}" id="subassemblies-tab" data-toggle="tab" href="#subassemblies" role="tab" aria-controls="subassemblies" aria-selected="false">Subassemblies</a>
+
+                            </li>
+                        {% endif %}
+
+                        {% if mooring_part.note %}
+                            <li class="nav-item">
+
+                                <a class="nav-link" id="subassemblies-tab" data-toggle="tab" href="#notes" role="tab" aria-controls="notes" aria-selected="false">Notes</a>
+
+                            </li>
+                        {% endif %}
+
+
+
+                    </ul>
+
+                    <div class="tab-content" id="inventory-tabs">
+
+                        {% if mooring_part.part.documentation.exists %}
+
+                        <div class="tab-pane fade show {{active_doc_tab}}" id="documentation" role="tabpanel" aria-labelledby="documentation-tab">
+                                <table class="table table-tight">
+                                    <thead>
+                                      <th>Document</th>
+                                      <th class="text-right">Document Type</th>
+
+                                    </thead>
+                                    <tbody>
+                                      {% for document in  mooring_part.part.documentation.all %}
+                                    <tr>
+                                        <td><a href="{{ document.doc_link }}" target="_blank">{{ document.name }}</a></td>
+                                        <td class="text-right">{{ document.doc_type }}</td>
+                                    </tr>
+                                      {% endfor %}
+                                    </tbody>
+                              </table>
+                          </div>
+                        {% endif %}
+
+                        {% if mooring_part.children.exists %}
+
+                            <div class="tab-pane fade {{ active_sub_tab }}" id="subassemblies" role="tabpanel" aria-labelledby="subassemblies-tab">
+
+                                      <ul class="list-group list-group-flush">
+
+                                            {% recursetree mooring_part.get_descendants %}
+                                                <li class="list-group-item">
+                                                    <div class="ajax-detail-link">
+                                                    <a data-detail-url="{% url 'moorings:ajax_moorings_detail' node.id %}"
+                                                        data-node-id="{{ node.id }}"
+                                                        href="#"
+                                                        class="subassembly-name">{{ node.part.name }}</a>
+
+
+                                                    <a data-detail-url="{% url 'moorings:ajax_moorings_detail' node.id  %}"
+                                                        data-node-id="{{ node.id }}"
+                                                        href="#"
+                                                        class="btn btn-primary btn-sm float-right mr-2"
+                                                        role="button">Edit</a>
+
+                                                    {% if not node.is_leaf_node %}
+                                                        <ul class="list-group list-group-flush">
+                                                            {{ children }}
+                                                        </ul>
+                                                    {% endif %}
+                                                    </div>
+                                                </li>
+                                            {% endrecursetree %}
+                                        </ul>
+                            </div>
+                        {% endif %}
+
+                        {% if mooring_part.note %}
+
+                            <div class="tab-pane fade" id="notes" role="tabpanel" aria-labelledby="notes-tab">
+                                <ul class="list-group list-group-flush">
+                                      <li class="list-group-item">{{ mooring_part.note }}</li>
+                                </ul>
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="ajax-detail-link">
+                        <hr>
+
+                        <a href="#" data-detail-url="{% url 'moorings:ajax_moorings_delete' mooring_part.id %}" role="button" class="btn btn-danger parts-delete">Remove from Template</a>
+                    </div>
+
+                </div>
+
+{% block javascript %}
+
+
+{% endblock javascript %}

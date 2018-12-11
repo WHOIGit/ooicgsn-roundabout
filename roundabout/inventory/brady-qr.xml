@@ -1,0 +1,29 @@
+<?xml version = "1.0" ?>
+<bpl-document xmlns = "http://www.bradycorp.com/printers/bpl">
+    <defaults>
+        <document units = "inches" />
+    </defaults>
+    <labels>
+        <label width = "2.0" mheight = "1.0" font-size="14" font-name="Arial"> \
+            <barcode
+            position-x = "0.1"
+            position-y = "0.2"
+            height = "0.6"
+            type = "qr-code"
+            human-readable = "true"
+            human-readable-location = "bottom" >
+                <datasource>
+                    <static-text value = "" />
+                </datasource>
+            </barcode>
+            <text position-x="0.2" position-y="0.6" align="center">
+                <text-sizing>
+                    <autosize height="0.3" width="1.6" />
+                </text-sizing>
+                <datasource>
+                    <static-text value="" />
+                </datasource>
+            </text>
+        </label>
+    </labels>
+</bpl-document>

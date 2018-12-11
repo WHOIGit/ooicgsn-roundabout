@@ -1,0 +1,54 @@
+
+                {% load crispy_forms_tags %}
+
+                <div class="card-header">
+                    {% if location.id %}
+                    <h3>{{ location.name }}</h3>
+                    {% else %}
+                    <h3>Add Location</h3>
+                    {% endif %}
+                </div>
+
+                <div class="card-body">
+
+
+                    <form class="form-horizontal ajax-form" method="post" action="" id="location-form" data-url='{{ request.build_absolute_uri|safe }}'>
+                      {% csrf_token %}
+                      {{ form|crispy }}
+
+                      <div class="row">
+                          {% if form.errors %}
+                              {% for field in form %}
+                                  {% for error in field.errors %}
+                                      <div class="alert alert-danger">
+                                          <strong>{{ error|escape }}</strong>
+                                      </div>
+                                  {% endfor %}
+                              {% endfor %}
+                              {% for error in form.non_field_errors %}
+                                  <div class="alert alert-danger">
+                                      <strong>{{ error|escape }}</strong>
+                                  </div>
+                              {% endfor %}
+                          {% endif %}
+
+
+                      </div>
+
+                      <div class="control-group">
+                        <div class="controls">
+                          {% if location.id %}
+                          <button type="submit" class="btn btn-primary">Update Location</button>
+                          {% else %}
+                          <button type="submit" class="btn btn-primary">Add Location</button>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </form>
+
+
+                </div>
+
+{% block javascript %}
+
+{% endblock javascript %}

@@ -1,0 +1,473 @@
+{% load static i18n %}
+{% load humanize %}
+{% load common_tags %}
+{% load mptt_tags %}
+
+{% if inventory_item %}
+<div class="card-header" data-object-id="{{ inventory_item.id }}"><h3>{{ inventory_item.part.name }}</h3></div>
+
+<div class="card-body">
+
+
+    <div class="dropdown float-right">
+      <button id="action" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-primary">
+        Choose Action
+      </button>
+      <div class="dropdown-menu ajax-detail-link" aria-labelledby="action">
+          <!---
+            <a class="dropdown-item" href="#"
+                data-detail-url="{% url 'inventory:ajax_inventory_action' 'invchange' inventory_item.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-location-id="{{ inventory_item.location.id}}"
+                data-node-type="detail">Inventory Change</a>
+            --->
+        {% if not inventory_item.deployment and not inventory_item.parent and not inventory_item.mooring_part %}
+            <a class="dropdown-item" href="#"
+                data-detail-url="{% url 'inventory:ajax_inventory_action' 'locationchange' inventory_item.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-location-id="{{ inventory_item.location.id}}"
+                data-node-type="detail">Location Change</a>
+        {% endif %}
+
+        {% if not inventory_item.deployment and not inventory_item.mooring_part %}
+            <a class="dropdown-item" href="#"
+                data-detail-url="{% url 'inventory:ajax_inventory_add_subassembly' inventory_item.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-location-id="{{ inventory_item.location.id }}"
+                data-node-type="detail">Add Subassembly</a>
+        {% endif %}
+
+        {% if not inventory_item.deployment and inventory_item.parent %}
+            <a class="dropdown-item" href="#"
+                data-detail-url="{% url 'inventory:ajax_inventory_action' 'subchange' inventory_item.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-location-id="{{ inventory_item.location.id}}"
+                data-node-type="detail">Remove from Parent Assembly</a>
+        {% endif %}
+
+        {% if not inventory_item.deployment and not inventory_item.parent and not inventory_item.mooring_part %}
+            <a class="dropdown-item" href="#"
+                data-detail-url="{% url 'inventory:ajax_inventory_add_to_parent' inventory_item.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-location-id="{{ inventory_item.location.id}}"
+                data-node-type="detail">Add to Parent Assembly</a>
+        {% endif %}
+
+        {% if not inventory_item.deployment and not inventory_item.parent %}
+            <a class="dropdown-item" href="#"
+                data-detail-url="{% url 'inventory:ajax_inventory_add_to_deployment' inventory_item.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-location-id="{{ inventory_item.location.id}}"
+                data-node-type="detail">Add to Deployment</a>
+        {% endif %}
+
+        {% if inventory_item.deployment %}
+            <a class="dropdown-item" href="#"
+                data-detail-url="{% url 'inventory:ajax_inventory_action' 'removefromdeployment' inventory_item.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-location-id="{{ inventory_item.location.id}}"
+                data-node-type="detail">Remove from Deployment</a>
+        {% endif %}
+
+        {% if inventory_item.mooring_part and not inventory_item.deployment and not inventory_item.parent %}
+            <a class="dropdown-item" href="#"
+                data-detail-url="{% url 'inventory:ajax_inventory_action' 'removedest' inventory_item.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-location-id="{{ inventory_item.location.id }}"
+                data-node-type="detail">Remove Destination</a>
+        {% endif %}
+
+        {% if not inventory_item.mooring_part and not inventory_item.parent %}
+            <a class="dropdown-item" href="#"
+                data-detail-url="{% url 'inventory:ajax_inventory_assign_destination' inventory_item.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-location-id="{{ inventory_item.location.id }}"
+                data-node-type="detail">Assign Destination</a>
+        {% endif %}
+
+            <a class="dropdown-item" href="#"
+                data-detail-url="{% url 'inventory:ajax_inventory_action' 'test' inventory_item.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-location-id="{{ inventory_item.location.id}}"
+                data-node-type="detail">Test</a>
+            <a class="dropdown-item" href="#"
+                data-detail-url="{% url 'inventory:ajax_inventory_action' 'flag' inventory_item.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-location-id="{{ inventory_item.location.id}}"
+                data-node-type="detail">Flag</a>
+                <!---
+            <a class="dropdown-item" href="#"
+                data-detail-url="{% url 'inventory:ajax_inventory_action' 'note' inventory_item.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-location-id="{{ inventory_item.location.id}}"
+                data-node-type="detail">Note</a>
+                --->
+            <a class="dropdown-item" href="#"
+                data-detail-url="{% url 'inventory:ajax_note_action' inventory_item.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-location-id="{{ inventory_item.location.id}}"
+                data-node-type="detail">Photo/Note</a>
+            <a class="dropdown-item" href="#"
+                data-detail-url="{% url 'inventory:ajax_history_action' inventory_item.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-location-id="{{ inventory_item.location.id}}"
+                data-node-type="detail">Historical Note</a>
+            {% if request.user|has_group:"admin" %}
+                <a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'inventory:ajax_inventory_update' inventory_item.id %}"
+                    data-node-id="{{ inventory_item.id }}"
+                    data-location-id="{{ inventory_item.location.id}}"
+                    data-node-type="detail">Edit Inventory Details</a>
+            {% endif %}
+      </div>
+    </div>
+
+
+    <p>Serial Number: {{ inventory_item.serial_number }}<br>
+        <a class="btn btn-outline-info btn-sm" data-toggle="collapse" href="#collapseBarCode" role="button" aria-expanded="false" aria-controls="collapseBarCode">
+          Print Barcode
+        </a>
+    </p>
+
+
+    <div class="collapse" id="collapseBarCode">
+      <div class="card card-body">
+            <form>
+              <div class="form-group">
+                <label for="label-printer">Select Label Printer</label>
+                <select class="form-control form-control-sm" id="label-printer">
+                  <option value="zebraprint.whoi.edu" data-printer-type="zebra">LOSOS - E-Lab Zebra printer</option>
+                  <option value="128.128.25.72" data-printer-type="brady">LOSOS - E-Lab Brady QR printer</option>
+                  <option value="128.128.25.73" data-printer-type="brady">LOSOS - E-Lab Brady Cable printer</option>
+                  <option value="otherprinter.whoi.edu" data-printer-type="other">otherprinter.whoi.edu</option>
+                </select>
+
+              </div>
+            </form>
+
+          <table>
+          	<tr>
+
+          		<td>
+                    <div id="print-barcode" class="print-code{% if inventory_item.part.part_type.name == 'Cable' %}-cable{% endif %}">
+                        <div >
+
+          			        <img src='https://barcode.tec-it.com/barcode.ashx?data={{ inventory_item.serial_number }}&code=Code93&dpi=300&unit=Min&imagetype=Png' alt='Barcode Generator TEC-IT'/>
+                        </div>
+                    </div>
+
+                    <button id="print-barcode-btn" class="btn btn-sm btn-primary print-code-btn"
+                            data-printcode-url="{% url 'inventory:ajax_print_code' 'bar93' %}"
+                            data-serial-number="{{ inventory_item.serial_number }}">Click to Print</button>
+                    <!--<button onclick="printDiv('print-barcode');" class="btn btn-sm btn-primary">Click to Print</button>-->
+
+          		</td>
+                <td>
+                    <div id="print-qrcode" class="print-code{% if inventory_item.part.part_type.name == 'Cable' %}-cable{% endif %}">
+                        <div >
+          			        <img style="width:46px;" src='https://barcode.tec-it.com/barcode.ashx?data={{ inventory_item.serial_number }}&code=QRCode&dpi=300&unit=Min&imagetype=Png' alt='Barcode Generator TEC-IT'/>
+                            <p style="font-size:7px; font-family:Arial; display: block; max-width:48px; word-wrap: break-word;">{{ qrcode_serial_number|safe }}</p>
+                        </div>
+                    </div>
+
+                    <button id="print-qrcode-btn" class="btn btn-sm btn-primary print-code-btn"
+                            data-printcode-url="{% url 'inventory:ajax_print_code' 'QR' %}"
+                            data-serial-number="{{ inventory_item.serial_number }}">Click to Print</button>
+                    <!--<button onclick="printDiv('print-qrcode');" class="btn btn-sm btn-primary">Click to Print</button>-->
+          		</td>
+          	</tr>
+          </table>
+
+          <div class="" role="alert" id="print-status-alert" style="display:none;"></div>
+
+      </div>
+    </div>
+
+    {% if inventory_item.old_serial_number %}
+        <p>Old Serial Number: {{ inventory_item.old_serial_number }}</p>
+    {% endif %}
+    {% if inventory_item.whoi_number %}
+        <p>WHOI Number: {{ inventory_item.whoi_number }}</p>
+    {% endif %}
+    {% if inventory_item.ooi_property_number %}
+        <p>OOI Property Number: {{ inventory_item.ooi_property_number }}</p>
+    {% endif %}
+    <p>Part Number: {{ inventory_item.part.part_number }}</p>
+    <p>Revision: {{ inventory_item.part.revision }}</p>
+    <p>Current Location: {{ inventory_item.location.name }}</p>
+
+    {% if inventory_item.deployment %}
+        <p>Current Deployment: {{ inventory_item.deployment.deployment_number }}</p>
+    {% endif %}
+
+    {% if inventory_item.parent %}
+    <p class="ajax-detail-link">Parent Assembly:
+        {% recursetree inventory_item.get_ancestors %}
+                {% if node.is_child_node %}&#187;{% endif %}
+                <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' node.id %}"
+                            data-node-id="{{ node.id }}">{{ node.part.name }} - {{ node.serial_number }}</a>
+                {% if not node.is_leaf_node %}
+                    {{ children }}
+                {% endif %}
+
+        {% endrecursetree %}
+    </p>
+    {% endif %}
+    <hr>
+    {% if inventory_item.flag %}
+    <div class="float-right ajax-detail-link"><a href="#" data-detail-url="{% url 'inventory:ajax_inventory_action' 'flag' inventory_item.id %}" role="button" class="btn btn-danger">FLAGGED</a></div>
+    {% endif %}
+
+    {% if inventory_item.test_type %}
+        <p>Current Test Status: <span class="badge {% if inventory_item.test_result %}badge-success{% else %}badge-danger{% endif %}">
+            {{ inventory_item.get_test_type_display}}: {{ inventory_item.get_test_result_display}}
+            </span>
+        </p>
+    {% endif %}
+
+
+
+
+    <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+
+        {% if inventory_item.action.all %}
+            <li class="nav-item">
+              <a class="nav-link active" id="history-tab" data-toggle="tab" href="#history" role="tab" aria-controls="history" aria-selected="true">History</a>
+            </li>
+        {% endif %}
+
+        {% if inventory_item.get_descendants %}
+            <li class="nav-item">
+              <a class="nav-link" id="subassemblies-tab" data-toggle="tab" href="#subassemblies" role="tab" aria-controls="subassemblies" aria-selected="false">Subassemblies</a>
+            </li>
+        {% endif %}
+
+        {% if inventory_item.mooring_part %}
+            <li class="nav-item">
+              <a class="nav-link" id="destination-tab" data-toggle="tab" href="#destination" role="tab" aria-controls="destination" aria-selected="false">Assigned Destination</a>
+            </li>
+        {% endif %}
+
+        {% if inventory_item.part.documentation.all %}
+          <li class="nav-item">
+            <a class="nav-link" id="documentation-tab" data-toggle="tab" href="#documentation" role="tab" aria-controls="documentation" aria-selected="false">Documentation</a>
+          </li>
+        {% endif %}
+
+        <li class="nav-item">
+          <a class="nav-link" id="part-template-tab" data-toggle="tab" href="#part-template" role="tab" aria-controls="part-template" aria-selected="false">Part Template</a>
+        </li>
+
+    </ul>
+
+    <div class="tab-content" id="inventory-tabs">
+
+        {% if inventory_item.action.all %}
+          <div class="tab-pane fade show active" id="history" role="tabpanel" aria-labelledby="history-tab">
+
+              <table class="table table-striped action-table">
+                  <thead>
+                    <th>Date</th>
+                    <th>Action</th>
+                    <th>Details</th>
+                    <th>Person</th>
+                    <th>Location</th>
+
+                  </thead>
+                  <tbody>
+                    {% for action in  inventory_item.action.all %}
+                      <tr>
+                          <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
+                          <td>{{ action.get_action_type_display }}</td>
+                          <td>
+                              {{ action.detail|safe }}
+                              {% for photo in action.photos.all %}
+                                  <img src="{{ photo.photo.url }}" width="100%"> <br>
+                              {% endfor %}
+                          </td>
+                          <td>{{ action.user.username }}</td>
+                          <td>{{ action.location.name }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+            </table>
+
+          </div>
+        {% endif %}
+
+        {% if inventory_item.get_descendants %}
+            <div class="tab-pane fade" id="subassemblies" role="tabpanel" aria-labelledby="subassemblies-tab">
+
+                <ul class="list-group list-group-flush">
+
+                  {% recursetree inventory_item.get_descendants %}
+                      <li class="list-group-item">
+                          <div class="ajax-detail-link">
+                              <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' node.id %}"
+                                 data-node-id="{{ node.id }}"
+                                 data-location-id="{{ node.location.id }}"
+                                 data-node-type="detail" class="subassembly-name">{{ node.part.name }} - {{ node.serial_number }}</a>
+
+                          <a href="{% url 'inventory:inventory_action' 'subchange' node.id node.location.id %}"
+                              class="btn btn-danger btn-sm float-right"
+                              role="button">Remove</a>
+
+                              <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' node.id %}"
+                                 data-node-id="{{ node.id }}"
+                                 data-location-id="{{ node.location.id }}"
+                                 data-node-type="detail"
+                                  class="btn btn-primary btn-sm float-right mr-2"
+                                  role="button">Edit</a>
+
+                          {% if not node.is_leaf_node %}
+                              <ul class="list-group list-group-flush">
+                                  {{ children }}
+                              </ul>
+                          {% endif %}
+                          </div>
+                      </li>
+                  {% endrecursetree %}
+                  </ul>
+
+            </div>
+        {% endif %}
+
+        {% if inventory_item.mooring_part %}
+            <div class="tab-pane fade" id="destination" role="tabpanel" aria-labelledby="destination-tab">
+
+                <h5 class="mt-3">{{ inventory_item.mooring_part.location.name }} ({{ inventory_item.mooring_part.location.location_id }})</h5>
+
+                <ul>
+
+                  {% recursetree inventory_item.mooring_part.get_family %}
+                      <li>
+
+                            {% if node.id == inventory_item.mooring_part_id %}
+                                 <span class="text-primary">
+                            {% else %}
+                                <span>
+                            {% endif %}
+                                    {{ node.part.name }}
+                                </span>
+                            {% if node.id == inventory_item.mooring_part_id %}
+                                   <span class="badge badge-primary badge-pill">Destination</span>
+                               {% endif %}
+
+
+
+                          {% if not node.is_leaf_node %}
+                              <ul >
+                                  {{ children }}
+                              </ul>
+                          {% endif %}
+
+                      </li>
+                  {% endrecursetree %}
+                  </ul>
+
+            </div>
+        {% endif %}
+
+        {% if inventory_item.part.documentation.all %}
+          <div class="tab-pane fade" id="documentation" role="tabpanel" aria-labelledby="documentation-tab">
+
+                  <table class="table documentation-table">
+                      <thead>
+                        <th>Document</th>
+                        <th class="text-right">Document Type</th>
+
+                      </thead>
+                      <tbody>
+                        {% for document in  inventory_item.part.documentation.all %}
+                      <tr>
+                          <td><a href="{{ document.doc_link }}" target="_blank">{{ document.name }}</a></td>
+                          <td class="text-right">{{ document.doc_type }}</td>
+                      </tr>
+                        {% endfor %}
+                      </tbody>
+                </table>
+
+          </div>
+        {% endif %}
+
+        <div class="tab-pane fade" id="part-template" role="tabpanel" aria-labelledby="part-template-tab">
+
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">Part Type: {{ inventory_item.part.part_type }}</li>
+                <li class="list-group-item">Unit Cost: ${{ inventory_item.part.unit_cost|intcomma }}</li>
+                <li class="list-group-item">Refurbishment Cost: ${{ inventory_item.part.refurbishment_cost|intcomma }}</li>
+                <li class="list-group-item">Current Inventory: {{ inventory_item.part.get_part_inventory_count }}</li>
+                {% if inventory_item.part.note %}
+                    <li class="list-group-item">Part Template Notes: {{ inventory_item.part.note }}</li>
+                {% endif %}
+            </ul>
+
+        </div>
+
+
+    </div>
+
+
+
+    <div class="mt-3 ajax-detail-link">
+        <a href="#"
+           data-detail-url="{% url 'inventory:ajax_inventory_action' 'movetotrash' inventory_item.id %}"
+           data-node-id="{{ inventory_item.id }}"
+           role="button" class="btn btn-danger parts-delete">Move to Trash</a>
+<!---
+    {% if perms.inventory.delete %}
+         <a href="#"
+            data-detail-url="{% url 'inventory:ajax_inventory_delete' inventory_item.id %}"
+            data-node-id="{{ inventory_item.id }}"
+            role="button" class="btn btn-danger parts-delete">Delete Permanently</a>
+    {% endif %}
+--->
+    </div>
+
+
+
+</div>
+
+{% endif %}
+
+{% block javascript %}
+<script>
+
+    $(document).ready(function(){
+        $('.print-code-btn').click(function() {
+            var url = $(this).attr('data-printcode-url');
+            var serialNumber = $(this).attr('data-serial-number');
+            var printerName = $( '#label-printer' ).val();
+            var printerType = $( '#label-printer option:selected' ).attr('data-printer-type');
+            console.log(printerType);
+            // Reset print-status-alert div
+            $('#print-status-alert').hide();
+
+            $.ajax({
+                url: url,
+                data: {
+                  'printer_name': printerName,
+                  'printer_type' : printerType,
+                  'serial_number': serialNumber,
+                },
+                success: function (data) {
+                  console.log(data.message);
+                  if (data.success) {
+                      $('#print-status-alert').show();
+                      $('#print-status-alert').addClass('alert alert-success');
+                      $('#print-status-alert').html(data.message);
+                  } else {
+                      $('#print-status-alert').show();
+                      $('#print-status-alert').addClass('alert alert-danger');
+                      $('#print-status-alert').html(data.message);
+                  }
+
+                }
+            });
+
+        });
+
+    });
+
+</script>
+{% endblock javascript %}

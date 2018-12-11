@@ -1,0 +1,30 @@
+
+{% load mptt_tags %}
+{% load inventory_tags %}
+{% load parts_tags %}
+
+{% get_inventory_list_by_location location_pk dep_pk as inventory %} 
+{% get_parts_list_by_location location_pk as nodes %} 
+
+
+    
+       {% for node,structure in nodes|tree_info %}
+        
+        
+        {% for i in inventory %}
+       
+            {% if structure.new_level %}<ul><li class="alert alert-primary">{% else %}</li><li>{% endif %}
+                {% if node.id == i.part.id %}
+                <a href="{% url 'parts:parts_detail' node.id %}?loc_id={{ location_pk }}">{{ node.name}} {{i.serial_number}}</a>
+                {% endif %}  
+            {% for level in structure.closed_levels %}</li></ul>{% endfor %}
+            
+        {% endfor %}
+
+        {% endfor %}
+
+
+
+
+
+    

@@ -1,0 +1,4 @@
+<option value="">---------</option>
+{% for deployment in deployments %}
+<option value="{{ deployment.pk }}">{{ deployment.deployment_number }} ({{ deployment.final_location.location_id }}) - {{ deployment.location.name }}</option>
+{% endfor %}

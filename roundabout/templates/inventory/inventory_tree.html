@@ -1,0 +1,22 @@
+
+{% load mptt_tags %}
+{% load inventory_tags %}
+
+{% get_inventory_list_by_location location_pk dep_pk as inventory %}
+
+
+
+        {% for inv,structure in inventory|tree_info %}
+
+                {% if structure.new_level %}
+                    <ul><li data-jstree='{"icon":"fa fa-bolt"}' id="inv_{{ inv.id }}">
+                {% else %}</li>
+                    <li data-jstree='{"icon":"fa fa-bolt"}' id="inv_{{ inv.id }}">
+                {% endif %}
+                    <a href="{% url 'inventory:inventory_detail' inv.id location_pk %}">
+                        {% if inv.part.friendly_name %} {{ inv.part.friendly_name}} {% else %} {{ inv.part.name }} {% endif %}
+                         - {{ inv.serial_number }}</a>
+
+             {% for level in structure.closed_levels %}</li></ul>{% endfor %}
+
+        {% endfor %}

@@ -1,0 +1,11 @@
+@page {
+    size: 2in 3.75in;
+    /* this affects the margin in the printer settings */
+    margin: 0 0 13mm 0;
+}
+
+img {
+    position: absolute;
+    top: 0;
+    left: 0;
+}

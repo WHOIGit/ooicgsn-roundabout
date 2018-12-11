@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% load mptt_tags %}
+{% load crispy_forms_tags %}
+
+{% block title %}Inventory{% endblock %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-md-5">
+            <h2>Inventory</h2>
+
+            {% include "inventory/inventory_location_list.html" %}
+        </div>
+        <div class="col-md-7 inventory-detail">
+
+            <div class="card">
+                <div class="card-header">
+                    {% if inventory_item.id %}
+                        <h3>{{ inventory_item.part.name }}</h3>
+                    {% else %}
+                        <h3>Add Inventory</h3>
+                    {% endif %}
+
+                    <p>{{ inventory_item.serial_number }}</p>
+
+                    {% if parent.id %}
+                        <h3>Add Subassembly to {{ parent.part.name }}</h3>
+                    {% endif %}
+                </div>
+
+                <div class="card-body">
+
+                    {% if not inventory_item.id and not parent.id %}
+                        <div id="inventory-filter">
+                            <form class="form-horizontal" method="post" action="" id="inventory-filter-form" data-url="{% url 'inventory:ajax_load_part_templates' %}" novalidate>
+                                <div class="form-group">
+                                <label for="id_part_type" class="form-control-label  requiredField">Select Part Type<span class="asteriskField">*</span></label>
+                                    <select name="part_type" class="select form-control" id="id_part_type">
+                                        <option value="">---------</option>
+                                        <option value="All">All Parts</option>
+                                        {% for type in part_types %}
+                                            <option value="{{ type.id }}">-- {{ type.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
+                        <hr>
+                    {% endif %}
+
+                    {% if action_type == 'subchange' %}
+                        <p>Select a new Parent Assembly or Location for this item</p>
+                    <!--
+                        <p>You may move this subassembly to another Parent or Location by using the form below.  To delete this Inventory Item from the system, click the Delete button.</p>
+                        <p><a href="{% url 'inventory:inventory_delete' inventory_item.id %}" role="button" class="btn btn-danger">Delete</a></p>
+                        <hr>
+                    -->
+                    {% endif %}
+
+                    {% if latest_flag.detail %}<p>Why Flagged: {{ latest_flag.detail }}</p>{% endif %}
+                    <form class="form-horizontal" method="post" action="" id="inventory-action-form" data-parents-url="{% url 'inventory:ajax_load_parents' %}"
+                          data-deployments-url="{% url 'inventory:ajax_load_deployments' %}" novalidate>
+                      {% csrf_token %}
+
+                      {{ form|crispy }}
+
+                      <div class="row">
+                          {% if form.errors %}
+                              {% for field in form %}
+                                  {% for error in field.errors %}
+                                      <div class="alert alert-danger">
+                                          <strong>{{ error|escape }}</strong>
+                                      </div>
+                                  {% endfor %}
+                              {% endfor %}
+                              {% for error in form.non_field_errors %}
+                                  <div class="alert alert-danger">
+                                      <strong>{{ error|escape }}</strong>
+                                  </div>
+                              {% endfor %}
+                          {% endif %}
+
+
+                      </div>
+
+                      <div class="control-group">
+                        <div class="controls">
+                          {% if inventory_item.id %}
+                          <button type="submit" class="btn btn-primary">Update Inventory</button>
+                          {% else %}
+                          <button type="submit" class="btn btn-primary">Add Inventory</button>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock content %}
+
+{% block javascript %}
+
+
+
+<script>
+
+$(document).ready(function() {
+    {% if parent.id %}
+        var inventory_id = {{ parent.id }} ;
+    {% elif inventory_item.id %}
+        var inventory_id = {{ inventory_item.id }} ;
+        var inventory_part_id = {{ inventory_item.part.id }}
+    {% else %}
+        var inventory_id = '1' ;
+        var inventory_part_id = '';
+    {% endif %}
+
+    var part_id = '{{ current_location }}' + '_' + inventory_id ;
+
+    $("#jstree_parts").jstree(true).select_node(part_id);
+
+    // AJAX functions for form
+    $("#id_part_type").change(function () {
+        var url = $("#inventory-filter-form").attr("data-url");
+        var partType = $(this).val();
+        $.ajax({
+            url: url,
+            data: {
+              'part_type': partType
+            },
+            success: function (data) {
+              $("#id_part").html(data);
+            }
+        });
+
+    });
+
+
+    $("#id_location").change(function () {
+        var url_deployments = $("#inventory-action-form").attr("data-deployments-url");
+        var url_parents = $("#inventory-action-form").attr("data-parents-url");
+        var locationID = $(this).val();
+        if ( $( "#id_part" ).length ) {
+            var partID = $("#id_part").val();
+        }  else {
+            var partID = inventory_part_id;
+        }
+        console.log(partID);
+
+        $.ajax({
+            url: url_deployments,
+            data: {
+              'location': locationID
+            },
+            success: function (data) {
+              $("#id_deployment").html(data);
+            }
+        });
+
+        $.ajax({
+            url: url_parents,
+            data: {
+              'location': locationID,
+              'part': partID
+            },
+            success: function (data) {
+              $("#id_parent").html(data);
+            }
+        });
+
+    });
+
+
+    {% if not parent.id %}
+        $("#id_part").change(function () {
+            var url_deployments = $("#inventory-action-form").attr("data-deployments-url");
+            var url_parents = $("#inventory-action-form").attr("data-parents-url");
+            var partID = $(this).val();
+            if ( $( "#id_location" ).length ) {
+                var locationID = $("#id_location").val();
+            }  else {
+                var locationID = '{{ current_location }}';
+            }
+            console.log(locationID);
+
+            $.ajax({
+                url: url_deployments,
+                data: {
+                  'location': locationID
+                },
+                success: function (data) {
+                  $("#id_deployment").html(data);
+                }
+            });
+
+            $.ajax({
+                url: url_parents,
+                data: {
+                  'location': locationID,
+                  'part': partID
+                },
+                success: function (data) {
+                  $("#id_parent").html(data);
+                }
+            });
+
+        });
+    {% endif %}
+
+});
+</script>
+
+
+{% endblock javascript %}

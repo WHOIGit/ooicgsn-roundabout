@@ -1,0 +1,127 @@
+{% load common_tags %}
+
+<div class="card-header" data-object-id="{{ deployment.id }}"><h3>Deployment {{ deployment.deployment_number }} - {{ deployment.final_location.location_id }}</h3></div>
+
+<div class="card-body">
+
+{% if  deployment.current_deployment_status != 'retire' %}
+    <div class="dropdown float-right">
+      <button id="action" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-primary">
+        Choose Action
+      </button>
+      <div class="dropdown-menu ajax-detail-link" aria-labelledby="action">
+
+                {% if  deployment.current_deployment_status == 'create' %}
+                    <a class="dropdown-item" href="#"
+                        data-detail-url="{% url 'deployments:ajax_deployment_action' 'burnin' deployment.id %}"
+                        data-node-id="{{ deployment.id }}"
+                        data-location-id="{{ deployment.location.id}}"
+                        data-node-type="detail">Initiate Burn In</a>
+                {% endif %}
+
+                {% if  deployment.current_deployment_status == 'burnin' %}
+                    <a class="dropdown-item" href="#"
+                        data-detail-url="{% url 'deployments:ajax_deployment_action' 'deploy' deployment.id %}"
+                        data-node-id="{{ deployment.id }}"
+                        data-location-id="{{ deployment.location.id}}"
+                        data-node-type="detail">Deploy to Sea</a>
+                {% endif %}
+
+                {% if  deployment.current_deployment_status == 'recover' %}
+                    <a class="dropdown-item" href="#"
+                        data-detail-url="{% url 'deployments:ajax_deployment_action' 'retire' deployment.id %}"
+                        data-node-id="{{ deployment.id }}"
+                        data-location-id="{{ deployment.location.id}}"
+                        data-node-type="detail">Retire</a>
+                {% endif %}
+
+                {% if  deployment.current_deployment_status == 'deploy' %}
+                    <a class="dropdown-item" href="#"
+                        data-detail-url="{% url 'deployments:ajax_deployment_action' 'recover' deployment.id %}"
+                        data-node-id="{{ deployment.id }}"
+                        data-location-id="{{ deployment.location.id}}"
+                        data-node-type="detail">Recover from Sea</a>
+                {% endif %}
+                    <a class="dropdown-item" href="#"
+                        data-detail-url="{% url 'deployments:ajax_deployment_snapshot' deployment.id %}"
+                        data-node-id="{{ deployment.id }}"
+                        data-location-id="{{ deployment.location.id}}"
+                        data-node-type="detail">Take Snapshot</a>
+
+      </div>
+    </div>
+{% endif %}
+
+    <p>Current Location: {{ deployment.location.name }}</p>
+    <p>Deployment Number: {{ deployment.deployment_number }}</p>
+    <p>Deployment ID: {{ deployment.final_location.location_id }}</p>
+    <p>Final Location: {{ deployment.final_location }}</p>
+    <p>Parent: {{ deployment.final_location.parent }}</p>
+
+    <hr>
+
+    <h4>Percent Complete</h4>
+
+    <div class="progress" style="height: 20px;">
+        {% if percent_complete == 0 %} {{ percent_complete }}% {% endif %}
+      <div class="progress-bar" role="progressbar" style="width: {{ percent_complete }}%;" aria-valuenow="{{ percent_complete }}" aria-valuemin="0" aria-valuemax="100">
+          {{ percent_complete }}%
+      </div>
+    </div>
+
+    <ul class="nav nav-tabs mt-3" id="inventory-tabs-nav" role="tablist">
+
+        {% if deployment.deployment_action.all %}
+            <li class="nav-item">
+              <a class="nav-link active" id="history-tab" data-toggle="tab" href="#history" role="tab" aria-controls="history" aria-selected="true">History</a>
+            </li>
+        {% endif %}
+    </ul>
+
+    <div class="tab-content" id="inventory-tabs">
+
+        {% if deployment.deployment_action.all %}
+          <div class="tab-pane fade show active" id="history" role="tabpanel" aria-labelledby="history-tab">
+
+              <table class="table table-striped action-table">
+                  <thead>
+                    <th>Date</th>
+                    <th>Action</th>
+                    <th>Details</th>
+                    <th>Person</th>
+                    <th>Location</th>
+
+                  </thead>
+                  <tbody>
+                    {% for action in deployment.deployment_action.all %}
+                      <tr>
+                          <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
+                          <td>{{ action.get_action_type_display }}</td>
+                          <td>{{ action.detail|safe }}</td>
+                          <td>{{ action.user.username }}</td>
+                          <td>{{ action.location.name }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+            </table>
+
+          </div>
+        {% endif %}
+
+    </div>
+
+{% if request.user|has_group:"admin" %}
+    <div class="mt-3 ajax-btn">
+        <a href="#" data-update-url="{% url 'deployments:ajax_deployment_update' deployment.id %}" role="button" class="btn btn-primary">Edit Deployment</a>
+        <a href="#" data-update-url="{% url 'deployments:ajax_deployment_delete' deployment.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
+    </div>
+{% endif %}
+
+
+
+</div>
+
+
+{% block javascript %}
+
+{% endblock javascript %}

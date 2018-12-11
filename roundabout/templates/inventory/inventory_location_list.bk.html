@@ -1,0 +1,44 @@
+
+{% load inventory_tags %}
+
+{% load mptt_tags %}
+<div id="jstree_parts">
+        <ul>
+        
+
+            {% recursetree locations %}
+                <li>
+                    {{ node.name }} {% if node.location_id %} ({{ node.location_id }})  {% endif %}
+                    {% if not location.is_leaf_node %}
+                    {% if node.deployment.exists %}
+                        <ul class="children">
+                                {% for dep in node.deployment.all %}
+                                   <li> {{ dep.deployment_number }}
+                                        <ul class="children">
+                                             {{ children }}
+                                    
+
+                                            {% if node.inventory.exists %}
+                                                {% include "inventory/inventory_tree.html" with location_pk=node.id  %}
+                                            {% endif %}
+                                        </ul>
+                                   </li>
+                                {% endfor %}
+                            
+                        </ul>    
+                    {% endif %}  
+                    {% endif %}  
+                    {% if not location.is_leaf_node %}
+                        <ul class="children">
+                            {{ children }}
+                            
+
+                            {% if node.inventory.exists %}
+                                {% include "inventory/inventory_tree.html" with location_pk=node.id  %}
+                            {% endif %}
+                        </ul>
+                    {% endif %}
+                </li>
+            {% endrecursetree %}
+        </ul>
+    </div>

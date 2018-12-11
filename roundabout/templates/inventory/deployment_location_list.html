@@ -1,0 +1,36 @@
+
+{% load mptt_tags %}
+
+<div id="jstree_deployments">
+
+
+            {% for location,structure in locations|tree_info %}
+                {% if structure.new_level %}
+                    <ul><li data-jstree='{"icon":"fa fa-map-marker"}' id="loc_{{ location.id }}">
+                {% else %}
+                    </li><li data-jstree='{"icon":"fa fa-map-marker"}' id="loc_{{ location.id }}">{% endif %}
+                        <a href="#" data-location-id='{{ location.id }}'>{{ location.name }}</a>
+
+                            <!-- Check if Deployment exists for the location. If so, include mooring sub-locations -->
+                            {% if location.deployment.exists %}
+                                <ul>
+                                {% for dep in location.deployment.all %}
+                                           <li data-jstree='{"icon":"fa fa-plus"}' id="{{ location.id }}_{{ dep.id }}">
+                                               <a href="{% url 'deployments:deployment_detail' dep.id location.id %}" data-location-id='{{ location.id }}'>{{ dep.deployment_number }}
+                                                  {% if dep.final_location %} ({{ dep.final_location.location_id }}){% endif %}</a>
+
+
+                                           </li>
+                                {% endfor %}
+                                </ul>
+                            {% endif %}
+
+
+
+
+                {% for level in structure.closed_levels %}</li></ul>{% endfor %}
+            {% endfor %}
+
+
+
+    </div>

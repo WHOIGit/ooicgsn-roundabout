@@ -1,0 +1,21 @@
+{% load mptt_tags %}
+
+<ul>
+    {% recursetree locations %}
+        <li data-jstree='{"icon":"fa fa-map-marker"}' id="locations_{{ node.id }}">
+            <a href="#" data-detail-url="{% url 'locations:ajax_location_detail' node.id %}" data-node-id="{{ node.id }}">
+                {{ node.name }} {% if node.location_id %} ({{ node.location_id }}) {% endif %}
+            </a>
+            {% if not node.is_leaf_node %}
+                <ul class="children">
+                    {{ children }}
+                </ul>
+            {% endif %}
+        </li>
+    {% endrecursetree %}
+</ul>
+
+
+{% block javascript %}
+
+{% endblock javascript %}

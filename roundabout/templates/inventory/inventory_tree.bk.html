@@ -1,0 +1,31 @@
+
+{% load mptt_tags %}
+{% load inventory_tags %}
+{% load parts_tags %}
+
+{% get_inventory_list_by_location location_pk dep_pk as inventory %} 
+{% get_parts_list_by_location location_pk as nodes %} 
+
+
+    
+        {% recursetree nodes %}
+        
+        
+        {% for i in inventory %}
+            {% if node.id == i.part.id %}
+            <li class="alert alert-primary">
+                <a href="{% url 'parts:parts_detail' node.id %}?loc_id={{ location_pk }}">{{ node.name }} - {{ i.serial_number }}</a>
+                {% if not node.is_leaf_node %}
+                    <ul class="children">
+                        {{ children }}
+                    </ul>
+                {% endif %}
+            </li>
+            {% endif %}  
+        {% endfor %}
+
+        {% endrecursetree %}
+
+
+
+    

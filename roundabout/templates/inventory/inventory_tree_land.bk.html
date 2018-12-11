@@ -1,0 +1,36 @@
+
+{% load mptt_tags %}
+{% load inventory_tags %}
+
+{% get_inventory_list_by_location location_pk as inventory %} 
+
+
+    
+       
+        
+        
+        {% for i in inventory %}
+
+        {% get_part_by_inventory i.part.id as part_tree %} 
+
+            {% for part,structure in part_tree|tree_info %}
+
+                {% if structure.new_level %}<ul><li>{% else %}</li><li>{% endif %}
+                    {{ part.name }} - {{ i.serial_number }}
+               
+             {% for level in structure.closed_levels %}</li></ul>{% endfor %}    
+
+             {% endfor %}
+            
+           <!-- <li class="alert alert-primary">
+                <a href="">{{ i.part.name }} - {{ i.serial_number }} {% if i.part.parent_id %}  - {{ i.part.parent_id }} {% endif %} -  {{ part }}</a>
+            </li> -->
+
+
+        {% endfor %}
+
+
+
+
+
+    

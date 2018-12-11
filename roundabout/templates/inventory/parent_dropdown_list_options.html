@@ -1,0 +1,4 @@
+<option value="">---------</option>
+{% for parent in parents %}
+<option value="{{ parent.pk }}">{{ parent.part.name }} - {{ parent.serial_number }}</option>
+{% endfor %}

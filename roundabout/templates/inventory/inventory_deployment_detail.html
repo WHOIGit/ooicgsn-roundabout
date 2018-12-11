@@ -1,0 +1,51 @@
+
+{% load static i18n %}
+
+                <div class="card-header"><h3>Deployment {{ deployment.deployment_number }} - {{ deployment.final_location.location_id }}</h3></div>
+
+                <div class="card-body">
+
+                    <div class="dropdown float-right">
+                      <button id="action" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-primary">
+                        Choose Action
+                      </button>
+                      <div class="dropdown-menu" aria-labelledby="action">
+                            <a class="dropdown-item" href="#">Update Completion %</a>
+                            <a class="dropdown-item" href="{% url 'deployments:deployment_deploy_confirm' deployment.id %}">Deploy to Sea</a>
+                      </div>
+                    </div>
+
+                    <p>Current Location: {{ deployment.location.name }}</p>
+                    <p>Deployment Number: {{ deployment.deployment_number }}</p>
+                    <p>Deployment ID: {{ deployment.final_location.location_id }}</p>
+
+                    <hr>
+
+                    <h4>Percent Complete</h4>
+
+                    <div class="progress" style="height: 20px;">
+                      <div class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25%</div>
+                    </div>
+
+
+
+
+
+
+                </div>
+
+
+{% block javascript %}
+
+
+
+<script>
+
+$(document).ready(function() {
+
+
+});
+</script>
+
+
+{% endblock javascript %}

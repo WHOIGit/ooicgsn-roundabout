@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% load mptt_tags %}
+
+{% block title %}Inventory{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-md-5 navtree-container">
+
+        {% include "inventory/parttype_filter.html" %}
+
+        <h2>Inventory</h2>
+
+        <div id="jstree-navtree" data-navtree-url="{% url 'inventory:ajax_load_inventory_navtree' %}"
+                                 data-node-type="{{ node_type }}">
+            <img src="{% static 'images/loading-icon.gif' %}" class="loading-icon"/>
+            <!-- AJAX navtree inserted here! -->
+        </div>
+
+    </div>
+    <div class="col-md-7 inventory-detail">
+
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="parts-add-btn">
+                    <a href="#" data-create-url="{% url 'inventory:ajax_inventory_add' %}" role="button" class="btn btn-primary">Add Inventory</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="detail-view">
+
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block javascript %}
+
+
+{% endblock javascript %}

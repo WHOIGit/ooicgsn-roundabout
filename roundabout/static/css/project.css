@@ -1,0 +1,209 @@
+/* These styles are generated from project.scss. */
+
+.alert-debug {
+    color: black;
+    background-color: white;
+    border-color: #d6e9c6;
+}
+
+.alert-error {
+    color: #b94a48;
+    background-color: #f2dede;
+    border-color: #eed3d7;
+}
+
+/* Global styles */
+
+.font-small {
+    font-size: .9rem;
+}
+
+/* Display django-debug-toolbar.
+   See https://github.com/django-debug-toolbar/django-debug-toolbar/issues/742
+   and https://github.com/pydanny/cookiecutter-django/issues/317
+*/
+[hidden][style="display: block;"] {
+    display: block !important;
+}
+
+.container-fluid {
+    max-width: 2000px;
+}
+
+.navtree-container {
+    height:100vh;
+    overflow-y: scroll;
+}
+
+#jstree_parts,
+#jstree_parts_locations {
+    font-size: 14px;
+}
+
+.loading-icon {
+    width: 100%;
+    max-width: 600px;
+}
+
+/* Base Template styling */
+
+.navbar-brand {
+    width: 80px;
+}
+
+svg#navbar-logo {
+    fill: #25578a;
+    float: left;
+    width: 100%;
+}
+
+#home-logo-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+svg#home-logo {
+    fill: #25578a;
+    width: 100%;
+}
+
+/* Part Templates styling */
+
+.parts-add-btn {
+    float: right;
+}
+
+.parts-delete {
+    float: right;
+}
+
+#parts-form #id_parent,
+#parts-form #id_location  {
+    max-height:500px;
+    overflow-y: scroll;
+}
+
+#parts-form #id_parent li,
+#parts-form #id_location li {
+    list-style: none;
+}
+
+#parts-form #id_location ul:nth-child(1) {
+    padding-left: 0px;
+}
+
+.add-row {
+    display:block;
+    margin-top:15px;
+}
+.add-row:before{
+    font-family: FontAwesome;
+    content: "\f055";
+    margin-right: 0.3em;
+
+}
+
+.delete-row {
+    color: red;
+}
+
+.delete-row:before{
+    font-family: FontAwesome;
+    content: "\f056";
+    margin-right: 0.3em;
+    color: red;
+}
+
+/* Inventory Templates styling */
+
+#filter-part-type {
+    float: right;
+    margin-top: 10px;
+}
+
+a.grey {
+    color: #bbb !important;
+}
+
+a.red {
+    color: red !important;
+}
+
+a.blue {
+    color: #007bff !important;
+}
+
+a.wh {
+    color: #eee !important;
+}
+
+#inventory-tabs table th {
+    border-top: none;
+}
+
+#inventory-tabs .list-group-item {
+    padding-right: 0;
+}
+
+#inventory-tabs .list-group-item a.subassembly-name {
+    display:inline-block;
+    height:50px;
+    max-width: 300px;
+}
+
+#add-subassembly-btn {
+    margin: 20px 0;
+}
+
+.action-table {
+    font-size: 12px;
+}
+
+#history {
+  max-height:500px;
+  overflow-y: scroll;
+}
+
+#destination li {
+    list-style: none;
+    padding-top: 10px;
+
+}
+
+#collapseBarCode td {
+    padding: 20px;
+}
+
+#print-qrcode {
+    margin-bottom: 10px;
+}
+
+.print-code img,
+.print-code-cable img {
+    max-width: 200px;
+}
+
+/* Inventory forms */
+
+#div_id_flag {
+    color: #dc3545;
+}
+
+#hint_id_serial_number.text-muted:hover {
+    color: #007bff !important;
+    cursor: pointer;
+}
+
+.summernoteinplacewidget.form-control,
+.summernotewidget.form-control {
+    height: auto;
+    padding: 0;
+    border: none;
+}
+
+/* Footer */
+
+footer {
+    background-color: white;
+    color: white;
+}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% load mptt_tags %}
+
+
+{% block title %}Deployments{% endblock %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-md-5">
+            <h2>Deployments</h2>
+
+            <div id="jstree-navtree" data-navtree-url="{% url 'deployments:ajax_load_deployment_navtree' %}"
+                                     data-node-type="{{ node_type }}">
+                <!-- AJAX navtree inserted here! -->
+            </div>
+
+        </div>
+        <div class="col-md-7 inventory-detail">
+
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <div class="parts-add-btn">
+                        <a href="#" data-create-url="{% url 'deployments:ajax_deployment_add' %}" role="button" class="btn btn-primary" id="deployment-add-btn">Add Deployment</a>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="card" id="detail-view">
+
+                <!-- AJAX detail templates inserted here! -->
+                {% include "inventory/ajax_deployment_detail.html" %}
+
+            </div>
+        </div>
+    </div>
+
+
+{% endblock content %}
+
+{% block javascript %}
+
+<script>
+$(document).ready(function() {
+
+    /* AJAX functions for Nav Tree links */
+    $('#jstree-navtree').on('click','a',function(){
+        var locationID = $(this).attr('data-location-id');
+        var addHref = '{% url 'deployments:ajax_deployment_add' %}';
+        $(".parts-add-btn a").attr("data-create-url", addHref + locationID);
+
+    });
+
+
+});
+
+</script>
+
+{% endblock javascript %}

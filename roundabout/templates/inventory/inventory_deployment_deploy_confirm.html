@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% load mptt_tags %}
+{% load crispy_forms_tags %}
+
+{% block title %}Inventory{% endblock %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-md-5">
+            <h2>Inventory</h2>
+
+            {% include "inventory/inventory_location_list.html" %}
+        </div>
+        <div class="col-md-7 inventory-detail">
+
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <div class="parts-add-btn">
+                        <a href="{% url 'inventory:inventory_add' current_location %}" role="button" class="btn btn-primary" id="inventory-add-btn">Add Inventory</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h3>Deployment {{ deployment.deployment_number }} - {{ deployment.final_location.location_id }}</h3></div>
+
+                <div class="card-body">
+
+                    <div class="dropdown float-right">
+                      <button id="action" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-primary">
+                        Choose Action
+                      </button>
+                      <div class="dropdown-menu" aria-labelledby="action">
+                            <a class="dropdown-item" href="#">Update Completion %</a>
+                            <a class="dropdown-item" href="#">Deploy to Sea</a>
+                      </div>
+                    </div>
+
+                    <p>Current Location: {{ deployment.location.name }}</p>
+                    <p>Deployment Number: {{ deployment.deployment_number }}</p>
+                    <p>Deployment ID: {{ deployment.final_location.location_id }}</p>
+
+                    <hr>
+
+                        <h4>Ready to move this Deployment to Sea?</h4>
+
+                        <a href=""
+                            class="btn btn-danger"
+                            role="button">Confirm Deployment to Sea</a>
+
+                    <hr>
+
+                    <h4>Percent Complete</h4>
+
+                    <div class="progress" style="height: 20px;">
+                      <div class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25%</div>
+                    </div>
+
+
+
+
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock content %}
+
+{% block javascript %}
+
+
+
+<script>
+
+$(document).ready(function() {
+    {% if parent.id %}
+        var inventory_id = {{ parent.id }} ;
+    {% elif inventory_item.id %}
+        var inventory_id = {{ inventory_item.id }} ;
+        var inventory_part_id = {{ inventory_item.part.id }}
+    {% elif deployment.id %}
+        var inventory_id = 'dep' + {{ deployment.id }} ;
+    {% else %}
+        var inventory_id = '1' ;
+        var inventory_part_id = '';
+    {% endif %}
+
+    var part_id = '{{ current_location }}' + '_' + inventory_id ;
+    console.log(part_id);
+    $("#jstree_parts").jstree(true).select_node(part_id);
+    //$("#jstree_parts").jstree(true).open_node(part_id);
+
+
+});
+</script>
+
+
+{% endblock javascript %}

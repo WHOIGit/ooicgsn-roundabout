@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% load mptt_tags %}
+{% load common_tags %}
+
+{% block title %}Mooring Templates{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-md-5 navtree-container">
+        <h2>Mooring Templates</h2>
+
+        {% include "moorings/parttype_filter.html" %}
+
+        <div id="jstree-navtree" data-navtree-url="{% url 'moorings:ajax_load_moorings_navtree' %}"
+                                 data-node-type="{{ node_type }}">
+            <img src="{% static 'images/loading-icon.gif' %}" class="loading-icon"/>
+            <!-- AJAX navtree inserted here! -->
+        </div>
+
+    </div>
+    <div class="col-md-7 inventory-detail">
+
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="parts-add-btn">
+                    <a href="#" data-create-url="{% url 'moorings:ajax_moorings_add' %}" role="button" class="btn btn-primary">Add Part to Mooring</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="detail-view">
+
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block javascript %}
+
+{% endblock javascript %}

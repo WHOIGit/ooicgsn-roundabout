@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% load mptt_tags %}
+
+{% block title %}Part Templates{% endblock %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Part Templates</h2>
+
+            {% include "parts/part_location_list.html" %}
+        </div>
+
+
+        <div class="col-md-6 parts-detail">
+
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <div class="parts-add-btn">
+                        <a href="{% url 'parts:parts_add' %}" role="button" class="btn btn-primary">Add Part Template</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h3>Add Existing Subassembly to {{ parent.name }}</h3></div>
+
+                <div class="card-body">
+
+                    <p>The following Subassembly Part Templates are available for this Part.</p>
+
+                <ul class="list-group list-group-flush">
+
+                {% if parts %}
+
+                      {% for part in parts %}
+
+                                  <li class="list-group-item">
+                                      <div >
+                                      {{ part.name }}
+
+                                      <a href="{% url 'parts:parts_subassembly_existing_add' part.id parent.id current_location %}"
+                                          class="btn btn-primary btn-sm float-right"
+                                          role="button">Add</a>
+
+
+                                      </div>
+                                  </li>
+
+                      {% endfor %}
+                {% else %}
+                    <p>NONE</p>
+                {% endif %}    
+
+                  </ul>
+
+        </div>
+    </div>
+</div>
+</div>
+
+
+{% endblock content %}
+
+{% block javascript %}
+
+<script>
+
+$(document).ready(function() {
+
+    var part_id = '{{ current_location }}' + '_' + '{{ parent.id }}' ;
+
+    $('#jstree_parts').jstree(true).select_node(part_id);
+
+
+});
+</script>
+
+
+{% endblock javascript %}

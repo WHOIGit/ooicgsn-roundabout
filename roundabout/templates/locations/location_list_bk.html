@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% load mptt_tags %}
+
+{% block title %}Locations{% endblock %}
+
+{% block content %}
+
+<div class="parts-add-btn">
+    <a href="{% url 'locations:locations_add' %}" role="button" class="btn btn-primary">Add Location</a>
+</div>
+
+  <h2>Locations</h2>
+
+    {% include "locations/locations_location_list.html" %}
+
+{% endblock content %}

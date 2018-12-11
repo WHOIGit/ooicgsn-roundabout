@@ -1,0 +1,6 @@
+{% if not filter_type %}
+<option value="">---------</option>
+{% endif %}
+{% for part in parts %}
+<option value="{{ part.pk }}">{{ part.name }}</option>
+{% endfor %}

@@ -1,0 +1,38 @@
+
+                <div class="card-header">
+                    <h3>{{ location.name }}</h3>
+                    
+                </div>
+
+                <div class="card-body">
+
+                    {% if location.location_type %}<p>Location Type: {{ location.location_type }}</p>{% endif %}
+                    {% if location.location_id %}<p>Location ID: {{ location.location_id }}</p>{% endif %}
+                    <p>Parent: {{ location.parent.name }}</p>
+
+
+
+
+{% block javascript %}
+
+<script>
+$(document).ready(function() {
+
+
+    $('.ajax-btn').on('click','a',function(){
+        var url = $(this).attr("data-update-url");
+        console.log(url);
+
+        $.ajax({
+            url: url,
+            success: function (data) {
+              $("#detail-view").html(data);
+            }
+        });
+    });
+
+
+});
+</script>
+
+{% endblock javascript %}
