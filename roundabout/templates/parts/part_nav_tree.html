@@ -1,0 +1,24 @@
+
+{% load parts_tags %}
+
+{% get_parts_list_by_type type_pk as parts %}
+
+    <ul>
+        {% for part in parts%}
+
+            <li {% if part.part_type.name == 'Electrical' %}
+                        data-jstree='{"icon":"fa fa-bolt"}'
+                    {% elif part.part_type.name == 'Mechanical' %}
+                        data-jstree='{"icon":"fa fa-wrench"}'
+                    {% elif part.part_type.name == 'Cable' %}
+                        data-jstree='{"icon":"fa fa-plug"}'
+                    {% elif part.part_type.name == 'Instrument' %}
+                        data-jstree='{"icon":"fa fa-camera"}'
+                    {% elif part.part_type.name == 'Structural' %}
+                        data-jstree='{"icon":"fa fa-cubes"}'
+                    {% endif %}
+                     id="{{ part.id }}"><a href="{% url 'parts:parts_detail' part.id %}">{{ part.name }}</a></li>
+
+
+        {% endfor %}
+    </ul>

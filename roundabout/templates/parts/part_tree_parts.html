@@ -1,0 +1,22 @@
+
+    <ul>
+        {% for part in parts %}
+
+            <li {% if part.part_type.name == 'Electrical' %}
+                        data-jstree='{"icon":"fa fa-bolt"}'
+                    {% elif part.part_type.name == 'Mechanical' %}
+                        data-jstree='{"icon":"fa fa-wrench"}'
+                    {% elif part.part_type.name == 'Cable' %}
+                        data-jstree='{"icon":"fa fa-plug"}'
+                    {% elif part.part_type.name == 'Instrument' %}
+                        data-jstree='{"icon":"fa fa-camera"}'
+                    {% elif part.part_type.name == 'Structural' %}
+                        data-jstree='{"icon":"fa fa-cubes"}'
+                    {% endif %}
+                     id="parts_{{ part.id }}"><a href="#" data-detail-url="{% url 'parts:ajax_parts_detail' part.id %}"
+                        data-node-id="{{ part.id }}"
+                        data-node-type="detail">{{ part.name }}</a></li>
+
+
+        {% endfor %}
+    </ul>

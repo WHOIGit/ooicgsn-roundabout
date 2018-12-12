@@ -1,0 +1,23 @@
+
+{% load mptt_tags %}
+<div id="jstree_parts_templates">
+
+
+        {% for type,structure in part_types|tree_info %}
+
+                {% if structure.new_level %}
+                    <ul><li data-jstree='{"icon":"fa fa-cog"}'>
+                {% else %}
+            </li><li data-jstree='{"icon":"fa fa-cog"}'>
+                {% endif %}
+                    <a href="#" data-type-id='{{ type.id }}'>{{ type.name }}</a>
+                    {% if type.parts.exists %}
+
+                        {% include "parts/part_nav_tree.html" with type_pk=type.id  %}
+
+                    {% endif %}
+
+             {% for level in structure.closed_levels %}</li></ul>{% endfor %}
+
+        {% endfor %}
+    </div>

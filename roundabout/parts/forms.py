@@ -1,0 +1,56 @@
+from django import forms
+from django.core.exceptions import ValidationError
+from django.forms.models import inlineformset_factory
+
+from .models import Part, Documentation
+from roundabout.locations.models import Location
+from roundabout.parts.widgets import PartParentWidget, PartLocationWidget
+
+import re
+
+
+class PartForm(forms.ModelForm):
+
+    part_number = forms.CharField(strip=True, help_text='Suggested format is ####-#####-#####', )
+
+    class Meta:
+        model = Part
+        fields = ['part_number', 'name', 'friendly_name',  'revision', 'part_type', 'is_equipment', 'unit_cost', 'refurbishment_cost', 'note']
+        labels = {
+            'parent': 'Parent Assembly',
+            'is_equipment': 'Is this part considered equipment?',
+            'note': 'Part Template Notes'
+        }
+"""
+    def clean_part_number(self):
+        part_number = self.cleaned_data['part_number']
+        if not re.match(r'^[a-zA-Z0-9_]{4}-[a-zA-Z0-9_]{5}-[a-zA-Z0-9_]{5}$', part_number):
+            part_number = part_number + '-00001'
+        if not re.match(r'^[a-zA-Z0-9_]{4}-[a-zA-Z0-9_]{5}-[a-zA-Z0-9_]{5}$', part_number):
+            raise ValidationError('Part Number in wrong format. Must be ####-#####-#####')
+        return part_number
+"""
+
+DocumentationFormset = inlineformset_factory(Part, Documentation, fields=('name', 'doc_type', 'doc_link'), extra=1, can_delete=True)
+
+
+class PartSubassemblyAddForm(forms.ModelForm):
+
+    class Meta:
+        model = Part
+        fields = ['name', 'revision', 'part_number' ]
+        labels = {
+        'parent': 'Parent Assembly'
+    }
+
+    def __init__(self, *args, **kwargs):
+        super(PartSubassemblyAddForm, self).__init__(*args, **kwargs)
+        self.fields['location'].queryset = Location.objects.filter(
+            tree_id=2).filter(level__gt=0).prefetch_related('parts')
+
+
+class PartSubassemblyEditForm(forms.ModelForm):
+
+    class Meta:
+        model = Part
+        fields = ['name' ]

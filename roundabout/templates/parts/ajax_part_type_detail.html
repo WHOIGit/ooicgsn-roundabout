@@ -1,0 +1,52 @@
+
+{% load static i18n %}
+{% load mptt_tags %}
+{% load humanize %}
+{% load parts_tags %}
+
+
+                <div class="card-header"><h3>{{ part_type.name }}</h3></div>
+
+                <div class="card-body">
+
+
+
+
+                </div>
+
+
+
+{% block javascript %}
+
+<script>
+
+$(document).ready(function() {
+    // AJAX functions for Inventory Detail template
+    $('.ajax-detail-link').on('click','a',function(){
+        var url = $(this).attr("data-detail-url");
+        var nodeID = $(this).attr("data-node-id");
+        console.log(url);
+
+        $.ajax({
+            url: url,
+
+            success: function (data) {
+              $("#detail-view").html(data);
+            }
+        });
+    });
+
+    /* $('a.link-to-tab').click(function (e) {
+      e.preventDefault();
+      $('a[href="' + $(this).attr('href') + '"]').tab('show');
+    }) */
+
+    $(function () {
+        var hash = window.location.hash;
+        hash && $('ul.nav a[href="' + hash + '"]').tab('show');
+    });
+});
+</script>
+
+
+{% endblock javascript %}

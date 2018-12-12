@@ -1,0 +1,23 @@
+
+{% load mptt_tags %}
+
+        {% for type,structure in part_types|tree_info %}
+
+                {% if structure.new_level %}
+                    <ul><li data-jstree='{"icon":"fa fa-cog"}' id="part_type_{{ type.id }}">
+                {% else %}
+            </li><li data-jstree='{"icon":"fa fa-cog"}' id="part_type_{{ type.id }}">
+                {% endif %}
+                    <a href="#"
+                            data-detail-url="{% url 'parts:ajax_parts_type_detail' type.id %}"
+                            data-type-id='{{ type.id }}'
+                            data-node-type="part_type">{{ type.name }}</a>
+                    {% if type.parts.exists %}
+
+                        {% include "parts/part_tree_parts.html" with parts=type.parts.all %}
+
+                    {% endif %}
+
+             {% for level in structure.closed_levels %}</li></ul>{% endfor %}
+
+        {% endfor %}

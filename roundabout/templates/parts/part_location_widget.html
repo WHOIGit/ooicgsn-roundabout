@@ -1,0 +1,18 @@
+{% load mptt_tags %}
+
+<div multiple=multiple class="selectmultiple form-control" id="id_{{ widget.name }}">
+
+    {% for location,structure in locations_form_options|tree_info %}
+        {% if structure.new_level %}
+            <ul><li>
+        {% else %}
+            </li><li>
+        {% endif %}
+
+                <input type="checkbox" name="{{ widget.name }}" value="{{ location.id|stringformat:'s' }}" {% if location.id|stringformat:'s' in widget.value %}checked{% endif %}>
+                {{ location.name }} {% if location.location_id %} ({{ location.location_id }}) {% endif %}
+
+        {% for level in structure.closed_levels %}</li></ul>{% endfor %}
+    {% endfor %}
+
+</div>

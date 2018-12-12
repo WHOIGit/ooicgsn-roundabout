@@ -1,0 +1,120 @@
+
+{% load static i18n %}
+{% load mptt_tags %}
+{% load humanize %}
+{% load parts_tags %}
+
+
+                <div class="card-header" data-object-id="{{ part_template.id }}"><h3>{{ part_template.name }}</h3></div>
+
+                <div class="card-body">
+
+                    <div class="dropdown float-right">
+                      <button id="action" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-primary">
+                        Choose Action
+                      </button>
+                      <div class="dropdown-menu ajax-detail-link" aria-labelledby="action">
+                          <a class="dropdown-item" href="#"
+                              data-detail-url="{% url 'parts:ajax_parts_update' part_template.id %}"
+                              data-node-id="{{ part_template.id }}"
+                              data-node-type="detail">Edit Part Template</a>
+                      </div>
+                    </div>
+
+
+                    <p>Revision: {{ part_template.revision }}</p>
+                    <p>Part Number: {{ part_template.part_number }}</p>
+                    <p>Part Type: {{ part_template.part_type }}</p>
+                    <p>Is Equipment: {{ part_template.is_equipment }}</p>
+                    <p>Unit Cost: ${{ part_template.unit_cost|intcomma }}</p>
+                    <p>Refurbishment Cost: ${{ part_template.refurbishment_cost|intcomma }}</p>
+                    <p>Current Inventory: {{ part_template.get_part_inventory_count }}</p>
+                    {% if part_template.note %}
+                        <p>Part Template Notes: {{ part_template.note }}</p>
+                    {% endif %}
+
+                    <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+
+                        {% if part_template.documentation.all %}
+                          <li class="nav-item">
+                            <a class="nav-link active" id="documentation-tab" data-toggle="tab" href="#documentation" role="tab" aria-controls="documentation" aria-selected="false">Documentation</a>
+                          </li>
+                        {% endif %}
+
+
+
+                    </ul>
+
+                    <div class="tab-content" id="inventory-tabs">
+
+                        {% if part_template.documentation.all %}
+
+                        <div class="tab-pane fade show active" id="documentation" role="tabpanel" aria-labelledby="documentation-tab">
+                                <table class="table table-tight">
+                                    <thead>
+                                      <th>Document</th>
+                                      <th class="text-right">Document Type</th>
+
+                                    </thead>
+                                    <tbody>
+                                      {% for document in  part_template.documentation.all %}
+                                    <tr>
+                                        <td><a href="{{ document.doc_link }}" target="_blank">{{ document.name }}</a></td>
+                                        <td class="text-right">{{ document.doc_type }}</td>
+                                    </tr>
+                                      {% endfor %}
+                                    </tbody>
+                              </table>
+                          </div>
+                        {% endif %}
+
+
+
+                    </div>
+
+
+
+                    <div class="ajax-detail-link">
+                        <hr>
+                        <a href="#" data-detail-url="{% url 'parts:ajax_parts_delete' part_template.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
+                    </div>
+
+
+                </div>
+
+
+
+{% block javascript %}
+
+<script>
+
+$(document).ready(function() {
+    // AJAX functions for Inventory Detail template
+    $('.ajax-detail-link').on('click','a',function(){
+        var url = $(this).attr("data-detail-url");
+        var nodeID = $(this).attr("data-node-id");
+        console.log(url);
+
+        $.ajax({
+            url: url,
+
+            success: function (data) {
+              $("#detail-view").html(data);
+            }
+        });
+    });
+
+    /* $('a.link-to-tab').click(function (e) {
+      e.preventDefault();
+      $('a[href="' + $(this).attr('href') + '"]').tab('show');
+    }) */
+
+    $(function () {
+        var hash = window.location.hash;
+        hash && $('ul.nav a[href="' + hash + '"]').tab('show');
+    });
+});
+</script>
+
+
+{% endblock javascript %}
