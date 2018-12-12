@@ -3,6 +3,7 @@ from .base import env
 
 # GENERAL
 # ------------------------------------------------------------------------------
+DEBUG = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = env('DJANGO_SECRET_KEY')
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
@@ -10,9 +11,9 @@ ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['roundabout.whoi.edu']
 
 # DATABASES
 # ------------------------------------------------------------------------------
-DATABASES['default'] = env.db('DATABASE_URL')  # noqa F405
-DATABASES['default']['ATOMIC_REQUESTS'] = True  # noqa F405
-DATABASES['default']['CONN_MAX_AGE'] = env.int('CONN_MAX_AGE', default=60)  # noqa F405
+DATABASES['default'] = env.db('DATABASE_URL')
+DATABASES['default']['ATOMIC_REQUESTS'] = True
+DATABASES['default']['CONN_MAX_AGE'] = env.int('CONN_MAX_AGE', default=60)
 
 # CACHES
 # ------------------------------------------------------------------------------
@@ -34,7 +35,7 @@ CACHES = {
 # https://docs.djangoproject.com/en/dev/ref/settings/#secure-proxy-ssl-header
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # https://docs.djangoproject.com/en/dev/ref/settings/#secure-ssl-redirect
-SECURE_SSL_REDIRECT = env.bool('DJANGO_SECURE_SSL_REDIRECT', default=True)
+#SECURE_SSL_REDIRECT = env.bool('DJANGO_SECURE_SSL_REDIRECT', default=True)
 # https://docs.djangoproject.com/en/dev/ref/settings/#session-cookie-secure
 SESSION_COOKIE_SECURE = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#csrf-cookie-secure
@@ -53,48 +54,48 @@ SECURE_CONTENT_TYPE_NOSNIFF = env.bool('DJANGO_SECURE_CONTENT_TYPE_NOSNIFF', def
 # STORAGES
 # ------------------------------------------------------------------------------
 # https://django-storages.readthedocs.io/en/latest/#installation
-INSTALLED_APPS += ['storages']  # noqa F405
+#INSTALLED_APPS += ['storages']  # noqa F405
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-AWS_ACCESS_KEY_ID = env('DJANGO_AWS_ACCESS_KEY_ID')
+#AWS_ACCESS_KEY_ID = env('DJANGO_AWS_ACCESS_KEY_ID')
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-AWS_SECRET_ACCESS_KEY = env('DJANGO_AWS_SECRET_ACCESS_KEY')
+#AWS_SECRET_ACCESS_KEY = env('DJANGO_AWS_SECRET_ACCESS_KEY')
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-AWS_STORAGE_BUCKET_NAME = env('DJANGO_AWS_STORAGE_BUCKET_NAME')
+#AWS_STORAGE_BUCKET_NAME = env('DJANGO_AWS_STORAGE_BUCKET_NAME')
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-AWS_QUERYSTRING_AUTH = False
+#AWS_QUERYSTRING_AUTH = False
 # DO NOT change these unless you know what you're doing.
-_AWS_EXPIRY = 60 * 60 * 24 * 7
+#_AWS_EXPIRY = 60 * 60 * 24 * 7
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-AWS_S3_OBJECT_PARAMETERS = {
-    'CacheControl': f'max-age={_AWS_EXPIRY}, s-maxage={_AWS_EXPIRY}, must-revalidate',
-}
+#AWS_S3_OBJECT_PARAMETERS = {
+#    'CacheControl': f'max-age={_AWS_EXPIRY}, s-maxage={_AWS_EXPIRY}, must-revalidate',
+#}
 
 # STATIC
 # ------------------------
 
-STATICFILES_STORAGE = 'config.settings.production.StaticRootS3Boto3Storage'
-STATIC_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/static/'
+#STATICFILES_STORAGE = 'config.settings.production.StaticRootS3Boto3Storage'
+#STATIC_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/static/'
 
 # MEDIA
 # ------------------------------------------------------------------------------
 
 # region http://stackoverflow.com/questions/10390244/
 # Full-fledge class: https://stackoverflow.com/a/18046120/104731
-from storages.backends.s3boto3 import S3Boto3Storage  # noqa E402
+#from storages.backends.s3boto3 import S3Boto3Storage  # noqa E402
 
 
-class StaticRootS3Boto3Storage(S3Boto3Storage):
-    location = 'static'
+#class StaticRootS3Boto3Storage(S3Boto3Storage):
+#    location = 'static'
 
 
-class MediaRootS3Boto3Storage(S3Boto3Storage):
-    location = 'media'
-    file_overwrite = False
+#class MediaRootS3Boto3Storage(S3Boto3Storage):
+#    location = 'media'
+#    file_overwrite = False
 
 
 # endregion
-DEFAULT_FILE_STORAGE = 'config.settings.production.MediaRootS3Boto3Storage'
-MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/media/'
+#DEFAULT_FILE_STORAGE = 'config.settings.production.MediaRootS3Boto3Storage'
+#MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/media/'
 
 # TEMPLATES
 # ------------------------------------------------------------------------------
@@ -112,14 +113,29 @@ TEMPLATES[0]['OPTIONS']['loaders'] = [  # noqa F405
 # EMAIL
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#default-from-email
-DEFAULT_FROM_EMAIL = env(
-    'DJANGO_DEFAULT_FROM_EMAIL',
-    default='Roundabout <noreply@roundabout.whoi.edu>'
-)
-# https://docs.djangoproject.com/en/dev/ref/settings/#server-email
+DEFAULT_FROM_EMAIL = env('DJANGO_DEFAULT_FROM_EMAIL',
+                         default='OOI Orion <webapp-support@whoi.edu>')
+EMAIL_SUBJECT_PREFIX = env('DJANGO_EMAIL_SUBJECT_PREFIX', default='[OOI Orion]')
 SERVER_EMAIL = env('DJANGO_SERVER_EMAIL', default=DEFAULT_FROM_EMAIL)
-# https://docs.djangoproject.com/en/dev/ref/settings/#email-subject-prefix
-EMAIL_SUBJECT_PREFIX = env('DJANGO_EMAIL_SUBJECT_PREFIX', default='[Roundabout]')
+
+# Anymail with Mailgun
+#INSTALLED_APPS += ['anymail', ]
+#ANYMAIL = {
+#    'MAILGUN_API_KEY': env('DJANGO_MAILGUN_API_KEY'),
+#    'MAILGUN_SENDER_DOMAIN': env('MAILGUN_SENDER_DOMAIN')
+#}
+#EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Host for sending e-mail.
+EMAIL_HOST = 'outbox.whoi.edu'
+
+# Port for sending e-mail.
+EMAIL_PORT = 25
+
+# SMTP authentication information for EMAIL_HOST.
+EMAIL_HOST_USER = 'webapp-support'
+EMAIL_USE_TLS = True
 
 # ADMIN
 # ------------------------------------------------------------------------------
@@ -129,13 +145,13 @@ ADMIN_URL = env('DJANGO_ADMIN_URL')
 # Anymail (Mailgun)
 # ------------------------------------------------------------------------------
 # https://anymail.readthedocs.io/en/stable/installation/#installing-anymail
-INSTALLED_APPS += ['anymail']  # noqa F405
-EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
+#INSTALLED_APPS += ['anymail']  # noqa F405
+#EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
 # https://anymail.readthedocs.io/en/stable/installation/#anymail-settings-reference
-ANYMAIL = {
-    'MAILGUN_API_KEY': env('MAILGUN_API_KEY'),
-    'MAILGUN_SENDER_DOMAIN': env('MAILGUN_DOMAIN')
-}
+#ANYMAIL = {
+#    'MAILGUN_API_KEY': env('MAILGUN_API_KEY'),
+#    'MAILGUN_SENDER_DOMAIN': env('MAILGUN_DOMAIN')
+#}
 
 # Gunicorn
 # ------------------------------------------------------------------------------

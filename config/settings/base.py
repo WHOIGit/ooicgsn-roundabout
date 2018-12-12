@@ -60,7 +60,6 @@ DJANGO_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.postgres',
     'django.contrib.humanize',
-    # 'django.contrib.humanize', # Handy template tags
     'django.contrib.admin',
 ]
 THIRD_PARTY_APPS = [
@@ -166,7 +165,7 @@ STATICFILES_FINDERS = [
 # MEDIA
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#media-root
-MEDIA_ROOT = str(APPS_DIR('media'))
+MEDIA_ROOT = str(ROOT_DIR('media'))
 # https://docs.djangoproject.com/en/dev/ref/settings/#media-url
 MEDIA_URL = '/media/'
 
