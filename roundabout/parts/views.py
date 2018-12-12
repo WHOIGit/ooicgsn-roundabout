@@ -428,9 +428,8 @@ class PartsDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
 
 # AJAX Views
 
-class PartsTypeAjaxDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
+class PartsTypeAjaxDetailView(LoginRequiredMixin , DetailView):
     model = PartType
     context_object_name = 'part_type'
     template_name='parts/ajax_part_type_detail.html'
-    permission_required = 'parts.add_part'
     redirect_field_name = 'home'
