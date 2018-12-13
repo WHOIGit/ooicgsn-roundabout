@@ -143,6 +143,9 @@ class Action(models.Model):
     SUBCHANGE = 'subchange'
     ADDTODEPLOYMENT = 'addtodeployment'
     REMOVEFROMDEPLOYMENT = 'removefromdeployment'
+    DEPLOYMENTBURNIN = 'deploymentburnin'
+    DEPLOYMENTTOSEA = 'deploymenttosea'
+    DEPLOYMENTRECOVER = 'deploymentrecover'
     ASSIGNDEST = 'assigndest'
     REMOVEDEST = 'removedest'
     TEST = 'test'
@@ -158,6 +161,9 @@ class Action(models.Model):
         (SUBCHANGE, 'Subassembly Change'),
         (ADDTODEPLOYMENT, 'Add to Deployment'),
         (REMOVEFROMDEPLOYMENT, 'Remove from Deployment'),
+        (DEPLOYMENTBURNIN, 'Deployment Burnin'),
+        (DEPLOYMENTTOSEA, 'Deployment to Sea'),
+        (DEPLOYMENTRECOVER, 'Deployment Recovered'),
         (ASSIGNDEST, 'Assign Destination'),
         (REMOVEDEST, 'Remove Destination'),
         (TEST, 'Test'),

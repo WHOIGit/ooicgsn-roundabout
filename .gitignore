@@ -267,6 +267,7 @@ tags
 ### Project template
 
 roundabout/media/
+media/
 
 .pytest_cache/
 

@@ -1850,21 +1850,37 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
 
     def form_valid(self, form):
 
-        if self.kwargs['action_type'] == 'burnin':
+        action_type = self.kwargs['action_type']
+
+        if action_type == 'burnin':
             self.object.detail = 'Burn In initiated at %s. ' % (self.object.location)
+            action_type_inventory = 'deploymentburnin'
 
-        if self.kwargs['action_type'] == 'deploy':
+        if action_type == 'deploy':
             self.object.detail = 'Deployed to Sea: %s. ' % (self.object.final_location)
+            action_type_inventory = 'deploymenttosea'
 
-        if self.kwargs['action_type'] == 'recover':
+        if action_type == 'recover':
             self.object.detail = 'Recovered from Sea to %s. ' % (self.object.location)
+            action_type_inventory = 'deploymentrecover'
 
-        if self.kwargs['action_type'] == 'retire':
+        if action_type == 'retire':
             self.object.detail = 'Retired from service.'
+            action_type_inventory = 'removefromdeployment'
 
         action_form = form.save()
-        action_record = DeploymentAction.objects.create(action_type=self.kwargs['action_type'], detail=self.object.detail, location_id=self.object.location_id,
+        action_record = DeploymentAction.objects.create(action_type=action_type, detail=self.object.detail, location_id=self.object.location_id,
                                               user_id=self.request.user.id, deployment_id=self.object.id)
+
+        # Get all Inventory items on Deployment, match location and add Action
+        inventory_items = Inventory.objects.filter(deployment_id=self.object.id)
+        for item in inventory_items:
+            item.location = action_form.location
+            item.save()
+
+            action_detail = 'Deployment action: %s, moved to %s. ' % (action_type_inventory, self.object.location)
+            action_record = Action.objects.create(action_type=action_type_inventory, detail=action_detail, location_id=self.object.location_id,
+                                                  user_id=self.request.user.id, inventory_id=item.id)
 
         response = HttpResponseRedirect(self.get_success_url())
 
