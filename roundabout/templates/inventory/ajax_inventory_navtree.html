@@ -56,7 +56,7 @@
                                                   data-node-id="{{ dep.id }}"
                                                   data-location-id="{{ location.id }}"
                                                   data-node-type="detail">{{ dep.deployment.deployment_number }}
-                                                  {% if dep.deployment.final_location %} ({{ dep.deployment.final_location.location_id }}){% endif %} - {{ dep.created_at }}
+                                                  {% if dep.deployment.final_location.exists %} ({{ dep.deployment.final_location.location_id }}){% endif %} - {{ dep.created_at }}
 
                                               </a>
 
