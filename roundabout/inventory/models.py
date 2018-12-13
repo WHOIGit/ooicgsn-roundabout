@@ -1,3 +1,6 @@
+import datetime
+from datetime import timedelta
+
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -84,6 +87,7 @@ class Inventory(MPTTModel):
     test_result = models.NullBooleanField(blank=False, choices=TEST_RESULTS)
     test_type = models.CharField(max_length=20, choices=TEST_TYPES, null=True, blank=True)
     flag = models.BooleanField(choices=FLAG_TYPES, blank=False, default=False)
+    time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
     whoi_number = models.CharField(max_length=255, unique=False, null=False, blank=True)
     ooi_property_number = models.CharField(max_length=255, unique=False, null=False, blank=True)
 
@@ -101,6 +105,16 @@ class Inventory(MPTTModel):
     def get_descendants_with_self(self):
         tree = self.get_descendants(include_self=True)
         return tree
+
+    def update_time_at_sea(self):
+        # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
+        action_deploy_to_sea = Action.objects.filter(inventory=self).filter(action_type='deploymenttosea').latest('created_at')
+        action_recover = Action.objects.filter(inventory=self).filter(action_type='deploymentrecover').latest('created_at')
+        latest_time_at_sea =  action_recover.created_at - action_deploy_to_sea.created_at
+
+        # add to existing Time at Sea duration
+        self.time_at_sea = self.time_at_sea + latest_time_at_sea
+        self.save()
 
 
 class DeploymentSnapshot(models.Model):

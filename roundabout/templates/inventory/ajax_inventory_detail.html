@@ -195,6 +195,7 @@
     <p>Part Number: {{ inventory_item.part.part_number }}</p>
     <p>Revision: {{ inventory_item.part.revision }}</p>
     <p>Current Location: {{ inventory_item.location.name }}</p>
+    <p>Time at Sea: {{ inventory_item.time_at_sea }}
 
     {% if inventory_item.deployment %}
         <p>Current Deployment: {{ inventory_item.deployment.deployment_number }}</p>
@@ -255,7 +256,7 @@
         {% endif %}
 
         <li class="nav-item">
-          <a class="nav-link" id="part-template-tab" data-toggle="tab" href="#part-template" role="tab" aria-controls="part-template" aria-selected="false">Part Template</a>
+          <a class="nav-link" id="part-template-tab" data-toggle="tab" href="#part-template" role="tab" aria-controls="part-template" aria-selected="false">Part Specs</a>
         </li>
 
     </ul>

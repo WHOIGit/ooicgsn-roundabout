@@ -1884,6 +1884,10 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             action_record.detail = action_detail
             action_record.save()
 
+            #update Time at Sea if Recovered from Sea with model method
+            if action_type == 'recover':
+                item.update_time_at_sea()
+
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
