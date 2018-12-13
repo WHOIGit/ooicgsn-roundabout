@@ -106,8 +106,8 @@ class Inventory(MPTTModel):
         tree = self.get_descendants(include_self=True)
         return tree
 
+    # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
     def update_time_at_sea(self):
-        # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
         action_deploy_to_sea = Action.objects.filter(inventory=self).filter(action_type='deploymenttosea').latest('created_at')
         action_recover = Action.objects.filter(inventory=self).filter(action_type='deploymentrecover').latest('created_at')
         latest_time_at_sea =  action_recover.created_at - action_deploy_to_sea.created_at
@@ -115,6 +115,17 @@ class Inventory(MPTTModel):
         # add to existing Time at Sea duration
         self.time_at_sea = self.time_at_sea + latest_time_at_sea
         self.save()
+
+    # get the time at sea for the current deployment only (if item is at sea)
+    def current_deployment_time_at_sea(self):
+        root_location = self.location.get_root()
+        if root_location.name == 'Sea':
+            action_deploy_to_sea = Action.objects.filter(inventory=self).filter(action_type='deploymenttosea').latest('created_at')
+            now = timezone.now()
+            current_time_at_sea = now - action_deploy_to_sea.created_at
+            return current_time_at_sea
+        else:
+            return None
 
 
 class DeploymentSnapshot(models.Model):

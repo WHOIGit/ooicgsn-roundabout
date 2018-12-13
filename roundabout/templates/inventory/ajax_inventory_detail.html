@@ -1,6 +1,7 @@
 {% load static i18n %}
 {% load humanize %}
 {% load common_tags %}
+{% load inventory_tags %}
 {% load mptt_tags %}
 
 {% if inventory_item %}
@@ -195,7 +196,8 @@
     <p>Part Number: {{ inventory_item.part.part_number }}</p>
     <p>Revision: {{ inventory_item.part.revision }}</p>
     <p>Current Location: {{ inventory_item.location.name }}</p>
-    <p>Time at Sea: {{ inventory_item.time_at_sea }}
+    <p>Time at Sea: {{ inventory_item.time_at_sea|time_at_sea_display }}</p>
+    <p>Current Deployment Time at Sea: {{ inventory_item.current_deployment_time_at_sea }}
 
     {% if inventory_item.deployment %}
         <p>Current Deployment: {{ inventory_item.deployment.deployment_number }}</p>
