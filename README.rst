@@ -23,7 +23,7 @@ Django 2.0
 
 JS/CSS
 ------
-- jQuery 1.12
+- jQuery 3.3.1
 - jsTree 3.3
 - Bootstrap 4
 
