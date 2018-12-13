@@ -26,10 +26,16 @@ class Deployment(models.Model):
         ordering = ['location', 'deployment_number']
 
     def __str__(self):
-        return '%s (%s) - %s' % (self.deployment_number, self.final_location.location_id, self.location.name)
+        if self.final_location.location_id:
+            return '%s (%s) - %s' % (self.deployment_number, self.final_location.location_id, self.location.name)
+        else:
+            return '%s - %s' % (self.deployment_number, self.location.name)
 
     def get_deployment_label(self):
-        return '%s (%s)' % (self.deployment_number, self.final_location.location_id)
+        if self.final_location.location_id:
+            return '%s (%s)' % (self.deployment_number, self.final_location.location_id)
+        else:
+            return self.deployment_number
 
     def current_deployment_status(self):
         deployment_status = self.deployment_action.first()
