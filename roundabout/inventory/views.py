@@ -1878,9 +1878,11 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             item.location = action_form.location
             item.save()
 
-            action_detail = 'Deployment action: %s, moved to %s. ' % (action_type_inventory, self.object.location)
-            action_record = Action.objects.create(action_type=action_type_inventory, detail=action_detail, location_id=self.object.location_id,
+            action_record = Action.objects.create(action_type=action_type_inventory, detail='', location_id=self.object.location_id,
                                                   user_id=self.request.user.id, inventory_id=item.id)
+            action_detail = '%s, moved to %s. ' % (action_record.get_action_type_display(), self.object.location)
+            action_record.detail = action_detail
+            action_record.save()
 
         response = HttpResponseRedirect(self.get_success_url())
 
