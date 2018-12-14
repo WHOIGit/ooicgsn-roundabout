@@ -25,6 +25,7 @@
                                                   data-location-id="{{ location.id }}"
                                                   data-node-type="detail">{{ dep.deployment_number }}
                                                   {% if dep.final_location.exists %} ({{ dep.final_location.location_id }}){% endif %}
+                                                  {% if dep.current_deployment_status == 'deploy' %}<span class="badge badge-pill badge-primary">Deployed</span>{% endif %}
                                                   {% if dep.current_deployment_status == 'recover' %}<span class="badge badge-pill badge-warning">Recovered</span>{% endif %}
                                                   {% if dep.current_deployment_status == 'burnin' %}<span class="badge badge-pill badge-danger">Burn In</span>{% endif %}
                                                   {% if dep.current_deployment_status == 'create' %}<span class="badge badge-pill badge-success">Initial Build</span>{% endif %}
