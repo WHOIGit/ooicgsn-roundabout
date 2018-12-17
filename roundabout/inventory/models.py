@@ -127,6 +127,10 @@ class Inventory(MPTTModel):
         else:
             return None
 
+    # get the Total Time at Sea by adding historical sea time and current deployment sea time
+    def total_time_at_sea(self):
+        return self.time_at_sea + self.current_deployment_time_at_sea()
+
 
 class DeploymentSnapshot(models.Model):
     deployment = models.ForeignKey(Deployment, related_name='deployment_snapshot',
