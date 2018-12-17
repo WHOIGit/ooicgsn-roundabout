@@ -80,10 +80,11 @@ def get_part_by_inventory(part_pk):
 @register.filter
 def time_at_sea_display(duration):
     total_seconds = int(duration.total_seconds())
-    hours = total_seconds // 3600
+    days = total_seconds // (3600 * 24)
+    hours = (total_seconds % (3600 * 24)) // 3600
     minutes = (total_seconds % 3600) // 60
 
-    return '{} hours {} min'.format(hours, minutes)
+    return '{} days {} hours {} min'.format(days, hours, minutes)
 
 # Custom filter to get dictionary values by key
 @register.filter
