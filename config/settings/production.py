@@ -215,3 +215,13 @@ LOGGING = {
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+#  Database Backups
+DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+DBBACKUP_STORAGE_OPTIONS = {'location': '/backups/databases'}
+DBBACKUP_CLEANUP_KEEP = 28
+
+# Django Cron configuration
+CRON_CLASSES = [
+    "common.util.cron.DBBackupCronJob",
+]

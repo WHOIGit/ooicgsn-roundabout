@@ -23,6 +23,7 @@ services:
     env_file:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
+    restart: unless-stopped
     command: /start
 
   postgres:
@@ -36,6 +37,7 @@ services:
       - production_postgres_data_backups:/backups
     env_file:
       - ./.envs/.production/.postgres
+    restart: unless-stopped
 
   nginx:
     build:
@@ -49,10 +51,13 @@ services:
       - production_nginx:/var/log/nginx
       - static_volume:/app/staticfiles  # <-- bind the static files
       - media_volume:/app/media  # <-- bind the media files
+      - ./.ssl/whoi_certs:/etc/ssl/whoi_certs/ # bind a local directory with the WHOI SSL certs
     ports:
-      - "8000:80"
-      #- "0.0.0.0:80:80"
-      #- "0.0.0.0:443:443"
+      # - "8000:80"
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+    restart: unless-stopped
 
   redis:
     image: redis:3.2
+    restart: unless-stopped

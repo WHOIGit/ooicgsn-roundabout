@@ -74,14 +74,23 @@ def get_part_by_inventory(part_pk):
     queryset = Part.objects.get(id=part_pk).get_family()
     return queryset
 
-# Custom filter to get dictionary values by key
+### FILTERS ###
 
+# filter Time at Sea duration field to show Hours/Minutes
+@register.filter
+def time_at_sea_display(duration):
+    total_seconds = int(duration.total_seconds())
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+
+    return '{} hours {} min'.format(hours, minutes)
+
+# Custom filter to get dictionary values by key
 @register.filter
 def get_item(dictionary, key):
     return dictionary.get(key)
 
 # Custom tag for diagnostics
-
 @register.simple_tag
 def debug_object_dump(var):
     return vars(var)
