@@ -11,7 +11,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
+dist/*
 downloads/
 eggs/
 .eggs/
@@ -277,3 +277,4 @@ media/
 .env
 .envs/*
 !.envs.example/
+!static/css/jstree/dist/
