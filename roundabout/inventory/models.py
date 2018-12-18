@@ -125,7 +125,7 @@ class Inventory(MPTTModel):
             current_time_at_sea = now - action_deploy_to_sea.created_at
             return current_time_at_sea
         else:
-            return None
+            return timedelta(minutes=0)
 
     # get the Total Time at Sea by adding historical sea time and current deployment sea time
     def total_time_at_sea(self):
