@@ -197,9 +197,7 @@
     <p>Revision: {{ inventory_item.part.revision }}</p>
     <p>Current Location: {{ inventory_item.location.name }}</p>
     <p>Time at Sea: {{ inventory_item.total_time_at_sea|time_at_sea_display }}</p>
-    {% if inventory_item.current_deployment_time_at_sea %}
-        <!--<p>Current Deployment Time at Sea: {{ inventory_item.current_deployment_time_at_sea|time_at_sea_display }}-->
-    {% endif %}
+
 
     {% if inventory_item.deployment %}
         <p>Current Deployment: {{ inventory_item.deployment.deployment_number }}</p>
