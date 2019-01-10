@@ -108,9 +108,20 @@ class Inventory(MPTTModel):
 
     # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
     def update_time_at_sea(self):
-        action_deploy_to_sea = Action.objects.filter(inventory=self).filter(action_type='deploymenttosea').latest('created_at')
-        action_recover = Action.objects.filter(inventory=self).filter(action_type='deploymentrecover').latest('created_at')
-        latest_time_at_sea =  action_recover.created_at - action_deploy_to_sea.created_at
+        try:
+            action_deploy_to_sea = Action.objects.filter(inventory=self).filter(action_type='deploymenttosea').latest('created_at')
+        except Action.DoesNotExist:
+            action_deploy_to_sea = None
+
+        try:
+            action_recover = Action.objects.filter(inventory=self).filter(action_type='deploymentrecover').latest('created_at')
+        except Action.DoesNotExist:
+            action_recover = None
+
+        if action_deploy_to_sea and action_recover:
+            latest_time_at_sea =  action_recover.created_at - action_deploy_to_sea.created_at
+        else:
+            latest_time_at_sea = timedelta(minutes=0)
 
         # add to existing Time at Sea duration
         self.time_at_sea = self.time_at_sea + latest_time_at_sea
