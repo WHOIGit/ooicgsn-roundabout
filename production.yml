@@ -78,8 +78,8 @@ services:
       - postgres_demo
       - redis
     volumes:
-      - static_volume_demo:/app/rdb-demo/staticfiles  # <-- bind the static files
-      - media_volume_demo:/app/rdb-demo/media  # <-- bind the media files
+      - static_volume_demo:/app/staticfiles  # <-- bind the static files
+      - media_volume_demo:/app/media  # <-- bind the media files
     env_file:
       - ./.envs/.production/.django_demo
       - ./.envs/.production/.postgres_demo
