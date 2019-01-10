@@ -121,7 +121,7 @@ class Inventory(MPTTModel):
         root_location = self.location.get_root()
         if root_location.name == 'Sea':
             action_deploy_to_sea = Action.objects.filter(inventory=self).filter(action_type='deploymenttosea').latest('created_at')
-            if action_deploy_to_sea:
+            if action_deploy_to_sea.exists():
                 now = timezone.now()
                 current_time_at_sea = now - action_deploy_to_sea.created_at
                 return current_time_at_sea
