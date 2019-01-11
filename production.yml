@@ -137,5 +137,5 @@ services:
       - production_postgres_data_generic:/var/lib/postgresql/data
       - production_postgres_data_backups_generic:/backups
     env_file:
-      - ./.envs/.production/.postgres_demo
+      - ./.envs/.production/.postgres_generic
     restart: unless-stopped
