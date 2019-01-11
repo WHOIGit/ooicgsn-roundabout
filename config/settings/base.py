@@ -70,8 +70,6 @@ THIRD_PARTY_APPS = [
     'rest_framework',
     'mptt', # Tree structures in database
     'django_summernote', #WYSIWYG
-    'dbbackup',  # django-dbbackup
-    'django_cron', # django-cron
 ]
 LOCAL_APPS = [
     'roundabout.users.apps.UsersAppConfig',
