@@ -113,7 +113,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
-    image: roundabout_production_django
+    image: roundabout_generic_django
     container_name: django_generic
     depends_on:
       - postgres_demo
@@ -131,7 +131,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
-    image: roundabout_production_postgres
+    image: roundabout_generic_postgres
     container_name: postgres_generic
     volumes:
       - production_postgres_data_generic:/var/lib/postgresql/data
