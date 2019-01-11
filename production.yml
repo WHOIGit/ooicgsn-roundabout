@@ -10,6 +10,10 @@ volumes:
   production_postgres_data_backups_demo: {}
   static_volume_demo: {}
   media_volume_demo: {}
+  production_postgres_data_generic: {}
+  production_postgres_data_backups_generic: {}
+  static_volume_generic: {}
+  media_volume_generic: {}
 
 services:
   django:
@@ -57,6 +61,8 @@ services:
       - media_volume:/app/media  # <-- bind the media files
       - static_volume_demo:/app/rdb-demo/staticfiles  # <-- bind the static files
       - media_volume_demo:/app/rdb-demo/media  # <-- bind the media files
+      - static_volume_generic:/app/rdb-generic/staticfiles  # <-- bind the static files
+      - media_volume_generic:/app/rdb-generic/media  # <-- bind the media files
       - ./.ssl/whoi_certs:/etc/ssl/whoi_certs/ # bind a local directory with the WHOI SSL certs
     ports:
       # - "8000:80"
@@ -97,6 +103,39 @@ services:
     volumes:
       - production_postgres_data_demo:/var/lib/postgresql/data
       - production_postgres_data_backups_demo:/backups
+    env_file:
+      - ./.envs/.production/.postgres_demo
+    restart: unless-stopped
+
+  # rdb-generic containers
+
+  django_generic:
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    image: roundabout_production_django
+    container_name: django_generic
+    depends_on:
+      - postgres_demo
+      - redis
+    volumes:
+      - static_volume_generic:/app/staticfiles  # <-- bind the static files
+      - media_volume_generic:/app/media  # <-- bind the media files
+    env_file:
+      - ./.envs/.production/.django_generic
+      - ./.envs/.production/.postgres_generic
+    restart: unless-stopped
+    command: /start
+
+  postgres_generic:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: roundabout_production_postgres
+    container_name: postgres_generic
+    volumes:
+      - production_postgres_data_generic:/var/lib/postgresql/data
+      - production_postgres_data_backups_generic:/backups
     env_file:
       - ./.envs/.production/.postgres_demo
     restart: unless-stopped
