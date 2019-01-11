@@ -20,5 +20,3 @@ coreapi==2.3.3  # https://github.com/core-api/python-client
 # Your custom requirements go here
 django-mptt==0.9.0
 django-summernote==0.8.11.1
-django-cron==0.5.1
-django-dbbackup==3.2.0

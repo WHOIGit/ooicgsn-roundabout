@@ -9,7 +9,7 @@ DEBUG = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = env('DJANGO_SECRET_KEY')
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['roundabout.whoi.edu'])
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['ooi-rdb.whoi.edu'])
 
 # DATABASES
 # ------------------------------------------------------------------------------
@@ -227,13 +227,3 @@ RAVEN_CONFIG = {
 
 # Your stuff...
 # ------------------------------------------------------------------------------
-
-#  Database Backups
-DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
-DBBACKUP_STORAGE_OPTIONS = {'location': '/backups/databases'}
-DBBACKUP_CLEANUP_KEEP = 28
-
-# Django Cron configuration
-CRON_CLASSES = [
-    "common.util.cron.DBBackupCronJob",
-]
