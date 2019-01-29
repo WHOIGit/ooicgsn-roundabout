@@ -1729,13 +1729,23 @@ class InventorySearchSerialList(InventoryNavTreeMixin, ListView):
     model = Inventory
     template_name = 'inventory/inventory_search_list.html'
     context_object_name = 'inventory_item'
-    paginate_by = 10
+    paginate_by = 2
 
     def get_context_data(self, **kwargs):
         context = super(InventorySearchSerialList, self).get_context_data(**kwargs)
+
+        # Check if search query exists, if so add it to context for pagination
+        keywords = self.request.GET.get('q')
+
+        if keywords:
+            search = 'q=' + keywords
+        else:
+            search = None
+
         context.update({
             'part_types': PartType.objects.all(),
-            'node_type': 'inventory'
+            'node_type': 'inventory',
+            'search': search,
         })
         return context
 
