@@ -1729,7 +1729,7 @@ class InventorySearchSerialList(InventoryNavTreeMixin, ListView):
     model = Inventory
     template_name = 'inventory/inventory_search_list.html'
     context_object_name = 'inventory_item'
-    paginate_by = 2
+    paginate_by = 20
 
     def get_context_data(self, **kwargs):
         context = super(InventorySearchSerialList, self).get_context_data(**kwargs)
