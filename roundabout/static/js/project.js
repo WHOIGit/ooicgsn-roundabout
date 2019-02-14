@@ -1,5 +1,10 @@
 /* Project specific Javascript goes here. */
 
+/* Auto focus to the Serial Number search box on page load */
+$(document).ready(function() {
+    $('#search-serial-number').focus();
+});
+
 /* Make the Documentation Inline Formset Jquery work */
 $('.form-group').removeClass('row');
 
