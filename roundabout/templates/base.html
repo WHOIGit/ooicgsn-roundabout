@@ -91,6 +91,12 @@
           <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% trans "Sign In" %}</a>
         </li>
         {% endif %}
+
+        {% if request.user|has_group:"admin" %}
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'admintools:printers_home'  %}"><i class="fa fa-cog" aria-hidden="true"></i></a>
+        </li>
+        {% endif %}
       </ul>
 
       <div id="searchform">
