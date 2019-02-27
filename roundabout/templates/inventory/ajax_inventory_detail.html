@@ -137,10 +137,9 @@
               <div class="form-group">
                 <label for="label-printer">Select Label Printer</label>
                 <select class="form-control form-control-sm" id="label-printer">
-                  <option value="zebraprint.whoi.edu" data-printer-type="zebra">LOSOS - E-Lab Zebra printer</option>
-                  <option value="128.128.25.72" data-printer-type="brady">LOSOS - E-Lab Brady QR printer</option>
-                  <option value="128.128.25.73" data-printer-type="brady">LOSOS - E-Lab Brady Cable printer</option>
-                  <option value="otherprinter.whoi.edu" data-printer-type="other">otherprinter.whoi.edu</option>
+                    {% for printer in printers %}
+                        <option value="{{ printer.ip_domain }}" data-printer-type="{{ printer.printer_type }}">{{ printer.name }}</option>
+                    {% endfor %}
                 </select>
 
               </div>
@@ -167,7 +166,7 @@
                     <div id="print-qrcode" class="print-code{% if inventory_item.part.part_type.name == 'Cable' %}-cable{% endif %}">
                         <div >
           			        <img style="width:46px;" src='https://barcode.tec-it.com/barcode.ashx?data={{ inventory_item.serial_number }}&code=QRCode&dpi=300&unit=Min&imagetype=Png' alt='Barcode Generator TEC-IT'/>
-                            <p style="font-size:7px; font-family:Arial; display: block; max-width:48px; word-wrap: break-word;">{{ qrcode_serial_number|safe }}</p>
+                            <p style="font-size:7px; font-family:Arial; display: block; max-width:48px; word-wrap: break-word;">{{ inventory_item.serial_number }}</p>
                         </div>
                     </div>
 
