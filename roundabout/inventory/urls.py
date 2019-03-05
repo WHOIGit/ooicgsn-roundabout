@@ -7,7 +7,6 @@ urlpatterns = [
     path('', view=views.InventoryHomeView.as_view(), name='inventory_home'),
     path('test/', view=views.InventoryHomeTestView.as_view(), name='inventory_home_test'),
     path('<int:pk>/', view=views.InventoryDetailView.as_view(), name='inventory_detail'),
-    path('<int:pk>/<int:current_location>/', view=views.InventoryDetailView.as_view(), name='inventory_detail'),
     path('add/', view=views.InventoryCreateView.as_view(), name='inventory_add'),
     path('add/<int:current_location>/', view=views.InventoryCreateView.as_view(), name='inventory_add'),
     path('add/<int:parent_pk>/<int:current_location>/', view=views.InventoryCreateView.as_view(), name='inventory_add'),
