@@ -25,6 +25,8 @@ services:
       - ./.envs/.production/.postgres
     restart: unless-stopped
     command: /start
+    networks:
+      - roundabout-network
 
   postgres:
     build:
@@ -38,6 +40,8 @@ services:
     env_file:
       - ./.envs/.production/.postgres
     restart: unless-stopped
+    networks:
+      - roundabout-network
 
   nginx:
     build:
@@ -54,11 +58,16 @@ services:
       - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"
     restart: unless-stopped
+    networks:
+      - roundabout-network
 
   redis:
     image: redis:3.2
     restart: unless-stopped
+    networks:
+      - roundabout-network
 
 networks:
   roundabout-network:
     name: roundabout-network
+    driver: bridge
