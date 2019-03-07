@@ -1,7 +1,7 @@
 import pytest
 
-from docker_test.users.forms import UserCreationForm
-from docker_test.users.tests.factories import UserFactory
+from roundabout.users.forms import UserCreationForm
+from roundabout.users.tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
 

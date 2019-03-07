@@ -17,6 +17,7 @@ from .forms import *
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, PartType
 from roundabout.moorings.models import MooringPart
+from roundabout.admintools.models import Printer
 from common.util.mixins import AjaxFormMixin
 
 # Mixins
@@ -47,7 +48,7 @@ def load_inventory_navtree(request):
 
 
 def make_tree_copy(root_part, new_location, deployment_snapshot, parent=None ):
-    #Makes a copy of the tree starting at "root_part", move to new Location, reparenting it to "parent"
+    # Makes a copy of the tree starting at "root_part", move to new Location, reparenting it to "parent"
     if root_part.part.friendly_name:
         part_name = root_part.part.friendly_name
     else:
@@ -59,6 +60,7 @@ def make_tree_copy(root_part, new_location, deployment_snapshot, parent=None ):
         make_tree_copy(child, new_location, deployment_snapshot, new_item)
 
 
+# Function to print to network printer via sockets
 def print_code_zebraprinter(request, **kwargs):
     code_format = kwargs.get('code_format', 'QR')
     printer_name = request.GET.get('printer_name')
@@ -70,7 +72,7 @@ def print_code_zebraprinter(request, **kwargs):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((printer_name, 9100))
 
-        if printer_type == 'brady':
+        if printer_type == 'Brady':
             # Need to load XML file so we'll set the path
             module_dir = os.path.dirname(__file__)  # get current directory
             # Set XML Namespace to get clean output
@@ -98,7 +100,7 @@ def print_code_zebraprinter(request, **kwargs):
 
                 content = ET.tostring(root, encoding='utf8').decode('utf8')
 
-        elif printer_type == 'zebra':
+        elif printer_type == 'Zebra':
             if code_format == 'QR':
                 content =   '^XA \
                             ^PW400 \
@@ -325,6 +327,7 @@ def load_is_equipment(request):
     return JsonResponse(data)
 
 
+# Funtion to filter navtree by Part Type
 def filter_inventory_navtree(request):
     part_types = request.GET.getlist('part_types[]')
     part_types = list(map(int, part_types))
@@ -345,18 +348,9 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(InventoryAjaxDetailView, self).get_context_data(**kwargs)
-        # Insert a line break into serial number for QR code printing
-        qrcode_serial_number_list = self.object.serial_number.split('-')
-        qrcode_serial_number = ''
-        for index, q in enumerate(qrcode_serial_number_list, start=1):
-            if index == 1:
-                qrcode_serial_number += str(q)
-            elif index == 3:
-                qrcode_serial_number += '-<br>' + str(q)
-            else:
-                qrcode_serial_number += '-' + str(q)
+        # Get Printers to display in print dropdown
         context.update({
-            'qrcode_serial_number': qrcode_serial_number
+            'printers': Printer.objects.all()
         })
         return context
 

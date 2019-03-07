@@ -1,4 +1,4 @@
-version: '3'
+version: '3.5'
 
 volumes:
   local_postgres_data: {}
@@ -20,6 +20,8 @@ services:
     ports:
       - "8000:8000"
     command: /start
+    networks:
+      - roundabout-network
 
   postgres:
     build:
@@ -31,3 +33,9 @@ services:
       - local_postgres_data_backups:/backups
     env_file:
       - ./.envs/.local/.postgres
+    networks:
+      - roundabout-network
+
+networks:
+  roundabout-network:
+    name: roundabout-network

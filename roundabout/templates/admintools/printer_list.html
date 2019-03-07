@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% block title %}Printers{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="parts-add-btn">
+      <a href="{% url 'users:user_admin_add' %}" role="button" class="btn btn-primary">Add Printer</a>
+  </div>
+  <h2>Printers</h2>
+
+
+  <table class="table table-striped table-hover">
+      <thead>
+        <th>Printer Name</th>
+        <th>IP Address/Domain</th>
+        <th>Printer Type</th>
+
+      </thead>
+      <tbody>
+        {% for printer in printers %}
+          <tr>
+              <td>{{ printer.name }}</td>
+              <td>{{ printer.ip_domain }}</td>
+              <td>{{ printer.printer_type }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+</table>
+</div>
+{% endblock content %}

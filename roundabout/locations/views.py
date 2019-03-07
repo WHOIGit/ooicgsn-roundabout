@@ -8,13 +8,18 @@ from .forms import LocationForm
 from .models import Location
 from common.util.mixins import AjaxFormMixin
 
-# Create your views here.
+# AJAX functions for Forms and Navtree
+# ------------------------------------------------------------------------------
 
-# AJAX Views
-
+# Main Navtree function
 def load_locations_navtree(request):
     locations = Location.objects.all()
     return render(request, 'locations/ajax_location_navtree.html', {'locations': locations})
+
+
+# Mooring CBV Views for CRUD operations and menu Actions
+# ------------------------------------------------------------------------------
+# AJAX Views
 
 class LocationsAjaxDetailView(LoginRequiredMixin, DetailView):
     model = Location
@@ -64,7 +69,6 @@ class LocationsAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, Delet
 
 
 # Location Base Views
-
 
 class LocationsHomeView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
     template_name = 'locations/location_list.html'

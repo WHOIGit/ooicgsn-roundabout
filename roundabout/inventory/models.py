@@ -100,7 +100,7 @@ class Inventory(MPTTModel):
         return self.serial_number
 
     def get_absolute_url(self):
-        return reverse('inventory:inventory_detail', kwargs={'pk': self.pk, 'current_location': self.current_location})
+        return reverse('inventory:inventory_detail', kwargs={ 'pk': self.pk })
 
     def get_descendants_with_self(self):
         tree = self.get_descendants(include_self=True)

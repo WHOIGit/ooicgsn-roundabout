@@ -57,10 +57,10 @@
 
         {% if request.user|has_group:"admin" or request.user|has_group:"technician" %}
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarTemplates" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 Templates
               </a>
-          <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+          <div class="dropdown-menu" aria-labelledby="navbarTemplates">
             <a class="dropdown-item" href="{% url 'parts:parts_home' %}">Parts</a>
             <a class="dropdown-item" href="{% url 'moorings:moorings_home' %}">Moorings</a>
             <a class="dropdown-item" href="{% url 'locations:locations_home' %}">Locations</a>
@@ -89,6 +89,17 @@
         <li class="nav-item">
           {# URL provided by django-allauth/account/urls.py #}
           <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% trans "Sign In" %}</a>
+        </li>
+        {% endif %}
+
+        {% if request.user|has_group:"admin" %}
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarAdmintools" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fa fa-cog" aria-hidden="true"></i>
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarAdmintools">
+                <a class="dropdown-item" href="{% url 'admintools:printers_home'  %}">Printers</a>
+            </div>
         </li>
         {% endif %}
       </ul>
