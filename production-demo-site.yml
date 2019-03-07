@@ -25,6 +25,8 @@ services:
       - ./.envs/.production/.postgres_demo
     restart: unless-stopped
     command: /start
+    networks:
+      - roundabout-network
 
   postgres_demo:
     build:
@@ -38,6 +40,8 @@ services:
     env_file:
       - ./.envs/.production/.postgres_demo
     restart: unless-stopped
+    networks:
+      - roundabout-network    
 
 networks:
   default:
