@@ -17,7 +17,6 @@ services:
     container_name: django_demo
     depends_on:
       - postgres_demo
-      - redis
     volumes:
       - static_volume_demo:/app/staticfiles  # <-- bind the static files
       - media_volume_demo:/app/media  # <-- bind the media files
