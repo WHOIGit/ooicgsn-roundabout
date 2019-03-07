@@ -17,7 +17,6 @@ services:
     container_name: django_generic
     depends_on:
       - postgres_generic
-      - redis
     volumes:
       - static_volume_generic:/app/staticfiles  # <-- bind the static files
       - media_volume_generic:/app/media  # <-- bind the media files
