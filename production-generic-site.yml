@@ -25,8 +25,6 @@ services:
       - ./.envs/.production/.postgres_generic
     restart: unless-stopped
     command: /start
-    networks:
-      - roundabout-network
 
   postgres_generic:
     build:
@@ -40,8 +38,6 @@ services:
     env_file:
       - ./.envs/.production/.postgres_generic
     restart: unless-stopped
-    networks:
-      - roundabout-network    
 
 networks:
   default:
