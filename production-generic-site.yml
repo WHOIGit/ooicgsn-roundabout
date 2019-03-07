@@ -1,0 +1,46 @@
+# rdb-generic.whoi.edu containers
+# requires the main roundabout-network to be running
+version: '3.5'
+
+volumes:
+  production_postgres_data_generic: {}
+  production_postgres_data_backups_generic: {}
+  static_volume_generic: {}
+  media_volume_generic: {}
+
+services:
+  django_generic:
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    image: roundabout_generic_django
+    container_name: django_generic
+    depends_on:
+      - postgres_generic
+      - redis
+    volumes:
+      - static_volume_generic:/app/staticfiles  # <-- bind the static files
+      - media_volume_generic:/app/media  # <-- bind the media files
+    env_file:
+      - ./.envs/.production/.django_generic
+      - ./.envs/.production/.postgres_generic
+    restart: unless-stopped
+    command: /start
+
+  postgres_generic:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: roundabout_generic_postgres
+    container_name: postgres_generic
+    volumes:
+      - production_postgres_data_generic:/var/lib/postgresql/data
+      - production_postgres_data_backups_generic:/backups
+    env_file:
+      - ./.envs/.production/.postgres_generic
+    restart: unless-stopped
+
+networks:
+  default:
+    external:
+      name: roundabout-network

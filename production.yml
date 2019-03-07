@@ -1,4 +1,4 @@
-version: '3'
+version: '3.5'
 
 volumes:
   production_postgres_data: {}
@@ -6,14 +6,6 @@ volumes:
   production_nginx: {}
   static_volume: {}
   media_volume: {}
-  production_postgres_data_demo: {}
-  production_postgres_data_backups_demo: {}
-  static_volume_demo: {}
-  media_volume_demo: {}
-  production_postgres_data_generic: {}
-  production_postgres_data_backups_generic: {}
-  static_volume_generic: {}
-  media_volume_generic: {}
 
 services:
   django:
@@ -59,7 +51,6 @@ services:
       - production_nginx:/var/log/nginx
       - ./.ssl/whoi_certs:/etc/ssl/whoi_certs/ # bind a local directory with the WHOI SSL certs
     ports:
-      # - "8000:80"
       - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"
     restart: unless-stopped
@@ -68,68 +59,6 @@ services:
     image: redis:3.2
     restart: unless-stopped
 
-  # rdb-demo containers
-
-  django_demo:
-    build:
-      context: .
-      dockerfile: ./compose/production/django/Dockerfile
-    image: roundabout_demo_django
-    container_name: django_demo
-    depends_on:
-      - postgres_demo
-      - redis
-    volumes:
-      - static_volume_demo:/app/staticfiles  # <-- bind the static files
-      - media_volume_demo:/app/media  # <-- bind the media files
-    env_file:
-      - ./.envs/.production/.django_demo
-      - ./.envs/.production/.postgres_demo
-    restart: unless-stopped
-    command: /start
-
-  postgres_demo:
-    build:
-      context: .
-      dockerfile: ./compose/production/postgres/Dockerfile
-    image: roundabout_demo_postgres
-    container_name: postgres_demo
-    volumes:
-      - production_postgres_data_demo:/var/lib/postgresql/data
-      - production_postgres_data_backups_demo:/backups
-    env_file:
-      - ./.envs/.production/.postgres_demo
-    restart: unless-stopped
-
-  # rdb-generic containers
-
-  django_generic:
-    build:
-      context: .
-      dockerfile: ./compose/production/django/Dockerfile
-    image: roundabout_generic_django
-    container_name: django_generic
-    depends_on:
-      - postgres_demo
-      - redis
-    volumes:
-      - static_volume_generic:/app/staticfiles  # <-- bind the static files
-      - media_volume_generic:/app/media  # <-- bind the media files
-    env_file:
-      - ./.envs/.production/.django_generic
-      - ./.envs/.production/.postgres_generic
-    restart: unless-stopped
-    command: /start
-
-  postgres_generic:
-    build:
-      context: .
-      dockerfile: ./compose/production/postgres/Dockerfile
-    image: roundabout_generic_postgres
-    container_name: postgres_generic
-    volumes:
-      - production_postgres_data_generic:/var/lib/postgresql/data
-      - production_postgres_data_backups_generic:/backups
-    env_file:
-      - ./.envs/.production/.postgres_generic
-    restart: unless-stopped
+networks:
+  roundabout-network:
+    name: roundabout-network
