@@ -1,0 +1,42 @@
+version: 2
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - build
+
+jobs:
+  build:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Building Docker application
+          command: >-
+            mv .envs.example .envs &&
+            docker-compose --file local.yml build
+      - run:
+          # The Django start script will run migrations for us
+          name: Starting Docker application
+          command: >-
+            docker-compose --file local.yml up
+      - run:
+          name: Checking for missing migrations
+          command: >-
+            docker-compose --file local.yml run --rm django \
+              python manage.py makemigrations --check
+      - run:
+          name: Running Django system checks
+          command: >-
+            docker-compose --file local.yml run --rm django \
+              python manage.py check
+      - run:
+          name: Running Django tests
+          command: >-
+            docker-compose --file local.yml run --rm django \
+              python manage.py test
+      - run:
+          name: Stopping Docker application
+          command: >-
+            docker-compose --file local.yml down
