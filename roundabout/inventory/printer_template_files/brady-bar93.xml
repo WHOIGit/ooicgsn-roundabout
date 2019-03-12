@@ -10,7 +10,7 @@
             position-x = "0.0"
             position-y = "0.2"
             height = "0.3"
-            type = "code 39"
+            type = "code 93"
             human-readable = "false"
             human-readable-location = "bottom"
             density="10"
