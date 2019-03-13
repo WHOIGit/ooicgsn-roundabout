@@ -25,7 +25,7 @@
               <td>{{ printer.name }}</td>
               <td>{{ printer.ip_domain }}</td>
               <td>{{ printer.printer_type }}</td>
-              <td>
+              <td class="text-right">
                   <a href="{% url 'admintools:printers_update' printer.id %}" role="button" class="btn btn-primary btn-sm">Edit</a>
                   <a href="{% url 'admintools:printers_delete' printer.id %}" role="button" class="btn btn-danger btn-sm">Delete</a>
               </td>
