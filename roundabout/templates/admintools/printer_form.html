@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Printer - {{ printer.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>{% if printer.name %}Edit {{ printer.name }}{% else %}Add Printer {% endif %}</h1>
+  <form class="form-horizontal" method="post" action="" id="printer-form">
+    {% csrf_token %}
+    {{ form|crispy }}
+
+    <div class="row">
+        {% if form.errors %}
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <div class="alert alert-danger">
+                    <strong>{{ error|escape }}</strong>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+
+    </div>
+
+    <div class="control-group">
+      <div class="controls">
+        {% if printer.id %}
+        <button type="submit" class="btn btn-primary">Update Printer</button>
+        {% else %}
+        <button type="submit" class="btn btn-primary">Add Printer</button>
+        {% endif %}
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

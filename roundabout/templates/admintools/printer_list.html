@@ -6,7 +6,7 @@
 <div class="container">
 
   <div class="parts-add-btn">
-      <a href="{% url 'users:user_admin_add' %}" role="button" class="btn btn-primary">Add Printer</a>
+      <a href="{% url 'admintools:printers_add' %}" role="button" class="btn btn-primary">Add Printer</a>
   </div>
   <h2>Printers</h2>
 
@@ -16,6 +16,7 @@
         <th>Printer Name</th>
         <th>IP Address/Domain</th>
         <th>Printer Type</th>
+        <th>&nbsp;</th>
 
       </thead>
       <tbody>
@@ -24,6 +25,10 @@
               <td>{{ printer.name }}</td>
               <td>{{ printer.ip_domain }}</td>
               <td>{{ printer.printer_type }}</td>
+              <td class="text-right">
+                  <a href="{% url 'admintools:printers_update' printer.id %}" role="button" class="btn btn-primary btn-sm">Edit</a>
+                  <a href="{% url 'admintools:printers_delete' printer.id %}" role="button" class="btn btn-danger btn-sm">Delete</a>
+              </td>
           </tr>
         {% endfor %}
       </tbody>
