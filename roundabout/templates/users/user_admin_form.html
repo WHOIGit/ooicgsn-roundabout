@@ -4,6 +4,7 @@
 {% block title %}Edit {{ user_admin.username }}{% endblock %}
 
 {% block content %}
+<div class="container">
   <h1>{% if user_admin.username %}Edit {{ user_admin.username }}{% else %}Add User {% endif %}</h1>
   <form class="form-horizontal" method="post" action="">
     {% csrf_token %}
@@ -14,4 +15,5 @@
       </div>
     </div>
   </form>
+</div>
 {% endblock %}
