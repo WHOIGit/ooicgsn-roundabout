@@ -1,0 +1,45 @@
+# ooi-rov.whoi.edu containers
+# requires the main roundabout-network to be running
+version: '3.5'
+
+volumes:
+  production_postgres_data_rov: {}
+  production_postgres_data_backups_rov: {}
+  static_volume_rov: {}
+  media_volume_rov: {}
+
+services:
+  django_rov:
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    image: roundabout_django_rov
+    container_name: django_rov
+    depends_on:
+      - postgres_rov
+    volumes:
+      - static_volume_rov:/app/staticfiles  # <-- bind the static files
+      - media_volume_rov:/app/media  # <-- bind the media files
+    env_file:
+      - ./.envs/.production/.django_rov
+      - ./.envs/.production/.postgres_rov
+    restart: unless-stopped
+    command: /start
+
+  postgres_rov:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: roundabout_postgres_rov
+    container_name: postgres_rov
+    volumes:
+      - production_postgres_data_rov:/var/lib/postgresql/data
+      - production_postgres_data_backups_rov:/backups
+    env_file:
+      - ./.envs/.production/.postgres_rov
+    restart: unless-stopped
+
+networks:
+  default:
+    external:
+      name: roundabout-network
