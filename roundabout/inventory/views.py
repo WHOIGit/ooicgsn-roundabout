@@ -222,6 +222,8 @@ def load_partnumber_create_serialnumber(request):
                 inventory_last = inventory_qs.latest('id')
                 last_serial_number_fragment = int(inventory_last.serial_number.split('-')[-1])
                 new_serial_number_fragment = last_serial_number_fragment + 1
+                # Fill fragment with leading zeroes if necessary
+                new_serial_number_fragment = str(new_serial_number_fragment).zfill(5)
             else:
                 new_serial_number_fragment = 20001
             new_serial_number = part_obj.part_number + '-' + str(new_serial_number_fragment)
@@ -243,6 +245,8 @@ def load_parttemplate_create_serialnumber(request):
             inventory_last = inventory_qs.latest('id')
             last_serial_number_fragment = int(inventory_last.serial_number.split('-')[-1])
             new_serial_number_fragment = last_serial_number_fragment + 1
+            # Fill fragment with leading zeroes if necessary
+            new_serial_number_fragment = str(new_serial_number_fragment).zfill(5)
         else:
             new_serial_number_fragment = 20001
         new_serial_number = part_obj.part_number + '-' + str(new_serial_number_fragment)
