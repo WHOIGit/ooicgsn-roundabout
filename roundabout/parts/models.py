@@ -36,7 +36,7 @@ class Part(models.Model):
     friendly_name = models.CharField(max_length=255, unique=False, null=False, blank=True)
     part_type = TreeForeignKey(PartType, related_name='parts', on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
     revision = models.CharField(max_length=100, blank=True)
-    part_number = models.CharField(max_length=100, unique=True, db_index=True)
+    part_number = models.CharField(max_length=100, unique=False, db_index=True)
     unit_cost = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], null=False, blank=True, default='0.00')
     refurbishment_cost = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], null=False, blank=True, default='0.00')
     is_equipment = models.BooleanField(default=False)

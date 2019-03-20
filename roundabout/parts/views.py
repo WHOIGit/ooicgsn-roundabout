@@ -194,7 +194,7 @@ class PartsAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin, A
     model = Part
     form_class = PartForm
     context_object_name = 'part_template'
-    template_name='parts/ajax_part_form.html'
+    template_name='parts/ajax_part_revision_form.html'
     permission_required = 'parts.add_part'
     redirect_field_name = 'home'
 
@@ -219,12 +219,16 @@ class PartsAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin, A
     def get_initial(self):
         #Returns the initial data from current revision
         initial = super(PartsAjaxCreateRevisionView, self).get_initial()
-
+        # get the current revision object, prepopolate fields
         current_revision = Part.objects.get(id=self.kwargs['current_revision'])
         initial['part_number'] = current_revision.part_number
         initial['name'] = current_revision.name
         initial['friendly_name'] = current_revision.friendly_name
         initial['part_type'] = current_revision.part_type
+        initial['is_equipment'] = current_revision.is_equipment
+        initial['unit_cost'] = current_revision.unit_cost
+        initial['refurbishment_cost'] = current_revision.refurbishment_cost
+        initial['note'] = current_revision.note
 
         return initial
 

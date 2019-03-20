@@ -1,0 +1,108 @@
+{% load static i18n %}
+{% load mptt_tags %}
+{% load crispy_forms_tags %}
+
+
+        <div class="card-header">
+            {% if part_template.id %}
+                <h3>{{ part_template.name }}</h3>
+            {% else %}
+                <h3>Add New Part Revision</h3>
+            {% endif %}
+        </div>
+
+        <div class="card-body">
+
+              <form class="form-horizontal parts ajax-form" method="post" action=""
+                    data-url='{{ request.build_absolute_uri|safe }}'
+                    data-partnumber-url=''
+                    id="parts-form">
+                {% csrf_token %}
+
+                {{ form|crispy }}
+
+                <div class="row">
+                    {% if form.errors %}
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <div class="alert alert-danger">
+                                    <strong>{{ error|escape }}</strong>
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                <strong>{{ error|escape }}</strong>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                <div class="col-md-12">
+                  <table class="table table-tight">
+                    <thead>
+                      <th>Document</th>
+                      <th class="text-right">Document Type</th>
+                      <th class="text-right">Link</th>
+                    </thead>
+                    <tbody>
+                      {{ documentation_form.management_form }}
+
+                      {% if documentation_form.errors %}
+                      <tr>
+                        <div class="alert alert-danger">
+                        {% for dict in documentation_form.errors %}
+
+                            {% for error in dict.values %}
+                              {{ error|escape }}
+                            {% endfor %}
+
+                        {% endfor %}
+                        </div>
+                      </tr>
+                     {% endif %}
+
+                      {% for doc in documentation_form %}
+
+                        <tr>
+                            <td>{% if doc.id  %}{{ doc.DELETE }}{% endif %} {{ doc.id }} {{ doc.name }}</td>
+                            <td class="text-right">{{ doc.doc_type }}</td>
+                            <td class="text-right">{{ doc.doc_link }} </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                </div>
+
+                <div class="control-group">
+                  <div class="controls">
+                    {% if part_template.id %}
+                    <button type="submit" class="btn btn-primary">Update Part</button>
+                    {% else %}
+                    <button type="submit" class="btn btn-primary">Add Part</button>
+                    {% endif %}
+                  </div>
+                </div>
+              </form>
+
+          </div>
+
+
+
+{% block javascript %}
+
+<script type="text/javascript">
+
+$(document).ready(function() {
+
+    $('#parts-form tbody tr').formset({
+        prefix: 'documentation',
+        addText: 'add document',
+        deleteText: 'remove',
+    });
+
+});
+
+</script>
+
+{% endblock javascript %}
