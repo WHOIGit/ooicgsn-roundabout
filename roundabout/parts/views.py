@@ -14,6 +14,7 @@ import re
 
 # Mixins
 
+# Create the queryset for the Parts navtree display
 class PartsNavTreeMixin(LoginRequiredMixin, PermissionRequiredMixin, object):
     permission_required = 'parts.add_part'
     redirect_field_name = 'home'
@@ -162,6 +163,73 @@ class PartsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
     def form_valid(self, form, documentation_form):
         part_form = form.save()
         self.object = part_form
+        documentation_form.instance = self.object
+        documentation_form.save()
+        response = HttpResponseRedirect(self.get_success_url())
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def form_invalid(self, form, documentation_form):
+        form_errors = documentation_form.errors
+
+        if self.request.is_ajax():
+            data = form.errors
+            return JsonResponse(data, status=400)
+        else:
+            return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form, form_errors=form_errors))
+
+    def get_success_url(self):
+        return reverse('parts:ajax_parts_detail', args=(self.object.id, ))
+
+
+class PartsAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, CreateView):
+    model = Part
+    form_class = PartForm
+    context_object_name = 'part_template'
+    template_name='parts/ajax_part_form.html'
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
+    def get(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        documentation_form = DocumentationFormset(instance=self.object)
+        return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form))
+
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        documentation_form = DocumentationFormset(
+            self.request.POST, instance=self.object)
+
+        if (form.is_valid() and documentation_form.is_valid()):
+            return self.form_valid(form, documentation_form)
+        return self.form_invalid(form, documentation_form)
+
+    def get_initial(self):
+        #Returns the initial data from current revision
+        initial = super(PartsAjaxCreateRevisionView, self).get_initial()
+
+        current_revision = Part.objects.get(id=self.kwargs['current_revision'])
+        initial['part_number'] = current_revision.part_number
+        initial['name'] = current_revision.name
+        initial['friendly_name'] = current_revision.friendly_name
+        initial['part_type'] = current_revision.part_type
+
+        return initial
+
+    def form_valid(self, form, documentation_form):
+        self.object = form.save()
         documentation_form.instance = self.object
         documentation_form.save()
         response = HttpResponseRedirect(self.get_success_url())
