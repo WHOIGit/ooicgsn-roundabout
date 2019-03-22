@@ -15,7 +15,7 @@
                     {% endif %}
                      id="parts_{{ part.id }}"><a href="#" data-detail-url="{% url 'parts:ajax_parts_detail' part.id %}"
                         data-node-id="{{ part.id }}"
-                        data-node-type="detail">{{ part.name }}</a></li>
+                        data-node-type="detail">{{ part }}</a></li>
 
 
         {% endfor %}

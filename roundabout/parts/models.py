@@ -46,7 +46,10 @@ class Part(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return self.name
+        if self.revision:
+            return '%s - Rev. %s' % (self.name, self.revision)
+        else:
+            return self.name
 
     def get_part_inventory_count(self):
         return self.inventory.count()
