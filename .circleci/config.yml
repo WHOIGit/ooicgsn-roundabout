@@ -19,16 +19,19 @@ jobs:
     steps:
       - checkout
       - run:
-          # From https://circleci.com/docs/2.0/docker-compose/
+          # The container image we use is Alpine-based, and we cannot run the
+          # docker-compose binary releases on Alpine. Build it ourselves.
           name: Installing Docker Compose
           command: >-
-            DC_VERSION=1.19.0 &&
-            DC_DOWNLOAD=docker-compose-`uname -s`-`uname -m` &&
-            apk add curl &&
-            curl -Lo ~/docker-compose \
-              https://github.com/docker/compose/releases/download/$DC_VERSION/$DC_DOWNLOAD &&
-            chmod +x ~/docker-compose &&
-            mv ~/docker-compose /usr/local/bin/docker-compose
+            apk add --update \
+              build-base \
+              libffi-dev \
+              openssl-dev \
+              python \
+              python-dev \
+              py-pip &&
+            pip install --upgrade pip &&
+            pip install docker-compose
       - setup_remote_docker:
           docker_layer_caching: true
           version: 18.06.0-ce
