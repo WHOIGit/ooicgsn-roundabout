@@ -14,7 +14,7 @@ jobs:
     #   machine: true
     #   docker_layer_caching: true
     docker:
-      - image: circleci/python:stretch
+      - image: docker:18.06.0-ce
 
     steps:
       - checkout
@@ -24,11 +24,14 @@ jobs:
           command: >-
             DC_VERSION=1.19.0 &&
             DC_DOWNLOAD=docker-compose-`uname -s`-`uname -m` &&
+            apk add curl &&
             curl -Lo ~/docker-compose \
               https://github.com/docker/compose/releases/download/$DC_VERSION/$DC_DOWNLOAD &&
             chmod +x ~/docker-compose &&
-            sudo mv ~/docker-compose /usr/local/bin/docker-compose
-      - setup_remote_docker
+            mv ~/docker-compose /usr/local/bin/docker-compose
+      - setup_remote_docker:
+          docker_layer_caching: true
+          version: 18.06.0-ce
       - run:
           name: Building Docker application
           command: >-
