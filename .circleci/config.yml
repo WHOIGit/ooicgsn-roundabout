@@ -8,9 +8,27 @@ workflows:
 
 jobs:
   build:
-    machine: true
+
+    # If you want to run in a virtual machine, switch to the `machine` executor,
+    # and remove the `setup_remote_docker` step.
+    #   machine: true
+    #   docker_layer_caching: true
+    docker:
+      - image: circleci/python:stretch
+
     steps:
       - checkout
+      - run:
+          # From https://circleci.com/docs/2.0/docker-compose/
+          name: Installing Docker Compose
+          command: >-
+            DC_VERSION=1.19.0 &&
+            DC_DOWNLOAD=docker-compose-`uname -s`-`uname -m` &&
+            curl -Lo ~/docker-compose \
+              https://github.com/docker/compose/releases/download/$DC_VERSION/$DC_DOWNLOAD &&
+            chmod +x ~/docker-compose &&
+            sudo mv ~/docker-compose /usr/local/bin/docker-compose
+      - setup_remote_docker
       - run:
           name: Building Docker application
           command: >-
