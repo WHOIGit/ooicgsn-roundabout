@@ -8,33 +8,19 @@ workflows:
 
 jobs:
   build:
-
-    # If you want to run in a virtual machine, switch to the `machine` executor,
-    # and remove the `setup_remote_docker` step.
-    #   machine: true
-    #   docker_layer_caching: true
-    docker:
-      - image: docker:18.06.0-ce
-
+    machine: true
     steps:
       - checkout
       - run:
-          # The container image we use is Alpine-based, and we cannot run the
-          # docker-compose binary releases on Alpine. Build it ourselves.
+          # From https://circleci.com/docs/2.0/docker-compose/
           name: Installing Docker Compose
           command: >-
-            apk add --update \
-              build-base \
-              libffi-dev \
-              openssl-dev \
-              python \
-              python-dev \
-              py-pip &&
-            pip install --upgrade pip &&
-            pip install docker-compose
-      - setup_remote_docker:
-          docker_layer_caching: true
-          version: 18.06.0-ce
+            DC_VERSION=1.19.0 &&
+            DC_DOWNLOAD=docker-compose-`uname -s`-`uname -m` &&
+            curl -Lo ~/docker-compose \
+              https://github.com/docker/compose/releases/download/$DC_VERSION/$DC_DOWNLOAD &&
+            chmod +x ~/docker-compose &&
+            sudo mv ~/docker-compose /usr/local/bin/docker-compose
       - run:
           name: Building Docker application
           command: >-
