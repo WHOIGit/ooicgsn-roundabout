@@ -6,7 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.core.exceptions import ValidationError
 
 from .models import Part, PartType
-from .forms import PartForm, DocumentationFormset, PartSubassemblyAddForm, PartSubassemblyEditForm
+from .forms import PartForm, DocumentationFormset, RevisionFormset, PartSubassemblyAddForm, PartSubassemblyEditForm
 from roundabout.locations.models import Location
 from common.util.mixins import AjaxFormMixin
 
@@ -91,8 +91,9 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
+        revision_form = RevisionFormset(instance=self.object)
         documentation_form = DocumentationFormset(instance=self.object)
-        return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form))
+        return self.render_to_response(self.get_context_data(form=form, revision_form=revision_form, documentation_form=documentation_form))
 
     def post(self, request, *args, **kwargs):
         self.object = None

@@ -9,6 +9,7 @@
             {% else %}
                 <h3>Add Part Template</h3>
             {% endif %}
+
         </div>
 
         <div class="card-body">
@@ -37,8 +38,50 @@
                         {% endfor %}
                     {% endif %}
 
+
+
+                </div>
+
                 <div class="col-md-12">
+                 <h4>Revision Information</h4>
                   <table class="table table-tight">
+                    <thead>
+                      <th>Revision Code</th>
+                      <th class="text-right">Unit Cost</th>
+                      <th class="text-right">Refurbishment Cost</th>
+                    </thead>
+                    <tbody>
+                        {{ revision_form.management_form }}
+
+                        {% if revision_form.errors %}
+                        <tr>
+                          <div class="alert alert-danger">
+                          {% for dict in revision_form.errors %}
+
+                              {% for error in dict.values %}
+                                {{ error|escape }}
+                              {% endfor %}
+
+                          {% endfor %}
+                          </div>
+                        </tr>
+                       {% endif %}
+
+                        {% for rev in revision_form %}
+
+                          <tr>
+                              <td>{{ rev.revision_code }}</td>
+                              <td class="text-right">{{ rev.unit_cost }}</td>
+                              <td class="text-right">{{ rev.refurbishment_cost }} </td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                </div>
+
+                <div class="col-md-12">
+                 <h5>Revision Documentation</h5>
+                  <table class="table table-tight documentation-form">
                     <thead>
                       <th>Document</th>
                       <th class="text-right">Document Type</th>
@@ -103,7 +146,7 @@
 
 $(document).ready(function() {
 
-    $('#parts-form tbody tr').formset({
+    $('.documentation-form tbody tr').formset({
         prefix: 'documentation',
         addText: 'add document',
         deleteText: 'remove',
@@ -135,7 +178,7 @@ $(document).ready(function() {
       });
 
     })
-    
+
 
 
 });

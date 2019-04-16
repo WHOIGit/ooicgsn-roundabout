@@ -32,7 +32,7 @@ class Part(models.Model):
         ('Mechanical', 'Mechanical'),
         ('Sensor', 'Sensor'),
     )
-    name = models.CharField(max_length=255, unique=False, db_index=True)
+    name = models.CharField(max_length=255, unique=True, db_index=True)
     friendly_name = models.CharField(max_length=255, unique=False, null=False, blank=True)
     part_type = TreeForeignKey(PartType, related_name='parts', on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
     revision = models.CharField(max_length=100, blank=True)
@@ -57,6 +57,20 @@ class Part(models.Model):
     def get_absolute_url(self):
         return reverse('parts:parts_detail', kwargs={'pk': self.pk, })
 
+class Revision(models.Model):
+    revision_code = models.CharField(max_length=255, unique=False, db_index=True, default='A')
+    unit_cost = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], null=False, blank=True, default='0.00')
+    refurbishment_cost = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], null=False, blank=True, default='0.00')
+    note = models.TextField(blank=True)
+    part = models.ForeignKey(Part, related_name='revisions',
+                          on_delete=models.CASCADE, null=False, blank=False, db_index=True)
+
+    class Meta:
+        ordering = ['revision_code']
+
+    def __str__(self):
+        return self.revision_code
+
 
 class Documentation(models.Model):
     DOC_TYPES = (
@@ -68,6 +82,8 @@ class Documentation(models.Model):
     doc_link = models.CharField(max_length=1000)
     part = models.ForeignKey(Part, related_name='documentation',
                              on_delete=models.CASCADE, null=True, blank=True)
+    revision = models.ForeignKey(Revision, related_name='documentation',
+                             on_delete=models.CASCADE, null=True, blank=True)                         
 
     class Meta:
         ordering = ['doc_type', 'name']

@@ -2,7 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.forms.models import inlineformset_factory
 
-from .models import Part, Documentation
+from .models import Part, Documentation, Revision
 from roundabout.locations.models import Location
 from roundabout.parts.widgets import PartParentWidget, PartLocationWidget
 
@@ -15,7 +15,7 @@ class PartForm(forms.ModelForm):
 
     class Meta:
         model = Part
-        fields = ['part_number', 'name', 'friendly_name',  'revision', 'part_type', 'is_equipment', 'unit_cost', 'refurbishment_cost', 'note']
+        fields = ['part_number', 'name', 'friendly_name', 'part_type', 'is_equipment']
         labels = {
             'parent': 'Parent Assembly',
             'is_equipment': 'Is this part considered equipment?',
@@ -30,8 +30,8 @@ class PartForm(forms.ModelForm):
             raise ValidationError('Part Number in wrong format. Must be ####-#####-#####')
         return part_number
 """
-
-DocumentationFormset = inlineformset_factory(Part, Documentation, fields=('name', 'doc_type', 'doc_link'), extra=1, can_delete=True)
+RevisionFormset = inlineformset_factory(Part, Revision, fields=('revision_code', 'unit_cost', 'refurbishment_cost'), extra=1, can_delete=False)
+DocumentationFormset = inlineformset_factory(Revision, Documentation, fields=('name', 'doc_type', 'doc_link'), extra=1, can_delete=True)
 
 
 class PartSubassemblyAddForm(forms.ModelForm):
