@@ -31,10 +31,11 @@ class PartForm(forms.ModelForm):
             raise ValidationError('Part Number in wrong format. Must be ####-#####-#####')
         return part_number
 """
+
 RevisionFormset = inlineformset_factory(Part, Revision, fields=('revision_code', 'unit_cost', 'refurbishment_cost', 'note'), widgets={
         'note': SummernoteWidget(),
     }, extra=1, can_delete=False)
-DocumentationFormset = inlineformset_factory(Part, Documentation, fields=('name', 'doc_type', 'doc_link'), extra=1, can_delete=True)
+DocumentationFormset = inlineformset_factory(Revision, Documentation, fields=('name', 'doc_type', 'doc_link'), extra=1, can_delete=True)
 
 
 class PartSubassemblyAddForm(forms.ModelForm):

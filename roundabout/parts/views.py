@@ -113,16 +113,16 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         # Save the Revision inline model form
         revision_form.instance = self.object
         revision_instances = revision_form.save()
-        # Get the Revision object by looping through list
+        # Get the Revision object by looping through instance list
         for instance in revision_instances:
             revision = instance
 
         # Save the Documentation inline model form
-        documentation_form.instance = self.object
+        documentation_form.instance = revision
         documentation_instances = documentation_form.save(commit=False)
         # Update Documentation objects to have Revision key
-        for instance in documentation_instances:
-            instance.revision = revision
+        #for instance in documentation_instances:
+        #    instance.revision = revision
         documentation_form.save()
 
         response = HttpResponseRedirect(self.get_success_url())
