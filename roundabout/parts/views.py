@@ -5,7 +5,7 @@ from django.views.generic import View, DetailView, ListView, RedirectView, Updat
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ValidationError
 
-from .models import Part, PartType
+from .models import Part, PartType, Revision, Documentation
 from .forms import PartForm, DocumentationFormset, RevisionFormset, PartSubassemblyAddForm, PartSubassemblyEditForm
 from roundabout.locations.models import Location
 from common.util.mixins import AjaxFormMixin
@@ -99,17 +99,32 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
+        revision_form = RevisionFormset(
+            self.request.POST, instance=self.object)
         documentation_form = DocumentationFormset(
             self.request.POST, instance=self.object)
 
-        if (form.is_valid() and documentation_form.is_valid()):
-            return self.form_valid(form, documentation_form)
-        return self.form_invalid(form, documentation_form)
+        if (form.is_valid() and revision_form.is_valid() and documentation_form.is_valid()):
+            return self.form_valid(form, revision_form, documentation_form)
+        return self.form_invalid(form, revision_form, documentation_form)
 
-    def form_valid(self, form, documentation_form):
+    def form_valid(self, form, revision_form, documentation_form):
         self.object = form.save()
+        # Save the Revision inline model form
+        revision_form.instance = self.object
+        revision_instances = revision_form.save()
+        # Get the Revision object by looping through list
+        for instance in revision_instances:
+            revision = instance
+
+        # Save the Documentation inline model form
         documentation_form.instance = self.object
+        documentation_instances = documentation_form.save(commit=False)
+        # Update Documentation objects to have Revision key
+        for instance in documentation_instances:
+            instance.revision = revision
         documentation_form.save()
+
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
@@ -129,7 +144,7 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
             data = form.errors
             return JsonResponse(data, status=400)
         else:
-            return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form, form_errors=form_errors))
+            return self.render_to_response(self.get_context_data(form=form, revision_form=revision_form, documentation_form=documentation_form, form_errors=form_errors))
 
     def get_success_url(self):
         return reverse('parts:ajax_parts_detail', args=(self.object.id, ))

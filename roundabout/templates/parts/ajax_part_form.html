@@ -74,6 +74,12 @@
                               <td class="text-right">{{ rev.unit_cost }}</td>
                               <td class="text-right">{{ rev.refurbishment_cost }} </td>
                           </tr>
+                          <tr>
+                              <td colspan="3">
+                                <p>Notes on this Revision</p>
+                                {{ rev.note }}
+                              </td>
+                          </tr>
                         {% endfor %}
                       </tbody>
                     </table>
@@ -115,7 +121,6 @@
                     </tbody>
                   </table>
                 </div>
-                </div>
 
                 <div class="control-group">
                   <div class="controls">
@@ -127,6 +132,10 @@
                   </div>
                 </div>
               </form>
+
+            </div>
+
+
 
           </div>
 

@@ -1,6 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.forms.models import inlineformset_factory
+from django_summernote.widgets import SummernoteWidget
 
 from .models import Part, Documentation, Revision
 from roundabout.locations.models import Location
@@ -30,8 +31,10 @@ class PartForm(forms.ModelForm):
             raise ValidationError('Part Number in wrong format. Must be ####-#####-#####')
         return part_number
 """
-RevisionFormset = inlineformset_factory(Part, Revision, fields=('revision_code', 'unit_cost', 'refurbishment_cost'), extra=1, can_delete=False)
-DocumentationFormset = inlineformset_factory(Revision, Documentation, fields=('name', 'doc_type', 'doc_link'), extra=1, can_delete=True)
+RevisionFormset = inlineformset_factory(Part, Revision, fields=('revision_code', 'unit_cost', 'refurbishment_cost', 'note'), widgets={
+        'note': SummernoteWidget(),
+    }, extra=1, can_delete=False)
+DocumentationFormset = inlineformset_factory(Part, Documentation, fields=('name', 'doc_type', 'doc_link'), extra=1, can_delete=True)
 
 
 class PartSubassemblyAddForm(forms.ModelForm):
