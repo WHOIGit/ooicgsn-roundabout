@@ -38,6 +38,20 @@ RevisionFormset = inlineformset_factory(Part, Revision, fields=('revision_code',
 DocumentationFormset = inlineformset_factory(Revision, Documentation, fields=('name', 'doc_type', 'doc_link'), extra=1, can_delete=True)
 
 
+class RevisionForm(forms.ModelForm):
+
+    class Meta:
+        model = Revision
+        fields = ['revision_code', 'unit_cost', 'refurbishment_cost', 'note', 'part']
+        labels = {
+            'note': 'Revision Notes'
+        }
+        widgets = {
+            'note': SummernoteWidget(),
+            'part': forms.HiddenInput(),
+        }
+
+
 class PartSubassemblyAddForm(forms.ModelForm):
 
     class Meta:

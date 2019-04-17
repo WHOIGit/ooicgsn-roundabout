@@ -6,7 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.core.exceptions import ValidationError
 
 from .models import Part, PartType, Revision, Documentation
-from .forms import PartForm, DocumentationFormset, RevisionFormset, PartSubassemblyAddForm, PartSubassemblyEditForm
+from .forms import PartForm, RevisionForm, DocumentationFormset, RevisionFormset, PartSubassemblyAddForm, PartSubassemblyEditForm
 from roundabout.locations.models import Location
 from common.util.mixins import AjaxFormMixin
 
@@ -207,12 +207,24 @@ class PartsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
 
 
 class PartsAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, CreateView):
-    model = Part
-    form_class = PartForm
-    context_object_name = 'part_template'
+    model = Revision
+    form_class = RevisionForm
+    context_object_name = 'revision'
     template_name='parts/ajax_part_revision_form.html'
     permission_required = 'parts.add_part'
     redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super(PartsAjaxCreateRevisionView, self).get_context_data(**kwargs)
+        part_pk = self.kwargs['part_pk']
+        part = Part.objects.get(id=part_pk)
+        current_revision = Revision.objects.filter(part=part).last()
+
+        context.update({
+            'part': part,
+            'current_revision': current_revision,
+        })
+        return context
 
     def get(self, request, *args, **kwargs):
         self.object = None
@@ -236,15 +248,12 @@ class PartsAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin, A
         #Returns the initial data from current revision
         initial = super(PartsAjaxCreateRevisionView, self).get_initial()
         # get the current revision object, prepopolate fields
-        current_revision = Part.objects.get(id=self.kwargs['current_revision'])
-        initial['part_number'] = current_revision.part_number
-        initial['name'] = current_revision.name
-        initial['friendly_name'] = current_revision.friendly_name
-        initial['part_type'] = current_revision.part_type
-        initial['is_equipment'] = current_revision.is_equipment
+        part = Part.objects.get(id=self.kwargs['part_pk'])
+        current_revision = Revision.objects.filter(part=part).last()
+        initial['part'] = part
+        initial['revision_code'] = None
         initial['unit_cost'] = current_revision.unit_cost
         initial['refurbishment_cost'] = current_revision.refurbishment_cost
-        initial['note'] = current_revision.note
 
         return initial
 
@@ -258,7 +267,7 @@ class PartsAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin, A
             print(form.cleaned_data)
             data = {
                 'message': "Successfully submitted form data.",
-                'object_id': self.object.id,
+                'object_id': self.object.part.id,
             }
             return JsonResponse(data)
         else:

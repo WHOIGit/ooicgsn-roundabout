@@ -21,7 +21,7 @@ urlpatterns = [
     path('ajax/detail/<int:pk>/', view=views.PartsAjaxDetailView.as_view(), name='ajax_parts_detail'),
     path('ajax/add/', view=views.PartsAjaxCreateView.as_view(), name='ajax_parts_add'),
     path('ajax/edit/<int:pk>/', view=views.PartsAjaxUpdateView.as_view(), name='ajax_parts_update'),
-    path('ajax/revision/create/<int:current_revision>/', view=views.PartsAjaxCreateRevisionView.as_view(), name='ajax_parts_create_revision'),
+    path('ajax/revision/create/<int:part_pk>/', view=views.PartsAjaxCreateRevisionView.as_view(), name='ajax_parts_create_revision'),
     path('ajax/part_type/<int:pk>/', view=views.PartsTypeAjaxDetailView.as_view(), name='ajax_parts_type_detail'),
     path('ajax/delete/<int:pk>/', view=views.PartsAjaxDeleteView.as_view(), name='ajax_parts_delete'),
     path('ajax/validate-part-number/', views.validate_part_number, name='ajax_validate_part_number'),

@@ -4,14 +4,14 @@
 
 
         <div class="card-header">
-            {% if part_template.id %}
-                <h3>{{ part_template.name }}</h3>
-            {% else %}
-                <h3>Add New Part Revision</h3>
-            {% endif %}
+            <h3>{{ part.name }}</h3>
+
+            <h3>Add New Part Revision</h3>
         </div>
 
         <div class="card-body">
+
+            <p><b>Current Revision Code: {{ current_revision.revision_code }}</b>
 
               <form class="form-horizontal parts ajax-form" method="post" action=""
                     data-url='{{ request.build_absolute_uri|safe }}'
@@ -36,9 +36,7 @@
                             </div>
                         {% endfor %}
                     {% endif %}
-                <div class="col-md-12">
-                    {{ revision_form.management_form }}
-                </div>
+
                 <div class="col-md-12">
                   <table class="table table-tight">
                     <thead>
