@@ -158,29 +158,8 @@ class PartsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
     permission_required = 'parts.add_part'
     redirect_field_name = 'home'
 
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        documentation_form = DocumentationFormset(instance=self.object)
-        return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form))
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        documentation_form = DocumentationFormset(
-            self.request.POST, instance=self.object)
-
-        if (form.is_valid() and documentation_form.is_valid()):
-            return self.form_valid(form, documentation_form)
-        return self.form_invalid(form, documentation_form)
-
     def form_valid(self, form, documentation_form):
-        part_form = form.save()
-        self.object = part_form
-        documentation_form.instance = self.object
-        documentation_form.save()
+        self.object = form.save()
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
@@ -194,13 +173,11 @@ class PartsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
             return response
 
     def form_invalid(self, form, documentation_form):
-        form_errors = documentation_form.errors
-
         if self.request.is_ajax():
             data = form.errors
             return JsonResponse(data, status=400)
         else:
-            return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form, form_errors=form_errors))
+            return self.render_to_response(self.get_context_data(form=form, form_errors=form_errors))
 
     def get_success_url(self):
         return reverse('parts:ajax_parts_detail', args=(self.object.id, ))
