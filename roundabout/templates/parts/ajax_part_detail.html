@@ -85,8 +85,23 @@
                                       </div>
                                     {% endif %}
 
+                                </div>
+                                <div class="ajax-detail-link">
 
 
+                                   <a href="#"
+                                      data-detail-url="{% url 'parts:ajax_parts_update_revision' revision.id %}"
+                                      data-node-id="{{ revision.id }}"
+                                      data-node-type="edit"
+                                      class="btn btn-danger btn-sm float-right"
+                                      role="button">Delete Revision</a>
+
+                                      <a href="#"
+                                         data-detail-url="{% url 'parts:ajax_parts_update_revision' revision.id %}"
+                                         data-node-id="{{ revision.id }}"
+                                         data-node-type="edit"
+                                         class="btn btn-primary btn-sm float-right mr-2"
+                                         role="button">Edit Revision</a>
                                 </div>
 
                             </div>
