@@ -78,6 +78,20 @@ class PartsAjaxDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailVie
     permission_required = 'parts.add_part'
     redirect_field_name = 'home'
 
+    def get_context_data(self, **kwargs):
+        context = super(PartsAjaxDetailView, self).get_context_data(**kwargs)
+        revision_count = Revision.objects.filter(part=self.object).count()
+
+        if revision_count > 1:
+            multiple_revision = True
+        else:
+            multiple_revision = False
+
+        context.update({
+            'multiple_revision': multiple_revision,
+        })
+        return context
+
 
 class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, CreateView):
     model = Part
@@ -181,6 +195,23 @@ class PartsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
 
     def get_success_url(self):
         return reverse('parts:ajax_parts_detail', args=(self.object.id, ))
+
+
+class PartsAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = Part
+    context_object_name='part_template'
+    template_name = 'parts/ajax_part_confirm_delete.html'
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        data = {
+            'message': "Successfully submitted form data.",
+            'parent_id': self.object.part_type_id,
+        }
+        self.object.delete()
+        return JsonResponse(data)
 
 
 class PartsAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, CreateView):
@@ -319,10 +350,10 @@ class PartsAjaxUpdateRevisionView(LoginRequiredMixin, PermissionRequiredMixin, A
         return reverse('parts:ajax_parts_detail', args=(self.object.part.id, ))
 
 
-class PartsAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
-    model = Part
-    context_object_name='part_template'
-    template_name = 'parts/ajax_part_confirm_delete.html'
+class PartsAjaxDeleteRevisionView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = Revision
+    context_object_name='revision'
+    template_name = 'parts/ajax_part_revision_confirm_delete.html'
     permission_required = 'parts.add_part'
     redirect_field_name = 'home'
 
@@ -330,7 +361,8 @@ class PartsAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteVie
         self.object = self.get_object()
         data = {
             'message': "Successfully submitted form data.",
-            'parent_id': self.object.part_type_id,
+            'parent_id': self.object.part.id,
+            'object_model': self.object._meta.model_name,
         }
         self.object.delete()
         return JsonResponse(data)
