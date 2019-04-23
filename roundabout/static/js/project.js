@@ -215,12 +215,19 @@ $(document).ready(function(){
         console.log(textStatus)
         console.log(jqXHR)
         console.log(data.parent_id);
+        console.log(data.object_model);
         console.log(navtreePrefix);
         $("#detail-view").html('');
         if (navtreePrefix == 'deployments') {
             var parentPrefix = 'locations';
         } else if (navtreePrefix == 'parts') {
-            var parentPrefix = 'part_type';
+
+            if (data.object_model == 'revision') {
+                var parentPrefix = 'parts';
+            } else {
+                var parentPrefix = 'part_type';
+            }
+
         } else {
             var parentPrefix = navtreePrefix;
         }

@@ -5,8 +5,8 @@ from django.views.generic import View, DetailView, ListView, RedirectView, Updat
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ValidationError
 
-from .models import Part, PartType
-from .forms import PartForm, DocumentationFormset, PartSubassemblyAddForm, PartSubassemblyEditForm
+from .models import Part, PartType, Revision, Documentation
+from .forms import PartForm, RevisionForm, DocumentationFormset, RevisionFormset, PartSubassemblyAddForm, PartSubassemblyEditForm
 from roundabout.locations.models import Location
 from common.util.mixins import AjaxFormMixin
 
@@ -14,6 +14,7 @@ import re
 
 # Mixins
 
+# Create the queryset for the Parts navtree display
 class PartsNavTreeMixin(LoginRequiredMixin, PermissionRequiredMixin, object):
     permission_required = 'parts.add_part'
     redirect_field_name = 'home'
@@ -77,6 +78,20 @@ class PartsAjaxDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailVie
     permission_required = 'parts.add_part'
     redirect_field_name = 'home'
 
+    def get_context_data(self, **kwargs):
+        context = super(PartsAjaxDetailView, self).get_context_data(**kwargs)
+        revision_count = Revision.objects.filter(part=self.object).count()
+
+        if revision_count > 1:
+            multiple_revision = True
+        else:
+            multiple_revision = False
+
+        context.update({
+            'multiple_revision': multiple_revision,
+        })
+        return context
+
 
 class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, CreateView):
     model = Part
@@ -90,24 +105,40 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
+        revision_form = RevisionFormset(instance=self.object)
         documentation_form = DocumentationFormset(instance=self.object)
-        return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form))
+        return self.render_to_response(self.get_context_data(form=form, revision_form=revision_form, documentation_form=documentation_form))
 
     def post(self, request, *args, **kwargs):
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
+        revision_form = RevisionFormset(
+            self.request.POST, instance=self.object)
         documentation_form = DocumentationFormset(
             self.request.POST, instance=self.object)
 
-        if (form.is_valid() and documentation_form.is_valid()):
-            return self.form_valid(form, documentation_form)
-        return self.form_invalid(form, documentation_form)
+        if (form.is_valid() and revision_form.is_valid() and documentation_form.is_valid()):
+            return self.form_valid(form, revision_form, documentation_form)
+        return self.form_invalid(form, revision_form, documentation_form)
 
-    def form_valid(self, form, documentation_form):
+    def form_valid(self, form, revision_form, documentation_form):
         self.object = form.save()
-        documentation_form.instance = self.object
+        # Save the Revision inline model form
+        revision_form.instance = self.object
+        revision_instances = revision_form.save()
+        # Get the Revision object by looping through instance list
+        for instance in revision_instances:
+            revision = instance
+
+        # Save the Documentation inline model form
+        documentation_form.instance = revision
+        documentation_instances = documentation_form.save(commit=False)
+        # Update Documentation objects to have Revision key
+        #for instance in documentation_instances:
+        #    instance.revision = revision
         documentation_form.save()
+
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
@@ -127,7 +158,7 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
             data = form.errors
             return JsonResponse(data, status=400)
         else:
-            return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form, form_errors=form_errors))
+            return self.render_to_response(self.get_context_data(form=form, revision_form=revision_form, documentation_form=documentation_form, form_errors=form_errors))
 
     def get_success_url(self):
         return reverse('parts:ajax_parts_detail', args=(self.object.id, ))
@@ -138,6 +169,136 @@ class PartsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
     form_class = PartForm
     context_object_name = 'part_template'
     template_name='parts/ajax_part_form.html'
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
+    def form_valid(self, form, documentation_form):
+        self.object = form.save()
+        response = HttpResponseRedirect(self.get_success_url())
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def form_invalid(self, form, documentation_form):
+        if self.request.is_ajax():
+            data = form.errors
+            return JsonResponse(data, status=400)
+        else:
+            return self.render_to_response(self.get_context_data(form=form, form_errors=form_errors))
+
+    def get_success_url(self):
+        return reverse('parts:ajax_parts_detail', args=(self.object.id, ))
+
+
+class PartsAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = Part
+    context_object_name='part_template'
+    template_name = 'parts/ajax_part_confirm_delete.html'
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        data = {
+            'message': "Successfully submitted form data.",
+            'parent_id': self.object.part_type_id,
+        }
+        self.object.delete()
+        return JsonResponse(data)
+
+
+class PartsAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, CreateView):
+    model = Revision
+    form_class = RevisionForm
+    context_object_name = 'revision'
+    template_name='parts/ajax_part_revision_form.html'
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super(PartsAjaxCreateRevisionView, self).get_context_data(**kwargs)
+        part_pk = self.kwargs['part_pk']
+        part = Part.objects.get(id=part_pk)
+        current_revision = Revision.objects.filter(part=part).last()
+
+        context.update({
+            'part': part,
+            'current_revision': current_revision,
+        })
+        return context
+
+    def get(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        documentation_form = DocumentationFormset(instance=self.object)
+        return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form))
+
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        documentation_form = DocumentationFormset(
+            self.request.POST, instance=self.object)
+
+        if (form.is_valid() and documentation_form.is_valid()):
+            return self.form_valid(form, documentation_form)
+        return self.form_invalid(form, documentation_form)
+
+    def get_initial(self):
+        #Returns the initial data from current revision
+        initial = super(PartsAjaxCreateRevisionView, self).get_initial()
+        # get the current revision object, prepopolate fields
+        part = Part.objects.get(id=self.kwargs['part_pk'])
+        current_revision = Revision.objects.filter(part=part).last()
+        initial['part'] = part
+        initial['revision_code'] = None
+        initial['unit_cost'] = current_revision.unit_cost
+        initial['refurbishment_cost'] = current_revision.refurbishment_cost
+
+        return initial
+
+    def form_valid(self, form, documentation_form):
+        self.object = form.save()
+        documentation_form.instance = self.object
+        documentation_form.save()
+        response = HttpResponseRedirect(self.get_success_url())
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.part.id,
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def form_invalid(self, form, documentation_form):
+        form_errors = documentation_form.errors
+
+        if self.request.is_ajax():
+            data = form.errors
+            return JsonResponse(data, status=400)
+        else:
+            return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form, form_errors=form_errors))
+
+    def get_success_url(self):
+        return reverse('parts:ajax_parts_detail', args=(self.object.part.id, ))
+
+
+class PartsAjaxUpdateRevisionView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, UpdateView):
+    model = Revision
+    form_class = RevisionForm
+    context_object_name = 'revision'
+    template_name='parts/ajax_part_revision_form.html'
     permission_required = 'parts.add_part'
     redirect_field_name = 'home'
 
@@ -170,7 +331,7 @@ class PartsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
             print(form.cleaned_data)
             data = {
                 'message': "Successfully submitted form data.",
-                'object_id': self.object.id,
+                'object_id': self.object.part.id,
             }
             return JsonResponse(data)
         else:
@@ -186,13 +347,13 @@ class PartsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
             return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form, form_errors=form_errors))
 
     def get_success_url(self):
-        return reverse('parts:ajax_parts_detail', args=(self.object.id, ))
+        return reverse('parts:ajax_parts_detail', args=(self.object.part.id, ))
 
 
-class PartsAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
-    model = Part
-    context_object_name='part_template'
-    template_name = 'parts/ajax_part_confirm_delete.html'
+class PartsAjaxDeleteRevisionView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = Revision
+    context_object_name='revision'
+    template_name = 'parts/ajax_part_revision_confirm_delete.html'
     permission_required = 'parts.add_part'
     redirect_field_name = 'home'
 
@@ -200,7 +361,8 @@ class PartsAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteVie
         self.object = self.get_object()
         data = {
             'message': "Successfully submitted form data.",
-            'parent_id': self.object.part_type_id,
+            'parent_id': self.object.part.id,
+            'object_model': self.object._meta.model_name,
         }
         self.object.delete()
         return JsonResponse(data)

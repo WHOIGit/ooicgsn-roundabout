@@ -4,11 +4,12 @@
 
 
         <div class="card-header">
-            {% if part_template.id %}
+            {% if part_template %}
                 <h3>{{ part_template.name }}</h3>
             {% else %}
                 <h3>Add Part Template</h3>
             {% endif %}
+
         </div>
 
         <div class="card-body">
@@ -36,43 +37,88 @@
                             </div>
                         {% endfor %}
                     {% endif %}
+                </div>
 
-                <div class="col-md-12">
-                  <table class="table table-tight">
-                    <thead>
-                      <th>Document</th>
-                      <th class="text-right">Document Type</th>
-                      <th class="text-right">Link</th>
-                    </thead>
-                    <tbody>
-                      {{ documentation_form.management_form }}
+                {% if not part_template %}
+                     <h4>Revision Information</h4>
+                      <table class="table table-tight">
+                        <thead>
+                          <th>Revision Code</th>
+                          <th class="text-right">Unit Cost</th>
+                          <th class="text-right">Refurbishment Cost</th>
+                        </thead>
+                        <tbody>
+                            {{ revision_form.management_form }}
 
-                      {% if documentation_form.errors %}
-                      <tr>
-                        <div class="alert alert-danger">
-                        {% for dict in documentation_form.errors %}
+                            {% if revision_form.errors %}
+                            <tr>
+                              <div class="alert alert-danger">
+                              {% for dict in revision_form.errors %}
 
-                            {% for error in dict.values %}
-                              {{ error|escape }}
+                                  {% for error in dict.values %}
+                                    {{ error|escape }}
+                                  {% endfor %}
+
+                              {% endfor %}
+                              </div>
+                            </tr>
+                           {% endif %}
+
+                            {% for rev in revision_form %}
+
+                              <tr>
+                                  <td>{{ rev.revision_code }}</td>
+                                  <td class="text-right">{{ rev.unit_cost }}</td>
+                                  <td class="text-right">{{ rev.refurbishment_cost }} </td>
+                              </tr>
+                              <tr>
+                                  <td colspan="3">
+                                    <p>Notes on this Revision</p>
+                                    {{ rev.note }}
+                                  </td>
+                              </tr>
                             {% endfor %}
+                          </tbody>
+                        </table>
 
-                        {% endfor %}
+
+                        <div class="col-md-12">
+                         <h5>Revision Documentation</h5>
+                          <table class="table table-tight documentation-form">
+                            <thead>
+                              <th>Document</th>
+                              <th class="text-right">Document Type</th>
+                              <th class="text-right">Link</th>
+                            </thead>
+                            <tbody>
+                              {{ documentation_form.management_form }}
+
+                              {% if documentation_form.errors %}
+                              <tr>
+                                <div class="alert alert-danger">
+                                {% for dict in documentation_form.errors %}
+
+                                    {% for error in dict.values %}
+                                      {{ error|escape }}
+                                    {% endfor %}
+
+                                {% endfor %}
+                                </div>
+                              </tr>
+                             {% endif %}
+
+                              {% for doc in documentation_form %}
+
+                                <tr>
+                                    <td>{% if doc.id  %}{{ doc.DELETE }}{% endif %} {{ doc.id }} {{ doc.name }}</td>
+                                    <td class="text-right">{{ doc.doc_type }}</td>
+                                    <td class="text-right">{{ doc.doc_link }} </td>
+                                </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
                         </div>
-                      </tr>
-                     {% endif %}
-
-                      {% for doc in documentation_form %}
-
-                        <tr>
-                            <td>{% if doc.id  %}{{ doc.DELETE }}{% endif %} {{ doc.id }} {{ doc.name }}</td>
-                            <td class="text-right">{{ doc.doc_type }}</td>
-                            <td class="text-right">{{ doc.doc_link }} </td>
-                        </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-                </div>
+                {% endif %}
 
                 <div class="control-group">
                   <div class="controls">
@@ -84,6 +130,10 @@
                   </div>
                 </div>
               </form>
+
+            </div>
+
+
 
           </div>
 
@@ -103,7 +153,7 @@
 
 $(document).ready(function() {
 
-    $('#parts-form tbody tr').formset({
+    $('.documentation-form tbody tr').formset({
         prefix: 'documentation',
         addText: 'add document',
         deleteText: 'remove',
@@ -135,7 +185,7 @@ $(document).ready(function() {
       });
 
     })
-    
+
 
 
 });

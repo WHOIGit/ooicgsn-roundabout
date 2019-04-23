@@ -92,6 +92,10 @@ svg#home-logo {
     padding-left: 0px;
 }
 
+#parts-form th {
+    font-weight: normal;
+}
+
 .add-row {
     display:block;
     margin-top:15px;
