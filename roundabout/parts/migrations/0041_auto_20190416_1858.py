@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='part',
             name='name',
-            field=models.CharField(db_index=True, max_length=255, unique=True),
+            field=models.CharField(db_index=True, max_length=255, unique=False),
         ),
         migrations.AlterField(
             model_name='revision',
