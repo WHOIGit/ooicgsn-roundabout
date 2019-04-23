@@ -57,6 +57,7 @@ class Part(models.Model):
     def get_absolute_url(self):
         return reverse('parts:parts_detail', kwargs={'pk': self.pk, })
 
+
 class Revision(models.Model):
     revision_code = models.CharField(max_length=255, unique=False, db_index=True, default='A')
     unit_cost = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], null=False, blank=True, default='0.00')
@@ -83,7 +84,7 @@ class Documentation(models.Model):
     part = models.ForeignKey(Part, related_name='documentation',
                              on_delete=models.CASCADE, null=True, blank=True)
     revision = models.ForeignKey(Revision, related_name='documentation',
-                             on_delete=models.CASCADE, null=True, blank=True)                         
+                             on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         ordering = ['doc_type', 'name']
