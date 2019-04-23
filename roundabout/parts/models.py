@@ -32,7 +32,7 @@ class Part(models.Model):
         ('Mechanical', 'Mechanical'),
         ('Sensor', 'Sensor'),
     )
-    name = models.CharField(max_length=255, unique=True, db_index=True)
+    name = models.CharField(max_length=255, unique=False, db_index=True)
     friendly_name = models.CharField(max_length=255, unique=False, null=False, blank=True)
     part_type = TreeForeignKey(PartType, related_name='parts', on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
     revision = models.CharField(max_length=100, blank=True)
