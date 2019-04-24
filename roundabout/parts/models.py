@@ -1,6 +1,7 @@
 from decimal import Decimal
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from django.core.validators import MinValueValidator
 from mptt.models import MPTTModel, TreeForeignKey
 
@@ -60,6 +61,7 @@ class Revision(models.Model):
     unit_cost = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], null=False, blank=True, default='0.00')
     refurbishment_cost = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], null=False, blank=True, default='0.00')
     note = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
     part = models.ForeignKey(Part, related_name='revisions',
                           on_delete=models.CASCADE, null=False, blank=False, db_index=True)
 
