@@ -6,7 +6,7 @@ from django_summernote.widgets import SummernoteInplaceWidget, SummernoteWidget
 
 from .models import Inventory, Deployment, Action, DeploymentSnapshot, PhotoNote
 from roundabout.locations.models import Location
-from roundabout.parts.models import Part
+from roundabout.parts.models import Part, Revision
 from roundabout.moorings.models import MooringPart
 
 
@@ -18,9 +18,8 @@ class InventoryForm(forms.ModelForm):
 
     class Meta:
         model = Inventory
-        fields = ['part', 'serial_number', 'old_serial_number', 'whoi_number', 'ooi_property_number']
+        fields = ['revision', 'serial_number', 'old_serial_number', 'whoi_number', 'ooi_property_number']
         labels = {
-            'part': 'Select Part Template',
             'serial_number': 'Serial Number',
             'old_serial_number': 'Legacy Serial Number',
             'whoi_number': 'WHOI Number',
@@ -34,8 +33,16 @@ class InventoryForm(forms.ModelForm):
 
         super(InventoryForm, self).__init__(*args, **kwargs)
 
-        # Remove Equipment specific fields unless item is Equipment
         if self.instance.pk:
+            # Populate Revision field with only Revisions for this Part
+            if self.instance.revision:
+                revisions = Revision.objects.filter(part=self.instance.revision.part)
+            else:
+                revisions = Revision.objects.filter(part=self.instance.part)
+                
+            self.fields['revision'].queryset = revisions
+
+            # Remove Equipment specific fields unless item is Equipment
             if not self.instance.part.is_equipment:
                 del self.fields['whoi_number']
                 del self.fields['ooi_property_number']
