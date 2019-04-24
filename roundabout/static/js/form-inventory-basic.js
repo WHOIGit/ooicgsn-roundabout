@@ -89,6 +89,7 @@ $(document).ready(function() {
     $("#id_part").change(function () {
         var url_equipment = $("#inventory-action-form").attr("data-equipment-url");
         var url_serialnumber = $("#inventory-action-form").attr("data-serialnumber-url");
+        var url_revisions = $("#inventory-action-form").attr("data-revisions-url");
         var partID = $(this).val();
 
         if ( $( "#id_location" ).length ) {
@@ -96,6 +97,16 @@ $(document).ready(function() {
         }  else {
             var locationID;
         }
+
+        $.ajax({
+            url: url_revisions,
+            data: {
+              "part_id": partID
+            },
+            success: function (data) {
+              $("#id_revision").html(data);
+            }
+        });
 
         $.ajax({
             url: url_serialnumber,

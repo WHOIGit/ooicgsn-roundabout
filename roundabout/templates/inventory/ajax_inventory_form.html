@@ -74,11 +74,12 @@
 
                     {% if latest_flag.detail %}<p><strong>Why Flagged:</strong> {{ latest_flag.detail }}</p>{% endif %}
                     <form class="form-horizontal ajax-form" method="post" action="" id="inventory-action-form" enctype="multipart/form-data"
-                         data-parents-url="{% url 'inventory:ajax_load_parents' %}"
+                          data-parents-url="{% url 'inventory:ajax_load_parents' %}"
                           data-deployments-url="{% url 'inventory:ajax_load_deployments' %}"
                           data-mooring-parts-url="{% url 'inventory:ajax_load_mooring_parts' %}"
                           data-equipment-url="{% url 'inventory:ajax_load_is_equipment' %}"
                           data-serialnumber-url="{% url 'inventory:ajax_load_parttemplate_create_serialnumber' %}"
+                          data-revisions-url="{% url 'inventory:ajax_load_revisions_by_partnumber' %}"
                           data-url='{{ request.build_absolute_uri|safe }}'>
                       {% csrf_token %}
                       {{ form.media }}

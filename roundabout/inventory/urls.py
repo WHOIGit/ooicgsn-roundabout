@@ -50,6 +50,7 @@ urlpatterns = [
     path('ajax/delete/<int:pk>/', view=views.InventoryAjaxDeleteView.as_view(), name='ajax_inventory_delete'),
     path('ajax/load-part-templates/', views.load_part_templates, name='ajax_load_part_templates'),
     path('ajax/load-part-templates-by-partnumber/', views.load_part_templates_by_partnumber, name='ajax_load_part_templates_by_partnumber'),
+    path('ajax/load-revisions-by-partnumber/', views.load_revisions_by_partnumber, name='ajax_load_revisions_by_partnumber'),
     path('ajax/load-part-number-for-serialnumber/', views.load_partnumber_create_serialnumber, name='ajax_load_partnumber_create_serialnumber'),
     path('ajax/load-part-templates-for-serialnumber/', views.load_parttemplate_create_serialnumber, name='ajax_load_parttemplate_create_serialnumber'),
     path('ajax/load-subassemblies-by-serialnumber/', views.load_subassemblies_by_serialnumber, name='ajax_load_subassemblies_by_serialnumber'),

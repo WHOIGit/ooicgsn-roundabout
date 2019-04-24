@@ -49,7 +49,7 @@ class InventoryAddForm(forms.ModelForm):
 
     class Meta:
         model = Inventory
-        fields = ['part', 'serial_number', 'old_serial_number', 'whoi_number', 'ooi_property_number', 'location']
+        fields = ['part', 'revision', 'serial_number', 'old_serial_number', 'whoi_number', 'ooi_property_number', 'location']
         labels = {
             'part': 'Select Part Template',
             'serial_number': 'Serial Number',
