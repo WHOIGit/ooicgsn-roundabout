@@ -1,4 +1,6 @@
 
 {% for revision in revisions %}
-<option value="{{ revision.pk }}">{{ revision.revision_code }}</option>
+
+    <option value="{{ revision.pk }}" {% if forloop.first %}selected{% endif %}>{{ revision.revision_code }}</option>
+
 {% endfor %}
