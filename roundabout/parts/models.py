@@ -66,7 +66,7 @@ class Revision(models.Model):
                           on_delete=models.CASCADE, null=False, blank=False, db_index=True)
 
     class Meta:
-        ordering = ['revision_code']
+        ordering = ['-created_at']
 
     def __str__(self):
         return self.revision_code
