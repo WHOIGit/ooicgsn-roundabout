@@ -15,7 +15,7 @@ from itertools import chain
 from .models import Inventory, Deployment, Action, DeploymentAction, InventorySnapshot, DeploymentSnapshot
 from .forms import *
 from roundabout.locations.models import Location
-from roundabout.parts.models import Part, PartType
+from roundabout.parts.models import Part, PartType, Revision
 from roundabout.moorings.models import MooringPart
 from roundabout.admintools.models import Printer
 from common.util.mixins import AjaxFormMixin
@@ -208,6 +208,15 @@ def load_part_templates_by_partnumber(request):
     if part_number:
         part_list = Part.objects.filter(part_number__icontains=part_number)
     return render(request, 'inventory/part_templates_dropdown_list_options.html', {'parts': part_list, 'filter_type': 'part_number'})
+
+
+# Function to load Revisions based on Part Number
+def load_revisions_by_partnumber(request):
+    part_id = request.GET.get('part_id')
+    revisions = Revision.objects.none()
+    if part_id:
+        revisions = Revision.objects.filter(part_id=part_id)
+    return render(request, 'inventory/revisions_dropdown_list_options.html', {'revisions': revisions,})
 
 
 # Function to create Serial Number from Part Number search, load result into form to preview

@@ -35,6 +35,7 @@ $(document).ready(function() {
       var url_serialnumber = $(this).attr("data-serialnumber-url");
       var url_equipment = $(this).attr("data-equipment-url");
       var partNumber = $("#part_number_search").val();
+      var url_revisions = $("#inventory-action-form").attr("data-revisions-url");
       $.ajax({
           url: url,
           data: {
@@ -42,6 +43,18 @@ $(document).ready(function() {
           },
           success: function (data) {
             $("#id_part").html(data);
+            // Now send another AJAX request to update Revisions
+            var partID = $("#id_part").val();
+            console.log(partID);
+            $.ajax({
+                url: url_revisions,
+                data: {
+                  "part_id": partID
+                },
+                success: function (data) {
+                  $("#id_revision").html(data);
+                }
+            });
           }
       });
       $.ajax({
@@ -89,6 +102,7 @@ $(document).ready(function() {
     $("#id_part").change(function () {
         var url_equipment = $("#inventory-action-form").attr("data-equipment-url");
         var url_serialnumber = $("#inventory-action-form").attr("data-serialnumber-url");
+        var url_revisions = $("#inventory-action-form").attr("data-revisions-url");
         var partID = $(this).val();
 
         if ( $( "#id_location" ).length ) {
@@ -96,6 +110,16 @@ $(document).ready(function() {
         }  else {
             var locationID;
         }
+
+        $.ajax({
+            url: url_revisions,
+            data: {
+              "part_id": partID
+            },
+            success: function (data) {
+              $("#id_revision").html(data);
+            }
+        });
 
         $.ajax({
             url: url_serialnumber,

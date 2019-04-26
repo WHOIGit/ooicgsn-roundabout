@@ -193,7 +193,7 @@
         <p>OOI Property Number: {{ inventory_item.ooi_property_number }}</p>
     {% endif %}
     <p>Part Number: {{ inventory_item.part.part_number }}</p>
-    <p>Revision: {{ inventory_item.part.revision }}</p>
+    <p>Revision: {{ inventory_item.revision.revision_code }}</p>
     <p>Current Location: {{ inventory_item.location.name }}</p>
     <p>Time at Sea: {{ inventory_item.total_time_at_sea|time_at_sea_display }}</p>
     {% if inventory_item.current_deployment_time_at_sea %}
@@ -252,7 +252,7 @@
             </li>
         {% endif %}
 
-        {% if inventory_item.part.documentation.all %}
+        {% if inventory_item.revision.documentation.all %}
           <li class="nav-item">
             <a class="nav-link" id="documentation-tab" data-toggle="tab" href="#documentation" role="tab" aria-controls="documentation" aria-selected="false">Documentation</a>
           </li>
@@ -372,7 +372,7 @@
             </div>
         {% endif %}
 
-        {% if inventory_item.part.documentation.all %}
+        {% if inventory_item.revision.documentation.all %}
           <div class="tab-pane fade" id="documentation" role="tabpanel" aria-labelledby="documentation-tab">
 
                   <table class="table documentation-table">
@@ -382,7 +382,7 @@
 
                       </thead>
                       <tbody>
-                        {% for document in  inventory_item.part.documentation.all %}
+                        {% for document in  inventory_item.revision.documentation.all %}
                       <tr>
                           <td><a href="{{ document.doc_link }}" target="_blank">{{ document.name }}</a></td>
                           <td class="text-right">{{ document.doc_type }}</td>
@@ -397,12 +397,12 @@
         <div class="tab-pane fade" id="part-template" role="tabpanel" aria-labelledby="part-template-tab">
 
             <ul class="list-group list-group-flush">
-                <li class="list-group-item">Part Type: {{ inventory_item.part.part_type }}</li>
-                <li class="list-group-item">Unit Cost: ${{ inventory_item.part.unit_cost|intcomma }}</li>
-                <li class="list-group-item">Refurbishment Cost: ${{ inventory_item.part.refurbishment_cost|intcomma }}</li>
-                <li class="list-group-item">Current Inventory: {{ inventory_item.part.get_part_inventory_count }}</li>
+                <li class="list-group-item">Part Type: {{ inventory_item.revision.part.part_type }}</li>
+                <li class="list-group-item">Unit Cost: ${{ inventory_item.revision.unit_cost|intcomma }}</li>
+                <li class="list-group-item">Refurbishment Cost: ${{ inventory_item.revision.refurbishment_cost|intcomma }}</li>
+                <li class="list-group-item">Current Inventory: {{ inventory_item.revision.part.get_part_inventory_count }}</li>
                 {% if inventory_item.part.note %}
-                    <li class="list-group-item">Part Template Notes: {{ inventory_item.part.note }}</li>
+                    <li class="list-group-item">Part Template Notes: {{ inventory_item.revision.note }}</li>
                 {% endif %}
             </ul>
 

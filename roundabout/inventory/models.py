@@ -8,7 +8,7 @@ from model_utils import FieldTracker
 from mptt.models import MPTTModel, TreeForeignKey
 
 from roundabout.locations.models import Location
-from roundabout.parts.models import Part
+from roundabout.parts.models import Part, Revision
 from roundabout.moorings.models import MooringPart
 from roundabout.users.models import User
 
@@ -70,6 +70,8 @@ class Inventory(MPTTModel):
     serial_number = models.CharField(max_length=255, unique=True, db_index=True)
     old_serial_number = models.CharField(max_length=255, unique=False, blank=True)
     part = models.ForeignKey(Part, related_name='inventory',
+                             on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
+    revision = models.ForeignKey(Revision, related_name='inventory',
                              on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
     location = TreeForeignKey(Location, related_name='inventory',
                               on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
