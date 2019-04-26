@@ -9,7 +9,10 @@ def port_inventory_to_revisions(apps, schema_editor):
     Inventory = apps.get_model('inventory', 'Inventory')
 
     for inv in Inventory.objects.all():
-        inv.revision = inv.part.revisions.all().first()
+        if inv.part:
+            inv.revision = inv.part.revisions.all().first()
+        else:
+            inv.revision = None    
         inv.save()
 
 
