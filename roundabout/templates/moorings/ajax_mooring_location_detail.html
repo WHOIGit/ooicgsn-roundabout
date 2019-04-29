@@ -26,7 +26,7 @@
     {% if location.location_type %}<p>Location Type: {{ location.location_type }}</p>{% endif %}
     {% if location.location_id %}<p>Location ID: {{ location.location_id }}</p>{% endif %}
     <p>Parent: {{ location.parent.name }}</p>
-    <p>Total Mooring Cost (Equational Field): ${{ location.get_mooring_total_cost|intcomma }}
+    <p>Total Mooring Cost: ${{ location.get_mooring_total_cost|intcomma }}
 
 
 
