@@ -27,7 +27,8 @@ class MooringPart(MPTTModel):
         tree = self.get_descendants(include_self=True)
         total_cost = 0
         for item in tree:
-            cost = item.part.unit_cost
+            revision = item.part.revisions.first()
+            cost = revision.unit_cost
             total_cost = total_cost + cost
         return total_cost
 

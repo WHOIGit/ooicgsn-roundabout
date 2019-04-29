@@ -32,10 +32,8 @@
                     </div>
 
 
-                        <p>Revision: {{ mooring_part.part.revision }}</p>
                         <p>Part Number: {{ mooring_part.part.part_number }}</p>
                         <p>Part Type: {{ mooring_part.part.part_type }}</p>
-                        <p>Unit Cost: ${{ mooring_part.part.unit_cost|intcomma }}</p>
                         <p>Current Inventory: {{ mooring_part.part.get_part_inventory_count }}
                     <hr>
                         <p>Location: {{ mooring_part.location.name }}</p>
@@ -46,7 +44,7 @@
                         {% endif %}
 
                         {% if mooring_part.children.exists %}
-                            <p>Total Assembly Cost (Equational Field): ${{ mooring_part.get_assembly_total_cost|intcomma }}
+                            <p>Total Assembly Cost: ${{ mooring_part.get_assembly_total_cost|intcomma }}
                         {% endif %}
 
 
