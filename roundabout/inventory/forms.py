@@ -1,8 +1,10 @@
 from django import forms
 from django.forms.models import inlineformset_factory
+from django.utils import timezone
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit
 from django_summernote.widgets import SummernoteInplaceWidget, SummernoteWidget
+from bootstrap_datepicker_plus import DatePickerInput
 
 from .models import Inventory, Deployment, Action, DeploymentSnapshot, PhotoNote
 from roundabout.locations.models import Location
@@ -39,7 +41,7 @@ class InventoryForm(forms.ModelForm):
                 revisions = Revision.objects.filter(part=self.instance.revision.part)
             else:
                 revisions = Revision.objects.filter(part=self.instance.part)
-                
+
             self.fields['revision'].queryset = revisions
 
             # Remove Equipment specific fields unless item is Equipment
@@ -401,6 +403,17 @@ class DeploymentActionBurninForm(forms.ModelForm):
         labels = {
             'location': 'Select Location for Burn In',
         }
+
+    date = forms.DateField( widget=DatePickerInput(
+            options={
+                "format": "MM/DD/YYYY", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": True,
+            }
+        ),
+        initial=timezone.now
+    )
 
     def __init__(self, *args, **kwargs):
         super(DeploymentActionBurninForm, self).__init__(*args, **kwargs)

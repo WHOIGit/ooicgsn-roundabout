@@ -71,6 +71,7 @@ THIRD_PARTY_APPS = [
     'rest_framework',
     'mptt', # Tree structures in database
     'django_summernote', #WYSIWYG
+    'bootstrap_datepicker_plus', # Date Picker
 ]
 LOCAL_APPS = [
     'roundabout.users.apps.UsersAppConfig',

@@ -1886,8 +1886,10 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             action_type_inventory = 'removefromdeployment'
 
         action_form = form.save()
+
+        action_date = form.cleaned_data['date']
         action_record = DeploymentAction.objects.create(action_type=action_type, detail=self.object.detail, location_id=self.object.location_id,
-                                              user_id=self.request.user.id, deployment_id=self.object.id)
+                                              user_id=self.request.user.id, deployment_id=self.object.id, created_at=action_date)
 
         # Get all Inventory items on Deployment, match location and add Action
         inventory_items = Inventory.objects.filter(deployment_id=self.object.id)

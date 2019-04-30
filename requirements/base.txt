@@ -19,5 +19,6 @@ coreapi==2.3.3  # https://github.com/core-api/python-client
 
 # Your custom requirements go here
 django-mptt==0.9.0
-django-summernote==0.8.11.1
+django-summernote==0.8.11.4
 whitenoise==4.1.2
+django-bootstrap-datepicker-plus==3.0.5
