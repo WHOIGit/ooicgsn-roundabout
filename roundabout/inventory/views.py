@@ -1887,6 +1887,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
 
         action_form = form.save()
 
+        # Get the date for the Action Record from the custom form field
         action_date = form.cleaned_data['date']
         action_record = DeploymentAction.objects.create(action_type=action_type, detail=self.object.detail, location_id=self.object.location_id,
                                               user_id=self.request.user.id, deployment_id=self.object.id, created_at=action_date)
@@ -1898,7 +1899,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             item.save()
 
             action_record = Action.objects.create(action_type=action_type_inventory, detail='', location_id=self.object.location_id,
-                                                  user_id=self.request.user.id, inventory_id=item.id)
+                                                  user_id=self.request.user.id, inventory_id=item.id, created_at=action_date)
             action_detail = '%s, moved to %s. ' % (action_record.get_action_type_display(), self.object.location)
             action_record.detail = action_detail
             action_record.save()

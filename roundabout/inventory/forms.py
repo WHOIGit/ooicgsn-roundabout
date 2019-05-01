@@ -404,6 +404,7 @@ class DeploymentActionBurninForm(forms.ModelForm):
             'location': 'Select Location for Burn In',
         }
 
+    # Add custom date field to allow user to pick date for the Action
     date = forms.DateField( widget=DatePickerInput(
             options={
                 "format": "MM/DD/YYYY", # moment date-time format
@@ -431,6 +432,18 @@ class DeploymentActionDeployForm(forms.ModelForm):
             'location': forms.HiddenInput()
         }
 
+    # Add custom date field to allow user to pick date for the Action
+    date = forms.DateField( widget=DatePickerInput(
+            options={
+                "format": "MM/DD/YYYY", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": True,
+            }
+        ),
+        initial=timezone.now
+    )
+
     def __init__(self, *args, **kwargs):
         super(DeploymentActionDeployForm, self).__init__(*args, **kwargs)
         self.initial['location'] = self.instance.final_location
@@ -444,6 +457,18 @@ class DeploymentActionRecoverForm(forms.ModelForm):
         labels = {
             'location': 'Select Land location to recover Deployment to:',
         }
+
+    # Add custom date field to allow user to pick date for the Action
+    date = forms.DateField( widget=DatePickerInput(
+            options={
+                "format": "MM/DD/YYYY", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": True,
+            }
+        ),
+        initial=timezone.now
+    )
 
     def __init__(self, *args, **kwargs):
         super(DeploymentActionRecoverForm, self).__init__(*args, **kwargs)
@@ -461,6 +486,18 @@ class DeploymentActionRetireForm(forms.ModelForm):
             'location': forms.HiddenInput()
         }
 
+    # Add custom date field to allow user to pick date for the Action
+    date = forms.DateField( widget=DatePickerInput(
+            options={
+                "format": "MM/DD/YYYY", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": True,
+            }
+        ),
+        initial=timezone.now
+    )
+    
     def __init__(self, *args, **kwargs):
         super(DeploymentActionRetireForm, self).__init__(*args, **kwargs)
         self.initial['location'] = Location.objects.get(name='Retired')
