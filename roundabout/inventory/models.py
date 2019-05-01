@@ -277,6 +277,9 @@ class DeploymentAction(models.Model):
                               on_delete=models.SET_NULL, null=True, blank=False)
     deployment = models.ForeignKey(Deployment, related_name='deployment_action',
                                  on_delete=models.CASCADE, null=True, blank=True)
+    latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    depth = models.PositiveIntegerField(null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at', 'action_type']
