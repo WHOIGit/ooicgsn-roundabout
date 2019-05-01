@@ -59,6 +59,16 @@
     <p>Parent: {{ deployment.final_location.parent }}</p>
 
     <hr>
+    {% if action_record.all %}
+    <h4>Deployment Details</h4>
+        {% for action in action_record.all %}
+            <p>Latitude: {{ action.latitude }}</p>
+            <p>Longitude: {{ action.longitude }}</p>
+            <p>Depth: {{ action.depth }} m</p>
+        {% endfor %}
+    {% endif %}
+
+    <hr>
 
     <h4>Percent Complete</h4>
 

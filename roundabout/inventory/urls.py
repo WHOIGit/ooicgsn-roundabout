@@ -45,7 +45,6 @@ urlpatterns = [
     path('ajax/note/<int:pk>/', view=views.ActionNoteAjaxCreateView.as_view(), name='ajax_note_action'),
     path('ajax/photo-upload/<int:pk>/', view=views.ActionPhotoUploadAjaxCreateView.as_view(), name='ajax_photo_upload_action'),
     path('ajax/history/<int:pk>/', view=views.ActionHistoryNoteAjaxCreateView.as_view(), name='ajax_history_action'),
-    path('ajax/deployment/<int:pk>/', view=views.InventoryAjaxDeploymentDetailView.as_view(), name='ajax_inventory_deployment_detail'),
     path('ajax/location/<int:pk>/', view=views.InventoryAjaxLocationDetailView.as_view(), name='ajax_inventory_location_detail'),
     path('ajax/delete/<int:pk>/', view=views.InventoryAjaxDeleteView.as_view(), name='ajax_inventory_delete'),
     path('ajax/load-part-templates/', views.load_part_templates, name='ajax_load_part_templates'),

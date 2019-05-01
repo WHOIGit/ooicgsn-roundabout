@@ -4,6 +4,7 @@ from datetime import timedelta
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
+from django.core.validators import MaxValueValidator, MinValueValidator
 from model_utils import FieldTracker
 from mptt.models import MPTTModel, TreeForeignKey
 
@@ -277,8 +278,16 @@ class DeploymentAction(models.Model):
                               on_delete=models.SET_NULL, null=True, blank=False)
     deployment = models.ForeignKey(Deployment, related_name='deployment_action',
                                  on_delete=models.CASCADE, null=True, blank=True)
-    latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
-    longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
+                                    validators=[
+                                        MaxValueValidator(90),
+                                        MinValueValidator(0)
+                                    ])
+    longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
+                                    validators=[
+                                        MaxValueValidator(180),
+                                        MinValueValidator(0)
+                                    ])
     depth = models.PositiveIntegerField(null=True, blank=True)
 
     class Meta:

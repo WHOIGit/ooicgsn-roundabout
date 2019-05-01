@@ -2,7 +2,7 @@ from django import forms
 from django.forms.models import inlineformset_factory
 from django.utils import timezone
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit
+from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, Div, Field
 from django_summernote.widgets import SummernoteInplaceWidget, SummernoteWidget
 from bootstrap_datepicker_plus import DatePickerInput
 
@@ -432,7 +432,7 @@ class DeploymentActionDeployForm(forms.ModelForm):
             'location': forms.HiddenInput()
         }
 
-    # Add custom date field to allow user to pick date for the Action
+    # Add custom date field to allow user to pick date for the Action record
     date = forms.DateField( widget=DatePickerInput(
             options={
                 "format": "MM/DD/YYYY", # moment date-time format
@@ -443,10 +443,30 @@ class DeploymentActionDeployForm(forms.ModelForm):
         ),
         initial=timezone.now
     )
+    # Add lat/long, depth fields for the Action record
+    latitude = forms.DecimalField()
+    longitude = forms.DecimalField()
+    depth = forms.IntegerField(min_value=0)
 
     def __init__(self, *args, **kwargs):
         super(DeploymentActionDeployForm, self).__init__(*args, **kwargs)
         self.initial['location'] = self.instance.final_location
+
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Div(
+                Field('date'),
+            ),
+            Div(
+                Field('latitude', wrapper_class='col-md-4'),
+                Field('longitude', wrapper_class='col-md-4'),
+                Field('depth', wrapper_class='col-md-4'),
+                css_class='form-row'
+            ),
+            Div(
+                Field('location'),
+            )
+        )
 
 
 class DeploymentActionRecoverForm(forms.ModelForm):
@@ -497,7 +517,7 @@ class DeploymentActionRetireForm(forms.ModelForm):
         ),
         initial=timezone.now
     )
-    
+
     def __init__(self, *args, **kwargs):
         super(DeploymentActionRetireForm, self).__init__(*args, **kwargs)
         self.initial['location'] = Location.objects.get(name='Retired')

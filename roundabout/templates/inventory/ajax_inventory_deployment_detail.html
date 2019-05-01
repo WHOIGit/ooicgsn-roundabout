@@ -45,6 +45,11 @@
                     <p>Deployment ID: {{ deployment.final_location.location_id }}</p>
                     <p>Final Location: {{ deployment.final_location }}</p>
                     <p>Parent: {{ deployment.final_location.parent }}</p>
+                    {% if action_record.all %}
+                        {% for action in action_record.all %}
+                            <p>Depth: {{ action.depth }}</p>
+                        {% endfor %}
+                    {% endif %}
 
                     <hr>
 
