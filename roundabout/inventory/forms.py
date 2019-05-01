@@ -446,7 +446,7 @@ class DeploymentActionDeployForm(forms.ModelForm):
     # Add lat/long, depth fields for the Action record
     latitude = forms.DecimalField()
     longitude = forms.DecimalField()
-    depth = forms.IntegerField(min_value=0)
+    depth = forms.IntegerField(label='Depth in Meters', min_value=0)
 
     def __init__(self, *args, **kwargs):
         super(DeploymentActionDeployForm, self).__init__(*args, **kwargs)

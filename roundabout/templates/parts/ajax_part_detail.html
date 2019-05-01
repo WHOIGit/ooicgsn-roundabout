@@ -37,8 +37,19 @@
                     <ul class="list-group">
                     {% for revision in part_template.revisions.all %}
 
-                            <li class="list-group-item">Revision: {{ revision.revision_code }}
-                                <a data-toggle="collapse" href="#revision-{{ revision.id }}" role="button" aria-expanded="false" aria-controls="revision-{{ revision.id }}"><i class="fa fa-plus-circle"></i></a>
+                            <li class="list-group-item">
+                                <a class="collapsed" data-toggle="collapse" href="#revision-{{ revision.id }}" aria-expanded="false" aria-controls="#revision-{{ revision.id }}">
+                                    Revision: {{ revision.revision_code }}
+                                </a>
+<!--
+                                <a data-toggle="collapse" href="#revision-{{ revision.id }}" role="button" aria-expanded="false" aria-controls="revision-{{ revision.id }}">
+                                    <i class="fa fa-plus-circle"></i>
+                                </a>
+-->
+                                <a data-toggle="collapse" class="collapsed text-right" href="#revision-{{ revision.id }}" aria-controls="revision-{{ revision.id }}" aria-expanded="false" role="button">
+                                    <i class="fa" aria-hidden="true"></i>
+                                    <span class="sr-only">Expand/Collapse Revision {{ revision.revision_code }}</span>
+                                </a>
 
                             <div class="collapse mt-3" id="revision-{{ revision.id }}">
                                   <hr>

@@ -45,6 +45,15 @@
     max-width: 600px;
 }
 
+/* Bootstrap toggle icons for collapse panels */
+[data-toggle="collapse"] i:before{
+    content: "\f146";
+}
+
+[data-toggle="collapse"].collapsed i:before{
+    content: "\f0fe";
+}
+
 /* Base Template styling */
 
 .navbar-brand {
