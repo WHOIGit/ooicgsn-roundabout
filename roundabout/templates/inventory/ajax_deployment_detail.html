@@ -60,7 +60,7 @@
 
     <hr>
     {% if action_record.all %}
-    <h4>Deployment Details</h4>
+    <h5>Deployment Details</h5>
         {% for action in action_record.all %}
             <p>Latitude: {{ action.latitude }}</p>
             <p>Longitude: {{ action.longitude }}</p>
@@ -70,7 +70,7 @@
 
     <hr>
 
-    <h4>Percent Complete</h4>
+    <h5>Percent Complete</h5>
 
     <div class="progress" style="height: 20px;">
         {% if percent_complete == 0 %} {{ percent_complete }}% {% endif %}
