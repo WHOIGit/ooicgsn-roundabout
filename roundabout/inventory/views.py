@@ -1823,10 +1823,12 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         return reverse('deployments:ajax_deployment_detail', args=(self.object.id,))
 
     def form_valid(self, form):
-
         self.object = form.save()
+
+        # Get the date for the Action Record from the custom form field
+        action_date = form.cleaned_data['date']
         action_record = DeploymentAction.objects.create(action_type='create', detail='Deployment created', location_id=self.object.location_id,
-                                              user_id=self.request.user.id, deployment_id=self.object.id)
+                                              user_id=self.request.user.id, deployment_id=self.object.id, created_at=action_date)
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -1842,6 +1844,16 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
 
 class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
+
+    def get_context_data(self, **kwargs):
+        context = super(DeploymentAjaxActionView, self).get_context_data(**kwargs)
+
+        latest_action_record = DeploymentAction.objects.filter(deployment=self.object).first()
+
+        context.update({
+            'latest_action_record': latest_action_record
+        })
+        return context
 
     def get_form_class(self):
         ACTION_FORMS = {

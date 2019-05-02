@@ -1,10 +1,12 @@
+import datetime
+
 from django import forms
 from django.forms.models import inlineformset_factory
 from django.utils import timezone
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, Div, Field
 from django_summernote.widgets import SummernoteInplaceWidget, SummernoteWidget
-from bootstrap_datepicker_plus import DatePickerInput
+from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
 
 from .models import Inventory, Deployment, Action, DeploymentSnapshot, PhotoNote
 from roundabout.locations.models import Location
@@ -388,6 +390,19 @@ class DeploymentForm(forms.ModelForm):
             'final_location': 'Deployment ID',
         }
 
+    # Add custom date field to allow user to pick date for the Action
+    date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": True,
+                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
+            }
+        ),
+        initial=timezone.now
+    )
+
     def __init__(self, *args, **kwargs):
         super(DeploymentForm, self).__init__(*args, **kwargs)
         root_node = Location.objects.get(name='Sea')
@@ -405,12 +420,13 @@ class DeploymentActionBurninForm(forms.ModelForm):
         }
 
     # Add custom date field to allow user to pick date for the Action
-    date = forms.DateField( widget=DatePickerInput(
+    date = forms.DateTimeField( widget=DateTimePickerInput(
             options={
-                "format": "MM/DD/YYYY", # moment date-time format
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
                 "showClose": True,
                 "showClear": True,
                 "showTodayButton": True,
+                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
             }
         ),
         initial=timezone.now
@@ -433,12 +449,13 @@ class DeploymentActionDeployForm(forms.ModelForm):
         }
 
     # Add custom date field to allow user to pick date for the Action record
-    date = forms.DateField( widget=DatePickerInput(
+    date = forms.DateTimeField( widget=DateTimePickerInput(
             options={
-                "format": "MM/DD/YYYY", # moment date-time format
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
                 "showClose": True,
                 "showClear": True,
                 "showTodayButton": True,
+                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
             }
         ),
         initial=timezone.now
@@ -479,15 +496,16 @@ class DeploymentActionRecoverForm(forms.ModelForm):
         }
 
     # Add custom date field to allow user to pick date for the Action
-    date = forms.DateField( widget=DatePickerInput(
+    date = forms.DateTimeField( widget=DateTimePickerInput(
             options={
-                "format": "MM/DD/YYYY", # moment date-time format
+                #"format": "MM/DD/YYYY, HH:mm:ss", # moment date-time format
                 "showClose": True,
                 "showClear": True,
                 "showTodayButton": True,
+                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
             }
         ),
-        initial=timezone.now
+        initial=timezone.now()
     )
 
     def __init__(self, *args, **kwargs):
@@ -507,12 +525,13 @@ class DeploymentActionRetireForm(forms.ModelForm):
         }
 
     # Add custom date field to allow user to pick date for the Action
-    date = forms.DateField( widget=DatePickerInput(
+    date = forms.DateTimeField( widget=DateTimePickerInput(
             options={
-                "format": "MM/DD/YYYY", # moment date-time format
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
                 "showClose": True,
                 "showClear": True,
                 "showTodayButton": True,
+                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
             }
         ),
         initial=timezone.now
