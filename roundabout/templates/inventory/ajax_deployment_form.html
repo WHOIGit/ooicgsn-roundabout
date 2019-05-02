@@ -16,7 +16,7 @@
     </div>
 
     <div class="card-body">
-        {{ latest_action_record.created_at }}
+        
         {% if action_type == 'deploy' %}
             <h4 class="mt-3 mb-3">Please confirm that {{ deployment.deployment_number }} is ready to deploy to {{ deployment.final_location.location_id }}.</h4>
         {% endif %}
