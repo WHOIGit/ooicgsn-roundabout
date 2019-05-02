@@ -1428,22 +1428,6 @@ class InventoryByMooringPartAjaxSubassemblyActionView(LoginRequiredMixin, Redire
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ) )
 
 
-class InventoryAjaxDeploymentDetailView(LoginRequiredMixin, DetailView):
-    model = Deployment
-    template_name ='inventory/ajax_inventory_deployment_detail.html'
-    context_object_name = 'deployment'
-
-    def get_context_data(self, **kwargs):
-        context = super(InventoryAjaxDeploymentDetailView, self).get_context_data(**kwargs)
-        total_mooringparts = MooringPart.objects.filter(location=self.object.final_location).count()
-        total_inventory = self.object.inventory.count()
-        percent_complete = round( (total_inventory / total_mooringparts) * 100 )
-        context.update({
-            'percent_complete': percent_complete,
-        })
-        return context
-
-
 class InventoryAjaxLocationDetailView(LoginRequiredMixin, DetailView):
     model = Location
     template_name = 'inventory/ajax_inventory_location_detail.html'
@@ -1787,11 +1771,17 @@ class DeploymentAjaxDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(DeploymentAjaxDetailView, self).get_context_data(**kwargs)
+        # Get percent complete info
         total_mooringparts = MooringPart.objects.filter(location=self.object.final_location).count()
         total_inventory = self.object.inventory.count()
         percent_complete = round( (total_inventory / total_mooringparts) * 100 )
+
+        # Get Lat/Long, Depth if Deployed
+        action_record = DeploymentAction.objects.filter(deployment=self.object).filter(action_type='deploy')
+
         context.update({
             'percent_complete': percent_complete,
+            'action_record': action_record,
         })
         return context
 
@@ -1833,10 +1823,12 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         return reverse('deployments:ajax_deployment_detail', args=(self.object.id,))
 
     def form_valid(self, form):
-
         self.object = form.save()
+
+        # Get the date for the Action Record from the custom form field
+        action_date = form.cleaned_data['date']
         action_record = DeploymentAction.objects.create(action_type='create', detail='Deployment created', location_id=self.object.location_id,
-                                              user_id=self.request.user.id, deployment_id=self.object.id)
+                                              user_id=self.request.user.id, deployment_id=self.object.id, created_at=action_date)
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -1852,6 +1844,16 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
 
 class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
+
+    def get_context_data(self, **kwargs):
+        context = super(DeploymentAjaxActionView, self).get_context_data(**kwargs)
+
+        latest_action_record = DeploymentAction.objects.filter(deployment=self.object).first()
+
+        context.update({
+            'latest_action_record': latest_action_record
+        })
+        return context
 
     def get_form_class(self):
         ACTION_FORMS = {
@@ -1886,8 +1888,24 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             action_type_inventory = 'removefromdeployment'
 
         action_form = form.save()
+
+        # Get the date for the Action Record from the custom form field
+        action_date = form.cleaned_data['date']
+
+        # If Deploying to Sea, add Depth, Lat/Long to Action Record
+        if action_type == 'deploy':
+            latitude = form.cleaned_data['latitude']
+            longitude = form.cleaned_data['longitude']
+            depth = form.cleaned_data['depth']
+            self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
+        else:
+            latitude = None
+            longitude = None
+            depth = None
+
         action_record = DeploymentAction.objects.create(action_type=action_type, detail=self.object.detail, location_id=self.object.location_id,
-                                              user_id=self.request.user.id, deployment_id=self.object.id)
+                                              user_id=self.request.user.id, deployment_id=self.object.id, created_at=action_date,
+                                              latitude=latitude, longitude=longitude, depth=depth)
 
         # Get all Inventory items on Deployment, match location and add Action
         inventory_items = Inventory.objects.filter(deployment_id=self.object.id)
@@ -1896,7 +1914,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             item.save()
 
             action_record = Action.objects.create(action_type=action_type_inventory, detail='', location_id=self.object.location_id,
-                                                  user_id=self.request.user.id, inventory_id=item.id)
+                                                  user_id=self.request.user.id, inventory_id=item.id, created_at=action_date)
             action_detail = '%s, moved to %s. ' % (action_record.get_action_type_display(), self.object.location)
             action_record.detail = action_detail
             action_record.save()

@@ -1,7 +1,7 @@
 {% load static i18n %}
 {% load mptt_tags %}
 {% load crispy_forms_tags %}
-
+{{ form.media }}
 
         <div class="card-header">
             {% if part_template %}
@@ -21,6 +21,7 @@
                 {% csrf_token %}
 
                 {{ form|crispy }}
+
 
                 <div class="row">
                     {% if form.errors %}

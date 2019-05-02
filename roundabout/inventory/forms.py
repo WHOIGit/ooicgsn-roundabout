@@ -1,8 +1,12 @@
+import datetime
+
 from django import forms
 from django.forms.models import inlineformset_factory
+from django.utils import timezone
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit
+from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, Div, Field
 from django_summernote.widgets import SummernoteInplaceWidget, SummernoteWidget
+from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
 
 from .models import Inventory, Deployment, Action, DeploymentSnapshot, PhotoNote
 from roundabout.locations.models import Location
@@ -39,7 +43,7 @@ class InventoryForm(forms.ModelForm):
                 revisions = Revision.objects.filter(part=self.instance.revision.part)
             else:
                 revisions = Revision.objects.filter(part=self.instance.part)
-                
+
             self.fields['revision'].queryset = revisions
 
             # Remove Equipment specific fields unless item is Equipment
@@ -386,6 +390,19 @@ class DeploymentForm(forms.ModelForm):
             'final_location': 'Deployment ID',
         }
 
+    # Add custom date field to allow user to pick date for the Action
+    date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": True,
+                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
+            }
+        ),
+        initial=timezone.now
+    )
+
     def __init__(self, *args, **kwargs):
         super(DeploymentForm, self).__init__(*args, **kwargs)
         root_node = Location.objects.get(name='Sea')
@@ -401,6 +418,19 @@ class DeploymentActionBurninForm(forms.ModelForm):
         labels = {
             'location': 'Select Location for Burn In',
         }
+
+    # Add custom date field to allow user to pick date for the Action
+    date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": True,
+                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
+            }
+        ),
+        initial=timezone.now
+    )
 
     def __init__(self, *args, **kwargs):
         super(DeploymentActionBurninForm, self).__init__(*args, **kwargs)
@@ -418,9 +448,42 @@ class DeploymentActionDeployForm(forms.ModelForm):
             'location': forms.HiddenInput()
         }
 
+    # Add custom date field to allow user to pick date for the Action record
+    date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": True,
+                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
+            }
+        ),
+        initial=timezone.now
+    )
+    # Add lat/long, depth fields for the Action record
+    latitude = forms.DecimalField()
+    longitude = forms.DecimalField()
+    depth = forms.IntegerField(label='Depth in Meters', min_value=0)
+
     def __init__(self, *args, **kwargs):
         super(DeploymentActionDeployForm, self).__init__(*args, **kwargs)
         self.initial['location'] = self.instance.final_location
+
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Div(
+                Field('date'),
+            ),
+            Div(
+                Field('latitude', wrapper_class='col-md-4'),
+                Field('longitude', wrapper_class='col-md-4'),
+                Field('depth', wrapper_class='col-md-4'),
+                css_class='form-row'
+            ),
+            Div(
+                Field('location'),
+            )
+        )
 
 
 class DeploymentActionRecoverForm(forms.ModelForm):
@@ -431,6 +494,19 @@ class DeploymentActionRecoverForm(forms.ModelForm):
         labels = {
             'location': 'Select Land location to recover Deployment to:',
         }
+
+    # Add custom date field to allow user to pick date for the Action
+    date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm:ss", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": True,
+                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
+            }
+        ),
+        initial=timezone.now()
+    )
 
     def __init__(self, *args, **kwargs):
         super(DeploymentActionRecoverForm, self).__init__(*args, **kwargs)
@@ -447,6 +523,19 @@ class DeploymentActionRetireForm(forms.ModelForm):
         widgets = {
             'location': forms.HiddenInput()
         }
+
+    # Add custom date field to allow user to pick date for the Action
+    date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": True,
+                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
+            }
+        ),
+        initial=timezone.now
+    )
 
     def __init__(self, *args, **kwargs):
         super(DeploymentActionRetireForm, self).__init__(*args, **kwargs)

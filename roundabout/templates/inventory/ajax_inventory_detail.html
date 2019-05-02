@@ -108,18 +108,19 @@
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
                 data-node-type="detail">Photo/Note</a>
+                
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_history_action' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
                 data-node-type="detail">Historical Note</a>
-            {% if request.user|has_group:"admin" %}
-                <a class="dropdown-item" href="#"
-                    data-detail-url="{% url 'inventory:ajax_inventory_update' inventory_item.id %}"
-                    data-node-id="{{ inventory_item.id }}"
-                    data-location-id="{{ inventory_item.location.id}}"
-                    data-node-type="detail">Edit Inventory Details</a>
-            {% endif %}
+
+            <a class="dropdown-item" href="#"
+                data-detail-url="{% url 'inventory:ajax_inventory_update' inventory_item.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-location-id="{{ inventory_item.location.id}}"
+                data-node-type="detail">Edit Inventory Details</a>
+
       </div>
     </div>
 

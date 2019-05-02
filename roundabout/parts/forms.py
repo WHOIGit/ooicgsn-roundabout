@@ -1,13 +1,15 @@
+import datetime
+import re
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.forms.models import inlineformset_factory
 from django_summernote.widgets import SummernoteWidget
+from bootstrap_datepicker_plus import DatePickerInput
 
 from .models import Part, Documentation, Revision
 from roundabout.locations.models import Location
 from roundabout.parts.widgets import PartParentWidget, PartLocationWidget
-
-import re
 
 
 class PartForm(forms.ModelForm):
@@ -42,11 +44,20 @@ class RevisionForm(forms.ModelForm):
 
     class Meta:
         model = Revision
-        fields = ['revision_code', 'unit_cost', 'refurbishment_cost', 'note', 'part']
+        fields = ['revision_code', 'created_at', 'unit_cost', 'refurbishment_cost', 'note', 'part']
         labels = {
+            'created_at': 'Release Date',
             'note': 'Revision Notes'
         }
         widgets = {
+            'created_at': DatePickerInput(
+                options={
+                    "format": "MM/DD/YYYY", # moment date-time format
+                    "showClose": True,
+                    "showClear": True,
+                    "showTodayButton": True,
+                }
+            ),
             'note': SummernoteWidget(),
             'part': forms.HiddenInput(),
         }
