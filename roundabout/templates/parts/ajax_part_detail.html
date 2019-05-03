@@ -33,6 +33,18 @@
                     <p>Part Type: {{ part_template.part_type }}</p>
                     <p>Is Equipment: {{ part_template.is_equipment }}</p>
 
+                    <p> {{ part_template.custom_fields.fields }} </p>
+                    <table>
+                    {% for key in part_template.custom_fields.fields %}
+                        <tr>
+                            <td>{{key.field_id}}</td>
+                            <td>{{key.field_name}}</td>
+                            <td>{{key.field_type}}</td>
+                        </tr>
+                    {% endfor %}
+                    </table>
+
+
                     <p>Current Inventory: {{ part_template.get_part_inventory_count }}</p>
 
                     <h4>Revisions</h4>

@@ -15,17 +15,9 @@
                       </button>
                       <div class="dropdown-menu ajax-detail-link" aria-labelledby="action">
                               <a class="dropdown-item" href="#"
-                                  data-detail-url="{% url 'parts:ajax_parts_update' part_template.id %}"
+                                  data-detail-url="{% url 'parts:ajax_parts_create_custom_fields' part_template.id %}"
                                   data-node-id="{{ part_template.id }}"
-                                  data-node-type="detail">Edit Part Template</a>
-                              <a class="dropdown-item" href="#"
-                                  data-detail-url="{% url 'parts:ajax_parts_create_revision' part_template.id %}"
-                                  data-node-id="{{ part_template.id }}"
-                                  data-node-type="create">Create New Revision</a>
-                              <a class="dropdown-item" href="#"
-                                  data-detail-url="{% url 'parts:ajax_parts_manage_custom_fields' part_template.id %}"
-                                  data-node-id="{{ part_template.id }}"
-                                  data-node-type="create">Manage Custom Fields</a>
+                                  data-node-type="detail">Add Custom Field</a>
                       </div>
                     </div>
 
@@ -110,7 +102,7 @@
                                            data-node-type="edit"
                                            class="btn btn-danger btn-sm float-left"
                                            role="button">Delete Field</a>
-                                     
+
 
                                 </div>
 

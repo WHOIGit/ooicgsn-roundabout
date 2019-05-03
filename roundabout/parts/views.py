@@ -1,12 +1,12 @@
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
-from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView
+from django.views.generic import View, FormView, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ValidationError
 
 from .models import Part, PartType, Revision, Documentation
-from .forms import PartForm, RevisionForm, DocumentationFormset, RevisionFormset, PartSubassemblyAddForm, PartSubassemblyEditForm
+from .forms import PartForm, RevisionForm, DocumentationFormset, RevisionFormset, PartSubassemblyAddForm, PartSubassemblyEditForm, PartCustomFieldForm
 from roundabout.locations.models import Location
 from common.util.mixins import AjaxFormMixin
 
@@ -367,6 +367,8 @@ class PartsAjaxDeleteRevisionView(LoginRequiredMixin, PermissionRequiredMixin, D
         self.object.delete()
         return JsonResponse(data)
 
+# VIEWS FOR CUSTOM FIELDS
+
 # DetailView to list all custom fields for management
 class PartsAjaxManageCustomFields(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     model = Part
@@ -374,6 +376,63 @@ class PartsAjaxManageCustomFields(LoginRequiredMixin, PermissionRequiredMixin, D
     template_name='parts/ajax_part_manage_custom_fields.html'
     permission_required = 'parts.add_part'
     redirect_field_name = 'home'
+
+
+# FormView to add new custom field
+class PartsAjaxCreateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, FormView):
+    template_name = 'parts/ajax_part_custom_field_form.html'
+    form_class = PartCustomFieldForm
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super(PartsAjaxCreateCustomFields, self).get_context_data(**kwargs)
+        context.update({
+            'part_template': Part.objects.get(id=self.kwargs['pk'])
+        })
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super(PartsAjaxCreateCustomFields, self).get_form_kwargs()
+        if 'pk' in self.kwargs:
+            kwargs['pk'] = self.kwargs['pk']
+        return kwargs
+
+    def form_valid(self, form):
+        field_name = form.cleaned_data['field_name']
+        field_type = form.cleaned_data['field_type']
+        part_id = form.cleaned_data['part_id']
+        # Create part-specific unique field_id
+        field_id = re.sub(r'[^0-9a-zA-Z]+','_',field_name)
+
+        part = Part.objects.get(id=part_id)
+
+        if part.custom_fields:
+            fields = part.custom_fields['fields']
+            new_field = {
+                'field_id': field_id,
+                'field_name': field_name,
+                'field_type': field_type,
+            }
+            fields.append(new_field)
+        else:
+            part.custom_fields = {
+                'fields': [ {
+                    'field_id': field_id,
+                    'field_name': field_name,
+                    'field_type': field_type,
+                }
+            ] }
+
+        part.save()
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': part_id,
+            }
+            return JsonResponse(data)
 
 
 # Base Views

@@ -83,3 +83,20 @@ class PartSubassemblyEditForm(forms.ModelForm):
     class Meta:
         model = Part
         fields = ['name' ]
+
+
+class PartCustomFieldForm(forms.Form):
+    field_type_choices =[('CharField', 'Text Field'), ('DateField', 'Date Field')]
+
+    field_name = forms.CharField(required=True)
+    field_type = forms.ChoiceField(choices = field_type_choices, required=True)
+    part_id = forms.IntegerField( widget=forms.HiddenInput() )
+
+    def __init__(self, *args, **kwargs):
+        if 'pk' in kwargs:
+            self.pk = kwargs.pop('pk')
+        else:
+            self.pk = None
+
+        super(PartCustomFieldForm, self).__init__(*args, **kwargs)
+        self.initial['part_id'] = self.pk
