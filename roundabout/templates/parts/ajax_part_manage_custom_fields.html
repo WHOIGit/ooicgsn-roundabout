@@ -30,12 +30,8 @@
                     </div>
 
                     <p>Part Number: {{ part_template.part_number }}</p>
-                    <p>Part Type: {{ part_template.part_type }}</p>
-                    <p>Is Equipment: {{ part_template.is_equipment }}</p>
 
-                    <p>Current Inventory: {{ part_template.get_part_inventory_count }}</p>
-
-                    <h4>Revisions</h4>
+                    <h4>Manage Custom Fields</h4>
 
                     <hr>
                     <ul class="list-group">
@@ -43,7 +39,7 @@
 
                             <li class="list-group-item">
                                 <a class="collapsed" data-toggle="collapse" href="#revision-{{ revision.id }}" aria-expanded="false" aria-controls="#revision-{{ revision.id }}">
-                                    Revision: {{ revision.revision_code }}
+                                    Field: {{ revision.revision_code }}
                                 </a>
 <!--
                                 <a data-toggle="collapse" href="#revision-{{ revision.id }}" role="button" aria-expanded="false" aria-controls="revision-{{ revision.id }}">
@@ -105,16 +101,16 @@
                                          data-node-id="{{ revision.id }}"
                                          data-node-type="edit"
                                          class="btn btn-primary btn-sm float-left mr-2"
-                                         role="button">Edit Revision</a>
+                                         role="button">Edit Field</a>
 
-                                     {% if multiple_revision %}
+
                                          <a href="#"
                                            data-detail-url="{% url 'parts:ajax_parts_delete_revision' revision.id %}"
                                            data-node-id="{{ revision.id }}"
                                            data-node-type="edit"
                                            class="btn btn-danger btn-sm float-left"
-                                           role="button">Delete Revision</a>
-                                     {% endif %}
+                                           role="button">Delete Field</a>
+                                     
 
                                 </div>
 

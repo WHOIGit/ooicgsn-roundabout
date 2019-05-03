@@ -1,5 +1,6 @@
 from decimal import Decimal
 from django.db import models
+from django.contrib.postgres.fields import JSONField
 from django.urls import reverse
 from django.utils import timezone
 from django.core.validators import MinValueValidator
@@ -42,6 +43,7 @@ class Part(models.Model):
     refurbishment_cost = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], null=False, blank=True, default='0.00')
     is_equipment = models.BooleanField(default=False)
     note = models.TextField(blank=True)
+    custom_fields = JSONField(blank=True, null=True)
 
     class Meta:
         ordering = ['name']

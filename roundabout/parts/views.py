@@ -367,6 +367,14 @@ class PartsAjaxDeleteRevisionView(LoginRequiredMixin, PermissionRequiredMixin, D
         self.object.delete()
         return JsonResponse(data)
 
+# DetailView to list all custom fields for management
+class PartsAjaxManageCustomFields(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
+    model = Part
+    context_object_name = 'part_template'
+    template_name='parts/ajax_part_manage_custom_fields.html'
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
 
 # Base Views
 
