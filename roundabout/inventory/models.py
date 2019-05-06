@@ -2,6 +2,7 @@ import datetime
 from datetime import timedelta
 
 from django.db import models
+from django.contrib.postgres.fields import JSONField
 from django.urls import reverse
 from django.utils import timezone
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -93,6 +94,7 @@ class Inventory(MPTTModel):
     time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
     whoi_number = models.CharField(max_length=255, unique=False, null=False, blank=True)
     ooi_property_number = models.CharField(max_length=255, unique=False, null=False, blank=True)
+    custom_field_values = JSONField(blank=True, null=True)
 
     tracker = FieldTracker(fields=['location', 'deployment', 'parent'])
 

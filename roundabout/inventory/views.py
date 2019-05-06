@@ -527,6 +527,42 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
     context_object_name = 'inventory_item'
     template_name='inventory/ajax_inventory_form.html'
 
+    def form_valid(self, form):
+        self.object = form.save()
+
+        # Check is this Part has custom fields
+        if self.object.part.custom_fields:
+            fields = self.object.part.custom_fields['fields']
+            custom_values = {
+                'custom_values': [ ]
+            }
+
+            #If so, match field_ids and update the custom_field_values field
+            for field in fields:
+                for key,value in field.items():
+                    if key == 'field_id' and form.cleaned_data[value]:
+                        print(key, value)
+                        field_value = {
+                            'field_id': value,
+                            'field_value': form.cleaned_data[value],
+                        }
+                        custom_values['custom_values'].append(field_value)
+
+            self.object.custom_field_values = custom_values
+            self.object.save()
+
+        response = HttpResponseRedirect(self.get_success_url())
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
     def get_success_url(self):
         return reverse('inventory:ajax_inventory_detail', args=(self.object.id,))
 

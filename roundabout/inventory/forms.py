@@ -51,6 +51,14 @@ class InventoryForm(forms.ModelForm):
                 del self.fields['whoi_number']
                 del self.fields['ooi_property_number']
 
+            # Check if this Part has Custom fields, create fields if needed
+            if self.instance.part.custom_fields:
+                custom_fields =  self.instance.part.custom_fields['fields']
+                for field in custom_fields:
+                    field_id = field['field_id']
+                    self.fields[field_id] = forms.CharField(label=field['field_name'], required=False)
+                    self.fields[field_id].initial = ''
+
 
 class InventoryAddForm(forms.ModelForm):
     serial_number = forms.CharField(strip=True,

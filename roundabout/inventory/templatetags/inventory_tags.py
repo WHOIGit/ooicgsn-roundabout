@@ -6,7 +6,6 @@ from roundabout.moorings.models import MooringPart
 
 register = template.Library()
 
-
 @register.simple_tag
 def get_mooringpart_list_by_deployment(dep_pk):
     deployment = Deployment.objects.select_related('final_location').get(id=dep_pk)
@@ -75,6 +74,15 @@ def get_part_by_inventory(part_pk):
     return queryset
 
 ### FILTERS ###
+
+# Get the Custom Field name from the Parts model
+@register.filter
+def get_custom_field_details_by_part(field_id, part):
+    fields = part.custom_fields['fields']
+    for field in fields:
+        if field['field_id'] == field_id:
+            field_name = field['field_name']
+    return field_name
 
 # filter Time at Sea duration field to show Hours/Minutes
 @register.filter

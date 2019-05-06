@@ -108,7 +108,7 @@
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
                 data-node-type="detail">Photo/Note</a>
-                
+
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_history_action' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
@@ -405,6 +405,20 @@
                 {% if inventory_item.part.note %}
                     <li class="list-group-item">Part Template Notes: {{ inventory_item.revision.note }}</li>
                 {% endif %}
+
+                <!-- User Defined Fields -->
+
+                {% if inventory_item.custom_field_values %}
+                    {% for field in inventory_item.custom_field_values.custom_values %}
+
+                        <li class="list-group-item">
+                            {{ field.field_id|get_custom_field_details_by_part:inventory_item.part }}:
+                            {{ field.field_value }}
+                        </li>
+
+                    {% endfor %}
+                {% endif %}
+
             </ul>
 
         </div>
