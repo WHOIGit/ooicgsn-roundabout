@@ -57,7 +57,13 @@ class InventoryForm(forms.ModelForm):
                 for field in custom_fields:
                     field_id = field['field_id']
                     self.fields[field_id] = forms.CharField(label=field['field_name'], required=False)
-                    self.fields[field_id].initial = ''
+                    # Get current value if it exists
+                    if self.instance.custom_field_values:
+                        fields = self.instance.custom_field_values['custom_values']
+                        for field in fields:
+                            print (field['field_id']);
+                            if field['field_id'] == field_id:
+                                self.fields[field_id].initial = field['field_value']
 
 
 class InventoryAddForm(forms.ModelForm):
@@ -102,7 +108,7 @@ class InventoryAddForm(forms.ModelForm):
         if self.instance.pk:
             if not self.instance.part.is_equipment:
                 del self.fields['whoi_number']
-                del self.fields['ooi_property_number']
+                del self.fields['ooi_property_number']       
 
 
 class ActionInventoryChangeForm(forms.ModelForm):
