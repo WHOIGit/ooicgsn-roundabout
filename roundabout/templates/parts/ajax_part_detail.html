@@ -157,15 +157,15 @@
 
                                           <a href="#"
                                              data-detail-url="{% url 'parts:ajax_parts_update_custom_fields' part_template.id field.field_id %}"
-                                             data-node-id="{{ revision.id }}"
+                                             data-node-id="{{ part_template.id }}"
                                              data-node-type="edit"
                                              class="btn btn-primary btn-sm float-left mr-2"
                                              role="button">Edit Field</a>
 
 
                                              <a href="#"
-                                               data-detail-url="{% url 'parts:ajax_parts_delete_revision' part_template.id %}"
-                                               data-node-id="{{ revision.id }}"
+                                               data-detail-url="{% url 'parts:ajax_parts_delete_custom_fields' part_template.id field.field_id  %}"
+                                               data-node-id="{{ part_template.id }}"
                                                data-node-type="edit"
                                                class="btn btn-danger btn-sm float-left"
                                                role="button">Delete Field</a>

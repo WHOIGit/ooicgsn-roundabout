@@ -7,7 +7,8 @@ from django.core.exceptions import ValidationError
 from django.template.defaultfilters import slugify
 
 from .models import Part, PartType, Revision, Documentation
-from .forms import PartForm, RevisionForm, DocumentationFormset, RevisionFormset, PartSubassemblyAddForm, PartSubassemblyEditForm, PartCustomFieldForm, PartCustomFieldUpdateForm
+from .forms import PartForm, RevisionForm, DocumentationFormset, RevisionFormset, PartCustomFieldDeleteForm, \
+                   PartSubassemblyAddForm, PartSubassemblyEditForm, PartCustomFieldForm, PartCustomFieldUpdateForm
 from roundabout.locations.models import Location
 from common.util.mixins import AjaxFormMixin
 
@@ -439,7 +440,7 @@ class PartsAjaxCreateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, A
             return JsonResponse(data)
 
 
-# FormView to add new custom field
+# FormView to update custom fields
 class PartsAjaxUpdateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, FormView):
     template_name = 'parts/ajax_part_custom_field_form.html'
     form_class = PartCustomFieldUpdateForm
@@ -478,6 +479,62 @@ class PartsAjaxUpdateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, A
                     field['field_name'] = field_name
                     field['field_description'] = field_description
                     field['field_type'] = field_type
+                    break
+
+        part.save()
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': part_id,
+            }
+            return JsonResponse(data)
+
+
+# FormView to delete custom fields
+class PartsAjaxDeleteCustomFields(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, FormView):
+    template_name = 'parts/ajax_part_custom_field_confirm_delete.html'
+    form_class = PartCustomFieldDeleteForm
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super(PartsAjaxDeleteCustomFields, self).get_context_data(**kwargs)
+        part = Part.objects.get(id=self.kwargs['pk'])
+        field_id = self.kwargs['field_id']
+        fields = part.custom_fields['fields']
+
+        for field in fields:
+            if field['field_id'] == field_id:
+                field_name = field['field_name']
+
+        context.update({
+            'part_template': part,
+            'field_name': field_name,
+        })
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super(PartsAjaxDeleteCustomFields, self).get_form_kwargs()
+        if 'pk' in self.kwargs:
+            kwargs['pk'] = self.kwargs['pk']
+        if 'field_id' in self.kwargs:
+            kwargs['field_id'] = self.kwargs['field_id']
+        return kwargs
+
+    def form_valid(self, form):
+        part_id = self.kwargs['pk']
+        field_id = self.kwargs['field_id']
+
+        part = Part.objects.get(id=part_id)
+
+        if part.custom_fields:
+            fields = part.custom_fields['fields']
+            for i in range(len(fields)):
+                if fields[i]['field_id'] == field_id:
+                    fields.pop(i)
+                    break
 
         part.save()
 

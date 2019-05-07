@@ -152,3 +152,20 @@ class PartCustomFieldUpdateForm(forms.Form):
                     self.fields['field_name'].initial = field['field_name']
                     self.fields['field_description'].initial = field['field_description']
                     self.fields['field_type'].initial = field['field_type']
+
+
+class PartCustomFieldDeleteForm(forms.Form):
+    #field_id = forms.CharField( required=True, widget=forms.HiddenInput() )
+
+    def __init__(self, *args, **kwargs):
+        if 'pk' in kwargs:
+            self.pk = kwargs.pop('pk')
+        else:
+            self.pk = None
+
+        if 'field_id' in kwargs:
+            self.field_id = kwargs.pop('field_id')
+        else:
+            self.field_id = None
+
+        super(PartCustomFieldDeleteForm, self).__init__(*args, **kwargs)
