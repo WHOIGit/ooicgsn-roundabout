@@ -409,7 +409,7 @@
                 <!-- User Defined Fields -->
 
                 {% if inventory_item.custom_field_values %}
-                    {% for field in inventory_item.custom_field_values.custom_values %}
+                    {% for field in inventory_item.custom_field_values.values %}
 
                         <li class="list-group-item">
                             {{ field.field_id|get_custom_field_details_by_part:inventory_item.part }}:

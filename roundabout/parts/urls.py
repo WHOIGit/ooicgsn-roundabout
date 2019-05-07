@@ -25,7 +25,6 @@ urlpatterns = [
     path('ajax/revision/edit/<int:pk>/', view=views.PartsAjaxUpdateRevisionView.as_view(), name='ajax_parts_update_revision'),
     path('ajax/revision/delete/<int:pk>/', view=views.PartsAjaxDeleteRevisionView.as_view(), name='ajax_parts_delete_revision'),
     path('ajax/part_type/<int:pk>/', view=views.PartsTypeAjaxDetailView.as_view(), name='ajax_parts_type_detail'),
-    path('ajax/custom_field/<int:pk>/', view=views.PartsAjaxManageCustomFields.as_view(), name='ajax_parts_manage_custom_fields'),
     path('ajax/custom_field/add/<int:pk>/', view=views.PartsAjaxCreateCustomFields.as_view(), name='ajax_parts_create_custom_fields'),
     path('ajax/custom_field/edit/<int:pk>/<str:field_id>/', view=views.PartsAjaxUpdateCustomFields.as_view(), name='ajax_parts_update_custom_fields'),
     path('ajax/custom_field/delete/<int:pk>/<str:field_id>/', view=views.PartsAjaxDeleteCustomFields.as_view(), name='ajax_parts_delete_custom_fields'),

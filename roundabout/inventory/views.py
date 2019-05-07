@@ -534,7 +534,7 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         if self.object.part.custom_fields:
             fields = self.object.part.custom_fields['fields']
             custom_values = {
-                'custom_values': [ ]
+                'values': [ ]
             }
 
             #If so, match field_ids and update the custom_field_values field
@@ -546,7 +546,7 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
                             'field_id': value,
                             'field_value': form.cleaned_data[value],
                         }
-                        custom_values['custom_values'].append(field_value)
+                        custom_values['values'].append(field_value)
 
             self.object.custom_field_values = custom_values
             self.object.save()

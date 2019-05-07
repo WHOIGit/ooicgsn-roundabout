@@ -111,10 +111,12 @@ class PartCustomFieldForm(forms.Form):
         field_name = self.cleaned_data['field_name']
         field_id = slugify(field_name)
         part = Part.objects.get(id=self.pk)
-        fields = part.custom_fields['fields']
-        for field in fields:
-            if field['field_id'] == field_id:
-                raise ValidationError('Field Name already in use. Please pick a unique name.')
+        
+        if part.custom_fields:
+            fields = part.custom_fields['fields']
+            for field in fields:
+                if field['field_id'] == field_id:
+                    raise ValidationError('Field Name already in use. Please pick a unique name.')
 
         return field_name
 

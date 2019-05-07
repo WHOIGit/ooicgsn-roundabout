@@ -9,7 +9,9 @@ from django.template.defaultfilters import slugify
 from .models import Part, PartType, Revision, Documentation
 from .forms import PartForm, RevisionForm, DocumentationFormset, RevisionFormset, PartCustomFieldDeleteForm, \
                    PartSubassemblyAddForm, PartSubassemblyEditForm, PartCustomFieldForm, PartCustomFieldUpdateForm
+
 from roundabout.locations.models import Location
+from roundabout.inventory.models import Inventory
 from common.util.mixins import AjaxFormMixin
 
 import re
@@ -371,15 +373,6 @@ class PartsAjaxDeleteRevisionView(LoginRequiredMixin, PermissionRequiredMixin, D
 
 # VIEWS FOR CUSTOM FIELDS
 
-# DetailView to list all custom fields for management
-class PartsAjaxManageCustomFields(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
-    model = Part
-    context_object_name = 'part_template'
-    template_name='parts/ajax_part_manage_custom_fields.html'
-    permission_required = 'parts.add_part'
-    redirect_field_name = 'home'
-
-
 # FormView to add new custom field
 class PartsAjaxCreateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, FormView):
     template_name = 'parts/ajax_part_custom_field_form.html'
@@ -535,8 +528,17 @@ class PartsAjaxDeleteCustomFields(LoginRequiredMixin, PermissionRequiredMixin, A
                 if fields[i]['field_id'] == field_id:
                     fields.pop(i)
                     break
-
         part.save()
+
+        # Delete any instances of this field from Inventory Custom Field Values
+        items = Inventory.objects.filter(custom_field_values__values__contains=[{'field_id': field_id}])
+        for item in items:
+            fields = item.custom_field_values['values']
+            for i in range(len(fields)):
+                if fields[i]['field_id'] == field_id:
+                    fields.pop(i)
+                    break
+            item.save()        
 
         if self.request.is_ajax():
             print(form.cleaned_data)
