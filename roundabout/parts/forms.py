@@ -117,3 +117,38 @@ class PartCustomFieldForm(forms.Form):
                 raise ValidationError('Field Name already in use. Please pick a unique name.')
 
         return field_name
+
+
+class PartCustomFieldUpdateForm(forms.Form):
+    field_type_choices =[ ('CharField', 'Text Field'),
+                          ('HTMLField', 'HTML Field'),
+                          ('IntegerField', 'Integer Field'),
+                          ('DecimalField', 'Decimal Field'),
+                          ('DateField', 'Date Field'),
+                        ]
+
+    field_name = forms.CharField(required=True)
+    field_description = forms.CharField(required=False)
+    field_type = forms.ChoiceField(choices = field_type_choices, required=True)
+
+    def __init__(self, *args, **kwargs):
+        if 'pk' in kwargs:
+            self.pk = kwargs.pop('pk')
+        else:
+            self.pk = None
+
+        if 'field_id' in kwargs:
+            self.field_id = kwargs.pop('field_id')
+        else:
+            self.field_id = None
+
+        super(PartCustomFieldUpdateForm, self).__init__(*args, **kwargs)
+        part = Part.objects.get(id=self.pk)
+
+        if part.custom_fields:
+            fields = part.custom_fields['fields']
+            for field in fields:
+                if field['field_id'] == self.field_id:
+                    self.fields['field_name'].initial = field['field_name']
+                    self.fields['field_description'].initial = field['field_description']
+                    self.fields['field_type'].initial = field['field_type']

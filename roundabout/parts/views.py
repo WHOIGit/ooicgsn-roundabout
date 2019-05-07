@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.template.defaultfilters import slugify
 
 from .models import Part, PartType, Revision, Documentation
-from .forms import PartForm, RevisionForm, DocumentationFormset, RevisionFormset, PartSubassemblyAddForm, PartSubassemblyEditForm, PartCustomFieldForm
+from .forms import PartForm, RevisionForm, DocumentationFormset, RevisionFormset, PartSubassemblyAddForm, PartSubassemblyEditForm, PartCustomFieldForm, PartCustomFieldUpdateForm
 from roundabout.locations.models import Location
 from common.util.mixins import AjaxFormMixin
 
@@ -427,6 +427,57 @@ class PartsAjaxCreateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, A
                     'field_type': field_type,
                 }
             ] }
+
+        part.save()
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': part_id,
+            }
+            return JsonResponse(data)
+
+
+# FormView to add new custom field
+class PartsAjaxUpdateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, FormView):
+    template_name = 'parts/ajax_part_custom_field_form.html'
+    form_class = PartCustomFieldUpdateForm
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super(PartsAjaxUpdateCustomFields, self).get_context_data(**kwargs)
+
+        context.update({
+            'part_template': Part.objects.get(id=self.kwargs['pk']),
+        })
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super(PartsAjaxUpdateCustomFields, self).get_form_kwargs()
+        if 'pk' in self.kwargs:
+            kwargs['pk'] = self.kwargs['pk']
+        if 'field_id' in self.kwargs:
+            kwargs['field_id'] = self.kwargs['field_id']
+        return kwargs
+
+    def form_valid(self, form):
+        field_name = form.cleaned_data['field_name']
+        field_description = form.cleaned_data['field_description']
+        field_type = form.cleaned_data['field_type']
+        part_id = self.kwargs['pk']
+        field_id = self.kwargs['field_id']
+
+        part = Part.objects.get(id=part_id)
+
+        if part.custom_fields:
+            fields = part.custom_fields['fields']
+            for field in fields:
+                if field['field_id'] == field_id:
+                    field['field_name'] = field_name
+                    field['field_description'] = field_description
+                    field['field_type'] = field_type
 
         part.save()
 

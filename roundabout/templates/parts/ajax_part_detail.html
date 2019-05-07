@@ -94,6 +94,7 @@
                                         {% endif %}
 
                                     </div>
+                                    <hr>
                                     <div class="ajax-detail-link">
 
                                           <a href="#"
@@ -155,7 +156,7 @@
                                     <div class="ajax-detail-link">
 
                                           <a href="#"
-                                             data-detail-url="{% url 'parts:ajax_parts_update_revision' part_template.id %}"
+                                             data-detail-url="{% url 'parts:ajax_parts_update_custom_fields' part_template.id field.field_id %}"
                                              data-node-id="{{ revision.id }}"
                                              data-node-type="edit"
                                              class="btn btn-primary btn-sm float-left mr-2"

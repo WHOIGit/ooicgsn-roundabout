@@ -7,8 +7,13 @@
         <div class="card-header">
             {% if part_template %}
                 <h3>{{ part_template.name }}</h3>
-                <h4>Add New Field</h4>
-            {% endif %}
+             {% endif %}
+
+             {% if view.kwargs.field_id %}
+                 <h4>Update Field</h4>
+             {% else %}
+                 <h4>Add New Field</h4>
+             {% endif %}
         </div>
 
         <div class="card-body">
@@ -40,9 +45,11 @@
 
                 <div class="control-group">
                   <div class="controls">
-
-                    <button type="submit" class="btn btn-primary">Add Field</button>
-
+                    {% if view.kwargs.field_id %}
+                        <button type="submit" class="btn btn-primary">Update Field</button>
+                    {% else %}
+                        <button type="submit" class="btn btn-primary">Add Field</button>
+                    {% endif %}
                     <input class="btn btn-light cancel-btn"
                            type="button" value="Cancel"
                            data-detail-url="{% url 'parts:ajax_parts_detail' part_template.id %}"
