@@ -33,18 +33,6 @@
                     <p>Part Type: {{ part_template.part_type }}</p>
                     <p>Is Equipment: {{ part_template.is_equipment }}</p>
 
-                    <p> {{ part_template.custom_fields.fields }} </p>
-                    <table>
-                    {% for key in part_template.custom_fields.fields %}
-                        <tr>
-                            <td>{{key.field_id}}</td>
-                            <td>{{key.field_name}}</td>
-                            <td>{{key.field_type}}</td>
-                        </tr>
-                    {% endfor %}
-                    </table>
-
-
                     <p>Current Inventory: {{ part_template.get_part_inventory_count }}</p>
 
                     <h4>Revisions</h4>
@@ -54,7 +42,7 @@
                     {% for revision in part_template.revisions.all %}
 
                             <li class="list-group-item">
-                                <a class="collapsed" data-toggle="collapse" href="#revision-{{ revision.id }}" aria-expanded="false" aria-controls="#revision-{{ revision.id }}">
+                                <a class="collapsed" data-toggle="collapse" href="#revision-{{ revision.id }}" aria-expanded="false" aria-controls="revision-{{ revision.id }}">
                                     Revision: {{ revision.revision_code }}
                                 </a>
 <!--
@@ -67,75 +55,126 @@
                                     <span class="sr-only">Expand/Collapse Revision {{ revision.revision_code }}</span>
                                 </a>
 
-                            <div class="collapse mt-3" id="revision-{{ revision.id }}">
-                                  <hr>
-                                  <p>Unit Cost: ${{ revision.unit_cost|intcomma }}</p>
-                                  <p>Refurbishment Cost: ${{ revision.refurbishment_cost|intcomma }}</p>
-                                  {% if revision.note %}
-                                      <p>Part Template Notes: {{ revision.note|safe  }}</p>
-                                  {% endif %}
-                                <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+                                <div class="collapse mt-3" id="revision-{{ revision.id }}">
+                                      <hr>
+                                      <p>Unit Cost: ${{ revision.unit_cost|intcomma }}</p>
+                                      <p>Refurbishment Cost: ${{ revision.refurbishment_cost|intcomma }}</p>
+                                      {% if revision.note %}
+                                          <p>Part Template Notes: {{ revision.note|safe  }}</p>
+                                      {% endif %}
+                                    <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+                                        {% if revision.documentation.all %}
+                                          <li class="nav-item">
+                                            <a class="nav-link active" id="documentation-tab" data-toggle="tab" href="#documentation" role="tab" aria-controls="documentation" aria-selected="false">Documentation</a>
+                                          </li>
+                                        {% endif %}
+                                    </ul>
 
-                                    {% if revision.documentation.all %}
-                                      <li class="nav-item">
-                                        <a class="nav-link active" id="documentation-tab" data-toggle="tab" href="#documentation" role="tab" aria-controls="documentation" aria-selected="false">Documentation</a>
-                                      </li>
-                                    {% endif %}
+                                    <div class="tab-content" id="inventory-tabs">
 
+                                        {% if revision.documentation.all %}
 
+                                        <div class="tab-pane fade show active" id="documentation" role="tabpanel" aria-labelledby="documentation-tab">
+                                                <table class="table table-tight">
+                                                    <thead>
+                                                      <th>Document</th>
+                                                      <th class="text-right">Document Type</th>
 
-                                </ul>
+                                                    </thead>
+                                                    <tbody>
+                                                      {% for document in revision.documentation.all %}
+                                                    <tr>
+                                                        <td><a href="{{ document.doc_link }}" target="_blank">{{ document.name }}</a></td>
+                                                        <td class="text-right">{{ document.doc_type }}</td>
+                                                    </tr>
+                                                      {% endfor %}
+                                                    </tbody>
+                                              </table>
+                                          </div>
+                                        {% endif %}
 
-                                <div class="tab-content" id="inventory-tabs">
+                                    </div>
+                                    <div class="ajax-detail-link">
 
-                                    {% if revision.documentation.all %}
+                                          <a href="#"
+                                             data-detail-url="{% url 'parts:ajax_parts_update_revision' revision.id %}"
+                                             data-node-id="{{ revision.id }}"
+                                             data-node-type="edit"
+                                             class="btn btn-primary btn-sm float-left mr-2"
+                                             role="button">Edit Revision</a>
 
-                                    <div class="tab-pane fade show active" id="documentation" role="tabpanel" aria-labelledby="documentation-tab">
-                                            <table class="table table-tight">
-                                                <thead>
-                                                  <th>Document</th>
-                                                  <th class="text-right">Document Type</th>
+                                         {% if multiple_revision %}
+                                             <a href="#"
+                                               data-detail-url="{% url 'parts:ajax_parts_delete_revision' revision.id %}"
+                                               data-node-id="{{ revision.id }}"
+                                               data-node-type="edit"
+                                               class="btn btn-danger btn-sm float-left"
+                                               role="button">Delete Revision</a>
+                                         {% endif %}
 
-                                                </thead>
-                                                <tbody>
-                                                  {% for document in  revision.documentation.all %}
-                                                <tr>
-                                                    <td><a href="{{ document.doc_link }}" target="_blank">{{ document.name }}</a></td>
-                                                    <td class="text-right">{{ document.doc_type }}</td>
-                                                </tr>
-                                                  {% endfor %}
-                                                </tbody>
-                                          </table>
-                                      </div>
-                                    {% endif %}
-
-                                </div>
-                                <div class="ajax-detail-link">
-
-                                      <a href="#"
-                                         data-detail-url="{% url 'parts:ajax_parts_update_revision' revision.id %}"
-                                         data-node-id="{{ revision.id }}"
-                                         data-node-type="edit"
-                                         class="btn btn-primary btn-sm float-left mr-2"
-                                         role="button">Edit Revision</a>
-
-                                     {% if multiple_revision %}
-                                         <a href="#"
-                                           data-detail-url="{% url 'parts:ajax_parts_delete_revision' revision.id %}"
-                                           data-node-id="{{ revision.id }}"
-                                           data-node-type="edit"
-                                           class="btn btn-danger btn-sm float-left"
-                                           role="button">Delete Revision</a>
-                                     {% endif %}
+                                    </div>
 
                                 </div>
-
-                            </div>
 
                         </li>
 
                     {% endfor %}
                     </ul>
+
+                    <hr>
+
+
+                    <div class="ajax-detail-link float-right">
+                        <a class="btn btn-primary btn-sm" href="#" role="button"
+                            data-detail-url="{% url 'parts:ajax_parts_create_custom_fields' part_template.id %}"
+                            data-node-id="{{ part_template.id }}"
+                            data-node-type="detail">Add New Field</a>
+                    </div>
+
+                    <h4>Custom Fields</h4>
+
+                    <ul class="list-group">
+                        {% for field in part_template.custom_fields.fields %}
+                            <li class="list-group-item">
+
+                                <a class="collapsed" data-toggle="collapse" href="#{{ field.field_id }}" aria-expanded="false" aria-controls="{{ field.field_id }}">
+                                    Field Name: {{ field.field_name }}
+                                </a>
+
+                                <a data-toggle="collapse" class="collapsed text-right" href="#{{ field.field_id }}" aria-controls="{{ field.field_id }}" aria-expanded="false" role="button">
+                                    <i class="fa" aria-hidden="true"></i>
+                                    <span class="sr-only">Expand/Collapse Revision {{ field.field_name }}</span>
+                                </a>
+
+                                <div class="collapse mt-3" id="{{ field.field_id }}">
+                                    <hr>
+                                        <p>Field Description: {{field.field_description}}</p>
+                                        <p>Field Type: {{field.field_type}}</p>
+                                    <hr>
+
+                                    <div class="ajax-detail-link">
+
+                                          <a href="#"
+                                             data-detail-url="{% url 'parts:ajax_parts_update_revision' part_template.id %}"
+                                             data-node-id="{{ revision.id }}"
+                                             data-node-type="edit"
+                                             class="btn btn-primary btn-sm float-left mr-2"
+                                             role="button">Edit Field</a>
+
+
+                                             <a href="#"
+                                               data-detail-url="{% url 'parts:ajax_parts_delete_revision' part_template.id %}"
+                                               data-node-id="{{ revision.id }}"
+                                               data-node-type="edit"
+                                               class="btn btn-danger btn-sm float-left"
+                                               role="button">Delete Field</a>
+
+                                    </div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+
 
                     <div class="ajax-detail-link">
                         <hr>

@@ -4,6 +4,7 @@ from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.views.generic import View, FormView, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ValidationError
+from django.template.defaultfilters import slugify
 
 from .models import Part, PartType, Revision, Documentation
 from .forms import PartForm, RevisionForm, DocumentationFormset, RevisionFormset, PartSubassemblyAddForm, PartSubassemblyEditForm, PartCustomFieldForm
@@ -400,10 +401,11 @@ class PartsAjaxCreateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, A
 
     def form_valid(self, form):
         field_name = form.cleaned_data['field_name']
+        field_description = form.cleaned_data['field_description']
         field_type = form.cleaned_data['field_type']
-        part_id = form.cleaned_data['part_id']
+        part_id = self.kwargs['pk']
         # Create part-specific unique field_id
-        field_id = re.sub(r'[^0-9a-zA-Z]+','_',field_name)
+        field_id = slugify(field_name)
 
         part = Part.objects.get(id=part_id)
 
@@ -412,6 +414,7 @@ class PartsAjaxCreateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, A
             new_field = {
                 'field_id': field_id,
                 'field_name': field_name,
+                'field_description': field_description,
                 'field_type': field_type,
             }
             fields.append(new_field)
@@ -420,6 +423,7 @@ class PartsAjaxCreateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, A
                 'fields': [ {
                     'field_id': field_id,
                     'field_name': field_name,
+                    'field_description': field_description,
                     'field_type': field_type,
                 }
             ] }

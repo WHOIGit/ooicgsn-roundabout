@@ -4,6 +4,7 @@ import re
 from django import forms
 from django.core.exceptions import ValidationError
 from django.forms.models import inlineformset_factory
+from django.template.defaultfilters import slugify
 from django_summernote.widgets import SummernoteWidget
 from bootstrap_datepicker_plus import DatePickerInput
 
@@ -86,11 +87,16 @@ class PartSubassemblyEditForm(forms.ModelForm):
 
 
 class PartCustomFieldForm(forms.Form):
-    field_type_choices =[('CharField', 'Text Field'), ('DateField', 'Date Field')]
+    field_type_choices =[ ('CharField', 'Text Field'),
+                          ('HTMLField', 'HTML Field'),
+                          ('IntegerField', 'Integer Field'),
+                          ('DecimalField', 'Decimal Field'),
+                          ('DateField', 'Date Field'),
+                        ]
 
     field_name = forms.CharField(required=True)
+    field_description = forms.CharField(required=False)
     field_type = forms.ChoiceField(choices = field_type_choices, required=True)
-    part_id = forms.IntegerField( widget=forms.HiddenInput() )
 
     def __init__(self, *args, **kwargs):
         if 'pk' in kwargs:
@@ -99,4 +105,15 @@ class PartCustomFieldForm(forms.Form):
             self.pk = None
 
         super(PartCustomFieldForm, self).__init__(*args, **kwargs)
-        self.initial['part_id'] = self.pk
+
+    # Validation to check that the Field Name is unique for this part
+    def clean_field_name(self):
+        field_name = self.cleaned_data['field_name']
+        field_id = slugify(field_name)
+        part = Part.objects.get(id=self.pk)
+        fields = part.custom_fields['fields']
+        for field in fields:
+            if field['field_id'] == field_id:
+                raise ValidationError('Field Name already in use. Please pick a unique name.')
+
+        return field_name
