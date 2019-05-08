@@ -540,7 +540,7 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
             #If so, match field_ids and update the custom_field_values field
             for field in fields:
                 for key,value in field.items():
-                    if key == 'field_id' and form.cleaned_data[value]:
+                    if key == 'field_id':
                         print(key, value)
                         field_value = {
                             'field_id': value,

@@ -424,6 +424,26 @@ class PartsAjaxCreateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, A
 
         part.save()
 
+        # Delete any instances of this field from Inventory Custom Field Values
+        items = part.inventory.all()
+        print(items)
+        for item in items:
+            if item.custom_field_values:
+                values = item.custom_field_values['values']
+                new_value = {
+                    'field_id': field_id,
+                    'field_value': '',
+                }
+                values.append(new_value)
+            else:
+                item.custom_field_values =  {
+                    'values': [ {
+                        'field_id': field_id,
+                        'field_value': '',
+                    } ]
+                }
+            item.save()
+
         if self.request.is_ajax():
             print(form.cleaned_data)
             data = {
@@ -538,7 +558,7 @@ class PartsAjaxDeleteCustomFields(LoginRequiredMixin, PermissionRequiredMixin, A
                 if fields[i]['field_id'] == field_id:
                     fields.pop(i)
                     break
-            item.save()        
+            item.save()
 
         if self.request.is_ajax():
             print(form.cleaned_data)
