@@ -56,7 +56,8 @@ class InventoryForm(forms.ModelForm):
                 custom_fields =  self.instance.part.custom_fields['fields']
                 for field in custom_fields:
                     field_id = field['field_id']
-                    self.fields[field_id] = forms.CharField(label=field['field_name'], required=False)
+                    self.fields[field_id] = forms.CharField(label=field['field_name'], required=False,
+                                                            help_text=field['field_description'])
                     # Get current value if it exists
                     if self.instance.custom_field_values:
                         fields = self.instance.custom_field_values['values']

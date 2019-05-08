@@ -88,7 +88,6 @@ class PartSubassemblyEditForm(forms.ModelForm):
 
 class PartCustomFieldForm(forms.Form):
     field_type_choices =[ ('CharField', 'Text Field'),
-                          ('HTMLField', 'HTML Field'),
                           ('IntegerField', 'Integer Field'),
                           ('DecimalField', 'Decimal Field'),
                           ('DateField', 'Date Field'),
@@ -111,7 +110,7 @@ class PartCustomFieldForm(forms.Form):
         field_name = self.cleaned_data['field_name']
         field_id = slugify(field_name)
         part = Part.objects.get(id=self.pk)
-        
+
         if part.custom_fields:
             fields = part.custom_fields['fields']
             for field in fields:
