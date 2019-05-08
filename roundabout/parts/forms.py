@@ -156,7 +156,6 @@ class PartCustomFieldUpdateForm(forms.Form):
 
 
 class PartCustomFieldDeleteForm(forms.Form):
-    #field_id = forms.CharField( required=True, widget=forms.HiddenInput() )
 
     def __init__(self, *args, **kwargs):
         if 'pk' in kwargs:
