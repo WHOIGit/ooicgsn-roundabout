@@ -424,7 +424,7 @@ class PartsAjaxCreateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, A
 
         part.save()
 
-        # Delete any instances of this field from Inventory Custom Field Values
+        # Get all Part inventory items, add default blank value for each item
         items = part.inventory.all()
         print(items)
         for item in items:
