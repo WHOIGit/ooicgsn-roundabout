@@ -436,10 +436,26 @@ class InventoryAjaxCreateBasicView(LoginRequiredMixin, AjaxFormMixin, CreateView
         action_record = Action.objects.create(action_type='invadd', detail='Item first added to Inventory', location_id=self.object.location_id,
                                               user_id=self.request.user.id, inventory_id=self.object.id)
 
-        if 'parent_pk' in self.kwargs:
-            detail = 'Subassembly %s added' % (self.object.serial_number)
-            parent_action_record = Action.objects.create(action_type='subchange', detail=detail, location_id=self.object.location_id,
-                                                        user_id=self.request.user.id, inventory_id=self.kwargs['parent_pk'])
+        # Check is this Part has custom fields. If so, add default custom values to this item.
+        if self.object.part.custom_fields:
+            fields = self.object.part.custom_fields['fields']
+
+            custom_values = {
+                'values': [ ]
+            }
+
+            for field in fields:
+                for key,value in field.items():
+                    if key == 'field_id':
+                        field_value = {
+                            'field_id': value,
+                            'field_value': field['field_default_value'],
+                        }
+                        custom_values['values'].append(field_value)
+
+            self.object.custom_field_values = custom_values
+            self.object.save()
+
 
         response = HttpResponseRedirect(self.get_success_url())
 
