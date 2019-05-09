@@ -397,6 +397,8 @@ class PartsAjaxCreateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, A
         field_name = form.cleaned_data['field_name']
         field_description = form.cleaned_data['field_description']
         field_type = form.cleaned_data['field_type']
+        field_default_value = form.cleaned_data['field_default_value']
+        field_is_global = form.cleaned_data['field_is_global']
         part_id = self.kwargs['pk']
         # Create part-specific unique field_id
         field_id = slugify(field_name)
@@ -410,6 +412,8 @@ class PartsAjaxCreateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, A
                 'field_name': field_name,
                 'field_description': field_description,
                 'field_type': field_type,
+                'field_default_value': field_default_value,
+                'field_is_global': field_is_global,
             }
             fields.append(new_field)
         else:
@@ -419,12 +423,14 @@ class PartsAjaxCreateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, A
                     'field_name': field_name,
                     'field_description': field_description,
                     'field_type': field_type,
+                    'field_default_value': field_default_value,
+                    'field_is_global': field_is_global,
                 }
             ] }
 
         part.save()
 
-        # Get all Part inventory items, add default blank value for each item
+        # Get all Part inventory items, add default value for each item
         items = part.inventory.all()
         print(items)
         for item in items:
@@ -432,14 +438,14 @@ class PartsAjaxCreateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, A
                 values = item.custom_field_values['values']
                 new_value = {
                     'field_id': field_id,
-                    'field_value': '',
+                    'field_value': field_default_value,
                 }
                 values.append(new_value)
             else:
                 item.custom_field_values =  {
                     'values': [ {
                         'field_id': field_id,
-                        'field_value': '',
+                        'field_value': field_default_value,
                     } ]
                 }
             item.save()
@@ -480,6 +486,8 @@ class PartsAjaxUpdateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, A
         field_name = form.cleaned_data['field_name']
         field_description = form.cleaned_data['field_description']
         field_type = form.cleaned_data['field_type']
+        field_default_value = form.cleaned_data['field_default_value']
+        field_is_global = form.cleaned_data['field_is_global']
         part_id = self.kwargs['pk']
         field_id = self.kwargs['field_id']
 
@@ -492,9 +500,23 @@ class PartsAjaxUpdateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, A
                     field['field_name'] = field_name
                     field['field_description'] = field_description
                     field['field_type'] = field_type
+                    field['field_default_value'] = field_default_value
+                    field['field_is_global'] = field_is_global
                     break
 
         part.save()
+
+        # If it's a global field, get all Part inventory items, and update value for each item
+        if field_is_global == 'true':
+            items = part.inventory.filter(custom_field_values__values__contains=[{'field_id': field_id}])
+
+            for item in items:
+                fields = item.custom_field_values['values']
+                for i in range(len(fields)):
+                    if fields[i]['field_id'] == field_id:
+                        fields[i]['field_value'] = field_default_value
+                        break
+                item.save()
 
         if self.request.is_ajax():
             print(form.cleaned_data)
@@ -551,7 +573,7 @@ class PartsAjaxDeleteCustomFields(LoginRequiredMixin, PermissionRequiredMixin, A
         part.save()
 
         # Delete any instances of this field from Inventory Custom Field Values
-        items = Inventory.objects.filter(custom_field_values__values__contains=[{'field_id': field_id}])
+        items = Inventory.objects.filter(part=part).filter(custom_field_values__values__contains=[{'field_id': field_id}])
         for item in items:
             fields = item.custom_field_values['values']
             for i in range(len(fields)):

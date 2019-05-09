@@ -533,6 +533,7 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         # Check is this Part has custom fields
         if self.object.part.custom_fields:
             fields = self.object.part.custom_fields['fields']
+
             custom_values = {
                 'values': [ ]
             }
@@ -541,7 +542,6 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
             for field in fields:
                 for key,value in field.items():
                     if key == 'field_id':
-                        print(key, value)
                         field_value = {
                             'field_id': value,
                             'field_value': form.cleaned_data[value],

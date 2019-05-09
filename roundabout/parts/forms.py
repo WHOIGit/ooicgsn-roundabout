@@ -96,6 +96,13 @@ class PartCustomFieldForm(forms.Form):
     field_name = forms.CharField(required=True)
     field_description = forms.CharField(required=False)
     field_type = forms.ChoiceField(choices = field_type_choices, required=True)
+    field_default_value = forms.CharField(required=False)
+    field_is_global = forms.ChoiceField(choices=(('true', 'Yes',), ('false', 'No',)),
+                                        widget=forms.RadioSelect,
+                                        initial='false',
+                                        label='Is this a global field value for this Part?',
+                                        help_text='Select "Yes" if this single field value applies to all Inventory items of this Part. \
+                                                    If "No", this field will be editable at the Inventory item level.')
 
     def __init__(self, *args, **kwargs):
         if 'pk' in kwargs:
@@ -122,7 +129,6 @@ class PartCustomFieldForm(forms.Form):
 
 class PartCustomFieldUpdateForm(forms.Form):
     field_type_choices =[ ('CharField', 'Text Field'),
-                          ('HTMLField', 'HTML Field'),
                           ('IntegerField', 'Integer Field'),
                           ('DecimalField', 'Decimal Field'),
                           ('DateField', 'Date Field'),
@@ -131,6 +137,13 @@ class PartCustomFieldUpdateForm(forms.Form):
     field_name = forms.CharField(required=True)
     field_description = forms.CharField(required=False)
     field_type = forms.ChoiceField(choices = field_type_choices, required=True)
+    field_default_value = forms.CharField(required=False)
+    field_is_global = forms.ChoiceField(choices=(('true', 'Yes',), ('false', 'No',)),
+                                        widget=forms.RadioSelect,
+                                        initial='false',
+                                        label='Is this a global field value for this Part?',
+                                        help_text='Select "Yes" if this single field value applies to all Inventory items of this Part. \
+                                                    If "No", this field will be editable at the Inventory item level.')
 
     def __init__(self, *args, **kwargs):
         if 'pk' in kwargs:
@@ -153,6 +166,8 @@ class PartCustomFieldUpdateForm(forms.Form):
                     self.fields['field_name'].initial = field['field_name']
                     self.fields['field_description'].initial = field['field_description']
                     self.fields['field_type'].initial = field['field_type']
+                    self.fields['field_default_value'].initial = field['field_default_value']
+                    self.fields['field_is_global'].initial = field['field_is_global']
 
 
 class PartCustomFieldDeleteForm(forms.Form):

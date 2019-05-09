@@ -56,15 +56,21 @@ class InventoryForm(forms.ModelForm):
                 custom_fields =  self.instance.part.custom_fields['fields']
                 for field in custom_fields:
                     field_id = field['field_id']
-                    self.fields[field_id] = forms.CharField(label=field['field_name'], required=False,
-                                                            help_text=field['field_description'])
-                    # Get current value if it exists
-                    if self.instance.custom_field_values:
-                        fields = self.instance.custom_field_values['values']
-                        for field in fields:
-                            print (field['field_id']);
-                            if field['field_id'] == field_id:
-                                self.fields[field_id].initial = field['field_value']
+                    # Create fields for non-Global custom fields
+                    if field['field_is_global'] == 'false':
+                        self.fields[field_id] = forms.CharField(label=field['field_name'], required=False,
+                                                                help_text=field['field_description'])
+                        # Get current value if it exists
+                        if self.instance.custom_field_values:
+                            fields = self.instance.custom_field_values['values']
+                            for field in fields:
+                                print (field['field_id']);
+                                if field['field_id'] == field_id:
+                                    self.fields[field_id].initial = field['field_value']
+                    else:
+                        # Create hidden fields for Global custom fields
+                        self.fields[field_id] = forms.CharField(widget=forms.HiddenInput(), initial=field['field_default_value'])
+
 
 
 class InventoryAddForm(forms.ModelForm):
