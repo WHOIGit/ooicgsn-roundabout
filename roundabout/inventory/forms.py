@@ -57,9 +57,31 @@ class InventoryForm(forms.ModelForm):
                 for field in custom_fields:
                     field_id = field['field_id']
                     # Create fields for non-Global custom fields
-                    if field['field_is_global'] == 'false':
-                        self.fields[field_id] = forms.CharField(label=field['field_name'], required=False,
+                    if not field['field_is_global']:
+                        if field['field_type'] == 'IntegerField':
+                            self.fields[field_id] = forms.IntegerField(label=field['field_name'], required=False,
                                                                 help_text=field['field_description'])
+                        elif field['field_type'] == 'DecimalField':
+                            self.fields[field_id] = forms.DecimalField(label=field['field_name'], required=False,
+                                                                help_text=field['field_description'])
+                        elif field['field_type'] == 'DateField':
+                            self.fields[field_id] = forms.DateTimeField(label=field['field_name'], required=False,
+                                                                help_text=field['field_description'],
+                                                                widget=DateTimePickerInput(
+                                                                    options={
+                                                                        #"format": "MM/DD/YYYY", # moment date-time format
+                                                                        "showClose": True,
+                                                                        "showClear": True,
+                                                                        "showTodayButton": True,
+                                                                    }
+                                                                ))
+                        elif field['field_type'] == 'BooleanField':
+                            self.fields[field_id] = forms.BooleanField(label=field['field_name'], required=False,
+                                                                help_text=field['field_description'])
+                        else:
+                            self.fields[field_id] = forms.CharField(label=field['field_name'], required=False,
+                                                                help_text=field['field_description'])
+
                         # Get current value if it exists
                         if self.instance.custom_field_values:
                             fields = self.instance.custom_field_values['values']

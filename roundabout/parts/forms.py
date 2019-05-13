@@ -91,18 +91,19 @@ class PartCustomFieldForm(forms.Form):
                           ('IntegerField', 'Integer Field'),
                           ('DecimalField', 'Decimal Field'),
                           ('DateField', 'Date Field'),
+                          ('BooleanField', 'Boolean Field'),
                         ]
 
     field_name = forms.CharField(required=True)
     field_description = forms.CharField(required=False)
     field_type = forms.ChoiceField(choices = field_type_choices, required=True)
     field_default_value = forms.CharField(required=False)
-    field_is_global = forms.ChoiceField(choices=(('true', 'Yes',), ('false', 'No',)),
-                                        widget=forms.RadioSelect,
-                                        initial='false',
-                                        label='Is this a global field value for this Part?',
-                                        help_text='Select "Yes" if this single field value applies to all Inventory items of this Part. \
-                                                    If "No", this field will be editable at the Inventory item level.')
+    field_is_global = forms.TypedChoiceField(coerce=lambda x: x =='True', choices=((False, 'No'), (True, 'Yes')),
+                                widget=forms.RadioSelect,
+                                required=False,
+                                label='Is this a global field value for this Part?',
+                                help_text='Select "Yes" if this single field value applies to all Inventory items of this Part. \
+                                            If "No", this field will be editable at the Inventory item level.')
 
     def __init__(self, *args, **kwargs):
         if 'pk' in kwargs:
@@ -132,18 +133,19 @@ class PartCustomFieldUpdateForm(forms.Form):
                           ('IntegerField', 'Integer Field'),
                           ('DecimalField', 'Decimal Field'),
                           ('DateField', 'Date Field'),
+                          ('BooleanField', 'Boolean Field'),
                         ]
 
     field_name = forms.CharField(required=True)
     field_description = forms.CharField(required=False)
     field_type = forms.ChoiceField(choices = field_type_choices, required=True)
     field_default_value = forms.CharField(required=False)
-    field_is_global = forms.ChoiceField(choices=(('true', 'Yes',), ('false', 'No',)),
-                                        widget=forms.RadioSelect,
-                                        initial='false',
-                                        label='Is this a global field value for this Part?',
-                                        help_text='Select "Yes" if this single field value applies to all Inventory items of this Part. \
-                                                    If "No", this field will be editable at the Inventory item level.')
+    field_is_global = forms.TypedChoiceField(coerce=lambda x: x =='True', choices=((False, 'No'), (True, 'Yes')),
+                                widget=forms.RadioSelect,
+                                required=False,
+                                label='Is this a global field value for this Part?',
+                                help_text='Select "Yes" if this single field value applies to all Inventory items of this Part. \
+                                            If "No", this field will be editable at the Inventory item level.')
 
     def __init__(self, *args, **kwargs):
         if 'pk' in kwargs:

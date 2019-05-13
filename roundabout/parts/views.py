@@ -1,3 +1,6 @@
+import re
+import json
+
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
@@ -13,8 +16,6 @@ from .forms import PartForm, RevisionForm, DocumentationFormset, RevisionFormset
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory
 from common.util.mixins import AjaxFormMixin
-
-import re
 
 # Mixins
 

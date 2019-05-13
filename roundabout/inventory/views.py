@@ -558,9 +558,14 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
             for field in fields:
                 for key,value in field.items():
                     if key == 'field_id':
+                        if field['field_type'] == 'DateField' or field['field_type'] == 'DecimalField':
+                            form_value = str(form.cleaned_data[value])
+                        else:
+                            form_value = form.cleaned_data[value]
+
                         field_value = {
                             'field_id': value,
-                            'field_value': form.cleaned_data[value],
+                            'field_value': form_value,
                         }
                         custom_values['values'].append(field_value)
 
