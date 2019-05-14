@@ -23,3 +23,21 @@ class UserDefinedFieldCreateView(LoginRequiredMixin, PermissionRequiredMixin, Cr
 
     def get_success_url(self):
         return reverse('userdefinedfields:fields_home', )
+
+
+class UserDefinedFieldUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = Field
+    form_class = UserDefinedFieldForm
+    context_object_name = 'fields'
+    permission_required = 'userdefinedfields.add_printer'
+    redirect_field_name = 'home'
+
+    def get_success_url(self):
+        return reverse('userdefinedfields:fields_home', )
+
+
+class UserDefinedFieldDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = Field
+    success_url = reverse_lazy('userdefinedfields:fields_home')
+    permission_required = 'userdefinedfields.delete_field'
+    redirect_field_name = 'home'
