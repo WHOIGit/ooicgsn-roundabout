@@ -383,8 +383,24 @@ class PartsAjaxCreateCustomFields(LoginRequiredMixin, PermissionRequiredMixin, A
 
     def get_context_data(self, **kwargs):
         context = super(PartsAjaxCreateCustomFields, self).get_context_data(**kwargs)
+
+        parts = Part.objects.exclude(custom_fields__isnull=True)
+
+        custom_fields = []
+
+        for part in parts:
+            fields = part.custom_fields['fields']
+
+            for field in fields:
+                for key,value in field.items():
+                    new_field = {
+                        key: value,
+                    }
+            custom_fields.append(new_field)
+
         context.update({
-            'part_template': Part.objects.get(id=self.kwargs['pk'])
+            'part_template': Part.objects.get(id=self.kwargs['pk']),
+            'custom_fields': custom_fields,
         })
         return context
 

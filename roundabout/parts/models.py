@@ -7,6 +7,7 @@ from django.core.validators import MinValueValidator
 from mptt.models import MPTTModel, TreeForeignKey
 
 from roundabout.locations.models import Location
+from roundabout.userdefinedfields.models import Field
 
 # Create your models here
 
@@ -44,6 +45,7 @@ class Part(models.Model):
     is_equipment = models.BooleanField(default=False)
     note = models.TextField(blank=True)
     custom_fields = JSONField(blank=True, null=True)
+    user_defined_fields = models.ManyToManyField(Field, blank=True)
 
     class Meta:
         ordering = ['name']

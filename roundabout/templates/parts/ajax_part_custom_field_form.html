@@ -18,6 +18,22 @@
 
         <div class="card-body">
 
+            <div id="existing-fields-list">
+                <form class="form-horizontal" method="post" action="" id="existing-fields-form" novalidate>
+                    <div class="form-group">
+                        {{ custom_fields }}
+                    <label for="id_custom_field" class="form-control-label  requiredField">Choose an Existing Custom Field</label>
+                        <select name="part_type" class="select form-control" id="id_custom_field">
+                            <option value="">---------</option>
+                            <option value="All">All Parts</option>
+
+                                <option value="{{ type.id }}">-- {{ type.name }}</option>
+
+                        </select>
+                    </div>
+                </form>
+            </div>
+
               <form class="form-horizontal parts ajax-form" method="post" action=""
                     data-url='{{ request.build_absolute_uri|safe }}'
                     data-partnumber-url=''
