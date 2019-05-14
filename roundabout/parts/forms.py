@@ -128,6 +128,16 @@ class PartCustomFieldForm(forms.Form):
         return field_name
 
 
+class PartAddUdfFieldForm(forms.ModelForm):
+
+    class Meta:
+        model = Part
+        fields = ['user_defined_fields']
+        labels = {
+            'user_defined_fields': 'Select an existing Custom Field',
+        }
+
+
 class PartCustomFieldUpdateForm(forms.Form):
     field_type_choices =[ ('CharField', 'Text Field'),
                           ('IntegerField', 'Integer Field'),

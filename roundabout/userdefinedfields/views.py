@@ -17,7 +17,7 @@ class UserDefinedFieldListView(LoginRequiredMixin, ListView):
 class UserDefinedFieldCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = Field
     form_class = UserDefinedFieldForm
-    context_object_name = 'fields'
+    context_object_name = 'field'
     permission_required = 'userdefinedfields.add_field'
     redirect_field_name = 'home'
 
@@ -28,7 +28,7 @@ class UserDefinedFieldCreateView(LoginRequiredMixin, PermissionRequiredMixin, Cr
 class UserDefinedFieldUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Field
     form_class = UserDefinedFieldForm
-    context_object_name = 'fields'
+    context_object_name = 'field'
     permission_required = 'userdefinedfields.add_printer'
     redirect_field_name = 'home'
 

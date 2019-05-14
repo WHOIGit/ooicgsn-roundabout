@@ -11,10 +11,13 @@ from django.template.defaultfilters import slugify
 
 from .models import Part, PartType, Revision, Documentation
 from .forms import PartForm, RevisionForm, DocumentationFormset, RevisionFormset, PartCustomFieldDeleteForm, \
-                   PartSubassemblyAddForm, PartSubassemblyEditForm, PartCustomFieldForm, PartCustomFieldUpdateForm
+                   PartSubassemblyAddForm, PartSubassemblyEditForm, PartCustomFieldForm, PartCustomFieldUpdateForm, \
+                   PartAddUdfFieldForm
 
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory
+from roundabout.userdefinedfields.models import Field
+
 from common.util.mixins import AjaxFormMixin
 
 # Mixins
@@ -371,6 +374,75 @@ class PartsAjaxDeleteRevisionView(LoginRequiredMixin, PermissionRequiredMixin, D
         }
         self.object.delete()
         return JsonResponse(data)
+
+
+# VIEWS FOR CUSTOM UDF FIELDS
+
+# UpdateView to add custom UDF field to Part
+class PartsAjaxAddUdfFieldUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, UpdateView):
+    model = Part
+    form_class = PartAddUdfFieldForm
+    context_object_name = 'part_template'
+    template_name='parts/ajax_part_udf_field_form.html'
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
+    def form_valid(self, form):
+        self.object = form.save()
+        response = HttpResponseRedirect(self.get_success_url())
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def form_invalid(self, form):
+        if self.request.is_ajax():
+            data = form.errors
+            return JsonResponse(data, status=400)
+        else:
+            return self.render_to_response(self.get_context_data(form=form, form_errors=form_errors))
+
+    def get_success_url(self):
+        return reverse('parts:ajax_parts_detail', args=(self.object.id, ))
+
+
+# Template View to confirm removal of a UDF field from a Part
+class PartsAjaxRemoveUdfFieldView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+    template_name = 'parts/ajax_part_udf_field_remove.html'
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super(PartsAjaxRemoveUdfFieldView, self).get_context_data(**kwargs)
+        part_template = Part.objects.get(id=self.kwargs['pk'])
+        field = Field.objects.get(id=self.kwargs['field_pk'])
+
+        context.update({
+            'part_template': part_template,
+            'field': field,
+        })
+        return context
+
+
+# RedirectView to remove a UDF field from a Part
+class PartsAjaxRemoveActionUdfFieldView(RedirectView):
+    permanent = False
+    query_string = True
+
+    def get_redirect_url(self, *args, **kwargs):
+        part_template = Part.objects.get(id=self.kwargs['pk'])
+        field = Field.objects.get(id=self.kwargs['field_pk'])
+        # Remove the field from the Part ManyToManyField
+        part_template.user_defined_fields.remove(field)
+
+        return reverse('parts:ajax_parts_detail', args=(part_template.id, ) )
+
 
 # VIEWS FOR CUSTOM FIELDS
 

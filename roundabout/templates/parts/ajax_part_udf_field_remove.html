@@ -1,0 +1,25 @@
+    <div class="card-body">
+        <div class="side-p">
+            <h3>Are you sure?</h3>
+            <p>You're about to delete the field {{ field }} from {{ part_template }}. Please confirm.</p>
+
+                <input class="btn btn-link cancel-btn"
+                       type="button" value="Cancel"
+                       data-detail-url="{% url 'parts:ajax_parts_detail' part_template.id %}"
+                       data-node-id="{{ part_template.id }}"/>
+
+                <span class="ajax-detail-link">
+                    <a href="#" class="btn btn-danger" role="button"
+                       data-detail-url="{% url 'parts:ajax_parts_remove_action_udf_field' part_template.id field.id %}"
+                       data-node-id="{{ part_template.id }}">
+                        Remove field
+                    </a>
+                </span>
+
+
+        </div>
+    </div>
+
+{% block javascript %}
+
+{% endblock javascript %}

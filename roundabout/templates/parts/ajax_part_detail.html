@@ -123,7 +123,7 @@
 
                     <div class="ajax-detail-link float-right">
                         <a class="btn btn-primary btn-sm" href="#" role="button"
-                            data-detail-url="{% url 'parts:ajax_parts_create_custom_fields' part_template.id %}"
+                            data-detail-url="{% url 'parts:ajax_parts_add_udf_field' part_template.id %}"
                             data-node-id="{{ part_template.id }}"
                             data-node-type="detail">Add New Field</a>
                     </div>
@@ -131,49 +131,42 @@
                     <h4>Custom Fields</h4>
 
                     <ul class="list-group">
-                        {% for field in part_template.custom_fields.fields %}
+                        {% for field in part_template.user_defined_fields.all %}
                             <li class="list-group-item">
 
-                                <a class="collapsed" data-toggle="collapse" href="#{{ field.field_id }}" aria-expanded="false" aria-controls="{{ field.field_id }}">
+                                <a class="collapsed" data-toggle="collapse" href="#field-{{ field.id }}" aria-expanded="false" aria-controls="field-{{ field.id }}">
                                     Field Name: {{ field.field_name }}
                                 </a>
 
-                                <a data-toggle="collapse" class="collapsed text-right" href="#{{ field.field_id }}" aria-controls="{{ field.field_id }}" aria-expanded="false" role="button">
+                                <a data-toggle="collapse" class="collapsed text-right" href="#field-{{ field.id }}" aria-controls="field-{{ field.id }}" aria-expanded="false" role="button">
                                     <i class="fa" aria-hidden="true"></i>
                                     <span class="sr-only">Expand/Collapse Revision {{ field.field_name }}</span>
                                 </a>
 
-                                <div class="collapse mt-3" id="{{ field.field_id }}">
+                                <div class="collapse mt-3" id="field-{{ field.id }}">
                                     <hr>
                                         <p>Field Description: {{field.field_description}}</p>
                                         <p>Field Type: {{field.field_type}}</p>
                                         <p>Field Default Value: {{field.field_default_value}}</p>
-                                        <p>Global Field for this Part?
-                                            {% if field.field_is_global %}
-                                                Yes
-                                            {% else %}
-                                                No
-                                            {% endif %}
 
-                                        </p>
                                     <hr>
 
-                                    <div class="ajax-detail-link">
 
-                                          <a href="#"
-                                             data-detail-url="{% url 'parts:ajax_parts_update_custom_fields' part_template.id field.field_id %}"
+
+                                          <a href="{% url 'userdefinedfields:fields_update' field.id %}"
+                                             data-detail-url=""
                                              data-node-id="{{ part_template.id }}"
                                              data-node-type="edit"
                                              class="btn btn-primary btn-sm float-left mr-2"
                                              role="button">Edit Field</a>
 
-
+                                    <div class="ajax-detail-link">
                                              <a href="#"
-                                               data-detail-url="{% url 'parts:ajax_parts_delete_custom_fields' part_template.id field.field_id  %}"
+                                               data-detail-url="{% url 'parts:ajax_parts_remove_udf_field' part_template.id field.id  %}"
                                                data-node-id="{{ part_template.id }}"
                                                data-node-type="edit"
                                                class="btn btn-danger btn-sm float-left"
-                                               role="button">Delete Field</a>
+                                               role="button">Remove Field</a>
 
                                     </div>
                                 </div>
