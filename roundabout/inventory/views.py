@@ -18,6 +18,7 @@ from roundabout.locations.models import Location
 from roundabout.parts.models import Part, PartType, Revision
 from roundabout.moorings.models import MooringPart
 from roundabout.admintools.models import Printer
+from roundabout.userdefinedfields.models import FieldValue
 from common.util.mixins import AjaxFormMixin
 
 # Mixins
@@ -362,8 +363,16 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super(InventoryAjaxDetailView, self).get_context_data(**kwargs)
         # Get Printers to display in print dropdown
+        printers = Printer.objects.all()
+        # Get custom fields with most recent Values
+        if self.object.fieldvalues.exists():
+            custom_fields = self.object.fieldvalues.filter(is_current=True)
+        else:
+            custom_fields = None
+
         context.update({
-            'printers': Printer.objects.all()
+            'printers': printers,
+            'custom_fields': custom_fields,
         })
         return context
 
@@ -547,30 +556,36 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         self.object = form.save()
 
         # Check is this Part has custom fields
-        if self.object.part.custom_fields:
-            fields = self.object.part.custom_fields['fields']
+        if self.object.part.user_defined_fields:
+            # reset all existing values to False for is_current
+            """
+            if self.object.fieldvalues.exists():
+                for fieldvalue in self.object.fieldvalues.all():
+                    fieldvalue.is_current = False
+                    fieldvalue.save()
+                    """
+            # loop through all cleaned_data fields, get custom fields, update the FieldValue model
+            for key, value in form.cleaned_data.items():
+                # check for the 'udffield' key in string, if so proceed
+                field_keys = key.partition('_')
 
-            custom_values = {
-                'values': [ ]
-            }
+                if field_keys[0] == 'udffield':
+                    field_id = int(field_keys[2])
+                    #Check if this inventory object has value for this field
+                    try:
+                        currentvalue = self.object.fieldvalues.filter(field_id=field_id).latest(field_name='created_at')
+                    except FieldValue.DoesNotExist:
+                        currentvalue = None
 
-            #If so, match field_ids and update the custom_field_values field
-            for field in fields:
-                for key,value in field.items():
-                    if key == 'field_id':
-                        if field['field_type'] == 'DateField' or field['field_type'] == 'DecimalField':
-                            form_value = str(form.cleaned_data[value])
-                        else:
-                            form_value = form.cleaned_data[value]
-
-                        field_value = {
-                            'field_id': value,
-                            'field_value': form_value,
-                        }
-                        custom_values['values'].append(field_value)
-
-            self.object.custom_field_values = custom_values
-            self.object.save()
+                    if currentvalue:
+                        if currentvalue.field_value != str(value):
+                            currentvalue.is_current = False
+                            currentvalue.save()
+                            # create new value object
+                            new_fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=value, inventory=self.object, is_current=True)
+                    else:
+                        # create new value object
+                        fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=value, inventory=self.object, is_current=True)
 
         response = HttpResponseRedirect(self.get_success_url())
 

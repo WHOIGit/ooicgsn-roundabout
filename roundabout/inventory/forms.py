@@ -12,6 +12,7 @@ from .models import Inventory, Deployment, Action, DeploymentSnapshot, PhotoNote
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
 from roundabout.moorings.models import MooringPart
+from roundabout.userdefinedfields.models import FieldValue
 
 
 class InventoryForm(forms.ModelForm):
@@ -52,47 +53,40 @@ class InventoryForm(forms.ModelForm):
                 del self.fields['ooi_property_number']
 
             # Check if this Part has Custom fields, create fields if needed
-            if self.instance.part.custom_fields:
-                custom_fields =  self.instance.part.custom_fields['fields']
-                for field in custom_fields:
-                    field_id = field['field_id']
-                    # Create fields for non-Global custom fields
-                    if not field['field_is_global']:
-                        if field['field_type'] == 'IntegerField':
-                            self.fields[field_id] = forms.IntegerField(label=field['field_name'], required=False,
-                                                                help_text=field['field_description'])
-                        elif field['field_type'] == 'DecimalField':
-                            self.fields[field_id] = forms.DecimalField(label=field['field_name'], required=False,
-                                                                help_text=field['field_description'])
-                        elif field['field_type'] == 'DateField':
-                            self.fields[field_id] = forms.DateTimeField(label=field['field_name'], required=False,
-                                                                help_text=field['field_description'],
-                                                                widget=DateTimePickerInput(
-                                                                    options={
-                                                                        #"format": "MM/DD/YYYY", # moment date-time format
-                                                                        "showClose": True,
-                                                                        "showClear": True,
-                                                                        "showTodayButton": True,
-                                                                    }
-                                                                ))
-                        elif field['field_type'] == 'BooleanField':
-                            self.fields[field_id] = forms.BooleanField(label=field['field_name'], required=False,
-                                                                help_text=field['field_description'])
-                        else:
-                            self.fields[field_id] = forms.CharField(label=field['field_name'], required=False,
-                                                                help_text=field['field_description'])
-
-                        # Get current value if it exists
-                        if self.instance.custom_field_values:
-                            fields = self.instance.custom_field_values['values']
-                            for field in fields:
-                                print (field['field_id']);
-                                if field['field_id'] == field_id:
-                                    self.fields[field_id].initial = field['field_value']
+            if self.instance.part.user_defined_fields:
+                for field in self.instance.part.user_defined_fields.all():
+                    if field.field_type == 'IntegerField':
+                        self.fields['udffield_' + str(field.id)] = forms.IntegerField(label=str(field.field_name), required=False,
+                                                            help_text=str(field.field_description))
+                    elif field.field_type == 'DecimalField':
+                        self.fields['udffield_' + str(field.id)] = forms.DecimalField(label=str(field.field_name), required=False,
+                                                            help_text=str(field.field_description))
+                    elif field.field_type == 'DateField':
+                        self.fields['udffield_' + str(field.id)] = forms.DateTimeField(label=str(field.field_name), required=False,
+                                                            help_text=str(field.field_description),
+                                                            widget=DateTimePickerInput(
+                                                                options={
+                                                                    #"format": "MM/DD/YYYY", # moment date-time format
+                                                                    "showClose": True,
+                                                                    "showClear": True,
+                                                                    "showTodayButton": True,
+                                                                }
+                                                            ))
+                    elif field.field_type == 'BooleanField':
+                        self.fields['udffield_' + str(field.id)] = forms.BooleanField(label=str(field.field_name), required=False,
+                                                            help_text=str(field.field_description))
                     else:
-                        # Create hidden fields for Global custom fields
-                        self.fields[field_id] = forms.CharField(widget=forms.HiddenInput(), initial=field['field_default_value'])
+                        self.fields['udffield_' + str(field.id)] = forms.CharField(label=str(field.field_name), required=False,
+                                                            help_text=str(field.field_description))
 
+                    #Check if this inventory object has values for these fields, set initial values if true
+                    try:
+                        fieldvalue = self.instance.fieldvalues.filter(field_id=field.id).latest(field_name='created_at')
+                    except FieldValue.DoesNotExist:
+                        fieldvalue = None
+
+                    if fieldvalue:
+                        self.initial['udffield_' + str(field.id)] = fieldvalue.field_value
 
 
 class InventoryAddForm(forms.ModelForm):

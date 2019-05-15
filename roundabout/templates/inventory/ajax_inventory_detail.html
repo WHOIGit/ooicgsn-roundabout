@@ -408,12 +408,12 @@
 
                 <!-- User Defined Fields -->
 
-                {% if inventory_item.custom_field_values %}
-                    {% for field in inventory_item.custom_field_values.values %}
+                {% if custom_fields %}
+                    {% for custom_field in custom_fields %}
 
                         <li class="list-group-item">
-                            {{ field.field_id|get_custom_field_details_by_part:inventory_item.part }}:
-                            {{ field.field_value }}
+                            {{ custom_field.field }}: {{ custom_field.field_value }}
+
                         </li>
 
                     {% endfor %}
