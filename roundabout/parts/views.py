@@ -441,6 +441,13 @@ class PartsAjaxRemoveActionUdfFieldView(RedirectView):
         # Remove the field from the Part ManyToManyField
         part_template.user_defined_fields.remove(field)
 
+        # Delete all FieldValue instances for items of this Part
+        items = part_template.inventory.filter(fieldvalues__isnull=False)
+        for item in items:
+            for fieldvalue in item.fieldvalues.all():
+                if fieldvalue.field == field:
+                    fieldvalue.delete()
+
         return reverse('parts:ajax_parts_detail', args=(part_template.id, ) )
 
 

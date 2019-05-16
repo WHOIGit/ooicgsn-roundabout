@@ -76,7 +76,14 @@ class UserDefinedFieldUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Up
                                 currentvalue = None
 
                             if not currentvalue:
-                                # create new value object
+                                # create new value object if no current value
+                                fieldvalue = FieldValue.objects.create(field=self.object, field_value=self.object.field_default_value,
+                                                                   inventory=item, is_current=True)
+
+                            if self.object.value_is_locked:
+                                # create new value object if value is locked for all items, set current value to false
+                                currentvalue.is_current = False
+                                currentvalue.save()
                                 fieldvalue = FieldValue.objects.create(field=self.object, field_value=self.object.field_default_value,
                                                                    inventory=item, is_current=True)
 
