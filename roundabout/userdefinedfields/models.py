@@ -8,7 +8,6 @@ class Field(models.Model):
         ('CharField', 'Text Field'),
         ('IntegerField', 'Integer Field'),
         ('DecimalField', 'Decimal Field'),
-        ('DateField', 'Date Field'),
         ('BooleanField', 'Boolean Field'),
     )
     field_name = models.CharField(max_length=255, unique=True, db_index=True)
