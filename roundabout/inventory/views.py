@@ -446,92 +446,12 @@ class InventoryAjaxCreateBasicView(LoginRequiredMixin, AjaxFormMixin, CreateView
                                               user_id=self.request.user.id, inventory_id=self.object.id)
 
         # Check is this Part has custom fields. If so, add default custom values to this item.
-        if self.object.part.custom_fields:
-            fields = self.object.part.custom_fields['fields']
-
-            custom_values = {
-                'values': [ ]
-            }
-
-            for field in fields:
-                for key,value in field.items():
-                    if key == 'field_id':
-                        field_value = {
-                            'field_id': value,
-                            'field_value': field['field_default_value'],
-                        }
-                        custom_values['values'].append(field_value)
-
-            self.object.custom_field_values = custom_values
-            self.object.save()
-
-
-        response = HttpResponseRedirect(self.get_success_url())
-
-        if self.request.is_ajax():
-            print(form.cleaned_data)
-            data = {
-                'message': "Successfully submitted form data.",
-                'object_id': self.object.id,
-            }
-            return JsonResponse(data)
-        else:
-            return response
-
-
-class InventoryAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
-    model = Inventory
-    form_class = InventoryForm
-    context_object_name = 'inventory_item'
-    template_name='inventory/ajax_inventory_form.html'
-
-    def get_success_url(self):
-        return reverse('inventory:ajax_inventory_detail', args=(self.object.id,))
-
-    def get_context_data(self, **kwargs):
-        context = super(InventoryAjaxCreateView, self).get_context_data(**kwargs)
-        # Add Parts list to context to build form filter
-        context.update({
-            'part_types': PartType.objects.all()
-        })
-        if 'parent_pk' in self.kwargs:
-            context.update({
-                'parent': Inventory.objects.get(id=self.kwargs['parent_pk'])
-            })
-        return context
-
-    def get_form_kwargs(self):
-        kwargs = super(InventoryAjaxCreateView, self).get_form_kwargs()
-        if 'parent_pk' in self.kwargs:
-            kwargs['parent_pk'] = self.kwargs['parent_pk']
-        if 'current_location' in self.kwargs:
-            kwargs['current_location'] = self.kwargs['current_location']
-        return kwargs
-
-    def get_initial(self):
-        #Returns the initial data to use for forms on this view.
-        initial = super(InventoryAjaxCreateView, self).get_initial()
-        if 'parent_pk' in self.kwargs:
-            parent = Inventory.objects.get(id=self.kwargs['parent_pk'])
-            part_templates = Part.objects.get(id=parent.part.id)
-            if parent.deployment:
-                initial['deployment'] = parent.deployment.id
-            initial['parent'] = self.kwargs['parent_pk']
-            initial['location'] = self.kwargs['current_location']
-            initial['part'] = part_templates
-        elif 'current_location' in self.kwargs:
-            initial['location'] = self.kwargs['current_location']
-        return initial
-
-    def form_valid(self, form):
-        self.object = form.save()
-        action_record = Action.objects.create(action_type='invadd', detail='Item first added to Inventory', location_id=self.object.location_id,
-                                              user_id=self.request.user.id, inventory_id=self.object.id)
-
-        if 'parent_pk' in self.kwargs:
-            detail = 'Subassembly %s added' % (self.object.serial_number)
-            parent_action_record = Action.objects.create(action_type='subchange', detail=detail, location_id=self.object.location_id,
-                                                        user_id=self.request.user.id, inventory_id=self.kwargs['parent_pk'])
+        if self.object.part.user_defined_fields.exists():
+            for field in self.object.part.user_defined_fields.all():
+                if field.field_default_value:
+                    # create new value object
+                    fieldvalue = FieldValue.objects.create(field=field, field_value=field.field_default_value,
+                                                                inventory=self.object, is_current=True)
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -556,14 +476,7 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         self.object = form.save()
 
         # Check is this Part has custom fields
-        if self.object.part.user_defined_fields:
-            # reset all existing values to False for is_current
-            """
-            if self.object.fieldvalues.exists():
-                for fieldvalue in self.object.fieldvalues.all():
-                    fieldvalue.is_current = False
-                    fieldvalue.save()
-                    """
+        if self.object.part.user_defined_fields.exists():
             # loop through all cleaned_data fields, get custom fields, update the FieldValue model
             for key, value in form.cleaned_data.items():
                 # check for the 'udffield' key in string, if so proceed
@@ -577,15 +490,27 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
                     except FieldValue.DoesNotExist:
                         currentvalue = None
 
+                    # If current value is different than new value, update is_current, add new value, add Action to History
                     if currentvalue:
                         if currentvalue.field_value != str(value):
                             currentvalue.is_current = False
                             currentvalue.save()
                             # create new value object
-                            new_fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=value, inventory=self.object, is_current=True)
+                            new_fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=value,
+                                                                        inventory=self.object, is_current=True)
+                            # create action record for history
+                            self.object.detail = 'Change field value for "%s" to %s' % (currentvalue.field, value)
+                            self.object.save()
+                            action_record = Action.objects.create(action_type='fieldchange', detail=self.object.detail, location=self.object.location,
+                                                                  user=self.request.user, inventory=self.object)
                     else:
                         # create new value object
                         fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=value, inventory=self.object, is_current=True)
+                        # create action record for history
+                        self.object.detail = 'Add initial field value for "%s" to %s' % (fieldvalue.field, value)
+                        self.object.save()
+                        action_record = Action.objects.create(action_type='fieldchange', detail=self.object.detail, location=self.object.location,
+                                                              user=self.request.user, inventory=self.object)
 
         response = HttpResponseRedirect(self.get_success_url())
 

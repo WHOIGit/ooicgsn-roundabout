@@ -67,6 +67,19 @@ class UserDefinedFieldUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Up
                 for part in parts.all():
                     part.user_defined_fields.add(self.object)
 
+                    # If custom field has a default value, add it to any existing Inventory items that has no existing value
+                    if self.object.field_default_value:
+                        for item in part.inventory.all():
+                            try:
+                                currentvalue = item.fieldvalues.filter(field=self.object).latest(field_name='created_at')
+                            except FieldValue.DoesNotExist:
+                                currentvalue = None
+
+                            if not currentvalue:
+                                # create new value object
+                                fieldvalue = FieldValue.objects.create(field=self.object, field_value=self.object.field_default_value,
+                                                                   inventory=item, is_current=True)
+
         return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):

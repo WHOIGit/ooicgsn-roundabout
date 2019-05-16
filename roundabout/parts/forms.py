@@ -137,6 +137,10 @@ class PartAddUdfFieldForm(forms.ModelForm):
             'user_defined_fields': 'Select an existing Custom Field',
         }
 
+        widgets = {
+            'user_defined_fields': forms.CheckboxSelectMultiple()
+        }
+
 
 class PartCustomFieldUpdateForm(forms.Form):
     field_type_choices =[ ('CharField', 'Text Field'),

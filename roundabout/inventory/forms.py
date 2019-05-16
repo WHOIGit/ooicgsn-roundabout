@@ -53,7 +53,7 @@ class InventoryForm(forms.ModelForm):
                 del self.fields['ooi_property_number']
 
             # Check if this Part has Custom fields, create fields if needed
-            if self.instance.part.user_defined_fields:
+            if self.instance.part.user_defined_fields.exists():
                 for field in self.instance.part.user_defined_fields.all():
                     if field.field_type == 'IntegerField':
                         self.fields['udffield_' + str(field.id)] = forms.IntegerField(label=str(field.field_name), required=False,

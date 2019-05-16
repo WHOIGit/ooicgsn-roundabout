@@ -210,6 +210,7 @@ class Action(models.Model):
     NOTE = 'note'
     HISTORYNOTE = 'historynote'
     TICKET = 'ticket'
+    FIELDCHANGE = 'fieldchange'
     FLAG = 'flag'
     MOVETOTRASH = 'movetotrash'
     ACT_TYPES = (
@@ -228,6 +229,7 @@ class Action(models.Model):
         (NOTE, 'Note'),
         (HISTORYNOTE, 'Historical Note'),
         (TICKET, 'Work Ticket'),
+        (FIELDCHANGE, 'Field Change'),
         (FLAG, 'Flag'),
         (MOVETOTRASH, 'Move to Trash'),
     )
