@@ -55,39 +55,38 @@ class InventoryForm(forms.ModelForm):
             # Check if this Part has Custom fields, create fields if needed
             if self.instance.part.user_defined_fields.exists():
                 for field in self.instance.part.user_defined_fields.all():
-                    if not field.value_is_locked:
-                        if field.field_type == 'IntegerField':
-                            self.fields['udffield_' + str(field.id)] = forms.IntegerField(label=str(field.field_name), required=False,
-                                                                help_text=str(field.field_description))
-                        elif field.field_type == 'DecimalField':
-                            self.fields['udffield_' + str(field.id)] = forms.DecimalField(label=str(field.field_name), required=False,
-                                                                help_text=str(field.field_description))
-                        elif field.field_type == 'DateField':
-                            self.fields['udffield_' + str(field.id)] = forms.DateTimeField(label=str(field.field_name), required=False,
-                                                                help_text=str(field.field_description),
-                                                                widget=DateTimePickerInput(
-                                                                    options={
-                                                                        #"format": "MM/DD/YYYY", # moment date-time format
-                                                                        "showClose": True,
-                                                                        "showClear": True,
-                                                                        "showTodayButton": True,
-                                                                    }
-                                                                ))
-                        elif field.field_type == 'BooleanField':
-                            self.fields['udffield_' + str(field.id)] = forms.BooleanField(label=str(field.field_name), required=False,
-                                                                help_text=str(field.field_description))
-                        else:
-                            self.fields['udffield_' + str(field.id)] = forms.CharField(label=str(field.field_name), required=False,
-                                                                help_text=str(field.field_description))
+                    if field.field_type == 'IntegerField':
+                        self.fields['udffield_' + str(field.id)] = forms.IntegerField(label=str(field.field_name), required=False,
+                                                            help_text=str(field.field_description))
+                    elif field.field_type == 'DecimalField':
+                        self.fields['udffield_' + str(field.id)] = forms.DecimalField(label=str(field.field_name), required=False,
+                                                            help_text=str(field.field_description))
+                    elif field.field_type == 'DateField':
+                        self.fields['udffield_' + str(field.id)] = forms.DateTimeField(label=str(field.field_name), required=False,
+                                                            help_text=str(field.field_description),
+                                                            widget=DateTimePickerInput(
+                                                                options={
+                                                                    #"format": "MM/DD/YYYY", # moment date-time format
+                                                                    "showClose": True,
+                                                                    "showClear": True,
+                                                                    "showTodayButton": True,
+                                                                }
+                                                            ))
+                    elif field.field_type == 'BooleanField':
+                        self.fields['udffield_' + str(field.id)] = forms.BooleanField(label=str(field.field_name), required=False,
+                                                            help_text=str(field.field_description))
+                    else:
+                        self.fields['udffield_' + str(field.id)] = forms.CharField(label=str(field.field_name), required=False,
+                                                            help_text=str(field.field_description))
 
-                        #Check if this inventory object has values for these fields, set initial values if true
-                        try:
-                            fieldvalue = self.instance.fieldvalues.filter(field_id=field.id).latest(field_name='created_at')
-                        except FieldValue.DoesNotExist:
-                            fieldvalue = None
+                    #Check if this inventory object has values for these fields, set initial values if true
+                    try:
+                        fieldvalue = self.instance.fieldvalues.filter(field_id=field.id).latest(field_name='created_at')
+                    except FieldValue.DoesNotExist:
+                        fieldvalue = None
 
-                        if fieldvalue:
-                            self.initial['udffield_' + str(field.id)] = fieldvalue.field_value
+                    if fieldvalue:
+                        self.initial['udffield_' + str(field.id)] = fieldvalue.field_value
 
 
 class InventoryAddForm(forms.ModelForm):

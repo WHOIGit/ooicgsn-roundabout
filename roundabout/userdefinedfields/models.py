@@ -14,7 +14,6 @@ class Field(models.Model):
     field_description = models.CharField(max_length=255, null=False, blank=True)
     field_type = models.CharField(max_length=100, choices=FIELD_TYPES)
     field_default_value = models.CharField(max_length=255, null=False, blank=True)
-    value_is_locked = models.BooleanField(default=False)
     global_for_part_types = models.ManyToManyField('parts.PartType', blank=True)
 
     class Meta:

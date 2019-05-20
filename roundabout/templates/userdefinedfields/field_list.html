@@ -17,7 +17,6 @@
         <th>Field Description</th>
         <th>Field Type</th>
         <th>Default Value</th>
-        <th>Value is locked to <br>default for all Items</th>
         <th>Global field for all Parts of this Type</th>
         <th>&nbsp;</th>
 
@@ -29,7 +28,6 @@
               <td>{{ field.field_description }}</td>
               <td>{{ field.field_type }}</td>
               <td>{{ field.field_default_value }}</td>
-              <td>{{ field.value_is_locked }}</td>
               <td>
                     {% for part_type in field.global_for_part_types.all %}{{ part_type }}<br/>{% endfor %}
 
