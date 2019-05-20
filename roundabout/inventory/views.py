@@ -364,15 +364,22 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         context = super(InventoryAjaxDetailView, self).get_context_data(**kwargs)
         # Get Printers to display in print dropdown
         printers = Printer.objects.all()
-        # Get custom fields with most recent Values
+        # Get this item's custom fields with most recent Values
         if self.object.fieldvalues.exists():
             custom_fields = self.object.fieldvalues.filter(is_current=True)
         else:
             custom_fields = None
 
+        # Get global custom fields for this Part
+        if self.object.part.fieldvalues.exists():
+            custom_fields_global = self.object.part.fieldvalues.filter(is_current=True)
+        else:
+            custom_fields_global = None
+
         context.update({
             'printers': printers,
             'custom_fields': custom_fields,
+            'custom_fields_global': custom_fields_global,
         })
         return context
 

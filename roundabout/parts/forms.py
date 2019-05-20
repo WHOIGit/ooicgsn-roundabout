@@ -102,7 +102,6 @@ class PartUdfAddFieldForm(forms.ModelForm):
 
 
 class PartUdfFieldSetValueForm(forms.Form):
-    field_value = forms.CharField(required=True)
 
     def __init__(self, *args, **kwargs):
         if 'pk' in kwargs:
@@ -119,6 +118,30 @@ class PartUdfFieldSetValueForm(forms.Form):
         part = Part.objects.get(id=self.pk)
         field = Field.objects.get(id=self.field_pk)
         partfieldvalues = part.fieldvalues.filter(field=field)
+
+        if field.field_type == 'IntegerField':
+            self.fields['field_value'] = forms.IntegerField(label=str(field.field_name), required=False,
+                                                help_text=str(field.field_description))
+        elif field.field_type == 'DecimalField':
+            self.fields['field_value'] = forms.DecimalField(label=str(field.field_name), required=False,
+                                                help_text=str(field.field_description))
+        elif field.field_type == 'DateField':
+            self.fields['field_value'] = forms.DateTimeField(label=str(field.field_name), required=False,
+                                                help_text=str(field.field_description),
+                                                widget=DateTimePickerInput(
+                                                    options={
+                                                        #"format": "MM/DD/YYYY", # moment date-time format
+                                                        "showClose": True,
+                                                        "showClear": True,
+                                                        "showTodayButton": True,
+                                                    }
+                                                ))
+        elif field.field_type == 'BooleanField':
+            self.fields['field_value'] = forms.BooleanField(label=str(field.field_name), required=False,
+                                                help_text=str(field.field_description))
+        else:
+            self.fields['field_value'] = forms.CharField(label=str(field.field_name), required=False,
+                                                help_text=str(field.field_description))
 
         if partfieldvalues:
             for fieldvalue in partfieldvalues:

@@ -454,7 +454,7 @@ class PartsAjaxSetUdfFieldValueFormView(LoginRequiredMixin, PermissionRequiredMi
         except FieldValue.DoesNotExist:
             currentvalue = None
 
-        # If current value is different than new value, update is_current, add new value
+        # If current value is different than new value, update is_current to False, add new value
         if currentvalue:
             if currentvalue.field_value != str(field_value):
                 currentvalue.is_current = False
@@ -466,6 +466,20 @@ class PartsAjaxSetUdfFieldValueFormView(LoginRequiredMixin, PermissionRequiredMi
             # create new value object
             partfieldvalue = FieldValue.objects.create(field_id=field_id, field_value=field_value,
                                                         part_id=part_id, is_current=True)
+
+        # Check all Inventory Items for this Part for existing field value. If so, update is_current to False
+        if part.inventory.exists():
+            items = part.inventory.all()
+            for item in items:
+                #Check if this Part object has value for this field
+                try:
+                    currentvalue = item.fieldvalues.filter(field_id=field_id).latest(field_name='created_at')
+                except FieldValue.DoesNotExist:
+                    currentvalue = None
+
+                if currentvalue:
+                    currentvalue.is_current = False
+                    currentvalue.save()
 
         if self.request.is_ajax():
             print(form.cleaned_data)
