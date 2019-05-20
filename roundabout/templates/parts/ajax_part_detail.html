@@ -145,22 +145,26 @@
 
                                 <div class="collapse mt-3" id="field-{{ field.id }}">
                                     <hr>
-                                        <p>Field Description: {{field.field_description}}</p>
-                                        <p>Field Type: {{field.field_type}}</p>
-                                        <p>Field Default Value: {{field.field_default_value}}</p>
+                                        <p>Field Description: {{ field.field_description }}</p>
+
+                                        {% for value in custom_fields %}
+                                            {% if value.field_id == field.id %}
+                                                <p>Global Field Value for this Part: {{ value.field_value }}</p>
+                                            {% endif %}
+                                        {% endfor %}
 
                                     <hr>
 
+                                    <div class="ajax-detail-link">
 
-
-                                          <a href="{% url 'userdefinedfields:fields_update' field.id %}"
-                                             data-detail-url=""
+                                          <a href="#"
+                                             data-detail-url="{% url 'parts:ajax_parts_set_udf_fieldvalue' part_template.id field.id %}"
                                              data-node-id="{{ part_template.id }}"
                                              data-node-type="edit"
                                              class="btn btn-primary btn-sm float-left mr-2"
-                                             role="button">Edit Field</a>
+                                             role="button">Set Field Value</a>
 
-                                    <div class="ajax-detail-link">
+
                                              <a href="#"
                                                data-detail-url="{% url 'parts:ajax_parts_remove_udf_field' part_template.id field.id  %}"
                                                data-node-id="{{ part_template.id }}"

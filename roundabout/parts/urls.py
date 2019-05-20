@@ -22,6 +22,7 @@ urlpatterns = [
     path('ajax/revision/delete/<int:pk>/', view=views.PartsAjaxDeleteRevisionView.as_view(), name='ajax_parts_delete_revision'),
     path('ajax/part_type/<int:pk>/', view=views.PartsTypeAjaxDetailView.as_view(), name='ajax_parts_type_detail'),
     path('ajax/userdefinedfields/add/<int:pk>/', view=views.PartsAjaxAddUdfFieldUpdateView.as_view(), name='ajax_parts_add_udf_field'),
+    path('ajax/userdefinedfields/setvalue/<int:pk>/<int:field_pk>/', view=views.PartsAjaxSetUdfFieldValueFormView.as_view(), name='ajax_parts_set_udf_fieldvalue'),
     path('ajax/userdefinedfields/remove/<int:pk>/<int:field_pk>/', view=views.PartsAjaxRemoveUdfFieldView.as_view(), name='ajax_parts_remove_udf_field'),
     path('ajax/userdefinedfields/remove/action/<int:pk>/<int:field_pk>/', view=views.PartsAjaxRemoveActionUdfFieldView.as_view(), name='ajax_parts_remove_action_udf_field'),
     path('ajax/delete/<int:pk>/', view=views.PartsAjaxDeleteView.as_view(), name='ajax_parts_delete'),

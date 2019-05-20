@@ -28,7 +28,9 @@ class FieldValue(models.Model):
     field = models.ForeignKey(Field, related_name='fieldvalues',
                           on_delete=models.CASCADE, null=False, blank=False)
     inventory = models.ForeignKey('inventory.Inventory', related_name='fieldvalues',
-                          on_delete=models.CASCADE, null=False, blank=False)
+                          on_delete=models.CASCADE, null=True)
+    part = models.ForeignKey('parts.Part', related_name='fieldvalues',
+                          on_delete=models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_current = models.BooleanField(default=False)
 

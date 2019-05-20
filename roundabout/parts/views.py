@@ -10,11 +10,11 @@ from django.core.exceptions import ValidationError
 from django.template.defaultfilters import slugify
 
 from .models import Part, PartType, Revision, Documentation
-from .forms import PartForm, RevisionForm, DocumentationFormset, PartAddUdfFieldForm
+from .forms import PartForm, RevisionForm, DocumentationFormset, PartUdfAddFieldForm, PartUdfFieldSetValueForm
 
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory
-from roundabout.userdefinedfields.models import Field
+from roundabout.userdefinedfields.models import Field, FieldValue
 
 from common.util.mixins import AjaxFormMixin
 
@@ -93,8 +93,15 @@ class PartsAjaxDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailVie
         else:
             multiple_revision = False
 
+        # Get custom fields with most recent Values
+        if self.object.fieldvalues.exists():
+            custom_fields = self.object.fieldvalues.filter(is_current=True)
+        else:
+            custom_fields = None
+
         context.update({
             'multiple_revision': multiple_revision,
+            'custom_fields': custom_fields,
         })
         return context
 
@@ -379,7 +386,7 @@ class PartsAjaxDeleteRevisionView(LoginRequiredMixin, PermissionRequiredMixin, D
 # UpdateView to add custom UDF field to Part
 class PartsAjaxAddUdfFieldUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, UpdateView):
     model = Part
-    form_class = PartAddUdfFieldForm
+    form_class = PartUdfAddFieldForm
     context_object_name = 'part_template'
     template_name='parts/ajax_part_udf_field_form.html'
     permission_required = 'parts.add_part'
@@ -408,6 +415,75 @@ class PartsAjaxAddUdfFieldUpdateView(LoginRequiredMixin, PermissionRequiredMixin
 
     def get_success_url(self):
         return reverse('parts:ajax_parts_detail', args=(self.object.id, ))
+
+
+# FormView to set UDF field value for Part
+class PartsAjaxSetUdfFieldValueFormView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, FormView):
+    template_name = 'parts/ajax_part_udf_setvalue_form.html'
+    form_class = PartUdfFieldSetValueForm
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super(PartsAjaxSetUdfFieldValueFormView, self).get_context_data(**kwargs)
+
+        context.update({
+            'part_template': Part.objects.get(id=self.kwargs['pk']),
+            'custom_field': Field.objects.get(id=self.kwargs['field_pk']),
+        })
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super(PartsAjaxSetUdfFieldValueFormView, self).get_form_kwargs()
+        if 'pk' in self.kwargs:
+            kwargs['pk'] = self.kwargs['pk']
+        if 'field_pk' in self.kwargs:
+            kwargs['field_pk'] = self.kwargs['field_pk']
+        return kwargs
+
+    def form_valid(self, form):
+        field_value = form.cleaned_data['field_value']
+        part_id = self.kwargs['pk']
+        field_id = self.kwargs['field_pk']
+
+        part = Part.objects.get(id=part_id)
+
+        #Check if this Part object has value for this field
+        try:
+            currentvalue = part.fieldvalues.filter(field_id=field_id).latest(field_name='created_at')
+        except FieldValue.DoesNotExist:
+            currentvalue = None
+
+        # If current value is different than new value, update is_current, add new value
+        if currentvalue:
+            if currentvalue.field_value != str(field_value):
+                currentvalue.is_current = False
+                currentvalue.save()
+                # create new value object
+                partfieldvalue = FieldValue.objects.create(field_id=field_id, field_value=field_value,
+                                                            part_id=part_id, is_current=True)
+        else:
+            # create new value object
+            partfieldvalue = FieldValue.objects.create(field_id=field_id, field_value=field_value,
+                                                        part_id=part_id, is_current=True)
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': part_id,
+            }
+            return JsonResponse(data)
+
+    def form_invalid(self, form):
+        if self.request.is_ajax():
+            data = form.errors
+            return JsonResponse(data, status=400)
+        else:
+            return self.render_to_response(self.get_context_data(form=form, form_errors=form_errors))
+
+    def get_success_url(self):
+        return reverse('parts:ajax_parts_detail', args=(part_id, ))
 
 
 # Template View to confirm removal of a UDF field from a Part
@@ -445,6 +521,11 @@ class PartsAjaxRemoveActionUdfFieldView(RedirectView):
             for fieldvalue in item.fieldvalues.all():
                 if fieldvalue.field == field:
                     fieldvalue.delete()
+
+        # Delete all global FieldValue instances for this Part
+        for fieldvalue in part_template.fieldvalues.all():
+            if fieldvalue.field == field:
+                fieldvalue.delete()
 
         return reverse('parts:ajax_parts_detail', args=(part_template.id, ) )
 

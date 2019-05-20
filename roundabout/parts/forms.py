@@ -11,6 +11,7 @@ from bootstrap_datepicker_plus import DatePickerInput
 from .models import Part, Documentation, Revision
 from roundabout.locations.models import Location
 from roundabout.parts.widgets import PartParentWidget, PartLocationWidget
+from roundabout.userdefinedfields.models import Field, FieldValue
 
 
 class PartForm(forms.ModelForm):
@@ -86,49 +87,7 @@ class PartSubassemblyEditForm(forms.ModelForm):
         fields = ['name' ]
 
 
-class PartCustomFieldForm(forms.Form):
-    field_type_choices =[ ('CharField', 'Text Field'),
-                          ('IntegerField', 'Integer Field'),
-                          ('DecimalField', 'Decimal Field'),
-                          ('DateField', 'Date Field'),
-                          ('BooleanField', 'Boolean Field'),
-                        ]
-
-    field_name = forms.CharField(required=True)
-    field_description = forms.CharField(required=False)
-    field_type = forms.ChoiceField(choices = field_type_choices, required=True)
-    field_default_value = forms.CharField(required=False)
-    field_is_global = forms.TypedChoiceField(coerce=lambda x: x =='True', choices=((False, 'No'), (True, 'Yes')),
-                                widget=forms.RadioSelect,
-                                required=False,
-                                label='Is this a global field value for this Part?',
-                                help_text='Select "Yes" if this single field value applies to all Inventory items of this Part. \
-                                            If "No", this field will be editable at the Inventory item level.')
-
-    def __init__(self, *args, **kwargs):
-        if 'pk' in kwargs:
-            self.pk = kwargs.pop('pk')
-        else:
-            self.pk = None
-
-        super(PartCustomFieldForm, self).__init__(*args, **kwargs)
-
-    # Validation to check that the Field Name is unique for this part
-    def clean_field_name(self):
-        field_name = self.cleaned_data['field_name']
-        field_id = slugify(field_name)
-        part = Part.objects.get(id=self.pk)
-
-        if part.custom_fields:
-            fields = part.custom_fields['fields']
-            for field in fields:
-                if field['field_id'] == field_id:
-                    raise ValidationError('Field Name already in use. Please pick a unique name.')
-
-        return field_name
-
-
-class PartAddUdfFieldForm(forms.ModelForm):
+class PartUdfAddFieldForm(forms.ModelForm):
 
     class Meta:
         model = Part
@@ -142,24 +101,8 @@ class PartAddUdfFieldForm(forms.ModelForm):
         }
 
 
-class PartCustomFieldUpdateForm(forms.Form):
-    field_type_choices =[ ('CharField', 'Text Field'),
-                          ('IntegerField', 'Integer Field'),
-                          ('DecimalField', 'Decimal Field'),
-                          ('DateField', 'Date Field'),
-                          ('BooleanField', 'Boolean Field'),
-                        ]
-
-    field_name = forms.CharField(required=True)
-    field_description = forms.CharField(required=False)
-    field_type = forms.ChoiceField(choices = field_type_choices, required=True)
-    field_default_value = forms.CharField(required=False)
-    field_is_global = forms.TypedChoiceField(coerce=lambda x: x =='True', choices=((False, 'No'), (True, 'Yes')),
-                                widget=forms.RadioSelect,
-                                required=False,
-                                label='Is this a global field value for this Part?',
-                                help_text='Select "Yes" if this single field value applies to all Inventory items of this Part. \
-                                            If "No", this field will be editable at the Inventory item level.')
+class PartUdfFieldSetValueForm(forms.Form):
+    field_value = forms.CharField(required=True)
 
     def __init__(self, *args, **kwargs):
         if 'pk' in kwargs:
@@ -167,36 +110,16 @@ class PartCustomFieldUpdateForm(forms.Form):
         else:
             self.pk = None
 
-        if 'field_id' in kwargs:
-            self.field_id = kwargs.pop('field_id')
+        if 'field_pk' in kwargs:
+            self.field_pk = kwargs.pop('field_pk')
         else:
-            self.field_id = None
+            self.field_pk = None
 
-        super(PartCustomFieldUpdateForm, self).__init__(*args, **kwargs)
+        super(PartUdfFieldSetValueForm, self).__init__(*args, **kwargs)
         part = Part.objects.get(id=self.pk)
+        field = Field.objects.get(id=self.field_pk)
+        partfieldvalues = part.fieldvalues.filter(field=field)
 
-        if part.custom_fields:
-            fields = part.custom_fields['fields']
-            for field in fields:
-                if field['field_id'] == self.field_id:
-                    self.fields['field_name'].initial = field['field_name']
-                    self.fields['field_description'].initial = field['field_description']
-                    self.fields['field_type'].initial = field['field_type']
-                    self.fields['field_default_value'].initial = field['field_default_value']
-                    self.fields['field_is_global'].initial = field['field_is_global']
-
-
-class PartCustomFieldDeleteForm(forms.Form):
-
-    def __init__(self, *args, **kwargs):
-        if 'pk' in kwargs:
-            self.pk = kwargs.pop('pk')
-        else:
-            self.pk = None
-
-        if 'field_id' in kwargs:
-            self.field_id = kwargs.pop('field_id')
-        else:
-            self.field_id = None
-
-        super(PartCustomFieldDeleteForm, self).__init__(*args, **kwargs)
+        if partfieldvalues:
+            for fieldvalue in partfieldvalues:
+                self.fields['field_value'].initial = fieldvalue.field_value
