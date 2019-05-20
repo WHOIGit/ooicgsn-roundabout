@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.template.defaultfilters import slugify
 
 from .models import Part, PartType, Revision, Documentation
-from .forms import PartForm, RevisionForm, DocumentationFormset, PartUdfAddFieldForm, PartUdfFieldSetValueForm
+from .forms import PartForm, RevisionForm, DocumentationFormset, RevisionFormset, PartUdfAddFieldForm, PartUdfFieldSetValueForm
 
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory
@@ -152,6 +152,13 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         #    instance.revision = revision
         documentation_form.save()
 
+        # Check for any global Part Type custom fields for this Part
+        custom_fields = self.object.part_type.custom_fields.all()
+
+        if custom_fields:
+            for field in custom_fields:
+                self.object.user_defined_fields.add(field)
+
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
@@ -185,7 +192,7 @@ class PartsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
     permission_required = 'parts.add_part'
     redirect_field_name = 'home'
 
-    def form_valid(self, form, documentation_form):
+    def form_valid(self, form):
         self.object = form.save()
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -199,7 +206,7 @@ class PartsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         else:
             return response
 
-    def form_invalid(self, form, documentation_form):
+    def form_invalid(self, form):
         if self.request.is_ajax():
             data = form.errors
             return JsonResponse(data, status=400)
