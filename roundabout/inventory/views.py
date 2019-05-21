@@ -452,9 +452,15 @@ class InventoryAjaxCreateBasicView(LoginRequiredMixin, AjaxFormMixin, CreateView
         action_record = Action.objects.create(action_type='invadd', detail='Item first added to Inventory', location_id=self.object.location_id,
                                               user_id=self.request.user.id, inventory_id=self.object.id)
 
-        # Check is this Part has custom fields. If so, add default custom values to this item.
-        if self.object.part.user_defined_fields.exists():
-            for field in self.object.part.user_defined_fields.all():
+        # Check if this Part has Custom fields, create fields if needed
+        try:
+            # Exclude any fields with Global Part Values
+            custom_fields = self.object.part.user_defined_fields.exclude(fieldvalues__part=self.object.part)
+        except Field.DoesNotExist:
+            custom_fields = None
+
+        if custom_fields:
+            for field in custom_fields:
                 if field.field_default_value:
                     # create new value object
                     fieldvalue = FieldValue.objects.create(field=field, field_value=field.field_default_value,
