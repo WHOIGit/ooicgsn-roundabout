@@ -26,6 +26,9 @@
                     </div>
 
                     <p>Part Number: {{ part_template.part_number }}</p>
+                    {% if part_template.friendly_name %}
+                        <p>Friendly Name: {{ part_template.friendly_name }}</p>
+                    {% endif %}
                     <p>Part Type: {{ part_template.part_type }}</p>
                     <p>Is Equipment: {{ part_template.is_equipment }}</p>
 
@@ -149,7 +152,7 @@
 
                                         {% for value in custom_fields %}
                                             {% if value.field_id == field.id %}
-                                                <p>Global Field Value for this Part: {{ value.field_value }}</p>
+                                                <p>Default Field Value for this Part: {{ value.field_value }}</p>
                                             {% endif %}
                                         {% endfor %}
 

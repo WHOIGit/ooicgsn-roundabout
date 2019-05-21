@@ -72,7 +72,7 @@ class Inventory(MPTTModel):
     serial_number = models.CharField(max_length=255, unique=True, db_index=True)
     old_serial_number = models.CharField(max_length=255, unique=False, blank=True)
     part = models.ForeignKey(Part, related_name='inventory',
-                             on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
+                             on_delete=models.CASCADE, null=True, blank=False, db_index=True)
     revision = models.ForeignKey(Revision, related_name='inventory',
                              on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
     location = TreeForeignKey(Location, related_name='inventory',
