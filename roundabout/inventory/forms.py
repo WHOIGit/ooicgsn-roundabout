@@ -55,7 +55,7 @@ class InventoryForm(forms.ModelForm):
             # Check if this Part has Custom fields, create fields if needed
             try:
                 # Exclude any fields with Global Part Values
-                custom_fields = self.instance.part.user_defined_fields.exclude(fieldvalues__part=self.instance.part)
+                custom_fields = self.instance.part.user_defined_fields.all()
             except Field.DoesNotExist:
                 custom_fields = None
 

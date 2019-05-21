@@ -401,6 +401,33 @@ class PartsAjaxAddUdfFieldUpdateView(LoginRequiredMixin, PermissionRequiredMixin
 
     def form_valid(self, form):
         self.object = form.save()
+
+        # If custom field has a default value, add it to any existing Inventory items that has no existing value
+        if self.object.user_defined_fields.exists():
+            for item in self.object.inventory.all():
+                for field in self.object.user_defined_fields.all():
+                    try:
+                        currentvalue = item.fieldvalues.filter(field=field).latest(field_name='created_at')
+                    except FieldValue.DoesNotExist:
+                        currentvalue = None
+
+                    if not currentvalue:
+                        try:
+                            partvalue = self.object.fieldvalues.filter(field=field).latest(field_name='created_at')
+                        except FieldValue.DoesNotExist:
+                            partvalue = None
+
+                        if partvalue:
+                            # create new value object with Part level default value
+                            fieldvalue = FieldValue.objects.create(field=field, field_value=partvalue.field_value,
+                                                               inventory=item, is_current=True)
+                        elif field.field_default_value:
+                            # create new value object with default value
+                            fieldvalue = FieldValue.objects.create(field=field, field_value=field.field_default_value,
+                                                           inventory=item, is_current=True)
+
+
+
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
@@ -474,19 +501,17 @@ class PartsAjaxSetUdfFieldValueFormView(LoginRequiredMixin, PermissionRequiredMi
             partfieldvalue = FieldValue.objects.create(field_id=field_id, field_value=field_value,
                                                         part_id=part_id, is_current=True)
 
-        # Check all Inventory Items for this Part for existing field value. If so, update is_current to False
-        if part.inventory.exists():
-            items = part.inventory.all()
-            for item in items:
-                #Check if this Part object has value for this field
-                try:
-                    currentvalue = item.fieldvalues.filter(field_id=field_id).latest(field_name='created_at')
-                except FieldValue.DoesNotExist:
-                    currentvalue = None
+        # If custom field has a default value, add it to any existing Inventory items that has no existing value
+        for item in part.inventory.all():
+            try:
+                itemvalue = item.fieldvalues.filter(field_id=field_id).latest(field_name='created_at')
+            except FieldValue.DoesNotExist:
+                itemvalue = None
 
-                if currentvalue:
-                    currentvalue.is_current = False
-                    currentvalue.save()
+            if not itemvalue:
+                # create new value object with Part level default value
+                fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=field_value,
+                                                   inventory=item, is_current=True)
 
         if self.request.is_ajax():
             print(form.cleaned_data)

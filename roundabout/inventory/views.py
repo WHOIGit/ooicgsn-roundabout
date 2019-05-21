@@ -18,7 +18,7 @@ from roundabout.locations.models import Location
 from roundabout.parts.models import Part, PartType, Revision
 from roundabout.moorings.models import MooringPart
 from roundabout.admintools.models import Printer
-from roundabout.userdefinedfields.models import FieldValue
+from roundabout.userdefinedfields.models import FieldValue, Field
 from common.util.mixins import AjaxFormMixin
 
 # Mixins
@@ -370,16 +370,9 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         else:
             custom_fields = None
 
-        # Get global custom fields for this Part
-        if self.object.part.fieldvalues.exists():
-            custom_fields_global = self.object.part.fieldvalues.filter(is_current=True)
-        else:
-            custom_fields_global = None
-
         context.update({
             'printers': printers,
             'custom_fields': custom_fields,
-            'custom_fields_global': custom_fields_global,
         })
         return context
 
@@ -452,7 +445,7 @@ class InventoryAjaxCreateBasicView(LoginRequiredMixin, AjaxFormMixin, CreateView
         action_record = Action.objects.create(action_type='invadd', detail='Item first added to Inventory', location_id=self.object.location_id,
                                               user_id=self.request.user.id, inventory_id=self.object.id)
 
-        # Check if this Part has Custom fields, create fields if needed
+        # Check if this Part has Custom fields with global default values, create fields if needed
         try:
             # Exclude any fields with Global Part Values
             custom_fields = self.object.part.user_defined_fields.exclude(fieldvalues__part=self.object.part)
@@ -464,6 +457,26 @@ class InventoryAjaxCreateBasicView(LoginRequiredMixin, AjaxFormMixin, CreateView
                 if field.field_default_value:
                     # create new value object
                     fieldvalue = FieldValue.objects.create(field=field, field_value=field.field_default_value,
+                                                                inventory=self.object, is_current=True)
+
+        # Check if this Part has Custom fields with Part Template default levels, create fields if needed
+        try:
+            # Only fields with Default Part Values
+            custom_fields = self.object.part.user_defined_fields.filter(fieldvalues__part=self.object.part) \
+                                                                .filter(fieldvalues__is_current=True).distinct()
+        except Field.DoesNotExist:
+            custom_fields = None
+
+        if custom_fields:
+            for field in custom_fields:
+                # Check if this Part has Custom fields with Part Template default levels, create fields if needed
+                try:
+                    default_value = field.fieldvalues.filter(part=self.object.part).latest()
+                except FieldValue.DoesNotExist:
+                    default_value = None
+
+                if default_value:
+                    fieldvalue = FieldValue.objects.create(field=field, field_value=default_value.field_value,
                                                                 inventory=self.object, is_current=True)
 
         response = HttpResponseRedirect(self.get_success_url())

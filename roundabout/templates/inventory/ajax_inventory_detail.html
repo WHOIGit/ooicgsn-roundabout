@@ -408,17 +408,6 @@
 
                 <!-- User Defined Fields -->
 
-                {% if custom_fields_global %}
-                    {% for custom_field in custom_fields_global %}
-
-                        <li class="list-group-item">
-                            {{ custom_field.field }}: {{ custom_field.field_value }}
-
-                        </li>
-
-                    {% endfor %}
-                {% endif %}
-
                 {% if custom_fields %}
                     {% for custom_field in custom_fields %}
 
