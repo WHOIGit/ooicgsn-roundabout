@@ -3,8 +3,16 @@ from roundabout.inventory.models import Inventory, Action, Deployment
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part
 from roundabout.moorings.models import MooringPart
+from roundabout.userdefinedfields.models import Field, FieldValue
 
 register = template.Library()
+
+# Get the historical list of custom field values, return as queryset
+@register.simple_tag
+def get_udf_field_value_history(field, item):
+    fieldvalues = FieldValue.objects.filter(field=field).filter(inventory=item)
+    return fieldvalues
+
 
 @register.simple_tag
 def get_mooringpart_list_by_deployment(dep_pk):

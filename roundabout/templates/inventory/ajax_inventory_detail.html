@@ -413,7 +413,11 @@
 
                         <li class="list-group-item">
                             {{ custom_field.field }}: {{ custom_field.field_value }}
-
+                            <!-- link trigger modal -->
+                            <button type="button" class="btn btn-sm btn-link float-right" data-toggle="modal" data-target="#modal-{{ custom_field.field_id }}">
+                              Launch demo modal
+                            </button>
+                            {% include "inventory/modal_inventory_udf_field_history.html" with field=custom_field.field item=inventory_item  %}
                         </li>
 
                     {% endfor %}

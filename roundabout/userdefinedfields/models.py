@@ -33,6 +33,7 @@ class FieldValue(models.Model):
                           on_delete=models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_current = models.BooleanField(default=False)
+    is_default_value = models.BooleanField(default=False)
 
     class Meta:
         ordering = ('field', 'created_at')

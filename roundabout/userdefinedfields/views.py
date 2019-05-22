@@ -39,7 +39,7 @@ class UserDefinedFieldCreateView(LoginRequiredMixin, PermissionRequiredMixin, Cr
                         for item in part.inventory.all():
                             # create new value object
                             fieldvalue = FieldValue.objects.create(field=self.object, field_value=self.object.field_default_value,
-                                                                   inventory=item, is_current=True)
+                                                                   inventory=item, is_current=True, is_default_value=True)
 
 
         return HttpResponseRedirect(self.get_success_url())
@@ -78,7 +78,7 @@ class UserDefinedFieldUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Up
                             if not currentvalue:
                                 # create new value object if no current value
                                 fieldvalue = FieldValue.objects.create(field=self.object, field_value=self.object.field_default_value,
-                                                                   inventory=item, is_current=True)
+                                                                   inventory=item, is_current=True, is_default_value=True)
 
         return HttpResponseRedirect(self.get_success_url())
 

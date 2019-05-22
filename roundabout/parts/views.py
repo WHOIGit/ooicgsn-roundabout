@@ -412,19 +412,10 @@ class PartsAjaxAddUdfFieldUpdateView(LoginRequiredMixin, PermissionRequiredMixin
                         currentvalue = None
 
                     if not currentvalue:
-                        try:
-                            partvalue = self.object.fieldvalues.filter(field=field).latest(field_name='created_at')
-                        except FieldValue.DoesNotExist:
-                            partvalue = None
-
-                        if partvalue:
-                            # create new value object with Part level default value
-                            fieldvalue = FieldValue.objects.create(field=field, field_value=partvalue.field_value,
-                                                               inventory=item, is_current=True)
-                        elif field.field_default_value:
+                        if field.field_default_value:
                             # create new value object with default value
                             fieldvalue = FieldValue.objects.create(field=field, field_value=field.field_default_value,
-                                                           inventory=item, is_current=True)
+                                                           inventory=item, is_current=True, is_default_value=True)
 
 
 
@@ -488,27 +479,33 @@ class PartsAjaxSetUdfFieldValueFormView(LoginRequiredMixin, PermissionRequiredMi
         except FieldValue.DoesNotExist:
             currentvalue = None
 
-        # If current value is different than new value, update is_current to False, add new value
-        if currentvalue:
-            if currentvalue.field_value != str(field_value):
-                currentvalue.is_current = False
-                currentvalue.save()
-                # create new value object
-                partfieldvalue = FieldValue.objects.create(field_id=field_id, field_value=field_value,
-                                                            part_id=part_id, is_current=True)
-        else:
+        # If current value is different than new value, update is_current to False
+        if currentvalue and currentvalue.field_value != str(field_value):
+            currentvalue.is_current = False
+            currentvalue.save()
             # create new value object
             partfieldvalue = FieldValue.objects.create(field_id=field_id, field_value=field_value,
-                                                        part_id=part_id, is_current=True)
+                                                    part_id=part_id, is_current=True)
+        elif not currentvalue:
+            # create new value object
+            partfieldvalue = FieldValue.objects.create(field_id=field_id, field_value=field_value,
+                                                    part_id=part_id, is_current=True)
 
-        # If custom field has a default value, add it to any existing Inventory items that has no existing value
+        # If custom field has a default part value, add it to any existing Inventory items that has no existing value,
+        # or is a Default Value
         for item in part.inventory.all():
             try:
                 itemvalue = item.fieldvalues.filter(field_id=field_id).latest(field_name='created_at')
             except FieldValue.DoesNotExist:
                 itemvalue = None
 
-            if not itemvalue:
+            if itemvalue and itemvalue.is_default_value == True:
+                itemvalue.is_current = False
+                itemvalue.save()
+                # create new value object with Part level default value
+                fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=field_value,
+                                                   inventory=item, is_current=True)
+            elif not itemvalue:
                 # create new value object with Part level default value
                 fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=field_value,
                                                    inventory=item, is_current=True)
@@ -562,16 +559,16 @@ class PartsAjaxRemoveActionUdfFieldView(RedirectView):
         part_template.user_defined_fields.remove(field)
 
         # Delete all FieldValue instances for items of this Part
-        items = part_template.inventory.filter(fieldvalues__isnull=False)
+        items = part_template.inventory.filter(fieldvalues__field=field)
         for item in items:
-            for fieldvalue in item.fieldvalues.all():
-                if fieldvalue.field == field:
-                    fieldvalue.delete()
+            fieldvalues = item.fieldvalues.filter(field=field)
+            if fieldvalues:
+                fieldvalues.delete()
 
         # Delete all global FieldValue instances for this Part
-        for fieldvalue in part_template.fieldvalues.all():
-            if fieldvalue.field == field:
-                fieldvalue.delete()
+        partfieldvalues = part_template.fieldvalues.filter(field=field)
+        if partfieldvalues:
+            partfieldvalues.delete()
 
         return reverse('parts:ajax_parts_detail', args=(part_template.id, ) )
 
