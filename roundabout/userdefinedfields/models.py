@@ -9,6 +9,7 @@ class Field(models.Model):
         ('IntegerField', 'Integer Field'),
         ('DecimalField', 'Decimal Field'),
         ('BooleanField', 'Boolean Field'),
+        ('DateField', 'Date Field'),
     )
     field_name = models.CharField(max_length=255, unique=True, db_index=True)
     field_description = models.CharField(max_length=255, null=False, blank=True)
@@ -24,7 +25,7 @@ class Field(models.Model):
 
 
 class FieldValue(models.Model):
-    field_value = models.CharField(max_length=255, unique=False, db_index=True, null=False, blank=True)
+    field_value = models.CharField(max_length=255, unique=False, db_index=True, null=True, blank=True)
     field = models.ForeignKey(Field, related_name='fieldvalues',
                           on_delete=models.CASCADE, null=False, blank=False)
     inventory = models.ForeignKey('inventory.Inventory', related_name='fieldvalues',

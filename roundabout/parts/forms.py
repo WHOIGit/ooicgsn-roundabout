@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.forms.models import inlineformset_factory
 from django.template.defaultfilters import slugify
 from django_summernote.widgets import SummernoteWidget
-from bootstrap_datepicker_plus import DatePickerInput
+from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
 
 from .models import Part, Documentation, Revision
 from roundabout.locations.models import Location
@@ -130,7 +130,7 @@ class PartUdfFieldSetValueForm(forms.Form):
                                                 help_text=str(field.field_description),
                                                 widget=DateTimePickerInput(
                                                     options={
-                                                        #"format": "MM/DD/YYYY", # moment date-time format
+                                                        "format": "YYYY-MM-DD hh:mm:ss", # moment date-time format
                                                         "showClose": True,
                                                         "showClear": True,
                                                         "showTodayButton": True,

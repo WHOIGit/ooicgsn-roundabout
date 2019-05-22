@@ -72,7 +72,7 @@ class InventoryForm(forms.ModelForm):
                                                             help_text=str(field.field_description),
                                                             widget=DateTimePickerInput(
                                                                 options={
-                                                                    #"format": "MM/DD/YYYY", # moment date-time format
+                                                                    "format": "YYYY-MM-DD hh:mm:ss",
                                                                     "showClose": True,
                                                                     "showClear": True,
                                                                     "showTodayButton": True,
