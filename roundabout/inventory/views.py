@@ -457,7 +457,7 @@ class InventoryAjaxCreateBasicView(LoginRequiredMixin, AjaxFormMixin, CreateView
                 if field.field_default_value:
                     # create new value object
                     fieldvalue = FieldValue.objects.create(field=field, field_value=field.field_default_value,
-                                                                inventory=self.object, is_current=True)
+                                                           inventory=self.object, is_current=True, is_default_value=True)
 
         # Check if this Part has Custom fields with Part Template default levels, create fields if needed
         try:
