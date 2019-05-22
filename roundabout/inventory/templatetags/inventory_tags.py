@@ -10,7 +10,7 @@ register = template.Library()
 # Get the historical list of custom field values, return as queryset
 @register.simple_tag
 def get_udf_field_value_history(field, item):
-    fieldvalues = FieldValue.objects.filter(field=field).filter(inventory=item)
+    fieldvalues = FieldValue.objects.filter(field=field).filter(inventory=item).order_by('-created_at')
     return fieldvalues
 
 
