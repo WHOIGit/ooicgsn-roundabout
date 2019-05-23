@@ -16,7 +16,7 @@
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'moorings:ajax_moorings_location_copy' location.id %}"
                     data-node-id="{{ location.id }}"
-                    data-node-type="detail">Copy Mooring Design</a>
+                    data-node-type="detail">Copy {{ label_moorings_app_singular }} Design</a>
             </div>
 
       </div>
@@ -26,7 +26,7 @@
     {% if location.location_type %}<p>Location Type: {{ location.location_type }}</p>{% endif %}
     {% if location.location_id %}<p>Location ID: {{ location.location_id }}</p>{% endif %}
     <p>Parent: {{ location.parent.name }}</p>
-    <p>Total Mooring Cost: ${{ location.get_mooring_total_cost|intcomma }}
+    <p>Total {{ label_moorings_app_singular }} Cost: ${{ location.get_mooring_total_cost|intcomma }}
 
 
 
