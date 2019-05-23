@@ -61,6 +61,8 @@
                                       <a href="{% url 'inventory:inventory_detail' inventory.id %}">
                                           {{ inventory.part.name }} - {{ inventory.serial_number }}
                                       </a>
+                                      <br>
+                                      Current Location: {{ inventory.location }}
 
                                       <a href="{% url 'inventory:inventory_detail' inventory.id %}"
                                           class="btn btn-primary btn-sm float-right"
@@ -98,7 +100,7 @@
                                 {% for object in page_obj.paginator.page_range %}
                                     <li class="page-item"><a class="page-link" href="{% url 'inventory:inventory_search_serial' %}?{{search}}&page={{ forloop.counter }}">{{ forloop.counter }}</a></li>
                                 {% endfor %}
-                                
+
                                 {% if page_obj.has_next %}
                                     <li class="page-item">
                                       <a class="page-link" href="{% url 'inventory:inventory_search_serial' %}?{{search}}&page={{ page_obj.next_page_number }}">Next</a>
