@@ -53,7 +53,7 @@
 {% endif %}
 
     <p>Current Location: {{ deployment.location.name }}</p>
-    <p>Deployment Number: {{ deployment.deployment_number }}</p>
+    <p>{{ label_deployments_app_singular }} Number: {{ deployment.deployment_number }}</p>
     <p>Deployment ID: {{ deployment.final_location.location_id }}</p>
     <p>Final Location: {{ deployment.final_location }}</p>
     <p>Parent: {{ deployment.final_location.parent }}</p>

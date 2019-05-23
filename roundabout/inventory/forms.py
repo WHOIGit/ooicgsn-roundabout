@@ -7,6 +7,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, Div, Field
 from django_summernote.widgets import SummernoteInplaceWidget, SummernoteWidget
 from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
+from django.contrib.sites.models import Site
 
 from .models import Inventory, Deployment, Action, DeploymentSnapshot, PhotoNote
 from roundabout.locations.models import Location
@@ -428,8 +429,17 @@ class DeploymentForm(forms.ModelForm):
     class Meta:
         model = Deployment
         fields = ['location', 'deployment_number', 'final_location']
+
+        # Check what Site we're on, change form label if obs-rdb.whoi.edu
+        current_site = Site.objects.get_current()
+        if current_site.domain == 'obs-rdb.whoi.edu':
+            deployment_number_label = 'Experiment Number'
+        else:
+            deployment_number_label = 'Deployment Number'
+
         labels = {
             'location': 'Current Location',
+            'deployment_number': deployment_number_label,
             'final_location': 'Deployment ID',
         }
 
