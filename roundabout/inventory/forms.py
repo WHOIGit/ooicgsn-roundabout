@@ -430,16 +430,8 @@ class DeploymentForm(forms.ModelForm):
         model = Deployment
         fields = ['location', 'deployment_number', 'final_location']
 
-        # Check what Site we're on, change form label if obs-rdb.whoi.edu
-        current_site = Site.objects.get_current()
-        if current_site.domain == 'obs-rdb.whoi.edu':
-            deployment_number_label = 'Experiment Number'
-        else:
-            deployment_number_label = 'Deployment Number'
-
         labels = {
             'location': 'Current Location',
-            'deployment_number': deployment_number_label,
             'final_location': 'Deployment ID',
         }
 
@@ -458,6 +450,16 @@ class DeploymentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(DeploymentForm, self).__init__(*args, **kwargs)
+        # Check what Site we're on, change form label if obs-rdb.whoi.edu
+        current_site = Site.objects.get_current()
+        if current_site.domain == 'obs-rdb.whoi.edu':
+            deployment_number_label = 'Experiment Number'
+        else:
+            deployment_number_label = 'Deployment Number'
+
+        self.fields['deployment_number'].label = deployment_number_label
+
+        # Limit final_location choices to only Sea locations
         root_node = Location.objects.get(name='Sea')
         location_list = root_node.get_descendants()
         self.fields['final_location'].queryset = location_list
