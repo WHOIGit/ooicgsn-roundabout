@@ -1,11 +1,13 @@
 from decimal import Decimal
 from django.db import models
+from django.contrib.postgres.fields import JSONField
 from django.urls import reverse
 from django.utils import timezone
 from django.core.validators import MinValueValidator
 from mptt.models import MPTTModel, TreeForeignKey
 
 from roundabout.locations.models import Location
+from roundabout.userdefinedfields.models import Field
 
 # Create your models here
 
@@ -42,6 +44,8 @@ class Part(models.Model):
     refurbishment_cost = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], null=False, blank=True, default='0.00')
     is_equipment = models.BooleanField(default=False)
     note = models.TextField(blank=True)
+    custom_fields = JSONField(blank=True, null=True)
+    user_defined_fields = models.ManyToManyField(Field, blank=True, related_name='parts')
 
     class Meta:
         ordering = ['name']

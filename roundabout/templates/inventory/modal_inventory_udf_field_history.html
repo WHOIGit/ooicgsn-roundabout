@@ -1,0 +1,50 @@
+{% load inventory_tags %}
+
+{% get_udf_field_value_history field item as fieldvalues %}
+
+
+<!-- Modal -->
+<div class="modal fade" id="modal-{{ field.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modal-{{ field.id }}"></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+        {% regroup fieldvalues by field as values_list %}
+
+        {% for value in values_list %}
+            <h4>Field Value History: {{ value.grouper }}</h4>
+
+            <hr>
+
+            <table class="table table-striped table-hover">
+                <thead>
+                  <th>Field Value</th>
+                  <th>Date Updated</th>
+                  <th>User</th>
+                </thead>
+                <tbody>
+                  {% for field_value in value.list %}
+                    <tr>
+                        <td>{{ field_value.field_value }}</td>
+                        <td>{{ field_value.created_at }}</td>
+                        <td>{{ field_value.user }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+
+          {% endfor %}
+
+      </div>
+      <div class="modal-footer">
+
+      </div>
+    </div>
+  </div>
+</div>

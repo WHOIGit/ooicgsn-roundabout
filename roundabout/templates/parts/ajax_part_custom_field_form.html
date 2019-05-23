@@ -1,0 +1,97 @@
+{% load static i18n %}
+{% load mptt_tags %}
+{% load crispy_forms_tags %}
+{{ form.media }}
+
+
+        <div class="card-header">
+            {% if part_template %}
+                <h3>{{ part_template.name }}</h3>
+             {% endif %}
+
+             {% if view.kwargs.field_id %}
+                 <h4>Update Field</h4>
+             {% else %}
+                 <h4>Add New Field</h4>
+             {% endif %}
+        </div>
+
+        <div class="card-body">
+
+            <div id="existing-fields-list">
+                <form class="form-horizontal" method="post" action="" id="existing-fields-form" novalidate>
+                    <div class="form-group">
+                        {{ custom_fields }}
+                    <label for="id_custom_field" class="form-control-label  requiredField">Choose an Existing Custom Field</label>
+                        <select name="part_type" class="select form-control" id="id_custom_field">
+                            <option value="">---------</option>
+                            <option value="All">All Parts</option>
+
+                                <option value="{{ type.id }}">-- {{ type.name }}</option>
+
+                        </select>
+                    </div>
+                </form>
+            </div>
+
+              <form class="form-horizontal parts ajax-form" method="post" action=""
+                    data-url='{{ request.build_absolute_uri|safe }}'
+                    data-partnumber-url=''
+                    id="parts-form">
+                {% csrf_token %}
+
+                {{ form|crispy }}
+
+                <div class="row">
+                    {% if form.errors %}
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <div class="alert alert-danger">
+                                    <strong>{{ error|escape }}</strong>
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                <strong>{{ error|escape }}</strong>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="control-group">
+                  <div class="controls">
+                    {% if view.kwargs.field_id %}
+                        <button type="submit" class="btn btn-primary">Update Field</button>
+                    {% else %}
+                        <button type="submit" class="btn btn-primary">Add Field</button>
+                    {% endif %}
+                    <input class="btn btn-light cancel-btn"
+                           type="button" value="Cancel"
+                           data-detail-url="{% url 'parts:ajax_parts_detail' part_template.id %}"
+                           data-node-id="{{ part_template.id }}" />
+                  </div>
+                </div>
+              </form>
+
+          </div>
+
+
+
+{% block javascript %}
+
+<script type="text/javascript">
+
+$(document).ready(function() {
+
+    $('#parts-form tbody tr').formset({
+        prefix: 'documentation',
+        addText: 'add document',
+        deleteText: 'remove',
+    });
+
+});
+
+</script>
+
+{% endblock javascript %}

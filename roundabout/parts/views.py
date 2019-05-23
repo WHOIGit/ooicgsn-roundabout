@@ -1,16 +1,22 @@
+import re
+import json
+
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
-from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView
+from django.views.generic import View, FormView, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ValidationError
+from django.template.defaultfilters import slugify
 
 from .models import Part, PartType, Revision, Documentation
-from .forms import PartForm, RevisionForm, DocumentationFormset, RevisionFormset, PartSubassemblyAddForm, PartSubassemblyEditForm
-from roundabout.locations.models import Location
-from common.util.mixins import AjaxFormMixin
+from .forms import PartForm, RevisionForm, DocumentationFormset, RevisionFormset, PartUdfAddFieldForm, PartUdfFieldSetValueForm
 
-import re
+from roundabout.locations.models import Location
+from roundabout.inventory.models import Inventory
+from roundabout.userdefinedfields.models import Field, FieldValue
+
+from common.util.mixins import AjaxFormMixin
 
 # Mixins
 
@@ -87,8 +93,15 @@ class PartsAjaxDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailVie
         else:
             multiple_revision = False
 
+        # Get custom fields with most recent Values
+        if self.object.fieldvalues.exists():
+            custom_fields = self.object.fieldvalues.filter(is_current=True)
+        else:
+            custom_fields = None
+
         context.update({
             'multiple_revision': multiple_revision,
+            'custom_fields': custom_fields,
         })
         return context
 
@@ -139,6 +152,13 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         #    instance.revision = revision
         documentation_form.save()
 
+        # Check for any global Part Type custom fields for this Part
+        custom_fields = self.object.part_type.custom_fields.all()
+
+        if custom_fields:
+            for field in custom_fields:
+                self.object.user_defined_fields.add(field)
+
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
@@ -172,7 +192,7 @@ class PartsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
     permission_required = 'parts.add_part'
     redirect_field_name = 'home'
 
-    def form_valid(self, form, documentation_form):
+    def form_valid(self, form):
         self.object = form.save()
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -186,7 +206,7 @@ class PartsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         else:
             return response
 
-    def form_invalid(self, form, documentation_form):
+    def form_invalid(self, form):
         if self.request.is_ajax():
             data = form.errors
             return JsonResponse(data, status=400)
@@ -368,6 +388,191 @@ class PartsAjaxDeleteRevisionView(LoginRequiredMixin, PermissionRequiredMixin, D
         return JsonResponse(data)
 
 
+# VIEWS FOR CUSTOM UDF FIELDS
+
+# UpdateView to add custom UDF field to Part
+class PartsAjaxAddUdfFieldUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, UpdateView):
+    model = Part
+    form_class = PartUdfAddFieldForm
+    context_object_name = 'part_template'
+    template_name='parts/ajax_part_udf_field_form.html'
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
+    def form_valid(self, form):
+        self.object = form.save()
+
+        # If custom field has a default value, add it to any existing Inventory items that has no existing value
+        if self.object.user_defined_fields.exists():
+            for item in self.object.inventory.all():
+                for field in self.object.user_defined_fields.all():
+                    try:
+                        currentvalue = item.fieldvalues.filter(field=field).latest(field_name='created_at')
+                    except FieldValue.DoesNotExist:
+                        currentvalue = None
+
+                    if not currentvalue:
+                        if field.field_default_value:
+                            # create new value object with default value
+                            fieldvalue = FieldValue.objects.create(field=field, field_value=field.field_default_value,
+                                                           inventory=item, is_current=True, is_default_value=True)
+
+
+
+        response = HttpResponseRedirect(self.get_success_url())
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def form_invalid(self, form):
+        if self.request.is_ajax():
+            data = form.errors
+            return JsonResponse(data, status=400)
+        else:
+            return self.render_to_response(self.get_context_data(form=form, form_errors=form_errors))
+
+    def get_success_url(self):
+        return reverse('parts:ajax_parts_detail', args=(self.object.id, ))
+
+
+# FormView to set UDF field value for Part
+class PartsAjaxSetUdfFieldValueFormView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, FormView):
+    template_name = 'parts/ajax_part_udf_setvalue_form.html'
+    form_class = PartUdfFieldSetValueForm
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super(PartsAjaxSetUdfFieldValueFormView, self).get_context_data(**kwargs)
+
+        context.update({
+            'part_template': Part.objects.get(id=self.kwargs['pk']),
+            'custom_field': Field.objects.get(id=self.kwargs['field_pk']),
+        })
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super(PartsAjaxSetUdfFieldValueFormView, self).get_form_kwargs()
+        if 'pk' in self.kwargs:
+            kwargs['pk'] = self.kwargs['pk']
+        if 'field_pk' in self.kwargs:
+            kwargs['field_pk'] = self.kwargs['field_pk']
+        return kwargs
+
+    def form_valid(self, form):
+        field_value = form.cleaned_data['field_value']
+        part_id = self.kwargs['pk']
+        field_id = self.kwargs['field_pk']
+
+        part = Part.objects.get(id=part_id)
+
+        #Check if this Part object has value for this field
+        try:
+            currentvalue = part.fieldvalues.filter(field_id=field_id).latest(field_name='created_at')
+        except FieldValue.DoesNotExist:
+            currentvalue = None
+
+        # If current value is different than new value, update is_current to False
+        if currentvalue and currentvalue.field_value != str(field_value):
+            currentvalue.is_current = False
+            currentvalue.save()
+            # create new value object
+            partfieldvalue = FieldValue.objects.create(field_id=field_id, field_value=field_value,
+                                                    part_id=part_id, is_current=True, user=self.request.user)
+        elif not currentvalue:
+            # create new value object
+            partfieldvalue = FieldValue.objects.create(field_id=field_id, field_value=field_value,
+                                                    part_id=part_id, is_current=True, user=self.request.user)
+
+        # If custom field has a default part value, add it to any existing Inventory items that has no existing value,
+        # or is a Default Value
+        for item in part.inventory.all():
+            try:
+                itemvalue = item.fieldvalues.filter(field_id=field_id).latest(field_name='created_at')
+            except FieldValue.DoesNotExist:
+                itemvalue = None
+
+            if itemvalue and itemvalue.is_default_value == True:
+                itemvalue.is_current = False
+                itemvalue.save()
+                # create new value object with Part level default value
+                fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=field_value,
+                                                   inventory=item, is_current=True, user=self.request.user)
+            elif not itemvalue:
+                # create new value object with Part level default value
+                fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=field_value,
+                                                   inventory=item, is_current=True, user=self.request.user)
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': part_id,
+            }
+            return JsonResponse(data)
+
+    def form_invalid(self, form):
+        if self.request.is_ajax():
+            data = form.errors
+            return JsonResponse(data, status=400)
+        else:
+            return self.render_to_response(self.get_context_data(form=form, form_errors=form_errors))
+
+    def get_success_url(self):
+        return reverse('parts:ajax_parts_detail', args=(part_id, ))
+
+
+# Template View to confirm removal of a UDF field from a Part
+class PartsAjaxRemoveUdfFieldView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+    template_name = 'parts/ajax_part_udf_field_remove.html'
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super(PartsAjaxRemoveUdfFieldView, self).get_context_data(**kwargs)
+        part_template = Part.objects.get(id=self.kwargs['pk'])
+        field = Field.objects.get(id=self.kwargs['field_pk'])
+
+        context.update({
+            'part_template': part_template,
+            'field': field,
+        })
+        return context
+
+
+# RedirectView to remove a UDF field from a Part
+class PartsAjaxRemoveActionUdfFieldView(RedirectView):
+    permanent = False
+    query_string = True
+
+    def get_redirect_url(self, *args, **kwargs):
+        part_template = Part.objects.get(id=self.kwargs['pk'])
+        field = Field.objects.get(id=self.kwargs['field_pk'])
+        # Remove the field from the Part ManyToManyField
+        part_template.user_defined_fields.remove(field)
+
+        # Delete all FieldValue instances for items of this Part
+        items = part_template.inventory.filter(fieldvalues__field=field)
+        for item in items:
+            fieldvalues = item.fieldvalues.filter(field=field)
+            if fieldvalues:
+                fieldvalues.delete()
+
+        # Delete all global FieldValue instances for this Part
+        partfieldvalues = part_template.fieldvalues.filter(field=field)
+        if partfieldvalues:
+            partfieldvalues.delete()
+
+        return reverse('parts:ajax_parts_detail', args=(part_template.id, ) )
+
+
 # Base Views
 
 class PartsDetailView(LoginRequiredMixin, DetailView):
@@ -476,101 +681,6 @@ class PartsUpdateView(PartsNavTreeMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('parts:parts_detail', args=(self.object.id, ))
-
-
-class PartsSubassemblyAddView(PartsNavTreeMixin, CreateView):
-    model = Part
-    form_class = PartForm
-    context_object_name = 'part_template'
-    template_name = 'parts/part_form.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(PartsSubassemblyAddView, self).get_context_data(**kwargs)
-        context.update({
-            'parent': Part.objects.get(id=self.kwargs['pk'])
-        })
-        return context
-
-    def get_initial(self):
-        #Returns the initial data to use for forms on this view.
-        initial = super(PartsSubassemblyAddView, self).get_initial()
-        initial['parent'] = self.kwargs['pk']
-        initial['location'] = self.kwargs['current_location']
-        return initial
-
-    def get(self, request, *args, **kwargs):
-        self.object = None
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        documentation_form = DocumentationFormset(instance=self.object)
-        return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form))
-
-    def post(self, request, *args, **kwargs):
-        self.object = None
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        documentation_form = DocumentationFormset(
-            self.request.POST, instance=self.object)
-
-        if (form.is_valid() and documentation_form.is_valid()):
-            return self.form_valid(form, documentation_form)
-        return self.form_invalid(form, documentation_form)
-
-    def form_valid(self, form, documentation_form):
-        self.object = form.save()
-        documentation_form.instance = self.object
-        documentation_form.save()
-        return HttpResponseRedirect(self.get_success_url())
-
-    def form_invalid(self, form, documentation_form):
-        form_errors = documentation_form.errors
-        return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form, form_errors=form_errors))
-
-    def get_success_url(self):
-        return reverse('parts:parts_detail', args=(self.object.id, self.kwargs['current_location']))
-
-
-class PartsSubassemblyEditView(PartsNavTreeMixin, UpdateView):
-    model = Part
-    form_class = PartSubassemblyEditForm
-    context_object_name = 'part_template'
-    template_name = 'parts/part_form_subassembly.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(PartsSubassemblyEditView, self).get_context_data(**kwargs)
-        context.update({
-            'parent': Part.objects.get(id=self.kwargs['parent_pk'])
-        })
-        return context
-
-    def get_success_url(self):
-        return reverse('parts:parts_detail', args=(self.object.id, self.kwargs['current_location']))
-
-
-class PartsSubassemblyAvailableView(PartsNavTreeMixin, DetailView):
-    model = Part
-    template_name = 'parts/part_subassembly_existing.html'
-    context_object_name = 'parent'
-
-    def get_context_data(self, **kwargs):
-        context = super(PartsSubassemblyAvailableView, self).get_context_data(**kwargs)
-
-        context.update({
-            'parts': Part.objects.filter(parent=context['parent'])
-        })
-        return context
-
-
-class PartsSubassemblyActionView(RedirectView):
-    permanent = False
-    query_string = True
-
-    def get_redirect_url(self, *args, **kwargs):
-        subassembly = get_object_or_404(Part, pk=kwargs['pk'])
-        new_location = get_object_or_404(Location, pk=kwargs['current_location'])
-        subassembly.location.add(new_location)
-
-        return reverse('parts:parts_detail', args=(self.kwargs['parent_pk'], self.kwargs['current_location']) ) + '#subassemblies'
 
 
 class PartsDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Field - {{ field.field_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>{% if field.field_name %}Edit {{ field.field_name }}{% else %}Add Field {% endif %}</h1>
+  <form class="form-horizontal" method="post" action="" id="printer-form">
+    {% csrf_token %}
+    {{ form|crispy }}
+
+    <div class="row">
+        {% if form.errors %}
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <div class="alert alert-danger">
+                    <strong>{{ error|escape }}</strong>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+
+    </div>
+
+    <div class="control-group">
+      <div class="controls">
+        {% if field.id %}
+        <button type="submit" class="btn btn-primary">Update Field</button>
+        {% else %}
+        <button type="submit" class="btn btn-primary">Add Field</button>
+        {% endif %}
+
+        <input class="btn btn-light"
+               type="button" value="Cancel"
+               onclick="window.history.go(-1);"/>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

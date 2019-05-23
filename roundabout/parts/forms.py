@@ -4,12 +4,14 @@ import re
 from django import forms
 from django.core.exceptions import ValidationError
 from django.forms.models import inlineformset_factory
+from django.template.defaultfilters import slugify
 from django_summernote.widgets import SummernoteWidget
-from bootstrap_datepicker_plus import DatePickerInput
+from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
 
 from .models import Part, Documentation, Revision
 from roundabout.locations.models import Location
 from roundabout.parts.widgets import PartParentWidget, PartLocationWidget
+from roundabout.userdefinedfields.models import Field, FieldValue
 
 
 class PartForm(forms.ModelForm):
@@ -83,3 +85,64 @@ class PartSubassemblyEditForm(forms.ModelForm):
     class Meta:
         model = Part
         fields = ['name' ]
+
+
+class PartUdfAddFieldForm(forms.ModelForm):
+
+    class Meta:
+        model = Part
+        fields = ['user_defined_fields']
+        labels = {
+            'user_defined_fields': 'Select an existing Custom Field',
+        }
+
+        widgets = {
+            'user_defined_fields': forms.CheckboxSelectMultiple()
+        }
+
+
+class PartUdfFieldSetValueForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        if 'pk' in kwargs:
+            self.pk = kwargs.pop('pk')
+        else:
+            self.pk = None
+
+        if 'field_pk' in kwargs:
+            self.field_pk = kwargs.pop('field_pk')
+        else:
+            self.field_pk = None
+
+        super(PartUdfFieldSetValueForm, self).__init__(*args, **kwargs)
+        part = Part.objects.get(id=self.pk)
+        field = Field.objects.get(id=self.field_pk)
+        partfieldvalues = part.fieldvalues.filter(field=field)
+
+        if field.field_type == 'IntegerField':
+            self.fields['field_value'] = forms.IntegerField(label=str(field.field_name), required=False,
+                                                help_text=str(field.field_description))
+        elif field.field_type == 'DecimalField':
+            self.fields['field_value'] = forms.DecimalField(label=str(field.field_name), required=False,
+                                                help_text=str(field.field_description))
+        elif field.field_type == 'DateField':
+            self.fields['field_value'] = forms.DateTimeField(label=str(field.field_name), required=False,
+                                                help_text=str(field.field_description),
+                                                widget=DateTimePickerInput(
+                                                    options={
+                                                        "format": "YYYY-MM-DD hh:mm:ss", # moment date-time format
+                                                        "showClose": True,
+                                                        "showClear": True,
+                                                        "showTodayButton": True,
+                                                    }
+                                                ))
+        elif field.field_type == 'BooleanField':
+            self.fields['field_value'] = forms.BooleanField(label=str(field.field_name), required=False,
+                                                help_text=str(field.field_description))
+        else:
+            self.fields['field_value'] = forms.CharField(label=str(field.field_name), required=False,
+                                                help_text=str(field.field_description))
+
+        if partfieldvalues:
+            for fieldvalue in partfieldvalues:
+                self.fields['field_value'].initial = fieldvalue.field_value

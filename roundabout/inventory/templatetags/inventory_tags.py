@@ -3,8 +3,15 @@ from roundabout.inventory.models import Inventory, Action, Deployment
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part
 from roundabout.moorings.models import MooringPart
+from roundabout.userdefinedfields.models import Field, FieldValue
 
 register = template.Library()
+
+# Get the historical list of custom field values, return as queryset
+@register.simple_tag
+def get_udf_field_value_history(field, item):
+    fieldvalues = FieldValue.objects.filter(field=field).filter(inventory=item).order_by('-created_at')
+    return fieldvalues
 
 
 @register.simple_tag
@@ -75,6 +82,15 @@ def get_part_by_inventory(part_pk):
     return queryset
 
 ### FILTERS ###
+
+# Get the Custom Field name from the Parts model
+@register.filter
+def get_custom_field_details_by_part(field_id, part):
+    fields = part.custom_fields['fields']
+    for field in fields:
+        if field['field_id'] == field_id:
+            field_name = field['field_name']
+    return field_name
 
 # filter Time at Sea duration field to show Hours/Minutes
 @register.filter

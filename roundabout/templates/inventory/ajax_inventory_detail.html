@@ -14,7 +14,7 @@
       <button id="action" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-primary">
         Choose Action
       </button>
-      <div class="dropdown-menu ajax-detail-link" aria-labelledby="action">
+      <div class="dropdown-menu dropdown-menu-right ajax-detail-link" aria-labelledby="action">
           <!---
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'invchange' inventory_item.id %}"
@@ -108,7 +108,7 @@
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
                 data-node-type="detail">Photo/Note</a>
-                
+
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_history_action' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
@@ -405,6 +405,26 @@
                 {% if inventory_item.part.note %}
                     <li class="list-group-item">Part Template Notes: {{ inventory_item.revision.note }}</li>
                 {% endif %}
+
+                <!-- User Defined Fields -->
+
+                {% if custom_fields %}
+                    {% for custom_field in custom_fields %}
+
+                        <li class="list-group-item">
+                            {{ custom_field.field }}: {{ custom_field.field_value }}
+                            <!-- link trigger modal -->
+                            <button type="button" class="btn btn-sm btn-link float-right" data-toggle="modal" data-target="#modal-{{ custom_field.field_id }}">
+                              View Field History
+                            </button>
+                            {% include "inventory/modal_inventory_udf_field_history.html" with field=custom_field.field item=inventory_item  %}
+                        </li>
+
+                    {% endfor %}
+                {% endif %}
+
+
+
             </ul>
 
         </div>

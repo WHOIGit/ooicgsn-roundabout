@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% block title %}Custom Fields{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="parts-add-btn">
+      <a href="{% url 'userdefinedfields:fields_add' %}" role="button" class="btn btn-primary">Add Custom Field</a>
+  </div>
+  <h2>Custom Fields</h2>
+
+
+  <table class="table table-striped table-hover custom-fields-table">
+      <thead>
+        <th>Field Name</th>
+        <th>Field Description</th>
+        <th>Field Type</th>
+        <th>Default Value</th>
+        <th>Global field for all Parts of this Type</th>
+        <th>&nbsp;</th>
+
+      </thead>
+      <tbody>
+        {% for field in fields %}
+          <tr>
+              <td>{{ field.field_name }}</td>
+              <td>{{ field.field_description }}</td>
+              <td>{{ field.field_type }}</td>
+              <td>{{ field.field_default_value }}</td>
+              <td>
+                    {% for part_type in field.global_for_part_types.all %}{{ part_type }}<br/>{% endfor %}
+
+              </td>
+              <td class="text-right">
+                  <a href="{% url 'userdefinedfields:fields_update' field.id %}" role="button" class="btn btn-primary btn-sm">Edit</a>
+                  <a href="{% url 'userdefinedfields:fields_delete' field.id %}" role="button" class="btn btn-danger btn-sm">Delete</a>
+              </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+</table>
+</div>
+{% endblock content %}
