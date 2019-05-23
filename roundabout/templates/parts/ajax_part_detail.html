@@ -152,7 +152,14 @@
 
                                         {% for value in custom_fields %}
                                             {% if value.field_id == field.id %}
-                                                <p>Default Field Value for this Part: {{ value.field_value }}</p> 
+                                                <p>
+                                                    <!-- link trigger modal -->
+                                                    <button type="button" class="btn btn-sm btn-link float-right" data-toggle="modal" data-target="#modal-{{ value.field_id }}">
+                                                      View Field History
+                                                    </button>
+                                                    {% include "parts/modal_part_udf_field_history.html" with field=value.field part=part_template  %}
+                                                    Default Field Value for this Part: {{ value.field_value }}
+                                                </p>
                                             {% endif %}
                                         {% endfor %}
 

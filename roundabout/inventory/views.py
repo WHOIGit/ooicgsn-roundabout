@@ -523,7 +523,7 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
                             currentvalue.save()
                             # create new value object
                             new_fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=value,
-                                                                        inventory=self.object, is_current=True)
+                                                                        inventory=self.object, is_current=True, user=self.request.user)
                             # create action record for history
                             self.object.detail = 'Change field value for "%s" to %s' % (currentvalue.field, value)
                             self.object.save()
@@ -531,7 +531,8 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
                                                                   user=self.request.user, inventory=self.object)
                     else:
                         # create new value object
-                        fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=value, inventory=self.object, is_current=True)
+                        fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=value,
+                                                                inventory=self.object, is_current=True, user=self.request.user)
                         # create action record for history
                         self.object.detail = 'Add initial field value for "%s" to %s' % (fieldvalue.field, value)
                         self.object.save()

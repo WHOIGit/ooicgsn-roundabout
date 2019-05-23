@@ -485,11 +485,11 @@ class PartsAjaxSetUdfFieldValueFormView(LoginRequiredMixin, PermissionRequiredMi
             currentvalue.save()
             # create new value object
             partfieldvalue = FieldValue.objects.create(field_id=field_id, field_value=field_value,
-                                                    part_id=part_id, is_current=True)
+                                                    part_id=part_id, is_current=True, user=self.request.user)
         elif not currentvalue:
             # create new value object
             partfieldvalue = FieldValue.objects.create(field_id=field_id, field_value=field_value,
-                                                    part_id=part_id, is_current=True)
+                                                    part_id=part_id, is_current=True, user=self.request.user)
 
         # If custom field has a default part value, add it to any existing Inventory items that has no existing value,
         # or is a Default Value
@@ -504,11 +504,11 @@ class PartsAjaxSetUdfFieldValueFormView(LoginRequiredMixin, PermissionRequiredMi
                 itemvalue.save()
                 # create new value object with Part level default value
                 fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=field_value,
-                                                   inventory=item, is_current=True)
+                                                   inventory=item, is_current=True, user=self.request.user)
             elif not itemvalue:
                 # create new value object with Part level default value
                 fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=field_value,
-                                                   inventory=item, is_current=True)
+                                                   inventory=item, is_current=True, user=self.request.user)
 
         if self.request.is_ajax():
             print(form.cleaned_data)

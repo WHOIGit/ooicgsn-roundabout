@@ -1,9 +1,15 @@
 from django import template
 from roundabout.parts.models import Part
 from roundabout.locations.models import Location
+from roundabout.userdefinedfields.models import FieldValue
 
 register = template.Library()
 
+# Get the historical list of custom field values, return as queryset
+@register.simple_tag
+def get_udf_field_value_history(field, part):
+    fieldvalues = FieldValue.objects.filter(field=field).filter(part=part).order_by('-created_at')
+    return fieldvalues
 
 @register.filter
 def is_in(var, obj):
