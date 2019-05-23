@@ -9,6 +9,7 @@ class Location(MPTTModel):
     LOC_TYPES = (
         ('Array', 'Array'),
         ('Mooring', 'Mooring'),
+        ('Instrument', 'Instrument'),
     )
 
     name = models.CharField(max_length=100)

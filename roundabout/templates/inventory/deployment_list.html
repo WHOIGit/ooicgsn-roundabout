@@ -3,13 +3,13 @@
 {% load mptt_tags %}
 
 
-{% block title %}Deployments{% endblock %}
+{% block title %}{{ label_deployments_app_plural }}{% endblock %}
 
 {% block content %}
 
     <div class="row">
         <div class="col-md-5">
-            <h2>Deployments</h2>
+            <h2>{{ label_deployments_app_plural }}</h2>
 
             <div id="jstree-navtree" data-navtree-url="{% url 'deployments:ajax_load_deployment_navtree' %}"
                                      data-node-type="{{ node_type }}">
@@ -22,7 +22,9 @@
             <div class="row mb-3">
                 <div class="col-md-12">
                     <div class="parts-add-btn">
-                        <a href="#" data-create-url="{% url 'deployments:ajax_deployment_add' %}" role="button" class="btn btn-primary" id="deployment-add-btn">Add Deployment</a>
+                        <a href="#" data-create-url="{% url 'deployments:ajax_deployment_add' %}" role="button" class="btn btn-primary" id="deployment-add-btn">
+                            Add {{ label_deployments_app_singular }}
+                        </a>
                     </div>
                 </div>
             </div>

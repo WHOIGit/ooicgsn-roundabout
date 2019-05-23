@@ -8,15 +8,15 @@
             {% if action_type == 'deploy' %}
                 <h3>Deploy to Sea</h3>
             {% else %}
-                <h3>Edit Deployment</h3>
+                <h3>Edit {{ label_deployments_app_singular }} </h3>
             {% endif %}
         {% else %}
-            <h3>Add New Deployment</h3>
+            <h3>Add New {{ label_deployments_app_singular }} </h3>
         {% endif %}
     </div>
 
     <div class="card-body">
-        
+
         {% if action_type == 'deploy' %}
             <h4 class="mt-3 mb-3">Please confirm that {{ deployment.deployment_number }} is ready to deploy to {{ deployment.final_location.location_id }}.</h4>
         {% endif %}
@@ -56,10 +56,10 @@
                   {% elif action_type == 'retire' %}
                       <button type="submit" class="btn btn-danger">Confirm Retirement</button>
                   {% else %}
-                      <button type="submit" class="btn btn-primary">Update Deployment</button>
+                      <button type="submit" class="btn btn-primary">Update {{ label_deployments_app_singular }} </button>
                   {% endif %}
               {% else %}
-              <button type="submit" class="btn btn-primary">Add Deployment</button>
+              <button type="submit" class="btn btn-primary">Add {{ label_deployments_app_singular }} </button>
               {% endif %}
 
               {% if deployment.id %}

@@ -1,6 +1,6 @@
 {% load common_tags %}
 
-<div class="card-header" data-object-id="{{ deployment.id }}"><h3>Deployment {{ deployment.deployment_number }} - {{ deployment.final_location.location_id }}</h3></div>
+<div class="card-header" data-object-id="{{ deployment.id }}"><h3>{{ label_deployments_app_singular }}  {{ deployment.deployment_number }} - {{ deployment.final_location.location_id }}</h3></div>
 
 <div class="card-body">
 
@@ -53,14 +53,14 @@
 {% endif %}
 
     <p>Current Location: {{ deployment.location.name }}</p>
-    <p>Deployment Number: {{ deployment.deployment_number }}</p>
+    <p>{{ label_deployments_app_singular }} Number: {{ deployment.deployment_number }}</p>
     <p>Deployment ID: {{ deployment.final_location.location_id }}</p>
     <p>Final Location: {{ deployment.final_location }}</p>
     <p>Parent: {{ deployment.final_location.parent }}</p>
 
     <hr>
     {% if action_record.all %}
-    <h5>Deployment Details</h5>
+    <h5>{{ label_deployments_app_singular }} Details</h5>
         {% for action in action_record.all %}
             <p>Latitude: {{ action.latitude }}</p>
             <p>Longitude: {{ action.longitude }}</p>
@@ -122,7 +122,7 @@
 
 {% if request.user|has_group:"admin" %}
     <div class="mt-3 ajax-btn">
-        <a href="#" data-update-url="{% url 'deployments:ajax_deployment_update' deployment.id %}" role="button" class="btn btn-primary">Edit Deployment</a>
+        <a href="#" data-update-url="{% url 'deployments:ajax_deployment_update' deployment.id %}" role="button" class="btn btn-primary">Edit {{ label_deployments_app_singular }} </a>
         <a href="#" data-update-url="{% url 'deployments:ajax_deployment_delete' deployment.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
     </div>
 {% endif %}

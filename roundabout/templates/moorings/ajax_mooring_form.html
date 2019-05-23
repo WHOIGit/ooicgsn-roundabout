@@ -12,7 +12,7 @@
             {% elif parent.id %}
                 <h3>Add Subassembly to {{ parent.part.name }} </h3>
             {% else %}
-                <h3>Add Part to Mooring Template</h3>
+                <h3>Add Part to {{ label_moorings_app_singular }} Template</h3>
             {% endif %}
         </div>
 
@@ -88,9 +88,9 @@
                 <div class="control-group">
                   <div class="controls">
                     {% if mooring_part.id %}
-                    <button type="submit" class="btn btn-primary">Update Mooring Part</button>
+                    <button type="submit" class="btn btn-primary">Update {{ label_moorings_app_singular }} Part</button>
                     {% else %}
-                    <button type="submit" class="btn btn-primary">Add Mooring Part</button>
+                    <button type="submit" class="btn btn-primary">Add {{ label_moorings_app_singular }} Part</button>
                     {% endif %}
                   </div>
                 </div>
