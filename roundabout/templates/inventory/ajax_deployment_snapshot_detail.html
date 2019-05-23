@@ -1,6 +1,6 @@
 {% load common_tags %}
 
-<div class="card-header" data-object-id="{{ deployment.id }}"><h3>Deployment {{ deployment_snapshot.deployment.deployment_number }} - {{ deployment_snapshot.deployment.final_location.location_id }}</h3></div>
+<div class="card-header" data-object-id="{{ deployment.id }}"><h3>{{ label_deployments_app_singular }}  {{ deployment_snapshot.deployment.deployment_number }} - {{ deployment_snapshot.deployment.final_location.location_id }}</h3></div>
 
 <div class="card-body">
     <p>Snapshot Notes: {{ deployment_snapshot.notes }}</p>
@@ -8,7 +8,7 @@
     <p>Snapshot Location: {{ deployment_snapshot.snapshot_location }} </p>
         <hr>
     <p>Current Location: {{ deployment_snapshot.deployment.location.name }}</p>
-    <p>Deployment Number: {{ deployment_snapshot.deployment.deployment_number }}</p>
+    <p>{{ label_deployments_app_singular }}  Number: {{ deployment_snapshot.deployment.deployment_number }}</p>
     <p>Deployment ID: {{ deployment_snapshot.deployment.final_location.location_id }}</p>
     <p>Final Location: {{ deployment_snapshot.deployment.final_location }}</p>
     <p>Parent: {{ deployment_snapshot.deployment.final_location.parent }}</p>
