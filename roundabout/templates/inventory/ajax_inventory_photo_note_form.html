@@ -20,13 +20,13 @@
                     <div class="d-none d-lg-block">
                         {# 1. BUTTON TO TRIGGER THE ACTION #}
                         <button type="button" class="btn btn-primary js-upload-photos">
-                          <i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload photos
+                          <i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload photos/documents
                         </button>
 
                         <div class="jumbotron text-muted text-center" style="padding-top: 4rem; padding-bottom: 4rem;">
                             <i class="fa fa-arrow-down" aria-hidden="true" style="font-size: 4rem;"></i>
 
-                          <h3>Drop Photos Here to Upload</h3>
+                          <h3>Drop Photos/Documents Here to Upload</h3>
                         </div>
                     </div>
 
@@ -124,9 +124,32 @@ $(function () {
   var photoIDList = [];
 
   $("#fileupload").fileupload({
+    add: function(e, data) {
+              var uploadErrors = [];
+              var acceptFileTypes = /(\.|\/)(pdf|xls?x|doc?x|gif|jpe?g|png)$/i;
+              if(data.originalFiles[0]['type'].length && !acceptFileTypes.test(data.originalFiles[0]['type'])) {
+                  uploadErrors.push('Not an accepted file type');
+              }
+
+              data.originalFiles.forEach(function (item, index) {
+                    console.log(item['type']);
+              });
+
+              /*
+              if(data.originalFiles[0]['size'].length && data.originalFiles[0]['size'] > 5000000) {
+                  uploadErrors.push('Filesize is too big');
+              }
+              */
+              if(uploadErrors.length > 0) {
+                  alert(uploadErrors.join("\n"));
+              } else {
+                  data.submit();
+              }
+      },
     dataType: 'json',
     done: function (e, data) {  /* PROCESS THE RESPONSE FROM THE SERVER */
       if (data.result.is_valid) {
+        console.log(data);  
         $("#gallery tbody").prepend(
           "<tr><td width='25%'><img src='" + data.result.url + "' width='100%'></td><td><a href='" + data.result.url + "'>" + data.result.name + "</a></td></tr>"
         )
