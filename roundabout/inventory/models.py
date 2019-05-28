@@ -6,7 +6,7 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 from django.urls import reverse
 from django.utils import timezone
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, FileExtensionValidator
 from model_utils import FieldTracker
 from mptt.models import MPTTModel, TreeForeignKey
 
@@ -252,7 +252,8 @@ class Action(models.Model):
 
 
 class PhotoNote(models.Model):
-    photo = models.FileField(upload_to='photos/')
+    photo = models.FileField(upload_to='notes/',
+                             validators=[FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg', 'gif', 'csv'])])
     inventory = models.ForeignKey(Inventory, related_name='photos',
                                  on_delete=models.CASCADE, null=True, blank=True)
     action = models.ForeignKey(Action, related_name='photos',

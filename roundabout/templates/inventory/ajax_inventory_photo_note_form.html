@@ -124,9 +124,10 @@ $(function () {
   var photoIDList = [];
 
   $("#fileupload").fileupload({
+    /*
     add: function(e, data) {
               var uploadErrors = [];
-              var acceptFileTypes = /(\.|\/)(pdf|xls?x|doc?x|gif|jpe?g|png)$/i;
+              var acceptFileTypes = /(\.|\/)(pdf|xlsx|xls|docx|doc|gif|jpe?g|png)$/i;
               if(data.originalFiles[0]['type'].length && !acceptFileTypes.test(data.originalFiles[0]['type'])) {
                   uploadErrors.push('Not an accepted file type');
               }
@@ -135,27 +136,34 @@ $(function () {
                     console.log(item['type']);
               });
 
-              /*
+
               if(data.originalFiles[0]['size'].length && data.originalFiles[0]['size'] > 5000000) {
                   uploadErrors.push('Filesize is too big');
               }
-              */
+
               if(uploadErrors.length > 0) {
                   alert(uploadErrors.join("\n"));
               } else {
                   data.submit();
               }
-      },
+      },*/
     dataType: 'json',
     done: function (e, data) {  /* PROCESS THE RESPONSE FROM THE SERVER */
       if (data.result.is_valid) {
-        console.log(data);  
-        $("#gallery tbody").prepend(
-          "<tr><td width='25%'><img src='" + data.result.url + "' width='100%'></td><td><a href='" + data.result.url + "'>" + data.result.name + "</a></td></tr>"
-        )
+        console.log(data);
+        if (data.result.file_type == 'image') {
+            $("#gallery tbody").prepend(
+              "<tr><td width='25%'><img src='" + data.result.url + "' width='100%'></td><td><a href='" + data.result.url + "'>" + data.result.name + "</a></td></tr>"
+            )
+        } else {
+            $("#gallery tbody").prepend(
+              "<tr><td width='25%' class='text-center'><i class='fa fa-file fa-3x'></i></td><td><a href='" + data.result.url + "'>" + data.result.name + "</a></td></tr>"
+            )
+        }
+
         // Add Photo IDs to array, change hidden input field value
         photoIDList.push(data.result.photo_id);
-        $("#id_photo_ids").val(photoIDList);
+        $('#id_photo_ids').val(photoIDList);
       }
     }
   });

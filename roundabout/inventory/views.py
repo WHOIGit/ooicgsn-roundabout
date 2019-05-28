@@ -838,7 +838,6 @@ class ActionPhotoUploadAjaxCreateView(View):
                     'name': photo_note.photo.name,
                     'url': photo_note.photo.url,
                     'photo_id': photo_note.id,
-                    'extension': photo_note.extension(),
                     'file_type': photo_note.file_type() }
         else:
             data = {'is_valid': False}
