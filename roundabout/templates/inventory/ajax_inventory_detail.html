@@ -287,7 +287,15 @@
                           <td>
                               {{ action.detail|safe }}
                               {% for photo in action.photos.all %}
-                                  <img src="{{ photo.photo.url }}" width="100%"> <br>
+                                  {% if photo.file_type == 'image' %}
+                                      <a href="{{ photo.photo.url }}" target="_blank">
+                                          <img src="{{ photo.photo.url }}" width="100%">
+                                      </a> <br><br>
+                                  {% else %}
+                                     <a href="{{ photo.photo.url }}" target="_blank"><i class='fa fa-file fa-3x'></i>
+                                         {{ photo.photo.name }}
+                                     </a>  <br><br>
+                                  {% endif %}
                               {% endfor %}
                           </td>
                           <td>{{ action.user.username }}</td>

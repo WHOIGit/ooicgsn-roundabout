@@ -1,3 +1,4 @@
+import os
 import datetime
 from datetime import timedelta
 
@@ -5,7 +6,7 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 from django.urls import reverse
 from django.utils import timezone
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, FileExtensionValidator
 from model_utils import FieldTracker
 from mptt.models import MPTTModel, TreeForeignKey
 
@@ -251,13 +252,27 @@ class Action(models.Model):
 
 
 class PhotoNote(models.Model):
-    photo = models.ImageField(upload_to='photos/')
+    photo = models.FileField(upload_to='notes/',
+                             validators=[FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg', 'gif', 'csv'])])
     inventory = models.ForeignKey(Inventory, related_name='photos',
                                  on_delete=models.CASCADE, null=True, blank=True)
     action = models.ForeignKey(Action, related_name='photos',
                                  on_delete=models.CASCADE, null=True, blank=True)
     user = models.ForeignKey(User, related_name='photos',
                              on_delete=models.SET_NULL, null=True, blank=False)
+
+    def file_type(self):
+        # get the file extension from file name
+        name, extension = os.path.splitext(self.photo.name)
+        # set the possible extensions for docs and images
+        doc_types = ['.pdf', '.doc', '.docx', '.xls', '.xlsx']
+        image_types = ['.png', '.jpg', '.jpeg', '.gif']
+
+        if extension in doc_types:
+            return 'document'
+        if extension in image_types:
+            return 'image'
+        return 'other'
 
 
 class DeploymentAction(models.Model):

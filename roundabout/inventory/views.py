@@ -834,7 +834,11 @@ class ActionPhotoUploadAjaxCreateView(View):
             photo_note.inventory_id = self.kwargs['pk']
             photo_note.user_id = self.request.user.id
             photo_note.save()
-            data = {'is_valid': True, 'name': photo_note.photo.name, 'url': photo_note.photo.url, 'photo_id': photo_note.id}
+            data = {'is_valid': True,
+                    'name': photo_note.photo.name,
+                    'url': photo_note.photo.url,
+                    'photo_id': photo_note.id,
+                    'file_type': photo_note.file_type() }
         else:
             data = {'is_valid': False}
         return JsonResponse(data)
