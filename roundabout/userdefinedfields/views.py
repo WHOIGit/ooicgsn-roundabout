@@ -52,7 +52,7 @@ class UserDefinedFieldUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Up
     model = Field
     form_class = UserDefinedFieldForm
     context_object_name = 'field'
-    permission_required = 'userdefinedfields.add_printer'
+    permission_required = 'userdefinedfields.add_field'
     redirect_field_name = 'home'
 
     def form_valid(self, form):
