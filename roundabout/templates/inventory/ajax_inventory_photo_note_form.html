@@ -153,11 +153,11 @@ $(function () {
         console.log(data);
         if (data.result.file_type == 'image') {
             $("#gallery tbody").prepend(
-              "<tr><td width='25%'><img src='" + data.result.url + "' width='100%'></td><td><a href='" + data.result.url + "'>" + data.result.name + "</a></td></tr>"
+              "<tr><td width='25%'><img src='" + data.result.url + "' width='100%'></td><td><a href='" + data.result.url + "' target='_blank'>" + data.result.name + "</a></td></tr>"
             )
         } else {
             $("#gallery tbody").prepend(
-              "<tr><td width='25%' class='text-center'><i class='fa fa-file fa-3x'></i></td><td><a href='" + data.result.url + "'>" + data.result.name + "</a></td></tr>"
+              "<tr><td width='25%' class='text-center'><i class='fa fa-file fa-3x'></i></td><td><a href='" + data.result.url + "' target='_blank'>" + data.result.name + "</a></td></tr>"
             )
         }
 
