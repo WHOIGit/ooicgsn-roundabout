@@ -1491,9 +1491,21 @@ class InventoryDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super(InventoryDetailView, self).get_context_data(**kwargs)
         # Add Parts list to context to build navtree filter
+        part_types = PartType.objects.all()
+        # Get Printers to display in print dropdown
+        printers = Printer.objects.all()
+
+        # Get this item's custom fields with most recent Values
+        if self.object.fieldvalues.exists():
+            custom_fields = self.object.fieldvalues.filter(is_current=True)
+        else:
+            custom_fields = None
+
         context.update({
-            'part_types': PartType.objects.all(),
-            'node_type': 'inventory'
+            'part_types': part_types,
+            'printers': printers,
+            'custom_fields': custom_fields,
+            'node_type': 'inventory',
         })
         return context
 
@@ -1510,9 +1522,10 @@ class InventoryHomeView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super(InventoryHomeView, self).get_context_data(**kwargs)
         # Add Parts list to context to build navtree filter
+        part_types = PartType.objects.all()
         context.update({
-            'part_types': PartType.objects.all(),
-            'node_type': 'inventory'
+            'part_types': part_types,
+            'node_type': 'inventory',
         })
         return context
 
