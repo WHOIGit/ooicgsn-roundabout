@@ -44,7 +44,7 @@ class InventoryNavTreeMixin(LoginRequiredMixin, object):
 # ------------------------------------------------------------------------------
 
 def load_inventory_navtree(request):
-    locations = Location.objects.exclude(name='Retired').prefetch_related('deployment__final_location__mooring_parts__part__part_type').prefetch_related('inventory__part__part_type').prefetch_related('deployment__inventory')
+    locations = Location.objects.exclude(root_type='Retired').prefetch_related('deployment__final_location__mooring_parts__part__part_type').prefetch_related('inventory__part__part_type').prefetch_related('deployment__inventory')
     return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations})
 
 
@@ -1077,7 +1077,7 @@ class InventoryAjaxDestinationSubassemblyListView(LoginRequiredMixin, TemplateVi
                 parent = None
         else:
             parent = None
-        inventory_items = Inventory.objects.filter(part=mooring_part.part).filter(deployment__isnull=True).filter(parent__isnull=True).exclude(location__name='Trash Bin')
+        inventory_items = Inventory.objects.filter(part=mooring_part.part).filter(deployment__isnull=True).filter(parent__isnull=True).exclude(location__root_type='Trash')
 
         context.update({
             'inventory_items': inventory_items,
@@ -1176,7 +1176,7 @@ class InventoryAjaxParentListView(LoginRequiredMixin, TemplateView):
             parent = MooringPart.objects.get(id=mp.id).get_ancestors().last()
             mooring_parts_list.append(parent)
         part_templates = Part.objects.filter(mooring_parts__in=mooring_parts_list)
-        parent_items = Inventory.objects.filter(part__in=part_templates).filter(deployment__isnull=True).exclude(location__name='Trash Bin').order_by('part__name')
+        parent_items = Inventory.objects.filter(part__in=part_templates).filter(deployment__isnull=True).exclude(location__root_type='Trash').order_by('part__name')
 
         for parent in parent_items:
             # Check if the mooring part template spot is already filled, remove parent from queryset
@@ -1276,7 +1276,7 @@ class InventoryAjaxSubassemblyListView(LoginRequiredMixin, TemplateView):
         if parent.mooring_part_id:
             mooring_parts = MooringPart.objects.get(id=parent.mooring_part_id).get_children()
             part_templates = Part.objects.filter(mooring_parts__in=mooring_parts)
-            inventory_items = Inventory.objects.filter(part__in=part_templates).filter(deployment__isnull=True).exclude(location__name='Trash Bin')
+            inventory_items = Inventory.objects.filter(part__in=part_templates).filter(deployment__isnull=True).exclude(location__root_type='Trash')
         else:
             mooring_parts = MooringPart.objects.filter(part=parent.part)
             mooring_parts_list = []
@@ -1284,7 +1284,7 @@ class InventoryAjaxSubassemblyListView(LoginRequiredMixin, TemplateView):
                 result_list = MooringPart.objects.get(id=mp.id).get_children()
                 mooring_parts_list = list(chain(mooring_parts_list, result_list))
             part_templates = Part.objects.filter(mooring_parts__in=mooring_parts_list)
-            inventory_items = Inventory.objects.filter(part__in=part_templates).filter(mooring_part__isnull=True).filter(parent__isnull=True).exclude(location__name='Trash Bin')
+            inventory_items = Inventory.objects.filter(part__in=part_templates).filter(mooring_part__isnull=True).filter(parent__isnull=True).exclude(location__root_type='Trash')
 
         context.update({
             'inventory_items': inventory_items
@@ -1366,7 +1366,7 @@ class InventoryByMooringPartAjaxSubassemblyListView(LoginRequiredMixin, Template
                 parent = None
         else:
             parent = None
-        inventory_items = Inventory.objects.filter(part=mooring_part.part).filter(deployment__isnull=True).filter(parent__isnull=True).exclude(location__name='Trash Bin')
+        inventory_items = Inventory.objects.filter(part=mooring_part.part).filter(deployment__isnull=True).filter(parent__isnull=True).exclude(location__root_type='Trash')
         inventory_items = inventory_items.filter(Q(mooring_part = mooring_part) | Q(mooring_part__isnull = True))
 
         context.update({
@@ -1482,7 +1482,7 @@ class InventoryAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, Delet
 
 # Base Views
 
-
+# View to get direct link to an Inventory item
 class InventoryDetailView(LoginRequiredMixin, DetailView):
     model = Inventory
     template_name='inventory/inventory_detail.html'
@@ -1515,6 +1515,7 @@ class InventoryDetailView(LoginRequiredMixin, DetailView):
         return self.render_to_response(context)
 
 
+# View to get main Inventory landing page
 class InventoryHomeView(LoginRequiredMixin, TemplateView):
     template_name ='inventory/inventory_list.html'
     context_object_name = 'inventory_item'
@@ -1801,7 +1802,7 @@ class InventoryDeploymentDetailView(InventoryNavTreeMixin, DetailView):
 # AJAX Views
 
 def load_deployment_navtree(request):
-    locations = Location.objects.exclude(name='Trash Bin').prefetch_related('deployment')
+    locations = Location.objects.exclude(root_type='Trash').prefetch_related('deployment')
     return render(request, 'inventory/ajax_deployment_navtree.html', {'locations': locations})
 
 
@@ -2002,8 +2003,8 @@ class DeploymentAjaxSnapshotCreateView(LoginRequiredMixin, AjaxFormMixin, Create
 
     def form_valid(self, form, **kwargs):
         deployment = Deployment.objects.get(pk=self.kwargs['pk'])
-        base_location = Location.objects.get(name='Snapshots')
-        snapshot_location = Location.objects.get(name='Snapshots')
+        base_location = Location.objects.get(root_type='Snapshots')
+        #snapshot_location = Location.objects.get(root_type='Snapshots')
         inventory_items = deployment.inventory.all()
 
         deployment_snapshot = form.save()

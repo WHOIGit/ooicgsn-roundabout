@@ -224,7 +224,7 @@ class ActionLocationChangeForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ActionLocationChangeForm, self).__init__(*args, **kwargs)
-        root_node = Location.objects.get(name='Land')
+        root_node = Location.objects.get(root_type='Land')
         location_list = root_node.get_descendants()
         self.fields['location'].queryset = location_list
         self.initial['detail'] = ''
@@ -416,7 +416,7 @@ class ActionMoveToTrashForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ActionMoveToTrashForm, self).__init__(*args, **kwargs)
-        self.initial['location'] = Location.objects.get(name='Trash Bin')
+        self.initial['location'] = Location.objects.get(root_type='Trash')
         self.initial['parent'] = ''
         self.initial['deployment'] = ''
         self.initial['mooring_part'] = ''
@@ -460,7 +460,7 @@ class DeploymentForm(forms.ModelForm):
         self.fields['deployment_number'].label = deployment_number_label
 
         # Limit final_location choices to only Sea locations
-        root_node = Location.objects.get(name='Sea')
+        root_node = Location.objects.get(root_type='Sea')
         location_list = root_node.get_descendants()
         self.fields['final_location'].queryset = location_list
 
@@ -489,7 +489,7 @@ class DeploymentActionBurninForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(DeploymentActionBurninForm, self).__init__(*args, **kwargs)
-        root_node = Location.objects.get(name='Land')
+        root_node = Location.objects.get(root_type='Land')
         location_list = root_node.get_descendants()
         self.fields['location'].queryset = location_list
 
@@ -565,7 +565,7 @@ class DeploymentActionRecoverForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(DeploymentActionRecoverForm, self).__init__(*args, **kwargs)
-        root_node = Location.objects.get(name='Land')
+        root_node = Location.objects.get(root_type='Land')
         location_list = root_node.get_descendants()
         self.fields['location'].queryset = location_list
 
@@ -594,7 +594,7 @@ class DeploymentActionRetireForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(DeploymentActionRetireForm, self).__init__(*args, **kwargs)
-        self.initial['location'] = Location.objects.get(name='Retired')
+        self.initial['location'] = Location.objects.get(root_type='Retired')
 
 
 class DeploymentSnapshotForm(forms.ModelForm):
