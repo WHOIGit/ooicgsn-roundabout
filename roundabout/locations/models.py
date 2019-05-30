@@ -12,11 +12,20 @@ class Location(MPTTModel):
         ('Instrument', 'Instrument'),
     )
 
+    ROOT_TYPES = (
+        ('Land', 'Land'),
+        ('Sea', 'Sea'),
+        ('Retired', 'Retired'),
+        ('Snapshots', 'Snapshots'),
+        ('Trash', 'Trash'),
+    )
+
     name = models.CharField(max_length=100)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True, on_delete=models.SET_NULL)
     location_type = models.CharField(max_length=20, choices=LOC_TYPES, blank=True)
     location_id = models.CharField(max_length=100, blank=True)
     weight = models.IntegerField(default=0, blank=True, null=True)
+    root_type = models.CharField(max_length=20, choices=ROOT_TYPES, blank=True)
 
     class MPTTMeta:
         order_insertion_by = ['weight', 'name']
