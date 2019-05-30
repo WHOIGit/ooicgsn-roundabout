@@ -44,8 +44,7 @@ def make_tree_copy(root_part, new_location, parent=None):
 
 # Main Navtree function
 def load_moorings_navtree(request):
-    # Temporary hack to limit Locations, need to fix
-    locations = Location.objects.exclude(name='Trash Bin').exclude(name='Retired').exclude(name='Snapshots').prefetch_related('mooring_parts__part__part_type')
+    locations = Location.objects.exclude(root_type='Trash').exclude(root_type='Retired').exclude(root_type='Snapshots').prefetch_related('mooring_parts__part__part_type')
     return render(request, 'moorings/ajax_mooring_navtree.html', {'locations': locations})
 
 
@@ -53,7 +52,7 @@ def load_moorings_navtree(request):
 def filter_moorings_navtree(request):
     part_types = request.GET.getlist('part_types[]')
     part_types = list(map(int, part_types))
-    locations = Location.objects.exclude(name='Trash Bin').exclude(name='Retired').exclude(name='Snapshots').prefetch_related('mooring_parts__part__part_type')
+    locations = Location.objects.exclude(root_type='Trash').exclude(root_type='Retired').exclude(root_type='Snapshots').prefetch_related('mooring_parts__part__part_type')
     return render(request, 'moorings/ajax_mooring_navtree.html', {'locations': locations, 'part_types': part_types})
 
 
