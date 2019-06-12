@@ -1921,6 +1921,21 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             self.object.detail = 'Deployed to Sea: %s. ' % (self.object.final_location)
             action_type_inventory = 'deploymenttosea'
 
+            # Create a Snapshot when Deployment is Deployed
+            deployment = self.object
+            base_location = Location.objects.get(root_type='Snapshots')
+            inventory_items = deployment.inventory.all()
+
+            snapshot = DeploymentSnapshot.objects.create(deployment=deployment,
+                                                         location=base_location,
+                                                         snapshot_location=deployment.location,
+                                                         notes=self.object.detail)
+
+            # Now create Inventory Item Snapshots with make_tree_copy function for Deployment Snapshot
+            for item in inventory_items:
+                if item.is_root_node():
+                    make_tree_copy(item, base_location, snapshot, item.parent)
+
         if action_type == 'recover':
             self.object.detail = 'Recovered from Sea to %s. ' % (self.object.location)
             action_type_inventory = 'deploymentrecover'
