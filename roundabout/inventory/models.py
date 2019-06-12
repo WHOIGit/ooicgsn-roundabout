@@ -163,7 +163,7 @@ class DeploymentSnapshot(models.Model):
                               on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
     snapshot_location = TreeForeignKey(Location, related_name='deployment_snapshot_location',
                               on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     notes = models.TextField(blank=True)
 
     class Meta:
@@ -185,7 +185,7 @@ class InventorySnapshot(MPTTModel):
                                    on_delete=models.CASCADE, null=True, blank=True)
     location = TreeForeignKey(Location, related_name='inventory_snapshot',
                               on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     order = models.CharField(max_length=255, null=False, blank=True, db_index=True)
 
     class MPTTMeta:
