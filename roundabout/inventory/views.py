@@ -1913,6 +1913,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
 
         action_type = self.kwargs['action_type']
 
+        # Set Detail and action_type_inventory variables
         if action_type == 'burnin':
             self.object.detail = 'Burn In initiated at %s. ' % (self.object.location)
             action_type_inventory = 'deploymentburnin'
@@ -1933,6 +1934,24 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
 
         # Get the date for the Action Record from the custom form field
         action_date = form.cleaned_data['date']
+
+        # Create automatic Snapshot when Deployed to Sea or Recovered
+        if action_type == 'deploy' or action_type == 'recover':
+            # Create a Snapshot when Deployment is Deployed
+            deployment = self.object
+            base_location = Location.objects.get(root_type='Snapshots')
+            inventory_items = deployment.inventory.all()
+
+            snapshot = DeploymentSnapshot.objects.create(deployment=deployment,
+                                                         location=base_location,
+                                                         snapshot_location=deployment.location,
+                                                         notes=self.object.detail,
+                                                         created_at=action_date, )
+
+            # Now create Inventory Item Snapshots with make_tree_copy function for Deployment Snapshot
+            for item in inventory_items:
+                if item.is_root_node():
+                    make_tree_copy(item, base_location, snapshot, item.parent)
 
         # If Deploying to Sea, add Depth, Lat/Long to Action Record
         if action_type == 'deploy':
