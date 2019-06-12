@@ -224,9 +224,9 @@ class ActionLocationChangeForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ActionLocationChangeForm, self).__init__(*args, **kwargs)
-        root_node = Location.objects.get(root_type='Land')
-        location_list = root_node.get_descendants()
-        self.fields['location'].queryset = location_list
+        #root_node = Location.objects.get(root_type='Land')
+        #location_list = root_node.get_descendants()
+        #self.fields['location'].queryset = location_list
         self.initial['detail'] = ''
 
 
