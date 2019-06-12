@@ -18,14 +18,6 @@ $(document).ready(function() {
         $("#div_id_parent").show();
     }
 
-    if ( ! $('#div_id_whoi_number input').val() ) {
-        $("#div_id_whoi_number").hide();
-    }
-
-    if ( ! $('#div_id_ooi_property_number input').val() ) {
-        $("#div_id_ooi_property_number").hide();
-    }
-
     $("#hint_id_serial_number").click(function () {
         $("#id_serial_number").removeAttr("readonly");
     });
