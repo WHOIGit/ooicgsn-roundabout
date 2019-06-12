@@ -12,3 +12,7 @@ class UserDefinedFieldForm(forms.ModelForm):
         labels = {
             'global_for_part_types': 'Global field for all Parts of this Type',
         }
+
+        widgets = {
+            'global_for_part_types': forms.CheckboxSelectMultiple()
+        }
