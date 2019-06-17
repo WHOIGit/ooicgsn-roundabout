@@ -32,7 +32,7 @@ class LocationDetailTests(TestCase):
         """
         self.client.login(username=self.username, password=self.password)
         response = self.client.get(reverse('locations:locations_home'))
-        assert response.status_code == 302
+        assert response.status_code == 403
 
     def test_home_view_can_access(self):
         """user in location permission should have access

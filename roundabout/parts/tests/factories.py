@@ -1,7 +1,7 @@
 import factory
 import random, string
 
-from roundabout.parts.models import Part, PartType, Documentation
+from roundabout.parts.models import Part, PartType, Documentation, Revision
 
 from faker import Faker
 fake = Faker()
@@ -31,6 +31,16 @@ class PartFactory(factory.DjangoModelFactory):
         django_get_or_create = ('part_number',)
 
     part_type = factory.SubFactory(PartTypeFactory)
+
+
+class RevisionFactory(factory.DjangoModelFactory):
+    """
+        Define Revision Factory
+    """
+    class Meta:
+        model = Revision
+
+    part = factory.SubFactory(Part)
 
 
 class DocumentationFactory(factory.DjangoModelFactory):

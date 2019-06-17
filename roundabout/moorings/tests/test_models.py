@@ -2,7 +2,7 @@ import pytest
 
 from django.test import TestCase
 from roundabout.moorings.tests.factories import MooringPartFactory
-from roundabout.parts.tests.factories import PartFactory
+from roundabout.parts.tests.factories import PartFactory, RevisionFactory
 from roundabout.locations.tests.factories import LocationFactory
 
 pytestmark = pytest.mark.django_db
@@ -25,8 +25,10 @@ def test_mooringpart_model():
 def test_get_assembly_total_cost_method():
     """ Test get_assembly_total_cost method """
     # create model instances
-    part1 = PartFactory(name="Test Part", unit_cost=5.00)
-    part2 = PartFactory(name="Test Part", unit_cost=10.00)
+    part1 = PartFactory(name="Test Part", )
+    revision1 = RevisionFactory(part=part1, unit_cost=5.00)
+    part2 = PartFactory(name="Test Part", )
+    revision2 = RevisionFactory(part=part2, unit_cost=10.00)
     location = LocationFactory(name="Test Location")
 
     parent1 = MooringPartFactory(parent__parent=None, part=part1, location=location)
