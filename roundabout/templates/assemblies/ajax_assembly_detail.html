@@ -1,0 +1,22 @@
+
+                <div class="card-header">
+                    <h3>{{ assembly.name }}</h3>
+                </div>
+
+                <div class="card-body">
+
+                    <p>Assembly ID Number: {{ assembly.assembly_number }}</p>
+
+                    <p>Description: {{ assembly.description }}</p>
+
+
+                <div class="mt-3 ajax-btn">
+                    <a href="#" data-update-url="{% url 'locations:ajax_location_update' location.id %}" role="button" class="btn btn-primary">Edit Location</a>
+
+                    <a href="#" data-update-url="{% url 'locations:ajax_location_delete' location.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
+                </div>
+
+
+{% block javascript %}
+
+{% endblock javascript %}
