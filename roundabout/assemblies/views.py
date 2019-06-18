@@ -25,7 +25,7 @@ class AssemblyHomeView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView
     def get_context_data(self, **kwargs):
         context = super(AssemblyHomeView, self).get_context_data(**kwargs)
         context.update({
-            'assemblies': Assembly.objects.all(),
+            'node_type': 'assemblies',
         })
         return context
 

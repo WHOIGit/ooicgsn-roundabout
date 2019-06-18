@@ -1,23 +1,19 @@
 
-{% load mptt_tags %}
+<ul>
+{% for assembly in assemblies %}
 
-        {% for assembly,structure in assemblies|tree_info %}
+    <li data-jstree='{"icon":"fa fa-cog"}' id="assembly_{{ assembly.id }}">
+            <a href="#"
+                    data-detail-url="{% url 'assemblies:ajax_assemblies_detail' assembly.id %}"
+                    data-type-id='{{ assembly.id }}'
+                    data-node-type="part_type">{{ assembly.name }}</a>
+            {% if assembly.assembly_parts.exists %}
 
-                {% if structure.new_level %}
-                    <ul><li data-jstree='{"icon":"fa fa-cog"}' id="assembly_{{ assembly.id }}">
-                {% else %}
-            </li><li data-jstree='{"icon":"fa fa-cog"}' id="assembly_{{ assembly.id }}">
-                {% endif %}
-                    <a href="#"
-                            data-detail-url="{% url 'parts:ajax_parts_type_detail' assembly.id %}"
-                            data-type-id='{{ assembly.id }}'
-                            data-node-type="part_type">{{ assembly.name }}</a>
-                    {% if assembly.assembly_parts.exists %}
+                {% include "parts/part_tree_parts.html" with assembly_parts=assembly.assembly_parts.all %}
 
-                        {% include "parts/part_tree_parts.html" with assembly_parts=assembly.assembly_parts.all %}
+            {% endif %}
 
-                    {% endif %}
+     </li>
 
-             {% for level in structure.closed_levels %}</li></ul>{% endfor %}
-
-        {% endfor %}
+{% endfor %}
+</ul>
