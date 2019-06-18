@@ -11,9 +11,9 @@
 
 
                 <div class="mt-3 ajax-btn">
-                    <a href="#" data-update-url="{% url 'locations:ajax_location_update' assembly.id %}" role="button" class="btn btn-primary">Edit Assembly</a>
+                    <a href="#" data-update-url="{% url 'assemblies:ajax_assemblies_update' assembly.id %}" role="button" class="btn btn-primary">Edit Assembly</a>
 
-                    <a href="#" data-update-url="{% url 'locations:ajax_location_delete' assembly.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
+                    <a href="#" data-update-url="{% url 'assemblies:ajax_assemblies_delete' assembly.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
                 </div>
 
 

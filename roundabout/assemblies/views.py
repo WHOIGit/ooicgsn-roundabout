@@ -68,3 +68,48 @@ class AssemblyAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
 
     def get_success_url(self):
         return reverse('assemblies:ajax_assemblies_detail', args=(self.object.id,))
+
+
+# Update view for assemblies
+class AssemblyAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, UpdateView):
+    model = Assembly
+    form_class = AssemblyForm
+    context_object_name = 'assembly'
+    template_name='assemblies/ajax_assembly_form.html'
+    permission_required = 'moorings.add_mooringpart'
+    redirect_field_name = 'home'
+
+    def form_valid(self, form):
+        self.object = form.save()
+
+        response = HttpResponseRedirect(self.get_success_url())
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def get_success_url(self):
+        return reverse('assemblies:ajax_assemblies_detail', args=(self.object.id,))
+
+
+class AssemblyAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = Assembly
+    template_name = 'assemblies/ajax_assembly_confirm_delete.html'
+    permission_required = 'moorings.add_mooringpart'
+    redirect_field_name = 'home'
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        data = {
+            'message': "Successfully submitted form data.",
+            'parent_id': self.object.id,
+        }
+        self.object.delete()
+
+        return JsonResponse(data)
