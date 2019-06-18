@@ -5,7 +5,8 @@ from django.views.generic import View, DetailView, ListView, RedirectView, Updat
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 from .models import Assembly, AssemblyPart, AssemblyDocument
-from .forms import AssemblyForm
+from .forms import AssemblyForm, AssemblyPartForm
+from roundabout.parts.models import PartType
 from common.util.mixins import AjaxFormMixin
 
 # Load the javascript navtree
@@ -113,3 +114,75 @@ class AssemblyAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, Delete
         self.object.delete()
 
         return JsonResponse(data)
+
+
+### CBV views for AssemblyPart model ###
+
+# Detail view for Assembly Part
+class AssemblyPartAjaxDetailView(LoginRequiredMixin, DetailView):
+    model = AssemblyPart
+    context_object_name = 'assembly_part'
+    template_name='assemblies/ajax_assemblypart_detail.html'
+
+
+# Create view for Assembly Part
+class AssemblyPartAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, CreateView):
+    model = AssemblyPart
+    form_class = AssemblyPartForm
+    template_name='assemblies/ajax_assemblypart_form.html'
+    context_object_name = 'assembly_part'
+    permission_required = 'moorings.add_mooringpart'
+    redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super(AssemblyPartAjaxCreateView, self).get_context_data(**kwargs)
+
+        context.update({
+            'part_types': PartType.objects.all(),
+            'assembly': Assembly.objects.get(id=self.kwargs['assembly_pk'])
+        })
+        if 'parent_pk' in self.kwargs:
+            context.update({
+                'parent': AssemblyPart.objects.get(id=self.kwargs['parent_pk'])
+            })
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super(AssemblyPartAjaxCreateView, self).get_form_kwargs()
+        kwargs['assembly_pk'] = self.kwargs['assembly_pk']
+        if 'parent_pk' in self.kwargs:
+            kwargs['parent_pk'] = self.kwargs['parent_pk']
+        return kwargs
+
+    def get_initial(self):
+        #Returns the initial data to use for forms on this view.
+        initial = super(AssemblyPartAjaxCreateView, self).get_initial()
+        initial['assembly'] = self.kwargs['assembly_pk']
+        if 'parent_pk' in self.kwargs:
+            initial['parent'] = self.kwargs['parent_pk']
+        return initial
+
+    def form_valid(self, form):
+        self.object = form.save()
+
+        if self.object.part.friendly_name:
+            self.object.order = self.object.part.friendly_name
+        else:
+            self.object.order = self.object.part.name
+
+        self.object.save()
+
+        response = HttpResponseRedirect(self.get_success_url())
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def get_success_url(self):
+        return reverse('assemblies:ajax_assemblyparts_detail', args=(self.object.id, ))

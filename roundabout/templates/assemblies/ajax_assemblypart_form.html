@@ -1,0 +1,107 @@
+
+{% load static i18n %}
+{% load mptt_tags %}
+{% load crispy_forms_tags %}
+
+
+
+
+        <div class="card-header">
+            {% if assembly.id %}
+                <h3>{{ mooring_part.part.name }}</h3>
+            {% elif parent.id %}
+                <h3>Add Subassembly to {{ parent.part.name }} </h3>
+            {% else %}
+                <h3>Add Part to Assembly</h3>
+            {% endif %}
+        </div>
+
+        <div class="card-body">
+
+
+                <div id="inventory-filter">
+                    <form class="form-horizontal" method="post" action="" id="parttype-filter-form" data-url="{% url 'moorings:ajax_load_part_templates' %}" novalidate>
+                        <div class="form-group">
+                        <label for="id_part_type" class="form-control-label  requiredField">Select Part Type<span class="asteriskField">*</span></label>
+                            <select name="part_type" class="select form-control" id="id_part_type">
+                                <option value="">---------</option>
+                                <option value="All">All Parts</option>
+                                {% for type in part_types %}
+                                    <option value="{{ type.id }}">-- {{ type.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="mb-3"><h4><span class="badge badge-secondary">OR</span></h4></div>
+
+                <div id="inventory-filter">
+                    <form method="post" action="" id="inventory-filter-form-part-number" data-url="{% url 'inventory:ajax_load_part_templates_by_partnumber' %}" novalidate>
+                        <div class="form-row">
+                            <div class="form-group col-md-8 col-lg-6">
+                                <label for="part_number" class="sr-only">Scan Part Number<span class="asteriskField">*</span></label>
+                                <div class="input-group mb-2 mr-sm-2">
+
+                                    <div class="input-group-prepend">
+                                      <div class="input-group-text">#</div>
+                                    </div>
+                                    <input type="text" name="part_number_search" class="textinput form-control" placeholder="Scan Part Number" id="part_number_search">
+                                </div>
+                            </div>
+                            <div class="form-group col-md-4 col-lg-6">
+                                <button type="submit" class="btn btn-primary mb-2">Search</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <hr>
+
+
+              <form class="form-horizontal ajax-form" method="post" action="" id="parts-form"
+                  data-url='{{ request.build_absolute_uri|safe }}'
+                  data-mooring-parts-url="{% url 'moorings:ajax_load_mooring_parts' %}">
+                {% csrf_token %}
+                {{ form.media }}
+                {{ form|crispy }}
+
+                <div class="row">
+                    {% if form.errors %}
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <div class="alert alert-danger">
+                                    <strong>{{ error|escape }}</strong>
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                <strong>{{ error|escape }}</strong>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+
+                </div>
+
+                <div class="control-group">
+                  <div class="controls">
+                    {% if mooring_part.id %}
+                    <button type="submit" class="btn btn-primary">Update {{ label_moorings_app_singular }} Part</button>
+                    {% else %}
+                    <button type="submit" class="btn btn-primary">Add {{ label_moorings_app_singular }} Part</button>
+                    {% endif %}
+                  </div>
+                </div>
+              </form>
+
+          </div>
+
+
+
+
+{% block javascript %}
+
+
+{% endblock javascript %}

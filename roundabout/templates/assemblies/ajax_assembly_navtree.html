@@ -9,7 +9,7 @@
                     data-node-type="part_type">{{ assembly.name }}</a>
             {% if assembly.assembly_parts.exists %}
 
-                {% include "parts/part_tree_parts.html" with assembly_parts=assembly.assembly_parts.all %}
+                {% include "assemblies/assembly_tree_parts.html" with assembly_parts=assembly.assembly_parts.all %}
 
             {% endif %}
 
