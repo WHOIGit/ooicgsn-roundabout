@@ -186,3 +186,63 @@ class AssemblyPartAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
 
     def get_success_url(self):
         return reverse('assemblies:ajax_assemblyparts_detail', args=(self.object.id, ))
+
+# Update view for Assembly Part
+class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, UpdateView):
+    model = AssemblyPart
+    form_class = AssemblyPartForm
+    template_name='assemblies/ajax_assemblypart_form.html'
+    context_object_name = 'assembly_part'
+    permission_required = 'moorings.add_mooringpart'
+    redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super(AssemblyPartAjaxUpdateView, self).get_context_data(**kwargs)
+        # Add Parts list to context to build form filter
+        context.update({
+            'part_types': PartType.objects.all()
+        })
+        if 'parent_pk' in self.kwargs:
+            context.update({
+                'parent': MooringPart.objects.get(id=self.kwargs['parent_pk'])
+            })
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super(AssemblyPartAjaxUpdateView, self).get_form_kwargs()
+        if 'parent_pk' in self.kwargs:
+            kwargs['parent_pk'] = self.kwargs['parent_pk']
+        if 'current_location' in self.kwargs:
+            kwargs['current_location'] = self.kwargs['current_location']
+        return kwargs
+
+    def get_success_url(self):
+        return reverse('moorings:ajax_moorings_detail', args=(self.object.id, ))
+
+    def form_valid(self, form):
+        self.object = form.save()
+
+        if self.object.part.friendly_name:
+            self.object.order = self.object.part.friendly_name
+        else:
+            self.object.order = self.object.part.name
+
+        self.object.save()
+
+        if self.object.get_descendants():
+            children = self.object.get_descendants()
+            for child in children:
+                child.location_id = self.object.location_id
+                child.save()
+
+        response = HttpResponseRedirect(self.get_success_url())
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+            }
+            return JsonResponse(data)
+        else:
+            return response

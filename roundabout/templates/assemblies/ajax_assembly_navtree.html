@@ -6,7 +6,7 @@
             <a href="#"
                     data-detail-url="{% url 'assemblies:ajax_assemblies_detail' assembly.id %}"
                     data-type-id='{{ assembly.id }}'
-                    data-node-type="part_type">{{ assembly.name }}</a>
+                    data-node-type="assembly">{{ assembly.name }}</a>
             {% if assembly.assembly_parts.exists %}
 
                 {% include "assemblies/assembly_tree_parts.html" with assembly_parts=assembly.assembly_parts.all %}

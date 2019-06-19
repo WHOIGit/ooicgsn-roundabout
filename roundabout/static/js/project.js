@@ -169,6 +169,19 @@ $(document).ready(function(){
         })
     })
 
+    $('#content-block').on('submit', 'form.assembly-part-form', function (event) {
+        event.preventDefault()
+        var formData = $(this).serialize()
+        var thisURL = $(this).attr('data-url') || window.location.href
+        $.ajax({
+            method: "POST",
+            url: thisURL,
+            data: formData,
+            success: handleAssemblyPartFormSuccess,
+            error: handleFormError,
+        })
+    })
+
     function handleFormSuccess(data, textStatus, jqXHR){
         console.log(data)
         console.log(textStatus)
@@ -284,6 +297,47 @@ $(document).ready(function(){
         console.log(data.object_id);
         console.log(navtreePrefix);
         var nodeID = 'deployment' + '_' + data.object_id ;
+        $.ajax({
+            url: navURL,
+            success: function (data) {
+                $(navTree).jstree(true).destroy();
+                $(navTree).html(data);
+                $(navTree).jstree();
+                $(navTree).jstree(true).select_node(nodeID);
+                $.each(openNodes, function(key, value) {
+                    $(navTree).jstree(true).open_node(value);
+                });
+                console.log(openNodes);
+                $(navTree).on('open_node.jstree', function (event, data) {
+                    console.log("node =" + data.node.id);
+                    openNodes.push(data.node.id);
+                    console.log(openNodes);
+                });
+                $(navTree).on('close_node.jstree', function (event, data) {
+                    console.log("node =" + data.node.id);
+                    var index = openNodes.indexOf(data.node.id);
+                    if (index > -1) {
+                      openNodes.splice(index, 1);
+                    }
+                    console.log(openNodes);
+                });
+            }
+        });
+    }
+
+    function handleAssemblyPartFormSuccess(data, textStatus, jqXHR){
+        console.log(data)
+        console.log(textStatus)
+        console.log(jqXHR)
+        $.ajax({
+            url: '/assemblies/ajax/assemblypart/detail/' + data.object_id + '/',
+            success: function (data) {
+              $("#detail-view").html(data);
+            }
+        });
+        console.log(data.object_id);
+        console.log(navtreePrefix);
+        var nodeID = 'assembly_parts' + '_' + data.object_id ;
         $.ajax({
             url: navURL,
             success: function (data) {

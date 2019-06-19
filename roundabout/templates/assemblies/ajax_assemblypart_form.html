@@ -59,7 +59,7 @@
                 <hr>
 
 
-              <form class="form-horizontal ajax-form" method="post" action="" id="parts-form"
+              <form class="form-horizontal assembly-part-form" method="post" action="" id=""
                   data-url='{{ request.build_absolute_uri|safe }}'
                   data-mooring-parts-url="{% url 'moorings:ajax_load_mooring_parts' %}">
                 {% csrf_token %}
