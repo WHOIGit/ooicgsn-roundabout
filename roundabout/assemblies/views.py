@@ -4,15 +4,16 @@ from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
-from .models import Assembly, AssemblyPart, AssemblyDocument
+from .models import Assembly, AssemblyPart, AssemblyType, AssemblyDocument
 from .forms import AssemblyForm, AssemblyPartForm
 from roundabout.parts.models import PartType
 from common.util.mixins import AjaxFormMixin
 
 # Load the javascript navtree
 def load_assemblies_navtree(request):
+    assembly_types = AssemblyType.objects.prefetch_related('assemblies__assembly_parts')
     assemblies = Assembly.objects.prefetch_related('assembly_parts')
-    return render(request, 'assemblies/ajax_assembly_navtree.html', {'assemblies': assemblies})
+    return render(request, 'assemblies/ajax_assembly_navtree.html', {'assembly_types': assembly_types})
 
 ## CBV views for Assembly app ##
 

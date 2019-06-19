@@ -1,17 +1,31 @@
-
 <ul>
-{% for assembly in assemblies %}
+{% for assembly_type in assembly_types %}
 
-    <li data-jstree='{"icon":"fa fa-cog"}' id="assembly_{{ assembly.id }}">
+    <li data-jstree='{"icon":"fa fa-rocket"}' id="assembly_type_{{ assembly_type.id }}">
             <a href="#"
-                    data-detail-url="{% url 'assemblies:ajax_assemblies_detail' assembly.id %}"
-                    data-type-id='{{ assembly.id }}'
-                    data-node-type="assembly">{{ assembly.name }}</a>
-            {% if assembly.assembly_parts.exists %}
+                    data-detail-url="{% url 'assemblies:ajax_assemblies_detail' assembly_type.id %}"
+                    data-type-id='{{ assembly_type.id }}'
+                    data-node-type="assembly">{{ assembly_type.name }}s</a>
 
-                {% include "assemblies/assembly_tree_parts.html" with assembly_parts=assembly.assembly_parts.all %}
+            <ul>
+            {% for assembly in assembly_type.assemblies.all %}
 
-            {% endif %}
+                <li data-jstree='{"icon":"fa fa-cog"}' id="assembly_{{ assembly.id }}">
+                        <a href="#"
+                                data-detail-url="{% url 'assemblies:ajax_assemblies_detail' assembly.id %}"
+                                data-type-id='{{ assembly.id }}'
+                                data-node-type="assembly">{{ assembly.name }}</a>
+
+                        {% if assembly.assembly_parts.exists %}
+
+                            {% include "assemblies/assembly_tree_parts.html" with assembly_parts=assembly.assembly_parts.all %}
+
+                        {% endif %}
+
+                 </li>
+
+            {% endfor %}
+            </ul>
 
      </li>
 

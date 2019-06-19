@@ -428,7 +428,7 @@ class DeploymentForm(forms.ModelForm):
 
     class Meta:
         model = Deployment
-        fields = ['location', 'deployment_number', 'final_location']
+        fields = ['location', 'deployment_number', 'final_location', 'assembly']
 
         labels = {
             'location': 'Current Location',

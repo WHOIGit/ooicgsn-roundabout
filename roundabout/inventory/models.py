@@ -13,6 +13,7 @@ from mptt.models import MPTTModel, TreeForeignKey
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
 from roundabout.moorings.models import MooringPart
+from roundabout.assemblies.models import Assembly
 from roundabout.users.models import User
 
 # Model Managers
@@ -25,7 +26,9 @@ class Deployment(models.Model):
     location = TreeForeignKey(Location, related_name='deployment',
                               on_delete=models.SET_NULL, null=True, blank=False)
     final_location = TreeForeignKey(Location, related_name='final_deployment',
-                              on_delete=models.SET_NULL, null=True, blank=False)
+                              on_delete=models.SET_NULL, null=True, blank=True)
+    assembly = models.ForeignKey(Assembly, related_name='deployments',
+                             on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
