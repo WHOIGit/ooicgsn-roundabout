@@ -42,7 +42,7 @@
                         {% endif %}
 
                         {% if assembly_part.children.exists %}
-                            <p>Total Assembly Cost: ${{ assembly_part.get_assembly_total_cost|intcomma }}
+                            <p>Total Assembly Cost: ${{ assembly_part.get_subassembly_total_cost|intcomma }}
                         {% endif %}
 
 
