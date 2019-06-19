@@ -4,9 +4,21 @@ from mptt.models import MPTTModel, TreeForeignKey
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part
 
+# Assembly Types model
+class AssemblyType(models.Model):
+    name = models.CharField(max_length=255, unique=False)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
 # Assembly base model
 class Assembly(models.Model):
     name = models.CharField(max_length=255, unique=False, db_index=True)
+    assembly_type = models.ForeignKey(AssemblyType, related_name='assemblies',
+                                    on_delete=models.SET_NULL, null=True, blank=True)
     assembly_number = models.CharField(max_length=100, unique=False, db_index=True, null=False, blank=True)
     description = models.TextField(blank=True)
 

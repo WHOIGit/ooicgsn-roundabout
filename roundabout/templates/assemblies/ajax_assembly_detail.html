@@ -16,7 +16,7 @@
                                     data-node-id="{{ assembly.id }}"
                                     data-node-type="detail">Add Top Level Part</a>
                                 <a class="dropdown-item" href="#"
-                                    data-detail-url="{% url 'assemblies:ajax_assemblyparts_add' assembly.id %}"
+                                    data-detail-url="{% url 'assemblies:ajax_assemblies_update' assembly.id %}"
                                     data-node-id="{{ assembly.id }}"
                                     data-node-type="detail">Edit Assembly Details</a>
                                 <!--<a class="dropdown-item" href="#"
@@ -29,6 +29,8 @@
                     </div>
 
                     <p>Assembly ID Number: {{ assembly.assembly_number }}</p>
+
+                    <p>Assembly Type: {{ assembly.assembly_type }}</p>
 
                     <p>Description: {{ assembly.description }}</p>
 

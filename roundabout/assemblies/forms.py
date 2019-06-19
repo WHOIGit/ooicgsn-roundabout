@@ -9,7 +9,7 @@ class AssemblyForm(forms.ModelForm):
 
     class Meta:
         model = Assembly
-        fields = ['name', 'assembly_number', 'description', ]
+        fields = ['name', 'assembly_type', 'assembly_number', 'description', ]
         labels = {
             'assembly_number': 'Assembly ID Number',
         }
