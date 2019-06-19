@@ -31,7 +31,11 @@
                                                </a>
 
                                                 {% if dep.final_location.mooring_parts.exists %}
-                                                    {% include "inventory/inventory_tree_land_deployment.html" with mooring_parts=dep.final_location.mooring_parts inventory_qs=dep.inventory dep_pk=dep.id part_types=part_types  %}
+                                                    {% include "inventory/inventory_tree_deployment.html" with mooring_parts=dep.final_location.mooring_parts inventory_qs=dep.inventory dep_pk=dep.id part_types=part_types  %}
+                                                {% endif %}
+
+                                                {% if dep.assembly.assembly_parts.exists %}
+                                                    {% include "inventory/inventory_tree_deployment_assembly.html" with assembly_parts=dep.assembly.assembly_parts inventory_qs=dep.inventory dep_pk=dep.id part_types=part_types  %}
                                                 {% endif %}
 
                                            </li>

@@ -19,6 +19,7 @@ from roundabout.parts.models import Part, PartType, Revision
 from roundabout.moorings.models import MooringPart
 from roundabout.admintools.models import Printer
 from roundabout.userdefinedfields.models import FieldValue, Field
+from roundabout.assemblies.models import AssemblyPart
 from common.util.mixins import AjaxFormMixin
 
 # Mixins
@@ -1814,9 +1815,13 @@ class DeploymentAjaxDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super(DeploymentAjaxDetailView, self).get_context_data(**kwargs)
         # Get percent complete info
-        total_mooringparts = MooringPart.objects.filter(location=self.object.final_location).count()
+        if self.object.final_location:
+            total_parts = MooringPart.objects.filter(location=self.object.final_location).count()
+        else:
+            total_parts = AssemblyPart.objects.filter(assembly=self.object.assembly).count()
+
         total_inventory = self.object.inventory.count()
-        percent_complete = round( (total_inventory / total_mooringparts) * 100 )
+        percent_complete = round( (total_inventory / total_parts) * 100 )
 
         # Get Lat/Long, Depth if Deployed
         action_record = DeploymentAction.objects.filter(deployment=self.object).filter(action_type='deploy')

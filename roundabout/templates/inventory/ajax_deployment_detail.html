@@ -55,8 +55,14 @@
     <p>Current Location: {{ deployment.location.name }}</p>
     <p>{{ label_deployments_app_singular }} Number: {{ deployment.deployment_number }}</p>
     <p>Deployment ID: {{ deployment.final_location.location_id }}</p>
-    <p>Final Location: {{ deployment.final_location }}</p>
-    <p>Parent: {{ deployment.final_location.parent }}</p>
+    {% if deployment.final_location %}
+        <p>Final Location: {{ deployment.final_location }}</p>
+        <p>Parent Array: {{ deployment.final_location.parent }}</p>
+    {% endif %}
+
+    {% if deployment.assembly %}
+        <p>Assembly: {{ deployment.assembly }}</p>
+    {% endif %}
 
     <hr>
     {% if action_record.all %}

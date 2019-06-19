@@ -64,3 +64,16 @@ class AssemblyPart(MPTTModel):
 
     def __str__(self):
         return self.part.name
+
+    def get_assembly_total_cost(self):
+        tree = self.get_descendants(include_self=True)
+        total_cost = 0
+        for item in tree:
+            revision = item.part.revisions.first()
+            cost = revision.unit_cost
+            total_cost = total_cost + cost
+        return total_cost
+
+    def get_descendants_with_self(self):
+        tree = self.get_descendants(include_self=True)
+        return tree
