@@ -519,8 +519,6 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
                     # If current value is different than new value, update is_current, add new value, add Action to History
                     if currentvalue:
                         if currentvalue.field_value != str(value) and currentvalue.field_value != value:
-                            print(currentvalue.field_value)
-                            print(value)
                             currentvalue.is_current = False
                             currentvalue.save()
                             # create new value object
