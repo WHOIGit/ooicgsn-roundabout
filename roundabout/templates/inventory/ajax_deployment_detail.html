@@ -1,6 +1,17 @@
 {% load common_tags %}
 
-<div class="card-header" data-object-id="{{ deployment.id }}"><h3>{{ label_deployments_app_singular }}  {{ deployment.deployment_number }} - {{ deployment.final_location.location_id }}</h3></div>
+<div class="card-header" data-object-id="{{ deployment.id }}">
+    <h3>{{ label_deployments_app_singular }}
+    {{ deployment.deployment_number }} -
+    {% if deployment.final_location %}
+        {{ deployment.final_location.location_id }}
+    {% endif %}
+
+    {% if deployment.assembly %}  
+        {{ deployment.assembly }}
+    {% endif %}
+    </h3>
+</div>
 
 <div class="card-body">
 
@@ -54,8 +65,9 @@
 
     <p>Current Location: {{ deployment.location.name }}</p>
     <p>{{ label_deployments_app_singular }} Number: {{ deployment.deployment_number }}</p>
-    <p>Deployment ID: {{ deployment.final_location.location_id }}</p>
+
     {% if deployment.final_location %}
+        <p>Deployment ID: {{ deployment.final_location.location_id }}</p>
         <p>Final Location: {{ deployment.final_location }}</p>
         <p>Parent Array: {{ deployment.final_location.parent }}</p>
     {% endif %}
