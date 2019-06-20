@@ -530,14 +530,15 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
                             action_record = Action.objects.create(action_type='fieldchange', detail=self.object.detail, location=self.object.location,
                                                                   user=self.request.user, inventory=self.object)
                     else:
-                        # create new value object
-                        fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=value,
-                                                                inventory=self.object, is_current=True, user=self.request.user)
-                        # create action record for history
-                        self.object.detail = 'Add initial field value for "%s" to %s' % (fieldvalue.field, value)
-                        self.object.save()
-                        action_record = Action.objects.create(action_type='fieldchange', detail=self.object.detail, location=self.object.location,
-                                                              user=self.request.user, inventory=self.object)
+                        if value:
+                            # create new value object
+                            fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=value,
+                                                                    inventory=self.object, is_current=True, user=self.request.user)
+                            # create action record for history
+                            self.object.detail = 'Add initial field value for "%s" to %s' % (fieldvalue.field, value)
+                            self.object.save()
+                            action_record = Action.objects.create(action_type='fieldchange', detail=self.object.detail, location=self.object.location,
+                                                                  user=self.request.user, inventory=self.object)
 
         response = HttpResponseRedirect(self.get_success_url())
 
