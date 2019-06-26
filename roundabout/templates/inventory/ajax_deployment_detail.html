@@ -7,7 +7,7 @@
         {{ deployment.final_location.location_id }}
     {% endif %}
 
-    {% if deployment.assembly %}  
+    {% if deployment.assembly %}
         {{ deployment.assembly }}
     {% endif %}
     </h3>
@@ -74,6 +74,10 @@
 
     {% if deployment.assembly %}
         <p>Assembly: {{ deployment.assembly }}</p>
+    {% endif %}
+
+    {% if deployment.build %}
+        <p>Build: {{ deployment.build }}</p>
     {% endif %}
 
     <hr>

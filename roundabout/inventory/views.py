@@ -1817,8 +1817,10 @@ class DeploymentAjaxDetailView(LoginRequiredMixin, DetailView):
         # Get percent complete info
         if self.object.final_location:
             total_parts = MooringPart.objects.filter(location=self.object.final_location).count()
-        else:
+        elif self.object.assembly:
             total_parts = AssemblyPart.objects.filter(assembly=self.object.assembly).count()
+        else:
+            total_parts = AssemblyPart.objects.filter(assembly=self.object.build.assembly).count()
 
         total_inventory = self.object.inventory.count()
         percent_complete = round( (total_inventory / total_parts) * 100 )

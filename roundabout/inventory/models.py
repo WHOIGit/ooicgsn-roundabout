@@ -30,6 +30,8 @@ class Deployment(models.Model):
                               on_delete=models.SET_NULL, null=True, blank=True)
     assembly = models.ForeignKey(Assembly, related_name='deployments',
                              on_delete=models.CASCADE, null=True, blank=True, db_index=True)
+    build = models.ForeignKey(Build, related_name='deployments',
+                             on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

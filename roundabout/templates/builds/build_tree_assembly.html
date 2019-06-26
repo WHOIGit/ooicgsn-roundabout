@@ -23,7 +23,7 @@
                             {% if assembly_part.id in inventory %}
                                 id="inventory_{{ inventory|get_item:assembly_part.id }}"
                             {% else %}
-                                id="assembly_part_{{ assembly_part.id }}_{{ dep_pk }}"
+                                id="assembly_part_{{ assembly_part.id }}_{{ build_pk }}"
                             {% endif %}  >
                 {% else %}</li>
                     <li     {% if assembly_part.part.part_type.name == 'Electrical' %}
@@ -41,7 +41,7 @@
                             {% if assembly_part.id in inventory %}
                                 id="inventory_{{ inventory|get_item:assembly_part.id }}"
                             {% else %}
-                                id="massembly_part_{{ assembly_part.id }}_{{ dep_pk }}"
+                                id="massembly_part_{{ assembly_part.id }}_{{ build_pk }}"
                             {% endif %}  >
                 {% endif %}
 

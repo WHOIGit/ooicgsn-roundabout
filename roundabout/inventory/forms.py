@@ -428,11 +428,12 @@ class DeploymentForm(forms.ModelForm):
 
     class Meta:
         model = Deployment
-        fields = ['location', 'deployment_number', 'final_location', 'assembly']
+        fields = ['location', 'deployment_number', 'final_location', 'build']
 
         labels = {
             'location': 'Current Location',
             'final_location': 'Deployment ID',
+            'build': 'Select an Assembly Build',
         }
 
     # Add custom date field to allow user to pick date for the Action

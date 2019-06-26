@@ -3,42 +3,42 @@
 
 
 
-            {% for location,structure in locations|tree_info %}
-                {% if structure.new_level %}
-                    <ul><li data-jstree='{"icon":"fa fa-map-marker"}' id="locations_{{ location.id }}">
-                {% else %}
-                    </li>
-                    <li data-jstree='{"icon":"fa fa-map-marker"}' id="locations_{{ location.id }}">
+{% for location,structure in locations|tree_info %}
+    {% if structure.new_level %}
+        <ul><li data-jstree='{"icon":"fa fa-map-marker"}' id="locations_{{ location.id }}">
+    {% else %}
+        </li>
+        <li data-jstree='{"icon":"fa fa-map-marker"}' id="locations_{{ location.id }}">
+    {% endif %}
+            <a href="#" data-location-id='{{ location.id }}'
+                        data-detail-url="{% url 'locations:ajax_location_detail' location.id %}"
+                        data-node-id="{{ location.id }}"
+                        data-node-type="location">{{ location.name }}</a>
+
+                <!-- Check if Build exists for the location. -->
+                {% if location.builds.exists %}
+                    <ul>
+                    {% for build in location.builds.all %}
+                               <li data-jstree='{"icon":"fa fa-rocket"}' id="builds_{{ build.id }}">
+                                   <a href="#" data-detail-url="{% url 'builds:ajax_builds_detail' build.id %}"
+                                      data-node-id="{{ build.id }}"
+                                      data-location-id="{{ location.id }}"
+                                      data-node-type="detail">{{ build }}
+                                  </a>
+
+                                  {% if build.assembly.assembly_parts.exists %}
+                                      {% include "builds/build_tree_assembly.html" with assembly_parts=build.assembly.assembly_parts.all inventory_qs=build.inventory.all build_pk=build.id part_types=part_types  %}
+                                  {% endif %}
+
+
+                               </li>
+                    {% endfor %}
+                    </ul>
                 {% endif %}
-                        <a href="#" data-location-id='{{ location.id }}'
-                                    data-detail-url="{% url 'locations:ajax_location_detail' location.id %}"
-                                    data-node-id="{{ location.id }}"
-                                    data-node-type="location">{{ location.name }}</a>
-
-                            <!-- Check if Build exists for the location. -->
-                            {% if location.builds.exists %}
-                                <ul>
-                                {% for build in location.builds.all %}
-                                           <li data-jstree='{"icon":"fa fa-rocket"}' id="builds_{{ build.id }}">
-                                               <a href="#" data-detail-url="{% url 'builds:ajax_builds_detail' build.id %}"
-                                                  data-node-id="{{ build.id }}"
-                                                  data-location-id="{{ location.id }}"
-                                                  data-node-type="detail">{{ build }}
-                                              </a>
-
-                                              {% if build.assembly.assembly_parts.exists %}
-                                                  {% include "builds/build_tree_assembly.html" with assembly_parts=build.assembly.assembly_parts.all inventory_qs=build.inventory.all build_pk=build.id part_types=part_types  %}
-                                              {% endif %}
-
-
-                                           </li>
-                                {% endfor %}
-                                </ul>
-                            {% endif %}
 
 
 
 
 
-                {% for level in structure.closed_levels %}</li></ul>{% endfor %}
-            {% endfor %}
+    {% for level in structure.closed_levels %}</li></ul>{% endfor %}
+{% endfor %}
