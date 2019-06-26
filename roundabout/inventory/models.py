@@ -14,6 +14,7 @@ from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
 from roundabout.moorings.models import MooringPart
 from roundabout.assemblies.models import Assembly
+from roundabout.builds.models import Build
 from roundabout.users.models import User
 
 # Model Managers
@@ -84,6 +85,8 @@ class Inventory(MPTTModel):
     parent = TreeForeignKey('self', related_name='children',
                             on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
     deployment = models.ForeignKey(Deployment, related_name='inventory',
+                                   on_delete=models.SET_NULL, null=True, blank=True)
+    build = models.ForeignKey(Build, related_name='inventory',
                                    on_delete=models.SET_NULL, null=True, blank=True)
     mooring_part = TreeForeignKey(MooringPart, related_name='inventory',
                                   on_delete=models.SET_NULL, null=True, blank=True, db_index=True)

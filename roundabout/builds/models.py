@@ -14,6 +14,7 @@ class Build(models.Model):
                               on_delete=models.SET_NULL, null=True, blank=False)
     assembly = models.ForeignKey(Assembly, related_name='builds',
                              on_delete=models.CASCADE, null=True, blank=True, db_index=True)
+    build_notes = models.TextField(blank=True)                         
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
