@@ -19,7 +19,7 @@ from roundabout.users.models import User
 # Model Managers
 
 
-# Create your models here.
+# Inventory/Deployment models
 
 class Deployment(models.Model):
     deployment_number = models.CharField(max_length=255, unique=False)
