@@ -28,6 +28,15 @@ class Build(models.Model):
     def __str__(self):
         return '%s - %s' % (self.build_number, self.assembly.name)
 
+    def current_deployment_status(self):
+        latest_deployment = self.deployments.first()
+        deployment_status = latest_deployment.deployment_action.first()
+        if deployment_status:
+            deployment_status = deployment_status.action_type
+        else:
+            deployment_status = None
+        return deployment_status
+
 
 class BuildAction(models.Model):
     BUILDADD = 'buildadd'
