@@ -22,7 +22,7 @@
                     data-node-id="{{ build.id }}"
                     data-location-id="{{ build.location.id}}"
                     data-node-type="detail">Test</a>
-                    
+
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'builds:ajax_builds_action' 'flag' build.id %}"
                     data-node-id="{{ build.id }}"
@@ -54,6 +54,91 @@
     <p>Assembly Type: {{ build.assembly.assembly_type }}</p>
 
     <p>Build Notes: {{ build.build_notes }}</p>
+
+    <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+
+        {% if build.actions.all %}
+            <li class="nav-item">
+              <a class="nav-link active" id="history-tab" data-toggle="tab" href="#history" role="tab" aria-controls="history" aria-selected="true">History</a>
+            </li>
+        {% endif %}
+
+        {% if build.revision.documentation.all %}
+          <li class="nav-item">
+            <a class="nav-link" id="documentation-tab" data-toggle="tab" href="#documentation" role="tab" aria-controls="documentation" aria-selected="false">Documentation</a>
+          </li>
+        {% endif %}
+
+    </ul>
+
+    <div class="tab-content" id="inventory-tabs">
+
+        {% if build.actions.all %}
+          <div class="tab-pane fade show active" id="history" role="tabpanel" aria-labelledby="history-tab">
+
+              <table class="table table-striped action-table">
+                  <thead>
+                    <th>Date</th>
+                    <th>Action</th>
+                    <th>Details</th>
+                    <th>Person</th>
+                    <th>Location</th>
+
+                  </thead>
+                  <tbody>
+                    {% for action in build.actions.all %}
+                      <tr>
+                          <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
+                          <td>{{ action.get_action_type_display }}</td>
+                          <td>
+                              {{ action.detail|safe }}
+                              {% for photo in action.photos.all %}
+                                  {% if photo.file_type == 'image' %}
+                                      <a href="{{ photo.photo.url }}" target="_blank">
+                                          <img src="{{ photo.photo.url }}" width="100%">
+                                      </a> <br><br>
+                                  {% else %}
+                                     <a href="{{ photo.photo.url }}" target="_blank"><i class='fa fa-file fa-3x'></i>
+                                         {{ photo.photo.name }}
+                                     </a>  <br><br>
+                                  {% endif %}
+                              {% endfor %}
+                          </td>
+                          <td>{{ action.user.username }}</td>
+                          <td>{{ action.location.name }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+            </table>
+
+          </div>
+        {% endif %}
+
+        {% if build.revision.documentation.all %}
+          <div class="tab-pane fade" id="documentation" role="tabpanel" aria-labelledby="documentation-tab">
+
+                  <table class="table documentation-table">
+                      <thead>
+                        <th>Document</th>
+                        <th class="text-right">Document Type</th>
+
+                      </thead>
+                      <tbody>
+                        {% for document in  build.revision.documentation.all %}
+                      <tr>
+                          <td><a href="{{ document.doc_link }}" target="_blank">{{ document.name }}</a></td>
+                          <td class="text-right">{{ document.doc_type }}</td>
+                      </tr>
+                        {% endfor %}
+                      </tbody>
+                </table>
+
+          </div>
+        {% endif %}
+
+
+
+    </div>
 
 
 <div class="mt-3 ajax-btn">
