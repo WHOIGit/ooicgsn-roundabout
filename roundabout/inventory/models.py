@@ -38,13 +38,13 @@ class Deployment(models.Model):
         ordering = ['location', 'deployment_number']
 
     def __str__(self):
-        if self.final_location.location_id:
+        if self.final_location:
             return '%s (%s) - %s' % (self.deployment_number, self.final_location.location_id, self.location.name)
         else:
             return '%s - %s' % (self.deployment_number, self.location.name)
 
     def get_deployment_label(self):
-        if self.final_location.location_id:
+        if self.final_location:
             return '%s (%s)' % (self.deployment_number, self.final_location.location_id)
         else:
             return self.deployment_number

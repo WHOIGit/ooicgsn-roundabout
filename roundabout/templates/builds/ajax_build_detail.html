@@ -36,10 +36,60 @@
                     data-node-type="detail">Photo/Note</a>
 
                 <a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'deployments:ajax_deployment_snapshot' build.id %}"
+                    data-node-id="{{ build.id }}"
+                    data-location-id="{{ build.location.id}}"
+                    data-node-type="detail">Take Snapshot</a>
+
+                <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'builds:ajax_builds_update' build.id %}"
                     data-node-id="{{ build.id }}"
                     data-location-id="{{ build.location.id}}"
                     data-node-type="detail">Edit Build Details</a>
+
+                <hr>
+
+                {% if not build.current_deployment_status %}
+                    <a class="dropdown-item" href="#"
+                        data-detail-url="{% url 'builds:ajax_deployment_add' build.id %}"
+                        data-node-id="{{ build.id }}"
+                        data-location-id="{{ build.location.id}}"
+                        data-node-type="detail">Start Deployment</a>
+                {% endif %}
+
+                {% if build.current_deployment_status == 'create' %}
+                    <a class="dropdown-item" href="#"
+                        data-detail-url="{% url 'deployments:ajax_deployment_action' 'burnin' build.id %}"
+                        data-node-id="{{ build.id }}"
+                        data-location-id="{{ build.location.id}}"
+                        data-node-type="detail">Initiate Burn In</a>
+                {% endif %}
+
+                {% if build.current_deployment_status == 'burnin' %}
+                    <a class="dropdown-item" href="#"
+                        data-detail-url="{% url 'deployments:ajax_deployment_action' 'deploy' build.id %}"
+                        data-node-id="{{ build.id }}"
+                        data-location-id="{{ build.location.id}}"
+                        data-node-type="detail">Deploy to Sea</a>
+                {% endif %}
+
+                {% if build.current_deployment_status == 'recover' %}
+                    <a class="dropdown-item" href="#"
+                        data-detail-url="{% url 'deployments:ajax_deployment_action' 'retire' build.id %}"
+                        data-node-id="{{ build.id }}"
+                        data-location-id="{{ build.location.id}}"
+                        data-node-type="detail">Retire</a>
+                {% endif %}
+
+                {% if build.current_deployment_status == 'deploy' %}
+                    <a class="dropdown-item" href="#"
+                        data-detail-url="{% url 'deployments:ajax_deployment_action' 'recover' build.id %}"
+                        data-node-id="{{ build.id }}"
+                        data-location-id="{{ build.location.id}}"
+                        data-node-type="detail">Recover from Sea</a>
+                {% endif %}
+
+
             </div>
 
       </div>
@@ -60,6 +110,12 @@
         {% if build.actions.all %}
             <li class="nav-item">
               <a class="nav-link active" id="history-tab" data-toggle="tab" href="#history" role="tab" aria-controls="history" aria-selected="true">History</a>
+            </li>
+        {% endif %}
+
+        {% if build.deployments.all %}
+            <li class="nav-item">
+              <a class="nav-link" id="deployments-tab" data-toggle="tab" href="#deployments" role="tab" aria-controls="deployments" aria-selected="true">Deployments</a>
             </li>
         {% endif %}
 
@@ -112,6 +168,22 @@
             </table>
 
           </div>
+        {% endif %}
+
+        {% if build.deployments.all %}
+        <div class="tab-pane fade" id="deployments" role="tabpanel" aria-labelledby="deployments-tab">
+
+            <ul class="list-group list-group-flush">
+                {% for deployment in build.deployments.all %}
+                    <li class="list-group-item">
+                        <a href="{% url 'deployments:ajax_deployment_detail' deployment.id %}">
+                            {{ deployment.get_deployment_label }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+
+        </div>
         {% endif %}
 
         {% if build.revision.documentation.all %}

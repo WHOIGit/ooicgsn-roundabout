@@ -29,12 +29,17 @@ class Build(models.Model):
         return '%s - %s' % (self.build_number, self.assembly.name)
 
     def current_deployment_status(self):
+        # set default deployment_status to None
+        deployment_status = None
+
+        # get the latest deployment if available
         latest_deployment = self.deployments.first()
-        deployment_status = latest_deployment.deployment_action.first()
-        if deployment_status:
-            deployment_status = deployment_status.action_type
-        else:
-            deployment_status = None
+        if latest_deployment:
+            deployment_status = latest_deployment.deployment_action.first()
+            if deployment_status:
+                deployment_status = deployment_status.action_type
+            else:
+                deployment_status = None
         return deployment_status
 
 
