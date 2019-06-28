@@ -57,7 +57,7 @@ class BuildAction(models.Model):
     BUILDADD = 'buildadd'
     LOCATIONCHANGE = 'locationchange'
     SUBASSEMBLYCHANGE = 'subassemblychange'
-    ASSIGNTODEPLOYMENT = 'assigntodeployment'
+    STARTDEPLOY = 'startdeploy'
     REMOVEFROMDEPLOYMENT = 'removefromdeployment'
     DEPLOYMENTBURNIN = 'deploymentburnin'
     DEPLOYMENTTOSEA = 'deploymenttosea'
@@ -72,7 +72,7 @@ class BuildAction(models.Model):
         (BUILDADD, 'Add Build'),
         (LOCATIONCHANGE, 'Location Change'),
         (SUBASSEMBLYCHANGE, 'Subassembly Change'),
-        (ASSIGNTODEPLOYMENT, 'Assign to Deployment'),
+        (STARTDEPLOY, 'Start Deployment'),
         (REMOVEFROMDEPLOYMENT, 'Remove from Deployment'),
         (DEPLOYMENTBURNIN, 'Deployment Burnin'),
         (DEPLOYMENTTOSEA, 'Deployment to Sea'),

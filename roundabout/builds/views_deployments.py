@@ -39,8 +39,12 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
         # Get the date for the Action Record from the custom form field
         action_date = form.cleaned_data['date']
-        action_record = DeploymentAction.objects.create(action_type='create', detail='Deployment created', location_id=self.object.location_id,
-                                              user_id=self.request.user.id, deployment_id=self.object.id, created_at=action_date)
+        action_record = DeploymentAction.objects.create(action_type='create', detail='Deployment created', location=self.object.location,
+                                                        user=self.request.user, deployment=self.object, created_at=action_date)
+
+        build_detail = '%s Deployment started.' % (self.object.deployment_number)
+        build_record = BuildAction.objects.create(action_type='startdeploy', detail=build_detail, location=self.object.location,
+                                                   user=self.request.user, build=build)
 
         response = HttpResponseRedirect(self.get_success_url())
 
