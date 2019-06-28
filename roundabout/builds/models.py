@@ -19,6 +19,7 @@ class Build(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
     detail = models.TextField(blank=True)
+    is_deployed = models.BooleanField(default=False)
 
     tracker = FieldTracker(fields=['location',])
 
@@ -27,6 +28,15 @@ class Build(models.Model):
 
     def __str__(self):
         return '%s - %s' % (self.build_number, self.assembly.name)
+
+    def current_deployment(self):
+        # set default to None
+        current_deployment = None
+
+        if self.is_deployed:
+            # get the latest deployment if available
+            current_deployment = self.deployments.first()
+        return current_deployment
 
     def current_deployment_status(self):
         # set default deployment_status to None

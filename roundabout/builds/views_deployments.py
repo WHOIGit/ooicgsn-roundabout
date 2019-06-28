@@ -33,6 +33,9 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
     def form_valid(self, form):
         self.object = form.save()
+        build = self.object.build
+        build.is_deployed = True
+        build.save()
 
         # Get the date for the Action Record from the custom form field
         action_date = form.cleaned_data['date']

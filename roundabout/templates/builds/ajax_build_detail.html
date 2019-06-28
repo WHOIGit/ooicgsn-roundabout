@@ -105,6 +105,30 @@
 
     <p>Build Notes: {{ build.build_notes }}</p>
 
+    <h5>Percent Built</h5>
+
+    <div class="progress" style="height: 20px;">
+        {% if percent_complete == 0 %} {{ percent_complete }}% {% endif %}
+      <div class="progress-bar" role="progressbar" style="width: {{ percent_complete }}%;" aria-valuenow="{{ percent_complete }}" aria-valuemin="0" aria-valuemax="100">
+          {{ percent_complete }}%
+      </div>
+    </div>
+
+    {% if build.is_deployed %}
+        <hr>
+
+        <h5>Current Deployment Data</h5>
+        <p>{{ label_deployments_app_singular }} Number: {{ current_deployment.deployment_number }}</p>
+
+        {% if action_record %}
+            <p>Latitude: {{ action_record.latitude }}</p>
+            <p>Longitude: {{ action_record.longitude }}</p>
+            <p>Depth: {{ action_record.depth }} m</p>
+        {% endif %}
+    {% endif %}
+
+    <hr>
+
     <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
 
         {% if build.actions.all %}

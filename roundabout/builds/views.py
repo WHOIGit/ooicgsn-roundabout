@@ -7,6 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from common.util.mixins import AjaxFormMixin
 from .models import Build, BuildAction
 from .forms import *
+from roundabout.assemblies.models import Assembly, AssemblyPart
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory, Action
 
@@ -40,6 +41,25 @@ class BuildAjaxDetailView(LoginRequiredMixin, DetailView):
     model = Build
     context_object_name = 'build'
     template_name='builds/ajax_build_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(BuildAjaxDetailView, self).get_context_data(**kwargs)
+
+        total_parts = AssemblyPart.objects.filter(assembly=self.object.assembly).count()
+        total_inventory = self.object.inventory.count()
+        percent_complete = round( (total_inventory / total_parts) * 100 )
+
+        action_record = None
+        # Get Lat/Long, Depth if Deployed
+        if self.object.is_deployed:
+            action_record = DeploymentAction.objects.filter(deployment=self.object.current_deployment()).filter(action_type='deploy').first()
+
+        context.update({
+            'current_deployment': self.object.current_deployment(),
+            'percent_complete': percent_complete,
+            'action_record': action_record,
+        })
+        return context
 
 
 # Create view for assemblies

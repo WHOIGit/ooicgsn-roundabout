@@ -24,9 +24,9 @@ from roundabout.users.models import User
 
 class Deployment(models.Model):
     deployment_number = models.CharField(max_length=255, unique=False)
-    location = TreeForeignKey(Location, related_name='deployment',
-                              on_delete=models.SET_NULL, null=True, blank=False)
-    final_location = TreeForeignKey(Location, related_name='final_deployment',
+    location = TreeForeignKey(Location, related_name='deployments',
+                              on_delete=models.SET_NULL, null=True, blank=True)
+    final_location = TreeForeignKey(Location, related_name='final_deployments',
                               on_delete=models.SET_NULL, null=True, blank=True)
     assembly = models.ForeignKey(Assembly, related_name='deployments',
                              on_delete=models.CASCADE, null=True, blank=True, db_index=True)
