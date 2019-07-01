@@ -2,7 +2,7 @@
 {% load mptt_tags %}
 {% load inventory_tags %}
 
-{% get_inventory_dictionary inventory_qs as inventory %}
+{% get_inventory_assembly_part_dictionary inventory_qs as inventory %}
 
 
         {% for assembly_part,structure in assembly_parts.all|tree_info %}
@@ -68,7 +68,7 @@
                         {% endif %}
                     {% endfor %}
                 {% else %}
-                    <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_mooring_part_add_subassembly' assembly_part.id location.id build_pk %}"
+                    <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_assembly_part_add_subassembly' assembly_part.id location.id build_pk %}"
                        data-node-id="{{ assembly_part.id }}"
                        data-location-id="{{ location.id }}"
                        data-part-type-id="{{ assembly_part.part.part_type.id }}"

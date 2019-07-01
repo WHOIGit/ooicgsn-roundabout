@@ -13,7 +13,7 @@ from mptt.models import MPTTModel, TreeForeignKey
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
 from roundabout.moorings.models import MooringPart
-from roundabout.assemblies.models import Assembly
+from roundabout.assemblies.models import Assembly, AssemblyPart
 from roundabout.builds.models import Build
 from roundabout.users.models import User
 
@@ -106,6 +106,8 @@ class Inventory(MPTTModel):
     build = models.ForeignKey(Build, related_name='inventory',
                                    on_delete=models.SET_NULL, null=True, blank=True)
     mooring_part = TreeForeignKey(MooringPart, related_name='inventory',
+                                  on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
+    assembly_part = TreeForeignKey(AssemblyPart, related_name='inventory',
                                   on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
     assigned_destination_root = TreeForeignKey('self', related_name='assigned_children',
                                 on_delete=models.SET_NULL, null=True, blank=True, db_index=True)

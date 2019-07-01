@@ -22,6 +22,14 @@ def get_mooringpart_list_by_deployment(dep_pk):
 
 
 @register.simple_tag
+def get_inventory_assembly_part_dictionary(inventory_qs):
+    inventory_dict = {}
+    for i in inventory_qs.all():
+        inventory_dict[i.assembly_part_id] = i.id
+    return inventory_dict
+
+
+@register.simple_tag
 def get_inventory_dictionary(inventory_qs):
     inventory_dict = {}
     for i in inventory_qs.all():
@@ -46,7 +54,7 @@ def get_inventory_queryset_by_deployment(dep_pk):
 
 @register.simple_tag
 def get_inventory_list_by_location(location):
-    if location.deployment.exists():
+    if location.deployments.exists():
         queryset = location.inventory.filter(deployment__isnull=True).filter(mooring_part__isnull=True).prefetch_related('part__part_type')
     else:
         queryset = location.inventory.filter(mooring_part__isnull=True).prefetch_related('part__part_type')
