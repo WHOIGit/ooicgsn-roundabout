@@ -95,9 +95,8 @@
       </div>
     </div>
 
-    <p>Build ID Number: {{ build.build_number }}</p>
 
-    <p>Current Location: {{ build.location }}</p>
+    <p>Build ID Number: {{ build.build_number }}</p>
 
     <p>Assembly: {{ build.assembly }}</p>
 
@@ -105,20 +104,52 @@
 
     <p>Build Notes: {{ build.build_notes }}</p>
 
-    <h5>Percent Built</h5>
+    <hr>
+    <div id="build-status">
+        <!--
+        <div id="build-progress" class="float-right">
+            <h6>Percent Built</h6>
+            <div class="progress progress-bar-vertical ">
+                <div class="progress-bar" role="progressbar" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100" style="height: 30%;">
+                  30%
+                </div>
+            </div>
+        </div>
+    -->
+        <h5>Build Status</h5>
 
-    <div class="progress" style="height: 20px;">
-        {% if percent_complete == 0 %} {{ percent_complete }}% {% endif %}
-      <div class="progress-bar" role="progressbar" style="width: {{ percent_complete }}%;" aria-valuenow="{{ percent_complete }}" aria-valuemin="0" aria-valuemax="100">
-          {{ percent_complete }}%
-      </div>
+        <p>Current Location: {{ build.location }}</p>
+
+        <h6>Percent Built</h6>
+
+        <div class="progress" style="height: 20px;">
+            {% if percent_complete == 0 %} {{ percent_complete }}% {% endif %}
+          <div class="progress-bar" role="progressbar" style="width: {{ percent_complete }}%;" aria-valuenow="{{ percent_complete }}" aria-valuemin="0" aria-valuemax="100">
+              {{ percent_complete }}%
+          </div>
+        </div>
+
     </div>
+
+
+
+
 
     {% if build.is_deployed %}
         <hr>
 
         <h5>Current Deployment Data</h5>
         <p>{{ label_deployments_app_singular }} Number: {{ current_deployment.deployment_number }}</p>
+
+        <h6>Deployment Status</h6>
+
+        <div class="progress" style="height: 20px;">
+
+          <div class="progress-bar {{ bar_class }}" role="progressbar" style="width: {{ bar_width }}%;" aria-valuenow="{{ bar_width }}" aria-valuemin="0" aria-valuemax="100">
+              <span>{{ current_deployment.get_deployment_status_label }}</span>
+          </div>
+
+        </div>
 
         {% if action_record %}
             <p>Latitude: {{ action_record.latitude }}</p>

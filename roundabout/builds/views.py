@@ -50,14 +50,34 @@ class BuildAjaxDetailView(LoginRequiredMixin, DetailView):
         percent_complete = round( (total_inventory / total_parts) * 100 )
 
         action_record = None
+        bar_class = None
+        bar_width = None
+
         # Get Lat/Long, Depth if Deployed
         if self.object.is_deployed:
-            action_record = DeploymentAction.objects.filter(deployment=self.object.current_deployment()).filter(action_type='deploy').first()
+            current_deployment = self.object.current_deployment()
+            action_record = DeploymentAction.objects.filter(deployment=current_deployment).filter(action_type='deploy').first()
+
+            # Set variables for Deployment Status bar
+            if current_deployment.current_deployment_status() == 'create':
+                bar_class = 'bg-success'
+                bar_width = 25
+            elif current_deployment.current_deployment_status() == 'burnin':
+                bar_class = 'bg-danger'
+                bar_width = 50
+            elif current_deployment.current_deployment_status() == 'deploy':
+                bar_class = None
+                bar_width = 75
+            elif current_deployment.current_deployment_status() == 'recover':
+                bar_class = 'bg-warning'
+                bar_width = 100
 
         context.update({
             'current_deployment': self.object.current_deployment(),
             'percent_complete': percent_complete,
             'action_record': action_record,
+            'bar_class': bar_class,
+            'bar_width': bar_width,
         })
         return context
 

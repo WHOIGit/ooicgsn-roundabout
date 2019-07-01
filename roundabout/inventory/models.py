@@ -55,7 +55,22 @@ class Deployment(models.Model):
             deployment_status = deployment_status.action_type
         else:
             deployment_status = 'create'
+
         return deployment_status
+
+    def get_deployment_status_label(self):
+        deployment_status_label = None
+        # get short label text for Deployment status
+        if self.current_deployment_status() == 'create':
+            deployment_status_label = 'Initial Deployment'
+        elif self.current_deployment_status() == 'burnin':
+            deployment_status_label = 'Burn In'
+        elif self.current_deployment_status() == 'deploy':
+            deployment_status_label = 'Deployed'
+        elif self.current_deployment_status() == 'recover':
+            deployment_status_label = 'Recovered'
+
+        return deployment_status_label
 
 
 class Inventory(MPTTModel):

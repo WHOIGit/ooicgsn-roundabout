@@ -1803,7 +1803,7 @@ class InventoryDeploymentDetailView(InventoryNavTreeMixin, DetailView):
 # AJAX Views
 
 def load_deployment_navtree(request):
-    locations = Location.objects.exclude(root_type='Trash').prefetch_related('deployment')
+    locations = Location.objects.exclude(root_type='Trash').prefetch_related('deployments')
     return render(request, 'inventory/ajax_deployment_navtree.html', {'locations': locations})
 
 
