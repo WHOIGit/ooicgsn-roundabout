@@ -13,7 +13,7 @@ from roundabout.inventory.models import Inventory, Action
 
 # Load the javascript navtree
 def load_builds_navtree(request):
-    locations = Location.objects.exclude(root_type='Retired').prefetch_related('builds').prefetch_related('inventory__part__part_type')
+    locations = Location.objects.prefetch_related('builds').prefetch_related('inventory__part__part_type')
     return render(request, 'builds/ajax_build_navtree.html', {'locations': locations})
 
 ## CBV views for Builds app ##
@@ -159,21 +159,10 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
                 if old_location.name != self.object.location.name:
                     self.object.detail = 'Moved to %s from %s. ' % (self.object.location.name, old_location) + self.object.detail
 
-            # Get any subassembly children items, move their location sto match parent and add Action to history
+            # Get any subassembly children items, move their locations to match parent and add Action to history
             subassemblies = self.object.inventory.all()
-            mooring_parts_added = []
+            assembly_parts_added = []
             for item in subassemblies:
-                if self.object.mooring_part_id:
-                    sub_mooring_parts = MooringPart.objects.get(id=self.object.mooring_part_id).get_descendants()
-                    sub_mooring_part = sub_mooring_parts.filter(part=item.part)
-                    for sub in sub_mooring_part:
-                        if sub.id not in mooring_parts_added:
-                            item.mooring_part = sub
-                            mooring_parts_added.append(sub.id)
-                            break
-                else:
-                    item.mooring_part = None
-
                 item.location = self.object.location
                 if old_location.name != self.object.location.name:
                     item.detail = 'Moved to %s from %s' % (self.object.location.name, old_location.name)

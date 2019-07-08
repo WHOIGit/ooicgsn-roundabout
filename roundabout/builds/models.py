@@ -45,9 +45,9 @@ class Build(models.Model):
         # get the latest deployment if available
         latest_deployment = self.deployments.first()
         if latest_deployment:
-            deployment_status = latest_deployment.deployment_action.first()
-            if deployment_status:
-                deployment_status = deployment_status.action_type
+            deployment_action = latest_deployment.deployment_action.first()
+            if deployment_action.action_type != 'retire':
+                deployment_status = deployment_action.action_type
             else:
                 deployment_status = None
         return deployment_status

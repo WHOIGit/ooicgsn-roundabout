@@ -59,7 +59,7 @@
 
                 {% if build.current_deployment_status == 'create' %}
                     <a class="dropdown-item" href="#"
-                        data-detail-url="{% url 'deployments:ajax_deployment_action' 'burnin' build.id %}"
+                        data-detail-url="{% url 'builds:ajax_deployment_action' 'burnin' build.current_deployment.id build.id  %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
                         data-node-type="detail">Initiate Burn In</a>
@@ -67,26 +67,26 @@
 
                 {% if build.current_deployment_status == 'burnin' %}
                     <a class="dropdown-item" href="#"
-                        data-detail-url="{% url 'deployments:ajax_deployment_action' 'deploy' build.id %}"
+                        data-detail-url="{% url 'builds:ajax_deployment_action' 'deploy' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
                         data-node-type="detail">Deploy to Sea</a>
                 {% endif %}
 
-                {% if build.current_deployment_status == 'recover' %}
-                    <a class="dropdown-item" href="#"
-                        data-detail-url="{% url 'deployments:ajax_deployment_action' 'retire' build.id %}"
-                        data-node-id="{{ build.id }}"
-                        data-location-id="{{ build.location.id}}"
-                        data-node-type="detail">Retire</a>
-                {% endif %}
-
                 {% if build.current_deployment_status == 'deploy' %}
                     <a class="dropdown-item" href="#"
-                        data-detail-url="{% url 'deployments:ajax_deployment_action' 'recover' build.id %}"
+                        data-detail-url="{% url 'builds:ajax_deployment_action' 'recover' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
                         data-node-type="detail">Recover from Sea</a>
+                {% endif %}
+
+                {% if build.current_deployment_status == 'recover' %}
+                    <a class="dropdown-item" href="#"
+                        data-detail-url="{% url 'builds:ajax_deployment_action' 'retire' build.current_deployment.id build.id %}"
+                        data-node-id="{{ build.id }}"
+                        data-location-id="{{ build.location.id}}"
+                        data-node-type="detail">Retire Deployment</a>
                 {% endif %}
 
 
@@ -103,7 +103,7 @@
     <p>Assembly Type: {{ build.assembly.assembly_type }}</p>
 
     <p>Build Notes: {{ build.build_notes }}</p>
-
+    {{build.current_deployment_status}}
     <hr>
     <div id="build-status">
         <!--
@@ -124,7 +124,7 @@
 
         <div class="progress" style="height: 20px;">
             {% if percent_complete == 0 %} {{ percent_complete }}% {% endif %}
-          <div class="progress-bar" role="progressbar" style="width: {{ percent_complete }}%;" aria-valuenow="{{ percent_complete }}" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress-bar bg-info" role="progressbar" style="width: {{ percent_complete }}%;" aria-valuenow="{{ percent_complete }}" aria-valuemin="0" aria-valuemax="100">
               {{ percent_complete }}%
           </div>
         </div>
@@ -140,6 +140,7 @@
 
         <h5>Current Deployment Data</h5>
         <p>{{ label_deployments_app_singular }} Number: {{ current_deployment.deployment_number }}</p>
+        <p>Final Deployment Location: {{ current_deployment.deployed_location }}
 
         <h6>Deployment Status</h6>
 
@@ -232,7 +233,7 @@
                 {% for deployment in build.deployments.all %}
                     <li class="list-group-item">
                         <a href="{% url 'deployments:ajax_deployment_detail' deployment.id %}">
-                            {{ deployment.get_deployment_label }}
+                            {{ deployment }}
                         </a>
                     </li>
                 {% endfor %}

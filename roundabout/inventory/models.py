@@ -28,6 +28,8 @@ class Deployment(models.Model):
                               on_delete=models.SET_NULL, null=True, blank=True)
     final_location = TreeForeignKey(Location, related_name='final_deployments',
                               on_delete=models.SET_NULL, null=True, blank=True)
+    deployed_location = TreeForeignKey(Location, related_name='deployed_deployments',
+                              on_delete=models.SET_NULL, null=True, blank=True)
     assembly = models.ForeignKey(Assembly, related_name='deployments',
                              on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     build = models.ForeignKey(Build, related_name='deployments',
@@ -35,19 +37,16 @@ class Deployment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['location', 'deployment_number']
+        ordering = ['-created_at']
 
     def __str__(self):
-        if self.final_location:
-            return '%s (%s) - %s' % (self.deployment_number, self.final_location.location_id, self.location.name)
+        if self.deployed_location:
+            return '%s - %s' % (self.deployment_number, self.deployed_location)
         else:
             return '%s - %s' % (self.deployment_number, self.location.name)
 
     def get_deployment_label(self):
-        if self.final_location:
-            return '%s (%s)' % (self.deployment_number, self.final_location.location_id)
-        else:
-            return self.deployment_number
+        return self.deployment_number
 
     def current_deployment_status(self):
         deployment_status = self.deployment_action.first()
