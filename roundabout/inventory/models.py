@@ -68,8 +68,41 @@ class Deployment(models.Model):
             deployment_status_label = 'Deployed'
         elif self.current_deployment_status() == 'recover':
             deployment_status_label = 'Recovered'
+        elif self.current_deployment_status() == 'retire':
+            deployment_status_label = 'Retired'
 
         return deployment_status_label
+
+    def get_deployment_progress_bar(self):
+        deployment_progress_bar = None
+        # Set variables for Deployment Status bar in Bootstrap
+        if self.current_deployment_status() == 'create':
+            deployment_progress_bar = {
+                'bar_class': 'bg-success',
+                'bar_width': 20,
+            }
+        elif self.current_deployment_status() == 'burnin':
+            deployment_progress_bar = {
+                'bar_class': 'bg-danger',
+                'bar_width': 40,
+            }
+        elif self.current_deployment_status() == 'deploy':
+            deployment_progress_bar = {
+                'bar_class': None,
+                'bar_width': 60,
+            }
+        elif self.current_deployment_status() == 'recover':
+            deployment_progress_bar = {
+                'bar_class': 'bg-warning',
+                'bar_width': 80,
+            }
+        elif self.current_deployment_status() == 'retire':
+            deployment_progress_bar = {
+                'bar_class': 'bg-info',
+                'bar_width': 100,
+            }
+
+        return deployment_progress_bar
 
 
 class Inventory(MPTTModel):

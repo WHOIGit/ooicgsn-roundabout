@@ -1,4 +1,5 @@
 {% load humanize %}
+{% load common_tags %}
 
 <div class="card-header" data-object-id="{{ build.id }}">
     <h3>{{ build }}</h3>
@@ -103,7 +104,7 @@
     <p>Assembly Type: {{ build.assembly.assembly_type }}</p>
 
     <p>Build Notes: {{ build.build_notes }}</p>
-    {{build.current_deployment_status}}
+
     <hr>
     <div id="build-status">
         <!--
@@ -125,7 +126,7 @@
         <div class="progress" style="height: 20px;">
             {% if percent_complete == 0 %} {{ percent_complete }}% {% endif %}
           <div class="progress-bar bg-info" role="progressbar" style="width: {{ percent_complete }}%;" aria-valuenow="{{ percent_complete }}" aria-valuemin="0" aria-valuemax="100">
-              {{ percent_complete }}%
+              <span>{{ percent_complete }}%</span>
           </div>
         </div>
 
@@ -146,9 +147,9 @@
 
         <div class="progress" style="height: 20px;">
 
-          <div class="progress-bar {{ bar_class }}" role="progressbar" style="width: {{ bar_width }}%;" aria-valuenow="{{ bar_width }}" aria-valuemin="0" aria-valuemax="100">
-              <span>{{ current_deployment.get_deployment_status_label }}</span>
-          </div>
+            <div class="progress-bar {{ current_deployment.get_deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ current_deployment.get_deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ current_deployment.get_deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
+                <span>{{ current_deployment.get_deployment_status_label }}</span>
+            </div>
 
         </div>
 

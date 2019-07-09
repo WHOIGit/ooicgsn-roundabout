@@ -1,24 +1,43 @@
+{% load common_tags %}
 
-                <div class="card-header">
-                    <h3>{{ location.name }}</h3>
-                    <h5>{{ location.get_root }}
+<div class="card-header">
+    <h3>{{ location.name }}</h3>
+    <h5>{{ location.get_root }}
+</div>
+
+<div class="card-body">
+
+    {% if location.location_type %}<p>Location Type: {{ location.location_type }}</p>{% endif %}
+    {% if location.location_id %}<p>Location ID: {{ location.location_id }}</p>{% endif %}
+    <h5>Deployment History</h5>
+
+    <ul class="list-group list-group-flush">
+        {% for deployment in location.deployed_deployments.all %}
+            <li class="list-group-item">
+                <a href="{% url 'deployments:ajax_deployment_detail' deployment.id %}">
+                    Build: {{ deployment.build }} | Deployment: {{ deployment.deployment_number }}
+                </a>
+
+                <div class="progress" style="height: 20px;">
+
+                  <div class="progress-bar {{ deployment.get_deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ deployment.get_deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ deployment.get_deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
+                      <span>{{ deployment.get_deployment_status_label }}</span>
+                  </div>
+
                 </div>
-
-                <div class="card-body">
-
-                    {% if location.location_type %}<p>Location Type: {{ location.location_type }}</p>{% endif %}
-                    {% if location.location_id %}<p>Location ID: {{ location.location_id }}</p>{% endif %}
-                    <p>Parent: {{ location.parent.name }}</p>
+            </li>
+        {% endfor %}
+    </ul>
 
 
 
 
 
-                <div class="mt-3 ajax-btn">
-                    <a href="#" data-update-url="{% url 'locations:ajax_location_update' location.id %}" role="button" class="btn btn-primary">Edit Location</a>
+<div class="mt-3 ajax-btn">
+    <a href="#" data-update-url="{% url 'locations:ajax_location_update' location.id %}" role="button" class="btn btn-primary">Edit Location</a>
 
-                    <a href="#" data-update-url="{% url 'locations:ajax_location_delete' location.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
-                </div>
+    <a href="#" data-update-url="{% url 'locations:ajax_location_delete' location.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
+</div>
 
 
 {% block javascript %}
