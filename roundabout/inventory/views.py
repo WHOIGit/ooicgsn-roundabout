@@ -63,6 +63,7 @@ def make_tree_copy(root_part, new_location, deployment_snapshot, parent=None ):
 
 # Function to print to network printer via sockets
 def print_code_zebraprinter(request, **kwargs):
+    item_pk = kwargs.get('pk')
     code_format = kwargs.get('code_format', 'QR')
     printer_name = request.GET.get('printer_name')
     printer_type = request.GET.get('printer_type')
@@ -70,6 +71,8 @@ def print_code_zebraprinter(request, **kwargs):
 
     if printer_name and printer_type:
     #try:
+        item = Inventory.objects.get(id=item_pk)
+
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((printer_name, 9100))
 
@@ -85,8 +88,15 @@ def print_code_zebraprinter(request, **kwargs):
                 root = tree.getroot()
 
                 # modifying the Static Text 'value' attribute to be Serial Number
+                """
                 for static_text in root.iter('{http://www.bradycorp.com/printers/bpl}static-text'):
                     static_text.set('value', serial_number)
+                """
+                for number, static_text in enumerate(root.iter('{http://www.bradycorp.com/printers/bpl}static-text'), start=1):
+                    if number == 3:
+                        static_text.set('value', item.part.friendly_name_display())
+                    else:
+                        static_text.set('value', item.serial_number)
 
                 content = ET.tostring(root, encoding='utf8').decode('utf8')
 
@@ -97,7 +107,7 @@ def print_code_zebraprinter(request, **kwargs):
 
                 # modifying the Static Text 'value' attribute to be Serial Number
                 for static_text in root.iter('{http://www.bradycorp.com/printers/bpl}static-text'):
-                    static_text.set('value', serial_number)
+                    static_text.set('value', item.serial_number)
 
                 content = ET.tostring(root, encoding='utf8').decode('utf8')
 

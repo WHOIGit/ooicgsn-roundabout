@@ -18,7 +18,16 @@
             </barcode>
             <text position-x="0.2" position-y="0.6" align="center">
                 <text-sizing>
-                    <autosize height="0.3" width="1.6" />
+                    <autosize height="0.2" width="1.8" />
+                </text-sizing>
+                <datasource>
+                    <static-text value="" />
+                </datasource>
+            </text>
+
+            <text position-x="0.2" position-y="0.85" align="center">
+                <text-sizing>
+                    <autosize height="0.2" width="1.8" />
                 </text-sizing>
                 <datasource>
                     <static-text value="" />
