@@ -154,6 +154,9 @@
                         <div >
 
           			        <img src='https://barcode.tec-it.com/barcode.ashx?data={{ inventory_item.serial_number }}&code=Code93&dpi=300&unit=Min&imagetype=Png' alt='Barcode Generator TEC-IT'/>
+                            <p style="font-size:8px; display: block; padding-left:78px;">
+                                {{ inventory_item.part.friendly_name_display }}
+                            </p>
                         </div>
                     </div>
 
@@ -471,7 +474,6 @@
     $(document).ready(function(){
         $('.print-code-btn').click(function() {
             var url = $(this).attr('data-printcode-url');
-            var serialNumber = $(this).attr('data-serial-number');
             var printerName = $( '#label-printer' ).val();
             var printerType = $( '#label-printer option:selected' ).attr('data-printer-type');
             console.log(printerType);
@@ -483,7 +485,6 @@
                 data: {
                   'printer_name': printerName,
                   'printer_type' : printerType,
-                  'serial_number': serialNumber,
                 },
                 success: function (data) {
                   console.log(data.message);
