@@ -125,7 +125,7 @@
 
         <div class="progress" style="height: 20px;">
             {% if percent_complete == 0 %} {{ percent_complete }}% {% endif %}
-          <div class="progress-bar bg-info" role="progressbar" style="width: {{ percent_complete }}%;" aria-valuenow="{{ percent_complete }}" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress-bar progress-bar-striped bg-info" role="progressbar" style="width: {{ percent_complete }}%;" aria-valuenow="{{ percent_complete }}" aria-valuemin="0" aria-valuemax="100">
               <span>{{ percent_complete }}%</span>
           </div>
         </div>
@@ -141,11 +141,11 @@
 
         <h5>Current Deployment Data</h5>
         <p>{{ label_deployments_app_singular }} Number: {{ current_deployment.deployment_number }}</p>
-        <p>Final Deployment Location: {{ current_deployment.deployed_location }}
+        <p>Final Deployment Location: {{ current_deployment.deployed_location }}</p>
 
         <h6>Deployment Status</h6>
 
-        <div class="progress" style="height: 20px;">
+        <div class="progress mb-3" style="height: 20px;">
 
             <div class="progress-bar {{ current_deployment.get_deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ current_deployment.get_deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ current_deployment.get_deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
                 <span>{{ current_deployment.get_deployment_status_label }}</span>
@@ -153,10 +153,11 @@
 
         </div>
 
-        {% if action_record %}
-            <p>Latitude: {{ action_record.latitude }}</p>
-            <p>Longitude: {{ action_record.longitude }}</p>
-            <p>Depth: {{ action_record.depth }} m</p>
+        {% if current_deployment.current_deployment_status == 'deploy' %}
+            <p>Deployment Date: {{ current_deployment.get_deploytosea_details|get_item:'deploy_date' }}</p>
+            <p>Latitude: {{ current_deployment.get_deploytosea_details|get_item:'latitude' }}</p>
+            <p>Longitude: {{ current_deployment.get_deploytosea_details|get_item:'longitude' }}</p>
+            <p>Depth: {{ current_deployment.get_deploytosea_details|get_item:'depth' }} m</p>
         {% endif %}
     {% endif %}
 
@@ -233,9 +234,35 @@
             <ul class="list-group list-group-flush">
                 {% for deployment in build.deployments.all %}
                     <li class="list-group-item">
-                        <a href="{% url 'deployments:ajax_deployment_detail' deployment.id %}">
-                            {{ deployment }}
+                        <a class="collapsed" data-toggle="collapse" href="#deployment-{{ deployment.id }}" aria-expanded="false" aria-controls="deployment-{{ deployment.id }}">
+                            Deployment: {{ deployment }}
                         </a>
+
+                        <a data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ deployment.id }}" aria-controls="deployment-{{ deployment.id }}" aria-expanded="false" role="button">
+                            <i class="fa" aria-hidden="true"></i>
+                            <span class="sr-only">Expand/Collapse Revision {{ deployment }}</span>
+                        </a>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar {{ deployment.get_deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ deployment.get_deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ deployment.get_deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
+                                <span>{{ deployment.get_deployment_status_label }}</span>
+                            </div>
+                        </div>
+
+                        <div class="collapse mt-3" id="deployment-{{ deployment.id }}">
+
+                            <p>Deployment Location: {{ deployment.deployed_location }}</p>
+
+
+
+                            {% if deployment.get_deploytosea_details %}
+                                <p>Deployment Date: {{ deployment.get_deploytosea_details|get_item:'deploy_date' }}</p>
+                                <p>Latitude: {{ deployment.get_deploytosea_details|get_item:'latitude' }}</p>
+                                <p>Longitude: {{ deployment.get_deploytosea_details|get_item:'longitude' }}</p>
+                                <p>Depth: {{ deployment.get_deploytosea_details|get_item:'depth' }} m</p>
+                            {% endif %}
+
+                        </div>
+
                     </li>
                 {% endfor %}
             </ul>

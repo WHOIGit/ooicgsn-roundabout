@@ -57,6 +57,22 @@ class Deployment(models.Model):
 
         return deployment_status
 
+    def get_deploytosea_details(self):
+        deploytosea_details = None
+        # get the latest 'Deploy' action record to find lat/long/depth data
+        action_record = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploy').first()
+
+        if action_record:
+            # create dictionary of location details
+            deploytosea_details = {
+                'latitude':  action_record.latitude,
+                'longitude': action_record.longitude,
+                'depth': action_record.depth,
+                'deploy_date': action_record.created_at.strftime('%m/%d/%Y %H:%M:%S'),
+            }
+
+        return deploytosea_details
+
     def get_deployment_status_label(self):
         deployment_status_label = None
         # get short label text for Deployment status

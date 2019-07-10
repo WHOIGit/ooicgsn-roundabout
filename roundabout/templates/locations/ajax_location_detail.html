@@ -2,32 +2,63 @@
 
 <div class="card-header">
     <h3>{{ location.name }}</h3>
-    <h5>{{ location.get_root }}
+    <h5>{{ location.get_root }} {% if location.location_type %} | Location Type: {{ location.location_type }}{% endif %}</h5>
 </div>
 
 <div class="card-body">
 
-    {% if location.location_type %}<p>Location Type: {{ location.location_type }}</p>{% endif %}
+
     {% if location.location_id %}<p>Location ID: {{ location.location_id }}</p>{% endif %}
-    <h5>Deployment History</h5>
 
-    <ul class="list-group list-group-flush">
-        {% for deployment in location.deployed_deployments.all %}
-            <li class="list-group-item">
-                <a href="{% url 'deployments:ajax_deployment_detail' deployment.id %}">
-                    Build: {{ deployment.build }} | Deployment: {{ deployment.deployment_number }}
-                </a>
+    {% if location.deployed_deployments.exists %}
+        <h5>Deployment History for this Location</h5>
 
-                <div class="progress" style="height: 20px;">
+        {% regroup location.deployed_deployments.all by build as build_list %}
 
-                  <div class="progress-bar {{ deployment.get_deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ deployment.get_deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ deployment.get_deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
-                      <span>{{ deployment.get_deployment_status_label }}</span>
-                  </div>
 
-                </div>
-            </li>
+        {% for build in build_list %}
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">Build: {{ build.grouper }}
+
+        <ul class="list-group list-group-flush">
+            {% for deployment in build.list %}
+                <li class="list-group-item">
+
+                    <a class="collapsed" data-toggle="collapse" href="#deployment-{{ deployment.id }}" aria-expanded="false" aria-controls="deployment-{{ deployment.id }}">
+                        Deployment: {{ deployment }}
+                    </a>
+
+                    <a data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ deployment.id }}" aria-controls="deployment-{{ deployment.id }}" aria-expanded="false" role="button">
+                        <i class="fa" aria-hidden="true"></i>
+                        <span class="sr-only">Expand/Collapse Revision {{ deployment }}</span>
+                    </a>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar {{ deployment.get_deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ deployment.get_deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ deployment.get_deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
+                            <span>{{ deployment.get_deployment_status_label }}</span>
+                        </div>
+                    </div>
+
+                     <div class="collapse mt-3" id="deployment-{{ deployment.id }}">
+
+                         <p>Deployment Location: {{ deployment.deployed_location }}</p>
+
+
+
+                         {% if deployment.get_deploytosea_details %}
+                             <p>Deployment Date: {{ deployment.get_deploytosea_details|get_item:'deploy_date' }}</p>
+                             <p>Latitude: {{ deployment.get_deploytosea_details|get_item:'latitude' }}</p>
+                             <p>Longitude: {{ deployment.get_deploytosea_details|get_item:'longitude' }}</p>
+                             <p>Depth: {{ deployment.get_deploytosea_details|get_item:'depth' }} m</p>
+                         {% endif %}
+
+                     </div>
+                </li>
+            {% endfor %}
+            </ul>
+         </li></ul>
         {% endfor %}
-    </ul>
+
+    {% endif %}
 
 
 
