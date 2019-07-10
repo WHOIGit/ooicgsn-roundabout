@@ -66,8 +66,9 @@
 
 <div class="mt-3 ajax-btn">
     <a href="#" data-update-url="{% url 'locations:ajax_location_update' location.id %}" role="button" class="btn btn-primary">Edit Location</a>
-
-    <a href="#" data-update-url="{% url 'locations:ajax_location_delete' location.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
+    {% if request.user|has_group:"admin" or request.user|has_group:"technician" %}
+        <a href="#" data-update-url="{% url 'locations:ajax_location_delete' location.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
+    {% endif %}
 </div>
 
 

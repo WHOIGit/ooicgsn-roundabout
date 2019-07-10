@@ -155,22 +155,27 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             longitude = form.cleaned_data['longitude']
             depth = form.cleaned_data['depth']
             self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
+            self.object.deployed_location = self.object.location
+            self.object.save()
         else:
             latitude = None
             longitude = None
             depth = None
 
-        action_record = DeploymentAction.objects.create(action_type=action_type, detail=self.object.detail, location_id=self.object.location_id,
-                                              user_id=self.request.user.id, deployment_id=self.object.id, created_at=action_date,
+        action_record = DeploymentAction.objects.create(action_type=action_type, detail=self.object.detail, location=self.object.location,
+                                              user=self.request.user, deployment=self.object, created_at=action_date,
                                               latitude=latitude, longitude=longitude, depth=depth)
 
         # Update Build location, create Action Record
         build = self.object.build
 
+        # If action_type is not "retire", update Build location
+        if action_type != 'retire':
+            build.location = self.object.location
+
+        # If action_type is "retire", update Build deployment status
         if action_type == 'retire':
             build.is_deployed = False
-        else:
-            build.location = self.object.location
 
         build.save()
 
@@ -186,7 +191,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
 
             action_record = Action.objects.create(action_type=action_type_inventory, detail='', location=build.location,
                                                   user=self.request.user, inventory=item, created_at=action_date)
-            action_detail = '%s, moved to %s. ' % (action_record.get_action_type_display(), self.object.location)
+            action_detail = '%s, moved to %s. ' % (action_record.get_action_type_display(), build.location)
             action_record.detail = action_detail
             action_record.save()
 
