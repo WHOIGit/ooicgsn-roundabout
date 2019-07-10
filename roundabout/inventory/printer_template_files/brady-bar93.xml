@@ -22,7 +22,7 @@
             </barcode>
             <text position-x="0.2" position-y="0.6" align="center">
                 <text-sizing>
-                    <autosize height="0.2" width="1.6" />
+                    <freeform height="0.3" />
                 </text-sizing>
                 <datasource>
                     <static-text value="" />
@@ -31,7 +31,10 @@
 
             <text position-x="0.2" position-y="0.8" align="center">
                 <text-sizing>
-                    <autosize height="0.2" width="1.6" />
+                    <!--<manual height="0.2" width="1.2" font-size="8" />
+                    <autosize height="0.2" width="1.0" />-->
+
+                    <freeform height="0.3" />
                 </text-sizing>
                 <datasource>
                     <static-text value="" />
