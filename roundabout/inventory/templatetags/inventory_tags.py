@@ -42,7 +42,7 @@ def get_inventory_destination_dictionary(assigned_destination_root):
     inventory_dict = {}
     inventory_qs = Inventory.objects.filter(assigned_destination_root=assigned_destination_root)
     for i in inventory_qs.all():
-        inventory_dict[i.mooring_part_id] = i.id
+        inventory_dict[i.assembly_part_id] = i.id
     return inventory_dict
 
 
@@ -54,10 +54,10 @@ def get_inventory_queryset_by_deployment(dep_pk):
 
 @register.simple_tag
 def get_inventory_list_by_location(location):
-    if location.deployments.exists():
-        queryset = location.inventory.filter(deployment__isnull=True).filter(mooring_part__isnull=True).prefetch_related('part__part_type')
+    if location.builds.exists():
+        queryset = location.inventory.filter(build__isnull=True).filter(assembly_part__isnull=True).prefetch_related('part__part_type')
     else:
-        queryset = location.inventory.filter(mooring_part__isnull=True).prefetch_related('part__part_type')
+        queryset = location.inventory.filter(assembly_part__isnull=True).prefetch_related('part__part_type')
     return queryset
 
 
@@ -72,7 +72,7 @@ def get_inventory_snapshot_list_by_location(location, dep):
 
 @register.simple_tag
 def get_inventory_list_by_location_with_destination(location):
-    queryset = location.inventory.filter(mooring_part__isnull=False).filter(deployment__isnull=True).filter(assigned_destination_root__isnull=False).prefetch_related('part__part_type')
+    queryset = location.inventory.filter(assembly_part__isnull=False).filter(build__isnull=True).filter(assigned_destination_root__isnull=False).prefetch_related('part__part_type')
     return queryset
 
 

@@ -22,7 +22,7 @@
                 data-location-id="{{ inventory_item.location.id}}"
                 data-node-type="detail">Inventory Change</a>
             --->
-        {% if not inventory_item.deployment and not inventory_item.parent and not inventory_item.mooring_part %}
+        {% if not inventory_item.build and not inventory_item.parent and not inventory_item.assembly_part %}
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'locationchange' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
@@ -30,7 +30,7 @@
                 data-node-type="detail">Location Change</a>
         {% endif %}
 
-        {% if not inventory_item.deployment and not inventory_item.mooring_part %}
+        {% if not inventory_item.build and not inventory_item.assembly_part %}
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_add_subassembly' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
@@ -38,7 +38,7 @@
                 data-node-type="detail">Add Subassembly</a>
         {% endif %}
 
-        {% if not inventory_item.deployment and inventory_item.parent %}
+        {% if not inventory_item.build and inventory_item.parent %}
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'subchange' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
@@ -46,7 +46,7 @@
                 data-node-type="detail">Remove from Parent Assembly</a>
         {% endif %}
 
-        {% if not inventory_item.deployment and not inventory_item.parent and not inventory_item.mooring_part %}
+        {% if not inventory_item.build and not inventory_item.parent and not inventory_item.assembly_part %}
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_add_to_parent' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
@@ -54,23 +54,23 @@
                 data-node-type="detail">Add to Parent Assembly</a>
         {% endif %}
 
-        {% if not inventory_item.deployment and not inventory_item.parent %}
+        {% if not inventory_item.build and not inventory_item.parent %}
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_add_to_deployment' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Add to Deployment</a>
+                data-node-type="detail">Add to Build</a>
         {% endif %}
 
-        {% if inventory_item.deployment %}
+        {% if inventory_item.build %}
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'removefromdeployment' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Remove from Deployment</a>
+                data-node-type="detail">Remove from Build</a>
         {% endif %}
 
-        {% if inventory_item.mooring_part and not inventory_item.deployment and not inventory_item.parent %}
+        {% if inventory_item.assembly_part and not inventory_item.build and not inventory_item.parent %}
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'removedest' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
@@ -78,7 +78,7 @@
                 data-node-type="detail">Remove Destination</a>
         {% endif %}
 
-        {% if not inventory_item.mooring_part and not inventory_item.parent %}
+        {% if not inventory_item.assembly_part and not inventory_item.parent %}
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_assign_destination' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
