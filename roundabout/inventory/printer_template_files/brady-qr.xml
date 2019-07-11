@@ -4,7 +4,7 @@
         <document units = "inches" />
     </defaults>
     <labels>
-        <label width = "2.0" height = "1.0" font-size="14" font-name="Arial"> \
+        <label width = "2.0" height = "1.0" font-size="8" font-name="Arial"> \
             <barcode
             position-x = "0.1"
             position-y = "0.2"
@@ -16,9 +16,21 @@
                     <static-text value = "" />
                 </datasource>
             </barcode>
-            <text position-x="0.2" position-y="0.6" align="center">
+            <text position-x="0.2" position-y="0.5" align="center">
                 <text-sizing>
-                    <autosize height="0.3" width="1.6" />
+                    <autosize height="0.2" width="1.5" />
+                </text-sizing>
+                <datasource>
+                    <static-text value="" />
+                </datasource>
+            </text>
+
+            <text position-x="0.72" position-y="0.4" align="right">
+                <text-sizing>
+                    <!--<manual height="0.2" width="1.2" font-size="8" />
+                    <autosize height="0.2" width="1.0" />-->
+
+                    <freeform height="0.3" />
                 </text-sizing>
                 <datasource>
                     <static-text value="" />

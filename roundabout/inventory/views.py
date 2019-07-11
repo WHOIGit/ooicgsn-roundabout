@@ -63,13 +63,15 @@ def make_tree_copy(root_part, new_location, deployment_snapshot, parent=None ):
 
 # Function to print to network printer via sockets
 def print_code_zebraprinter(request, **kwargs):
+    item_pk = kwargs.get('pk')
     code_format = kwargs.get('code_format', 'QR')
     printer_name = request.GET.get('printer_name')
     printer_type = request.GET.get('printer_type')
-    serial_number = request.GET.get('serial_number')
 
     if printer_name and printer_type:
     #try:
+        item = Inventory.objects.get(id=item_pk)
+
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((printer_name, 9100))
 
@@ -85,8 +87,11 @@ def print_code_zebraprinter(request, **kwargs):
                 root = tree.getroot()
 
                 # modifying the Static Text 'value' attribute to be Serial Number
-                for static_text in root.iter('{http://www.bradycorp.com/printers/bpl}static-text'):
-                    static_text.set('value', serial_number)
+                for number, static_text in enumerate(root.iter('{http://www.bradycorp.com/printers/bpl}static-text'), start=1):
+                    if number == 3:
+                        static_text.set('value', item.part.friendly_name_display())
+                    else:
+                        static_text.set('value', item.serial_number)
 
                 content = ET.tostring(root, encoding='utf8').decode('utf8')
 
@@ -96,8 +101,11 @@ def print_code_zebraprinter(request, **kwargs):
                 root = tree.getroot()
 
                 # modifying the Static Text 'value' attribute to be Serial Number
-                for static_text in root.iter('{http://www.bradycorp.com/printers/bpl}static-text'):
-                    static_text.set('value', serial_number)
+                for number, static_text in enumerate(root.iter('{http://www.bradycorp.com/printers/bpl}static-text'), start=1):
+                    if number == 3:
+                        static_text.set('value', item.part.friendly_name_display())
+                    else:
+                        static_text.set('value', item.serial_number)
 
                 content = ET.tostring(root, encoding='utf8').decode('utf8')
 
@@ -110,14 +118,14 @@ def print_code_zebraprinter(request, **kwargs):
                             ^FDMM,A{}^FS \
                             ^FO20,170 \
                             ^A0,30,25 \
-                            ^FD{}^FS^XZ'.format(serial_number, serial_number)
+                            ^FD{}^FS^XZ'.format(item.serial_number, item.serial_number)
                 #content = '^XA^PW400^LL200^FO20,20^A0N,30,30~SD25^FDHello Connor^FS^XZ'
             elif code_format == 'bar93':
                 content =   '^XA \
                             ^PW400 \
                             ^FO20,20^BY1 \
                             ^BAN,150,Y,N,N \
-                            ^FD{}^FS^XZ'.format(serial_number)
+                            ^FD{}^FS^XZ'.format(item.serial_number)
 
         content = content.encode()
 

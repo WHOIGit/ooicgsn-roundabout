@@ -154,11 +154,14 @@
                         <div >
 
           			        <img src='https://barcode.tec-it.com/barcode.ashx?data={{ inventory_item.serial_number }}&code=Code93&dpi=300&unit=Min&imagetype=Png' alt='Barcode Generator TEC-IT'/>
+                            <p style="font-size:8px; display: block; padding-left:78px;">
+                                {{ inventory_item.part.friendly_name_display }}
+                            </p>
                         </div>
                     </div>
 
                     <button id="print-barcode-btn" class="btn btn-sm btn-primary print-code-btn"
-                            data-printcode-url="{% url 'inventory:ajax_print_code' 'bar93' %}"
+                            data-printcode-url="{% url 'inventory:ajax_print_code' inventory_item.id 'bar93' %}"
                             data-serial-number="{{ inventory_item.serial_number }}">Click to Print</button>
                     <!--<button onclick="printDiv('print-barcode');" class="btn btn-sm btn-primary">Click to Print</button>-->
 
@@ -167,12 +170,14 @@
                     <div id="print-qrcode" class="print-code{% if inventory_item.part.part_type.name == 'Cable' %}-cable{% endif %}">
                         <div >
           			        <img style="width:46px;" src='https://barcode.tec-it.com/barcode.ashx?data={{ inventory_item.serial_number }}&code=QRCode&dpi=300&unit=Min&imagetype=Png' alt='Barcode Generator TEC-IT'/>
-                            <p style="font-size:7px; font-family:Arial; display: block; max-width:48px; word-wrap: break-word;">{{ inventory_item.serial_number }}</p>
+                            <p style="font-size:7px; font-family:Arial; display: block;">{{ inventory_item.serial_number }}<br>
+                                {{ inventory_item.part.friendly_name_display }}
+                            </p>
                         </div>
                     </div>
 
                     <button id="print-qrcode-btn" class="btn btn-sm btn-primary print-code-btn"
-                            data-printcode-url="{% url 'inventory:ajax_print_code' 'QR' %}"
+                            data-printcode-url="{% url 'inventory:ajax_print_code' inventory_item.id 'QR' %}"
                             data-serial-number="{{ inventory_item.serial_number }}">Click to Print</button>
                     <!--<button onclick="printDiv('print-qrcode');" class="btn btn-sm btn-primary">Click to Print</button>-->
           		</td>
@@ -469,7 +474,6 @@
     $(document).ready(function(){
         $('.print-code-btn').click(function() {
             var url = $(this).attr('data-printcode-url');
-            var serialNumber = $(this).attr('data-serial-number');
             var printerName = $( '#label-printer' ).val();
             var printerType = $( '#label-printer option:selected' ).attr('data-printer-type');
             console.log(printerType);
@@ -481,7 +485,6 @@
                 data: {
                   'printer_name': printerName,
                   'printer_type' : printerType,
-                  'serial_number': serialNumber,
                 },
                 success: function (data) {
                   console.log(data.message);

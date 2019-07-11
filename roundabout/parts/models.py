@@ -59,6 +59,12 @@ class Part(models.Model):
     def get_absolute_url(self):
         return reverse('parts:parts_detail', kwargs={'pk': self.pk, })
 
+    def friendly_name_display(self):
+        if self.friendly_name:
+            return self.friendly_name
+        else:    
+            return self.name
+
 
 class Revision(models.Model):
     revision_code = models.CharField(max_length=255, unique=False, db_index=True, default='A')
