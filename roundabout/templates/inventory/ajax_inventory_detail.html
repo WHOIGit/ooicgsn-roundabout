@@ -64,7 +64,7 @@
 
         {% if inventory_item.build %}
             <a class="dropdown-item" href="#"
-                data-detail-url="{% url 'inventory:ajax_inventory_action' 'removefromdeployment' inventory_item.id %}"
+                data-detail-url="{% url 'inventory:ajax_inventory_action' 'removefrombuild' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
                 data-node-type="detail">Remove from Build</a>
@@ -196,13 +196,12 @@
     <p>Part Number: {{ inventory_item.part.part_number }}</p>
     <p>Revision: {{ inventory_item.revision.revision_code }}</p>
     <p>Current Location: {{ inventory_item.location.name }}</p>
+    {% if inventory_item.build %}
+        <p>Current Build: {{ inventory_item.build }}</p>
+    {% endif %}
     <p>Time at Sea: {{ inventory_item.total_time_at_sea|time_at_sea_display }}</p>
     {% if inventory_item.current_deployment_time_at_sea %}
         <p>Current Deployment Time at Sea: {{ inventory_item.current_deployment_time_at_sea|time_at_sea_display }}
-    {% endif %}
-
-    {% if inventory_item.deployment %}
-        <p>Current Deployment: {{ inventory_item.deployment.deployment_number }}</p>
     {% endif %}
 
     {% if inventory_item.parent %}

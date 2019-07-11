@@ -259,26 +259,26 @@ class ActionSubassemblyChangeForm(forms.ModelForm):
         self.initial['assigned_destination_root'] = ''
 
 
-class ActionRemoveFromDeploymentForm(forms.ModelForm):
+class ActionRemoveFromBuildForm(forms.ModelForm):
 
     class Meta:
         model = Inventory
-        fields = ['location', 'detail', 'parent', 'deployment', 'mooring_part']
+        fields = ['location', 'detail', 'parent', 'build', 'assembly_part']
         widgets = {
             'parent': forms.HiddenInput(),
-            'deployment': forms.HiddenInput(),
-            'mooring_part': forms.HiddenInput(),
+            'build': forms.HiddenInput(),
+            'assembly_part': forms.HiddenInput(),
         }
         labels = {
             'location': 'Select new Location for item',
-            'detail': 'Reasons for removing from Deployment',
+            'detail': 'Reasons for removing from Build',
         }
 
     def __init__(self, *args, **kwargs):
-        super(ActionRemoveFromDeploymentForm, self).__init__(*args, **kwargs)
+        super(ActionRemoveFromBuildForm, self).__init__(*args, **kwargs)
         self.initial['parent'] = ''
-        self.initial['deployment'] = ''
-        self.initial['mooring_part'] = ''
+        self.initial['build'] = ''
+        self.initial['assembly_part'] = ''
         self.initial['detail'] = ''
 
 

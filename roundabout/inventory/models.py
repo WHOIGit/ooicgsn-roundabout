@@ -170,7 +170,7 @@ class Inventory(MPTTModel):
     ooi_property_number = models.CharField(max_length=255, unique=False, null=False, blank=True)
     custom_field_values = JSONField(blank=True, null=True)
 
-    tracker = FieldTracker(fields=['location', 'deployment', 'parent'])
+    tracker = FieldTracker(fields=['location', 'deployment', 'parent', 'build'])
 
     class MPTTMeta:
         order_insertion_by = ['serial_number']

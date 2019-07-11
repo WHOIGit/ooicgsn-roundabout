@@ -9,7 +9,7 @@
                     </li><li data-jstree='{"icon":"fa fa-map-marker"}' id="location_{{ location.id }}">
                 {% endif %}
                     <a href="#" data-location-id='{{ location.id }}'
-                            data-detail-url="{% url 'inventory:ajax_inventory_location_detail' location.id %}"
+                            data-detail-url="{% url 'locations:ajax_location_detail' location.id %}"
                             data-node-id="{{ location.id }}"
                             data-node-type="location">{{ location.name }}</a>
 
