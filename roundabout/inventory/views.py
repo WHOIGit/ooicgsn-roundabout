@@ -885,54 +885,50 @@ class ActionHistoryNoteAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateV
         return reverse('inventory:ajax_inventory_detail', args=(self.object.inventory_id, ))
 
 
-class InventoryAjaxAddToDeploymentListView(LoginRequiredMixin, TemplateView):
-    template_name = 'inventory/ajax_inventory_add_to_deployment.html'
+class InventoryAjaxAddToBuildListView(LoginRequiredMixin, TemplateView):
+    template_name = 'inventory/ajax_inventory_add_to_build.html'
 
     def get_context_data(self, **kwargs):
-        context = super(InventoryAjaxAddToDeploymentListView, self).get_context_data(**kwargs)
+        context = super(InventoryAjaxAddToBuildListView, self).get_context_data(**kwargs)
         inventory_item = Inventory.objects.get(id=self.kwargs['pk'])
-        deployments = Deployment.objects.all().order_by('location__name')
+        builds = Build.objects.all().order_by('location__name')
 
-        for dep in deployments:
-            if dep.current_deployment_status() != 'create' and dep.current_deployment_status() != 'burnin':
-                deployments = deployments.exclude(id=dep.id)
-
-        if inventory_item.mooring_part:
-            for dep in deployments:
-                for mp in dep.final_location.mooring_parts.all():
-                    if mp != inventory_item.mooring_part:
+        if inventory_item.assembly_part:
+            for build in builds:
+                for assembly_part in build.assembly.assembly_parts.all():
+                    if assembly_part != inventory_item.assembly_part:
                         x = False
                     else:
                         x = True
                         break
                 if not x:
-                    deployments = deployments.exclude(id=dep.id)
+                    builds = builds.exclude(id=build.id)
         else:
-            for dep in deployments:
-                for mp in dep.final_location.mooring_parts.all():
-                    if mp.part != inventory_item.part:
+            for build in builds:
+                for assembly_part in build.assembly.assembly_parts.all():
+                    if assembly_part.part != inventory_item.part:
                         x = False
                     else:
                         x = True
                         break
                 if not x:
-                    deployments = deployments.exclude(id=dep.id)
+                    builds = builds.exclude(id=build.id)
 
-        deployments = deployments.prefetch_related('final_location__mooring_parts__part')
+        builds = builds.prefetch_related('assembly__assembly_parts__part')
 
-        if inventory_item.mooring_part:
-            mooring_parts = MooringPart.objects.filter(id=inventory_item.mooring_part.id)
+        if inventory_item.assembly_part:
+            assembly_parts = AssemblyPart.objects.filter(id=inventory_item.assembly_part.id)
         else:
-            mooring_parts = MooringPart.objects.filter(part=inventory_item.part).filter(location__final_deployment__in=deployments).select_related().distinct()
+            assembly_parts = AssemblyPart.objects.filter(part=inventory_item.part).filter(assembly__builds__in=builds).select_related().distinct()
 
         context.update({
             'inventory_item': inventory_item
         })
         context.update({
-            'mooring_parts': mooring_parts
+            'assembly_parts': assembly_parts
         })
         context.update({
-            'deployments': deployments
+            'builds': builds
         })
         return context
 

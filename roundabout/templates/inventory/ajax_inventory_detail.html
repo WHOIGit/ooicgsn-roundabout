@@ -38,14 +38,6 @@
                 data-node-type="detail">Add Subassembly</a>
         {% endif %}
 
-        {% if not inventory_item.build and inventory_item.parent %}
-            <a class="dropdown-item" href="#"
-                data-detail-url="{% url 'inventory:ajax_inventory_action' 'subchange' inventory_item.id %}"
-                data-node-id="{{ inventory_item.id }}"
-                data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Remove from Parent Assembly</a>
-        {% endif %}
-
         {% if not inventory_item.build and not inventory_item.parent and not inventory_item.assembly_part %}
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_add_to_parent' inventory_item.id %}"
@@ -54,9 +46,17 @@
                 data-node-type="detail">Add to Parent Assembly</a>
         {% endif %}
 
+        {% if not inventory_item.build and inventory_item.parent %}
+            <a class="dropdown-item" href="#"
+                data-detail-url="{% url 'inventory:ajax_inventory_action' 'subchange' inventory_item.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-location-id="{{ inventory_item.location.id}}"
+                data-node-type="detail">Remove from Parent Assembly</a>
+        {% endif %}
+
         {% if not inventory_item.build and not inventory_item.parent %}
             <a class="dropdown-item" href="#"
-                data-detail-url="{% url 'inventory:ajax_inventory_add_to_deployment' inventory_item.id %}"
+                data-detail-url="{% url 'inventory:ajax_inventory_add_to_build' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
                 data-node-type="detail">Add to Build</a>
