@@ -31,7 +31,7 @@ urlpatterns = [
     path('ajax/add-to-parent/action/<int:pk>/<int:parent_pk>/', view=views.InventoryAjaxParentActionView.as_view(), name='ajax_inventory_add_to_parent_action'),
     # Add to build action paths
     path('ajax/add-to-build/<int:pk>/', view=views.InventoryAjaxAddToBuildListView.as_view(), name='ajax_inventory_add_to_build'),
-    path('ajax/add-to-build/action/<int:pk>/<int:deployment_pk>/<int:mooring_part_pk>/', view=views.InventoryAjaxAddToDeploymentActionView.as_view(), name='ajax_inventory_add_to_build_action'),
+    path('ajax/add-to-build/action/<int:pk>/<int:build_pk>/<int:assembly_part_pk>/', view=views.InventoryAjaxAddToBuildActionView.as_view(), name='ajax_inventory_add_to_build_action'),
     # Add subassembly paths
     path('ajax/add-subassembly/<int:parent_pk>/', view=views.InventoryAjaxSubassemblyListView.as_view(), name='ajax_inventory_add_subassembly'),
     path('ajax/add-subassembly/action/<int:pk>/<int:parent_pk>/', view=views.InventoryAjaxSubassemblyActionView.as_view(), name='ajax_inventory_add_subassembly_action'),

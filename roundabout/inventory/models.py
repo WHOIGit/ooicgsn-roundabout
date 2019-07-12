@@ -273,8 +273,8 @@ class Action(models.Model):
     INVCHANGE = 'invchange'
     LOCATIONCHANGE = 'locationchange'
     SUBCHANGE = 'subchange'
-    ADDTODEPLOYMENT = 'addtodeployment'
-    REMOVEFROMDEPLOYMENT = 'removefromdeployment'
+    ADDTOBUILD = 'addtobuild'
+    REMOVEFROMBUILD = 'removefrombuild'
     DEPLOYMENTBURNIN = 'deploymentburnin'
     DEPLOYMENTTOSEA = 'deploymenttosea'
     DEPLOYMENTRECOVER = 'deploymentrecover'
@@ -292,8 +292,8 @@ class Action(models.Model):
         (INVCHANGE, 'Inventory Change'),
         (LOCATIONCHANGE, 'Location Change'),
         (SUBCHANGE, 'Subassembly Change'),
-        (ADDTODEPLOYMENT, 'Add to Deployment'),
-        (REMOVEFROMDEPLOYMENT, 'Remove from Deployment'),
+        (ADDTOBUILD, 'Add to Build'),
+        (REMOVEFROMBUILD, 'Remove from Build'),
         (DEPLOYMENTBURNIN, 'Deployment Burnin'),
         (DEPLOYMENTTOSEA, 'Deployment to Sea'),
         (DEPLOYMENTRECOVER, 'Deployment Recovered'),

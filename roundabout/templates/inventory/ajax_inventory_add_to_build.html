@@ -47,7 +47,11 @@
                                   {% if assembly_part.assembly == build.assembly %}
                                    <li class="list-group-item">
 
-                                      {{ assembly_part.get_ancestors|tree_path:" > " }} > <span class="text-primary">{{ assembly_part }}</span>
+                                      {% if assembly_part.get_ancestors %}
+                                          {{ assembly_part.get_ancestors|tree_path:" > " }} >
+                                      {% endif %}
+
+                                      <span class="text-primary">{{ assembly_part }}</span>
                                       {% if assembly_part.get_children %} > {{ assembly_part.get_children|tree_path:" :: " }} {% endif %}
 
                                         <!-- Get dictionary of current Inventory IDs for this Build, check if Assembly Part is filled -->
