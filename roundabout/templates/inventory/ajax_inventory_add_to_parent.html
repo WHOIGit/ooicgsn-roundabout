@@ -3,84 +3,83 @@
 {% load mptt_tags %}
 
 
-            <div class="card">
-                <div class="card-header">
-                    {% if inventory_item.id %}
-                        <h3>{{ inventory_item.part.name }}</h3>
-                    {% else %}
-                        <h3>Add Inventory</h3>
-                    {% endif %}
+<div class="card">
+    <div class="card-header">
+        {% if inventory_item.id %}
+            <h3>{{ inventory_item.part.name }}</h3>
+        {% else %}
+            <h3>Add Inventory</h3>
+        {% endif %}
 
-                    <p>{{ inventory_item.serial_number }}</p>
+        <p>{{ inventory_item.serial_number }}</p>
 
-                    {% if parent.id %}
-                        <h3>Add to Parent Assembly</h3>
-                    {% endif %}
-                </div>
+        {% if parent.id %}
+            <h3>Add to Parent Assembly</h3>
+        {% endif %}
+    </div>
 
-                <div class="card-body">
+    <div class="card-body">
 
 
 
-                    <div id="subassembly-filter">
-                        <form method="post" action="" id="subassembly-filter-form-serial-number"
-                              data-url="{% url 'inventory:ajax_load_subassemblies_by_serialnumber' %}"
-                              data-parent-id="{{ parent.id }}"
-                              novalidate>
-                              {% csrf_token %}
-                            <div class="form-row">
-                                <div class="form-group col-md-8 col-lg-6">
-                                    <label for="serial_number_search" class="sr-only">Scan Serial Number<span class="asteriskField">*</span></label>
-                                    <div class="input-group mb-2 mr-sm-2">
+        <div id="subassembly-filter">
+            <form method="post" action="" id="subassembly-filter-form-serial-number"
+                  data-url="{% url 'inventory:ajax_load_subassemblies_by_serialnumber' %}"
+                  data-parent-id="{{ parent.id }}"
+                  novalidate>
+                  {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group col-md-8 col-lg-6">
+                        <label for="serial_number_search" class="sr-only">Scan Serial Number<span class="asteriskField">*</span></label>
+                        <div class="input-group mb-2 mr-sm-2">
 
-                                        <div class="input-group-prepend">
-                                          <div class="input-group-text">#</div>
-                                        </div>
-                                        <input type="text" name="serial_number_search" class="textinput form-control" placeholder="Scan Serial Number" id="serial_number_search">
-                                    </div>
-                                </div>
-                                <div class="form-group col-md-4 col-lg-6">
-                                    <button type="submit" class="btn btn-primary mb-2">Search</button>
-                                </div>
+                            <div class="input-group-prepend">
+                              <div class="input-group-text">#</div>
                             </div>
-                        </form>
+                            <input type="text" name="serial_number_search" class="textinput form-control" placeholder="Scan Serial Number" id="serial_number_search">
+                        </div>
                     </div>
-
-                    <p>The following Parent Inventory Items are available for this Part.</p>
-
-                    <div id="available-subassemblies">
-                        <ul class="list-group list-group-flush">
-
-                        {% if parent_items %}
-
-                              {% for parent in parent_items %}
-
-                                          <li class="list-group-item">
-                                              <div class="ajax-add-subassembly-link">
-
-                                              {% if parent.part.friendly_name %} {{ parent.part.friendly_name}} {% else %} {{ parent.part.name }} {% endif %}
-                                               - {{ parent.serial_number }}
-                                               {% if parent.assigned_destination_root %}<span class="badge badge-pill badge-primary">DEST - {{ parent.assigned_destination_root.assembly_part.location.location_id }}</span>{% endif %}
-                                               <br>Current Location: {{ parent.location.name }}
-
-                                              <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_add_to_parent_action' inventory_item.id parent.id %}"
-                                                  data-node-id="{{ inventory_item.id }}"
-                                                  class="btn btn-primary btn-sm float-right"
-                                                  role="button">Add</a>
-
-
-                                              </div>
-                                          </li>
-
-                              {% endfor %}
-                        {% else %}
-                            <p>NONE</p>
-                        {% endif %}
-
-                        </ul>
-                  </div>
-
+                    <div class="form-group col-md-4 col-lg-6">
+                        <button type="submit" class="btn btn-primary mb-2">Search</button>
+                    </div>
                 </div>
+            </form>
+        </div>
+
+        <p>The following Parent Inventory Items are available for this Part.</p>
+
+        <div id="available-subassemblies">
+            <ul class="list-group list-group-flush">
+
+            {% if parent_items %}
+
+                  {% for parent in parent_items %}
+
+                              <li class="list-group-item">
+                                  <div class="ajax-add-subassembly-link">
+
+                                  {% if parent.part.friendly_name %} {{ parent.part.friendly_name}} {% else %} {{ parent.part.name }} {% endif %}
+                                   - {{ parent.serial_number }}
+                                   {% if parent.assigned_destination_root %}<span class="badge badge-pill badge-primary">DEST - {{ parent.assigned_destination_root.assembly_part.location.location_id }}</span>{% endif %}
+                                   <br>Current Location: {{ parent.location.name }}
+
+                                  <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_add_to_parent_action' inventory_item.id parent.id %}"
+                                      data-node-id="{{ inventory_item.id }}"
+                                      class="btn btn-primary btn-sm float-right"
+                                      role="button">Add</a>
+
+                                  </div>
+                              </li>
+
+                  {% endfor %}
+            {% else %}
+                <p>NONE</p>
+            {% endif %}
+
+            </ul>
+      </div>
+
+    </div>
 
 
 {% block javascript %}

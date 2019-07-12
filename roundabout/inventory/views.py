@@ -716,50 +716,50 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 self.object.detail = 'Removed from %s. ' % (old_parent) + self.object.detail
 
                 # Add Action Record for Parent Assembly
-                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=parent_detail, location_id=self.object.location_id,
-                                                      user_id=self.request.user.id, inventory_id=old_parent_pk)
+                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=parent_detail, location=self.object.location,
+                                                      user=self.request.user, inventory=old_parent)
 
             # Find previous location to add to Detail field text
             old_location_pk = self.object.tracker.previous('location')
             if old_location_pk:
                 old_location = Location.objects.get(pk=old_location_pk)
-                if self.object.deployment:
-                    self.object.detail = 'Moved to %s from %s' % (self.object.deployment, old_location.name) + self.object.detail
+                if self.object.build:
+                    self.object.detail = 'Moved to %s from %s' % (self.object.build, old_location.name) + self.object.detail
                 elif old_location.name != self.object.location.name:
                     self.object.detail = 'Moved to %s from %s. ' % (self.object.location.name, old_location) + self.object.detail
 
             # Get any subassembly children items, move their location to match parent and add Action to history
-            subassemblies = Inventory.objects.get(id=self.object.id).get_descendants()
-            mooring_parts_added = []
+            subassemblies = self.object.get_descendants()
+            assembly_parts_added = []
             for item in subassemblies:
-                if self.object.mooring_part_id:
-                    sub_mooring_parts = MooringPart.objects.get(id=self.object.mooring_part_id).get_descendants()
-                    sub_mooring_part = sub_mooring_parts.filter(part=item.part)
-                    for sub in sub_mooring_part:
-                        if sub.id not in mooring_parts_added:
-                            item.mooring_part = sub
-                            mooring_parts_added.append(sub.id)
+                if self.object.assembly_part:
+                    sub_assembly_parts = self.object.assembly_part.get_descendants()
+                    sub_assembly_part = sub_assembly_parts.filter(part=item.part)
+                    for sub in sub_assembly_part:
+                        if sub.id not in assembly_parts_added:
+                            item.assembly_part = sub
+                            assembly_parts_added.append(sub.id)
                             break
                 else:
-                    item.mooring_part = None
+                    item.assembly_part = None
 
                 item.location = self.object.location
-                item.deployment = self.object.deployment
+                item.build = self.object.build
                 item.assigned_destination_root = self.object.assigned_destination_root
 
-                if self.object.deployment:
-                    item.detail = 'Moved to %s from %s' % (self.object.deployment, old_location.name)
+                if self.object.build:
+                    item.detail = 'Moved to %s from %s' % (self.object.build, old_location.name)
                 elif old_location.name != self.object.location.name:
                     item.detail = 'Moved to %s from %s' % (self.object.location.name, old_location.name)
                 else:
                     item.detail = 'Parent Inventory Change'
                 item.save()
-                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location_id=item.location_id,
-                                                      user_id=self.request.user.id, inventory_id=item.id)
+                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location=item.location,
+                                                      user=self.request.user, inventory=item)
 
         action_form = form.save()
-        action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=self.object.detail, location_id=self.object.location_id,
-                                              user_id=self.request.user.id, inventory_id=self.object.id)
+        action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=self.object.detail, location=self.object.location,
+                                              user=self.request.user, inventory=self.object)
 
         response = HttpResponseRedirect(self.get_success_url())
 
