@@ -234,14 +234,14 @@ class ActionSubassemblyChangeForm(forms.ModelForm):
 
     class Meta:
         model = Inventory
-        fields = ['location', 'parent', 'deployment', 'mooring_part', 'assigned_destination_root', 'detail']
+        fields = ['location', 'parent', 'build', 'assembly_part', 'assigned_destination_root', 'detail']
         labels = {
             'detail': 'Add a Note',
         }
         widgets = {
             'parent': forms.HiddenInput(),
-            'deployment': forms.HiddenInput(),
-            'mooring_part': forms.HiddenInput(),
+            'build': forms.HiddenInput(),
+            'assembly_part': forms.HiddenInput(),
             'assigned_destination_root': forms.HiddenInput(),
         }
 
@@ -254,8 +254,8 @@ class ActionSubassemblyChangeForm(forms.ModelForm):
             """
         self.initial['detail'] = ''
         self.initial['parent'] = ''
-        self.initial['deployment'] = ''
-        self.initial['mooring_part'] = ''
+        self.initial['build'] = ''
+        self.initial['assembly_part'] = ''
         self.initial['assigned_destination_root'] = ''
 
 
@@ -286,11 +286,11 @@ class ActionRemoveDestinationForm(forms.ModelForm):
 
     class Meta:
         model = Inventory
-        fields = ['detail', 'parent', 'deployment', 'mooring_part', 'assigned_destination_root']
+        fields = ['detail', 'parent', 'build', 'assembly_part', 'assigned_destination_root']
         widgets = {
             'parent': forms.HiddenInput(),
-            'deployment': forms.HiddenInput(),
-            'mooring_part': forms.HiddenInput(),
+            'build': forms.HiddenInput(),
+            'assembly_part': forms.HiddenInput(),
             'assigned_destination_root': forms.HiddenInput(),
         }
         labels = {
@@ -300,8 +300,8 @@ class ActionRemoveDestinationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ActionRemoveDestinationForm, self).__init__(*args, **kwargs)
         self.initial['parent'] = ''
-        self.initial['deployment'] = ''
-        self.initial['mooring_part'] = ''
+        self.initial['build'] = ''
+        self.initial['assembly_part'] = ''
         self.initial['assigned_destination_root'] = ''
         self.initial['detail'] = ''
 
