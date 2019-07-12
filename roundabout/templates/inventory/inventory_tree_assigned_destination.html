@@ -67,7 +67,7 @@
                            ">
                             {% if assembly_part.part.friendly_name %} {{ assembly_part.part.friendly_name}} {% else %} {{ assembly_part.part.name }} {% endif %}
                             - {{ i.serial_number }}
-                            {% if forloop.first %}<span class="badge badge-pill badge-primary">DEST - {{ assembly_part.assembly.assembly_number }}</span>{% endif %}</a>
+                            {% if forloop.first %}<span class="badge badge-pill badge-primary">DEST - {{ assembly_part.assembly }}</span>{% endif %}</a>
                     {% endif %}
                 {% endfor %}
             {% else %}

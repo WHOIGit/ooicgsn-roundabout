@@ -45,10 +45,11 @@ urlpatterns = [
     path('ajax/add-subassembly/assembly-part/action/<int:pk>/<int:build_pk>/<int:assembly_part_pk>/<int:parent_pk>/', view=views.InventoryAjaxByAssemblyPartyActionView.as_view(), name='ajax_inventory_assembly_part_add_subassembly_action'),
     # Assign Destination paths
     path('ajax/assign-destination/<int:pk>/', view=views.InventoryAjaxAssignDestinationView.as_view(), name='ajax_inventory_assign_destination'),
-    path('ajax/assign-destination/action/<int:pk>/<int:mooring_part_pk>/', view=views.InventoryAjaxAssignDestinationActionView.as_view(), name='ajax_inventory_assign_destination_action'),
+    path('ajax/assign-destination/action/<int:pk>/<int:assembly_part_pk>/', view=views.InventoryAjaxAssignDestinationActionView.as_view(), name='ajax_inventory_assign_destination_action'),
     path('ajax/destination/<int:pk>/<int:location_pk>/<int:assigned_destination_root_pk>/', view=views.InventoryAjaxDestinationSubassemblyListView.as_view(), name='ajax_inventory_destination_add_subassembly'),
-    path('ajax/destination/action/<int:pk>/<int:mooring_part_pk>/<int:location_pk>/<int:assigned_destination_root_pk>/', view=views.InventoryAjaxDestinationSubassemblyActionView.as_view(), name='ajax_inventory_destination_add_subassembly_action'),
-    path('ajax/destination/action/<int:pk>/<int:mooring_part_pk>/<int:location_pk>/<int:assigned_destination_root_pk>/<int:parent_pk>/', view=views.InventoryAjaxDestinationSubassemblyActionView.as_view(), name='ajax_inventory_destination_add_subassembly_action'),
+    path('ajax/destination/action/<int:pk>/<int:assembly_part_pk>/<int:location_pk>/<int:assigned_destination_root_pk>/', view=views.InventoryAjaxDestinationSubassemblyActionView.as_view(), name='ajax_inventory_destination_add_subassembly_action'),
+    path('ajax/destination/action/<int:pk>/<int:assembly_part_pk>/<int:location_pk>/<int:assigned_destination_root_pk>/<int:parent_pk>/', view=views.InventoryAjaxDestinationSubassemblyActionView.as_view(), name='ajax_inventory_destination_add_subassembly_action'),
+    # Base action paths
     path('ajax/edit/<int:pk>/', view=views.InventoryAjaxUpdateView.as_view(), name='ajax_inventory_update'),
     path('ajax/action/<action_type>/<int:pk>/', view=views.InventoryAjaxActionView.as_view(), name='ajax_inventory_action'),
     path('ajax/note/<int:pk>/', view=views.ActionNoteAjaxCreateView.as_view(), name='ajax_note_action'),
@@ -56,6 +57,7 @@ urlpatterns = [
     path('ajax/history/<int:pk>/', view=views.ActionHistoryNoteAjaxCreateView.as_view(), name='ajax_history_action'),
     path('ajax/location/<int:pk>/', view=views.InventoryAjaxLocationDetailView.as_view(), name='ajax_inventory_location_detail'),
     path('ajax/delete/<int:pk>/', view=views.InventoryAjaxDeleteView.as_view(), name='ajax_inventory_delete'),
+    # Javascript AJAX filter paths
     path('ajax/load-part-templates/', views.load_part_templates, name='ajax_load_part_templates'),
     path('ajax/load-part-templates-by-partnumber/', views.load_part_templates_by_partnumber, name='ajax_load_part_templates_by_partnumber'),
     path('ajax/load-revisions-by-partnumber/', views.load_revisions_by_partnumber, name='ajax_load_revisions_by_partnumber'),

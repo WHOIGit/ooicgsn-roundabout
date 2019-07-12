@@ -3,70 +3,75 @@
 {% load mptt_tags %}
 
 
-            <div class="card">
-                <div class="card-header">
+<div class="card">
+    <div class="card-header">
 
-                    <h3>Assign Destination</h3>
+        <h3>Assign Destination</h3>
 
 
-                    <p>{% if inventory_item.part.friendly_name %} {{ inventory_item.part.friendly_name}} {% else %} {{ inventory_item.part.name }} {% endif %}
-                        - {{ inventory_item.serial_number }}</p>
+        <p>{% if inventory_item.part.friendly_name %} {{ inventory_item.part.friendly_name}} {% else %} {{ inventory_item.part.name }} {% endif %}
+            - {{ inventory_item.serial_number }}</p>
 
+    </div>
+
+    <div class="card-body">
+
+        <p>The following Assembly template destinations are available for this Part.</p>
+
+        <div id="available-assembly-parts">
+
+            {% if assembly_parts %}
+
+                {% regroup assembly_parts by assembly as assembly_list %}
+                {% for assembly in assembly_list %}
+
+                <div class="card">
+                    <div class="card-header" id="heading-{{ forloop.counter }}">
+                      <h5 class="mb-0">
+                        <button class="btn btn-link" data-toggle="collapse" data-target="#collapse-{{ forloop.counter }}" aria-expanded="true" aria-controls="collapse-{{ forloop.counter }}">
+                          <b>{{ assembly.grouper }}</b>
+                        </button>
+                      </h5>
+                    </div>
+
+                    <div id="collapse-{{ forloop.counter }}" class="collapse" aria-labelledby="heading-{{ assembly.id }}" data-parent="#available-assembly-parts">
+                      <div class="card-body ajax-add-subassembly-link">
+                          <ul class="list-group list-group-flush">
+                           {% for assembly_part in assembly.list %}
+                                <li class="list-group-item">
+                                   <b>{{ assembly_part.assembly }}</b> <br>
+
+                                   {% if assembly_part.get_ancestors %}
+                                       {{ assembly_part.get_ancestors|tree_path:" > " }} >
+                                   {% endif %}
+
+                                   <span class="text-primary">{{ assembly_part }}</span>
+
+                                   {% if assembly_part.get_children %} > {{ assembly_part.get_children|tree_path:" :: " }} {% endif %}
+
+                                 <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_assign_destination_action' inventory_item.id assembly_part.id %}"
+                                     data-mooring-id="{{ assembly_part.id }}"
+                                     data-node-id="{{ inventory_item.id }}"
+                                     class="btn btn-primary btn-sm float-right"
+                                     role="button">Select</a>
+                                 </li>
+
+                           {% endfor %}
+                           </ul>
+                      </div>
+                    </div>
                 </div>
 
-                <div class="card-body">
+                {% endfor %}
 
-                    <p>The following Mooring Template destinations are available for this Part.</p>
-
-                    <div id="available-mooring-parts">
-
-                        {% if mooring_parts %}
-
-                            {% regroup mooring_parts by location.parent as mooring_parts_by_location %}
-                            {% for location_parent in mooring_parts_by_location %}
-
-                            <div class="card">
-                                <div class="card-header" id="heading-{{ forloop.counter }}">
-                                  <h5 class="mb-0">
-                                    <button class="btn btn-link" data-toggle="collapse" data-target="#collapse-{{ forloop.counter }}" aria-expanded="true" aria-controls="collapse-{{ forloop.counter }}">
-                                      <b>{{ location_parent.grouper }}</b>
-                                    </button>
-                                  </h5>
-                                </div>
-
-                                <div id="collapse-{{ forloop.counter }}" class="collapse" aria-labelledby="heading-{{ location_parent.id }}" data-parent="#available-mooring-parts">
-                                  <div class="card-body ajax-add-subassembly-link">
-                                      <ul class="list-group list-group-flush">
-                                       {% for mooring_part in location_parent.list %}
-                                            <li class="list-group-item">
-                                               <b>{{ mooring_part.location }} ({{ mooring_part.location.location_id }})</b> <br>
-
-                                               {{ mooring_part.get_ancestors|tree_path:" > " }} > <span class="text-primary">{{ mooring_part }}</span>
-                                               {% if mooring_part.get_children %} > {{ mooring_part.get_children|tree_path:" :: " }} {% endif %}
-
-                                             <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_assign_destination_action' inventory_item.id mooring_part.id %}"
-                                                 data-mooring-id="{{ mooring_part.id }}"
-                                                 data-node-id="{{ inventory_item.id }}"
-                                                 class="btn btn-primary btn-sm float-right"
-                                                 role="button">Select</a>
-                                             </li>
-
-                                       {% endfor %}
-                                       </ul>
-                                  </div>
-                                </div>
-                            </div>
-
-                            {% endfor %}
-
-                        {% else %}
-                            <p>NONE</p>
-                        {% endif %}
+            {% else %}
+                <p>NONE</p>
+            {% endif %}
 
 
-                  </div>
+      </div>
 
-                </div>
+    </div>
 
 
 {% block javascript %}
