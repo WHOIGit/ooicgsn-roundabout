@@ -26,8 +26,10 @@ urlpatterns = [
     path('ajax/edit/<int:pk>/', view=views.InventoryAjaxUpdateView.as_view(), name='ajax_inventory_update'),
     path('ajax/add/', view=views.InventoryAjaxCreateBasicView.as_view(), name='ajax_inventory_add'),
     path('ajax/add/<int:current_location>/', view=views.InventoryAjaxCreateBasicView.as_view(), name='ajax_inventory_add'),
+    # Add to parent item action paths
     path('ajax/add-to-parent/<int:pk>/', view=views.InventoryAjaxParentListView.as_view(), name='ajax_inventory_add_to_parent'),
     path('ajax/add-to-parent/action/<int:pk>/<int:parent_pk>/', view=views.InventoryAjaxParentActionView.as_view(), name='ajax_inventory_add_to_parent_action'),
+    # Add to build action paths
     path('ajax/add-to-deployment/<int:pk>/', view=views.InventoryAjaxAddToDeploymentListView.as_view(), name='ajax_inventory_add_to_deployment'),
     path('ajax/add-to-deployment/action/<int:pk>/<int:deployment_pk>/<int:mooring_part_pk>/', view=views.InventoryAjaxAddToDeploymentActionView.as_view(), name='ajax_inventory_add_to_deployment_action'),
     # Add subassembly paths
@@ -40,7 +42,7 @@ urlpatterns = [
     # Add subassembly by Assembly Part
     path('ajax/add-subassembly/assembly-part/<int:pk>/<int:location_pk>/<int:build_pk>/', view=views.InventoryAjaxByAssemblyPartListView.as_view(), name='ajax_inventory_assembly_part_add_subassembly'),
     path('ajax/add-subassembly/assembly-part/action/<int:pk>/<int:build_pk>/<int:assembly_part_pk>/', view=views.InventoryAjaxByAssemblyPartyActionView.as_view(), name='ajax_inventory_assembly_part_add_subassembly_action'),
-    path('ajax/add-subassembly/assembly-part/action/<int:pk>/<int:build_pk>/<int:assembly_part_pk>/<int:parent_pk>/', view=views.InventoryAjaxByAssemblyPartyActionView.as_view(), name='ajax_inventory_assembly_part_add_subassembly_action'),    
+    path('ajax/add-subassembly/assembly-part/action/<int:pk>/<int:build_pk>/<int:assembly_part_pk>/<int:parent_pk>/', view=views.InventoryAjaxByAssemblyPartyActionView.as_view(), name='ajax_inventory_assembly_part_add_subassembly_action'),
     # Assign Destination paths
     path('ajax/assign-destination/<int:pk>/', view=views.InventoryAjaxAssignDestinationView.as_view(), name='ajax_inventory_assign_destination'),
     path('ajax/assign-destination/action/<int:pk>/<int:mooring_part_pk>/', view=views.InventoryAjaxAssignDestinationActionView.as_view(), name='ajax_inventory_assign_destination_action'),

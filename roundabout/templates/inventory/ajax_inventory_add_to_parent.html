@@ -60,7 +60,7 @@
 
                                               {% if parent.part.friendly_name %} {{ parent.part.friendly_name}} {% else %} {{ parent.part.name }} {% endif %}
                                                - {{ parent.serial_number }}
-                                               {% if parent.assigned_destination_root %}<span class="badge badge-pill badge-primary">DEST - {{ parent.assigned_destination_root.mooring_part.location.location_id }}</span>{% endif %}
+                                               {% if parent.assigned_destination_root %}<span class="badge badge-pill badge-primary">DEST - {{ parent.assigned_destination_root.assembly_part.location.location_id }}</span>{% endif %}
                                                <br>Current Location: {{ parent.location.name }}
 
                                               <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_add_to_parent_action' inventory_item.id parent.id %}"
