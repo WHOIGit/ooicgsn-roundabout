@@ -73,6 +73,25 @@ class Deployment(models.Model):
 
         return deploytosea_details
 
+    # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
+    def get_deployment_time_at_sea(self):
+        deployment_time_at_sea = None
+
+        try:
+            action_deploy_to_sea = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploy').latest('created_at')
+        except DeploymentAction.DoesNotExist:
+            action_deploy_to_sea = None
+
+        try:
+            action_recover = DeploymentAction.objects.filter(deployment=self).filter(action_type='recover').latest('created_at')
+        except DeploymentAction.DoesNotExist:
+            action_recover = None
+
+        if action_deploy_to_sea and action_recover:
+            deployment_time_at_sea =  action_recover.created_at - action_deploy_to_sea.created_at
+
+        return deployment_time_at_sea
+
     def get_deployment_status_label(self):
         deployment_status_label = None
         # get short label text for Deployment status
