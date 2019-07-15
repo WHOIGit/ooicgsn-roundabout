@@ -17,13 +17,13 @@
                     data-detail-url="{% url 'builds:ajax_builds_action' 'locationchange' build.id %}"
                     data-node-id="{{ build.id }}"
                     data-node-type="detail">Location Change</a>
-
+                <!--
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'builds:ajax_builds_action' 'test' build.id %}"
                     data-node-id="{{ build.id }}"
                     data-location-id="{{ build.location.id}}"
                     data-node-type="detail">Test</a>
-
+                -->
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'builds:ajax_builds_action' 'flag' build.id %}"
                     data-node-id="{{ build.id }}"
@@ -118,6 +118,10 @@
         </div>
     -->
         <h5>Build Status</h5>
+
+        {% if build.flag %}
+        <div class="float-right ajax-detail-link"><a href="#" data-detail-url="{% url 'builds:ajax_builds_action' 'flag' build.id %}" role="button" class="btn btn-danger">FLAGGED</a></div>
+        {% endif %}
 
         <p>Current Location: {{ build.location }}</p>
 

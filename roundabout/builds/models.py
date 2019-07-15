@@ -13,6 +13,10 @@ from roundabout.users.models import User
 # Build model
 
 class Build(models.Model):
+    FLAG_TYPES = (
+            (True, "Flagged"),
+            (False, "Unflagged"),
+    )
     build_number = models.CharField(max_length=255, unique=False)
     location = TreeForeignKey(Location, related_name='builds',
                               on_delete=models.SET_NULL, null=True, blank=False)
@@ -24,6 +28,7 @@ class Build(models.Model):
     detail = models.TextField(blank=True)
     is_deployed = models.BooleanField(default=False)
     time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
+    flag = models.BooleanField(choices=FLAG_TYPES, blank=False, default=False)
 
     tracker = FieldTracker(fields=['location',])
 

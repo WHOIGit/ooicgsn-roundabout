@@ -35,6 +35,35 @@ class BuildActionLocationChangeForm(forms.ModelForm):
         self.initial['detail'] = ''
 
 
+class BuildActionFlagForm(forms.ModelForm):
+
+    class Meta:
+        model = Build
+        fields = ['flag', 'detail']
+        labels = {
+            'flag': 'Flag Part',
+            'detail': 'Details',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(BuildActionFlagForm, self).__init__(*args, **kwargs)
+        self.initial['detail'] = ''
+
+
+class BuildActionTestForm(forms.ModelForm):
+
+    class Meta:
+        model = Build
+        fields = ['detail']
+        labels = {
+            'detail': 'Note on Test Results',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(BuildActionTestForm, self).__init__(*args, **kwargs)
+        self.initial['detail'] = ''
+
+
 class DeploymentForm(forms.ModelForm):
 
     class Meta:

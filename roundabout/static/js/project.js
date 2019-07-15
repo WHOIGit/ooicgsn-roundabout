@@ -188,14 +188,14 @@ $(document).ready(function(){
         console.log(jqXHR)
 
         $.ajax({
-            url: '/' + navtreePrefix + '/ajax/detail/' + data.object_id + '/',
+            url: '/' + data.object_type + '/ajax/detail/' + data.object_id + '/',
             success: function (data) {
               $("#detail-view").html(data);
             }
         });
         console.log(data.object_id);
         console.log(navtreePrefix);
-        var nodeID = navtreePrefix + '_' + data.object_id ;
+        var nodeID = data.object_type + '_' + data.object_id ;
         $.ajax({
             url: navURL,
             success: function (data) {
