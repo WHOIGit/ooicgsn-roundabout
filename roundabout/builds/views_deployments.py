@@ -54,6 +54,7 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.build.id,
+                'navtreePrefix': 'build',
             }
             return JsonResponse(data)
         else:

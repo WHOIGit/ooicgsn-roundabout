@@ -186,6 +186,7 @@ $(document).ready(function(){
         console.log(data)
         console.log(textStatus)
         console.log(jqXHR)
+
         $.ajax({
             url: '/' + navtreePrefix + '/ajax/detail/' + data.object_id + '/',
             success: function (data) {
@@ -289,14 +290,14 @@ $(document).ready(function(){
         console.log(textStatus)
         console.log(jqXHR)
         $.ajax({
-            url: '/deployments/ajax/detail/' + data.object_id + '/',
+            url: '/builds/ajax/detail/' + data.object_id + '/',
             success: function (data) {
               $("#detail-view").html(data);
             }
         });
         console.log(data.object_id);
         console.log(navtreePrefix);
-        var nodeID = 'deployment' + '_' + data.object_id ;
+        var nodeID = 'builds' + '_' + data.object_id ;
         $.ajax({
             url: navURL,
             success: function (data) {
