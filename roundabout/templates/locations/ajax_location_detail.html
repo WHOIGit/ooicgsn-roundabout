@@ -51,6 +51,10 @@
                              <p>Depth: {{ deployment.get_deploytosea_details|get_item:'depth' }} m</p>
                          {% endif %}
 
+                         {% if deployment.get_deployment_time_at_sea %}
+                             <p>Total Time at Sea: {{ deployment.get_deployment_time_at_sea|time_at_sea_display }}
+                         {% endif %}
+
                      </div>
                 </li>
             {% endfor %}
