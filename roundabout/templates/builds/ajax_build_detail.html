@@ -268,9 +268,12 @@
                                 <p>Latitude: {{ deployment.get_deploytosea_details|get_item:'latitude' }}</p>
                                 <p>Longitude: {{ deployment.get_deploytosea_details|get_item:'longitude' }}</p>
                                 <p>Depth: {{ deployment.get_deploytosea_details|get_item:'depth' }} m</p>
-                                <p>Total Time at Sea: {{ deployment.get_deployment_time_at_sea|time_at_sea_display }}
+
                             {% endif %}
 
+                            {% if deployment.get_deployment_time_at_sea %}
+                                <p>Total Time at Sea: {{ deployment.get_deployment_time_at_sea|time_at_sea_display }}
+                            {% endif %}
                         </div>
 
                     </li>
