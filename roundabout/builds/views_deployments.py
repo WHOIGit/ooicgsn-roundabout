@@ -170,6 +170,10 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         # Update Build location, create Action Record
         build = self.object.build
 
+        # Create Build Action record for deployment
+        build_record = BuildAction.objects.create(action_type=action_type_inventory, detail=self.object.detail, location=self.object.location,
+                                                   user=self.request.user, build=build, created_at=action_date)
+
         # If action_type is not "retire", update Build location
         if action_type != 'retire':
             build.location = self.object.location
@@ -180,9 +184,9 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
 
         build.save()
 
-        # Create Build Action record for deployment
-        build_record = BuildAction.objects.create(action_type=action_type_inventory, detail=self.object.detail, location=self.object.location,
-                                                   user=self.request.user, build=build, created_at=action_date)
+        #update Time at Sea if Recovered from Sea with Build model method
+        if action_type == 'recover':
+            build.update_time_at_sea()
 
         # Get all Inventory items on Deployment, match location and add Action
         inventory_items = Inventory.objects.filter(build=build)
@@ -196,7 +200,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             action_record.detail = action_detail
             action_record.save()
 
-            #update Time at Sea if Recovered from Sea with model method
+            #update Time at Sea if Recovered from Sea with Inventory model method
             if action_type == 'recover':
                 item.update_time_at_sea()
 

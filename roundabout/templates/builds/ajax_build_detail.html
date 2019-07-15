@@ -121,6 +121,8 @@
 
         <p>Current Location: {{ build.location }}</p>
 
+        <p>Total Time at Sea: {{ build.total_time_at_sea|time_at_sea_display }}</p>
+
         <h6>Percent Built</h6>
 
         <div class="progress" style="height: 20px;">
@@ -129,6 +131,9 @@
               <span>{{ percent_complete }}%</span>
           </div>
         </div>
+
+
+
 
     </div>
 
@@ -142,6 +147,10 @@
         <h5>Current Deployment Data</h5>
         <p>{{ label_deployments_app_singular }} Number: {{ current_deployment.deployment_number }}</p>
         <p>Final Deployment Location: {{ current_deployment.deployed_location }}</p>
+
+        {% if build.current_deployment_time_at_sea %}
+            <p>Current Deployment Time at Sea: {{ build.current_deployment_time_at_sea|time_at_sea_display }}
+        {% endif %}
 
         <h6>Deployment Status</h6>
 

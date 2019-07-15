@@ -18,3 +18,13 @@ def has_group(user, group_name):
 @register.filter
 def get_item(dictionary, key):
     return dictionary.get(key)
+
+# filter Time at Sea duration field to show Hours/Minutes
+@register.filter
+def time_at_sea_display(duration):
+    total_seconds = int(duration.total_seconds())
+    days = total_seconds // (3600 * 24)
+    hours = (total_seconds % (3600 * 24)) // 3600
+    minutes = (total_seconds % 3600) // 60
+
+    return '{} days {} hours {} min'.format(days, hours, minutes)    

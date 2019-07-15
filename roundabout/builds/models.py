@@ -1,3 +1,6 @@
+import datetime
+from datetime import timedelta
+
 from django.db import models
 from mptt.models import TreeForeignKey
 from django.utils import timezone
@@ -20,6 +23,7 @@ class Build(models.Model):
     updated_at = models.DateTimeField(default=timezone.now)
     detail = models.TextField(blank=True)
     is_deployed = models.BooleanField(default=False)
+    time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
 
     tracker = FieldTracker(fields=['location',])
 
@@ -51,6 +55,48 @@ class Build(models.Model):
             else:
                 deployment_status = None
         return deployment_status
+
+    # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
+    def update_time_at_sea(self):
+        try:
+            action_deploy_to_sea = BuildAction.objects.filter(build=self).filter(action_type='deploymenttosea').latest('created_at')
+        except BuildAction.DoesNotExist:
+            action_deploy_to_sea = None
+
+        try:
+            action_recover = BuildAction.objects.filter(build=self).filter(action_type='deploymentrecover').latest('created_at')
+        except BuildAction.DoesNotExist:
+            action_recover = None
+
+        if action_deploy_to_sea and action_recover:
+            latest_time_at_sea =  action_recover.created_at - action_deploy_to_sea.created_at
+        else:
+            latest_time_at_sea = timedelta(minutes=0)
+
+        # add to existing Time at Sea duration
+        self.time_at_sea = self.time_at_sea + latest_time_at_sea
+        self.save()
+
+    # get the time at sea for the current deployment only (if item is at sea)
+    def current_deployment_time_at_sea(self):
+        current_deployment_time = timedelta(minutes=0)
+
+        if self.current_deployment_status() == 'deploy':
+            try:
+                action_deploy_to_sea = BuildAction.objects.filter(build=self).filter(action_type='deploymenttosea').latest('created_at')
+            except BuildAction.DoesNotExist:
+                action_deploy_to_sea = None
+
+            if action_deploy_to_sea:
+                now = timezone.now()
+                current_time_at_sea = now - action_deploy_to_sea.created_at
+                current_deployment_time = current_time_at_sea
+
+        return current_deployment_time
+
+    # get the Total Time at Sea by adding historical sea time and current deployment sea time
+    def total_time_at_sea(self):
+        return self.time_at_sea + self.current_deployment_time_at_sea()
 
 
 class BuildAction(models.Model):
