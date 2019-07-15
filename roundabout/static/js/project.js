@@ -187,15 +187,20 @@ $(document).ready(function(){
         console.log(textStatus)
         console.log(jqXHR)
 
+        if (data.hasOwnProperty('object_type')) {
+            var objectTypePrefix = data.object_type;
+        } else {
+            var objectTypePrefix = navtreePrefix;
+        }
+
         $.ajax({
-            url: '/' + data.object_type + '/ajax/detail/' + data.object_id + '/',
+            url: '/' + objectTypePrefix + '/ajax/detail/' + data.object_id + '/',
             success: function (data) {
               $("#detail-view").html(data);
             }
         });
-        console.log(data.object_id);
-        console.log(navtreePrefix);
-        var nodeID = data.object_type + '_' + data.object_id ;
+
+        var nodeID = objectTypePrefix + '_' + data.object_id ;
         $.ajax({
             url: navURL,
             success: function (data) {

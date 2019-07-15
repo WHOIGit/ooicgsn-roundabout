@@ -54,7 +54,7 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.build.id,
-                'navtreePrefix': 'build',
+                'object_type': 'builds',
             }
             return JsonResponse(data)
         else:
@@ -212,6 +212,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
                 'message': "Successfully submitted form data.",
                 'object_id': build.id,
                 'location_id': self.object.location.id,
+                'object_type': 'builds',
             }
             return JsonResponse(data)
         else:

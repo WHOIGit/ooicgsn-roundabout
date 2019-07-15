@@ -86,6 +86,7 @@ class BuildAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
+                'object_type': 'builds',
             }
             return JsonResponse(data)
         else:
@@ -112,6 +113,7 @@ class BuildAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
+                'object_type': 'builds',
             }
             return JsonResponse(data)
         else:
