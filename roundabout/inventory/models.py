@@ -73,7 +73,7 @@ class Deployment(models.Model):
 
         return deploytosea_details
 
-    # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
+    # get the most recent Deploy to Sea and Recover from Sea action timestamps, find time delta for Total Time at sea
     def get_deployment_time_at_sea(self):
         deployment_time_at_sea = None
 
