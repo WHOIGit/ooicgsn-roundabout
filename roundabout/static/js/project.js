@@ -237,23 +237,17 @@ $(document).ready(function(){
         console.log(data.object_model);
         console.log(navtreePrefix);
         $("#detail-view").html('');
-        if (navtreePrefix == 'deployments') {
-            var parentPrefix = 'locations';
-        } else if (navtreePrefix == 'parts') {
 
-            if (data.object_model == 'revision') {
-                var parentPrefix = 'parts';
-            } else {
-                var parentPrefix = 'part_type';
-            }
-
+        if (data.hasOwnProperty('object_type')) {
+            var objectTypePrefix = data.object_type;
         } else {
-            var parentPrefix = navtreePrefix;
+            var objectTypePrefix = navtreePrefix;
         }
-        var nodeID = parentPrefix + '_' + data.parent_id;
+
+        var nodeID = objectTypePrefix + '_' + data.parent_id;
 
         $.ajax({
-            url: '/' + navtreePrefix + '/ajax/load-navtree/',
+            url: '/' + objectTypePrefix + '/ajax/load-navtree/',
             success: function (data) {
                 $(navTree).jstree(true).destroy();
                 $(navTree).html(data);

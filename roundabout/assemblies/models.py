@@ -28,6 +28,10 @@ class Assembly(models.Model):
     def __str__(self):
         return self.name
 
+    # method to set the object_type variable to send to Javascript AJAX functions
+    def get_object_type(self):
+        return 'assembly'
+
     def get_assembly_total_cost(self):
         tree = self.assembly_parts.all()
         total_cost = 0
@@ -75,6 +79,10 @@ class AssemblyPart(MPTTModel):
 
     def __str__(self):
         return self.part.name
+
+    # method to set the object_type variable to send to Javascript AJAX functions
+    def get_object_type(self):
+        return 'assembly_parts'
 
     def get_subassembly_total_cost(self):
         tree = self.get_descendants(include_self=True)

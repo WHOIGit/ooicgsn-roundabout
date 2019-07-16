@@ -7,8 +7,8 @@
 
 
         <div class="card-header">
-            {% if assembly.id %}
-                <h3>{{ mooring_part.part.name }}</h3>
+            {% if assembly_part.id %}
+                <h3>{{ assembly_part.part.name }}</h3>
             {% elif parent.id %}
                 <h3>Add Subassembly to {{ parent.part.name }} </h3>
             {% else %}
@@ -59,7 +59,7 @@
                 <hr>
 
 
-              <form class="form-horizontal assembly-part-form" method="post" action="" id=""
+              <form class="form-horizontal ajax-form" method="post" action="" id="assembly-part-form"
                   data-url='{{ request.build_absolute_uri|safe }}'
                   data-mooring-parts-url="{% url 'moorings:ajax_load_mooring_parts' %}">
                 {% csrf_token %}
@@ -87,10 +87,10 @@
 
                 <div class="control-group">
                   <div class="controls">
-                    {% if mooring_part.id %}
-                    <button type="submit" class="btn btn-primary">Update {{ label_moorings_app_singular }} Part</button>
+                    {% if assembly_part.id %}
+                    <button type="submit" class="btn btn-primary">Update Assembly Part</button>
                     {% else %}
-                    <button type="submit" class="btn btn-primary">Add {{ label_moorings_app_singular }} Part</button>
+                    <button type="submit" class="btn btn-primary">Add Assembly Part</button>
                     {% endif %}
                   </div>
                 </div>

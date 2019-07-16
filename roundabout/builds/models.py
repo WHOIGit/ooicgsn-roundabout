@@ -38,6 +38,10 @@ class Build(models.Model):
     def __str__(self):
         return '%s - %s' % (self.build_number, self.assembly.name)
 
+    # method to set the object_type variable to send to Javascript AJAX functions
+    def get_object_type(self):
+        return 'builds'
+
     def current_deployment(self):
         # set default to None
         current_deployment = None

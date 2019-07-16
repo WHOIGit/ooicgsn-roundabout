@@ -63,6 +63,8 @@ class AssemblyAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
@@ -91,6 +93,8 @@ class AssemblyAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
@@ -111,6 +115,7 @@ class AssemblyAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, Delete
         data = {
             'message': "Successfully submitted form data.",
             'parent_id': self.object.id,
+            'object_type': self.object.get_object_type(),
         }
         self.object.delete()
 
@@ -180,6 +185,8 @@ class AssemblyPartAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
@@ -205,7 +212,7 @@ class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
         })
         if 'parent_pk' in self.kwargs:
             context.update({
-                'parent': MooringPart.objects.get(id=self.kwargs['parent_pk'])
+                'parent': AssemblyPart.objects.get(id=self.kwargs['parent_pk'])
             })
         return context
 
@@ -218,7 +225,7 @@ class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
         return kwargs
 
     def get_success_url(self):
-        return reverse('moorings:ajax_moorings_detail', args=(self.object.id, ))
+        return reverse('assemblies:ajax_assemblyparts_detail', args=(self.object.id, ))
 
     def form_valid(self, form):
         self.object = form.save()
@@ -243,7 +250,27 @@ class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
             return response
+
+
+class AssemblyPartAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = AssemblyPart
+    context_object_name='assembly_part'
+    template_name = 'assemblies/ajax_assembly_confirm_delete.html'
+    permission_required = 'moorings.add_mooringpart'
+    redirect_field_name = 'home'
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        data = {
+            'message': "Successfully submitted form data.",
+            'object_type': self.object.get_object_type(),
+            'parent_id': self.object.parent_id,
+        }
+        self.object.delete()
+        return JsonResponse(data)

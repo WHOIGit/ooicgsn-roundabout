@@ -16,4 +16,5 @@ urlpatterns = [
     path('ajax/assemblypart/add/<int:assembly_pk>/', view=views.AssemblyPartAjaxCreateView.as_view(), name='ajax_assemblyparts_add'),
     path('ajax/assemblypart/add/<int:assembly_pk>/<int:parent_pk>/', view=views.AssemblyPartAjaxCreateView.as_view(), name='ajax_assemblyparts_add'),
     path('ajax/assemblypart/edit/<int:pk>/', view=views.AssemblyPartAjaxUpdateView.as_view(), name='ajax_assemblyparts_update'),
+    path('ajax/assemblypart/delete/<int:pk>/', view=views.AssemblyPartAjaxDeleteView.as_view(), name='ajax_assemblyparts_delete'),
 ]

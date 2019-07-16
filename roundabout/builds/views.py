@@ -86,7 +86,7 @@ class BuildAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
-                'object_type': 'builds',
+                'object_type': self.object.get_object_type(),
                 'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
@@ -114,7 +114,7 @@ class BuildAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
-                'object_type': 'builds',
+                'object_type': self.object.get_object_type(),
                 'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
@@ -197,7 +197,7 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
-                'object_type': 'builds',
+                'object_type': self.object.get_object_type(),
                 'location_id': self.object.location.id,
                 'detail_path': self.get_success_url(),
             }

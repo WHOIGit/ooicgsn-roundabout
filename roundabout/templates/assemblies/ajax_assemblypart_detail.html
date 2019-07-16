@@ -37,7 +37,7 @@
                     <hr>
                         {% if assembly_part.parent.id %}
                             <p class="ajax-detail-link">Parent Assembly:
-                                <a href="#" data-detail-url="{% url 'moorings:ajax_moorings_detail' assembly_part.parent.id %}"
+                                <a href="#" data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' assembly_part.parent.id %}"
                                             data-node-id="{{ assembly_part.parent.id }}">{{ assembly_part.parent.part.name }}</a></p>
                         {% endif %}
 
@@ -119,13 +119,13 @@
                                             {% recursetree assembly_part.get_descendants %}
                                                 <li class="list-group-item">
                                                     <div class="ajax-detail-link">
-                                                    <a data-detail-url="{% url 'moorings:ajax_moorings_detail' node.id %}"
+                                                    <a data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' node.id %}"
                                                         data-node-id="{{ node.id }}"
                                                         href="#"
                                                         class="subassembly-name">{{ node.part.name }}</a>
 
 
-                                                    <a data-detail-url="{% url 'moorings:ajax_moorings_detail' node.id  %}"
+                                                    <a data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' node.id  %}"
                                                         data-node-id="{{ node.id }}"
                                                         href="#"
                                                         class="btn btn-primary btn-sm float-right mr-2"
@@ -158,7 +158,7 @@
                     <div class="ajax-detail-link">
                         <hr>
 
-                        <a href="#" data-detail-url="{% url 'moorings:ajax_moorings_delete' assembly_part.id %}" role="button" class="btn btn-danger parts-delete">Remove from Template</a>
+                        <a href="#" data-detail-url="{% url 'assemblies:ajax_assemblyparts_delete' assembly_part.id %}" role="button" class="btn btn-danger parts-delete">Remove from Template</a>
                     </div>
 
                 </div>
