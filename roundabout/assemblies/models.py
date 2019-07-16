@@ -30,7 +30,7 @@ class Assembly(models.Model):
 
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
-        return 'assembly'
+        return 'assemblies'
 
     def get_assembly_total_cost(self):
         tree = self.assembly_parts.all()
