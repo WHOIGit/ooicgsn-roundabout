@@ -55,6 +55,7 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.build.id,
                 'object_type': 'builds',
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
@@ -213,6 +214,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
                 'object_id': build.id,
                 'location_id': self.object.location.id,
                 'object_type': 'builds',
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:

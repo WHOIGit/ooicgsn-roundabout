@@ -185,7 +185,7 @@ $(document).ready(function(){
     function handleFormSuccess(data, textStatus, jqXHR){
         console.log(data)
         console.log(textStatus)
-        console.log(jqXHR)
+        console.log(data.detail_path)
 
         if (data.hasOwnProperty('object_type')) {
             var objectTypePrefix = data.object_type;
@@ -194,7 +194,7 @@ $(document).ready(function(){
         }
 
         $.ajax({
-            url: '/' + objectTypePrefix + '/ajax/detail/' + data.object_id + '/',
+            url: data.detail_path,
             success: function (data) {
               $("#detail-view").html(data);
             }
@@ -286,47 +286,6 @@ $(document).ready(function(){
                 $(navTree).jstree();
                 $(navTree).jstree(true).select_node(nodeID);
                 console.log(nodeID);
-            }
-        });
-    }
-
-    function handleDeploymentFormSuccess(data, textStatus, jqXHR){
-        console.log(data)
-        console.log(textStatus)
-        console.log(jqXHR)
-        $.ajax({
-            url: '/builds/ajax/detail/' + data.object_id + '/',
-            success: function (data) {
-              $("#detail-view").html(data);
-            }
-        });
-        console.log(data.object_id);
-        console.log(navtreePrefix);
-        var nodeID = 'builds' + '_' + data.object_id ;
-        $.ajax({
-            url: navURL,
-            success: function (data) {
-                $(navTree).jstree(true).destroy();
-                $(navTree).html(data);
-                $(navTree).jstree();
-                $(navTree).jstree(true).select_node(nodeID);
-                $.each(openNodes, function(key, value) {
-                    $(navTree).jstree(true).open_node(value);
-                });
-                console.log(openNodes);
-                $(navTree).on('open_node.jstree', function (event, data) {
-                    console.log("node =" + data.node.id);
-                    openNodes.push(data.node.id);
-                    console.log(openNodes);
-                });
-                $(navTree).on('close_node.jstree', function (event, data) {
-                    console.log("node =" + data.node.id);
-                    var index = openNodes.indexOf(data.node.id);
-                    if (index > -1) {
-                      openNodes.splice(index, 1);
-                    }
-                    console.log(openNodes);
-                });
             }
         });
     }
