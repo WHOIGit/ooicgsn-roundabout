@@ -204,3 +204,22 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
             return JsonResponse(data)
         else:
             return response
+
+
+class BuildAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = Build
+    template_name = 'builds/ajax_build_confirm_delete.html'
+    permission_required = 'builds.delete_build'
+    redirect_field_name = 'home'
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        data = {
+            'message': "Successfully submitted form data.",
+            'parent_id': self.object.location.id,
+            'parent_type': 'locations',
+            'object_type': self.object.get_object_type(),
+        }
+        self.object.delete()
+
+        return JsonResponse(data)

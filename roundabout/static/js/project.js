@@ -234,7 +234,7 @@ $(document).ready(function(){
         console.log(textStatus)
         console.log(jqXHR)
         console.log(data.parent_id);
-        console.log(data.object_model);
+        console.log(data.object_type);
         console.log(navtreePrefix);
         $("#detail-view").html('');
 
@@ -244,7 +244,13 @@ $(document).ready(function(){
             var objectTypePrefix = navtreePrefix;
         }
 
-        var nodeID = objectTypePrefix + '_' + data.parent_id;
+        if (data.hasOwnProperty('parent_type')) {
+            var parentTypePrefix = data.parent_type;
+        } else {
+            var parentTypePrefix = navtreePrefix;
+        }
+
+        var nodeID = parentTypePrefix + '_' + data.parent_id;
 
         $.ajax({
             url: '/' + objectTypePrefix + '/ajax/load-navtree/',
