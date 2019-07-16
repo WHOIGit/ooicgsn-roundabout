@@ -488,6 +488,8 @@ class InventoryAjaxCreateBasicView(LoginRequiredMixin, AjaxFormMixin, CreateView
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
@@ -548,6 +550,8 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
@@ -773,6 +777,8 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
                 'location_id': self.object.location.id,
             }
             return JsonResponse(data)
@@ -819,6 +825,8 @@ class ActionNoteAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.inventory_id,
+                'object_type': self.object.inventory.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
@@ -881,6 +889,8 @@ class ActionHistoryNoteAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateV
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.inventory_id,
+                'object_type': self.object.inventory.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:

@@ -197,8 +197,12 @@ class Inventory(MPTTModel):
     def __str__(self):
         return self.serial_number
 
+    # method to set the object_type variable to send to Javascript AJAX functions
+    def get_object_type(self):
+        return 'inventory'
+
     def get_absolute_url(self):
-        return reverse('inventory:inventory_detail', kwargs={ 'pk': self.pk })
+        return reverse('inventory:ajax_inventory_detail', kwargs={ 'pk': self.pk })
 
     def get_descendants_with_self(self):
         tree = self.get_descendants(include_self=True)
