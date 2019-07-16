@@ -27,7 +27,7 @@ class AssemblyPartForm(forms.ModelForm):
         }
 
     class Media:
-        js = ('js/form-moorings.js',)
+        js = ('js/form-assemblyparts.js',)
 
     def __init__(self, *args, **kwargs):
 

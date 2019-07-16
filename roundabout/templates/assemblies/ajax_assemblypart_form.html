@@ -20,7 +20,7 @@
 
 
                 <div id="inventory-filter">
-                    <form class="form-horizontal" method="post" action="" id="parttype-filter-form" data-url="{% url 'moorings:ajax_load_part_templates' %}" novalidate>
+                    <form class="form-horizontal" method="post" action="" id="parttype-filter-form" data-url="{% url 'assemblies:ajax_load_part_templates' %}" novalidate>
                         <div class="form-group">
                         <label for="id_part_type" class="form-control-label  requiredField">Select Part Type<span class="asteriskField">*</span></label>
                             <select name="part_type" class="select form-control" id="id_part_type">
@@ -61,7 +61,7 @@
 
               <form class="form-horizontal ajax-form" method="post" action="" id="assembly-part-form"
                   data-url='{{ request.build_absolute_uri|safe }}'
-                  data-mooring-parts-url="{% url 'moorings:ajax_load_mooring_parts' %}">
+                  data-assembly-parts-url="{% url 'assemblies:ajax_load_assembly_parts' %}">
                 {% csrf_token %}
                 {{ form.media }}
                 {{ form|crispy }}

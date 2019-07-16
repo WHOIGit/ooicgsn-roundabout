@@ -6,7 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 
 from .models import Assembly, AssemblyPart, AssemblyType, AssemblyDocument
 from .forms import AssemblyForm, AssemblyPartForm
-from roundabout.parts.models import PartType
+from roundabout.parts.models import PartType, Part
 from common.util.mixins import AjaxFormMixin
 
 # Load the javascript navtree
@@ -14,6 +14,25 @@ def load_assemblies_navtree(request):
     assembly_types = AssemblyType.objects.prefetch_related('assemblies__assembly_parts')
     assemblies = Assembly.objects.prefetch_related('assembly_parts')
     return render(request, 'assemblies/ajax_assembly_navtree.html', {'assembly_types': assembly_types})
+
+# Function to load Parts based on Part Type filter
+def load_part_templates(request):
+    part_type = request.GET.get('part_type')
+    if part_type == 'All':
+        part_list = Part.objects.all()
+    else:
+        part_list = Part.objects.filter(part_type=part_type)
+    return render(request, 'inventory/part_templates_dropdown_list_options.html', {'parts': part_list})
+
+
+# Function to load available Assembly Parts based on Assembly
+def load_assembly_parts(request):
+    assembly_id = request.GET.get('assembly')
+    assembly_parts_list = AssemblyPart.objects.none()
+    if assembly_id:
+        assembly = Assembly.objects.get(id=assembly_id)
+        assembly_parts_list = AssemblyPart.objects.filter(assembly=assembly).prefetch_related('part')
+    return render(request, 'inventory/assemblyparts_dropdown_list_options.html', {'assembly_parts': assembly_parts_list})
 
 ## CBV views for Assembly app ##
 
