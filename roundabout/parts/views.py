@@ -166,6 +166,8 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
@@ -201,6 +203,8 @@ class PartsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
@@ -229,6 +233,8 @@ class PartsAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteVie
         data = {
             'message': "Successfully submitted form data.",
             'parent_id': self.object.part_type_id,
+            'parent_type': 'part_type',
+            'object_type': self.object.get_object_type(),
         }
         self.object.delete()
         return JsonResponse(data)
@@ -296,6 +302,8 @@ class PartsAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin, A
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.part.id,
+                'object_type': self.object.part.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
@@ -352,6 +360,8 @@ class PartsAjaxUpdateRevisionView(LoginRequiredMixin, PermissionRequiredMixin, A
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.part.id,
+                'object_type': self.object.part.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
@@ -382,7 +392,8 @@ class PartsAjaxDeleteRevisionView(LoginRequiredMixin, PermissionRequiredMixin, D
         data = {
             'message': "Successfully submitted form data.",
             'parent_id': self.object.part.id,
-            'object_model': self.object._meta.model_name,
+            'parent_type': self.object.part.get_object_type(),
+            'object_type': self.object.part.get_object_type(),
         }
         self.object.delete()
         return JsonResponse(data)
@@ -426,6 +437,8 @@ class PartsAjaxAddUdfFieldUpdateView(LoginRequiredMixin, PermissionRequiredMixin
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
@@ -514,7 +527,9 @@ class PartsAjaxSetUdfFieldValueFormView(LoginRequiredMixin, PermissionRequiredMi
             print(form.cleaned_data)
             data = {
                 'message': "Successfully submitted form data.",
-                'object_id': part_id,
+                'object_id': part.id,
+                'object_type': part.get_object_type(),
+                'detail_path': part.get_absolute_url(),
             }
             return JsonResponse(data)
 
@@ -524,9 +539,6 @@ class PartsAjaxSetUdfFieldValueFormView(LoginRequiredMixin, PermissionRequiredMi
             return JsonResponse(data, status=400)
         else:
             return self.render_to_response(self.get_context_data(form=form, form_errors=form_errors))
-
-    def get_success_url(self):
-        return reverse('parts:ajax_parts_detail', args=(part_id, ))
 
 
 # Template View to confirm removal of a UDF field from a Part
