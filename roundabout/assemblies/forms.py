@@ -43,4 +43,8 @@ class AssemblyPartForm(forms.ModelForm):
 
         super(AssemblyPartForm, self).__init__(*args, **kwargs)
         #self.fields['parent'].queryset = MooringPart.objects.none()
-        self.fields['parent'].queryset = AssemblyPart.objects.filter(id=self.parent_pk)
+        #self.fields['parent'].queryset = AssemblyPart.objects.filter(id=self.parent_pk)
+        if self.assembly_pk:
+            self.fields['parent'].queryset = AssemblyPart.objects.filter(assembly_id=self.assembly_pk)
+        elif self.instance.pk:
+            self.fields['parent'].queryset = AssemblyPart.objects.filter(assembly=self.instance.assembly)
