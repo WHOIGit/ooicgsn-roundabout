@@ -27,26 +27,32 @@
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'builds:ajax_builds_action' 'flag' build.id %}"
                     data-node-id="{{ build.id }}"
-                    data-location-id="{{ build.location.id}}"
+                    data-location-id="{{ build.location.id }}"
                     data-node-type="detail">Flag</a>
 
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'inventory:ajax_note_action' build.id %}"
                     data-node-id="{{ build.id }}"
-                    data-location-id="{{ build.location.id}}"
+                    data-location-id="{{ build.location.id }}"
                     data-node-type="detail">Photo/Note</a>
 
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'deployments:ajax_deployment_snapshot' build.id %}"
                     data-node-id="{{ build.id }}"
-                    data-location-id="{{ build.location.id}}"
+                    data-location-id="{{ build.location.id }}"
                     data-node-type="detail">Take Snapshot</a>
 
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'builds:ajax_builds_update' build.id %}"
                     data-node-id="{{ build.id }}"
-                    data-location-id="{{ build.location.id}}"
+                    data-location-id="{{ build.location.id }}"
                     data-node-type="detail">Edit Build Details</a>
+
+                <a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'builds:ajax_builds_snapshot' build.id %}"
+                    data-node-id="{{ build.id }}"
+                    data-location-id="{{ build.location.id }}"
+                    data-node-type="detail">Take Snapshot</a>
 
                 <hr>
 

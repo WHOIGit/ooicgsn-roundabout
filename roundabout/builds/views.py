@@ -5,7 +5,7 @@ from django.views.generic import View, DetailView, ListView, RedirectView, Updat
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 from common.util.mixins import AjaxFormMixin
-from .models import Build, BuildAction
+from .models import Build, BuildAction, BuildSnapshot, InventorySnapshot
 from .forms import *
 from roundabout.assemblies.models import Assembly, AssemblyPart
 from roundabout.locations.models import Location
@@ -15,6 +15,19 @@ from roundabout.inventory.models import Inventory, Action
 def load_builds_navtree(request):
     locations = Location.objects.prefetch_related('builds').prefetch_related('inventory__part__part_type')
     return render(request, 'builds/ajax_build_navtree.html', {'locations': locations})
+
+# Function to copy Inventory items for Build Snapshots
+def make_tree_copy(root_part, new_location, build_snapshot, parent=None ):
+    # Makes a copy of the tree starting at "root_part", move to new Location, reparenting it to "parent"
+    if root_part.part.friendly_name:
+        part_name = root_part.part.friendly_name
+    else:
+        part_name = root_part.part.name
+
+    new_item = InventorySnapshot.objects.create(location=new_location, inventory=root_part, parent=parent, build=build_snapshot, order=part_name)
+
+    for child in root_part.get_children():
+        make_tree_copy(child, new_location, build_snapshot, new_item)
 
 ## CBV views for Builds app ##
 
@@ -223,3 +236,57 @@ class BuildAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteVie
         self.object.delete()
 
         return JsonResponse(data)
+
+
+# Create a new Snapshot copy of a Build
+class BuildAjaxSnapshotCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
+    model = BuildSnapshot
+    form_class = BuildSnapshotForm
+    template_name = 'builds/ajax_snapshot_form.html'
+    context_object_name = 'build'
+
+    def get_context_data(self, **kwargs):
+        context = super(BuildAjaxSnapshotCreateView, self).get_context_data(**kwargs)
+        context.update({
+            'build': Build.objects.get(id=self.kwargs['pk'])
+        })
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super(BuildAjaxSnapshotCreateView, self).get_form_kwargs()
+        if 'pk' in self.kwargs:
+            kwargs['pk'] = self.kwargs['pk']
+        return kwargs
+
+    def get_success_url(self):
+        return reverse('builds:ajax_builds_detail', args=(self.kwargs['pk'], ))
+
+    def form_valid(self, form, **kwargs):
+        build = Build.objects.get(pk=self.kwargs['pk'])
+        #base_location = Location.objects.get(root_type='Snapshots')
+        #snapshot_location = Location.objects.get(root_type='Snapshots')
+        inventory_items = build.inventory.all()
+
+        build_snapshot = form.save()
+        build_snapshot.build = build
+        build_snapshot.deployment = build.current_deployment()
+        build_snapshot.location = build.location
+        build_snapshot.save()
+
+        for item in inventory_items:
+            if item.is_root_node():
+                make_tree_copy(item, build.location, build_snapshot, item.parent)
+
+        response = HttpResponseRedirect(self.get_success_url())
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': build.id,
+                'object_type': build.get_object_type(),
+                'detail_path': self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response

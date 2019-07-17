@@ -157,7 +157,7 @@ class BuildAction(models.Model):
 
 
 class BuildSnapshot(models.Model):
-    build = models.ForeignKey(Build, related_name='build_snapshots', on_delete=models.CASCADE, null=False)
+    build = models.ForeignKey(Build, related_name='build_snapshots', on_delete=models.CASCADE, null=True, blank=True)
     deployment = models.ForeignKey('inventory.Deployment', related_name='build_snapshots',
                                    on_delete=models.SET_NULL, null=True, blank=True)
     location = TreeForeignKey(Location, related_name='build_snapshots',

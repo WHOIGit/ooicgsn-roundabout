@@ -6,7 +6,7 @@ from django.contrib.sites.models import Site
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, Div, Field
 
-from .models import Build, BuildAction
+from .models import Build, BuildAction, BuildSnapshot
 from roundabout.inventory.models import Deployment, DeploymentAction
 from roundabout.locations.models import Location
 
@@ -62,6 +62,21 @@ class BuildActionTestForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(BuildActionTestForm, self).__init__(*args, **kwargs)
         self.initial['detail'] = ''
+
+
+class BuildSnapshotForm(forms.ModelForm):
+
+    class Meta:
+        model = BuildSnapshot
+        fields = ['notes']
+        labels = {
+            'detail': 'Notes on Snapshot',
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.pk = kwargs.pop('pk')
+        super(BuildSnapshotForm, self).__init__(*args, **kwargs)
+        #self.fields['location'].queryset = Location.objects.exclude(id=self.pk)
 
 
 class DeploymentForm(forms.ModelForm):
