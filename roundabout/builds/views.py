@@ -270,6 +270,7 @@ class BuildAjaxSnapshotCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView)
         build_snapshot = form.save()
         build_snapshot.build = build
         build_snapshot.deployment = build.current_deployment()
+        build_snapshot.deployment_status = build.current_deployment_status()
         build_snapshot.location = build.location
         build_snapshot.save()
 

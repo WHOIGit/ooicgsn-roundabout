@@ -1,5 +1,6 @@
 {% load humanize %}
 {% load common_tags %}
+{% load mptt_tags %}
 
 <div class="card-header" data-object-id="{{ build.id }}">
     <h3>{{ build }}</h3>
@@ -196,6 +197,12 @@
             </li>
         {% endif %}
 
+        {% if build.build_snapshots.all %}
+            <li class="nav-item">
+              <a class="nav-link" id="snapshots-tab" data-toggle="tab" href="#snapshots" role="tab" aria-controls="snapshots" aria-selected="true">Snapshots</a>
+            </li>
+        {% endif %}
+
         {% if build.revision.documentation.all %}
           <li class="nav-item">
             <a class="nav-link" id="documentation-tab" data-toggle="tab" href="#documentation" role="tab" aria-controls="documentation" aria-selected="false">Documentation</a>
@@ -284,6 +291,67 @@
                             {% if deployment.get_deployment_time_at_sea %}
                                 <p>Total Time at Sea: {{ deployment.get_deployment_time_at_sea|time_at_sea_display }}
                             {% endif %}
+                        </div>
+
+                    </li>
+                {% endfor %}
+            </ul>
+
+        </div>
+        {% endif %}
+
+        {% if build.build_snapshots.all %}
+        <div class="tab-pane fade" id="snapshots" role="tabpanel" aria-labelledby="snapshots-tab">
+
+            <ul class="list-group list-group-flush">
+                {% for snapshot in build.build_snapshots.all %}
+                    <li class="list-group-item">
+                        <a class="collapsed" data-toggle="collapse" href="#snapshot-{{ snapshot.id }}" aria-expanded="false" aria-controls="snapshot-{{ snapshot.id }}">
+                            Snapshot: {{ snapshot.location  }} - {{ snapshot.created_at|date:"n/j/y H:i" }}
+                        </a>
+
+                        <a data-toggle="collapse" class="collapsed text-right" href="#snapshot-{{ snapshot.id }}" aria-controls="snapshot-{{ snapshot.id }}" aria-expanded="false" role="button">
+                            <i class="fa" aria-hidden="true"></i>
+                            <span class="sr-only">Expand/Collapse {{ snapshot }}</span>
+                        </a>
+
+                        <div class="collapse mt-3" id="snapshot-{{ snapshot.id }}">
+
+                            <p>Snapshot Notes: {{ snapshot.notes }}</p>
+
+                            {% if snapshot.deployment %}
+                                <p>Snapshot Deployment: {{ snapshot.deployment }}</p>
+                                <p>
+                                    Snapshot Deployment Status:
+                                    {% if snapshot.deployment_status == 'deploy' %}<span class="badge badge-pill badge-primary">Deployed</span>{% endif %}
+                                    {% if snapshot.deployment_status == 'recover' %}<span class="badge badge-pill badge-warning">Recovered</span>{% endif %}
+                                    {% if snapshot.deployment_status == 'burnin' %}<span class="badge badge-pill badge-danger">Burn In</span>{% endif %}
+                                    {% if snapshot.deployment_status == 'create' %}<span class="badge badge-pill badge-success">Initial Deployment</span>{% endif %}
+                                </p>
+
+                                <p>Snapshot Inventory:</p>
+                                <ul>
+
+                                  {% recursetree snapshot.inventory_snapshots.all %}
+                                      <li>
+                                                <span>
+                                                    {{ node.inventory.part.name }} - {{ node.inventory.serial_number }}
+                                                </span>
+
+                                          {% if not node.is_leaf_node %}
+                                              <ul >
+                                                  {{ children }}
+                                              </ul>
+                                          {% endif %}
+
+                                      </li>
+                                  {% endrecursetree %}
+                                  </ul>
+                            {% endif %}
+
+
+
+
                         </div>
 
                     </li>
