@@ -5,7 +5,7 @@ from django.views.generic import View, DetailView, ListView, RedirectView, Updat
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 from common.util.mixins import AjaxFormMixin
-from .models import Build, BuildAction, BuildSnapshot, InventorySnapshot
+from .models import Build, BuildAction, BuildSnapshot, InventorySnapshot, PhotoNote
 from .forms import *
 from roundabout.assemblies.models import Assembly, AssemblyPart
 from roundabout.locations.models import Location
@@ -217,6 +217,79 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
             return JsonResponse(data)
         else:
             return response
+
+
+class BuildNoteAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
+    model = BuildAction
+    form_class = BuildActionPhotoNoteForm
+    context_object_name = 'action'
+    template_name='builds/ajax_inventory_photo_note_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(BuildNoteAjaxCreateView, self).get_context_data(**kwargs)
+        build = Build.objects.get(id=self.kwargs['pk'])
+        context.update({
+            'build': build
+        })
+        return context
+
+    def get_initial(self):
+        build = Build.objects.get(id=self.kwargs['pk'])
+        return { 'build': build.id, 'location': build.location_id }
+
+    def form_valid(self, form):
+        self.object = form.save()
+        self.object.user = self.request.user
+        self.object.action_type = 'note'
+        self.object.save()
+
+        photo_ids = form.cleaned_data['photo_ids']
+        if photo_ids:
+            photo_ids = photo_ids.split(',')
+            for id in photo_ids:
+                photo = PhotoNote.objects.get(id=id)
+                photo.action_id = self.object.id
+                photo.save()
+
+        response = HttpResponseRedirect(self.get_success_url())
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.build_id,
+                'object_type': self.object.build.get_object_type(),
+                'detail_path': self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def get_success_url(self):
+        return reverse('builds:ajax_builds_detail', args=(self.object.build_id, ))
+
+
+class BuildPhotoUploadAjaxCreateView(View):
+    def get(self, request, **kwargs):
+        build = Build.objects.get(id=self.kwargs['pk'])
+        form = BuildActionPhotoUploadForm()
+        return render(self.request, 'builds/ajax_inventory_photo_note_form.html', {'build': build,})
+
+    def post(self, request, **kwargs):
+        form = BuildPhotoUploadAjaxCreateView(self.request.POST, self.request.FILES)
+        if form.is_valid():
+            photo_note = form.save()
+            photo_note.build_id = self.kwargs['pk']
+            photo_note.user = self.request.user
+            photo_note.save()
+            data = {'is_valid': True,
+                    'name': photo_note.photo.name,
+                    'url': photo_note.photo.url,
+                    'photo_id': photo_note.id,
+                    'file_type': photo_note.file_type() }
+        else:
+            data = {'is_valid': False}
+        return JsonResponse(data)
 
 
 class BuildAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):

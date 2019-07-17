@@ -5,8 +5,9 @@ from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
 from django.contrib.sites.models import Site
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, Div, Field
+from django_summernote.widgets import SummernoteInplaceWidget, SummernoteWidget
 
-from .models import Build, BuildAction, BuildSnapshot
+from .models import Build, BuildAction, BuildSnapshot, PhotoNote
 from roundabout.inventory.models import Deployment, DeploymentAction
 from roundabout.locations.models import Location
 
@@ -62,6 +63,36 @@ class BuildActionTestForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(BuildActionTestForm, self).__init__(*args, **kwargs)
         self.initial['detail'] = ''
+
+
+class BuildActionPhotoNoteForm(forms.ModelForm):
+    photo_ids = forms.CharField(required=False, widget=forms.HiddenInput())
+
+    class Meta:
+        model = BuildAction
+        fields = ['detail', 'build', 'location']
+        labels = {
+            'detail': 'Add a Note',
+        }
+        widgets = {
+            'build': forms.HiddenInput(),
+            'location': forms.HiddenInput(),
+            'detail': SummernoteWidget(),
+        }
+
+
+class BuildActionPhotoUploadForm(forms.ModelForm):
+
+    class Meta:
+        model = PhotoNote
+        fields = ['photo', 'build']
+        labels = {
+            'detail': 'Add a Note',
+        }
+        widgets = {
+            'build': forms.HiddenInput(),
+            'detail': SummernoteWidget(),
+        }
 
 
 class BuildSnapshotForm(forms.ModelForm):

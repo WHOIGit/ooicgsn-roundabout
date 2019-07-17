@@ -4,6 +4,7 @@ from datetime import timedelta
 from django.db import models
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils import timezone
+from django.core.validators import FileExtensionValidator
 from model_utils import FieldTracker
 
 from roundabout.locations.models import Location
@@ -155,6 +156,30 @@ class BuildAction(models.Model):
 
     def __str__(self):
         return self.get_action_type_display()
+
+
+class PhotoNote(models.Model):
+    photo = models.FileField(upload_to='notes/',
+                             validators=[FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg', 'gif', 'csv'])])
+    build = models.ForeignKey(Build, related_name='build_photos',
+                                 on_delete=models.CASCADE, null=True, blank=True)
+    action = models.ForeignKey(BuildAction, related_name='build_photos',
+                                 on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(User, related_name='build_photos',
+                             on_delete=models.SET_NULL, null=True, blank=False)
+
+    def file_type(self):
+        # get the file extension from file name
+        name, extension = os.path.splitext(self.photo.name)
+        # set the possible extensions for docs and images
+        doc_types = ['.pdf', '.doc', '.docx', '.xls', '.xlsx']
+        image_types = ['.png', '.jpg', '.jpeg', '.gif']
+
+        if extension in doc_types:
+            return 'document'
+        if extension in image_types:
+            return 'image'
+        return 'other'
 
 
 class BuildSnapshot(models.Model):

@@ -1,0 +1,173 @@
+
+{% load static i18n %}
+{% load mptt_tags %}
+{% load crispy_forms_tags %}
+
+                <div class="card-header">
+                    {% if build.id %}
+                        <h3>{{ build }}</h3>
+                    {% else %}
+                        <h3>Add Inventory</h3>
+                    {% endif %}
+
+
+                </div>
+
+                <div class="card-body">
+
+                    <div class="d-none d-lg-block">
+                        {# 1. BUTTON TO TRIGGER THE ACTION #}
+                        <button type="button" class="btn btn-primary js-upload-photos">
+                          <i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload photos/documents
+                        </button>
+
+                        <div class="jumbotron text-muted text-center" style="padding-top: 4rem; padding-bottom: 4rem;">
+                            <i class="fa fa-arrow-down" aria-hidden="true" style="font-size: 4rem;"></i>
+
+                          <h3>Drop Photos/Documents Here to Upload</h3>
+                        </div>
+                    </div>
+
+                    {# 2. FILE INPUT TO BE USED BY THE PLUG-IN #}
+                    <input id="fileupload" type="file" name="photo" multiple
+                           style="display: none;"
+                           data-url="{% url 'builds:ajax_photo_upload_action' build.id %}"
+                           data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
+
+                    <div class="d-md-block d-lg-none">
+                        {# 1. BUTTON TO TRIGGER THE ACTION #}
+                        <button type="button" class="btn btn-primary js-upload-photos">
+                          <i class="fa fa-camera" aria-hidden="true"></i>Take a photo
+                        </button>
+                    </div>
+
+                    {# 3. TABLE TO DISPLAY THE UPLOADED PHOTO #}
+                    <table id="gallery" class="table table-bordered">
+                      <thead>
+                        <tr>
+                          <th colspan="2">Attached items</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for photo in photos %}
+                          <tr>
+                              <td>
+                                <img src="{{ photo.photo.url }}" width="100%"> <br>
+                              </td>
+                            <td><a href="{{ photo.photo.url }}" target="_blank">{{ photo.photo.name }}</a></td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+
+                    <form class="form-horizontal ajax-form" method="post" action="" id="inventory-photo-note-form" enctype="multipart/form-data"
+                          data-url='{{ request.build_absolute_uri|safe }}'>
+                      {% csrf_token %}
+                      {{ form|crispy }}
+                      {{ form.media }}
+
+                      <div class="row">
+                          {% if form.errors %}
+                              {% for field in form %}
+                                  {% for error in field.errors %}
+                                      <div class="alert alert-danger">
+                                          <strong>{{ error|escape }}</strong>
+                                      </div>
+                                  {% endfor %}
+                              {% endfor %}
+                              {% for error in form.non_field_errors %}
+                                  <div class="alert alert-danger">
+                                      <strong>{{ error|escape }}</strong>
+                                  </div>
+                              {% endfor %}
+                          {% endif %}
+
+
+                      </div>
+
+                      <div class="control-group">
+                        <div class="controls">
+                              <button type="submit" class="btn btn-primary">Add Note</button>
+
+                             {% if inventory_item.id %}
+                              <input class="btn btn-light cancel-btn"
+                                     type="button" value="Cancel"
+                                     data-detail-url="{% url 'builds:ajax_builds_detail' build.id %}"
+                                     data-node-id="{{ build.id }}" />
+                             {% endif %}
+                        </div>
+                      </div>
+                    </form>
+
+
+                </div>
+
+
+{% block javascript %}
+{# JQUERY FILE UPLOAD SCRIPTS #}
+  <script src="{% static 'js/jquery-file-upload/vendor/jquery.ui.widget.js' %}"></script>
+  <script src="{% static 'js/jquery-file-upload/jquery.iframe-transport.js' %}"></script>
+  <script src="{% static 'js/jquery-file-upload/jquery.fileupload.js' %}"></script>
+
+<script>
+$(function () {
+  /* OPEN THE FILE EXPLORER WINDOW */
+  $(".js-upload-photos").click(function () {
+    $("#fileupload").click();
+  });
+
+  /* INITIALIZE THE FILE UPLOAD COMPONENT */
+
+  // Empty array to populate with photo upload IDs
+  var photoIDList = [];
+
+  $("#fileupload").fileupload({
+    /*
+    add: function(e, data) {
+              var uploadErrors = [];
+              var acceptFileTypes = /(\.|\/)(pdf|xlsx|xls|docx|doc|gif|jpe?g|png)$/i;
+              if(data.originalFiles[0]['type'].length && !acceptFileTypes.test(data.originalFiles[0]['type'])) {
+                  uploadErrors.push('Not an accepted file type');
+              }
+
+              data.originalFiles.forEach(function (item, index) {
+                    console.log(item['type']);
+              });
+
+
+              if(data.originalFiles[0]['size'].length && data.originalFiles[0]['size'] > 5000000) {
+                  uploadErrors.push('Filesize is too big');
+              }
+
+              if(uploadErrors.length > 0) {
+                  alert(uploadErrors.join("\n"));
+              } else {
+                  data.submit();
+              }
+      },*/
+    dataType: 'json',
+    done: function (e, data) {  /* PROCESS THE RESPONSE FROM THE SERVER */
+      if (data.result.is_valid) {
+        console.log(data);
+        if (data.result.file_type == 'image') {
+            $("#gallery tbody").prepend(
+              "<tr><td width='25%'><img src='" + data.result.url + "' width='100%'></td><td><a href='" + data.result.url + "' target='_blank'>" + data.result.name + "</a></td></tr>"
+            )
+        } else {
+            $("#gallery tbody").prepend(
+              "<tr><td width='25%' class='text-center'><i class='fa fa-file fa-3x'></i></td><td><a href='" + data.result.url + "' target='_blank'>" + data.result.name + "</a></td></tr>"
+            )
+        }
+
+        // Add Photo IDs to array, change hidden input field value
+        photoIDList.push(data.result.photo_id);
+        $('#id_photo_ids').val(photoIDList);
+      }
+    }
+  });
+
+});
+
+
+</script>
+{% endblock javascript %}
