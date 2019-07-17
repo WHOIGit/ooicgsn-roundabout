@@ -2,7 +2,7 @@ import datetime
 from datetime import timedelta
 
 from django.db import models
-from mptt.models import TreeForeignKey
+from mptt.models import MPTTModel, TreeForeignKey
 from django.utils import timezone
 from model_utils import FieldTracker
 
@@ -154,3 +154,38 @@ class BuildAction(models.Model):
 
     def __str__(self):
         return self.get_action_type_display()
+
+
+class BuildSnapshot(models.Model):
+    build = models.ForeignKey(Build, related_name='build_snapshots', on_delete=models.CASCADE, null=False)
+    deployment = models.ForeignKey('inventory.Deployment', related_name='build_snapshots',
+                                   on_delete=models.SET_NULL, null=True, blank=True)
+    location = TreeForeignKey(Location, related_name='build_snapshots',
+                              on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['build', 'deployment', '-created_at']
+
+    def __str__(self):
+        return self.build
+
+
+class InventorySnapshot(MPTTModel):
+    inventory = models.ForeignKey('inventory.Inventory', related_name='inventory_snapshots',
+                                 on_delete=models.SET_NULL, null=True, blank=True)
+    parent = TreeForeignKey('self', related_name='children',
+                            on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
+    build = models.ForeignKey(BuildSnapshot, related_name='inventory_snapshots',
+                                   on_delete=models.CASCADE, null=True, blank=True)
+    location = TreeForeignKey(Location, related_name='inventory_snapshots',
+                              on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    order = models.CharField(max_length=255, null=False, blank=True, db_index=True)
+
+    class MPTTMeta:
+        order_insertion_by = ['order']
+
+    def __str__(self):
+        return self.inventory.serial_number
