@@ -57,7 +57,7 @@
 
                 <hr>
 
-                {% if not build.current_deployment_status %}
+                {% if not build.is_deployed %}
                     <a class="dropdown-item" href="#"
                         data-detail-url="{% url 'builds:ajax_deployment_add' build.id %}"
                         data-node-id="{{ build.id }}"
@@ -65,7 +65,7 @@
                         data-node-type="detail">Start Deployment</a>
                 {% endif %}
 
-                {% if build.current_deployment_status == 'create' %}
+                {% if build.current_deployment.current_deployment_status == 'create' %}
                     <a class="dropdown-item" href="#"
                         data-detail-url="{% url 'builds:ajax_deployment_action' 'burnin' build.current_deployment.id build.id  %}"
                         data-node-id="{{ build.id }}"
@@ -73,7 +73,7 @@
                         data-node-type="detail">Initiate Burn In</a>
                 {% endif %}
 
-                {% if build.current_deployment_status == 'burnin' %}
+                {% if build.current_deployment.current_deployment_status == 'burnin' %}
                     <a class="dropdown-item" href="#"
                         data-detail-url="{% url 'builds:ajax_deployment_action' 'deploy' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
@@ -81,7 +81,7 @@
                         data-node-type="detail">Deploy to Sea</a>
                 {% endif %}
 
-                {% if build.current_deployment_status == 'deploy' %}
+                {% if build.current_deployment.current_deployment_status == 'deploy' %}
                     <a class="dropdown-item" href="#"
                         data-detail-url="{% url 'builds:ajax_deployment_action' 'recover' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
@@ -89,7 +89,7 @@
                         data-node-type="detail">Recover from Sea</a>
                 {% endif %}
 
-                {% if build.current_deployment_status == 'recover' %}
+                {% if build.current_deployment.current_deployment_status == 'recover' %}
                     <a class="dropdown-item" href="#"
                         data-detail-url="{% url 'builds:ajax_deployment_action' 'retire' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
@@ -334,7 +334,8 @@
                                 <p>Total Time at Sea: {{ snapshot.time_at_sea|time_at_sea_display }}
                             {% endif %}
 
-                            <p>Snapshot Inventory:</p>
+                            <h6>Snapshot Inventory:</h6>
+                            <hr>
                             <ul>
 
                               {% recursetree snapshot.inventory_snapshots.all %}

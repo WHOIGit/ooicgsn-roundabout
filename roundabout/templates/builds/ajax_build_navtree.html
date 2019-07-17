@@ -24,10 +24,10 @@
                                       data-node-id="{{ build.id }}"
                                       data-location-id="{{ location.id }}"
                                       data-node-type="detail">{{ build }}
-                                      {% if build.current_deployment_status == 'deploy' %}<span class="badge badge-pill badge-primary">Deployed</span>{% endif %}
-                                      {% if build.current_deployment_status == 'recover' %}<span class="badge badge-pill badge-warning">Recovered</span>{% endif %}
-                                      {% if build.current_deployment_status == 'burnin' %}<span class="badge badge-pill badge-danger">Burn In</span>{% endif %}
-                                      {% if build.current_deployment_status == 'create' %}<span class="badge badge-pill badge-success">Initial Deployment</span>{% endif %}
+                                      {% if build.current_deployment.current_deployment_status == 'deploy' %}<span class="badge badge-pill badge-primary">Deployed</span>{% endif %}
+                                      {% if build.current_deployment.current_deployment_status == 'recover' %}<span class="badge badge-pill badge-warning">Recovered</span>{% endif %}
+                                      {% if build.current_deployment.current_deployment_status == 'burnin' %}<span class="badge badge-pill badge-danger">Burn In</span>{% endif %}
+                                      {% if build.current_deployment.current_deployment_status == 'create' %}<span class="badge badge-pill badge-success">Initial Deployment</span>{% endif %}
                                   </a>
 
                                   {% if build.assembly.assembly_parts.exists %}

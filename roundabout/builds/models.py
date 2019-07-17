@@ -50,7 +50,7 @@ class Build(models.Model):
             # get the latest deployment if available
             current_deployment = self.deployments.first()
         return current_deployment
-
+    """
     def current_deployment_status(self):
         # set default deployment_status to None
         deployment_status = None
@@ -64,7 +64,7 @@ class Build(models.Model):
             else:
                 deployment_status = None
         return deployment_status
-
+    """
     # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
     def update_time_at_sea(self):
         try:
@@ -90,7 +90,8 @@ class Build(models.Model):
     def current_deployment_time_at_sea(self):
         current_deployment_time = timedelta(minutes=0)
 
-        if self.current_deployment_status() == 'deploy':
+
+        if self.current_deployment() and self.current_deployment().current_deployment_status() == 'deploy':
             try:
                 action_deploy_to_sea = BuildAction.objects.filter(build=self).filter(action_type='deploymenttosea').latest('created_at')
             except BuildAction.DoesNotExist:
