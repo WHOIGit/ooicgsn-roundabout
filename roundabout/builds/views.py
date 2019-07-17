@@ -272,6 +272,7 @@ class BuildAjaxSnapshotCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView)
         build_snapshot.deployment = build.current_deployment()
         build_snapshot.deployment_status = build.current_deployment_status()
         build_snapshot.location = build.location
+        build_snapshot.time_at_sea = build.total_time_at_sea()
         build_snapshot.save()
 
         for item in inventory_items:

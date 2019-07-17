@@ -328,26 +328,31 @@
                                     {% if snapshot.deployment_status == 'burnin' %}<span class="badge badge-pill badge-danger">Burn In</span>{% endif %}
                                     {% if snapshot.deployment_status == 'create' %}<span class="badge badge-pill badge-success">Initial Deployment</span>{% endif %}
                                 </p>
-
-                                <p>Snapshot Inventory:</p>
-                                <ul>
-
-                                  {% recursetree snapshot.inventory_snapshots.all %}
-                                      <li>
-                                                <span>
-                                                    {{ node.inventory.part.name }} - {{ node.inventory.serial_number }}
-                                                </span>
-
-                                          {% if not node.is_leaf_node %}
-                                              <ul >
-                                                  {{ children }}
-                                              </ul>
-                                          {% endif %}
-
-                                      </li>
-                                  {% endrecursetree %}
-                                  </ul>
                             {% endif %}
+
+                            {% if snapshot.time_at_sea %}
+                                <p>Total Time at Sea: {{ snapshot.time_at_sea|time_at_sea_display }}
+                            {% endif %}
+
+                            <p>Snapshot Inventory:</p>
+                            <ul>
+
+                              {% recursetree snapshot.inventory_snapshots.all %}
+                                  <li>
+                                            <span>
+                                                {{ node.inventory.part.name }} - {{ node.inventory.serial_number }}
+                                            </span>
+
+                                      {% if not node.is_leaf_node %}
+                                          <ul >
+                                              {{ children }}
+                                          </ul>
+                                      {% endif %}
+
+                                  </li>
+                              {% endrecursetree %}
+                              </ul>
+
 
 
 

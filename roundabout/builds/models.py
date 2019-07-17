@@ -160,11 +160,12 @@ class BuildSnapshot(models.Model):
     build = models.ForeignKey(Build, related_name='build_snapshots', on_delete=models.CASCADE, null=True, blank=True)
     deployment = models.ForeignKey('inventory.Deployment', related_name='build_snapshots',
                                    on_delete=models.SET_NULL, null=True, blank=True)
-    deployment_status = models.CharField(max_length=255, null=False, blank=True)                           
+    deployment_status = models.CharField(max_length=255, null=False, blank=True)
     location = TreeForeignKey(Location, related_name='build_snapshots',
                               on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
     created_at = models.DateTimeField(default=timezone.now)
     notes = models.TextField(blank=True)
+    time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
 
     class Meta:
         ordering = ['build', 'deployment', '-created_at']
