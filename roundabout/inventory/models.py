@@ -49,9 +49,12 @@ class Deployment(models.Model):
         return self.deployment_number
 
     def current_deployment_status(self):
-        deployment_status = self.deployment_action.first()
-        if deployment_status:
-            deployment_status = deployment_status.action_type
+        deployment_action = self.deployment_actions.first()
+        if deployment_action:
+            if deployment_action.action_type == 'details':
+                deployment_status = 'deploy'
+            else:
+                deployment_status = deployment_action.action_type
         else:
             deployment_status = 'create'
 
@@ -60,7 +63,7 @@ class Deployment(models.Model):
     def get_deploytosea_details(self):
         deploytosea_details = None
         # get the latest 'Deploy' action record to find lat/long/depth data
-        action_record = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploy').first()
+        action_record = DeploymentAction.objects.filter(deployment=self).filter(action_type='details').first()
 
         if action_record:
             # create dictionary of location details
@@ -300,6 +303,7 @@ class Action(models.Model):
     REMOVEFROMBUILD = 'removefrombuild'
     DEPLOYMENTBURNIN = 'deploymentburnin'
     DEPLOYMENTTOSEA = 'deploymenttosea'
+    DEPLOYMENTUPDATE = 'deploymentupdate'
     DEPLOYMENTRECOVER = 'deploymentrecover'
     ASSIGNDEST = 'assigndest'
     REMOVEDEST = 'removedest'
@@ -319,6 +323,7 @@ class Action(models.Model):
         (REMOVEFROMBUILD, 'Remove from Build'),
         (DEPLOYMENTBURNIN, 'Deployment Burnin'),
         (DEPLOYMENTTOSEA, 'Deployment to Sea'),
+        (DEPLOYMENTUPDATE, 'Deployment Update'),
         (DEPLOYMENTRECOVER, 'Deployment Recovered'),
         (ASSIGNDEST, 'Assign Destination'),
         (REMOVEDEST, 'Remove Destination'),
@@ -377,21 +382,23 @@ class DeploymentAction(models.Model):
     RETIRE = 'retire'
     CREATE = 'create'
     BURNIN = 'burnin'
+    DETAILS = 'details'
     ACT_TYPES = (
         (DEPLOY, 'Deployed to Sea'),
         (RECOVER, 'Recovered from Sea'),
         (RETIRE, 'Retired'),
         (CREATE, 'Created'),
         (BURNIN, 'Burn In'),
+        (DETAILS, 'Deployment Details'),
     )
     action_type = models.CharField(max_length=20, choices=ACT_TYPES)
     created_at = models.DateTimeField(default=timezone.now)
     detail = models.TextField(blank=True)
-    user = models.ForeignKey(User, related_name='deployment_action',
+    user = models.ForeignKey(User, related_name='deployment_actions',
                              on_delete=models.SET_NULL, null=True, blank=False)
-    location = TreeForeignKey(Location, related_name='deployment_action',
+    location = TreeForeignKey(Location, related_name='deployment_actions',
                               on_delete=models.SET_NULL, null=True, blank=False)
-    deployment = models.ForeignKey(Deployment, related_name='deployment_action',
+    deployment = models.ForeignKey(Deployment, related_name='deployment_actions',
                                  on_delete=models.CASCADE, null=True, blank=True)
     latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
                                     validators=[

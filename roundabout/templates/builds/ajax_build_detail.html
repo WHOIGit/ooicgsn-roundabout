@@ -82,6 +82,13 @@
                 {% endif %}
 
                 {% if build.current_deployment.current_deployment_status == 'deploy' %}
+
+                    <a class="dropdown-item" href="#"
+                        data-detail-url="{% url 'builds:ajax_deployment_action' 'details' build.current_deployment.id build.id %}"
+                        data-node-id="{{ build.id }}"
+                        data-location-id="{{ build.location.id}}"
+                        data-node-type="detail">Update Deployment Details</a>
+
                     <a class="dropdown-item" href="#"
                         data-detail-url="{% url 'builds:ajax_deployment_action' 'recover' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
@@ -173,7 +180,7 @@
 
         </div>
 
-        {% if current_deployment.current_deployment_status == 'deploy' %}
+        {% if current_deployment.get_deploytosea_details %}
             <p>Deployment Date: {{ current_deployment.get_deploytosea_details|get_item:'deploy_date'|date:"n/j/y H:i" }}</p>
             <p>Latitude: {{ current_deployment.get_deploytosea_details|get_item:'latitude' }}</p>
             <p>Longitude: {{ current_deployment.get_deploytosea_details|get_item:'longitude' }}</p>

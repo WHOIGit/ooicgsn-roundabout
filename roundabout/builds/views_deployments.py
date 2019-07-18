@@ -100,6 +100,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             "deploy" : DeploymentActionDeployForm,
             "recover" : DeploymentActionRecoverForm,
             "retire" : DeploymentActionRetireForm,
+            "details" : DeploymentActionDetailsForm,
         }
         action_type = self.kwargs['action_type']
         form_class_name = ACTION_FORMS[action_type]
@@ -127,6 +128,10 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             self.object.detail = '%s Retired.' % (self.object.deployment_number)
             action_type_inventory = 'removefromdeployment'
 
+        if action_type == 'details':
+            self.object.detail = '%s Details set.' % (self.object.deployment_number)
+            action_type_inventory = 'deploymentupdate'
+
         action_form = form.save()
 
         # Get the date for the Action Record from the custom form field
@@ -152,7 +157,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
                     make_tree_copy(item, base_location, snapshot, item.parent)
         """
         # If Deploying to Sea, add Depth, Lat/Long to Action Record
-        if action_type == 'deploy':
+        if action_type == 'deploy' or action_type == 'details':
             latitude = form.cleaned_data['latitude']
             longitude = form.cleaned_data['longitude']
             depth = form.cleaned_data['depth']
@@ -167,6 +172,12 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         action_record = DeploymentAction.objects.create(action_type=action_type, detail=self.object.detail, location=self.object.location,
                                               user=self.request.user, deployment=self.object, created_at=action_date,
                                               latitude=latitude, longitude=longitude, depth=depth)
+
+        # if action type is Deploy, add second Detail action record for lat/long
+        if action_type == 'deploy':
+            detail_record = DeploymentAction.objects.create(action_type='details', detail=self.object.detail, location=self.object.location,
+                                                  user=self.request.user, deployment=self.object, created_at=action_date,
+                                                  latitude=latitude, longitude=longitude, depth=depth)
 
         # Update Build location, create Action Record
         build = self.object.build

@@ -220,12 +220,59 @@ class DeploymentActionDeployForm(forms.ModelForm):
         initial=timezone.now
     )
     # Add lat/long, depth fields for the Action record
-    latitude = forms.DecimalField()
-    longitude = forms.DecimalField()
-    depth = forms.IntegerField(label='Depth in Meters', min_value=0)
+    latitude = forms.DecimalField(required=False)
+    longitude = forms.DecimalField(required=False)
+    depth = forms.IntegerField(label='Depth in Meters', min_value=0, required=False)
 
     def __init__(self, *args, **kwargs):
         super(DeploymentActionDeployForm, self).__init__(*args, **kwargs)
+        self.initial['location'] = self.instance.deployed_location
+
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Div(
+                Field('date'),
+            ),
+            Div(
+                Field('latitude', wrapper_class='col-md-4'),
+                Field('longitude', wrapper_class='col-md-4'),
+                Field('depth', wrapper_class='col-md-4'),
+                css_class='form-row'
+            ),
+            Div(
+                Field('location'),
+            )
+        )
+
+
+class DeploymentActionDetailsForm(forms.ModelForm):
+
+    class Meta:
+        model = Deployment
+        fields = ['location',]
+        labels = {
+            'location': 'Deployment Location',
+        }
+
+    # Add custom date field to allow user to pick date for the Action record
+    date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": True,
+                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
+            }
+        ),
+        initial=timezone.now
+    )
+    # Add lat/long, depth fields for the Action record
+    latitude = forms.DecimalField(required=False)
+    longitude = forms.DecimalField(required=False)
+    depth = forms.IntegerField(label='Depth in Meters', min_value=0, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(DeploymentActionDetailsForm, self).__init__(*args, **kwargs)
         self.initial['location'] = self.instance.deployed_location
 
         self.helper = FormHelper()

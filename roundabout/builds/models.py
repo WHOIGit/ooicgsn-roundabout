@@ -119,6 +119,7 @@ class BuildAction(models.Model):
     REMOVEFROMDEPLOYMENT = 'removefromdeployment'
     DEPLOYMENTBURNIN = 'deploymentburnin'
     DEPLOYMENTTOSEA = 'deploymenttosea'
+    DEPLOYMENTUPDATE = 'deploymentupdate'
     DEPLOYMENTRECOVER = 'deploymentrecover'
     TEST = 'test'
     NOTE = 'note'
@@ -134,6 +135,7 @@ class BuildAction(models.Model):
         (REMOVEFROMDEPLOYMENT, 'Remove from Deployment'),
         (DEPLOYMENTBURNIN, 'Deployment Burnin'),
         (DEPLOYMENTTOSEA, 'Deployment to Sea'),
+        (DEPLOYMENTUPDATE, 'Deployment Update'),
         (DEPLOYMENTRECOVER, 'Deployment Recovered'),
         (TEST, 'Test'),
         (NOTE, 'Note'),
