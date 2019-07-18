@@ -1,3 +1,6 @@
+import json
+import os
+
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
@@ -276,7 +279,7 @@ class BuildPhotoUploadAjaxCreateView(View):
         return render(self.request, 'builds/ajax_inventory_photo_note_form.html', {'build': build,})
 
     def post(self, request, **kwargs):
-        form = BuildPhotoUploadAjaxCreateView(self.request.POST, self.request.FILES)
+        form = BuildActionPhotoUploadForm(self.request.POST, self.request.FILES)
         if form.is_valid():
             photo_note = form.save()
             photo_note.build_id = self.kwargs['pk']

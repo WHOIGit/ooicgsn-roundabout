@@ -232,7 +232,7 @@
                           <td>{{ action.get_action_type_display }}</td>
                           <td>
                               {{ action.detail|safe }}
-                              {% for photo in action.photos.all %}
+                              {% for photo in action.build_photos.all %}
                                   {% if photo.file_type == 'image' %}
                                       <a href="{{ photo.photo.url }}" target="_blank">
                                           <img src="{{ photo.photo.url }}" width="100%">
