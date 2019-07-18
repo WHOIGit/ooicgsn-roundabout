@@ -125,7 +125,7 @@ class BuildAction(models.Model):
     HISTORYNOTE = 'historynote'
     TICKET = 'ticket'
     FLAG = 'flag'
-    MOVETOTRASH = 'movetotrash'
+    RETIREBUILD = 'retirebuild'
     ACT_TYPES = (
         (BUILDADD, 'Add Build'),
         (LOCATIONCHANGE, 'Location Change'),
@@ -140,7 +140,7 @@ class BuildAction(models.Model):
         (HISTORYNOTE, 'Historical Note'),
         (TICKET, 'Work Ticket'),
         (FLAG, 'Flag'),
-        (MOVETOTRASH, 'Move to Trash'),
+        (RETIREBUILD, 'Retire Build'),
     )
     action_type = models.CharField(max_length=20, choices=ACT_TYPES)
     created_at = models.DateTimeField(default=timezone.now)

@@ -149,6 +149,7 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
             'locationchange' : BuildActionLocationChangeForm,
             'test': BuildActionTestForm,
             'flag': BuildActionFlagForm,
+            "retirebuild" : BuildActionRetireForm,
 
         }
         action_type = self.kwargs['action_type']
@@ -196,10 +197,10 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
                 action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location_id=item.location_id,
                                                       user_id=self.request.user.id, inventory_id=item.id)
 
-        elif self.kwargs['action_type'] == 'test':
+        if self.kwargs['action_type'] == 'test':
             self.object.detail = '%s: %s. ' % (self.object.get_test_type_display(), self.object.get_test_result_display()) + self.object.detail
 
-        #elif self.kwargs['action_type'] == 'flag':
+        #if self.kwargs['action_type'] == 'flag':
             #self.kwargs['action_type'] = self.object.get_flag_display()
 
         action_form = form.save()

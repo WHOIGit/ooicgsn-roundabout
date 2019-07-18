@@ -95,6 +95,24 @@ class BuildActionPhotoUploadForm(forms.ModelForm):
         }
 
 
+class BuildActionRetireForm(forms.ModelForm):
+
+    class Meta:
+        model = Build
+        fields = ['location', 'detail', ]
+        widgets = {
+            'location': forms.HiddenInput(),
+        }
+        labels = {
+            'detail': 'Reasons for retiring this Build',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(BuildActionRetireForm, self).__init__(*args, **kwargs)
+        self.initial['location'] = Location.objects.get(root_type='Retired')
+        self.initial['detail'] = ''
+
+
 class BuildSnapshotForm(forms.ModelForm):
 
     class Meta:
