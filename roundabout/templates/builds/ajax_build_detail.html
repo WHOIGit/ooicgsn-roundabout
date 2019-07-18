@@ -174,7 +174,7 @@
         </div>
 
         {% if current_deployment.current_deployment_status == 'deploy' %}
-            <p>Deployment Date: {{ current_deployment.get_deploytosea_details|get_item:'deploy_date' }}</p>
+            <p>Deployment Date: {{ current_deployment.get_deploytosea_details|get_item:'deploy_date'|date:"n/j/y H:i" }}</p>
             <p>Latitude: {{ current_deployment.get_deploytosea_details|get_item:'latitude' }}</p>
             <p>Longitude: {{ current_deployment.get_deploytosea_details|get_item:'longitude' }}</p>
             <p>Depth: {{ current_deployment.get_deploytosea_details|get_item:'depth' }} m</p>

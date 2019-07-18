@@ -68,7 +68,7 @@ class Deployment(models.Model):
                 'latitude':  action_record.latitude,
                 'longitude': action_record.longitude,
                 'depth': action_record.depth,
-                'deploy_date': action_record.created_at.strftime('%m/%d/%Y %H:%M:%S'),
+                'deploy_date': action_record.created_at,
             }
 
         return deploytosea_details
