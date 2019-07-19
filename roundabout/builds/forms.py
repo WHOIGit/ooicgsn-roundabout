@@ -150,7 +150,7 @@ class DeploymentForm(forms.ModelForm):
                 "showClose": True,
                 "showClear": True,
                 "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
+                "maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
             }
         ),
         initial=timezone.now
@@ -185,7 +185,7 @@ class DeploymentActionBurninForm(forms.ModelForm):
                 "showClose": True,
                 "showClear": True,
                 "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
+                "maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
             }
         ),
         initial=timezone.now
@@ -214,7 +214,7 @@ class DeploymentActionDeployForm(forms.ModelForm):
                 "showClose": True,
                 "showClear": True,
                 "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
+                #"maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
             }
         ),
         initial=timezone.now
@@ -261,7 +261,7 @@ class DeploymentActionDetailsForm(forms.ModelForm):
                 "showClose": True,
                 "showClear": True,
                 "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
+                "maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
             }
         ),
         initial=timezone.now
@@ -308,7 +308,7 @@ class DeploymentActionRecoverForm(forms.ModelForm):
                 "showClose": True,
                 "showClear": True,
                 "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
+                "maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
             }
         ),
         initial=timezone.now()
@@ -337,7 +337,7 @@ class DeploymentActionRetireForm(forms.ModelForm):
                 "showClose": True,
                 "showClear": True,
                 "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
+                "maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
             }
         ),
         initial=timezone.now
