@@ -62,7 +62,9 @@ class Deployment(models.Model):
 
     def get_deploytosea_details(self):
         deploytosea_details = None
-        # get the latest 'Deploy' action record to find lat/long/depth data
+        # get the latest 'Deploy' action record to initial
+        deploy_record = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploy').first()
+        # get the latest 'Detail' action record to find last lat/long/depth data
         action_record = DeploymentAction.objects.filter(deployment=self).filter(action_type='details').first()
 
         if action_record:
@@ -71,7 +73,7 @@ class Deployment(models.Model):
                 'latitude':  action_record.latitude,
                 'longitude': action_record.longitude,
                 'depth': action_record.depth,
-                'deploy_date': action_record.created_at,
+                'deploy_date': deploy_record.created_at,
             }
 
         return deploytosea_details

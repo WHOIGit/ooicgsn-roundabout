@@ -289,15 +289,35 @@
 
                             {% if deployment.get_deploytosea_details %}
                                 <p>Deployment Date: {{ deployment.get_deploytosea_details|get_item:'deploy_date' }}</p>
-                                <p>Latitude: {{ deployment.get_deploytosea_details|get_item:'latitude' }}</p>
-                                <p>Longitude: {{ deployment.get_deploytosea_details|get_item:'longitude' }}</p>
-                                <p>Depth: {{ deployment.get_deploytosea_details|get_item:'depth' }} m</p>
-
                             {% endif %}
 
                             {% if deployment.get_deployment_time_at_sea %}
                                 <p>Total Time at Sea: {{ deployment.get_deployment_time_at_sea|time_at_sea_display }}
                             {% endif %}
+
+                            <table class="table table-striped action-table">
+                                <thead>
+                                  <th>Date</th>
+                                  <th>Action</th>
+                                  <th>Details</th>
+                                  <th>Person</th>
+                                  <th>Location</th>
+
+                                </thead>
+                                <tbody>
+                                  {% for action in deployment.deployment_actions.all %}
+                                    <tr>
+                                        <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
+                                        <td>{{ action.get_action_type_display }}</td>
+                                        <td>
+                                            {{ action.detail|safe }}
+                                        </td>
+                                        <td>{{ action.user.username }}</td>
+                                        <td>{{ action.location.name }}</td>
+                                    </tr>
+                                  {% endfor %}
+                                </tbody>
+                          </table>
                         </div>
 
                     </li>

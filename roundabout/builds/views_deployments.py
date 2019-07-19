@@ -156,33 +156,45 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
                 if item.is_root_node():
                     make_tree_copy(item, base_location, snapshot, item.parent)
         """
-        # If Deploying to Sea, add Depth, Lat/Long to Action Record
+        # If Deploying to Sea or Updating deployment, set Depth, Lat/Long
         if action_type == 'deploy' or action_type == 'details':
             latitude = form.cleaned_data['latitude']
             longitude = form.cleaned_data['longitude']
             depth = form.cleaned_data['depth']
-            self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
-            self.object.deployed_location = self.object.location
-            self.object.save()
         else:
             latitude = None
             longitude = None
             depth = None
 
+        # If Deploying to Sea, update Location and add Details Action record
+        if action_type == 'deploy':
+            self.object.deployed_location = self.object.location
+            self.object.save()
+
+            details = 'Details set. <br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
+            detail_record = DeploymentAction.objects.create(action_type='details', detail=details, location=self.object.location,
+                                                  user=self.request.user, deployment=self.object, created_at=action_date,
+                                                  latitude=latitude, longitude=longitude, depth=depth)
+
+        # If Updating deployment, update Location and add Depth, Lat/Long to Action Record
+        if action_type == 'details':
+            self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
+            self.object.deployed_location = self.object.location
+            self.object.save()
+
         action_record = DeploymentAction.objects.create(action_type=action_type, detail=self.object.detail, location=self.object.location,
                                               user=self.request.user, deployment=self.object, created_at=action_date,
                                               latitude=latitude, longitude=longitude, depth=depth)
 
-        # if action type is Deploy, add second Detail action record for lat/long
-        if action_type == 'deploy':
-            detail_record = DeploymentAction.objects.create(action_type='details', detail=self.object.detail, location=self.object.location,
-                                                  user=self.request.user, deployment=self.object, created_at=action_date,
-                                                  latitude=latitude, longitude=longitude, depth=depth)
+
 
         # Update Build location, create Action Record
         build = self.object.build
 
         # Create Build Action record for deployment
+        if action_type == 'deploy':
+            self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
+
         build_record = BuildAction.objects.create(action_type=action_type_inventory, detail=self.object.detail, location=self.object.location,
                                                    user=self.request.user, build=build, created_at=action_date)
 
