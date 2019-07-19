@@ -151,6 +151,7 @@ class DeploymentForm(forms.ModelForm):
                 "showClear": True,
                 "showTodayButton": True,
                 "maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
+                "useCurrent": True,
             }
         ),
         initial=timezone.now
@@ -298,7 +299,7 @@ class DeploymentActionRecoverForm(forms.ModelForm):
         model = Deployment
         fields = ['location',]
         labels = {
-            'location': 'Select Land location to recover Deployment to:',
+            'location': 'Select location to recover Deployment to:',
         }
 
     # Add custom date field to allow user to pick date for the Action
@@ -319,6 +320,7 @@ class DeploymentActionRecoverForm(forms.ModelForm):
         root_node = Location.objects.get(root_type='Land')
         location_list = root_node.get_descendants()
         self.fields['location'].queryset = location_list
+        self.fields['location'].required = True
 
 
 class DeploymentActionRetireForm(forms.ModelForm):

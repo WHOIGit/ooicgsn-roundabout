@@ -65,7 +65,7 @@
               {% if deployment.id %}
                <input class="btn btn-light cancel-btn"
                       type="button" value="Cancel"
-                      data-detail-url="{% url 'builds:ajax_builds_detail' deployment.id %}"
+                      data-detail-url="{% url 'builds:ajax_builds_detail' deployment.build.id %}"
                       data-node-id="{{ deployment.id }}" />
               {% endif %}
             </div>
@@ -88,6 +88,7 @@
             var options_obj = JSON.parse(picker_options);
             options_obj.options.maxDate = '{% now "SHORT_DATE_FORMAT" %} {% now "H:i" %}';
             options_obj.options.minDate = '{{ latest_action_record.created_at|date:"SHORT_DATE_FORMAT" }} {{ latest_action_record.created_at|time:"H:i" }}';
+            options_obj.options.useCurrent = false;
             console.log(options_obj);
             $('#id_date').attr('dp_config', JSON.stringify(options_obj));
         }
