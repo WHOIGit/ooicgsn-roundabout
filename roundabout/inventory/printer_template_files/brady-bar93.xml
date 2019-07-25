@@ -20,21 +20,21 @@
                     <static-text value = "" />
                 </datasource>
             </barcode>
-            <text position-x="0.2" position-y="0.6" align="center">
+            <text position-x="0.1" position-y="0.6" align="center">
                 <text-sizing>
-                    <freeform height="0.3" />
+                    <freeform height="0.25" />
                 </text-sizing>
                 <datasource>
                     <static-text value="" />
                 </datasource>
             </text>
 
-            <text position-x="0.2" position-y="0.8" align="center">
+            <text position-x="0.1" position-y="0.8" align="center">
                 <text-sizing>
                     <!--<manual height="0.2" width="1.2" font-size="8" />
                     <autosize height="0.2" width="1.0" />-->
 
-                    <freeform height="0.3" />
+                    <freeform height="0.25" />
                 </text-sizing>
                 <datasource>
                     <static-text value="" />
