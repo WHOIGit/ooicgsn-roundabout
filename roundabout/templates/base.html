@@ -57,9 +57,13 @@
         </li>
 
         <li class="nav-item">
+          <a class="nav-link" href="{% url 'builds:builds_home' %}">Builds</a>
+        </li>
+    <!--
+        <li class="nav-item">
             <a class="nav-link" href="{% url 'deployments:deployment_home' %}">{{ label_deployments_app_plural }}</a>
         </li>
-
+     -->
 
         {% if request.user|has_group:"admin" or request.user|has_group:"technician" %}
         <li class="nav-item dropdown">
@@ -68,7 +72,8 @@
               </a>
           <div class="dropdown-menu" aria-labelledby="navbarTemplates">
             <a class="dropdown-item" href="{% url 'parts:parts_home' %}">Parts</a>
-            <a class="dropdown-item" href="{% url 'moorings:moorings_home' %}">{{ label_moorings_app_plural }}</a>
+            <a class="dropdown-item" href="{% url 'assemblies:assemblies_home' %}">Assemblies</a>
+            <!--<a class="dropdown-item" href="{% url 'moorings:moorings_home' %}">{{ label_moorings_app_plural }}</a>-->
             <a class="dropdown-item" href="{% url 'locations:locations_home' %}">Locations</a>
           </div>
         </li>

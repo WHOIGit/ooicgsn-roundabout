@@ -1,0 +1,82 @@
+
+{% load mptt_tags %}
+{% load inventory_tags %}
+
+{% get_inventory_assembly_part_dictionary inventory_qs as inventory %}
+
+
+        {% for assembly_part,structure in assembly_parts.all|tree_info %}
+
+                {% if structure.new_level %}
+                    <ul><li {% if assembly_part.part.part_type.name == 'Electrical' %}
+                                data-jstree='{"icon":"fa fa-bolt"}'
+                            {% elif assembly_part.part.part_type.name == 'Mechanical' %}
+                                data-jstree='{"icon":"fa fa-wrench"}'
+                            {% elif assembly_part.part.part_type.name == 'Cable' %}
+                                data-jstree='{"icon":"fa fa-plug"}'
+                            {% elif assembly_part.part.part_type.name == 'Instrument' %}
+                                data-jstree='{"icon":"fa fa-camera"}'
+                            {% elif assembly_part.part.part_type.name == 'Structural' %}
+                                data-jstree='{"icon":"fa fa-cubes"}'
+                            {% endif %}
+
+                            {% if assembly_part.id in inventory %}
+                                id="inventory_{{ inventory|get_item:assembly_part.id }}"
+                            {% else %}
+                                id="assembly_part_{{ assembly_part.id }}_{{ build_pk }}"
+                            {% endif %}  >
+                {% else %}</li>
+                    <li     {% if assembly_part.part.part_type.name == 'Electrical' %}
+                                data-jstree='{"icon":"fa fa-bolt"}'
+                            {% elif assembly_part.part.part_type.name == 'Mechanical' %}
+                                data-jstree='{"icon":"fa fa-wrench"}'
+                            {% elif assembly_part.part.part_type.name == 'Cable' %}
+                                data-jstree='{"icon":"fa fa-plug"}'
+                            {% elif assembly_part.part.part_type.name == 'Instrument' %}
+                                data-jstree='{"icon":"fa fa-camera"}'
+                            {% elif assembly_part.part.part_type.name == 'Structural' %}
+                                data-jstree='{"icon":"fa fa-cubes"}'
+                            {% endif %}
+
+                            {% if assembly_part.id in inventory %}
+                                id="inventory_{{ inventory|get_item:assembly_part.id }}"
+                            {% else %}
+                                id="massembly_part_{{ assembly_part.id }}_{{ build_pk }}"
+                            {% endif %}  >
+                {% endif %}
+
+                {% if assembly_part.id in inventory %}
+                    {% for i in inventory_qs.all %}
+                        {% if i.id == inventory|get_item:assembly_part.id %}
+                            <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' i.id %}"
+                               data-node-id="{{ assembly_part.id }}"
+                               data-location-id="{{ location.id }}"
+                               data-part-type-id="{{ assembly_part.part.part_type.id }}"
+                               data-node-type="detail"
+                               class="
+                               {% if i.is_root_node and not assembly_part.is_root_node %} red {% endif %}
+                               {% if part_types %}
+                                   {% if assembly_part.part.part_type.id in part_types %}
+                                       blue
+                                   {% else %}
+                                       wh
+                                   {% endif %}
+                               {% endif %}
+                               ">
+                                {% if assembly_part.part.friendly_name %} {{ assembly_part.part.friendly_name}} {% else %} {{ assembly_part.part.name }} {% endif %}
+                                - {{ i.serial_number }}</a>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_assembly_part_add_subassembly' assembly_part.id location.id build_pk %}"
+                       data-node-id="{{ assembly_part.id }}"
+                       data-location-id="{{ location.id }}"
+                       data-part-type-id="{{ assembly_part.part.part_type.id }}"
+                       data-node-type="detail" class="grey">
+                        {% if assembly_part.part.friendly_name %} {{ assembly_part.part.friendly_name}} {% else %} {{ assembly_part.part.name }} {% endif %} -
+                        {{ assembly_part.part.part_number }} </a>
+                {% endif %}
+
+             {% for level in structure.closed_levels %}</li></ul>{% endfor %}
+
+        {% endfor %}

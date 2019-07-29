@@ -29,6 +29,8 @@ urlpatterns = [
     path('deployments/', include('roundabout.inventory.urls_deployment', namespace='deployments')),
     path('admintools/', include('roundabout.admintools.urls', namespace='admintools')),
     path('userdefinedfields/', include('roundabout.userdefinedfields.urls', namespace='userdefinedfields')),
+    path('assemblies/', include('roundabout.assemblies.urls', namespace='assemblies')),
+    path('builds/', include('roundabout.builds.urls', namespace='builds')),
     #Summernote WYSIWYG
     path('summernote/', include('django_summernote.urls')),
 ] + static(

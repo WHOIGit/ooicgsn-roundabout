@@ -1,0 +1,49 @@
+{% load humanize %}
+
+<div class="card-header" data-object-id="{{ assembly.id }}">
+    <h3>{{ assembly.name }}</h3>
+</div>
+
+<div class="card-body">
+
+    <div class="dropdown float-right">
+      <button id="action" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-primary">
+        Choose Action
+      </button>
+      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="action">
+            <div class="ajax-detail-link">
+                <a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'assemblies:ajax_assemblyparts_add' assembly.id %}"
+                    data-node-id="{{ assembly.id }}"
+                    data-node-type="detail">Add Top Level Part</a>
+                <a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'assemblies:ajax_assemblies_update' assembly.id %}"
+                    data-node-id="{{ assembly.id }}"
+                    data-node-type="detail">Edit Assembly Details</a>
+                <!--<a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'moorings:ajax_moorings_copy' assembly.id %}"
+                    data-node-id="{{ mooring_part.id }}"
+                    data-node-type="detail">Copy Mooring Template</a>-->
+            </div>
+
+      </div>
+    </div>
+
+    <p>Assembly ID Number: {{ assembly.assembly_number }}</p>
+
+    <p>Assembly Type: {{ assembly.assembly_type }}</p>
+
+    <p>Description: {{ assembly.description }}</p>
+
+    <p>Total Assembly Cost: ${{ assembly.get_assembly_total_cost|intcomma }}
+
+
+<div class="mt-3 ajax-btn">
+
+    <a href="#" data-update-url="{% url 'assemblies:ajax_assemblies_delete' assembly.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
+</div>
+
+
+{% block javascript %}
+
+{% endblock javascript %}

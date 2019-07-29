@@ -13,43 +13,136 @@ from mptt.models import MPTTModel, TreeForeignKey
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
 from roundabout.moorings.models import MooringPart
+from roundabout.assemblies.models import Assembly, AssemblyPart
+from roundabout.builds.models import Build
 from roundabout.users.models import User
 
 # Model Managers
 
 
-# Create your models here.
+# Inventory/Deployment models
 
 class Deployment(models.Model):
     deployment_number = models.CharField(max_length=255, unique=False)
-    location = TreeForeignKey(Location, related_name='deployment',
-                              on_delete=models.SET_NULL, null=True, blank=False)
-    final_location = TreeForeignKey(Location, related_name='final_deployment',
-                              on_delete=models.SET_NULL, null=True, blank=False)
+    location = TreeForeignKey(Location, related_name='deployments',
+                              on_delete=models.SET_NULL, null=True, blank=True)
+    final_location = TreeForeignKey(Location, related_name='final_deployments',
+                              on_delete=models.SET_NULL, null=True, blank=True)
+    deployed_location = TreeForeignKey(Location, related_name='deployed_deployments',
+                              on_delete=models.SET_NULL, null=True, blank=True)
+    assembly = models.ForeignKey(Assembly, related_name='deployments',
+                             on_delete=models.CASCADE, null=True, blank=True, db_index=True)
+    build = models.ForeignKey(Build, related_name='deployments',
+                             on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['location', 'deployment_number']
+        ordering = ['build', '-created_at']
 
     def __str__(self):
-        if self.final_location.location_id:
-            return '%s (%s) - %s' % (self.deployment_number, self.final_location.location_id, self.location.name)
+        if self.deployed_location:
+            return '%s - %s' % (self.deployment_number, self.deployed_location)
         else:
             return '%s - %s' % (self.deployment_number, self.location.name)
 
     def get_deployment_label(self):
-        if self.final_location.location_id:
-            return '%s (%s)' % (self.deployment_number, self.final_location.location_id)
-        else:
-            return self.deployment_number
+        return self.deployment_number
 
     def current_deployment_status(self):
-        deployment_status = self.deployment_action.first()
-        if deployment_status:
-            deployment_status = deployment_status.action_type
+        deployment_action = self.deployment_actions.first()
+        if deployment_action:
+            if deployment_action.action_type == 'details':
+                deployment_status = 'deploy'
+            else:
+                deployment_status = deployment_action.action_type
         else:
             deployment_status = 'create'
+
         return deployment_status
+
+    def get_deploytosea_details(self):
+        deploytosea_details = None
+        # get the latest 'Deploy' action record to initial
+        deploy_record = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploy').first()
+        # get the latest 'Detail' action record to find last lat/long/depth data
+        action_record = DeploymentAction.objects.filter(deployment=self).filter(action_type='details').first()
+
+        if action_record:
+            # create dictionary of location details
+            deploytosea_details = {
+                'latitude':  action_record.latitude,
+                'longitude': action_record.longitude,
+                'depth': action_record.depth,
+                'deploy_date': deploy_record.created_at,
+            }
+
+        return deploytosea_details
+
+    # get the most recent Deploy to Sea and Recover from Sea action timestamps, find time delta for Total Time at sea
+    def get_deployment_time_at_sea(self):
+        deployment_time_at_sea = None
+
+        try:
+            action_deploy_to_sea = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploy').latest('created_at')
+        except DeploymentAction.DoesNotExist:
+            action_deploy_to_sea = None
+
+        try:
+            action_recover = DeploymentAction.objects.filter(deployment=self).filter(action_type='recover').latest('created_at')
+        except DeploymentAction.DoesNotExist:
+            action_recover = None
+
+        if action_deploy_to_sea and action_recover:
+            deployment_time_at_sea =  action_recover.created_at - action_deploy_to_sea.created_at
+
+        return deployment_time_at_sea
+
+    def get_deployment_status_label(self):
+        deployment_status_label = None
+        # get short label text for Deployment status
+        if self.current_deployment_status() == 'create':
+            deployment_status_label = 'Initial Deployment'
+        elif self.current_deployment_status() == 'burnin':
+            deployment_status_label = 'Burn In'
+        elif self.current_deployment_status() == 'deploy':
+            deployment_status_label = 'Deployed'
+        elif self.current_deployment_status() == 'recover':
+            deployment_status_label = 'Recovered'
+        elif self.current_deployment_status() == 'retire':
+            deployment_status_label = 'Retired'
+
+        return deployment_status_label
+
+    def get_deployment_progress_bar(self):
+        deployment_progress_bar = None
+        # Set variables for Deployment Status bar in Bootstrap
+        if self.current_deployment_status() == 'create':
+            deployment_progress_bar = {
+                'bar_class': 'bg-success',
+                'bar_width': 20,
+            }
+        elif self.current_deployment_status() == 'burnin':
+            deployment_progress_bar = {
+                'bar_class': 'bg-danger',
+                'bar_width': 40,
+            }
+        elif self.current_deployment_status() == 'deploy':
+            deployment_progress_bar = {
+                'bar_class': None,
+                'bar_width': 60,
+            }
+        elif self.current_deployment_status() == 'recover':
+            deployment_progress_bar = {
+                'bar_class': 'bg-warning',
+                'bar_width': 80,
+            }
+        elif self.current_deployment_status() == 'retire':
+            deployment_progress_bar = {
+                'bar_class': 'bg-info',
+                'bar_width': 100,
+            }
+
+        return deployment_progress_bar
 
 
 class Inventory(MPTTModel):
@@ -82,7 +175,11 @@ class Inventory(MPTTModel):
                             on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
     deployment = models.ForeignKey(Deployment, related_name='inventory',
                                    on_delete=models.SET_NULL, null=True, blank=True)
+    build = models.ForeignKey(Build, related_name='inventory',
+                                   on_delete=models.SET_NULL, null=True, blank=True)
     mooring_part = TreeForeignKey(MooringPart, related_name='inventory',
+                                  on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
+    assembly_part = TreeForeignKey(AssemblyPart, related_name='inventory',
                                   on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
     assigned_destination_root = TreeForeignKey('self', related_name='assigned_children',
                                 on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
@@ -97,7 +194,7 @@ class Inventory(MPTTModel):
     ooi_property_number = models.CharField(max_length=255, unique=False, null=False, blank=True)
     custom_field_values = JSONField(blank=True, null=True)
 
-    tracker = FieldTracker(fields=['location', 'deployment', 'parent'])
+    tracker = FieldTracker(fields=['location', 'deployment', 'parent', 'build'])
 
     class MPTTMeta:
         order_insertion_by = ['serial_number']
@@ -105,8 +202,12 @@ class Inventory(MPTTModel):
     def __str__(self):
         return self.serial_number
 
+    # method to set the object_type variable to send to Javascript AJAX functions
+    def get_object_type(self):
+        return 'inventory'
+
     def get_absolute_url(self):
-        return reverse('inventory:inventory_detail', kwargs={ 'pk': self.pk })
+        return reverse('inventory:ajax_inventory_detail', kwargs={ 'pk': self.pk })
 
     def get_descendants_with_self(self):
         tree = self.get_descendants(include_self=True)
@@ -200,10 +301,11 @@ class Action(models.Model):
     INVCHANGE = 'invchange'
     LOCATIONCHANGE = 'locationchange'
     SUBCHANGE = 'subchange'
-    ADDTODEPLOYMENT = 'addtodeployment'
-    REMOVEFROMDEPLOYMENT = 'removefromdeployment'
+    ADDTOBUILD = 'addtobuild'
+    REMOVEFROMBUILD = 'removefrombuild'
     DEPLOYMENTBURNIN = 'deploymentburnin'
     DEPLOYMENTTOSEA = 'deploymenttosea'
+    DEPLOYMENTUPDATE = 'deploymentupdate'
     DEPLOYMENTRECOVER = 'deploymentrecover'
     ASSIGNDEST = 'assigndest'
     REMOVEDEST = 'removedest'
@@ -219,10 +321,11 @@ class Action(models.Model):
         (INVCHANGE, 'Inventory Change'),
         (LOCATIONCHANGE, 'Location Change'),
         (SUBCHANGE, 'Subassembly Change'),
-        (ADDTODEPLOYMENT, 'Add to Deployment'),
-        (REMOVEFROMDEPLOYMENT, 'Remove from Deployment'),
+        (ADDTOBUILD, 'Add to Build'),
+        (REMOVEFROMBUILD, 'Remove from Build'),
         (DEPLOYMENTBURNIN, 'Deployment Burnin'),
         (DEPLOYMENTTOSEA, 'Deployment to Sea'),
+        (DEPLOYMENTUPDATE, 'Deployment Update'),
         (DEPLOYMENTRECOVER, 'Deployment Recovered'),
         (ASSIGNDEST, 'Assign Destination'),
         (REMOVEDEST, 'Remove Destination'),
@@ -281,21 +384,23 @@ class DeploymentAction(models.Model):
     RETIRE = 'retire'
     CREATE = 'create'
     BURNIN = 'burnin'
+    DETAILS = 'details'
     ACT_TYPES = (
         (DEPLOY, 'Deployed to Sea'),
         (RECOVER, 'Recovered from Sea'),
         (RETIRE, 'Retired'),
         (CREATE, 'Created'),
         (BURNIN, 'Burn In'),
+        (DETAILS, 'Deployment Details'),
     )
     action_type = models.CharField(max_length=20, choices=ACT_TYPES)
     created_at = models.DateTimeField(default=timezone.now)
     detail = models.TextField(blank=True)
-    user = models.ForeignKey(User, related_name='deployment_action',
+    user = models.ForeignKey(User, related_name='deployment_actions',
                              on_delete=models.SET_NULL, null=True, blank=False)
-    location = TreeForeignKey(Location, related_name='deployment_action',
+    location = TreeForeignKey(Location, related_name='deployment_actions',
                               on_delete=models.SET_NULL, null=True, blank=False)
-    deployment = models.ForeignKey(Deployment, related_name='deployment_action',
+    deployment = models.ForeignKey(Deployment, related_name='deployment_actions',
                                  on_delete=models.CASCADE, null=True, blank=True)
     latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
                                     validators=[

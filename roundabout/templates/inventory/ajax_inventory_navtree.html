@@ -9,30 +9,30 @@
                     </li><li data-jstree='{"icon":"fa fa-map-marker"}' id="location_{{ location.id }}">
                 {% endif %}
                     <a href="#" data-location-id='{{ location.id }}'
-                            data-detail-url="{% url 'inventory:ajax_inventory_location_detail' location.id %}"
+                            data-detail-url="{% url 'locations:ajax_location_detail' location.id %}"
                             data-node-id="{{ location.id }}"
                             data-node-type="location">{{ location.name }}</a>
 
 
-                            {% if location.deployment.exists %}
+                            <!-- Check if Build exists for the location. -->
+                            {% if location.builds.exists %}
                                 <ul>
-                                {% for dep in location.deployment.all %}
-                                           <li data-jstree='{"icon":"fa fa-anchor"}' id="deployment_{{ dep.id }}">
-                                               <a href="#" data-location-id='{{ location.id }}'
-                                                       data-detail-url="{% url 'deployments:ajax_deployment_detail' dep.id %}"
-                                                       data-node-id="{{ dep.id }}"
-                                                       data-node-type="deployment">{{ dep.deployment_number }}
-                                                   {% if dep.final_location.exists %} ({{ dep.final_location.location_id }}){% endif %}
-                                                   {% if dep.current_deployment_status == 'deploy' %}<span class="badge badge-pill badge-primary">Deployed</span>{% endif %}
-                                                   {% if dep.current_deployment_status == 'recover' %}<span class="badge badge-pill badge-warning">Recovered</span>{% endif %}
-                                                   {% if dep.current_deployment_status == 'burnin' %}<span class="badge badge-pill badge-danger">Burn In</span>{% endif %}
-                                                   {% if dep.current_deployment_status == 'create' %}<span class="badge badge-pill badge-success">Initial Build</span>{% endif %}
+                                {% for build in location.builds.all %}
+                                           <li data-jstree='{"icon":"fa fa-rocket"}' id="builds_{{ build.id }}">
+                                               <a href="#" data-detail-url="{% url 'builds:ajax_builds_detail' build.id %}"
+                                                  data-node-id="{{ build.id }}"
+                                                  data-location-id="{{ location.id }}"
+                                                  data-node-type="detail">{{ build }}
+                                                  {% if build.current_deployment.current_deployment_status == 'deploy' %}<span class="badge badge-pill badge-primary">Deployed</span>{% endif %}
+                                                  {% if build.current_deployment.current_deployment_status == 'recover' %}<span class="badge badge-pill badge-warning">Recovered</span>{% endif %}
+                                                  {% if build.current_deployment.current_deployment_status == 'burnin' %}<span class="badge badge-pill badge-danger">Burn In</span>{% endif %}
+                                                  {% if build.current_deployment.current_deployment_status == 'create' %}<span class="badge badge-pill badge-success">Initial Deployment</span>{% endif %}
+                                              </a>
 
-                                               </a>
+                                              {% if build.assembly.assembly_parts.exists %}
+                                                  {% include "builds/build_tree_assembly.html" with assembly_parts=build.assembly.assembly_parts.all inventory_qs=build.inventory.all build_pk=build.id part_types=part_types  %}
+                                              {% endif %}
 
-                                                {% if dep.final_location.mooring_parts.exists %}
-                                                    {% include "inventory/inventory_tree_land_deployment.html" with mooring_parts=dep.final_location.mooring_parts inventory_qs=dep.inventory dep_pk=dep.id part_types=part_types  %}
-                                                {% endif %}
 
                                            </li>
                                 {% endfor %}
@@ -43,7 +43,7 @@
                             {% if location.inventory.exists %}
 
                                     {% include "inventory/inventory_tree_assigned_destination.html" with location=location part_types=part_types %}
-                                    {% include "inventory/inventory_tree_land.html" with location=location part_types=part_types %}
+                                    {% include "inventory/inventory_tree_unassigned.html" with location=location part_types=part_types %}
 
                             {% endif %}
 

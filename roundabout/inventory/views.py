@@ -19,6 +19,8 @@ from roundabout.parts.models import Part, PartType, Revision
 from roundabout.moorings.models import MooringPart
 from roundabout.admintools.models import Printer
 from roundabout.userdefinedfields.models import FieldValue, Field
+from roundabout.assemblies.models import AssemblyPart
+from roundabout.builds.models import Build, BuildAction
 from common.util.mixins import AjaxFormMixin
 
 # Mixins
@@ -44,7 +46,7 @@ class InventoryNavTreeMixin(LoginRequiredMixin, object):
 # ------------------------------------------------------------------------------
 
 def load_inventory_navtree(request):
-    locations = Location.objects.exclude(root_type='Retired').prefetch_related('deployment__final_location__mooring_parts__part__part_type').prefetch_related('inventory__part__part_type').prefetch_related('deployment__inventory')
+    locations = Location.objects.exclude(root_type='Retired').prefetch_related('deployments__final_location__mooring_parts__part__part_type').prefetch_related('inventory__part__part_type').prefetch_related('deployments__inventory')
     return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations})
 
 
@@ -312,16 +314,16 @@ def load_mooringpart_subassemblies_by_serialnumber(request):
 def load_destination_subassemblies_by_serialnumber(request):
     serial_number = request.GET.get('serial_number').strip()
     parent_id = request.GET.get('parent_id')
-    mooringpart_id = request.GET.get('mooringpart_id')
+    assemblypart_id = request.GET.get('assemblypart_id')
     location_id = request.GET.get('location_id')
 
-    mooring_part = MooringPart.objects.get(id=mooringpart_id)
+    assembly_part = AssemblyPart.objects.get(id=assemblypart_id)
     parent = Inventory.objects.get(id=parent_id)
     location = Location.objects.get(id=location_id)
-    inventory_items = Inventory.objects.filter(serial_number__icontains=serial_number).filter(part=mooring_part.part).filter(deployment__isnull=True).filter(parent__isnull=True)
+    inventory_items = Inventory.objects.filter(serial_number__icontains=serial_number).filter(part=assembly_part.part).filter(build__isnull=True).filter(parent__isnull=True)
     return render(request, 'inventory/available_destination_subassemblies.html', {'inventory_items': inventory_items,
                                                                       'parent': parent,
-                                                                      'mooring_part': mooring_part,
+                                                                      'assembly_part': assembly_part,
                                                                       'location': location, })
 
 
@@ -353,9 +355,9 @@ def load_is_equipment(request):
 def filter_inventory_navtree(request):
     part_types = request.GET.getlist('part_types[]')
     part_types = list(map(int, part_types))
-    locations = Location.objects.prefetch_related('deployment__final_location__mooring_parts__part__part_type') \
+    locations = Location.objects.prefetch_related('deployments__final_location__mooring_parts__part__part_type') \
                                 .prefetch_related('inventory__part__part_type') \
-                                .prefetch_related('deployment__inventory')
+                                .prefetch_related('deployments__inventory')
     return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations, 'part_types': part_types})
 
 
@@ -494,6 +496,8 @@ class InventoryAjaxCreateBasicView(LoginRequiredMixin, AjaxFormMixin, CreateView
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
@@ -555,6 +559,8 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
@@ -571,7 +577,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
             "invchange" : ActionInventoryChangeForm,
             "locationchange" : ActionLocationChangeForm,
             "subchange" : ActionSubassemblyChangeForm,
-            "removefromdeployment" : ActionRemoveFromDeploymentForm,
+            "removefrombuild" : ActionRemoveFromBuildForm,
             "removedest" : ActionRemoveDestinationForm,
             "test" : ActionTestForm,
             "note" : ActionNoteForm,
@@ -616,23 +622,28 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location_id=item.location_id,
                                                       user_id=self.request.user.id, inventory_id=item.id)
 
-        if self.kwargs['action_type'] == 'removefromdeployment':
-            # Find Deployment it was removed from
-            old_deployment_pk = self.object.tracker.previous('deployment')
-            if old_deployment_pk:
-                old_deployment = Deployment.objects.get(pk=old_deployment_pk)
-                self.object.detail = ' Removed from %s.' % (old_deployment.get_deployment_label()) + self.object.detail
+        if self.kwargs['action_type'] == 'removefrombuild':
+            # Find Build it was removed from
+            old_build_pk = self.object.tracker.previous('build')
+            if old_build_pk:
+                old_build = Build.objects.get(pk=old_build_pk)
+                self.object.detail = ' Removed from %s. ' % (old_build) + self.object.detail
+
+                # Create Build Action record for adding inventory item
+                build_detail = '%s removed from Build' % (self.object)
+                build_record = BuildAction.objects.create(action_type='subassemblychange', detail=build_detail, location=old_build.location,
+                                                           user=self.request.user, build=old_build)
 
             # Get any subassembly children items, add Action to history
-            subassemblies = Inventory.objects.get(id=self.object.id).get_descendants()
+            subassemblies = self.object.get_descendants()
             for item in subassemblies:
-                item.mooring_part = None
-                item.deployment = None
+                item.assembly_part = None
+                item.build = None
                 item.location = self.object.location
-                item.detail = ' Removed from %s.' % (old_deployment.get_deployment_label())
+                item.detail = ' Removed from %s.' % (old_build)
                 item.save()
-                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location_id=item.location_id,
-                                                      user_id=self.request.user.id, inventory_id=item.id)
+                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location=item.location,
+                                                      user=self.request.user, inventory=item)
 
         if self.kwargs['action_type'] == 'removedest':
             self.object.detail = 'Destination Assignment removed.'
@@ -708,13 +719,13 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location_id=item.location_id,
                                                       user_id=self.request.user.id, inventory_id=item.id)
 
-        elif self.kwargs['action_type'] == 'test':
+        if self.kwargs['action_type'] == 'test':
             self.object.detail = '%s: %s. ' % (self.object.get_test_type_display(), self.object.get_test_result_display()) + self.object.detail
 
-        #elif self.kwargs['action_type'] == 'flag':
+        #if self.kwargs['action_type'] == 'flag':
             #self.kwargs['action_type'] = self.object.get_flag_display()
 
-        elif self.kwargs['action_type'] == 'subchange':
+        if self.kwargs['action_type'] == 'subchange':
             # Find previous parent to add to Detail field text
             old_parent_pk = self.object.tracker.previous('parent')
             if old_parent_pk:
@@ -723,50 +734,50 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 self.object.detail = 'Removed from %s. ' % (old_parent) + self.object.detail
 
                 # Add Action Record for Parent Assembly
-                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=parent_detail, location_id=self.object.location_id,
-                                                      user_id=self.request.user.id, inventory_id=old_parent_pk)
+                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=parent_detail, location=self.object.location,
+                                                      user=self.request.user, inventory=old_parent)
 
             # Find previous location to add to Detail field text
             old_location_pk = self.object.tracker.previous('location')
             if old_location_pk:
                 old_location = Location.objects.get(pk=old_location_pk)
-                if self.object.deployment:
-                    self.object.detail = 'Moved to %s from %s' % (self.object.deployment, old_location.name) + self.object.detail
+                if self.object.build:
+                    self.object.detail = 'Moved to %s from %s' % (self.object.build, old_location.name) + self.object.detail
                 elif old_location.name != self.object.location.name:
                     self.object.detail = 'Moved to %s from %s. ' % (self.object.location.name, old_location) + self.object.detail
 
             # Get any subassembly children items, move their location to match parent and add Action to history
-            subassemblies = Inventory.objects.get(id=self.object.id).get_descendants()
-            mooring_parts_added = []
+            subassemblies = self.object.get_descendants()
+            assembly_parts_added = []
             for item in subassemblies:
-                if self.object.mooring_part_id:
-                    sub_mooring_parts = MooringPart.objects.get(id=self.object.mooring_part_id).get_descendants()
-                    sub_mooring_part = sub_mooring_parts.filter(part=item.part)
-                    for sub in sub_mooring_part:
-                        if sub.id not in mooring_parts_added:
-                            item.mooring_part = sub
-                            mooring_parts_added.append(sub.id)
+                if self.object.assembly_part:
+                    sub_assembly_parts = self.object.assembly_part.get_descendants()
+                    sub_assembly_part = sub_assembly_parts.filter(part=item.part)
+                    for sub in sub_assembly_part:
+                        if sub.id not in assembly_parts_added:
+                            item.assembly_part = sub
+                            assembly_parts_added.append(sub.id)
                             break
                 else:
-                    item.mooring_part = None
+                    item.assembly_part = None
 
                 item.location = self.object.location
-                item.deployment = self.object.deployment
+                item.build = self.object.build
                 item.assigned_destination_root = self.object.assigned_destination_root
 
-                if self.object.deployment:
-                    item.detail = 'Moved to %s from %s' % (self.object.deployment, old_location.name)
+                if self.object.build:
+                    item.detail = 'Moved to %s from %s' % (self.object.build, old_location.name)
                 elif old_location.name != self.object.location.name:
                     item.detail = 'Moved to %s from %s' % (self.object.location.name, old_location.name)
                 else:
                     item.detail = 'Parent Inventory Change'
                 item.save()
-                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location_id=item.location_id,
-                                                      user_id=self.request.user.id, inventory_id=item.id)
+                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location=item.location,
+                                                      user=self.request.user, inventory=item)
 
         action_form = form.save()
-        action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=self.object.detail, location_id=self.object.location_id,
-                                              user_id=self.request.user.id, inventory_id=self.object.id)
+        action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=self.object.detail, location=self.object.location,
+                                              user=self.request.user, inventory=self.object)
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -775,6 +786,8 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
                 'location_id': self.object.location.id,
             }
             return JsonResponse(data)
@@ -821,6 +834,8 @@ class ActionNoteAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.inventory_id,
+                'object_type': self.object.inventory.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
@@ -883,6 +898,8 @@ class ActionHistoryNoteAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateV
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.inventory_id,
+                'object_type': self.object.inventory.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
@@ -892,127 +909,128 @@ class ActionHistoryNoteAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateV
         return reverse('inventory:ajax_inventory_detail', args=(self.object.inventory_id, ))
 
 
-class InventoryAjaxAddToDeploymentListView(LoginRequiredMixin, TemplateView):
-    template_name = 'inventory/ajax_inventory_add_to_deployment.html'
+class InventoryAjaxAddToBuildListView(LoginRequiredMixin, TemplateView):
+    template_name = 'inventory/ajax_inventory_add_to_build.html'
 
     def get_context_data(self, **kwargs):
-        context = super(InventoryAjaxAddToDeploymentListView, self).get_context_data(**kwargs)
+        context = super(InventoryAjaxAddToBuildListView, self).get_context_data(**kwargs)
         inventory_item = Inventory.objects.get(id=self.kwargs['pk'])
-        deployments = Deployment.objects.all().order_by('location__name')
+        builds = Build.objects.all().order_by('location__name')
 
-        for dep in deployments:
-            if dep.current_deployment_status() != 'create' and dep.current_deployment_status() != 'burnin':
-                deployments = deployments.exclude(id=dep.id)
-
-        if inventory_item.mooring_part:
-            for dep in deployments:
-                for mp in dep.final_location.mooring_parts.all():
-                    if mp != inventory_item.mooring_part:
+        if inventory_item.assembly_part:
+            for build in builds:
+                for assembly_part in build.assembly.assembly_parts.all():
+                    if assembly_part != inventory_item.assembly_part:
                         x = False
                     else:
                         x = True
                         break
                 if not x:
-                    deployments = deployments.exclude(id=dep.id)
+                    builds = builds.exclude(id=build.id)
         else:
-            for dep in deployments:
-                for mp in dep.final_location.mooring_parts.all():
-                    if mp.part != inventory_item.part:
+            for build in builds:
+                for assembly_part in build.assembly.assembly_parts.all():
+                    if assembly_part.part != inventory_item.part:
                         x = False
                     else:
                         x = True
                         break
                 if not x:
-                    deployments = deployments.exclude(id=dep.id)
+                    builds = builds.exclude(id=build.id)
 
-        deployments = deployments.prefetch_related('final_location__mooring_parts__part')
+        builds = builds.prefetch_related('assembly__assembly_parts__part')
 
-        if inventory_item.mooring_part:
-            mooring_parts = MooringPart.objects.filter(id=inventory_item.mooring_part.id)
+        if inventory_item.assembly_part:
+            assembly_parts = AssemblyPart.objects.filter(id=inventory_item.assembly_part.id)
         else:
-            mooring_parts = MooringPart.objects.filter(part=inventory_item.part).filter(location__final_deployment__in=deployments).select_related().distinct()
+            assembly_parts = AssemblyPart.objects.filter(part=inventory_item.part).filter(assembly__builds__in=builds).select_related().distinct()
 
         context.update({
             'inventory_item': inventory_item
         })
         context.update({
-            'mooring_parts': mooring_parts
+            'assembly_parts': assembly_parts
         })
         context.update({
-            'deployments': deployments
+            'builds': builds
         })
         return context
 
 
-class InventoryAjaxAddToDeploymentActionView(RedirectView):
+class InventoryAjaxAddToBuildActionView(RedirectView):
     permanent = False
     query_string = True
 
     def get_redirect_url(self, *args, **kwargs):
-        mooring_part = MooringPart.objects.get(id=self.kwargs['mooring_part_pk'])
+        assembly_part = AssemblyPart.objects.get(id=self.kwargs['assembly_part_pk'])
         inventory_item = Inventory.objects.get(id=self.kwargs['pk'])
-        deployment = Deployment.objects.get(id=self.kwargs['deployment_pk'])
+        build = Build.objects.get(id=self.kwargs['build_pk'])
 
-        if mooring_part.parent:
+        if assembly_part.parent:
             try:
-                parent = Inventory.objects.filter(mooring_part=mooring_part.parent).filter(deployment=deployment).first()
+                parent = Inventory.objects.filter(assembly_part=assembly_part.parent).filter(build=build).first()
             except Inventory.DoesNotExist:
                 parent = None
         else:
             parent = None
 
-        inventory_item.mooring_part = mooring_part
-        inventory_item.deployment = deployment
+        inventory_item.assembly_part = assembly_part
+        inventory_item.build = build
         inventory_item.parent = parent
-        inventory_item.location = deployment.location
+        inventory_item.location = build.location
         inventory_item.save()
 
-        detail = 'Moved to %s.' % (inventory_item.deployment)
+        detail = 'Moved to %s.' % (inventory_item.build)
         # Find previous location to add to Detail field text
         old_location_pk = inventory_item.tracker.previous('location')
         if old_location_pk != inventory_item.location:
             detail = detail + ' Moved to %s.' % (inventory_item.location)
         if inventory_item.parent:
             detail = detail + ' Added to %s' % (inventory_item.parent)
-            parent_record = Action.objects.create(action_type='subchange', detail='Subassembly %s added.' % (inventory_item), location_id=inventory_item.location_id,
-                                                  user_id=self.request.user.id, inventory_id=inventory_item.parent.id)
-        action_record = Action.objects.create(action_type='addtodeployment', detail=detail, location_id=inventory_item.location_id,
-                                              user_id=self.request.user.id, inventory_id=inventory_item.id)
+            parent_record = Action.objects.create(action_type='subchange', detail='Subassembly %s added.' % (inventory_item), location=inventory_item.location,
+                                                  user=self.request.user, inventory=inventory_item.parent)
+        action_record = Action.objects.create(action_type='addtobuild', detail=detail, location=inventory_item.location,
+                                              user=self.request.user, inventory=inventory_item)
 
         # Check if any subassembly orphan children items already exist.  If so, make this item the parent
-        children = inventory_item.mooring_part.get_children()
+        children = inventory_item.assembly_part.get_children()
         for child in children:
             if child.inventory.exists():
-                child_item = Inventory.objects.filter(mooring_part=child).filter(deployment=inventory_item.deployment)
+                child_item = Inventory.objects.filter(assembly_part=child).filter(build=inventory_item.build)
                 for c in child_item:
-                    if c.deployment == inventory_item.deployment:
+                    if c.build == inventory_item.build:
                         c.parent = subassembly
                         c.save()
 
         # Get any subassembly children items, move their location to match parent and add Action to history
-        subassemblies = Inventory.objects.get(id=inventory_item.id).get_descendants()
-        mooring_parts_added = []
+        subassemblies = inventory_item.get_descendants()
+        assembly_parts_added = []
         for item in subassemblies:
-            sub_mooring_parts = inventory_item.mooring_part.get_descendants()
-            sub_mooring_part = sub_mooring_parts.filter(part=item.part)
+            sub_assembly_parts = inventory_item.assembly_part.get_descendants()
+            sub_assembly_part = sub_assembly_parts.filter(part=item.part)
 
-            for sub in sub_mooring_part:
-                if sub.id not in mooring_parts_added:
-                    item.mooring_part = sub
-                    mooring_parts_added.append(sub.id)
+            for sub in sub_assembly_part:
+                if sub.id not in assembly_parts_added:
+                    item.assembly_part = sub
+                    assembly_parts_added.append(sub.id)
                     break
 
             item.location = inventory_item.location
-            item.deployment = inventory_item.deployment
+            item.build = inventory_item.build
 
-            if item.deployment:
-                item.detail = 'Moved to %s' % (item.deployment)
+            if item.build:
+                item.detail = 'Moved to %s' % (item.build)
             else:
                 item.detail = 'Parent Inventory Change'
 
             item.save()
-            action_record = Action.objects.create(action_type='invchange', detail=item.detail, location_id=item.location_id,
-                                                  user_id=self.request.user.id, inventory_id=item.id)
+            action_record = Action.objects.create(action_type='invchange', detail=item.detail, location=item.location,
+                                                  user=self.request.user, inventory=item)
+
+        # Create Build Action record for adding inventory item
+        detail = '%s added to Build' % (inventory_item)
+        build_record = BuildAction.objects.create(action_type='subassemblychange', detail=detail, location=build.location,
+                                                   user=self.request.user, build=build)
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ) )
 
@@ -1023,13 +1041,13 @@ class InventoryAjaxAssignDestinationView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super(InventoryAjaxAssignDestinationView, self).get_context_data(**kwargs)
         inventory_item = Inventory.objects.get(id=self.kwargs['pk'])
-        mooring_parts = MooringPart.objects.filter(part=inventory_item.part).order_by('location__parent__name', 'location__name').select_related()
+        assembly_parts = AssemblyPart.objects.filter(part=inventory_item.part).order_by('assembly').select_related()
 
         context.update({
             'inventory_item': inventory_item
         })
         context.update({
-            'mooring_parts': mooring_parts
+            'assembly_parts': assembly_parts
         })
         return context
 
@@ -1039,30 +1057,30 @@ class InventoryAjaxAssignDestinationActionView(RedirectView):
     query_string = True
 
     def get_redirect_url(self, *args, **kwargs):
-        mooring_part = MooringPart.objects.get(id=self.kwargs['mooring_part_pk'])
+        assembly_part = AssemblyPart.objects.get(id=self.kwargs['assembly_part_pk'])
         inventory_item = Inventory.objects.get(id=self.kwargs['pk'])
 
-        inventory_item.mooring_part = mooring_part
+        inventory_item.assembly_part = assembly_part
         inventory_item.assigned_destination_root = inventory_item
         inventory_item.save()
 
         # Get any subassembly children items, move their Mooring Part assignment to match parent
         subassemblies = inventory_item.get_descendants()
-        mooring_parts_added = []
+        assembly_parts_added = []
         for item in subassemblies:
             item.assigned_destination_root = inventory_item
-            sub_mooring_parts = inventory_item.mooring_part.get_descendants()
-            sub_mooring_part = sub_mooring_parts.filter(part=item.part)
-            for sub in sub_mooring_part:
-                if sub.id not in mooring_parts_added:
-                    item.mooring_part = sub
-                    mooring_parts_added.append(sub.id)
+            sub_assembly_parts = inventory_item.assembly_part.get_descendants()
+            sub_assembly_part = sub_assembly_parts.filter(part=item.part)
+            for sub in sub_assembly_part:
+                if sub.id not in assembly_parts_added:
+                    item.assembly_part = sub
+                    assembly_parts_added.append(sub.id)
                     break
             item.save()
 
-        detail = 'Destination assigned - %s.' % (inventory_item.mooring_part.location.name)
-        action_record = Action.objects.create(action_type='assigndest', detail=detail, location_id=inventory_item.location_id,
-                                              user_id=self.request.user.id, inventory_id=inventory_item.id)
+        detail = 'Destination assigned - %s.' % (inventory_item.assembly_part.assembly)
+        action_record = Action.objects.create(action_type='assigndest', detail=detail, location=inventory_item.location,
+                                              user=self.request.user, inventory=inventory_item)
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ) )
 
@@ -1073,25 +1091,25 @@ class InventoryAjaxDestinationSubassemblyListView(LoginRequiredMixin, TemplateVi
     def get_context_data(self, **kwargs):
         context = super(InventoryAjaxDestinationSubassemblyListView, self).get_context_data(**kwargs)
         navtree_node_id = self.request.GET.get('navTreeNodeID')
-        mooring_part = MooringPart.objects.get(id=self.kwargs['pk'])
+        assembly_part = AssemblyPart.objects.get(id=self.kwargs['pk'])
         location = Location.objects.get(id=self.kwargs['location_pk'])
         assigned_destination_root = Inventory.objects.get(id=self.kwargs['assigned_destination_root_pk'])
 
         #navtreedata = json.loads(navtree_node_id)
 
-        if mooring_part.parent:
+        if assembly_part.parent:
             try:
-                parent = Inventory.objects.filter(mooring_part=mooring_part.parent).filter(deployment__isnull=True).first()
+                parent = Inventory.objects.filter(assembly_part=assembly_part.parent).filter(build__isnull=True).first()
             except Inventory.DoesNotExist:
                 parent = None
         else:
             parent = None
-        inventory_items = Inventory.objects.filter(part=mooring_part.part).filter(deployment__isnull=True).filter(parent__isnull=True).exclude(location__root_type='Trash')
+        inventory_items = Inventory.objects.filter(part=assembly_part.part).filter(build__isnull=True).filter(parent__isnull=True).filter(assigned_destination_root__isnull=True).exclude(location__root_type='Trash')
 
         context.update({
             'inventory_items': inventory_items,
             'navtree_node_id': navtree_node_id,
-            'mooring_part': mooring_part,
+            'assembly_part': assembly_part,
             'parent': parent,
             'location': location,
             'assigned_destination_root': assigned_destination_root,
@@ -1105,7 +1123,7 @@ class InventoryAjaxDestinationSubassemblyActionView(LoginRequiredMixin, Redirect
 
     def get_redirect_url(self, *args, **kwargs):
         subassembly = Inventory.objects.get(id=self.kwargs['pk'])
-        mooring_part = MooringPart.objects.get(id=self.kwargs['mooring_part_pk'])
+        assembly_part = AssemblyPart.objects.get(id=self.kwargs['assembly_part_pk'])
         location = Location.objects.get(id=self.kwargs['location_pk'])
         assigned_destination_root = Inventory.objects.get(id=self.kwargs['assigned_destination_root_pk'])
 
@@ -1115,58 +1133,58 @@ class InventoryAjaxDestinationSubassemblyActionView(LoginRequiredMixin, Redirect
             parent = None
 
         subassembly.location = location
-        subassembly.mooring_part = mooring_part
+        subassembly.assembly_part = assembly_part
         subassembly.parent = parent
         subassembly.assigned_destination_root = assigned_destination_root
         subassembly.save()
 
-        detail = 'Destination assigned - %s.' % (subassembly.mooring_part.location.name)
+        detail = 'Destination assigned - %s.' % (subassembly.assembly_part.assembly)
         # Find previous location to add to Detail field text
         old_location_pk = subassembly.tracker.previous('location')
         if old_location_pk != subassembly.location:
             detail = ' Moved to %s.' % (subassembly.location)
         if subassembly.parent:
             detail = detail + ' Added to %s' % (subassembly.parent)
-            parent_record = Action.objects.create(action_type='subchange', detail='Subassembly %s added.' % (subassembly), location_id=subassembly.location_id,
-                                                  user_id=self.request.user.id, inventory_id=subassembly.parent.id)
-        action_record = Action.objects.create(action_type='invchange', detail=detail, location_id=subassembly.location_id,
-                                              user_id=self.request.user.id, inventory_id=subassembly.id)
+            parent_record = Action.objects.create(action_type='subchange', detail='Subassembly %s added.' % (subassembly), location=subassembly.location,
+                                                  user=self.request.user, inventory=subassembly.parent)
+        action_record = Action.objects.create(action_type='invchange', detail=detail, location=subassembly.location,
+                                              user=self.request.user, inventory=subassembly)
 
         # Check if any subassembly orphan children items already exist.  If so, make this item the parent
-        children = subassembly.mooring_part.get_children()
+        children = subassembly.assembly_part.get_children()
         for child in children:
             if child.inventory.exists():
-                child_item = Inventory.objects.filter(mooring_part=child).filter(assigned_destination_root=subassembly.assigned_destination_root)
+                child_item = Inventory.objects.filter(assembly_part=child).filter(assigned_destination_root=subassembly.assigned_destination_root)
                 for c in child_item:
                     if c.assigned_destination_root == subassembly.assigned_destination_root:
                         c.parent = subassembly
                         c.save()
 
         # Get any subassembly children items, move their location to match parent and add Action to history
-        subassemblies = Inventory.objects.get(id=subassembly.id).get_descendants()
-        mooring_parts_added = []
+        subassemblies = subassembly.get_descendants()
+        assembly_parts_added = []
         for item in subassemblies:
-            sub_mooring_parts = subassembly.mooring_part.get_descendants()
-            sub_mooring_part = sub_mooring_parts.filter(part=item.part)
+            sub_assembly_parts = subassembly.assembly_part.get_descendants()
+            sub_assembly_part = sub_assembly_parts.filter(part=item.part)
 
-            for sub in sub_mooring_part:
-                if sub.id not in mooring_parts_added:
-                    item.mooring_part = sub
-                    mooring_parts_added.append(sub.id)
+            for sub in sub_assembly_part:
+                if sub.id not in assembly_parts_added:
+                    item.assembly_part = sub
+                    assembly_parts_added.append(sub.id)
                     break
 
             item.location = subassembly.location
-            item.deployment = subassembly.deployment
+            item.build = subassembly.build
             item.assigned_destination_root = subassembly.assigned_destination_root
 
-            if item.deployment:
-                item.detail = 'Moved to %s' % (item.deployment)
+            if item.build:
+                item.detail = 'Moved to %s' % (item.build)
             else:
                 item.detail = 'Parent Inventory Change'
 
             item.save()
-            action_record = Action.objects.create(action_type='invchange', detail=item.detail, location_id=item.location_id,
-                                                  user_id=self.request.user.id, inventory_id=item.id)
+            action_record = Action.objects.create(action_type='invchange', detail=item.detail, location=item.location,
+                                                  user=self.request.user, inventory=item)
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ) )
 
@@ -1177,31 +1195,31 @@ class InventoryAjaxParentListView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super(InventoryAjaxParentListView, self).get_context_data(**kwargs)
         item = Inventory.objects.get(id=self.kwargs['pk'])
-        items_with_mooring_part = Inventory.objects.filter(part=item.part).filter(mooring_part__isnull=False)
+        items_with_assembly_part = Inventory.objects.filter(part=item.part).filter(assembly_part__isnull=False)
 
-        mooring_parts = MooringPart.objects.filter(part=item.part)
-        mooring_parts_list = []
-        for mp in mooring_parts:
-            parent = MooringPart.objects.get(id=mp.id).get_ancestors().last()
-            mooring_parts_list.append(parent)
-        part_templates = Part.objects.filter(mooring_parts__in=mooring_parts_list)
-        parent_items = Inventory.objects.filter(part__in=part_templates).filter(deployment__isnull=True).exclude(location__root_type='Trash').order_by('part__name')
+        assembly_parts = AssemblyPart.objects.filter(part=item.part)
+        assembly_parts_list = []
+        for ap in assembly_parts:
+            parent = AssemblyPart.objects.get(id=ap.id).get_ancestors().last()
+            assembly_parts_list.append(parent)
+        part_templates = Part.objects.filter(assembly_parts__in=assembly_parts_list)
+        parent_items = Inventory.objects.filter(part__in=part_templates).filter(build__isnull=True).exclude(location__root_type='Trash').order_by('part__name')
 
         for parent in parent_items:
-            # Check if the mooring part template spot is already filled, remove parent from queryset
+            # Check if the assembly part template spot is already filled, remove parent from queryset
             children = parent.get_children()
             if children:
                 for child in children:
-                    if child in items_with_mooring_part:
+                    if child in items_with_assembly_part:
                         parent_items = parent_items.exclude(id=parent.id)
 
         for parent in parent_items:
-            # Check if the parent is assigned a destination that has no mooring template spot for the item, remove from queryset
-            if parent.mooring_part:
-                parent_tree = parent.mooring_part.get_children()
+            # Check if the parent is assigned a destination that has no assembly template spot for the item, remove from queryset
+            if parent.assembly_part:
+                parent_tree = parent.assembly_part.get_children()
                 if parent_tree:
-                    for mp in parent_tree:
-                        if mp not in item.part.mooring_parts.all():
+                    for ap in parent_tree:
+                        if ap not in item.part.assembly_parts.all():
                             x = False
                         else:
                             x = True
@@ -1225,53 +1243,54 @@ class InventoryAjaxParentActionView(RedirectView):
     def get_redirect_url(self, *args, **kwargs):
         subassembly = Inventory.objects.get(id=self.kwargs['pk'])
         parent = Inventory.objects.get(id=self.kwargs['parent_pk'])
-        if parent.mooring_part:
-            mooring_parts = parent.mooring_part.get_children()
-            mooring_part = mooring_parts.get(part=subassembly.part)
+
+        if parent.assembly_part:
+            assembly_parts = parent.assembly_part.get_children()
+            assembly_part = assembly_parts.get(part=subassembly.part)
         else:
-            mooring_part = None
+            assembly_part = None
 
         subassembly.location = parent.location
-        subassembly.deployment = parent.deployment
+        subassembly.build = parent.build
         subassembly.parent = parent
-        subassembly.mooring_part = mooring_part
+        subassembly.assembly_part = assembly_part
         subassembly.assigned_destination_root = parent.assigned_destination_root
         subassembly.save()
 
         detail = 'Added to %s.' % (parent)
-        if subassembly.deployment:
-            detail = detail + ' Moved to %s' % (subassembly.deployment)
+        if subassembly.build:
+            detail = detail + ' Moved to %s' % (subassembly.build)
         parent_detail = 'Subassembly %s added.' % (subassembly)
-        action_record = Action.objects.create(action_type='subchange', detail=detail, location_id=parent.location.id,
-                                              user_id=self.request.user.id, inventory_id=subassembly.id)
-        parent_action_record = Action.objects.create(action_type='subchange', detail=parent_detail, location_id=parent.location.id,
-                                              user_id=self.request.user.id, inventory_id=parent.id)
+        action_record = Action.objects.create(action_type='subchange', detail=detail, location=parent.location,
+                                              user=self.request.user, inventory=subassembly)
+        parent_action_record = Action.objects.create(action_type='subchange', detail=parent_detail, location=parent.location,
+                                              user=self.request.user, inventory=parent)
 
         # Get any subassembly children items, move their location to match parent and add Action to history
         subassemblies = subassembly.get_descendants()
-        mooring_parts_added = []
+        assembly_parts_added = []
         for item in subassemblies:
-            if mooring_part:
-                sub_mooring_parts = subassembly.mooring_part.get_descendants()
-                sub_mooring_part = sub_mooring_parts.filter(part=item.part)
-                for sub in sub_mooring_part:
-                    if sub.id not in mooring_parts_added:
-                        item.mooring_part = sub
-                        mooring_parts_added.append(sub.id)
+            if assembly_part:
+                sub_assembly_parts = subassembly.assembly_part.get_descendants()
+                sub_assembly_part = sub_assembly_parts.filter(part=item.part)
+                for sub in sub_assembly_part:
+                    if sub.id not in assembly_parts_added:
+                        item.assembly_part = sub
+                        assembly_parts_added.append(sub.id)
                         break
 
             item.location = subassembly.location
-            item.deployment = subassembly.deployment
+            item.build = subassembly.build
             item.assigned_destination_root = subassembly.assigned_destination_root
 
-            if item.deployment:
-                item.detail = 'Moved to %s' % (item.deployment)
+            if item.build:
+                item.detail = 'Moved to %s' % (item.build)
             else:
                 item.detail = 'Parent Inventory Change'
 
             item.save()
-            action_record = Action.objects.create(action_type='invchange', detail=item.detail, location_id=item.location_id,
-                                                  user_id=self.request.user.id, inventory_id=item.id)
+            action_record = Action.objects.create(action_type='invchange', detail=item.detail, location=item.location,
+                                                  user=self.request.user, inventory=item)
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ) )
 
@@ -1282,18 +1301,18 @@ class InventoryAjaxSubassemblyListView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super(InventoryAjaxSubassemblyListView, self).get_context_data(**kwargs)
         parent = Inventory.objects.get(id=self.kwargs['parent_pk'])
-        if parent.mooring_part_id:
-            mooring_parts = MooringPart.objects.get(id=parent.mooring_part_id).get_children()
-            part_templates = Part.objects.filter(mooring_parts__in=mooring_parts)
-            inventory_items = Inventory.objects.filter(part__in=part_templates).filter(deployment__isnull=True).exclude(location__root_type='Trash')
+        if parent.assembly_part:
+            assembly_parts = assembly_part.get_children()
+            part_templates = Part.objects.filter(assembly_parts__in=assembly_parts)
+            inventory_items = Inventory.objects.filter(part__in=part_templates).filter(build__isnull=True).exclude(location__root_type='Trash')
         else:
-            mooring_parts = MooringPart.objects.filter(part=parent.part)
-            mooring_parts_list = []
-            for mp in mooring_parts:
-                result_list = MooringPart.objects.get(id=mp.id).get_children()
-                mooring_parts_list = list(chain(mooring_parts_list, result_list))
-            part_templates = Part.objects.filter(mooring_parts__in=mooring_parts_list)
-            inventory_items = Inventory.objects.filter(part__in=part_templates).filter(mooring_part__isnull=True).filter(parent__isnull=True).exclude(location__root_type='Trash')
+            assembly_parts = AssemblyPart.objects.filter(part=parent.part)
+            assembly_parts_list = []
+            for ap in assembly_parts:
+                result_list = AssemblyPart.objects.get(id=ap.id).get_children()
+                assembly_parts_list = list(chain(assembly_parts_list, result_list))
+            part_templates = Part.objects.filter(assembly_parts__in=assembly_parts_list)
+            inventory_items = Inventory.objects.filter(part__in=part_templates).filter(assembly_part__isnull=True).filter(parent__isnull=True).exclude(location__root_type='Trash')
 
         context.update({
             'inventory_items': inventory_items
@@ -1311,51 +1330,51 @@ class InventoryAjaxSubassemblyActionView(RedirectView):
     def get_redirect_url(self, *args, **kwargs):
         subassembly = Inventory.objects.get(id=self.kwargs['pk'])
         parent = Inventory.objects.get(id=self.kwargs['parent_pk'])
-        if parent.mooring_part_id:
-            mooring_parts = MooringPart.objects.get(id=parent.mooring_part_id).get_children()
-            mooring_part = mooring_parts.get(part=subassembly.part)
+        if parent.assembly_part:
+            assembly_parts = parent.assembly_part.get_children()
+            assembly_part = assembly_parts.get(part=subassembly.part)
         else:
-            mooring_part = None
+            assembly_part = None
 
         subassembly.location = parent.location
-        subassembly.deployment = parent.deployment
+        subassembly.build = parent.build
         subassembly.parent = parent
-        subassembly.mooring_part = mooring_part
+        subassembly.assembly_part = assembly_part
         subassembly.save()
 
         detail = 'Added to %s.' % (parent)
-        if subassembly.deployment:
-            detail = detail + ' Moved to %s' % (subassembly.deployment)
+        if subassembly.build:
+            detail = detail + ' Moved to %s' % (subassembly.build)
         parent_detail = 'Subassembly %s added.' % (subassembly)
-        action_record = Action.objects.create(action_type='subchange', detail=detail, location_id=parent.location.id,
-                                              user_id=self.request.user.id, inventory_id=subassembly.id)
-        parent_action_record = Action.objects.create(action_type='subchange', detail=parent_detail, location_id=parent.location.id,
-                                              user_id=self.request.user.id, inventory_id=parent.id)
+        action_record = Action.objects.create(action_type='subchange', detail=detail, location=parent.location,
+                                              user=self.request.user, inventory=subassembly)
+        parent_action_record = Action.objects.create(action_type='subchange', detail=parent_detail, location=parent.location,
+                                              user=self.request.user, inventory=parent)
 
         # Get any subassembly children items, move their location to match parent and add Action to history
         subassemblies = Inventory.objects.get(id=subassembly.id).get_descendants()
-        mooring_parts_added = []
+        assembly_parts_added = []
         for item in subassemblies:
-            if mooring_part:
-                sub_mooring_parts = subassembly.mooring_part.get_descendants()
-                sub_mooring_part = sub_mooring_parts.filter(part=item.part)
-                for sub in sub_mooring_part:
-                    if sub.id not in mooring_parts_added:
-                        item.mooring_part = sub
-                        mooring_parts_added.append(sub.id)
+            if assembly_part:
+                sub_assembly_parts = subassembly.assembly_part.get_descendants()
+                sub_assembly_part = sub_assembly_parts.filter(part=item.part)
+                for sub in sub_assembly_part:
+                    if sub.id not in assembly_parts_added:
+                        item.assembly_part = sub
+                        assembly_parts_added.append(sub.id)
                         break
 
             item.location = subassembly.location
-            item.deployment = subassembly.deployment
+            item.build = subassembly.build
 
-            if item.deployment:
-                item.detail = 'Moved to %s' % (item.deployment)
+            if item.build:
+                item.detail = 'Moved to %s' % (item.build)
             else:
                 item.detail = 'Parent Inventory Change'
 
             item.save()
-            action_record = Action.objects.create(action_type='invchange', detail=item.detail, location_id=item.location_id,
-                                                  user_id=self.request.user.id, inventory_id=item.id)
+            action_record = Action.objects.create(action_type='invchange', detail=item.detail, location=item.location,
+                                                  user=self.request.user, inventory=item)
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['parent_pk'], ) )
 
@@ -1461,6 +1480,116 @@ class InventoryByMooringPartAjaxSubassemblyActionView(LoginRequiredMixin, Redire
             item.save()
             action_record = Action.objects.create(action_type='invchange', detail=item.detail, location_id=item.location_id,
                                                   user_id=self.request.user.id, inventory_id=item.id)
+
+        return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ) )
+
+
+class InventoryAjaxByAssemblyPartListView(LoginRequiredMixin, TemplateView):
+    template_name = 'inventory/ajax_inventory_assemblypart_add_subassembly.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(InventoryAjaxByAssemblyPartListView, self).get_context_data(**kwargs)
+        assembly_part = AssemblyPart.objects.get(id=self.kwargs['pk'])
+        location = Location.objects.get(id=self.kwargs['location_pk'])
+        build = Build.objects.get(id=self.kwargs['build_pk'])
+        if assembly_part.parent:
+            try:
+                parent = Inventory.objects.filter(assembly_part=assembly_part.parent).filter(build=build).first()
+            except Inventory.DoesNotExist:
+                parent = None
+        else:
+            parent = None
+        inventory_items = Inventory.objects.filter(part=assembly_part.part).filter(build__isnull=True).filter(parent__isnull=True).exclude(location__root_type='Trash')
+        inventory_items = inventory_items.filter(Q(assembly_part = assembly_part) | Q(assembly_part__isnull = True))
+
+        context.update({
+            'inventory_items': inventory_items
+        })
+        context.update({
+            'assembly_part': assembly_part
+        })
+        context.update({
+            'parent': parent
+        })
+        context.update({
+            'location': location
+        })
+        context.update({
+            'build': build
+        })
+
+        return context
+
+
+class InventoryAjaxByAssemblyPartyActionView(LoginRequiredMixin, RedirectView):
+    permanent = False
+    query_string = True
+
+    def get_redirect_url(self, *args, **kwargs):
+        subassembly = Inventory.objects.get(id=self.kwargs['pk'])
+        assembly_part = AssemblyPart.objects.get(id=self.kwargs['assembly_part_pk'])
+        build = Build.objects.get(id=self.kwargs['build_pk'])
+        location = build.location
+        if 'parent_pk' in self.kwargs:
+            parent = Inventory.objects.get(id=self.kwargs['parent_pk'])
+        else:
+            parent = None
+
+        subassembly.location = location
+        subassembly.build = build
+        subassembly.future_destination = None
+        subassembly.parent = parent
+        subassembly.assembly_part = assembly_part
+        subassembly.save()
+
+        detail = 'Moved to %s.' % (subassembly.build)
+        if subassembly.parent:
+            detail = detail + ' Added to %s' % (subassembly.parent)
+            parent_record = Action.objects.create(action_type='subchange', detail='Subassembly %s added.' % (subassembly), location=subassembly.location,
+                                                  user=self.request.user, inventory=subassembly.parent)
+        action_record = Action.objects.create(action_type='invchange', detail=detail, location=subassembly.location,
+                                              user=self.request.user, inventory=subassembly)
+
+        # Check if any subassembly orphan children items already exist.  If so, make this item the parent
+        children = subassembly.assembly_part.get_children()
+        for child in children:
+            if child.inventory.exists():
+                child_item = Inventory.objects.filter(assembly_part=child).filter(build=subassembly.build)
+                for c in child_item:
+                    if c.build == subassembly.build:
+                        c.parent = subassembly
+                        c.save()
+
+
+        # Get any subassembly children items, move their location to match parent and add Action to history
+        subassemblies = Inventory.objects.get(id=subassembly.id).get_descendants()
+        assembly_parts_added = []
+        for item in subassemblies:
+            sub_assembly_parts = subassembly.assembly_part.get_descendants()
+            sub_assembly_part = sub_assembly_parts.filter(part=item.part)
+
+            for sub in sub_assembly_part:
+                if sub.id not in assembly_parts_added:
+                    item.assembly_part = sub
+                    assembly_parts_added.append(sub.id)
+                    break
+
+            item.location = subassembly.location
+            item.build = subassembly.build
+
+            if item.build:
+                item.detail = 'Moved to %s' % (item.build)
+            else:
+                item.detail = 'Parent Inventory Change'
+
+            item.save()
+            action_record = Action.objects.create(action_type='invchange', detail=item.detail, location_id=item.location_id,
+                                                  user_id=self.request.user.id, inventory_id=item.id)
+
+        # Create Build Action record for adding inventory item
+        detail = '%s added to Build' % (subassembly)
+        build_record = BuildAction.objects.create(action_type='subassemblychange', detail=detail, location=build.location,
+                                                   user=self.request.user, build=build)
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ) )
 
@@ -1811,7 +1940,7 @@ class InventoryDeploymentDetailView(InventoryNavTreeMixin, DetailView):
 # AJAX Views
 
 def load_deployment_navtree(request):
-    locations = Location.objects.exclude(root_type='Trash').prefetch_related('deployment')
+    locations = Location.objects.exclude(root_type='Trash').prefetch_related('deployments')
     return render(request, 'inventory/ajax_deployment_navtree.html', {'locations': locations})
 
 
@@ -1823,9 +1952,15 @@ class DeploymentAjaxDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super(DeploymentAjaxDetailView, self).get_context_data(**kwargs)
         # Get percent complete info
-        total_mooringparts = MooringPart.objects.filter(location=self.object.final_location).count()
+        if self.object.final_location:
+            total_parts = MooringPart.objects.filter(location=self.object.final_location).count()
+        elif self.object.assembly:
+            total_parts = AssemblyPart.objects.filter(assembly=self.object.assembly).count()
+        else:
+            total_parts = AssemblyPart.objects.filter(assembly=self.object.build.assembly).count()
+
         total_inventory = self.object.inventory.count()
-        percent_complete = round( (total_inventory / total_mooringparts) * 100 )
+        percent_complete = round( (total_inventory / total_parts) * 100 )
 
         # Get Lat/Long, Depth if Deployed
         action_record = DeploymentAction.objects.filter(deployment=self.object).filter(action_type='deploy')
