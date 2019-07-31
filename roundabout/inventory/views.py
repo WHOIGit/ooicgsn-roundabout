@@ -1538,7 +1538,12 @@ class InventoryAjaxByAssemblyPartyActionView(LoginRequiredMixin, RedirectView):
             detail = detail + ' Added to %s' % (subassembly.parent)
             parent_record = Action.objects.create(action_type='subchange', detail='Subassembly %s added.' % (subassembly), location=subassembly.location,
                                                   user=self.request.user, inventory=subassembly.parent)
-        action_record = Action.objects.create(action_type='invchange', detail=detail, location=subassembly.location,
+        if subassembly.build:
+            action_type = 'addtobuild'
+        else:
+            action_type = 'invchange'
+
+        action_record = Action.objects.create(action_type=action_type, detail=detail, location=subassembly.location,
                                               user=self.request.user, inventory=subassembly)
 
         # Check if any subassembly orphan children items already exist.  If so, make this item the parent
@@ -1574,7 +1579,7 @@ class InventoryAjaxByAssemblyPartyActionView(LoginRequiredMixin, RedirectView):
                 item.detail = 'Parent Inventory Change'
 
             item.save()
-            action_record = Action.objects.create(action_type='invchange', detail=item.detail, location_id=item.location_id,
+            action_record = Action.objects.create(action_type=action_type, detail=item.detail, location_id=item.location_id,
                                                   user_id=self.request.user.id, inventory_id=item.id)
 
         # Create Build Action record for adding inventory item
