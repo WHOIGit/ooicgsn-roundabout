@@ -7,8 +7,6 @@
                 <div class="card-header">
                     {% if inventory_item.id %}
                         <h3>{{ inventory_item.part.name }}</h3>
-                    {% else %}
-                        <h3>Add Inventory</h3>
                     {% endif %}
 
                     <p>{{ inventory_item.serial_number }}</p>
