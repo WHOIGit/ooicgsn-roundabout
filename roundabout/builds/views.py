@@ -16,7 +16,7 @@ from roundabout.inventory.models import Inventory, Action
 
 # Load the javascript navtree
 def load_builds_navtree(request):
-    locations = Location.objects.prefetch_related('builds').prefetch_related('inventory__part__part_type')
+    locations = Location.objects.prefetch_related('builds__assembly__assembly_parts__part__part_type').prefetch_related('builds__inventory__part__part_type')
     return render(request, 'builds/ajax_build_navtree.html', {'locations': locations})
 
 # Function to copy Inventory items for Build Snapshots
