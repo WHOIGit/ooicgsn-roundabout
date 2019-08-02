@@ -20,10 +20,10 @@
                     data-detail-url="{% url 'assemblies:ajax_assemblies_update' assembly.id %}"
                     data-node-id="{{ assembly.id }}"
                     data-node-type="detail">Edit Assembly Details</a>
-                <!--<a class="dropdown-item" href="#"
-                    data-detail-url="{% url 'moorings:ajax_moorings_copy' assembly.id %}"
-                    data-node-id="{{ mooring_part.id }}"
-                    data-node-type="detail">Copy Mooring Template</a>-->
+                <a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly.id %}"
+                    data-node-id="{{ assembly.id }}"
+                    data-node-type="detail">Copy Assembly Template</a>
             </div>
 
       </div>

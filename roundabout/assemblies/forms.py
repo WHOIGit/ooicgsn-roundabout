@@ -11,8 +11,18 @@ class AssemblyForm(forms.ModelForm):
         model = Assembly
         fields = ['name', 'assembly_type', 'assembly_number', 'description', ]
         labels = {
+            'name': 'Assembly Name',
             'assembly_number': 'Assembly ID Number',
         }
+
+    def __init__(self, *args, **kwargs):
+
+        if 'pk' in kwargs:
+            self.pk = kwargs.pop('pk')
+        else:
+            self.pk = None
+
+        super(AssemblyForm, self).__init__(*args, **kwargs)
 
 
 class AssemblyPartForm(forms.ModelForm):
