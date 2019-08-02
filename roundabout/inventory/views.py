@@ -46,7 +46,7 @@ class InventoryNavTreeMixin(LoginRequiredMixin, object):
 # ------------------------------------------------------------------------------
 
 def load_inventory_navtree(request):
-    locations = Location.objects.exclude(root_type='Retired').prefetch_related('deployments__final_location__mooring_parts__part__part_type').prefetch_related('inventory__part__part_type').prefetch_related('deployments__inventory')
+    locations = Location.objects.exclude(root_type='Retired').prefetch_related('builds__assembly__assembly_parts__part__part_type').prefetch_related('inventory__part__part_type').prefetch_related('builds__inventory')
     return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations})
 
 
