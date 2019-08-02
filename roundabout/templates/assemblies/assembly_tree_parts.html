@@ -1,7 +1,7 @@
 
 {% load mptt_tags %}
 
-{% for assembly_part,structure in assembly_parts|tree_info %}
+{% for assembly_part,structure in assembly_parts.all|tree_info %}
 
         {% if structure.new_level %}
             <ul><li {% if assembly_part.part.part_type.name == 'Electrical' %}
