@@ -31,15 +31,15 @@ $(document).ready(function() {
 
     });
 
-    $("#id_location").change(function () {
-        var url_mooring_parts = $("#parts-form").attr("data-mooring-parts-url");
-        var locationID = $(this).val();
-        console.log(locationID);
+    $("#id_assembly").change(function () {
+        var url_assembly_parts = $("#assembly-part-form").attr("data-assembly-parts-url");
+        var assemblyID = $(this).val();
+        console.log(assemblyID);
 
         $.ajax({
-            url: url_mooring_parts,
+            url: url_assembly_parts,
             data: {
-              'location': locationID
+              'assembly': assemblyID
             },
             success: function (data) {
               $("#id_parent").html(data);

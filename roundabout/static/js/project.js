@@ -169,19 +169,38 @@ $(document).ready(function(){
         })
     })
 
+    $('#content-block').on('submit', 'form.assembly-part-form', function (event) {
+        event.preventDefault()
+        var formData = $(this).serialize()
+        var thisURL = $(this).attr('data-url') || window.location.href
+        $.ajax({
+            method: "POST",
+            url: thisURL,
+            data: formData,
+            success: handleAssemblyPartFormSuccess,
+            error: handleFormError,
+        })
+    })
+
     function handleFormSuccess(data, textStatus, jqXHR){
         console.log(data)
         console.log(textStatus)
-        console.log(jqXHR)
+        console.log(data.detail_path)
+
+        if (data.hasOwnProperty('object_type')) {
+            var objectTypePrefix = data.object_type;
+        } else {
+            var objectTypePrefix = navtreePrefix;
+        }
+
         $.ajax({
-            url: '/' + navtreePrefix + '/ajax/detail/' + data.object_id + '/',
+            url: data.detail_path,
             success: function (data) {
               $("#detail-view").html(data);
             }
         });
-        console.log(data.object_id);
-        console.log(navtreePrefix);
-        var nodeID = navtreePrefix + '_' + data.object_id ;
+
+        var nodeID = objectTypePrefix + '_' + data.object_id ;
         $.ajax({
             url: navURL,
             success: function (data) {
@@ -215,26 +234,26 @@ $(document).ready(function(){
         console.log(textStatus)
         console.log(jqXHR)
         console.log(data.parent_id);
-        console.log(data.object_model);
+        console.log(data.object_type);
         console.log(navtreePrefix);
         $("#detail-view").html('');
-        if (navtreePrefix == 'deployments') {
-            var parentPrefix = 'locations';
-        } else if (navtreePrefix == 'parts') {
 
-            if (data.object_model == 'revision') {
-                var parentPrefix = 'parts';
-            } else {
-                var parentPrefix = 'part_type';
-            }
-
+        if (data.hasOwnProperty('object_type')) {
+            var objectTypePrefix = data.object_type;
         } else {
-            var parentPrefix = navtreePrefix;
+            var objectTypePrefix = navtreePrefix;
         }
-        var nodeID = parentPrefix + '_' + data.parent_id;
+
+        if (data.hasOwnProperty('parent_type')) {
+            var parentTypePrefix = data.parent_type;
+        } else {
+            var parentTypePrefix = navtreePrefix;
+        }
+
+        var nodeID = parentTypePrefix + '_' + data.parent_id;
 
         $.ajax({
-            url: '/' + navtreePrefix + '/ajax/load-navtree/',
+            url: '/' + objectTypePrefix + '/ajax/load-navtree/',
             success: function (data) {
                 $(navTree).jstree(true).destroy();
                 $(navTree).html(data);
@@ -271,19 +290,19 @@ $(document).ready(function(){
         });
     }
 
-    function handleDeploymentFormSuccess(data, textStatus, jqXHR){
+    function handleAssemblyPartFormSuccess(data, textStatus, jqXHR){
         console.log(data)
         console.log(textStatus)
         console.log(jqXHR)
         $.ajax({
-            url: '/deployments/ajax/detail/' + data.object_id + '/',
+            url: '/assemblies/ajax/assemblypart/detail/' + data.object_id + '/',
             success: function (data) {
               $("#detail-view").html(data);
             }
         });
         console.log(data.object_id);
         console.log(navtreePrefix);
-        var nodeID = 'deployment' + '_' + data.object_id ;
+        var nodeID = 'assembly_parts' + '_' + data.object_id ;
         $.ajax({
             url: navURL,
             success: function (data) {

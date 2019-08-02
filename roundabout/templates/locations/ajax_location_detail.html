@@ -1,24 +1,79 @@
+{% load common_tags %}
 
-                <div class="card-header">
-                    <h3>{{ location.name }}</h3>
-                    <h5>{{ location.get_root }}
-                </div>
+<div class="card-header">
+    <h3>{{ location.name }}</h3>
+    <h5>{{ location.get_root }} {% if location.location_type %} | Location Type: {{ location.location_type }}{% endif %}</h5>
+</div>
 
-                <div class="card-body">
-
-                    {% if location.location_type %}<p>Location Type: {{ location.location_type }}</p>{% endif %}
-                    {% if location.location_id %}<p>Location ID: {{ location.location_id }}</p>{% endif %}
-                    <p>Parent: {{ location.parent.name }}</p>
+<div class="card-body">
 
 
+    {% if location.location_id %}<p>Location ID: {{ location.location_id }}</p>{% endif %}
+
+    {% if location.deployed_deployments.exists %}
+        <h5>Deployment History for this Location</h5>
+
+        {% regroup location.deployed_deployments.all by build as build_list %}
+
+
+        {% for build in build_list %}
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">Build: {{ build.grouper }}
+
+        <ul class="list-group list-group-flush">
+            {% for deployment in build.list %}
+                <li class="list-group-item">
+
+                    <a class="collapsed" data-toggle="collapse" href="#deployment-{{ deployment.id }}" aria-expanded="false" aria-controls="deployment-{{ deployment.id }}">
+                        Deployment: {{ deployment }}
+                    </a>
+
+                    <a data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ deployment.id }}" aria-controls="deployment-{{ deployment.id }}" aria-expanded="false" role="button">
+                        <i class="fa" aria-hidden="true"></i>
+                        <span class="sr-only">Expand/Collapse Revision {{ deployment }}</span>
+                    </a>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar {{ deployment.get_deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ deployment.get_deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ deployment.get_deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
+                            <span>{{ deployment.get_deployment_status_label }}</span>
+                        </div>
+                    </div>
+
+                     <div class="collapse mt-3" id="deployment-{{ deployment.id }}">
+
+                         <p>Deployment Location: {{ deployment.deployed_location }}</p>
 
 
 
-                <div class="mt-3 ajax-btn">
-                    <a href="#" data-update-url="{% url 'locations:ajax_location_update' location.id %}" role="button" class="btn btn-primary">Edit Location</a>
+                         {% if deployment.get_deploytosea_details %}
+                             <p>Deployment Date: {{ deployment.get_deploytosea_details|get_item:'deploy_date' }}</p>
+                             <p>Latitude: {{ deployment.get_deploytosea_details|get_item:'latitude' }}</p>
+                             <p>Longitude: {{ deployment.get_deploytosea_details|get_item:'longitude' }}</p>
+                             <p>Depth: {{ deployment.get_deploytosea_details|get_item:'depth' }} m</p>
+                         {% endif %}
 
-                    <a href="#" data-update-url="{% url 'locations:ajax_location_delete' location.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
-                </div>
+                         {% if deployment.get_deployment_time_at_sea %}
+                             <p>Total Time at Sea: {{ deployment.get_deployment_time_at_sea|time_at_sea_display }}
+                         {% endif %}
+
+                     </div>
+                </li>
+            {% endfor %}
+            </ul>
+         </li></ul>
+        {% endfor %}
+
+    {% endif %}
+
+
+
+
+
+<div class="mt-3 ajax-btn">
+    <a href="#" data-update-url="{% url 'locations:ajax_location_update' location.id %}" role="button" class="btn btn-primary">Edit Location</a>
+    {% if request.user|has_group:"admin" or request.user|has_group:"technician" %}
+        <a href="#" data-update-url="{% url 'locations:ajax_location_delete' location.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
+    {% endif %}
+</div>
 
 
 {% block javascript %}

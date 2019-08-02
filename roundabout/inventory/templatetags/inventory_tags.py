@@ -22,6 +22,14 @@ def get_mooringpart_list_by_deployment(dep_pk):
 
 
 @register.simple_tag
+def get_inventory_assembly_part_dictionary(inventory_qs):
+    inventory_dict = {}
+    for i in inventory_qs.all():
+        inventory_dict[i.assembly_part_id] = i.id
+    return inventory_dict
+
+
+@register.simple_tag
 def get_inventory_dictionary(inventory_qs):
     inventory_dict = {}
     for i in inventory_qs.all():
@@ -34,7 +42,7 @@ def get_inventory_destination_dictionary(assigned_destination_root):
     inventory_dict = {}
     inventory_qs = Inventory.objects.filter(assigned_destination_root=assigned_destination_root)
     for i in inventory_qs.all():
-        inventory_dict[i.mooring_part_id] = i.id
+        inventory_dict[i.assembly_part_id] = i.id
     return inventory_dict
 
 
@@ -46,10 +54,10 @@ def get_inventory_queryset_by_deployment(dep_pk):
 
 @register.simple_tag
 def get_inventory_list_by_location(location):
-    if location.deployment.exists():
-        queryset = location.inventory.filter(deployment__isnull=True).filter(mooring_part__isnull=True).prefetch_related('part__part_type')
+    if location.builds.exists():
+        queryset = location.inventory.filter(build__isnull=True).filter(assembly_part__isnull=True).prefetch_related('part__part_type')
     else:
-        queryset = location.inventory.filter(mooring_part__isnull=True).prefetch_related('part__part_type')
+        queryset = location.inventory.filter(assembly_part__isnull=True).prefetch_related('part__part_type')
     return queryset
 
 
@@ -64,7 +72,7 @@ def get_inventory_snapshot_list_by_location(location, dep):
 
 @register.simple_tag
 def get_inventory_list_by_location_with_destination(location):
-    queryset = location.inventory.filter(mooring_part__isnull=False).filter(deployment__isnull=True).filter(assigned_destination_root__isnull=False).prefetch_related('part__part_type')
+    queryset = location.inventory.filter(assembly_part__isnull=False).filter(build__isnull=True).filter(assigned_destination_root__isnull=False).prefetch_related('part__part_type')
     return queryset
 
 
@@ -91,16 +99,6 @@ def get_custom_field_details_by_part(field_id, part):
         if field['field_id'] == field_id:
             field_name = field['field_name']
     return field_name
-
-# filter Time at Sea duration field to show Hours/Minutes
-@register.filter
-def time_at_sea_display(duration):
-    total_seconds = int(duration.total_seconds())
-    days = total_seconds // (3600 * 24)
-    hours = (total_seconds % (3600 * 24)) // 3600
-    minutes = (total_seconds % 3600) // 60
-
-    return '{} days {} hours {} min'.format(days, hours, minutes)
 
 # Custom filter to get dictionary values by key
 @register.filter

@@ -3,83 +3,83 @@
 
 
 
-            <div class="card">
-                <div class="card-header">
-                    {% if inventory_item.id %}
-                        <h3>{{ inventory_item.part.name }}</h3>
-                    {% else %}
-                        <h3>Add Inventory</h3>
-                    {% endif %}
+<div class="card">
+<div class="card-header">
+    {% if inventory_item.id %}
+        <h3>{{ inventory_item.part.name }}</h3>
+    {% else %}
+        <h3>Add Inventory</h3>
+    {% endif %}
 
-                    <p>{{ inventory_item.serial_number }}</p>
+    <p>{{ inventory_item.serial_number }}</p>
 
-                    {% if parent.id %}
-                        <h3>Add Subassembly to {{ parent.part.name }}</h3>
-                    {% endif %}
-                </div>
+    {% if parent.id %}
+        <h3>Add Subassembly to {{ parent.part.name }}</h3>
+    {% endif %}
+</div>
 
-                <div class="card-body">
+<div class="card-body">
 
 
 
-                    <div id="subassembly-filter">
-                        <form method="post" action="" id="subassembly-destination-filter-form-serial-number"
-                              data-url="{% url 'inventory:ajax_load_destination_subassemblies_by_serialnumber' %}"
-                              data-parent-id="{{ parent.id }}"
-                              data-mooringpart-id="{{ mooring_part.id }}"
-                              data-location-id="{{ location.id }}"
-                              novalidate>
-                              {% csrf_token %}
-                            <div class="form-row">
-                                <div class="form-group col-md-8 col-lg-6">
-                                    <label for="serial_number_search" class="sr-only">Scan Serial Number<span class="asteriskField">*</span></label>
-                                    <div class="input-group mb-2 mr-sm-2">
+    <div id="subassembly-filter">
+        <form method="post" action="" id="subassembly-destination-filter-form-serial-number"
+              data-url="{% url 'inventory:ajax_load_destination_subassemblies_by_serialnumber' %}"
+              data-parent-id="{{ parent.id }}"
+              data-assemblypart-id="{{ assembly_part.id }}"
+              data-location-id="{{ location.id }}"
+              novalidate>
+              {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group col-md-8 col-lg-6">
+                    <label for="serial_number_search" class="sr-only">Scan Serial Number<span class="asteriskField">*</span></label>
+                    <div class="input-group mb-2 mr-sm-2">
 
-                                        <div class="input-group-prepend">
-                                          <div class="input-group-text">#</div>
-                                        </div>
-                                        <input type="text" name="serial_number_search" class="textinput form-control" placeholder="Scan Serial Number" id="serial_number_search">
-                                    </div>
-                                </div>
-                                <div class="form-group col-md-4 col-lg-6">
-                                    <button type="submit" class="btn btn-primary mb-2">Search</button>
-                                </div>
-                            </div>
-                        </form>
+                        <div class="input-group-prepend">
+                          <div class="input-group-text">#</div>
+                        </div>
+                        <input type="text" name="serial_number_search" class="textinput form-control" placeholder="Scan Serial Number" id="serial_number_search">
                     </div>
-
-                    <p>The following Inventory Items are available for this Part. </p>
-                    <div id="available-subassemblies">
-                        <ul class="list-group list-group-flush">
-
-                        {% if inventory_items %}
-
-                              {% for inventory in inventory_items %}
-
-                                          <li class="list-group-item">
-                                              <div class="ajax-add-subassembly-link">
-                                              {% if inventory.part.friendly_name %} {{ inventory.part.friendly_name}} {% else %} {{ inventory.part.name }} {% endif %}
-                                              - {{ inventory.serial_number }} <br>Current Location: {{ inventory.location.name }}
-
-                                              <a href="#"
-                                                  data-detail-url="{% url 'inventory:ajax_inventory_destination_add_subassembly_action' inventory.id mooring_part.id location.id assigned_destination_root.id %}"
-                                                  data-node-id="{{ inventory.id }}"
-                                                  class="btn btn-primary btn-sm float-right action-link"
-                                                  role="button">Add</a>
-
-
-                                              </div>
-                                          </li>
-
-                              {% endfor %}
-                        {% else %}
-                            <p>NONE</p>
-                        {% endif %}
-
-                      </ul>
-                  </div>
-
                 </div>
+                <div class="form-group col-md-4 col-lg-6">
+                    <button type="submit" class="btn btn-primary mb-2">Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <p>The following Inventory Items are available for this Part. </p>
+    <div id="available-subassemblies">
+        <ul class="list-group list-group-flush">
+
+        {% if inventory_items %}
+
+              {% for inventory in inventory_items %}
+
+                          <li class="list-group-item">
+                              <div class="ajax-add-subassembly-link">
+                              {% if inventory.part.friendly_name %} {{ inventory.part.friendly_name}} {% else %} {{ inventory.part.name }} {% endif %}
+                              - {{ inventory.serial_number }} <br>Current Location: {{ inventory.location.name }}
+
+                              <a href="#"
+                                  data-detail-url="{% url 'inventory:ajax_inventory_destination_add_subassembly_action' inventory.id assembly_part.id location.id assigned_destination_root.id %}"
+                                  data-node-id="{{ inventory.id }}"
+                                  class="btn btn-primary btn-sm float-right action-link"
+                                  role="button">Add</a>
+
+
+                              </div>
+                          </li>
+
+              {% endfor %}
+        {% else %}
+            <p>NONE</p>
+        {% endif %}
+
+      </ul>
+  </div>
+
+</div>
 
 
 {% block javascript %}
@@ -101,8 +101,8 @@ $(document).ready(function() {
     $("#subassembly-destination-filter-form-serial-number").on("submit", function(){
       var url = $(this).attr("data-url");
       var parentID = $(this).attr("data-parent-id");
-      var deploymentID = $(this).attr("data-deployment-id");
-      var mooringPartID = $(this).attr("data-mooringpart-id");
+      var buildID = $(this).attr("data-build-id");
+      var assemblyPartID = $(this).attr("data-assemblypart-id");
       var locationID = $(this).attr("data-location-id");
       var serialNumber = $("#serial_number_search").val();
       $.ajax({
@@ -110,8 +110,8 @@ $(document).ready(function() {
           data: {
             "serial_number": serialNumber,
             "parent_id": parentID,
-            "deployment_id": deploymentID,
-            "mooringpart_id": mooringPartID,
+            "build_id": buildID,
+            "assemblypart_id": assemblyPartID,
             "location_id": locationID,
           },
           success: function (data) {

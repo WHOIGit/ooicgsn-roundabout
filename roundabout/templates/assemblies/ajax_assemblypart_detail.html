@@ -1,0 +1,169 @@
+{% load static i18n %}
+{% load mptt_tags %}
+{% load humanize %}
+{% load parts_tags %}
+
+                <div class="card-header" data-object-id="{{ assembly_part.id }}"><h3>{{ assembly_part.part.name }}</h3></div>
+
+                <div class="card-body">
+
+                    <div class="dropdown float-right">
+                      <button id="action" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-primary">
+                        Choose Action
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="action">
+                            <div class="ajax-detail-link">
+                                <a class="dropdown-item" href="#"
+                                    data-detail-url="{% url 'assemblies:ajax_assemblyparts_add' assembly_part.assembly.id assembly_part.id %}"
+                                    data-node-id="{{ assembly_part.id }}"
+                                    data-node-type="detail">Add New Subassembly</a>
+                                <a class="dropdown-item" href="#"
+                                    data-detail-url="{% url 'assemblies:ajax_assemblyparts_update' assembly_part.id %}"
+                                    data-node-id="{{ assembly_part.id }}"
+                                    data-node-type="detail">Edit Subassembly Template</a>
+                                <!--<a class="dropdown-item" href="#"
+                                    data-detail-url="{% url 'moorings:ajax_moorings_copy' assembly_part.id %}"
+                                    data-node-id="{{ mooring_part.id }}"
+                                    data-node-type="detail">Copy Mooring Template</a>-->
+                            </div>
+
+                      </div>
+                    </div>
+
+
+                        <p>Part Number: {{ assembly_part.part.part_number }}</p>
+                        <p>Part Type: {{ assembly_part.part.part_type }}</p>
+                        <p>Current Inventory: {{ assembly_part.part.get_part_inventory_count }}
+                    <hr>
+                        {% if assembly_part.parent.id %}
+                            <p class="ajax-detail-link">Parent Assembly:
+                                <a href="#" data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' assembly_part.parent.id %}"
+                                            data-node-id="{{ assembly_part.parent.id }}">{{ assembly_part.parent.part.name }}</a></p>
+                        {% endif %}
+
+                        {% if assembly_part.children.exists %}
+                            <p>Total Assembly Cost: ${{ assembly_part.get_subassembly_total_cost|intcomma }}
+                        {% endif %}
+
+
+
+                    {% if assembly_part.part.documentation.all %}
+
+                       {% define "active" as active_doc_tab %}
+                       {% define "" as active_sub_tab %}
+
+                    {% else %}
+
+                       {% define "" as active_doc_tab %}
+                       {% define "active show" as active_sub_tab %}
+
+                    {% endif %}
+
+                    <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+
+                        {% if assembly_part.part.documentation.all %}
+                          <li class="nav-item">
+                            <a class="nav-link {{ active_doc_tab }}" id="documentation-tab" data-toggle="tab" href="#documentation" role="tab" aria-controls="documentation" aria-selected="false">Documentation</a>
+                          </li>
+                        {% endif %}
+
+                        {% if assembly_part.children.exists %}
+                            <li class="nav-item">
+
+                                <a class="nav-link {{ active_sub_tab }}" id="subassemblies-tab" data-toggle="tab" href="#subassemblies" role="tab" aria-controls="subassemblies" aria-selected="false">Subassemblies</a>
+
+                            </li>
+                        {% endif %}
+
+                        {% if assembly_part.note %}
+                            <li class="nav-item">
+
+                                <a class="nav-link" id="subassemblies-tab" data-toggle="tab" href="#notes" role="tab" aria-controls="notes" aria-selected="false">Notes</a>
+
+                            </li>
+                        {% endif %}
+
+
+
+                    </ul>
+
+                    <div class="tab-content" id="inventory-tabs">
+
+                        {% if assembly_part.part.documentation.exists %}
+
+                        <div class="tab-pane fade show {{active_doc_tab}}" id="documentation" role="tabpanel" aria-labelledby="documentation-tab">
+                                <table class="table table-tight">
+                                    <thead>
+                                      <th>Document</th>
+                                      <th class="text-right">Document Type</th>
+
+                                    </thead>
+                                    <tbody>
+                                      {% for document in  assembly_part.part.documentation.all %}
+                                    <tr>
+                                        <td><a href="{{ document.doc_link }}" target="_blank">{{ document.name }}</a></td>
+                                        <td class="text-right">{{ document.doc_type }}</td>
+                                    </tr>
+                                      {% endfor %}
+                                    </tbody>
+                              </table>
+                          </div>
+                        {% endif %}
+
+                        {% if assembly_part.children.exists %}
+
+                            <div class="tab-pane fade {{ active_sub_tab }}" id="subassemblies" role="tabpanel" aria-labelledby="subassemblies-tab">
+
+                                      <ul class="list-group list-group-flush">
+
+                                            {% recursetree assembly_part.get_descendants %}
+                                                <li class="list-group-item">
+                                                    <div class="ajax-detail-link">
+                                                    <a data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' node.id %}"
+                                                        data-node-id="{{ node.id }}"
+                                                        href="#"
+                                                        class="subassembly-name">{{ node.part.name }}</a>
+
+
+                                                    <a data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' node.id  %}"
+                                                        data-node-id="{{ node.id }}"
+                                                        href="#"
+                                                        class="btn btn-primary btn-sm float-right mr-2"
+                                                        role="button">Edit</a>
+
+                                                    {% if not node.is_leaf_node %}
+                                                        <ul class="list-group list-group-flush">
+                                                            {{ children }}
+                                                        </ul>
+                                                    {% endif %}
+                                                    </div>
+                                                </li>
+                                            {% endrecursetree %}
+                                        </ul>
+                            </div>
+                        {% endif %}
+
+                        {% if assembly_part.note %}
+
+                            <div class="tab-pane fade" id="notes" role="tabpanel" aria-labelledby="notes-tab">
+                                <ul class="list-group list-group-flush">
+                                      <li class="list-group-item">{{ assembly_part.note }}</li>
+                                </ul>
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="ajax-detail-link">
+                        <hr>
+
+                        <a href="#" data-detail-url="{% url 'assemblies:ajax_assemblyparts_delete' assembly_part.id %}" role="button" class="btn btn-danger parts-delete">Remove from Template</a>
+                    </div>
+
+                </div>
+
+{% block javascript %}
+
+
+{% endblock javascript %}

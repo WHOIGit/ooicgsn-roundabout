@@ -22,7 +22,7 @@
                 data-location-id="{{ inventory_item.location.id}}"
                 data-node-type="detail">Inventory Change</a>
             --->
-        {% if not inventory_item.deployment and not inventory_item.parent and not inventory_item.mooring_part %}
+        {% if not inventory_item.build and not inventory_item.parent and not inventory_item.assembly_part %}
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'locationchange' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
@@ -30,7 +30,7 @@
                 data-node-type="detail">Location Change</a>
         {% endif %}
 
-        {% if not inventory_item.deployment and not inventory_item.mooring_part %}
+        {% if not inventory_item.build and not inventory_item.assembly_part %}
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_add_subassembly' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
@@ -38,15 +38,7 @@
                 data-node-type="detail">Add Subassembly</a>
         {% endif %}
 
-        {% if not inventory_item.deployment and inventory_item.parent %}
-            <a class="dropdown-item" href="#"
-                data-detail-url="{% url 'inventory:ajax_inventory_action' 'subchange' inventory_item.id %}"
-                data-node-id="{{ inventory_item.id }}"
-                data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Remove from Parent Assembly</a>
-        {% endif %}
-
-        {% if not inventory_item.deployment and not inventory_item.parent and not inventory_item.mooring_part %}
+        {% if not inventory_item.build and not inventory_item.parent and not inventory_item.assembly_part %}
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_add_to_parent' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
@@ -54,23 +46,31 @@
                 data-node-type="detail">Add to Parent Assembly</a>
         {% endif %}
 
-        {% if not inventory_item.deployment and not inventory_item.parent %}
+        {% if not inventory_item.build and inventory_item.parent %}
             <a class="dropdown-item" href="#"
-                data-detail-url="{% url 'inventory:ajax_inventory_add_to_deployment' inventory_item.id %}"
+                data-detail-url="{% url 'inventory:ajax_inventory_action' 'subchange' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Add to Deployment</a>
+                data-node-type="detail">Remove from Parent Assembly</a>
         {% endif %}
 
-        {% if inventory_item.deployment %}
+        {% if not inventory_item.build and not inventory_item.parent %}
             <a class="dropdown-item" href="#"
-                data-detail-url="{% url 'inventory:ajax_inventory_action' 'removefromdeployment' inventory_item.id %}"
+                data-detail-url="{% url 'inventory:ajax_inventory_add_to_build' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Remove from Deployment</a>
+                data-node-type="detail">Add to Build</a>
         {% endif %}
 
-        {% if inventory_item.mooring_part and not inventory_item.deployment and not inventory_item.parent %}
+        {% if inventory_item.build %}
+            <a class="dropdown-item" href="#"
+                data-detail-url="{% url 'inventory:ajax_inventory_action' 'removefrombuild' inventory_item.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-location-id="{{ inventory_item.location.id}}"
+                data-node-type="detail">Remove from Build</a>
+        {% endif %}
+
+        {% if inventory_item.assembly_part and not inventory_item.build and not inventory_item.parent %}
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'removedest' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
@@ -78,7 +78,7 @@
                 data-node-type="detail">Remove Destination</a>
         {% endif %}
 
-        {% if not inventory_item.mooring_part and not inventory_item.parent %}
+        {% if not inventory_item.assembly_part and not inventory_item.parent %}
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_assign_destination' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
@@ -201,13 +201,12 @@
     <p>Part Number: {{ inventory_item.part.part_number }}</p>
     <p>Revision: {{ inventory_item.revision.revision_code }}</p>
     <p>Current Location: {{ inventory_item.location.name }}</p>
+    {% if inventory_item.build %}
+        <p>Current Build: {{ inventory_item.build }}</p>
+    {% endif %}
     <p>Time at Sea: {{ inventory_item.total_time_at_sea|time_at_sea_display }}</p>
     {% if inventory_item.current_deployment_time_at_sea %}
         <p>Current Deployment Time at Sea: {{ inventory_item.current_deployment_time_at_sea|time_at_sea_display }}
-    {% endif %}
-
-    {% if inventory_item.deployment %}
-        <p>Current Deployment: {{ inventory_item.deployment.deployment_number }}</p>
     {% endif %}
 
     {% if inventory_item.parent %}
@@ -252,7 +251,7 @@
             </li>
         {% endif %}
 
-        {% if inventory_item.mooring_part %}
+        {% if inventory_item.assembly_part %}
             <li class="nav-item">
               <a class="nav-link" id="destination-tab" data-toggle="tab" href="#destination" role="tab" aria-controls="destination" aria-selected="false">Assigned Destination</a>
             </li>
@@ -350,26 +349,26 @@
             </div>
         {% endif %}
 
-        {% if inventory_item.mooring_part %}
+        {% if inventory_item.assembly_part %}
             <div class="tab-pane fade" id="destination" role="tabpanel" aria-labelledby="destination-tab">
 
-                <h5 class="mt-3">{{ inventory_item.mooring_part.location.name }} ({{ inventory_item.mooring_part.location.location_id }})</h5>
+                <h5 class="mt-3">{{ inventory_item.assembly_part.assembly }} </h5>
 
                 <ul>
 
-                  {% recursetree inventory_item.mooring_part.get_family %}
+                  {% recursetree inventory_item.assembly_part.get_family %}
                       <li>
 
-                            {% if node.id == inventory_item.mooring_part_id %}
+                            {% if node.id == inventory_item.assembly_part_id %}
                                  <span class="text-primary">
                             {% else %}
                                 <span>
                             {% endif %}
                                     {{ node.part.name }}
                                 </span>
-                            {% if node.id == inventory_item.mooring_part_id %}
-                                   <span class="badge badge-primary badge-pill">Destination</span>
-                               {% endif %}
+                            {% if node.id == inventory_item.assembly_part_id %}
+                                <span class="badge badge-primary badge-pill">Destination</span>
+                            {% endif %}
 
 
 

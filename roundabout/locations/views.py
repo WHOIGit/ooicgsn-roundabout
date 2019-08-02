@@ -46,6 +46,8 @@ class LocationsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxF
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
@@ -74,6 +76,8 @@ class LocationsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxF
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
@@ -95,6 +99,8 @@ class LocationsAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, Delet
         data = {
             'message': "Successfully submitted form data.",
             'parent_id': self.object.parent_id,
+            'parent_type': self.object.get_object_type(),
+            'object_type': self.object.get_object_type(),
         }
         self.object.delete()
 

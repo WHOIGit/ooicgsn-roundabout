@@ -1,8 +1,0 @@
-{% load mptt_tags %}
-
-<option value="">---------</option>
-{% if mooring_parts %}
-    {% for mooring_part,structure in mooring_parts|tree_info %}
-        <option value="{{ mooring_part.pk }}">{% for m in mooring_part.get_ancestors  %}--{% endfor %} {{ mooring_part.part.name }}</option>
-    {% endfor %}
-{% endif %}

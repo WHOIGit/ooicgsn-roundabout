@@ -1,0 +1,8 @@
+{% load mptt_tags %}
+
+<option value="">---------</option>
+{% if assembly_parts %}
+    {% for assembly_part,structure in assembly_parts|tree_info %}
+        <option value="{{ assembly_part.pk }}">{% for ap in assembly_part.get_ancestors  %}--{% endfor %} {{ assembly_part.part.name }}</option>
+    {% endfor %}
+{% endif %}

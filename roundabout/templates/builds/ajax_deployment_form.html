@@ -1,0 +1,102 @@
+
+{{ form.media }}
+{% load crispy_forms_tags %}
+{% load build_tags %}
+
+
+    <div class="card-header">
+        {% if deployment.id %}
+            {% if action_type == 'deploy' %}
+                <h3>Deploy to Sea</h3>
+            {% else %}
+                <h3>Edit {{ label_deployments_app_singular }} </h3>
+            {% endif %}
+        {% else %}
+            <h3>Start New {{ label_deployments_app_singular }} </h3>
+        {% endif %}
+    </div>
+
+    <div class="card-body">
+
+        {% if action_type == 'deploy' %}
+            <h4 class="mt-3 mb-3">Please confirm that {{ deployment.deployment_number }} is ready to deploy:</h4>
+        {% endif %}
+
+        {% if action_type == 'retire' %}
+            <h4 class="mt-3 mb-3">Please confirm that {{ deployment.deployment_number }} is ready to be Retired.</h4>
+        {% endif %}
+
+        <form class="form-horizontal ajax-form" method="post" action="" id="deployment-form" data-url='{{ request.build_absolute_uri|safe }}'>
+          {% csrf_token %}
+          {{ form|crispy }}
+
+          <div class="row">
+              {% if form.errors %}
+                  {% for field in form %}
+                      {% for error in field.errors %}
+                          <div class="alert alert-danger">
+                              <strong>{{ error|escape }}</strong>
+                          </div>
+                      {% endfor %}
+                  {% endfor %}
+                  {% for error in form.non_field_errors %}
+                      <div class="alert alert-danger">
+                          <strong>{{ error|escape }}</strong>
+                      </div>
+                  {% endfor %}
+              {% endif %}
+
+
+          </div>
+
+          <div class="control-group">
+            <div class="controls">
+              {% if deployment.id %}
+                  {% if action_type == 'deploy' %}
+                      <button type="submit" class="btn btn-danger">Confirm Deploy to Sea</button>
+                  {% elif action_type == 'retire' %}
+                      <button type="submit" class="btn btn-danger">Confirm Retirement</button>
+                  {% else %}
+                      <button type="submit" class="btn btn-primary">Update {{ label_deployments_app_singular }} </button>
+                  {% endif %}
+              {% else %}
+              <button type="submit" class="btn btn-primary">Add {{ label_deployments_app_singular }} </button>
+              {% endif %}
+
+              {% if deployment.id %}
+               <input class="btn btn-light cancel-btn"
+                      type="button" value="Cancel"
+                      data-detail-url="{% url 'builds:ajax_builds_detail' deployment.build.id %}"
+                      data-node-id="{{ deployment.id }}" />
+              {% endif %}
+            </div>
+          </div>
+        </form>
+
+
+    </div>
+
+
+{% block javascript %}
+
+
+
+<script>
+    // Update the DatePicker options to set the minDate/maxDate option with the last action date
+    {% if deployment.id %}
+        function updateDatePicker() {
+            var picker_options = $('#id_date').attr('dp_config');
+            var options_obj = JSON.parse(picker_options);
+            options_obj.options.maxDate = '{% tomorrow "%m/%d/%Y %H:%M" %}';
+            options_obj.options.minDate = '{{ latest_action_record.created_at|date:"SHORT_DATE_FORMAT" }} {{ latest_action_record.created_at|time:"H:i" }}';
+            options_obj.options.useCurrent = false;
+            console.log(options_obj);
+            $('#id_date').attr('dp_config', JSON.stringify(options_obj));
+        }
+        updateDatePicker();
+
+    {% endif %}
+</script>
+
+
+{% endblock javascript %}

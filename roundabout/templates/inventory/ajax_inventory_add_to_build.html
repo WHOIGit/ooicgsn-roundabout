@@ -1,0 +1,101 @@
+
+{% load static i18n %}
+{% load common_tags %}
+{% load inventory_tags %}
+{% load mptt_tags %}
+
+
+<div class="card">
+<div class="card-header">
+
+    <h3>Add to Build</h3>
+
+
+    <p>{% if inventory_item.part.friendly_name %} {{ inventory_item.part.friendly_name}} {% else %} {{ inventory_item.part.name }} {% endif %}
+        - {{ inventory_item.serial_number }}</p>
+
+</div>
+
+<div class="card-body">
+
+    <p>The following Build destinations are available for this Part.</p>
+
+
+    <div id="available-assembly-parts">
+    {% if builds %}
+        {% regroup builds by location as builds_by_location %}
+        {% for location in builds_by_location %}
+            <h5 class="mt-3">{{ location.grouper.get_ancestors|tree_path:" > " }} > {{ location.grouper }}</h5>
+            {%  for build in location.list %}
+
+                <div class="card">
+                    <div class="card-header" id="heading-{{ build.id }}">
+                      <h5 class="mb-0">
+                        <button class="btn btn-link" data-toggle="collapse" data-target="#collapse-{{ build.id  }}" aria-expanded="true" aria-controls="collapse-{{ build.id }}">
+                            <b>{{ build }}
+                                {% if build.current_deployment_status == 'burnin' %}<span class="badge badge-pill badge-danger">Burn In</span>{% endif %}
+                                {% if build.current_deployment_status == 'create' %}<span class="badge badge-pill badge-success">Initial Build</span>{% endif %}
+                            </b>
+                        </button>
+                      </h5>
+                    </div>
+
+                    <div id="collapse-{{ build.id  }}" class="collapse" aria-labelledby="heading-{{ build.id  }}" data-parent="#available-assembly-parts">
+                      <div class="card-body ajax-add-subassembly-link">
+                          <ul class="list-group list-group-flush">
+                              {% for assembly_part in assembly_parts %}
+                                  {% if assembly_part.assembly == build.assembly %}
+                                   <li class="list-group-item">
+
+                                      {% if assembly_part.get_ancestors %}
+                                          {{ assembly_part.get_ancestors|tree_path:" > " }} >
+                                      {% endif %}
+
+                                      <span class="text-primary">{{ assembly_part }}</span>
+                                      {% if assembly_part.get_children %} > {{ assembly_part.get_children|tree_path:" :: " }} {% endif %}
+
+                                        <!-- Get dictionary of current Inventory IDs for this Build, check if Assembly Part is filled -->
+                                      {% get_inventory_assembly_part_dictionary build.inventory as inventory_dict %}
+
+                                          {% if assembly_part.id in inventory_dict %}
+                                              <button type="button" class="btn btn-dark btn-sm float-right" disabled>Filled</button>
+                                          {% else %}
+                                          <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_add_to_build_action' inventory_item.id build.id assembly_part.id %}"
+                                              data-mooring-id="{{ assembly_part.id }}"
+                                              data-node-id="{{ inventory_item.id }}"
+                                              class="btn btn-primary btn-sm float-right"
+                                              role="button">Select </a>
+
+                                          {% endif %}
+
+
+                                    </li>
+
+
+                                    {% endif %}
+
+                              {% endfor %}
+
+                           </ul>
+                      </div>
+                    </div>
+                </div>
+
+            {% endfor %}
+        {% endfor %}
+
+    {% else %}
+        <p>NONE</p>
+    {% endif %}
+
+
+
+  </div>
+
+</div>
+
+
+{% block javascript %}
+
+
+{% endblock javascript %}

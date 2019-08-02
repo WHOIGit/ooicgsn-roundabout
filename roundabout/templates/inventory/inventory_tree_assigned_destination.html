@@ -8,76 +8,76 @@
 {% if inv.assigned_destination_root == inv %}
     {% get_inventory_destination_dictionary inv.assigned_destination_root as inventory_dict %}
 
-    {% for mooring_part,structure in inv.mooring_part.get_descendants_with_self|tree_info %}
+    {% for assembly_part,structure in inv.assembly_part.get_descendants_with_self|tree_info %}
 
             {% if structure.new_level %}
-                <ul><li {% if mooring_part.part.part_type.name == 'Electrical' %}
+                <ul><li {% if assembly_part.part.part_type.name == 'Electrical' %}
                             data-jstree='{"icon":"fa fa-bolt"}'
-                        {% elif mooring_part.part.part_type.name == 'Mechanical' %}
+                        {% elif assembly_part.part.part_type.name == 'Mechanical' %}
                             data-jstree='{"icon":"fa fa-wrench"}'
-                        {% elif mooring_part.part.part_type.name == 'Cable' %}
+                        {% elif assembly_part.part.part_type.name == 'Cable' %}
                             data-jstree='{"icon":"fa fa-plug"}'
-                        {% elif mooring_part.part.part_type.name == 'Instrument' %}
+                        {% elif assembly_part.part.part_type.name == 'Instrument' %}
                             data-jstree='{"icon":"fa fa-camera"}'
-                        {% elif mooring_part.part.part_type.name == 'Structural' %}
+                        {% elif assembly_part.part.part_type.name == 'Structural' %}
                             data-jstree='{"icon":"fa fa-cubes"}'
                         {% endif %}
 
-                        {% if mooring_part.id in inventory_dict %}
-                            id="inventory_{{ inventory_dict|get_item:mooring_part.id }}"
+                        {% if assembly_part.id in inventory_dict %}
+                            id="inventory_{{ inventory_dict|get_item:assembly_part.id }}"
                         {% else %}
-                            id="mooring_part_{{ mooring_part.id }}_{{ inv.id }}"
+                            id="assembly_part_{{ assembly_part.id }}_{{ inv.id }}"
                         {% endif %}  >
             {% else %}</li>
-                <li     {% if mooring_part.part.part_type.name == 'Electrical' %}
+                <li     {% if assembly_part.part.part_type.name == 'Electrical' %}
                             data-jstree='{"icon":"fa fa-bolt"}'
-                        {% elif mooring_part.part.part_type.name == 'Mechanical' %}
+                        {% elif assembly_part.part.part_type.name == 'Mechanical' %}
                             data-jstree='{"icon":"fa fa-wrench"}'
-                        {% elif mooring_part.part.part_type.name == 'Cable' %}
+                        {% elif assembly_part.part.part_type.name == 'Cable' %}
                             data-jstree='{"icon":"fa fa-plug"}'
-                        {% elif mooring_part.part.part_type.name == 'Instrument' %}
+                        {% elif assembly_part.part.part_type.name == 'Instrument' %}
                             data-jstree='{"icon":"fa fa-camera"}'
-                        {% elif mooring_part.part.part_type.name == 'Structural' %}
+                        {% elif assembly_part.part.part_type.name == 'Structural' %}
                             data-jstree='{"icon":"fa fa-cubes"}'
                         {% endif %}
 
-                        {% if mooring_part.id in inventory %}
-                            id="inventory_{{ inventory_dict|get_item:mooring_part.id }}"
+                        {% if assembly_part.id in inventory %}
+                            id="inventory_{{ inventory_dict|get_item:assembly_part.id }}"
                         {% else %}
-                            id="mooring_part_{{ mooring_part.id }}_{{ inv.id }}"
+                            id="assembly_part_{{ assembly_part.id }}_{{ inv.id }}"
                         {% endif %}  >
             {% endif %}
 
-            {% if mooring_part.id in inventory_dict %}
+            {% if assembly_part.id in inventory_dict %}
                 {% for i in inv.assigned_destination_root.assigned_children.all %}
-                    {% if i.id == inventory_dict|get_item:mooring_part.id %}
+                    {% if i.id == inventory_dict|get_item:assembly_part.id %}
                         <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' i.id %}"
-                           data-node-id="{{ mooring_part.id }}"
+                           data-node-id="{{ assembly_part.id }}"
                            data-location-id="{{ location.id }}"
-                           data-part-type-id="{{ mooring_part.part.part_type.id }}"
+                           data-part-type-id="{{ assembly_part.part.part_type.id }}"
                            data-node-type="detail"
                            class="
                            {% if part_types %}
-                               {% if mooring_part.part.part_type.id in part_types %}
+                               {% if assembly_part.part.part_type.id in part_types %}
                                    blue
                                {% else %}
                                    wh
                                {% endif %}
                            {% endif %}
                            ">
-                            {% if mooring_part.part.friendly_name %} {{ mooring_part.part.friendly_name}} {% else %} {{ mooring_part.part.name }} {% endif %}
+                            {% if assembly_part.part.friendly_name %} {{ assembly_part.part.friendly_name}} {% else %} {{ assembly_part.part.name }} {% endif %}
                             - {{ i.serial_number }}
-                            {% if forloop.first %}<span class="badge badge-pill badge-primary">DEST - {{ mooring_part.location.location_id }}</span>{% endif %}</a>
+                            {% if forloop.first %}<span class="badge badge-pill badge-primary">DEST - {{ assembly_part.assembly }}</span>{% endif %}</a>
                     {% endif %}
                 {% endfor %}
             {% else %}
-                <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_destination_add_subassembly' mooring_part.id location.id inv.assigned_destination_root.id %}"
-                   data-node-id="{{ mooring_part.id }}"
+                <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_destination_add_subassembly' assembly_part.id location.id inv.assigned_destination_root.id %}"
+                   data-node-id="{{ assembly_part.id }}"
                    data-location-id="{{ location.id }}"
-                   data-part-type-id="{{ mooring_part.part.part_type.id }}"
+                   data-part-type-id="{{ assembly_part.part.part_type.id }}"
                    data-node-type="detail" class="grey">
-                    {% if mooring_part.part.friendly_name %} {{ mooring_part.part.friendly_name}} {% else %} {{ mooring_part.part.name }} {% endif %} -
-                    {{ mooring_part.part.part_number }} </a>
+                    {% if assembly_part.part.friendly_name %} {{ assembly_part.part.friendly_name}} {% else %} {{ assembly_part.part.name }} {% endif %} -
+                    {{ assembly_part.part.part_number }} </a>
             {% endif %}
 
          {% for level in structure.closed_levels %}</li></ul>{% endfor %}

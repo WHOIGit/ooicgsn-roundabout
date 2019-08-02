@@ -53,11 +53,15 @@ class Part(models.Model):
     def __str__(self):
         return self.name
 
+    # method to set the object_type variable to send to Javascript AJAX functions
+    def get_object_type(self):
+        return 'parts'
+
     def get_part_inventory_count(self):
         return self.inventory.count()
 
     def get_absolute_url(self):
-        return reverse('parts:parts_detail', kwargs={'pk': self.pk, })
+        return reverse('parts:ajax_parts_detail', kwargs={'pk': self.pk, })
 
     def friendly_name_display(self):
         if self.friendly_name:
