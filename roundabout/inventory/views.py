@@ -31,8 +31,9 @@ class InventoryNavTreeMixin(LoginRequiredMixin, object):
     def get_context_data(self, **kwargs):
         context = super(InventoryNavTreeMixin, self).get_context_data(**kwargs)
         context.update({
-            'locations': Location.objects.prefetch_related('deployment__final_location__mooring_parts__part__part_type')
-                        .prefetch_related('inventory__part__part_type').prefetch_related('deployment__inventory')
+            'locations': Location.objects.exclude(root_type='Retired')
+                        .prefetch_related('builds__assembly__assembly_parts__part__part_type')
+                        .prefetch_related('inventory__part__part_type').prefetch_related('builds__inventory')
         })
         if 'current_location' in self.kwargs:
             context['current_location'] = self.kwargs['current_location']

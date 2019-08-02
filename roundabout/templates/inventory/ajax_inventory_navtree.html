@@ -48,26 +48,7 @@
                             {% endif %}
 
 
-                            <!-- Check if Snapshot exists for the location. If so, include Deployments -->
-                            {% if location.deployment_snapshot.exists %}
-                                <ul>
-                                {% for dep in location.deployment_snapshot.all %}
-                                           <li data-jstree='{"icon":"fa fa-anchor"}' id="deployments_snapshot_{{ dep.id }}">
-                                               <a href="#" data-detail-url="{% url 'deployments:ajax_deployment_snapshot_detail' dep.id %}"
-                                                  data-node-id="{{ dep.id }}"
-                                                  data-location-id="{{ location.id }}"
-                                                  data-node-type="detail">{{ dep.deployment.deployment_number }}
-                                                  {% if dep.deployment.final_location.exists %} ({{ dep.deployment.final_location.location_id }}){% endif %} - {{ dep.created_at }}
-
-                                              </a>
-
-                                              {% include "inventory/inventory_tree_snapshot.html" with location=location part_types=part_types dep=dep  %}
-
-
-                                           </li>
-                                {% endfor %}
-                                </ul>
-                            {% endif %}
+                            
 
 
 
