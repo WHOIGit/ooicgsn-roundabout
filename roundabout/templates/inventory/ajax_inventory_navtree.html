@@ -30,7 +30,7 @@
                                               </a>
 
                                               {% if build.assembly.assembly_parts.exists %}
-                                                  {% include "builds/build_tree_assembly.html" with assembly_parts=build.assembly.assembly_parts.all inventory_qs=build.inventory.all build_pk=build.id part_types=part_types  %}
+                                                  {% include "builds/build_tree_assembly.html" with assembly_parts=build.assembly.assembly_parts inventory_qs=build.inventory build_pk=build.id part_types=part_types  %}
                                               {% endif %}
 
 
@@ -48,7 +48,7 @@
                             {% endif %}
 
 
-                            
+
 
 
 
