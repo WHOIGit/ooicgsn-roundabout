@@ -12,7 +12,6 @@ from common.util.mixins import AjaxFormMixin
 # Load the javascript navtree
 def load_assemblies_navtree(request):
     assembly_types = AssemblyType.objects.prefetch_related('assemblies__assembly_parts')
-    assemblies = Assembly.objects.prefetch_related('assembly_parts')
     return render(request, 'assemblies/ajax_assembly_navtree.html', {'assembly_types': assembly_types})
 
 # Function to load Parts based on Part Type filter
