@@ -10,6 +10,7 @@ urlpatterns = [
     path('ajax/add/', view=views.AssemblyAjaxCreateView.as_view(), name='ajax_assemblies_add'),
     path('ajax/edit/<int:pk>/', view=views.AssemblyAjaxUpdateView.as_view(), name='ajax_assemblies_update'),
     path('ajax/delete/<int:pk>/', view=views.AssemblyAjaxDeleteView.as_view(), name='ajax_assemblies_delete'),
+    path('ajax/copy/<int:pk>/', view=views.AssemblyAjaxCopyView.as_view(), name='ajax_assemblies_copy'),
     path('ajax/load-navtree/', views.load_assemblies_navtree, name='ajax_load_assemblies_navtree'),
     # AssemblyPart paths
     path('ajax/assemblypart/detail/<int:pk>/', view=views.AssemblyPartAjaxDetailView.as_view(), name='ajax_assemblyparts_detail'),

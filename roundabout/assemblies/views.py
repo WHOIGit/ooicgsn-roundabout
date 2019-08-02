@@ -9,6 +9,17 @@ from .forms import AssemblyForm, AssemblyPartForm
 from roundabout.parts.models import PartType, Part
 from common.util.mixins import AjaxFormMixin
 
+
+# General functions for use in Assembly views
+# ------------------------------------------------------------------------------
+
+# Makes a copy of the tree starting at "root_part", move to new Assembly, reparenting it to "parent"
+def make_tree_copy(root_part, new_assembly, parent=None):
+    new_ap = AssemblyPart.objects.create(assembly=new_assembly, part=root_part.part, parent=parent, order=root_part.order)
+
+    for child in root_part.get_children():
+        make_tree_copy(child, new_assembly, new_ap)
+
 # Load the javascript navtree
 def load_assemblies_navtree(request):
     assembly_types = AssemblyType.objects.prefetch_related('assemblies__assembly_parts__part')
@@ -120,6 +131,57 @@ class AssemblyAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
 
     def get_success_url(self):
         return reverse('assemblies:ajax_assemblies_detail', args=(self.object.id,))
+
+
+# View to copy full Assembly Template
+class AssemblyAjaxCopyView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, CreateView):
+    model = Assembly
+    form_class = AssemblyForm
+    template_name = 'assemblies/ajax_assembly_form.html'
+    context_object_name = 'assembly'
+    permission_required = 'moorings.add_mooringpart'
+    redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super(AssemblyAjaxCopyView, self).get_context_data(**kwargs)
+        context.update({
+            'assembly_to_copy': Assembly.objects.get(id=self.kwargs['pk'])
+        })
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super(AssemblyAjaxCopyView, self).get_form_kwargs()
+        if 'pk' in self.kwargs:
+            kwargs['pk'] = self.kwargs['pk']
+        return kwargs
+
+    def get_success_url(self):
+        return reverse('assemblies:ajax_assemblies_detail', args=(self.object.id,))
+
+    def form_valid(self, form, **kwargs):
+        self.object = form.save()
+
+        assembly_to_copy = Assembly.objects.get(pk=self.kwargs['pk'])
+        new_location = form.cleaned_data.get('location')
+        assembly_parts = assembly_to_copy.assembly_parts.all()
+
+        for ap in assembly_parts:
+            if ap.is_root_node():
+                make_tree_copy(ap, self.object, ap.parent)
+
+        response = HttpResponseRedirect(self.get_success_url())
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response
 
 
 class AssemblyAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):

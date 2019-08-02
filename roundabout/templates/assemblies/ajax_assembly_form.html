@@ -3,9 +3,11 @@
 
                 <div class="card-header">
                     {% if assembly.id %}
-                    <h3>{{ assembly.name }}</h3>
+                        <h3>{{ assembly.name }}</h3>
+                    {% elif assembly_to_copy %}
+                        <h3>Copy Assembly "{{ assembly_to_copy.name }}" to Create a New Assembly</h3>
                     {% else %}
-                    <h3>Add Assembly</h3>
+                        <h3>Add Assembly</h3>
                     {% endif %}
                 </div>
 
