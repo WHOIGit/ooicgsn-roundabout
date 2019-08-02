@@ -212,7 +212,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         if action_type == 'recover':
             build.update_time_at_sea()
 
-        # Get all Inventory items on Deployment, match location and add Action
+        # Get all Inventory items on Build, match location and add Action
         inventory_items = Inventory.objects.filter(build=build)
         for item in inventory_items:
             item.location = build.location
