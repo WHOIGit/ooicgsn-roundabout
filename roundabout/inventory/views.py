@@ -33,7 +33,7 @@ class InventoryNavTreeMixin(LoginRequiredMixin, object):
         context.update({
             'locations': Location.objects.exclude(root_type='Retired')
                         .prefetch_related('builds__assembly__assembly_parts__part__part_type')
-                        .prefetch_related('inventory__part__part_type').prefetch_related('builds__inventory')
+                        .prefetch_related('inventory__part__part_type').prefetch_related('builds__inventory').prefetch_related('builds__deployments')
         })
         if 'current_location' in self.kwargs:
             context['current_location'] = self.kwargs['current_location']
@@ -47,7 +47,11 @@ class InventoryNavTreeMixin(LoginRequiredMixin, object):
 # ------------------------------------------------------------------------------
 
 def load_inventory_navtree(request):
-    locations = Location.objects.exclude(root_type='Retired').prefetch_related('builds__assembly__assembly_parts__part__part_type').prefetch_related('inventory__part__part_type').prefetch_related('builds__inventory')
+    locations = Location.objects.exclude(root_type='Retired') \
+                .prefetch_related('builds__assembly__assembly_parts__part__part_type') \
+                .prefetch_related('inventory__part__part_type') \
+                .prefetch_related('builds__inventory') \
+                .prefetch_related('builds__deployments')
     return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations})
 
 
