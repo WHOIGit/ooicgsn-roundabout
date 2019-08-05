@@ -62,7 +62,7 @@
                         data-detail-url="{% url 'builds:ajax_deployment_add' build.id %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
-                        data-node-type="detail">Start Deployment</a>
+                        data-node-type="detail">Start {{ label_deployments_app_singular }}</a>
                 {% endif %}
 
                 {% if build.current_deployment.current_deployment_status == 'create' %}
@@ -101,7 +101,7 @@
                         data-detail-url="{% url 'builds:ajax_deployment_action' 'retire' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
-                        data-node-type="detail">Retire Deployment</a>
+                        data-node-type="detail">Retire {{ label_deployments_app_singular }}</a>
                 {% endif %}
 
 
@@ -162,15 +162,15 @@
     {% if build.is_deployed %}
         <hr>
 
-        <h5>Current Deployment Data</h5>
+        <h5>Current {{ label_deployments_app_singular }} Data</h5>
         <p>{{ label_deployments_app_singular }} Number: {{ current_deployment.deployment_number }}</p>
-        <p>Final Deployment Location: {{ current_deployment.deployed_location }}</p>
+        <p>Final {{ label_deployments_app_singular }} Location: {{ current_deployment.deployed_location }}</p>
 
         {% if build.current_deployment_time_at_sea %}
-            <p>Current Deployment Time at Sea: {{ build.current_deployment_time_at_sea|time_at_sea_display }}
+            <p>Current {{ label_deployments_app_singular }} Time at Sea: {{ build.current_deployment_time_at_sea|time_at_sea_display }}
         {% endif %}
 
-        <h6>Deployment Status</h6>
+        <h6>{{ label_deployments_app_singular }} Status</h6>
 
         <div class="progress mb-3" style="height: 20px;">
 
@@ -181,7 +181,7 @@
         </div>
 
         {% if current_deployment.get_deploytosea_details %}
-            <p>Deployment Date: {{ current_deployment.get_deploytosea_details|get_item:'deploy_date'|date:"n/j/y H:i" }}</p>
+            <p>{{ label_deployments_app_singular }} Date: {{ current_deployment.get_deploytosea_details|get_item:'deploy_date'|date:"n/j/y H:i" }}</p>
             <p>Latitude: {{ current_deployment.get_deploytosea_details|get_item:'latitude' }}</p>
             <p>Longitude: {{ current_deployment.get_deploytosea_details|get_item:'longitude' }}</p>
             <p>Depth: {{ current_deployment.get_deploytosea_details|get_item:'depth' }} m</p>
@@ -200,7 +200,7 @@
 
         {% if build.deployments.all %}
             <li class="nav-item">
-              <a class="nav-link" id="deployments-tab" data-toggle="tab" href="#deployments" role="tab" aria-controls="deployments" aria-selected="true">Deployments</a>
+              <a class="nav-link" id="deployments-tab" data-toggle="tab" href="#deployments" role="tab" aria-controls="deployments" aria-selected="true">{{ label_deployments_app_plural }}</a>
             </li>
         {% endif %}
 
@@ -268,7 +268,7 @@
                 {% for deployment in build.deployments.all %}
                     <li class="list-group-item">
                         <a class="collapsed" data-toggle="collapse" href="#deployment-{{ deployment.id }}" aria-expanded="false" aria-controls="deployment-{{ deployment.id }}">
-                            Deployment: {{ deployment }}
+                            {{ label_deployments_app_singular }}: {{ deployment }}
                         </a>
 
                         <a data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ deployment.id }}" aria-controls="deployment-{{ deployment.id }}" aria-expanded="false" role="button">
@@ -283,12 +283,12 @@
 
                         <div class="collapse mt-3" id="deployment-{{ deployment.id }}">
 
-                            <p>Deployment Location: {{ deployment.deployed_location }}</p>
+                            <p>{{ label_deployments_app_singular }} Location: {{ deployment.deployed_location }}</p>
 
 
 
                             {% if deployment.get_deploytosea_details %}
-                                <p>Deployment Date: {{ deployment.get_deploytosea_details|get_item:'deploy_date' }}</p>
+                                <p>{{ label_deployments_app_singular }} Date: {{ deployment.get_deploytosea_details|get_item:'deploy_date' }}</p>
                             {% endif %}
 
                             {% if deployment.get_deployment_time_at_sea %}

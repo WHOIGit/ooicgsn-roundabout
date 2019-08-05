@@ -6,23 +6,22 @@ def template_app_labels(request):
     current_site = Site.objects.get_current()
 
     if current_site.domain == 'obs-rdb.whoi.edu':
-        label_moorings_app_plural = 'Instruments'
-        label_moorings_app_singular = 'Instrument'
+        label_assemblies_app_plural = 'Instruments'
+        label_assemblies_app_singular = 'Instrument'
 
         label_deployments_app_plural = 'Experiments'
         label_deployments_app_singular = 'Experiment'
     else:
-        label_moorings_app_plural = 'Moorings'
-        label_moorings_app_singular = 'Mooring'
+        label_assemblies_app_plural = 'Assemblies'
+        label_assemblies_app_singular = 'Assemblies'
 
         label_deployments_app_plural = 'Deployments'
         label_deployments_app_singular = 'Deployment'
 
 
     return {
-            'label_moorings_app_plural': label_moorings_app_plural,
-            'label_moorings_app_singular': label_moorings_app_singular,
+            'label_assemblies_app_plural': label_assemblies_app_plural,
+            'label_assemblies_app_singular': label_assemblies_app_singular,
             'label_deployments_app_plural': label_deployments_app_plural,
             'label_deployments_app_singular': label_deployments_app_singular,
-
            }
