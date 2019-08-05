@@ -3,7 +3,7 @@
 
     <li data-jstree='{"icon":"fa fa-rocket"}' id="assembly_type_{{ assembly_type.id }}">
             <a href="#"
-                    data-detail-url="{% url 'assemblies:ajax_assemblies_detail' assembly_type.id %}"
+                    data-detail-url="{% url 'assemblies:ajax_assembly_type_detail' assembly_type.id %}"
                     data-type-id='{{ assembly_type.id }}'
                     data-node-type="assemblies">{{ assembly_type.name }}s</a>
 
