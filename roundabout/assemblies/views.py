@@ -50,7 +50,7 @@ def load_assembly_parts(request):
 class AssemblyHomeView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
     template_name = 'assemblies/assembly_list.html'
     context_object_name = 'assemblies'
-    permission_required = 'moorings.add_mooringpart'
+    permission_required = 'assemblies.view_assembly'
     redirect_field_name = 'home'
 
     def get_context_data(self, **kwargs):
@@ -79,7 +79,7 @@ class AssemblyAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
     form_class = AssemblyForm
     context_object_name = 'assembly'
     template_name='assemblies/ajax_assembly_form.html'
-    permission_required = 'moorings.add_mooringpart'
+    permission_required = 'assemblies.add_assembly'
     redirect_field_name = 'home'
 
     def form_valid(self, form):
@@ -109,7 +109,7 @@ class AssemblyAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
     form_class = AssemblyForm
     context_object_name = 'assembly'
     template_name='assemblies/ajax_assembly_form.html'
-    permission_required = 'moorings.add_mooringpart'
+    permission_required = 'assemblies.change_assembly'
     redirect_field_name = 'home'
 
     def form_valid(self, form):
@@ -139,7 +139,7 @@ class AssemblyAjaxCopyView(LoginRequiredMixin, PermissionRequiredMixin, AjaxForm
     form_class = AssemblyForm
     template_name = 'assemblies/ajax_assembly_form.html'
     context_object_name = 'assembly'
-    permission_required = 'moorings.add_mooringpart'
+    permission_required = 'assemblies.add_assembly'
     redirect_field_name = 'home'
 
     def get_context_data(self, **kwargs):
@@ -187,7 +187,7 @@ class AssemblyAjaxCopyView(LoginRequiredMixin, PermissionRequiredMixin, AjaxForm
 class AssemblyAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Assembly
     template_name = 'assemblies/ajax_assembly_confirm_delete.html'
-    permission_required = 'moorings.add_mooringpart'
+    permission_required = 'assemblies.delete_assembly'
     redirect_field_name = 'home'
 
     def delete(self, request, *args, **kwargs):
@@ -217,7 +217,7 @@ class AssemblyPartAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
     form_class = AssemblyPartForm
     template_name='assemblies/ajax_assemblypart_form.html'
     context_object_name = 'assembly_part'
-    permission_required = 'moorings.add_mooringpart'
+    permission_required = 'assemblies.add_assembly'
     redirect_field_name = 'home'
 
     def get_context_data(self, **kwargs):
@@ -281,7 +281,7 @@ class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
     form_class = AssemblyPartForm
     template_name='assemblies/ajax_assemblypart_form.html'
     context_object_name = 'assembly_part'
-    permission_required = 'moorings.add_mooringpart'
+    permission_required = 'assemblies.add_assembly'
     redirect_field_name = 'home'
 
     def get_context_data(self, **kwargs):
@@ -342,7 +342,7 @@ class AssemblyPartAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, De
     model = AssemblyPart
     context_object_name='assembly_part'
     template_name = 'assemblies/ajax_assembly_confirm_delete.html'
-    permission_required = 'moorings.add_mooringpart'
+    permission_required = 'assemblies.change_assembly'
     redirect_field_name = 'home'
 
     def delete(self, request, *args, **kwargs):
