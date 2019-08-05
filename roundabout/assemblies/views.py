@@ -354,3 +354,14 @@ class AssemblyPartAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, De
         }
         self.object.delete()
         return JsonResponse(data)
+
+
+# Assembly Types Template Views
+
+# AJAX Views
+
+class AssemblyTypeAjaxDetailView(LoginRequiredMixin, DetailView):
+    model = AssemblyType
+    context_object_name = 'assembly_type'
+    template_name='assemblies/ajax_assembly_type_detail.html'
+    redirect_field_name = 'home'
