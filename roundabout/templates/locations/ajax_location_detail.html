@@ -24,38 +24,8 @@
             {% for deployment in build.list %}
                 <li class="list-group-item">
 
-                    <a class="collapsed" data-toggle="collapse" href="#deployment-{{ deployment.id }}" aria-expanded="false" aria-controls="deployment-{{ deployment.id }}">
-                        Deployment: {{ deployment }}
-                    </a>
+                    {% include "builds/deployment_detail.html" with deployment=deployment %}
 
-                    <a data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ deployment.id }}" aria-controls="deployment-{{ deployment.id }}" aria-expanded="false" role="button">
-                        <i class="fa" aria-hidden="true"></i>
-                        <span class="sr-only">Expand/Collapse Revision {{ deployment }}</span>
-                    </a>
-                    <div class="progress" style="height: 20px;">
-                        <div class="progress-bar {{ deployment.get_deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ deployment.get_deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ deployment.get_deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
-                            <span>{{ deployment.get_deployment_status_label }}</span>
-                        </div>
-                    </div>
-
-                     <div class="collapse mt-3" id="deployment-{{ deployment.id }}">
-
-                         <p>Deployment Location: {{ deployment.deployed_location }}</p>
-
-
-
-                         {% if deployment.get_deploytosea_details %}
-                             <p>Deployment Date: {{ deployment.get_deploytosea_details|get_item:'deploy_date' }}</p>
-                             <p>Latitude: {{ deployment.get_deploytosea_details|get_item:'latitude' }}</p>
-                             <p>Longitude: {{ deployment.get_deploytosea_details|get_item:'longitude' }}</p>
-                             <p>Depth: {{ deployment.get_deploytosea_details|get_item:'depth' }} m</p>
-                         {% endif %}
-
-                         {% if deployment.get_deployment_time_at_sea %}
-                             <p>Total Time at Sea: {{ deployment.get_deployment_time_at_sea|time_at_sea_display }}
-                         {% endif %}
-
-                     </div>
                 </li>
             {% endfor %}
             </ul>
