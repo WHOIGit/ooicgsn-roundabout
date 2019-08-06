@@ -6,6 +6,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 
 from .forms import LocationForm
 from .models import Location
+from roundabout.inventory.models import Deployment
+
 from common.util.mixins import AjaxFormMixin
 
 # AJAX functions for Forms and Navtree
@@ -25,6 +27,17 @@ class LocationsAjaxDetailView(LoginRequiredMixin, DetailView):
     model = Location
     context_object_name = 'location'
     template_name='locations/ajax_location_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(LocationsAjaxDetailView, self).get_context_data(**kwargs)
+
+        deployments = Deployment.objects.filter(deployed_location=self.object).order_by('build__assembly', '-created_at')
+
+        print(deployments)
+        context.update({
+            'deployments': deployments
+        })
+        return context
 
 
 class LocationsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, UpdateView):
