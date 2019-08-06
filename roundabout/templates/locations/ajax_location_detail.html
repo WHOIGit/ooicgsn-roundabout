@@ -10,15 +10,15 @@
 
     {% if location.location_id %}<p>Location ID: {{ location.location_id }}</p>{% endif %}
 
-    {% if location.deployed_deployments.exists %}
+    {% if deployments.exists %}
         <h5>Deployment History for this Location</h5>
 
-        {% regroup location.deployed_deployments.all by build as build_list %}
+        {% regroup deployments by build.assembly as build_list %}
 
 
         {% for build in build_list %}
         <ul class="list-group list-group-flush">
-            <li class="list-group-item">Build: {{ build.grouper }}
+            <li class="list-group-item">Assembly: {{ build.grouper }}
 
         <ul class="list-group list-group-flush">
             {% for deployment in build.list %}
