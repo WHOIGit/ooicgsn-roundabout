@@ -1,0 +1,54 @@
+{% load common_tags %}
+
+<a class="collapsed" data-toggle="collapse" href="#deployment-{{ deployment.id }}" aria-expanded="false" aria-controls="deployment-{{ deployment.id }}">
+    {{ label_deployments_app_singular }}: {{ deployment }}
+</a>
+
+<a data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ deployment.id }}" aria-controls="deployment-{{ deployment.id }}" aria-expanded="false" role="button">
+    <i class="fa" aria-hidden="true"></i>
+    <span class="sr-only">Expand/Collapse Revision {{ deployment }}</span>
+</a>
+<div class="progress" style="height: 20px;">
+    <div class="progress-bar {{ deployment.get_deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ deployment.get_deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ deployment.get_deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
+        <span>{{ deployment.get_deployment_status_label }}</span>
+    </div>
+</div>
+
+<div class="collapse mt-3" id="deployment-{{ deployment.id }}">
+
+    <p>{{ label_deployments_app_singular }} Location: {{ deployment.deployed_location }}</p>
+
+
+
+    {% if deployment.get_deploytosea_details %}
+        <p>{{ label_deployments_app_singular }} Date: {{ deployment.get_deploytosea_details|get_item:'deploy_date' }}</p>
+    {% endif %}
+
+    {% if deployment.get_deployment_time_at_sea %}
+        <p>Total Time at Sea: {{ deployment.get_deployment_time_at_sea|time_at_sea_display }}
+    {% endif %}
+
+    <table class="table table-striped action-table">
+        <thead>
+          <th>Date</th>
+          <th>Action</th>
+          <th>Details</th>
+          <th>Person</th>
+          <th>Location</th>
+
+        </thead>
+        <tbody>
+          {% for action in deployment.deployment_actions.all %}
+            <tr>
+                <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
+                <td>{{ action.get_action_type_display }}</td>
+                <td>
+                    {{ action.detail|safe }}
+                </td>
+                <td>{{ action.user.username }}</td>
+                <td>{{ action.location.name }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+  </table>
+</div>
