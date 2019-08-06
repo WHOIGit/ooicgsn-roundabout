@@ -33,7 +33,6 @@ class LocationsAjaxDetailView(LoginRequiredMixin, DetailView):
 
         deployments = Deployment.objects.filter(deployed_location=self.object).order_by('build__assembly', '-created_at')
 
-        print(deployments)
         context.update({
             'deployments': deployments
         })
