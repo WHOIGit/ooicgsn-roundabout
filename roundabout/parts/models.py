@@ -42,7 +42,6 @@ class Part(models.Model):
     part_number = models.CharField(max_length=100, unique=False, db_index=True)
     unit_cost = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], null=False, blank=True, default='0.00')
     refurbishment_cost = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], null=False, blank=True, default='0.00')
-    is_equipment = models.BooleanField(default=False)
     note = models.TextField(blank=True)
     custom_fields = JSONField(blank=True, null=True)
     user_defined_fields = models.ManyToManyField(Field, blank=True, related_name='parts')
@@ -66,7 +65,7 @@ class Part(models.Model):
     def friendly_name_display(self):
         if self.friendly_name:
             return self.friendly_name
-        else:    
+        else:
             return self.name
 
 

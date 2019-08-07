@@ -20,10 +20,9 @@ class PartForm(forms.ModelForm):
 
     class Meta:
         model = Part
-        fields = ['part_number', 'name', 'friendly_name', 'part_type', 'is_equipment']
+        fields = ['part_number', 'name', 'friendly_name', 'part_type']
         labels = {
             'parent': 'Parent Assembly',
-            'is_equipment': 'Is this part considered equipment?',
             'note': 'Part Template Notes'
         }
 """

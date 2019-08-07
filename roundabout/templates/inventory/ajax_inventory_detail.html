@@ -22,7 +22,7 @@
                 data-location-id="{{ inventory_item.location.id}}"
                 data-node-type="detail">Inventory Change</a>
             --->
-        {% if not inventory_item.build and not inventory_item.parent and not inventory_item.assembly_part %}
+        {% if not inventory_item.build and not inventory_item.parent %}
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'locationchange' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
