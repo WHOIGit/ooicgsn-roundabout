@@ -6,24 +6,16 @@ $(document).ready(function() {
         $("#div_id_deployment").show();
     }
 
-    if ( $("#id_mooring_part option").length == 1 ) {
-        $("#div_id_mooring_part").hide();
+    if ( $("#id_assembly_part option").length == 1 ) {
+        $("#div_id_assembly_part").hide();
     }  else {
-        $("#div_id_mooring_part").show();
+        $("#div_id_assembly_part").show();
     }
 
     if ( $("#id_parent option").length == 1 ) {
         $("#div_id_parent").hide();
     }  else {
         $("#div_id_parent").show();
-    }
-
-    if ( ! $('#div_id_whoi_number input').val() ) {
-        $("#div_id_whoi_number").hide();
-    }
-
-    if ( ! $('#div_id_ooi_property_number input').val() ) {
-        $("#div_id_ooi_property_number").hide();
     }
 
     $("#hint_id_serial_number").click(function () {
@@ -33,7 +25,6 @@ $(document).ready(function() {
     $("#inventory-filter-form-part-number").on("submit", function(){
       var url = $(this).attr("data-url");
       var url_serialnumber = $(this).attr("data-serialnumber-url");
-      var url_equipment = $(this).attr("data-equipment-url");
       var partNumber = $("#part_number_search").val();
       var url_revisions = $("#inventory-action-form").attr("data-revisions-url");
       $.ajax({
@@ -128,23 +119,6 @@ $(document).ready(function() {
             },
             success: function (data) {
               $("#div_id_serial_number div").html(data);
-            }
-        });
-
-        $.ajax({
-            url: url_equipment,
-            data: {
-              'part': partID
-            },
-            success: function (data) {
-              console.log(data.is_equipment);
-              if (data.is_equipment) {
-                  $("#div_id_whoi_number").show();
-                  $("#div_id_ooi_property_number").show();
-              } else {
-                  $("#div_id_whoi_number").hide();
-                  $("#div_id_ooi_property_number").hide();
-              }
             }
         });
 

@@ -332,30 +332,6 @@ def load_destination_subassemblies_by_serialnumber(request):
                                                                       'location': location, })
 
 
-# Function to return True if Part Template selected is "Equipment"
-def load_is_equipment(request):
-    part_id = request.GET.get('part')
-    part_number = request.GET.get('part_number')
-
-    if part_id:
-        part = Part.objects.get(id=part_id)
-    elif part_number:
-        part = Part.objects.filter(part_number__icontains=part_number).first()
-    else:
-        part = None
-
-    if part:
-        is_equipment = part.is_equipment
-    else:
-        is_equipment = False
-
-    data = {
-        'message': "Successfully submitted form data.",
-        'is_equipment': is_equipment,
-    }
-    return JsonResponse(data)
-
-
 # Funtion to filter navtree by Part Type
 def filter_inventory_navtree(request):
     part_types = request.GET.getlist('part_types[]')
@@ -579,7 +555,6 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
 
     def get_form_class(self):
         ACTION_FORMS = {
-            "invchange" : ActionInventoryChangeForm,
             "locationchange" : ActionLocationChangeForm,
             "subchange" : ActionSubassemblyChangeForm,
             "removefrombuild" : ActionRemoveFromBuildForm,
@@ -605,18 +580,18 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
 
             # Get any subassembly children items, move their location sto match parent and add Action to history
             subassemblies = Inventory.objects.get(id=self.object.id).get_descendants()
-            mooring_parts_added = []
+            assembly_parts_added = []
             for item in subassemblies:
-                if self.object.mooring_part_id:
-                    sub_mooring_parts = MooringPart.objects.get(id=self.object.mooring_part_id).get_descendants()
-                    sub_mooring_part = sub_mooring_parts.filter(part=item.part)
-                    for sub in sub_mooring_part:
-                        if sub.id not in mooring_parts_added:
-                            item.mooring_part = sub
-                            mooring_parts_added.append(sub.id)
+                if self.object.assembly_part:
+                    sub_assembly_parts = self.object.assembly_part.get_descendants()
+                    sub_assembly_part = sub_assembly_parts.filter(part=item.part)
+                    for sub in sub_assembly_part:
+                        if sub.id not in assembly_parts_added:
+                            item.assembly_part = sub
+                            assembly_parts_added.append(sub.id)
                             break
                 else:
-                    item.mooring_part = None
+                    item.assembly_part = None
 
                 item.location_id = self.object.location_id
                 if old_location.name != self.object.location.name:
@@ -658,68 +633,6 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 item.mooring_part = None
                 item.assigned_destination_root = None
                 item.detail = 'Destination Assignment removed.'
-                item.save()
-                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location_id=item.location_id,
-                                                      user_id=self.request.user.id, inventory_id=item.id)
-
-        if self.kwargs['action_type'] == 'invchange':
-            # Find if it was removed from Deployment. Add note.
-            old_deployment_pk = self.object.tracker.previous('deployment')
-            if old_deployment_pk:
-                old_deployment = Deployment.objects.get(pk=old_deployment_pk)
-                self.object.detail = ' Removed from %s.' % (old_deployment.get_deployment_label()) + self.object.detail
-
-
-            # Find if it was removed from Parent assembly. Add note.
-            old_parent_pk = self.object.tracker.previous('parent')
-            if old_parent_pk:
-                old_parent = Inventory.objects.get(pk=old_parent_pk)
-                parent_detail = 'Subassembly %s removed. ' % (self.object) + self.object.detail
-                # Add Action Record for Parent Assembly
-                action_record = Action.objects.create(action_type='subchange', detail=parent_detail, location_id=old_parent.location_id,
-                                                      user_id=self.request.user.id, inventory_id=old_parent_pk)
-                # Add note to instance Detail field for Action Record
-                self.object.detail = 'Removed from %s.' % (old_parent) + self.object.detail
-
-            # Find if it was added to Parent assembly. Add note.
-            if self.object.parent:
-                parent_detail = 'Subassembly %s added. ' % (self.object) + self.object.detail
-                # Add Action Record for Parent Assembly
-                action_record = Action.objects.create(action_type='subchange', detail=parent_detail, location_id=self.object.parent.location_id,
-                                                      user_id=self.request.user.id, inventory_id=self.object.parent.id)
-
-            # Find previous location to add to Detail field text
-            old_location_pk = self.object.tracker.previous('location')
-            if old_location_pk:
-                old_location = Location.objects.get(pk=old_location_pk)
-                if self.object.deployment:
-                    self.object.detail = 'Moved to %s from %s' % (self.object.deployment, old_location.name) + self.object.detail
-                elif old_location.name != self.object.location.name:
-                    self.object.detail = 'Moved to %s from %s. ' % (self.object.location.name, old_location) + self.object.detail
-
-            # Get any subassembly children items, move their location to match parent and add Action to history
-            subassemblies = Inventory.objects.get(id=self.object.id).get_descendants()
-            mooring_parts_added = []
-            for item in subassemblies:
-                if self.object.mooring_part_id:
-                    sub_mooring_parts = MooringPart.objects.get(id=self.object.mooring_part_id).get_descendants()
-                    sub_mooring_part = sub_mooring_parts.filter(part=item.part)
-                    for sub in sub_mooring_part:
-                        if sub.id not in mooring_parts_added:
-                            item.mooring_part = sub
-                            mooring_parts_added.append(sub.id)
-                            break
-                else:
-                    item.mooring_part = None
-
-                item.location_id = self.object.location_id
-                item.deployment_id = self.object.deployment_id
-                if self.object.deployment:
-                    item.detail = 'Moved to %s from %s' % (self.object.deployment, old_location.name)
-                elif old_location.name != self.object.location.name:
-                    item.detail = 'Moved to %s from %s' % (self.object.location.name, old_location.name)
-                else:
-                    item.detail = 'Parent Inventory Change'
                 item.save()
                 action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location_id=item.location_id,
                                                       user_id=self.request.user.id, inventory_id=item.id)
@@ -1787,7 +1700,6 @@ class InventoryActionView(InventoryUpdateView):
 
     def get_form_class(self):
         ACTION_FORMS = {
-            "invchange" : ActionInventoryChangeForm,
             "subchange" : ActionSubassemblyChangeForm,
             "test" : ActionTestForm,
             "note" : ActionNoteForm,

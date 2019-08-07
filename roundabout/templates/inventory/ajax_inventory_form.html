@@ -41,7 +41,6 @@
                             <form method="post" action="" id="inventory-filter-form-part-number"
                                 data-url="{% url 'inventory:ajax_load_part_templates_by_partnumber' %}"
                                 data-serialnumber-url="{% url 'inventory:ajax_load_partnumber_create_serialnumber' %}"
-                                data-equipment-url="{% url 'inventory:ajax_load_is_equipment' %}"
                                 novalidate>
                                 <div class="form-row">
                                     <div class="form-group col-md-8 col-lg-6">
@@ -77,7 +76,6 @@
                           data-parents-url="{% url 'inventory:ajax_load_parents' %}"
                           data-deployments-url="{% url 'inventory:ajax_load_deployments' %}"
                           data-mooring-parts-url="{% url 'inventory:ajax_load_mooring_parts' %}"
-                          data-equipment-url="{% url 'inventory:ajax_load_is_equipment' %}"
                           data-serialnumber-url="{% url 'inventory:ajax_load_parttemplate_create_serialnumber' %}"
                           data-revisions-url="{% url 'inventory:ajax_load_revisions_by_partnumber' %}"
                           data-url='{{ request.build_absolute_uri|safe }}'>

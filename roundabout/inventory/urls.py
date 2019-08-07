@@ -69,7 +69,6 @@ urlpatterns = [
     path('ajax/load-parents/', views.load_parents, name='ajax_load_parents'),
     path('ajax/load-deployments/', views.load_deployments, name='ajax_load_deployments'),
     path('ajax/load-mooring-parts/', views.load_mooring_parts, name='ajax_load_mooring_parts'),
-    path('ajax/load-is-equipment/', views.load_is_equipment, name='ajax_load_is_equipment'),
     path('ajax/filter-navtree/', views.filter_inventory_navtree, name='ajax_filter_inventory_navtree'),
     path('ajax/print-code/<int:pk>/<code_format>/', views.print_code_zebraprinter, name='ajax_print_code'),
 ]

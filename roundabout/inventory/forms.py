@@ -24,12 +24,10 @@ class InventoryForm(forms.ModelForm):
 
     class Meta:
         model = Inventory
-        fields = ['revision', 'serial_number', 'old_serial_number', 'whoi_number', 'ooi_property_number']
+        fields = ['revision', 'serial_number', 'old_serial_number']
         labels = {
             'serial_number': 'Serial Number',
             'old_serial_number': 'Legacy Serial Number',
-            'whoi_number': 'WHOI Number',
-            'ooi_property_number': 'OOI Property Number',
         }
 
     class Media:
@@ -47,11 +45,6 @@ class InventoryForm(forms.ModelForm):
                 revisions = Revision.objects.filter(part=self.instance.part)
 
             self.fields['revision'].queryset = revisions
-
-            # Remove Equipment specific fields unless item is Equipment
-            if not self.instance.part.is_equipment:
-                del self.fields['whoi_number']
-                del self.fields['ooi_property_number']
 
             # Check if this Part has Custom fields, create fields if needed
             try:
@@ -104,13 +97,11 @@ class InventoryAddForm(forms.ModelForm):
 
     class Meta:
         model = Inventory
-        fields = ['part', 'revision', 'serial_number', 'old_serial_number', 'whoi_number', 'ooi_property_number', 'location']
+        fields = ['part', 'revision', 'serial_number', 'old_serial_number', 'location']
         labels = {
             'part': 'Select Part Template',
             'serial_number': 'Serial Number',
             'old_serial_number': 'Legacy Serial Number',
-            'whoi_number': 'WHOI Number',
-            'ooi_property_number': 'OOI Property Number',
         }
 
     class Media:
@@ -133,84 +124,6 @@ class InventoryAddForm(forms.ModelForm):
             parent = Inventory.objects.get(id=self.parent)
             part_list = Part.objects.get(id=parent.part.id)
             self.fields['part'].queryset = part_list
-
-        # Remove Equipment specific fields unless item is Equipment
-        if self.instance.pk:
-            if not self.instance.part.is_equipment:
-                del self.fields['whoi_number']
-                del self.fields['ooi_property_number']
-
-
-class ActionInventoryChangeForm(forms.ModelForm):
-
-    class Meta:
-        model = Inventory
-        fields = ['location', 'deployment', 'mooring_part', 'parent', 'detail']
-        labels = {
-            'detail': 'Add a Note',
-        }
-
-    class Media:
-        js = ('js/form-inventory.js',)
-
-    def __init__(self, *args, **kwargs):
-        super(ActionInventoryChangeForm, self).__init__(*args, **kwargs)
-        self.initial['detail'] = ''
-        self.fields['parent'].queryset = Inventory.objects.none()
-        self.fields['deployment'].queryset = Deployment.objects.none()
-        self.fields['mooring_part'].queryset = MooringPart.objects.none()
-
-        # Allow AJAX submissions by populating querysets for Django form check
-        if 'part' in self.data:
-            try:
-                part_id = int(self.data.get('part'))
-                mooring_parts = MooringPart.objects.filter(part_id=part_id)
-                if mooring_parts:
-                    mooring_parts_list = []
-                    for mp in mooring_parts:
-                        mooring_parts_list.append(mp.parent.part.id)
-                    self.fields['parent'].queryset = Inventory.objects.filter(part_id__in=mooring_parts_list)
-
-            except (ValueError, TypeError):
-                pass  # invalid input from the client; ignore and fallback to empty queryset
-        elif self.instance.pk:
-            if self.instance.deployment:
-                mooring_parts = MooringPart.objects.filter(part_id=self.instance.part.id).filter(location=self.instance.deployment.final_location)
-            else:
-                mooring_parts = MooringPart.objects.filter(part_id=self.instance.part.id)
-                mooring_parts_list = []
-                for mp in mooring_parts:
-                    if mp.parent:
-                        mooring_parts_list.append(mp.parent.part.id)
-                        self.fields['parent'].queryset = Inventory.objects.filter(part_id__in=mooring_parts_list).filter(location=self.instance.location)
-                    else:
-                        self.fields['parent'].queryset = Inventory.objects.none()
-
-        if 'location' in self.data:
-            try:
-                location_id = int(self.data.get('location'))
-                self.fields['deployment'].queryset = Deployment.objects.filter(location_id=location_id)
-                self.fields['parent'].queryset = Inventory.objects.filter(location_id=location_id)
-                self.fields['mooring_part'].queryset = MooringPart.objects.all()
-            except (ValueError, TypeError):
-                pass  # invalid input from the client; ignore and fallback to empty queryset
-        elif self.instance.pk:
-            self.fields['deployment'].queryset = Deployment.objects.filter(location_id=self.instance.location.id)
-
-        if 'deployment' in self.data:
-            try:
-                deployment_id = int(self.data.get('deployment'))
-                deployment = Deployment.objects.get(id=deployment_id)
-                self.fields['mooring_part'].queryset = MooringPart.objects.filter(location=deployment.final_location)
-            except (ValueError, TypeError):
-                pass  # invalid input from the client; ignore and fallback to empty queryset
-        elif self.instance.pk:
-            if self.instance.deployment:
-                self.fields['mooring_part'].queryset = MooringPart.objects.filter(location=self.instance.deployment.final_location)
-            elif self.instance.mooring_part:
-                self.fields['mooring_part'].queryset = MooringPart.objects.filter(location=self.instance.mooring_part.location)
-            else:
-                self.fields['mooring_part'].queryset = MooringPart.objects.none()
 
 
 class ActionLocationChangeForm(forms.ModelForm):
