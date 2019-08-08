@@ -18,7 +18,7 @@
                             {% if location.builds.exists %}
                                 <ul>
                                 {% for build in location.builds.all %}
-                                           <li data-jstree='{"icon":"fa fa-rocket"}' id="builds_{{ build.id }}">
+                                           <li data-jstree='{"icon":"fa fa-rocket"}' id="builds_{{ build.id }}" class="jstree-closed">
                                                <a href="#" data-detail-url="{% url 'builds:ajax_builds_detail' build.id %}"
                                                   data-node-id="{{ build.id }}"
                                                   data-location-id="{{ location.id }}"
@@ -36,11 +36,6 @@
                                                       <span class="badge badge-pill badge-success">Initial Deployment - {{ build.current_deployment.deployment_number }} </span>
                                                   {% endif %}
                                               </a>
-
-                                              {% if build.assembly.assembly_parts.exists %}
-                                                  {% include "builds/build_tree_assembly.html" with assembly_parts=build.assembly.assembly_parts inventory_qs=build.inventory build_pk=build.id part_types=part_types  %}
-                                              {% endif %}
-
 
                                            </li>
                                 {% endfor %}
