@@ -237,14 +237,9 @@ $(document).ready(function(){
         $(navTree).jstree(true).refresh();
         $(navTree).on('refresh.jstree', function() {
             var parentID = $(navTree).jstree(true).get_parent(nodeID);
-            $(navTree).jstree(true).select_node(nodeID);
+            //$(navTree).jstree(true).select_node(nodeID);
             $(navTree).jstree(true).open_node(parentID);
          });
-
-
-
-
-
 
         /*$.ajax({
             url: navURL,
@@ -458,33 +453,13 @@ $(document).ready(function() {
             url: url,
             success: function (data) {
               $("#detail-view").html(data);
-              $.ajax({
-                  url: '/' + navtreePrefix + '/ajax/load-navtree/',
-                  success: function (data) {
-                      $(navTree).jstree(true).destroy();
-                      $(navTree).html(data);
-                      $(navTree).jstree();
-                      $(navTree).jstree(true).select_node(nodeID);
-                      $(navTree).jstree(true).open_node(nodeID);
-                      $.each(openNodes, function(key, value) {
-                          $(navTree).jstree(true).open_node(value);
-                      });
-                      console.log(openNodes);
-                      $(navTree).on('open_node.jstree', function (event, data) {
-                          console.log("node =" + data.node.id);
-                          openNodes.push(data.node.id);
-                          console.log(openNodes);
-                      });
-                      $(navTree).on('close_node.jstree', function (event, data) {
-                          console.log("node =" + data.node.id);
-                          var index = openNodes.indexOf(data.node.id);
-                          if (index > -1) {
-                            openNodes.splice(index, 1);
-                          }
-                          console.log(openNodes);
-                      });
-                  }
-              });
+              $(navTree).jstree(true).settings.core.data.url = navURL;
+              $(navTree).jstree(true).refresh();
+              $(navTree).on('refresh.jstree', function() {
+                  var parentID = $(navTree).jstree(true).get_parent(nodeID);
+                  $(navTree).jstree(true).select_node(nodeID);
+                  $(navTree).jstree(true).open_node(parentID);
+               });
 
             }
         });

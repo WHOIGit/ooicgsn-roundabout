@@ -51,10 +51,8 @@ def load_inventory_navtree(request):
     print(node_id)
     if node_id == '#' or not node_id:
         locations = Location.objects.exclude(root_type='Retired') \
-                    .prefetch_related('builds__assembly__assembly_parts__part__part_type') \
-                    .prefetch_related('inventory__part__part_type') \
-                    .prefetch_related('builds__inventory') \
-                    .prefetch_related('builds__deployments')
+                    .prefetch_related('inventory__part__part_type')
+
         return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations})
     else:
         build_pk = node_id.split('_')[1]
