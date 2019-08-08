@@ -16,9 +16,19 @@ from roundabout.inventory.models import Inventory, Action
 
 # Load the javascript navtree
 def load_builds_navtree(request):
-    locations = Location.objects.prefetch_related('builds__assembly__assembly_parts__part__part_type') \
-                .prefetch_related('builds__inventory__part__part_type').prefetch_related('builds__deployments')
-    return render(request, 'builds/ajax_build_navtree.html', {'locations': locations})
+    node_id = request.GET.get('id')
+
+    if node_id == '#':
+        locations = Location.objects.prefetch_related('builds__assembly__assembly_parts__part__part_type') \
+                    .prefetch_related('builds__inventory__part__part_type').prefetch_related('builds__deployments')
+        return render(request, 'builds/ajax_build_navtree.html', {'locations': locations})
+    else:
+        build_pk = node_id.split('_')[1]
+        build = Build.objects.get(id=build_pk)
+        return render(request, 'builds/build_tree_assembly.html', {'assembly_parts': build.assembly.assembly_parts,
+                                                                   'inventory_qs': build.inventory,
+                                                                   'location_pk': build.location_id,
+                                                                   'build_pk': build_pk, })
 
 # Function to copy Inventory items for Build Snapshots
 def make_tree_copy(root_part, new_location, build_snapshot, parent=None ):

@@ -18,6 +18,38 @@ var navURL = navTree.attr('data-navtree-url');
 $(document).ready(function() {
 
     // AJAX functions for Nav Tree
+    $(navTree).jstree({
+      'core' : {
+        'data' : {
+          'url' : navURL,
+          'data' : function (node) {
+            return { 'id' : node.id };
+          }
+        }
+      }
+    });
+
+    /*
+    $(navTree).on('open_node.jstree', function (event, data) {
+        console.log("node =" + data.node.id);
+        openNodes.push(data.node.id);
+        console.log(openNodes);
+    });
+    $(navTree).on('close_node.jstree', function (event, data) {
+        console.log("node =" + data.node.id);
+        var index = openNodes.indexOf(data.node.id);
+        if (index > -1) {
+          openNodes.splice(index, 1);
+        }
+        console.log(openNodes);
+    });
+    */
+    var nodeID = navtreePrefix + '_' + $('.card-header').attr('data-object-id');
+    console.log(nodeID);
+    $(navTree).jstree(true).select_node(nodeID);
+
+
+    /*
     $.ajax({
         url: navURL,
         success: function (data) {
@@ -44,7 +76,7 @@ $(document).ready(function() {
 
         }
     });
-
+    */
     $(navTree).on('click','a',function(){
         var url = $(this).attr("data-detail-url");
         // Get the li ID for the jsTree node
@@ -201,7 +233,20 @@ $(document).ready(function(){
         });
 
         var nodeID = objectTypePrefix + '_' + data.object_id ;
-        $.ajax({
+        $(navTree).jstree(true).settings.core.data.url = navURL;
+        $(navTree).jstree(true).refresh();
+        $(navTree).on('refresh.jstree', function() {
+            var parentID = $(navTree).jstree(true).get_parent(nodeID);
+            $(navTree).jstree(true).select_node(nodeID);
+            $(navTree).jstree(true).open_node(parentID);
+         });
+
+
+
+
+
+
+        /*$.ajax({
             url: navURL,
             success: function (data) {
                 $(navTree).jstree(true).destroy();
@@ -226,7 +271,7 @@ $(document).ready(function(){
                     console.log(openNodes);
                 });
             }
-        });
+        });*/
     }
 
     function handleDeleteFormSuccess(data, textStatus, jqXHR){
@@ -252,17 +297,13 @@ $(document).ready(function(){
 
         var nodeID = parentTypePrefix + '_' + data.parent_id;
 
-        $.ajax({
-            url: '/' + objectTypePrefix + '/ajax/load-navtree/',
-            success: function (data) {
-                $(navTree).jstree(true).destroy();
-                $(navTree).html(data);
-                $(navTree).jstree();
-                $(navTree).jstree(true).select_node(nodeID);
-                $(navTree).jstree(true).open_node(nodeID);
-                console.log(nodeID);
-            }
-        });
+        $(navTree).jstree(true).settings.core.data.url = navURL;
+        $(navTree).jstree(true).refresh();
+        $(navTree).on('refresh.jstree', function() {
+            var parentID = $(navTree).jstree(true).get_parent(nodeID);
+            $(navTree).jstree(true).select_node(nodeID);
+            $(navTree).jstree(true).open_node(parentID);
+         });
     }
 
     function handleCopyFormSuccess(data, textStatus, jqXHR){
