@@ -22,8 +22,15 @@ def make_tree_copy(root_part, new_assembly, parent=None):
 
 # Load the javascript navtree
 def load_assemblies_navtree(request):
-    assembly_types = AssemblyType.objects.prefetch_related('assemblies__assembly_parts__part')
-    return render(request, 'assemblies/ajax_assembly_navtree.html', {'assembly_types': assembly_types})
+    node_id = request.GET.get('id')
+
+    if node_id == '#' or not node_id:
+        assembly_types = AssemblyType.objects.prefetch_related('assemblies')
+        return render(request, 'assemblies/ajax_assembly_navtree.html', {'assembly_types': assembly_types})
+    else:
+        assembly_pk = node_id.split('_')[1]
+        assembly = Assembly.objects.prefetch_related('assembly_parts').get(id=assembly_pk)
+        return render(request, 'assemblies/assembly_tree_parts.html', {'assembly_parts': assembly.assembly_parts,})
 
 # Function to load Parts based on Part Type filter
 def load_part_templates(request):

@@ -48,7 +48,7 @@ class InventoryNavTreeMixin(LoginRequiredMixin, object):
 
 def load_inventory_navtree(request):
     node_id = request.GET.get('id')
-    print(node_id)
+
     if node_id == '#' or not node_id:
         locations = Location.objects.exclude(root_type='Retired') \
                     .prefetch_related('inventory__part__part_type')
@@ -56,7 +56,7 @@ def load_inventory_navtree(request):
         return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations})
     else:
         build_pk = node_id.split('_')[1]
-        build = Build.objects.get(id=build_pk)
+        build = Build.objects.prefetch_related('assembly__assembly_parts').prefetch_related('inventory').get(id=build_pk)
         return render(request, 'builds/build_tree_assembly.html', {'assembly_parts': build.assembly.assembly_parts,
                                                                    'inventory_qs': build.inventory,
                                                                    'location_pk': build.location_id,
