@@ -29,7 +29,7 @@ def load_assemblies_navtree(request):
         return render(request, 'assemblies/ajax_assembly_navtree.html', {'assembly_types': assembly_types})
     else:
         assembly_pk = node_id.split('_')[1]
-        assembly = Assembly.objects.get(id=assembly_pk)
+        assembly = Assembly.objects.prefetch_related('assembly_parts').get(id=assembly_pk)
         return render(request, 'assemblies/assembly_tree_parts.html', {'assembly_parts': assembly.assembly_parts,})
 
 # Function to load Parts based on Part Type filter
