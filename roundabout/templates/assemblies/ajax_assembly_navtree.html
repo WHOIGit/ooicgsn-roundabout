@@ -10,18 +10,11 @@
             <ul>
             {% for assembly in assembly_type.assemblies.all %}
 
-                <li data-jstree='{"icon":"fa fa-rocket"}' id="assemblies_{{ assembly.id }}">
+                <li data-jstree='{"icon":"fa fa-rocket"}' id="assemblies_{{ assembly.id }}" class="jstree-closed">
                         <a href="#"
                                 data-detail-url="{% url 'assemblies:ajax_assemblies_detail' assembly.id %}"
                                 data-type-id='{{ assembly.id }}'
                                 data-node-type="assembly">{{ assembly.name }}</a>
-
-                        {% if assembly.assembly_parts.exists %}
-
-                            {% include "assemblies/assembly_tree_parts.html" with assembly_parts=assembly.assembly_parts %}
-
-                        {% endif %}
-
                  </li>
 
             {% endfor %}
