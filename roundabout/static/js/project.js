@@ -29,24 +29,12 @@ $(document).ready(function() {
       }
     });
 
-    /*
-    $(navTree).on('open_node.jstree', function (event, data) {
-        console.log("node =" + data.node.id);
-        openNodes.push(data.node.id);
-        console.log(openNodes);
-    });
-    $(navTree).on('close_node.jstree', function (event, data) {
-        console.log("node =" + data.node.id);
-        var index = openNodes.indexOf(data.node.id);
-        if (index > -1) {
-          openNodes.splice(index, 1);
-        }
-        console.log(openNodes);
-    });
-    */
     var nodeID = navtreePrefix + '_' + $('.card-header').attr('data-object-id');
     console.log(nodeID);
-    $(navTree).jstree(true).select_node(nodeID);
+    $(navTree).on('ready.jstree', function (event, data) {
+      data.instance._open_to(nodeID);
+      data.instance.select_node(nodeID);
+    });
 
 
     /*
@@ -235,11 +223,10 @@ $(document).ready(function(){
         var nodeID = objectTypePrefix + '_' + data.object_id ;
         $(navTree).jstree(true).settings.core.data.url = navURL;
         $(navTree).jstree(true).refresh();
-        $(navTree).on('refresh.jstree', function() {
-            var parentID = $(navTree).jstree(true).get_parent(nodeID);
-            //$(navTree).jstree(true).select_node(nodeID);
-            $(navTree).jstree(true).open_node(parentID);
-         });
+        $(navTree).on('refresh.jstree', function (event, data) {
+          data.instance._open_to(nodeID);
+        });
+
 
         /*$.ajax({
             url: navURL,
@@ -294,11 +281,9 @@ $(document).ready(function(){
 
         $(navTree).jstree(true).settings.core.data.url = navURL;
         $(navTree).jstree(true).refresh();
-        $(navTree).on('refresh.jstree', function() {
-            var parentID = $(navTree).jstree(true).get_parent(nodeID);
-            $(navTree).jstree(true).select_node(nodeID);
-            $(navTree).jstree(true).open_node(parentID);
-         });
+        $(navTree).on('refresh.jstree', function (event, data) {
+          data.instance._open_to(nodeID);
+        });
     }
 
     function handleCopyFormSuccess(data, textStatus, jqXHR){
