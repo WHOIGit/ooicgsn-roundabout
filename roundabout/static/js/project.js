@@ -32,39 +32,10 @@ $(document).ready(function() {
     var nodeID = navtreePrefix + '_' + $('.card-header').attr('data-object-id');
     console.log(nodeID);
     $(navTree).on('ready.jstree', function (event, data) {
-      data.instance._open_to(nodeID);
-      data.instance.select_node(nodeID);
+        data.instance._open_to(nodeID);
+        data.instance.select_node(nodeID);
     });
 
-
-    /*
-    $.ajax({
-        url: navURL,
-        success: function (data) {
-
-            $(navTree).html(data);
-            $(navTree).jstree();
-            $(navTree).on('open_node.jstree', function (event, data) {
-                console.log("node =" + data.node.id);
-                openNodes.push(data.node.id);
-                console.log(openNodes);
-            });
-            $(navTree).on('close_node.jstree', function (event, data) {
-                console.log("node =" + data.node.id);
-                var index = openNodes.indexOf(data.node.id);
-                if (index > -1) {
-                  openNodes.splice(index, 1);
-                }
-                console.log(openNodes);
-            });
-            var nodeID = navtreePrefix + '_' + $('.card-header').attr('data-object-id');
-            console.log(nodeID);
-            $(navTree).jstree(true).select_node(nodeID);
-
-
-        }
-    });
-    */
     $(navTree).on('click','a',function(){
         var url = $(this).attr("data-detail-url");
         // Get the li ID for the jsTree node
@@ -176,32 +147,6 @@ $(document).ready(function(){
         })
     })
 
-    $('#content-block').on('submit', 'form.deployment-form', function (event) {
-        event.preventDefault()
-        var formData = $(this).serialize()
-        var thisURL = $(this).attr('data-url') || window.location.href
-        $.ajax({
-            method: "POST",
-            url: thisURL,
-            data: formData,
-            success: handleDeploymentFormSuccess,
-            error: handleFormError,
-        })
-    })
-
-    $('#content-block').on('submit', 'form.assembly-part-form', function (event) {
-        event.preventDefault()
-        var formData = $(this).serialize()
-        var thisURL = $(this).attr('data-url') || window.location.href
-        $.ajax({
-            method: "POST",
-            url: thisURL,
-            data: formData,
-            success: handleAssemblyPartFormSuccess,
-            error: handleFormError,
-        })
-    })
-
     function handleFormSuccess(data, textStatus, jqXHR){
         console.log(data)
         console.log(textStatus)
@@ -221,10 +166,13 @@ $(document).ready(function(){
         });
 
         var nodeID = objectTypePrefix + '_' + data.object_id ;
+        console.log(nodeID)
         $(navTree).jstree(true).settings.core.data.url = navURL;
         $(navTree).jstree(true).refresh();
         $(navTree).on('refresh.jstree', function (event, data) {
-          data.instance._open_to(nodeID);
+            data.instance.deselect_all();
+            data.instance._open_to(nodeID);
+            data.instance.select_node(nodeID);
         });
 
 
@@ -307,47 +255,6 @@ $(document).ready(function(){
                 $(navTree).jstree();
                 $(navTree).jstree(true).select_node(nodeID);
                 console.log(nodeID);
-            }
-        });
-    }
-
-    function handleAssemblyPartFormSuccess(data, textStatus, jqXHR){
-        console.log(data)
-        console.log(textStatus)
-        console.log(jqXHR)
-        $.ajax({
-            url: '/assemblies/ajax/assemblypart/detail/' + data.object_id + '/',
-            success: function (data) {
-              $("#detail-view").html(data);
-            }
-        });
-        console.log(data.object_id);
-        console.log(navtreePrefix);
-        var nodeID = 'assembly_parts' + '_' + data.object_id ;
-        $.ajax({
-            url: navURL,
-            success: function (data) {
-                $(navTree).jstree(true).destroy();
-                $(navTree).html(data);
-                $(navTree).jstree();
-                $(navTree).jstree(true).select_node(nodeID);
-                $.each(openNodes, function(key, value) {
-                    $(navTree).jstree(true).open_node(value);
-                });
-                console.log(openNodes);
-                $(navTree).on('open_node.jstree', function (event, data) {
-                    console.log("node =" + data.node.id);
-                    openNodes.push(data.node.id);
-                    console.log(openNodes);
-                });
-                $(navTree).on('close_node.jstree', function (event, data) {
-                    console.log("node =" + data.node.id);
-                    var index = openNodes.indexOf(data.node.id);
-                    if (index > -1) {
-                      openNodes.splice(index, 1);
-                    }
-                    console.log(openNodes);
-                });
             }
         });
     }
@@ -440,11 +347,11 @@ $(document).ready(function() {
               $("#detail-view").html(data);
               $(navTree).jstree(true).settings.core.data.url = navURL;
               $(navTree).jstree(true).refresh();
-              $(navTree).on('refresh.jstree', function() {
-                  var parentID = $(navTree).jstree(true).get_parent(nodeID);
-                  $(navTree).jstree(true).select_node(nodeID);
-                  $(navTree).jstree(true).open_node(parentID);
-               });
+              $(navTree).on('refresh.jstree', function (event, data) {
+                  data.instance.deselect_all();
+                  data.instance._open_to(nodeID);
+                  data.instance.select_node(nodeID);
+              });
 
             }
         });
