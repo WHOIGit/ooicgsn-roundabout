@@ -25,7 +25,7 @@
         <h3>{{ navtree_title }} Search Results</h3>
       </div>
       <div class="card-body">
-        <p>The following items match your search.</p>
+        <p><b>{{ search_count }}</b> items match your search!</p>
         <ul class="list-group list-group-flush">
           {% if search_items %}
 
@@ -62,8 +62,6 @@
               {% endfor %}
 
             {% endif %}
-          {% else %}
-            <p>NONE</p>
           {% endif %}
         </ul>
 

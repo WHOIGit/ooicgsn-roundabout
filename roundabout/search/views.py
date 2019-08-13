@@ -20,78 +20,9 @@ from roundabout.admintools.models import Printer
 from roundabout.assemblies.models import AssemblyPart
 from roundabout.builds.models import Build, BuildAction
 
-# Mixins
-# ------------------------------------------------------------------------------
-
-class InventoryNavTreeMixin(LoginRequiredMixin, object):
-
-    def get_context_data(self, **kwargs):
-        context = super(InventoryNavTreeMixin, self).get_context_data(**kwargs)
-        context.update({
-            'locations': Location.objects.exclude(root_type='Retired')
-                        .prefetch_related('builds__assembly__assembly_parts__part__part_type')
-                        .prefetch_related('inventory__part__part_type').prefetch_related('builds__inventory').prefetch_related('builds__deployments')
-        })
-        if 'current_location' in self.kwargs:
-            context['current_location'] = self.kwargs['current_location']
-        else:
-            context['current_location'] = 2
-
-        return context
 
 
-
-
-# Funtion to filter navtree by Part Type
-def filter_inventory_navtree(request):
-    part_types = request.GET.getlist('part_types[]')
-    part_types = list(map(int, part_types))
-    locations = Location.objects.prefetch_related('deployments__final_location__mooring_parts__part__part_type') \
-                                .prefetch_related('inventory__part__part_type') \
-                                .prefetch_related('deployments__inventory')
-    return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations, 'part_types': part_types})
-
-
-
-class Searchbar(InventoryNavTreeMixin, TemplateView):
-    # Display a Inventory List page filtered by serial number.
-    #model = Inventory
-    template_name = 'search/search_list.html'
-    #context_object_name = 'search_items'
-    #paginate_by = 20
-
-    def get_context_data(self, **kwargs):
-        context = super(Searchbar, self).get_context_data(**kwargs)
-
-        # Check if search query exists, if so add it to context for pagination
-        keywords = self.request.GET.get('q')
-        print('keywords:',keywords)
-
-        if keywords:
-            search = 'q=' + keywords
-            qs_inv = Inventory.objects.filter( Q(serial_number__icontains=keywords)|Q(part__name__icontains=keywords) )
-            qs_part = Part.objects.filter( Q(part_number__icontains=keywords)|Q(name__icontains=keywords) )
-        else:
-            search = None
-            qs_inv = Inventory.objects.none()
-            qs_part = Part.objects.none()
-
-        print(qs_inv,qs_part)
-
-        context.update({
-            'node_type': 'inventory',
-            'navtree_title': 'Inventory',
-            'navtree_url': reverse('inventory:ajax_load_inventory_navtree'),
-            'search': search,
-            'inventory': qs_inv,
-            'parts':qs_part,
-        })
-        return context
-
-
-class SearchList(InventoryNavTreeMixin, ListView):
-    # Display a Inventory List page filtered by serial number.
-    #model = Inventory
+class SearchList(ListView):
     template_name = 'search/search_list.html'
     context_object_name = 'search_items'
     paginate_by = 20
@@ -109,13 +40,24 @@ class SearchList(InventoryNavTreeMixin, ListView):
             search = None
         context['search'] = search
 
+        count=0
+        if model_select == 'inventory':
+            if keywords:
+                query = Q(serial_number__icontains=keywords)|Q(part__name__icontains=keywords)
+                count = Inventory.objects.filter(query).count()
+        elif model_select == 'parts':
+            if keywords:
+                query = Q(part_number__icontains=keywords)|Q(name__icontains=keywords)
+                count = Part.objects.filter(query).count()
+        context['search_count'] = count
+
         if model_select == 'inventory':
             context.update({'node_type': 'inventory',
                             'navtree_title': 'Inventory',
                             'navtree_url':reverse('inventory:ajax_load_inventory_navtree')})
         elif model_select == 'parts':
             context.update({'node_type': 'parts',
-                            'navtree_title': 'Parts',
+                            'navtree_title': 'Part Templates',
                             'navtree_url':reverse('parts:ajax_load_parts_navtree')})
         return context
 
@@ -135,3 +77,4 @@ class SearchList(InventoryNavTreeMixin, ListView):
                 query = Q(part_number__icontains=keywords)|Q(name__icontains=keywords)
                 qs = Part.objects.filter(query)
             return qs
+
