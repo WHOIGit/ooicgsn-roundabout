@@ -1,4 +1,5 @@
 from django.urls import path
+from django.urls import path
 
 from . import views
 
@@ -17,6 +18,7 @@ urlpatterns = [
     path('subassembly_ex/add/<int:pk>/<int:parent_pk>/<int:current_location>/', view=views.InventorySubassemblyActionView.as_view(), name='inventory_subassembly_existing_add'),
     path('delete/<int:pk>/', view=views.InventoryDeleteView.as_view(), name='inventory_delete'),
     path('search_serial/', view=views.InventorySearchSerialList.as_view(), name='inventory_search_serial'),
+    path('searchbar/', view=views.Searchbar.as_view(), name='searchbar'),
     path('deployment/<int:pk>/<int:current_location>/', view=views.InventoryDeploymentDetailView.as_view(), name='inventory_deployment_detail'),
     # AJAX paths
     path('ajax/load-navtree/', views.load_inventory_navtree, name='ajax_load_inventory_navtree'),

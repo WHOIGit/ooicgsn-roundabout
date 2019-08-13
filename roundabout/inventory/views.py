@@ -1824,6 +1824,39 @@ class InventoryDeleteView(DeleteView):
     model = Inventory
     success_url = reverse_lazy('inventory:inventory_home')
 
+class Searchbar(InventoryNavTreeMixin, TemplateView):
+    # Display a Inventory List page filtered by serial number.
+    #model = Inventory
+    template_name = 'inventory/search_list.html'
+    #context_object_name = 'search_items'
+    #paginate_by = 20
+
+    def get_context_data(self, **kwargs):
+        context = super(Searchbar, self).get_context_data(**kwargs)
+
+        # Check if search query exists, if so add it to context for pagination
+        keywords = self.request.GET.get('q2')
+        print('keywords:',keywords)
+
+        if keywords:
+            search = 'q2=' + keywords
+            qs_inv = Inventory.objects.filter(serial_number__icontains=keywords)
+            qs_part = Part.objects.filter(part_number__icontains=keywords)
+        else:
+            search = None
+            qs_inv = Inventory.objects.none()
+            qs_part = Part.objects.none()
+
+        print(qs_inv,qs_part)
+
+        context.update({
+            'part_types': PartType.objects.all(),
+            'node_type': 'inventory',
+            'search': search,
+            'inventory': qs_inv,
+            'parts':qs_part,
+        })
+        return context
 
 class InventorySearchSerialList(InventoryNavTreeMixin, ListView):
     # Display a Inventory List page filtered by serial number.
@@ -1854,7 +1887,8 @@ class InventorySearchSerialList(InventoryNavTreeMixin, ListView):
         qs = Inventory.objects.none()
         keywords = self.request.GET.get('q')
         if keywords:
-            qs = Inventory.objects.filter(serial_number__icontains=keywords)
+            query = Q(serial_number__icontains=keywords)|Q(part__name__icontains=keywords)
+            qs = Inventory.objects.filter(query)
         return qs
 
 
