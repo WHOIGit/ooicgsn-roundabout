@@ -1,0 +1,17 @@
+
+      <div id="searchform">
+          <form action="{% url 'search:searchbar' %}" method="get" accept-charset="utf-8" class="form-inline">
+
+            <div class="input-group mb-3">
+              <input type="text" class="form-control" name="q" type="text" placeholder="Search Serial and Name" id="search-query">
+              <div class="input-group-append">
+                <button class="btn btn-outline-primary" type="submit"><i class="fa fa-search"></i> Search</button>
+                <select class="btn btn-outline-primary" name="m">
+                  <option value="inventory" selected>Inventory</option>
+                  <option value="parts">Parts</option>
+                </select>
+              </div>
+            </div>
+
+          </form>
+      </div>

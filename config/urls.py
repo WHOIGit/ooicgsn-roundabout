@@ -31,6 +31,8 @@ urlpatterns = [
     path('userdefinedfields/', include('roundabout.userdefinedfields.urls', namespace='userdefinedfields')),
     path('assemblies/', include('roundabout.assemblies.urls', namespace='assemblies')),
     path('builds/', include('roundabout.builds.urls', namespace='builds')),
+    #path('reports/', include('roundabout.reports.urls', namespace='reports')),
+    path('search/', include('roundabout.search.urls', namespace='search')),
     #Summernote WYSIWYG
     path('summernote/', include('django_summernote.urls')),
 ] + static(

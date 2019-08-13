@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% load mptt_tags %}
+{% load crispy_forms_tags %}
+{% block title %}Search{% endblock %}
+{% block content %}
+
+
+<!-- NAVTREE -->
+<div class="row">
+  <div class="col-md-5 navtree-container">
+    <h2>{{ navtree_title }}</h2>
+    <div id="jstree-navtree" data-navtree-url="{{ navtree_url }}"
+      data-node-type="{{ node_type }}">
+      <img src="{% static 'images/loading-icon.gif' %}" class="loading-icon"/>
+      <!-- AJAX navtree inserted here! -->
+    </div>
+  </div>
+
+
+  <!-- LISTVIEW -->
+  <div class="col-md-7 inventory-detail">
+    <div class="card" id="detail-view">
+      <div class="card-header">
+        <h3>{{ navtree_title }} Search Results</h3>
+      </div>
+      <div class="card-body">
+        <p>The following items match your search.</p>
+        <ul class="list-group list-group-flush">
+          {% if search_items %}
+
+            {% if node_type == 'inventory' %}
+              {% for inv in search_items %}
+                <li class="list-group-item">
+                  <div >
+                    <a href="{% url 'inventory:inventory_detail' inv.id %}">
+                    {{ inv.part.name }} - {{ inv.serial_number }}
+                    </a>
+                    <br>
+                    Current Location: {{ inv.location }}
+                    <a href="{% url 'inventory:inventory_detail' inv.id %}"
+                      class="btn btn-primary btn-sm float-right"
+                      role="button">View</a>
+                  </div>
+                </li>
+              {% endfor %}
+
+            {% elif node_type == 'parts' %}
+              {% for part in search_items %}
+                <li class="list-group-item">
+                  <div >
+                    <a href="{% url 'parts:parts_detail' part.id %}">
+                    {{ part.name }} - {{ part.part_number }}
+                    </a>
+                    <br>
+                    Part Type: {{ part.part_type }}
+                    <a href="{% url 'parts:parts_detail' part.id %}"
+                      class="btn btn-primary btn-sm float-right"
+                      role="button">View</a>
+                  </div>
+                </li>
+              {% endfor %}
+
+            {% endif %}
+          {% else %}
+            <p>NONE</p>
+          {% endif %}
+        </ul>
+
+        <!-- Bootstrap Pagination -->
+        {% if is_paginated %}
+          <hr>
+          <nav aria-label="search-pagination">
+            <ul class="pagination justify-content-center pagination-sm">
+              {% if page_obj.has_previous %}
+                <!-- Append the searched query to the URL, so that on a search results page,
+                  the pagination don't revert to listing all the listview items. -->
+                <li class="page-item">
+                  <a class="page-link" href="{% url 'search:searchbar' %}?{{search}}&page={{ page_obj.previous_page_number }}" tabindex="-1">Previous</a>
+                </li>
+              {% else %}
+                <li class="page-item disabled">
+                  <a class="page-link" href="#" tabindex="-1">Previous</a>
+                </li>
+              {% endif %}
+              {% for object in page_obj.paginator.page_range %}
+                <li class="page-item"><a class="page-link" href="{% url 'search:searchbar' %}?{{search}}&page={{ forloop.counter }}">{{ forloop.counter }}</a></li>
+              {% endfor %}
+              {% if page_obj.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="{% url 'search:searchbar' %}?{{search}}&page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+              {% else %}
+                <li class="page-item disabled">
+                  <a class="page-link" href="#">Next</a>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
+{% block javascript %}
+{% endblock javascript %}
