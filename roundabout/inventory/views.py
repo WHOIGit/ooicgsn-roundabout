@@ -63,6 +63,14 @@ def load_inventory_navtree(request):
                                                                    'build_pk': build_pk, })
 
 
+# Function to filter navtree by Part Type
+def filter_inventory_navtree(request):
+    part_types = request.GET.getlist('part_types[]')
+    part_types = list(map(int, part_types))
+    locations = Location.objects.exclude(root_type='Retired').prefetch_related('inventory__part__part_type')
+    return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations, 'part_types': part_types})
+
+
 def make_tree_copy(root_part, new_location, deployment_snapshot, parent=None ):
     # Makes a copy of the tree starting at "root_part", move to new Location, reparenting it to "parent"
     if root_part.part.friendly_name:
@@ -338,16 +346,6 @@ def load_destination_subassemblies_by_serialnumber(request):
                                                                       'parent': parent,
                                                                       'assembly_part': assembly_part,
                                                                       'location': location, })
-
-
-# Funtion to filter navtree by Part Type
-def filter_inventory_navtree(request):
-    part_types = request.GET.getlist('part_types[]')
-    part_types = list(map(int, part_types))
-    locations = Location.objects.prefetch_related('deployments__final_location__mooring_parts__part__part_type') \
-                                .prefetch_related('inventory__part__part_type') \
-                                .prefetch_related('deployments__inventory')
-    return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations, 'part_types': part_types})
 
 
 # Inventory CBV Views for CRUD operations and menu Actions
