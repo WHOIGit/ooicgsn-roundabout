@@ -128,7 +128,7 @@ def print_code_zebraprinter(request, **kwargs):
                     if number == 3:
                         static_text.set('value', item.part.friendly_name_display())
                     else:
-                        static_text.set('value', item.serial_number)
+                        static_text.set('value', item.serial_number.upper())
 
                 content = ET.tostring(root, encoding='utf8').decode('utf8')
 
@@ -148,7 +148,7 @@ def print_code_zebraprinter(request, **kwargs):
                             ^PW400 \
                             ^FO20,20^BY1 \
                             ^BAN,150,Y,N,N \
-                            ^FD{}^FS^XZ'.format(item.serial_number)
+                            ^FD{}^FS^XZ'.format(item.serial_number.upper())
 
         content = content.encode()
 
