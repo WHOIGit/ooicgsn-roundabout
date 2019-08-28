@@ -1,4 +1,6 @@
 from django import template
+from dateutil import parser
+
 from roundabout.inventory.models import Inventory, Action, Deployment
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part
@@ -11,6 +13,16 @@ register = template.Library()
 @register.simple_tag
 def get_udf_field_value_history(field, item):
     fieldvalues = FieldValue.objects.filter(field=field).filter(inventory=item).order_by('-created_at')
+
+    for value in fieldvalues:
+        #Check if UDF field is a DateField, if so format date for display
+        if value.field.field_type == 'DateField':
+            try:
+                dt = parser.parse(value.field_value)
+                value.field_value = dt.strftime("%m-%d-%Y %H:%M:%S")
+            except:
+                pass
+
     return fieldvalues
 
 

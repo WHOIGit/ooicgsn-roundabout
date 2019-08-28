@@ -2,6 +2,7 @@ import json
 import socket
 import os
 import xml.etree.ElementTree as ET
+from dateutil import parser
 
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse, reverse_lazy
@@ -364,6 +365,15 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         # Get this item's custom fields with most recent Values
         if self.object.fieldvalues.exists():
             custom_fields = self.object.fieldvalues.filter(is_current=True)
+
+            for cf in custom_fields:
+                #Check if UDF field is a DateField, if so format date for display
+                if cf.field.field_type == 'DateField':
+                    try:
+                        dt = parser.parse(cf.field_value)
+                        cf.field_value = dt.strftime("%m-%d-%Y %H:%M:%S")
+                    except:
+                        pass
         else:
             custom_fields = None
 
@@ -520,20 +530,34 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
                         if currentvalue.field_value != str(value) and currentvalue.field_value != value:
                             currentvalue.is_current = False
                             currentvalue.save()
-                            # create new value object
+                            # Create new value object
                             new_fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=value,
                                                                         inventory=self.object, is_current=True, user=self.request.user)
-                            # create action record for history
+                            # Create action record for history
+                            # Check if UDF field is a DateField, if so format date for display
+                            if new_fieldvalue.field.field_type == 'DateField':
+                                try:
+                                    value = value.strftime("%m-%d-%Y %H:%M:%S")
+                                except:
+                                    pass
+
                             self.object.detail = 'Change field value for "%s" to %s' % (currentvalue.field, value)
                             self.object.save()
                             action_record = Action.objects.create(action_type='fieldchange', detail=self.object.detail, location=self.object.location,
                                                                   user=self.request.user, inventory=self.object)
                     else:
                         if value:
-                            # create new value object
+                            # Create new value object
                             fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=value,
                                                                     inventory=self.object, is_current=True, user=self.request.user)
-                            # create action record for history
+                            # Create action record for history
+                            # Check if UDF field is a DateField, if so format date for display
+                            if fieldvalue.field.field_type == 'DateField':
+                                try:
+                                    value = value.strftime("%m-%d-%Y %H:%M:%S")
+                                except:
+                                    pass
+
                             self.object.detail = 'Add initial field value for "%s" to %s' % (fieldvalue.field, value)
                             self.object.save()
                             action_record = Action.objects.create(action_type='fieldchange', detail=self.object.detail, location=self.object.location,
