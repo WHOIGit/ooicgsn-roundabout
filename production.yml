@@ -54,6 +54,8 @@ services:
     container_name: nginx
     depends_on:
       - django
+      - alfresco
+      - alfresco-share
     volumes:
       - production_nginx:/var/log/nginx
       - ./.ssl/whoi_certs:/etc/ssl/whoi_certs/ # bind a local directory with the WHOI SSL certs
