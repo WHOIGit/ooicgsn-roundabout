@@ -74,6 +74,7 @@ services:
   alfresco:
     # image: alfresco/alfresco-content-repository-community:6.0.5-ea
     build: ./alfresco
+    container_name: alfresco
     environment:
         JAVA_OPTS : "
             -Ddb.driver=org.postgresql.Driver
@@ -101,12 +102,14 @@ services:
   alfresco-share:
     # image: alfresco/alfresco-share:6.0.a
     build: ./share
+    container_name: alfresco-share
     environment:
       - REPO_HOST=alfresco
       - REPO_PORT=8080
 
   alfresco-postgres:
     image: postgres:10.1
+    container_name: alfresco-postgres
     environment:
       - POSTGRES_PASSWORD=alfresco
       - POSTGRES_USER=alfresco
@@ -118,6 +121,7 @@ services:
 
   alfresco-solr6:
     image: alfresco/alfresco-search-services:1.1.1
+    container_name: alfresco-solr6
     environment:
         #Solr needs to know how to register itself with Alfresco
         - SOLR_ALFRESCO_HOST=alfresco
