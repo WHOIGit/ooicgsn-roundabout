@@ -92,7 +92,7 @@ services:
       - alfresco-repo-data:/usr/local/tomcat/alf_data
     ports:
       - 21:2121   #FTP port
-      - 25:2525   #SMTP port
+      - 2525:2525   #SMTP port
       - 143:1143  #IMAP port
 #     - 445:1145      #CIFS
 #     - 137:1137/udp  #CIFS
@@ -117,7 +117,7 @@ services:
     volumes:
        - alfresco-postgres-data:/var/lib/postgresql/data
     ports:
-        - 5432:5432
+        - 5433:5432
 
   alfresco-solr6:
     image: alfresco/alfresco-search-services:1.1.1
