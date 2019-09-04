@@ -122,7 +122,7 @@ services:
         - 5433:5432
 
   alfresco-solr6:
-    image: alfresco/alfresco-search-services:1.1.1
+    image: alfresco/alfresco-search-services:1.2.0
     container_name: alfresco-solr6
     environment:
         #Solr needs to know how to register itself with Alfresco
