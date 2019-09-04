@@ -73,9 +73,9 @@ services:
             -Ddeployment.method=DOCKER_COMPOSE
             "
     volumes:
-      #- alfresco-repo-data:/usr/local/tomcat/alf_data
-      - ./volumes/data/alf-repo-data:/usr/local/tomcat/alf_data
-      - ./volumes/logs/alfresco:/usr/local/tomcat/logs
+      - alfresco-repo-data:/usr/local/tomcat/alf_data
+      #- ./volumes/data/alf-repo-data:/usr/local/tomcat/alf_data
+      #- ./volumes/logs/alfresco:/usr/local/tomcat/logs
       - ./volumes/config/alfresco-global.properties:/usr/local/tomcat/shared/classes/alfresco-global.properties
     ports:
       - 21:2121   #FTP port
