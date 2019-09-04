@@ -138,6 +138,26 @@ services:
     volumes:
       - alfresco-solr-data:/opt/alfresco-search-services/data
 
+  nginx:
+    build:
+      context: .
+      dockerfile: ./compose/production/nginx/Dockerfile
+    image: roundabout_production_nginx
+    container_name: nginx
+    depends_on:
+      - django
+      - alfresco
+      - alfresco-share
+    volumes:
+      - production_nginx:/var/log/nginx
+      - ./.ssl/whoi_certs:/etc/ssl/whoi_certs/ # bind a local directory with the WHOI SSL certs
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+    restart: unless-stopped
+    networks:
+      - roundabout-network
+
 networks:
   roundabout-network:
     name: roundabout-network
