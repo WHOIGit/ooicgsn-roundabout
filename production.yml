@@ -77,6 +77,8 @@ services:
     # image: alfresco/alfresco-content-repository-community:6.0.5-ea
     build: ./alfresco
     container_name: alfresco
+    depends_on:
+            - alfresco-postgres
     environment:
         JAVA_OPTS : "
             -Ddb.driver=org.postgresql.Driver
