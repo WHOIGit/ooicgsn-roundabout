@@ -67,7 +67,7 @@ THIRD_PARTY_APPS = [
     'crispy_forms',
     'allauth',
     'allauth.account',
-    'allauth.socialaccount',
+    #'allauth.socialaccount',
     'rest_framework',
     'mptt', # Tree structures in database
     'django_summernote', #WYSIWYG
