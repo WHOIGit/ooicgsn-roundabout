@@ -99,8 +99,8 @@ services:
       - roundabout-network
     volumes:
       #- ./volumes/logs/share:/usr/local/tomcat/logs
-      - ./volumes/config/ext-share-config-custom.xml:/usr/local/tomcat/shared/classes/alfresco/web-extension/ext-share-config-custom.xml
-      
+      #- ./volumes/config/ext-share-config-custom.xml:/usr/local/tomcat/shared/classes/alfresco/web-extension/ext-share-config-custom.xml
+
   alfresco-postgres:
     image: postgres:10.1
     container_name: alfresco-postgres
