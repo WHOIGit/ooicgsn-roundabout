@@ -15,7 +15,24 @@ urlpatterns = [
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     # User management
-    
+    path(
+        "users/",
+        include("roundabout.users.urls", namespace="users"),
+    ),
+    path("accounts/", include("allauth.urls")),
+    # Your stuff: custom urls includes go here
+    # Your stuff: custom urls includes go here
+    path('locations/', include('roundabout.locations.urls', namespace='locations')),
+    path('parts/', include('roundabout.parts.urls', namespace='parts')),
+    path('moorings/', include('roundabout.moorings.urls', namespace='moorings')),
+    path('inventory/', include('roundabout.inventory.urls', namespace='inventory')),
+    path('deployments/', include('roundabout.inventory.urls_deployment', namespace='deployments')),
+    path('admintools/', include('roundabout.admintools.urls', namespace='admintools')),
+    path('userdefinedfields/', include('roundabout.userdefinedfields.urls', namespace='userdefinedfields')),
+    path('assemblies/', include('roundabout.assemblies.urls', namespace='assemblies')),
+    path('builds/', include('roundabout.builds.urls', namespace='builds')),
+    #Summernote WYSIWYG
+    path('summernote/', include('django_summernote.urls')),
 ] + static(
     settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
 )
