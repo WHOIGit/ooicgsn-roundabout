@@ -97,7 +97,7 @@ services:
       - REPO_PORT=8080
     networks:
       - roundabout-network
-    volumes:
+    #volumes:
       #- ./volumes/logs/share:/usr/local/tomcat/logs
       #- ./volumes/config/ext-share-config-custom.xml:/usr/local/tomcat/shared/classes/alfresco/web-extension/ext-share-config-custom.xml
 
