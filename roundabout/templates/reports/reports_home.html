@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% load mptt_tags %}
+{% load crispy_forms_tags %}
+{% block title %}Search{% endblock %}
+{% block content %}
+
+
+<!-- NAVTREE -->
+<div class="row">
+  <div class="col-md-5 navtree-container">
+    <h2>{{ navtree_title }}</h2>
+    <div id="jstree-navtree" data-navtree-url="{{ navtree_url }}"
+      data-node-type="{{ node_type }}">
+      <img src="{% static 'images/loading-icon.gif' %}" class="loading-icon"/>
+      <!-- AJAX navtree inserted here! -->
+    </div>
+  </div>
+
+
+  <!-- Details View -->
+  <div class="col-md-7 inventory-detail">
+    <div class="card" id="detail-view">
+      <div class="card-header">
+        <h3>Your Report</h3>
+      </div>
+
+      <div class="card-body">
+        <p>report body</p>
+
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
+{% block javascript %}
+{% endblock javascript %}

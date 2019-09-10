@@ -21,7 +21,6 @@ urlpatterns = [
     ),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
-    # Your stuff: custom urls includes go here
     path('locations/', include('roundabout.locations.urls', namespace='locations')),
     path('parts/', include('roundabout.parts.urls', namespace='parts')),
     path('moorings/', include('roundabout.moorings.urls', namespace='moorings')),
@@ -31,7 +30,7 @@ urlpatterns = [
     path('userdefinedfields/', include('roundabout.userdefinedfields.urls', namespace='userdefinedfields')),
     path('assemblies/', include('roundabout.assemblies.urls', namespace='assemblies')),
     path('builds/', include('roundabout.builds.urls', namespace='builds')),
-    #path('reports/', include('roundabout.reports.urls', namespace='reports')),
+    path('reports/', include('roundabout.reports.urls', namespace='reports')),
     path('search/', include('roundabout.search.urls', namespace='search')),
     #Summernote WYSIWYG
     path('summernote/', include('django_summernote.urls')),
