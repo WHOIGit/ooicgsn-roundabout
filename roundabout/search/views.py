@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse, reverse_lazy
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, QueryDict
 from django.db.models import Q
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
