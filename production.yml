@@ -55,7 +55,9 @@ services:
   ### Alfreso Community Edition deployment containers: alfresco, alfresco-share, alfresco-postgres, alfresco-solr6
   alfresco:
     # image: alfresco/alfresco-content-repository-community:6.0.5-ea
-    build: ./alfresco
+    build:
+      context: .
+      dockerfile: ./compose/production/alfresco/Dockerfile
     container_name: alfresco
     depends_on:
             - alfresco-postgres
@@ -76,7 +78,7 @@ services:
       - alfresco-repo-data:/usr/local/tomcat/alf_data
       #- ./volumes/data/alf-repo-data:/usr/local/tomcat/alf_data
       #- ./volumes/logs/alfresco:/usr/local/tomcat/logs
-      - ./volumes/config/alfresco-global.properties:/usr/local/tomcat/shared/classes/alfresco-global.properties
+      - ./compose/production/alfresco/alfresco-global.properties:/usr/local/tomcat/shared/classes/alfresco-global.properties
     ports:
       - 21:2121   #FTP port
       - 2525:2525   #SMTP port
@@ -90,7 +92,9 @@ services:
 
   alfresco-share:
     # image: alfresco/alfresco-share:6.0.a
-    build: ./share
+    build:
+      context: .
+      dockerfile: ./compose/production/share/Dockerfile
     container_name: alfresco-share
     environment:
       - REPO_HOST=alfresco
@@ -99,7 +103,7 @@ services:
       - roundabout-network
     volumes:
       #- ./volumes/logs/share:/usr/local/tomcat/logs
-      - ./volumes/config/ext-share-config-custom.xml:/usr/local/tomcat/shared/classes/alfresco/web-extension/ext-share-config-custom.xml
+      - ./compose/production/share/ext-share-config-custom.xml:/usr/local/tomcat/shared/classes/alfresco/web-extension/ext-share-config-custom.xml
 
   alfresco-postgres:
     image: postgres:10.1
