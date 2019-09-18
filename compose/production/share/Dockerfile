@@ -14,5 +14,5 @@ RUN mkdir -p $TOMCAT_DIR/amps_share
 RUN java -jar $TOMCAT_DIR/alfresco-mmt/alfresco-mmt*.jar install \
     $TOMCAT_DIR/amps_share $TOMCAT_DIR/webapps/share -directory -nobackup -force
 
-COPY ./share-config-custom.xml \
+COPY ./compose/production/share/share-config-custom.xml \
     $TOMCAT_DIR/shared/classes/alfresco/web-extension/share-config-custom.xml
