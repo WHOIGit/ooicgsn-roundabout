@@ -20,61 +20,67 @@ from roundabout.admintools.models import Printer
 from roundabout.assemblies.models import AssemblyPart
 from roundabout.builds.models import Build, BuildAction
 
-
-
-class SearchList(ListView):
+class BasicSearch(ListView):
     template_name = 'search/search_list.html'
-    context_object_name = 'search_items'
+    context_object_name = 'search_items_qs'
     paginate_by = 20
 
     def get_context_data(self, **kwargs):
-        context = super(SearchList, self).get_context_data(**kwargs)
+        context = super(BasicSearch, self).get_context_data(**kwargs)
 
         # Check if search query exists, if so add it to context for pagination
-        keywords = self.request.GET.get('q')
-        model_select = self.request.GET.get('m')
+        query = self.request.GET.get('q')
+        context['checked'] = {}
+        for gname in ['p','i','n','sn']:
+            context['checked'][gname] = 'checked' if self.request.GET.get(gname)=='✓' else ''
+        print(context['checked'])
 
-        if keywords:
-            search = 'q={}&m={}'.format(keywords,model_select)
+        if query:
+            query_str = 'q={}'.format(query)
         else:
-            search = None
-        context['search'] = search
+            query_str = None
+        context['query'] = query
+        context['query_slug'] = query_str
 
-        count=0
-        if model_select == 'inventory':
-            if keywords:
-                query = Q(serial_number__icontains=keywords)|Q(part__name__icontains=keywords)
-                count = Inventory.objects.filter(query).count()
-        elif model_select == 'parts':
-            if keywords:
-                query = Q(part_number__icontains=keywords)|Q(name__icontains=keywords)
-                count = Part.objects.filter(query).count()
-        context['search_count'] = count
+        context['search_items'] = []
+        for q in context['search_items_qs']:
+            item = {}
+            item['id'] = q.id
+            item['type'] = q.__class__.__name__
+            if isinstance(q,Inventory):
+                item['href'] = reverse('inventory:inventory_detail',args=[q.id])
+                item['entry'] = '{} - {}'.format(q.serial_number,q.part.name)
+                item['subline'] = 'Inventory Location: {}'.format(q.location)
+            elif isinstance(q,Part):
+                item['href'] = reverse('parts:parts_detail',args=[q.id])
+                item['entry'] = '{} - {}'.format(q.part_number,q.name)
+                item['subline'] = 'Part Type: {}'.format(q.part_type)
 
-        if model_select == 'inventory':
-            context.update({'node_type': 'inventory',
-                            'navtree_title': 'Inventory',
-                            'navtree_url':reverse('inventory:ajax_load_inventory_navtree')})
-        elif model_select == 'parts':
-            context.update({'node_type': 'parts',
-                            'navtree_title': 'Part Templates',
-                            'navtree_url':reverse('parts:ajax_load_parts_navtree')})
+            context['search_items'].append(item)
+        context['search_count'] = len(context['search_items_qs'])
         return context
 
     def get_queryset(self):
         keywords = self.request.GET.get('q')
-        model_select = self.request.GET.get('m')
+        parts_bool = self.request.GET.get('p') == '✓'
+        inventory_bool = self.request.GET.get('i') == '✓'
+        name_bool = self.request.GET.get('n') == '✓'
+        sn_bool = self.request.GET.get('sn') == '✓'
 
-        if model_select == 'inventory':
-            qs = Inventory.objects.none()
-            if keywords:
-                query = Q(serial_number__icontains=keywords)|Q(part__name__icontains=keywords)
-                qs = Inventory.objects.filter(query)
-            return qs
-        elif model_select == 'parts':
-            qs = Part.objects.none()
-            if keywords:
-                query = Q(part_number__icontains=keywords)|Q(name__icontains=keywords)
-                qs = Part.objects.filter(query)
-            return qs
+        qs_inv = Inventory.objects.none()
+        qs_prt = Part.objects.none()
+        if keywords and any([name_bool,sn_bool]):
+            if inventory_bool:
+                if sn_bool and name_bool: query_inv = Q(serial_number__icontains=keywords)|Q(part__name__icontains=keywords)
+                elif sn_bool:             query_inv = Q(serial_number__icontains=keywords)
+                elif name_bool:           query_inv = Q(part__name__icontains=keywords)
+                qs_inv = Inventory.objects.filter(query_inv).order_by('serial_number')
+
+            if parts_bool:
+                if sn_bool and name_bool: query_prt = Q(part_number__icontains=keywords)|Q(name__icontains=keywords)
+                elif sn_bool:             query_prt = Q(part_number__icontains=keywords)
+                elif name_bool:           query_prt = Q(name__icontains=keywords)
+                qs_prt = Part.objects.filter(query_prt).order_by('part_number')
+
+        return list(qs_inv) + list(qs_prt)
 

@@ -6,64 +6,83 @@
 {% block content %}
 
 
-<!-- NAVTREE -->
 <div class="row">
-  <div class="col-md-5 navtree-container">
-    <h2>{{ navtree_title }}</h2>
-    <div id="jstree-navtree" data-navtree-url="{{ navtree_url }}"
-      data-node-type="{{ node_type }}">
-      <img src="{% static 'images/loading-icon.gif' %}" class="loading-icon"/>
-      <!-- AJAX navtree inserted here! -->
-    </div>
+
+  <!-- SEARCH CONTROLS -->
+  <div class="col-md-5 search-control">
+    <h2>Search Controls</h2>
+    <form action="{% url 'search:main' %}" method="get" accept-charset="utf-8" class="form">
+
+      <input type="text" class="form-control" name="q" placeholder="Search Term Here!" id="search-query" value="{{ query }}">
+      <br>
+
+      <div class="card">
+        <div class="card-header">
+          <h4>Where?</h4>
+        </div>
+        <div>
+          <p></p>
+          <ul>
+            <li><input class="form-check-input" type="checkbox" value="✓" id="parts-bool" name="p" {{ checked.p }}>
+              <label class="form-check-label" for="parts-bool">Parts</label></li>
+            <li><input class="form-check-input" type="checkbox" value="✓" id="inv-bool" name="i" {{ checked.i }}>
+              <label class="form-check-label" for="inv-bool">Inventory</label></li>
+          </ul>
+        </div>
+      </div>
+      <br>
+
+      <div class="card">
+        <div class="card-header">
+          <h4>What?</h4>
+        </div>
+        <div>
+          <p></p>
+          <ul>
+            <li><input class="form-check-input" type="checkbox" value="✓" id="name-bool" name="n" {{ checked.n }}>
+              <label class="form-check-label" for="name-bool">Name</label></li>
+            <li><input class="form-check-input" type="checkbox" value="✓" id="sn-bool" name="sn" {{ checked.sn }}>
+              <label class="form-check-label" for="sn-bool">Serial Number</label></li>
+          </ul>
+        </div>
+      </div>
+
+      <br>
+      <button class="btn btn-primary float-right" type="submit"><i class="fa fa-search"></i> Submit</button>
+
+    </form>
   </div>
 
 
   <!-- LISTVIEW -->
-  <div class="col-md-7 inventory-detail">
-    <div class="card" id="detail-view">
+  <div class="col-md-7 search-results">
+    <div class="card" id="search-list-view">
       <div class="card-header">
-        <h3>{{ navtree_title }} Search Results</h3>
+        <h3>Search Results</h3>
       </div>
       <div class="card-body">
         <p><b>{{ search_count }}</b> items match your search!</p>
         <ul class="list-group list-group-flush">
           {% if search_items %}
 
-            {% if node_type == 'inventory' %}
-              {% for inv in search_items %}
-                <li class="list-group-item">
-                  <div >
-                    <a href="{% url 'inventory:inventory_detail' inv.id %}">
-                    {{ inv.part.name }} - {{ inv.serial_number }}
-                    </a>
-                    <br>
-                    Current Location: {{ inv.location }}
-                    <a href="{% url 'inventory:inventory_detail' inv.id %}"
-                      class="btn btn-primary btn-sm float-right"
-                      role="button">View</a>
-                  </div>
-                </li>
-              {% endfor %}
+            {% for item in search_items %}
+              <li class="list-group-item">
+                <div >
+                  <a href="{{  item.href }}">
+                  {{ item.entry }}
+                  </a>
+                  <br>
+                  {{ item.subline }}
+                  <a href="{{  item.href }}"
+                    class="btn btn-primary btn-sm float-right"
+                    role="button">View</a>
+                </div>
+              </li>
+            {% endfor %}
 
-            {% elif node_type == 'parts' %}
-              {% for part in search_items %}
-                <li class="list-group-item">
-                  <div >
-                    <a href="{% url 'parts:parts_detail' part.id %}">
-                    {{ part.name }} - {{ part.part_number }}
-                    </a>
-                    <br>
-                    Part Type: {{ part.part_type }}
-                    <a href="{% url 'parts:parts_detail' part.id %}"
-                      class="btn btn-primary btn-sm float-right"
-                      role="button">View</a>
-                  </div>
-                </li>
-              {% endfor %}
-
-            {% endif %}
           {% endif %}
         </ul>
+
 
         <!-- Bootstrap Pagination -->
         {% if is_paginated %}
