@@ -32,8 +32,20 @@ $(document).ready(function() {
     var nodeID = navtreePrefix + '_' + $('.card-header').attr('data-object-id');
     console.log(nodeID);
     $(navTree).on('ready.jstree', function (event, data) {
-        data.instance._open_to(nodeID);
-        data.instance.select_node(nodeID);
+        /* Need to check if the loading item is on a Build, if so need to open the Build tree first */
+        /* buildID variable is set by Django in ajax_inventory_detail template */
+        if (typeof buildID !== 'undefined') {
+            console.log(buildID);
+            data.instance._open_to(buildID);
+            data.instance.open_node(buildID);
+            $(navTree).on("open_node.jstree", function (event, data) {
+                data.instance._open_to(nodeID);
+                data.instance.select_node(nodeID);
+            });
+        } else {
+            data.instance._open_to(nodeID);
+            data.instance.select_node(nodeID);
+        }
     });
 
     $(navTree).on('click','a',function(){
