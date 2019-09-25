@@ -57,22 +57,6 @@ $(document).ready(function() {
             $("#div_id_serial_number div").html(data);
           }
       });
-      $.ajax({
-          url: url_equipment,
-          data: {
-            'part_number': partNumber
-          },
-          success: function (data) {
-            console.log(data.is_equipment);
-            if (data.is_equipment) {
-                $("#div_id_whoi_number").show();
-                $("#div_id_ooi_property_number").show();
-            } else {
-                $("#div_id_whoi_number").hide();
-                $("#div_id_ooi_property_number").hide();
-            }
-          }
-      });
       return false;
     })
 
@@ -91,7 +75,6 @@ $(document).ready(function() {
     });
 
     $("#id_part").change(function () {
-        var url_equipment = $("#inventory-action-form").attr("data-equipment-url");
         var url_serialnumber = $("#inventory-action-form").attr("data-serialnumber-url");
         var url_revisions = $("#inventory-action-form").attr("data-revisions-url");
         var partID = $(this).val();
