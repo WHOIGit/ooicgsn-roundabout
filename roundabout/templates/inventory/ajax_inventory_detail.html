@@ -470,6 +470,11 @@
 {% block javascript %}
 <script>
 
+    {% if inventory_item.build %}
+        var buildID = 'builds_' + {{ inventory_item.build.id }};
+    {% endif %}
+
+
     $(document).ready(function(){
         $('.print-code-btn').click(function() {
             var url = $(this).attr('data-printcode-url');
