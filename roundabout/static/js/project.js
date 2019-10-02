@@ -67,9 +67,15 @@ $(document).ready(function() {
     });
 
     $(navTree).on('click','a',function(){
+        var nodeType = $(this).attr("data-node-type");
+
+        if (!nodeType) {
+            nodeType = navtreePrefix;
+        }
         var url = $(this).attr("data-detail-url");
-        var nodeID = navtreePrefix + '_' + $(this).attr("data-node-id");
+        var nodeID = nodeType + '_' + $(this).attr("data-node-id");
         var itemID = $(this).attr("data-node-id");
+
         // Get the li ID for the jsTree node
         var navTreeNodeID = $(this).parent().attr("id");
 
@@ -83,10 +89,11 @@ $(document).ready(function() {
 
               /* Use History API to change browser Back button behavior, create bookmarkable URLs */
               var backURL = url
-              var bookmarkURL = '/' + navtreePrefix + '/' + itemID
+              var bookmarkURL = '/' + nodeType + '/' + itemID
               var state = {
                   nodeID: nodeID,
                   itemID: itemID,
+                  nodeType: nodeType,
                   backURL: backURL,
                   bookmarkURL: bookmarkURL,
               };

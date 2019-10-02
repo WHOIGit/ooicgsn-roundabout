@@ -52,10 +52,10 @@
                 {% for i in inv.assigned_destination_root.assigned_children.all %}
                     {% if i.id == inventory_dict|get_item:assembly_part.id %}
                         <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' i.id %}"
-                           data-node-id="{{ assembly_part.id }}"
+                           data-node-id="{{ i.id }}"
                            data-location-id="{{ location.id }}"
                            data-part-type-id="{{ assembly_part.part.part_type.id }}"
-                           data-node-type="detail"
+                           data-node-type="inventory"
                            class="
                            {% if part_types %}
                                {% if assembly_part.part.part_type.id in part_types %}
@@ -75,7 +75,7 @@
                    data-node-id="{{ assembly_part.id }}"
                    data-location-id="{{ location.id }}"
                    data-part-type-id="{{ assembly_part.part.part_type.id }}"
-                   data-node-type="detail" class="grey">
+                   data-node-type="assembly_part" class="grey">
                     {% if assembly_part.part.friendly_name %} {{ assembly_part.part.friendly_name}} {% else %} {{ assembly_part.part.name }} {% endif %} -
                     {{ assembly_part.part.part_number }} </a>
             {% endif %}

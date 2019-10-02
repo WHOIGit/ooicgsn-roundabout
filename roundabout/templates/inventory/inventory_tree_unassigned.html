@@ -37,7 +37,7 @@
                 <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' inv.id %}"
                    data-node-id="{{ inv.id }}"
                    data-part-type-id="{{ inv.part.part_type.id }}"
-                   data-node-type="detail"
+                   data-node-type="inventory"
                    class="
                    {% if part_types %}
                        {% if inv.part.part_type.id in part_types %}
