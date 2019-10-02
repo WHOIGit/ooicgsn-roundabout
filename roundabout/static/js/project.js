@@ -1,12 +1,30 @@
 /* Project specific Javascript goes here. */
 
-/* Auto focus to the Serial Number search box on page load */
 $(document).ready(function() {
+    /* Auto focus to the Serial Number search box on page load */
     $('#search-serial-number').focus();
+
+    /* Make the Documentation Inline Formset Jquery work */
+    $('.form-group').removeClass('row');
 });
 
-/* Make the Documentation Inline Formset Jquery work */
-$('.form-group').removeClass('row');
+/* Use History API to load AJAX data on Back button click */
+window.onpopstate = function (event) {
+  if (event.state) {
+      $.ajax({
+          url: event.state.backURL,
+          data: {
+            'nodeID': event.state.nodeID
+          },
+          success: function (data) {
+            $("#detail-view").html(data);
+            $(navTree).jstree(true).deselect_all();
+            $(navTree).jstree(true).select_node(event.state.nodeID);
+          }
+      });
+  }
+  console.log(event.state);
+};
 
 /* AJAX navtree functions - Global */
 
@@ -50,6 +68,8 @@ $(document).ready(function() {
 
     $(navTree).on('click','a',function(){
         var url = $(this).attr("data-detail-url");
+        var nodeID = navtreePrefix + '_' + $(this).attr("data-node-id");
+        var itemID = $(this).attr("data-node-id");
         // Get the li ID for the jsTree node
         var navTreeNodeID = $(this).parent().attr("id");
 
@@ -60,6 +80,18 @@ $(document).ready(function() {
             },
             success: function (data) {
               $("#detail-view").html(data);
+
+              /* Use History API to change browser Back button behavior, create bookmarkable URLs */
+              var backURL = url
+              var bookmarkURL = '/' + navtreePrefix + '/' + itemID
+              var state = {
+                  nodeID: nodeID,
+                  itemID: itemID,
+                  backURL: backURL,
+                  bookmarkURL: bookmarkURL,
+              };
+              history.pushState(state, '', bookmarkURL);
+              console.log(history.state);
             }
         });
     });
@@ -306,8 +338,9 @@ $(document).ready(function() {
     $('#content-block').on('click','.ajax-detail-link a',function(){
         var url = $(this).attr("data-detail-url");
         var nodeID = navtreePrefix + '_' + $(this).attr("data-node-id");
+        var itemID = $(this).attr("data-node-id");
         var previousNodeID = navtreePrefix + '_' + $('.card-header').attr('data-object-id');
-        console.log(previousNodeID);
+
         $.ajax({
             url: url,
             beforeSend: function() {
@@ -315,8 +348,19 @@ $(document).ready(function() {
             },
             success: function (data) {
               $("#detail-view").html(data);
-              console.log(nodeID);
               $(navTree).jstree(true).select_node(nodeID);
+
+              /* Use History API to change browser Back button behavior, create bookmarkable URLs */
+              var backURL = url
+              var bookmarkURL = '/' + navtreePrefix + '/' + itemID
+              var state = {
+                  nodeID: nodeID,
+                  itemID: itemID,
+                  backURL: backURL,
+                  bookmarkURL: bookmarkURL,
+              };
+              history.pushState(state, '', bookmarkURL);
+              console.log(history.state);
             }
         });
     });
