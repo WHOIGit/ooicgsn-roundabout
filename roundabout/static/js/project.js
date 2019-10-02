@@ -72,6 +72,7 @@ $(document).ready(function() {
         if (!nodeType) {
             nodeType = navtreePrefix;
         }
+
         var url = $(this).attr("data-detail-url");
         var nodeID = nodeType + '_' + $(this).attr("data-node-id");
         var itemID = $(this).attr("data-node-id");
@@ -88,8 +89,14 @@ $(document).ready(function() {
               $("#detail-view").html(data);
 
               /* Use History API to change browser Back button behavior, create bookmarkable URLs */
+              if (nodeType == 'assemblyparts') {
+                  bookmarkURL = '/assemblies/assemblypart/' + itemID;
+                  /*nodeID = nodeType + '_' + $(this).attr("data-node-id") + '_' + buildID;*/
+              } else {
+                 var bookmarkURL = '/' + nodeType + '/' + itemID
+              }
+
               var backURL = url
-              var bookmarkURL = '/' + nodeType + '/' + itemID
               var state = {
                   nodeID: nodeID,
                   itemID: itemID,

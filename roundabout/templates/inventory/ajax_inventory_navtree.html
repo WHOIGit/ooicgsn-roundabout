@@ -4,9 +4,9 @@
 
             {% for location,structure in locations|tree_info %}
                 {% if structure.new_level %}
-                    <ul><li data-jstree='{"icon":"fa fa-map-marker"}' id="location_{{ location.id }}">
+                    <ul><li data-jstree='{"icon":"fa fa-map-marker"}' id="locations_{{ location.id }}">
                 {% else %}
-                    </li><li data-jstree='{"icon":"fa fa-map-marker"}' id="location_{{ location.id }}">
+                    </li><li data-jstree='{"icon":"fa fa-map-marker"}' id="locations_{{ location.id }}">
                 {% endif %}
                     <a href="#" data-location-id='{{ location.id }}'
                             data-detail-url="{% url 'locations:ajax_location_detail' location.id %}"

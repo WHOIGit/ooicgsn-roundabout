@@ -211,7 +211,25 @@ class AssemblyAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, Delete
 
 ### CBV views for AssemblyPart model ###
 
-# Detail view for Assembly Part
+# AJAX Detail view for Assembly Part
+class AssemblyPartDetailView(LoginRequiredMixin, DetailView):
+    model = AssemblyPart
+    context_object_name = 'assembly_part'
+    template_name='assemblies/assemblypart_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(AssemblyPartDetailView, self).get_context_data(**kwargs)
+        context.update({
+            'node_type': 'assemblyparts'
+        })
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+# AJAX Detail view for Assembly Part
 class AssemblyPartAjaxDetailView(LoginRequiredMixin, DetailView):
     model = AssemblyPart
     context_object_name = 'assembly_part'

@@ -23,7 +23,7 @@
                             {% if assembly_part.id in inventory %}
                                 id="inventory_{{ inventory|get_item:assembly_part.id }}"
                             {% else %}
-                                id="assembly_part_{{ assembly_part.id }}_{{ build_pk }}"
+                                id="assemblypart_{{ assembly_part.id }}_builds_{{ build_pk }}"
                             {% endif %}  >
                 {% else %}</li>
                     <li     {% if assembly_part.part.part_type.name == 'Electrical' %}
@@ -41,7 +41,7 @@
                             {% if assembly_part.id in inventory %}
                                 id="inventory_{{ inventory|get_item:assembly_part.id }}"
                             {% else %}
-                                id="massembly_part_{{ assembly_part.id }}_{{ build_pk }}"
+                                id="assemblypart_{{ assembly_part.id }}_builds_{{ build_pk }}"
                             {% endif %}  >
                 {% endif %}
 
@@ -49,10 +49,11 @@
                     {% for i in inventory_qs.all %}
                         {% if i.id == inventory|get_item:assembly_part.id %}
                             <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' i.id %}"
-                               data-node-id="{{ assembly_part.id }}"
+                               data-node-id="{{ i.id }}"
+                               data-build-id="{{ build_pk }}"
                                data-location-id="{{ location.id }}"
                                data-part-type-id="{{ assembly_part.part.part_type.id }}"
-                               data-node-type="detail"
+                               data-node-type="inventory"
                                class="
                                {% if i.is_root_node and not assembly_part.is_root_node %} red {% endif %}
                                {% if part_types %}
@@ -70,9 +71,10 @@
                 {% else %}
                     <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_assembly_part_add_subassembly' assembly_part.id location_pk build_pk %}"
                        data-node-id="{{ assembly_part.id }}"
+                       data-build-id="{{ build_pk }}"
                        data-location-id="{{ location.id }}"
                        data-part-type-id="{{ assembly_part.part.part_type.id }}"
-                       data-node-type="detail" class="grey">
+                       data-node-type="assemblypart" class="grey">
                         {% if assembly_part.part.friendly_name %} {{ assembly_part.part.friendly_name}} {% else %} {{ assembly_part.part.name }} {% endif %} -
                         {{ assembly_part.part.part_number }} </a>
                 {% endif %}
