@@ -63,7 +63,43 @@ class BuildHomeView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
 
 
-# Detail view for builds
+# Direct Detail view for Builds
+class BuildDetailView(LoginRequiredMixin, DetailView):
+    model = Build
+    context_object_name = 'build'
+    template_name='builds/build_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(BuildDetailView, self).get_context_data(**kwargs)
+
+        total_parts = AssemblyPart.objects.filter(assembly=self.object.assembly).count()
+        total_inventory = self.object.inventory.count()
+        percent_complete = round( (total_inventory / total_parts) * 100 )
+
+        action_record = None
+        bar_class = None
+        bar_width = None
+
+        # Get Lat/Long, Depth if Deployed
+        if self.object.is_deployed:
+            current_deployment = self.object.current_deployment()
+            action_record = DeploymentAction.objects.filter(deployment=current_deployment).filter(action_type='deploy').first()
+
+        context.update({
+            'node_type': 'builds',
+            'current_deployment': self.object.current_deployment(),
+            'percent_complete': percent_complete,
+            'action_record': action_record,
+        })
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+
+# AJAX Detail view for builds
 class BuildAjaxDetailView(LoginRequiredMixin, DetailView):
     model = Build
     context_object_name = 'build'
