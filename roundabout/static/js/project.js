@@ -91,10 +91,10 @@ $(document).ready(function() {
               /* Use History API to change browser Back button behavior, create bookmarkable URLs */
               if (nodeType == 'assemblyparts') {
                   bookmarkURL = '/assemblies/assemblypart/' + itemID;
-                  /*nodeID = nodeType + '_' + $(this).attr("data-node-id") + '_' + buildID;*/
               } else if (nodeType == 'assemblytype') {
                   bookmarkURL = '/assemblies/assemblytype/' + itemID;
-                  /*nodeID = nodeType + '_' + $(this).attr("data-node-id") + '_' + buildID;*/
+              } else if (nodeType == 'part_type') {
+                  bookmarkURL = '/parts/part_type/' + itemID;      
               } else {
                  var bookmarkURL = '/' + nodeType + '/' + itemID
               }
