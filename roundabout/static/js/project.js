@@ -92,6 +92,9 @@ $(document).ready(function() {
               if (nodeType == 'assemblyparts') {
                   bookmarkURL = '/assemblies/assemblypart/' + itemID;
                   /*nodeID = nodeType + '_' + $(this).attr("data-node-id") + '_' + buildID;*/
+              } else if (nodeType == 'assemblytype') {
+                  bookmarkURL = '/assemblies/assemblytype/' + itemID;
+                  /*nodeID = nodeType + '_' + $(this).attr("data-node-id") + '_' + buildID;*/
               } else {
                  var bookmarkURL = '/' + nodeType + '/' + itemID
               }

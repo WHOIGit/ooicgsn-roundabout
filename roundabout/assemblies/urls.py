@@ -5,7 +5,9 @@ from . import views
 app_name = 'assemblies'
 urlpatterns = [
     path('', view=views.AssemblyHomeView.as_view(), name='assemblies_home'),
+    path('<int:pk>/', view=views.AssemblyDetailView.as_view(), name='assembly_detail'),
     path('assemblypart/<int:pk>/', view=views.AssemblyPartDetailView.as_view(), name='assemblypart_detail'),
+    path('assemblytype/<int:pk>/', view=views.AssemblyTypeDetailView.as_view(), name='assemblytype_detail'),
     # AJAX paths
     path('ajax/detail/<int:pk>/', view=views.AssemblyAjaxDetailView.as_view(), name='ajax_assemblies_detail'),
     path('ajax/add/', view=views.AssemblyAjaxCreateView.as_view(), name='ajax_assemblies_add'),
