@@ -23,7 +23,7 @@
                             {% if assembly_part.id in inventory %}
                                 id="inventory_{{ inventory|get_item:assembly_part.id }}"
                             {% else %}
-                                id="assemblypart_{{ assembly_part.id }}_builds_{{ build_pk }}"
+                                id="assemblyparts_{{ assembly_part.id }}_builds_{{ build_pk }}"
                             {% endif %}  >
                 {% else %}</li>
                     <li     {% if assembly_part.part.part_type.name == 'Electrical' %}
@@ -41,7 +41,7 @@
                             {% if assembly_part.id in inventory %}
                                 id="inventory_{{ inventory|get_item:assembly_part.id }}"
                             {% else %}
-                                id="assemblypart_{{ assembly_part.id }}_builds_{{ build_pk }}"
+                                id="assemblyparts_{{ assembly_part.id }}_builds_{{ build_pk }}"
                             {% endif %}  >
                 {% endif %}
 
@@ -74,7 +74,7 @@
                        data-build-id="{{ build_pk }}"
                        data-location-id="{{ location.id }}"
                        data-part-type-id="{{ assembly_part.part.part_type.id }}"
-                       data-node-type="assemblypart" class="grey">
+                       data-node-type="assemblyparts" class="grey">
                         {% if assembly_part.part.friendly_name %} {{ assembly_part.part.friendly_name}} {% else %} {{ assembly_part.part.name }} {% endif %} -
                         {{ assembly_part.part.part_number }} </a>
                 {% endif %}

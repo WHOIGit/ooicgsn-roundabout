@@ -13,13 +13,10 @@ window.onpopstate = function (event) {
   if (event.state) {
       $.ajax({
           url: event.state.backURL,
-          data: {
-            'nodeID': event.state.nodeID
-          },
           success: function (data) {
             $("#detail-view").html(data);
             $(navTree).jstree(true).deselect_all();
-            $(navTree).jstree(true).select_node(event.state.nodeID);
+            $(navTree).jstree(true).select_node(event.state.navTreeNodeID);
           }
       });
   }
@@ -51,7 +48,7 @@ $(document).ready(function() {
     console.log(nodeID);
     $(navTree).on('ready.jstree', function (event, data) {
         /* Need to check if the loading item is on a Build, if so need to open the Build tree first */
-        /* buildID variable is set by Django in ajax_inventory_detail template */
+        /* buildID variable is set by Django in ajax_inventory_detail or ajax_build_detail template */
         if (typeof buildID !== 'undefined') {
             console.log(buildID);
             data.instance._open_to(buildID);
@@ -76,7 +73,6 @@ $(document).ready(function() {
         var url = $(this).attr("data-detail-url");
         var nodeID = nodeType + '_' + $(this).attr("data-node-id");
         var itemID = $(this).attr("data-node-id");
-
         // Get the li ID for the jsTree node
         var navTreeNodeID = $(this).parent().attr("id");
 
@@ -90,18 +86,18 @@ $(document).ready(function() {
 
               /* Use History API to change browser Back button behavior, create bookmarkable URLs */
               if (nodeType == 'assemblyparts') {
-                  bookmarkURL = '/assemblies/assemblypart/' + itemID;
+                  var bookmarkURL = '/assemblies/assemblypart/' + itemID;
               } else if (nodeType == 'assemblytype') {
-                  bookmarkURL = '/assemblies/assemblytype/' + itemID;
+                  var bookmarkURL = '/assemblies/assemblytype/' + itemID;
               } else if (nodeType == 'part_type') {
-                  bookmarkURL = '/parts/part_type/' + itemID;      
+                  var bookmarkURL = '/parts/part_type/' + itemID;
               } else {
                  var bookmarkURL = '/' + nodeType + '/' + itemID
               }
 
               var backURL = url
               var state = {
-                  nodeID: nodeID,
+                  navTreeNodeID: navTreeNodeID,
                   itemID: itemID,
                   nodeType: nodeType,
                   backURL: backURL,
