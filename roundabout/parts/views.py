@@ -710,6 +710,24 @@ class PartsDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
 
 # Part Types Template Views
 
+# Direct detail view
+class PartsTypeDetailView(LoginRequiredMixin, DetailView):
+    model = PartType
+    template_name = 'parts/part_type_detail.html'
+    context_object_name = 'part_type'
+
+    def get_context_data(self, **kwargs):
+        context = super(PartsTypeDetailView, self).get_context_data(**kwargs)
+        context.update({
+            'node_type': 'part_type'
+        })
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
 # AJAX Views
 
 class PartsTypeAjaxDetailView(LoginRequiredMixin , DetailView):

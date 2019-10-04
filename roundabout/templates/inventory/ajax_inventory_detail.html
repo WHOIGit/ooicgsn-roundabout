@@ -470,10 +470,10 @@
 {% block javascript %}
 <script>
 
+    /* Need to set a global JS variable is this item is on a Build to reference build_id */
     {% if inventory_item.build %}
         var buildID = 'builds_' + {{ inventory_item.build.id }};
     {% endif %}
-
 
     $(document).ready(function(){
         $('.print-code-btn').click(function() {

@@ -1,12 +1,27 @@
 /* Project specific Javascript goes here. */
 
-/* Auto focus to the Serial Number search box on page load */
 $(document).ready(function() {
+    /* Auto focus to the Serial Number search box on page load */
     $('#search-serial-number').focus();
+
+    /* Make the Documentation Inline Formset Jquery work */
+    $('.form-group').removeClass('row');
 });
 
-/* Make the Documentation Inline Formset Jquery work */
-$('.form-group').removeClass('row');
+/* Use History API to load AJAX data on Back button click */
+window.onpopstate = function (event) {
+  if (event.state) {
+      $.ajax({
+          url: event.state.backURL,
+          success: function (data) {
+            $("#detail-view").html(data);
+            $(navTree).jstree(true).deselect_all();
+            $(navTree).jstree(true).select_node(event.state.navTreeNodeID);
+          }
+      });
+  }
+  console.log(event.state);
+};
 
 /* AJAX navtree functions - Global */
 
@@ -33,7 +48,7 @@ $(document).ready(function() {
     console.log(nodeID);
     $(navTree).on('ready.jstree', function (event, data) {
         /* Need to check if the loading item is on a Build, if so need to open the Build tree first */
-        /* buildID variable is set by Django in ajax_inventory_detail template */
+        /* buildID variable is set by Django in ajax_inventory_detail or ajax_build_detail template */
         if (typeof buildID !== 'undefined') {
             console.log(buildID);
             data.instance._open_to(buildID);
@@ -49,7 +64,15 @@ $(document).ready(function() {
     });
 
     $(navTree).on('click','a',function(){
+        var nodeType = $(this).attr("data-node-type");
+
+        if (!nodeType) {
+            nodeType = navtreePrefix;
+        }
+
         var url = $(this).attr("data-detail-url");
+        var nodeID = nodeType + '_' + $(this).attr("data-node-id");
+        var itemID = $(this).attr("data-node-id");
         // Get the li ID for the jsTree node
         var navTreeNodeID = $(this).parent().attr("id");
 
@@ -60,6 +83,28 @@ $(document).ready(function() {
             },
             success: function (data) {
               $("#detail-view").html(data);
+
+              /* Use History API to change browser Back button behavior, create bookmarkable URLs */
+              if (nodeType == 'assemblyparts') {
+                  var bookmarkURL = '/assemblies/assemblypart/' + itemID;
+              } else if (nodeType == 'assemblytype') {
+                  var bookmarkURL = '/assemblies/assemblytype/' + itemID;
+              } else if (nodeType == 'part_type') {
+                  var bookmarkURL = '/parts/part_type/' + itemID;
+              } else {
+                 var bookmarkURL = '/' + nodeType + '/' + itemID
+              }
+
+              var backURL = url
+              var state = {
+                  navTreeNodeID: navTreeNodeID,
+                  itemID: itemID,
+                  nodeType: nodeType,
+                  backURL: backURL,
+                  bookmarkURL: bookmarkURL,
+              };
+              history.pushState(state, '', bookmarkURL);
+              console.log(history.state);
             }
         });
     });
@@ -306,8 +351,9 @@ $(document).ready(function() {
     $('#content-block').on('click','.ajax-detail-link a',function(){
         var url = $(this).attr("data-detail-url");
         var nodeID = navtreePrefix + '_' + $(this).attr("data-node-id");
+        var itemID = $(this).attr("data-node-id");
         var previousNodeID = navtreePrefix + '_' + $('.card-header').attr('data-object-id');
-        console.log(previousNodeID);
+
         $.ajax({
             url: url,
             beforeSend: function() {
@@ -315,8 +361,19 @@ $(document).ready(function() {
             },
             success: function (data) {
               $("#detail-view").html(data);
-              console.log(nodeID);
               $(navTree).jstree(true).select_node(nodeID);
+
+              /* Use History API to change browser Back button behavior, create bookmarkable URLs */
+              var backURL = url
+              var bookmarkURL = '/' + navtreePrefix + '/' + itemID
+              var state = {
+                  nodeID: nodeID,
+                  itemID: itemID,
+                  backURL: backURL,
+                  bookmarkURL: bookmarkURL,
+              };
+              history.pushState(state, '', bookmarkURL);
+              console.log(history.state);
             }
         });
     });

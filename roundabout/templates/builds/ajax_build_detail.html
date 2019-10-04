@@ -372,5 +372,8 @@
 
 
 {% block javascript %}
-
+<script>
+    /* Need to set a global JS variable to reference build_id */
+    var buildID = 'builds_' + {{ build.id }};
+</script>
 {% endblock javascript %}
