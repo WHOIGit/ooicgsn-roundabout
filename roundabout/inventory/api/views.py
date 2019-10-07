@@ -5,7 +5,7 @@ from .serializers import InventorySerializer
 
 class InventoryViewSet(viewsets.ModelViewSet):
 
-    queryset = Inventory.objects.all()
+    queryset = Inventory.objects.all().select_related('location').select_related('part')
     serializer_class = InventorySerializer
     search_fields = ['serial_number']
     filter_backends = (filters.SearchFilter,)
