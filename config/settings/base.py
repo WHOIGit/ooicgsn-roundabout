@@ -264,6 +264,13 @@ SOCIALACCOUNT_ADAPTER = 'roundabout.users.adapters.SocialAccountAdapter'
 
 # Roundabout Specific settings
 # ------------------------------------------------------------------------------
+# REST framework settings
+REST_FRAMEWORK = {
+    # When you enable API versioning, the request.version attribute will contain a string
+    # that corresponds to the version requested in the incoming client request.
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
+}
+
 # Summernote CONFIGURATION
 SUMMERNOTE_THEME = 'bs4'
 SUMMERNOTE_CONFIG = {

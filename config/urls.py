@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.urls import include, path
+from django.urls import include, path, re_path
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.views.generic import TemplateView
@@ -21,7 +21,6 @@ urlpatterns = [
     ),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
-    # Your stuff: custom urls includes go here
     path('locations/', include('roundabout.locations.urls', namespace='locations')),
     path('parts/', include('roundabout.parts.urls', namespace='parts')),
     path('moorings/', include('roundabout.moorings.urls', namespace='moorings')),
@@ -31,6 +30,8 @@ urlpatterns = [
     path('userdefinedfields/', include('roundabout.userdefinedfields.urls', namespace='userdefinedfields')),
     path('assemblies/', include('roundabout.assemblies.urls', namespace='assemblies')),
     path('builds/', include('roundabout.builds.urls', namespace='builds')),
+    # API urls
+    path('api/v1/', include('roundabout.inventory.api.urls')),
     #Summernote WYSIWYG
     path('summernote/', include('django_summernote.urls')),
 ] + static(
