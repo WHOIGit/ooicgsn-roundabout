@@ -33,6 +33,7 @@ urlpatterns = [
     # API urls
     path('api/v1/', include('roundabout.inventory.api.urls')),
     path('api/v1/', include('roundabout.locations.api.urls')),
+    path('api/v1/', include('roundabout.parts.api.urls')),
     #Summernote WYSIWYG
     path('summernote/', include('django_summernote.urls')),
 ] + static(
