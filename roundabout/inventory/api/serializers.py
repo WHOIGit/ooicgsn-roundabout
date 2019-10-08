@@ -17,7 +17,7 @@ class InventorySerializer(serializers.ModelSerializer):
     def get_custom_fields(self, obj):
         # Get this item's custom fields with most recent Values
         if obj.fieldvalues.exists():
-            obj_custom_fields = obj.fieldvalues.filter(is_current=True)
+            obj_custom_fields = obj.fieldvalues.filter(is_current=True).select_related('field')
         else:
             obj_custom_fields = None
         # create initial empty dict
@@ -26,7 +26,6 @@ class InventorySerializer(serializers.ModelSerializer):
         if obj_custom_fields:
             for field in obj_custom_fields:
                 custom_fields[field.field.field_name] = field.field_value
-                #custom_fields.update(field.field=field.field_value)
 
         return custom_fields
 
@@ -34,5 +33,7 @@ class InventorySerializer(serializers.ModelSerializer):
     def setup_eager_loading(queryset):
         """ Perform necessary prefetching of data. """
         queryset = queryset.select_related('location').select_related('part')
+
+        queryset = queryset.prefetch_related('fieldvalues')
 
         return queryset
