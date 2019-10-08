@@ -4,7 +4,7 @@ from .views import InventoryViewSet
 
 # Create a router and register our viewsets with it.
 router = SimpleRouter()
-router.register(r'inventory', InventoryViewSet )
+router.register(r'inventory', InventoryViewSet, 'inventory' )
 
 urlpatterns = [
     path('', include(router.urls) ),

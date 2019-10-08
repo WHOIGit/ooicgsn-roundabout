@@ -12,3 +12,10 @@ class InventorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Inventory
         fields = ['id', 'serial_number', 'part', 'location', ]
+
+    @staticmethod
+    def setup_eager_loading(queryset):
+        """ Perform necessary prefetching of data. """
+        queryset = queryset.select_related('location').select_related('part')
+
+        return queryset 
