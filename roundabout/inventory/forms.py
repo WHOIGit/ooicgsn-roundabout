@@ -12,7 +12,6 @@ from django.contrib.sites.models import Site
 from .models import Inventory, Deployment, Action, DeploymentSnapshot, PhotoNote
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
-from roundabout.moorings.models import MooringPart
 from roundabout.userdefinedfields.models import FieldValue
 
 

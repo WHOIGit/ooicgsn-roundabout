@@ -4,7 +4,6 @@ from dateutil import parser
 from roundabout.inventory.models import Inventory, Action, Deployment
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part
-from roundabout.moorings.models import MooringPart
 from roundabout.userdefinedfields.models import Field, FieldValue
 
 register = template.Library()
@@ -27,25 +26,10 @@ def get_udf_field_value_history(field, item):
 
 
 @register.simple_tag
-def get_mooringpart_list_by_deployment(dep_pk):
-    deployment = Deployment.objects.select_related('final_location').get(id=dep_pk)
-    queryset = MooringPart.objects.filter(location=deployment.final_location).prefetch_related('part').prefetch_related('part__part_type')
-    return queryset
-
-
-@register.simple_tag
 def get_inventory_assembly_part_dictionary(inventory_qs):
     inventory_dict = {}
     for i in inventory_qs.all():
         inventory_dict[i.assembly_part_id] = i.id
-    return inventory_dict
-
-
-@register.simple_tag
-def get_inventory_dictionary(inventory_qs):
-    inventory_dict = {}
-    for i in inventory_qs.all():
-        inventory_dict[i.mooring_part_id] = i.id
     return inventory_dict
 
 
@@ -85,14 +69,6 @@ def get_inventory_snapshot_list_by_location(location, dep):
 @register.simple_tag
 def get_inventory_list_by_location_with_destination(location):
     queryset = location.inventory.filter(assembly_part__isnull=False).filter(build__isnull=True).filter(assigned_destination_root__isnull=False).prefetch_related('part__part_type')
-    return queryset
-
-
-@register.simple_tag
-def get_locations_by_mooring(location_pk):
-    queryset = Location.objects.filter(parent_id=location_pk)
-    queryset = Location.objects.get_queryset_descendants(
-        queryset, include_self=True).prefetch_related('inventory')
     return queryset
 
 

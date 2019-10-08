@@ -23,7 +23,6 @@ urlpatterns = [
     # Your stuff: custom urls includes go here
     path('locations/', include('roundabout.locations.urls', namespace='locations')),
     path('parts/', include('roundabout.parts.urls', namespace='parts')),
-    path('moorings/', include('roundabout.moorings.urls', namespace='moorings')),
     path('inventory/', include('roundabout.inventory.urls', namespace='inventory')),
     path('deployments/', include('roundabout.inventory.urls_deployment', namespace='deployments')),
     path('admintools/', include('roundabout.admintools.urls', namespace='admintools')),

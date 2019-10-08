@@ -12,7 +12,6 @@ from mptt.models import MPTTModel, TreeForeignKey
 
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
-from roundabout.moorings.models import MooringPart
 from roundabout.assemblies.models import Assembly, AssemblyPart
 from roundabout.builds.models import Build
 from roundabout.users.models import User
