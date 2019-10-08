@@ -5,6 +5,11 @@ from django.contrib import admin
 from django.views.generic import TemplateView
 from django.views import defaults as default_views
 
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
     path(
@@ -33,6 +38,9 @@ urlpatterns = [
     path('api/v1/', include('roundabout.inventory.api.urls')),
     path('api/v1/', include('roundabout.locations.api.urls')),
     path('api/v1/', include('roundabout.parts.api.urls')),
+    # API JWT token paths
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     #Summernote WYSIWYG
     path('summernote/', include('django_summernote.urls')),
 ] + static(
