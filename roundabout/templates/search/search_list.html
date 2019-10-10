@@ -20,21 +20,20 @@
         <div class="card-header">
           <h4>Search Results Type</h4>
         </div>
-        <div>
-          <p></p>
+        <div class="card-body">
 
+          <label class="form-check-label" for="parts-bool">Parts</label><br>
           <label class="switch">
             <input type="checkbox" class="form-check-input" value="✓" id="parts-bool" name="p" {{ checked.p }}>>
             <span class="slider"></span>
           </label>
-          <label class="form-check-label" for="parts-bool">Parts</label>
           <br>
 
+          <label class="form-check-label" for="inv-bool">Inventory</label><br>
           <label class="switch">
             <input type="checkbox" class="form-check-input" value="✓" id="inv-bool" name="i" {{ checked.i }}>
             <span class="slider"></span>
           </label>
-          <label class="form-check-label" for="inv-bool">Inventory</label>
           <br>
 
         </div>
@@ -45,35 +44,34 @@
         <div class="card-header">
           <h4>Searched Fields</h4>
         </div>
-        <div>
-          <p></p>
+        <div class="card-body">
 
+          <label class="form-check-label" for="name-bool">Name</label><br>
           <label class="switch">
             <input type="checkbox" class="form-check-input" value="✓" id="name-bool" name="n" {{ checked.n }}>
             <span class="slider"></span>
           </label>
-          <label class="form-check-label" for="name-bool">Name</label>
           <br>
 
+          <label class="form-check-label" for="sn-bool">Serial Number</label><br>
           <label class="switch">
             <input type="checkbox" class="form-check-input" value="✓" id="sn-bool" name="sn" {{ checked.sn }}>
             <span class="slider"></span>
           </label>
-          <label class="form-check-label" for="sn-bool">Serial Number</label>
           <br>
 
+          <label class="form-check-label" for="l-bool">Location</label><br>
           <label class="switch">
             <input type="checkbox" class="form-check-input" value="✓" id="l-bool" name="l" {{ checked.l }}>
             <span class="slider"></span>
           </label>
-          <label class="form-check-label" for="l-bool">Location</label>
           <br>
 
+          <label class="form-check-label" for="u-bool">Custom Fields</label><br>
           <label class="switch">
             <input type="checkbox" class="form-check-input" value="✓" id="u-bool" name="u" {{ checked.u }}>
             <span class="slider"></span>
           </label>
-          <label class="form-check-label" for="u-bool">Custom Fields</label>
           <br>
 
         </div>
