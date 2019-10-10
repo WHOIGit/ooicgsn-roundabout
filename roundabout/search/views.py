@@ -15,6 +15,7 @@ from itertools import chain
 from roundabout.inventory.models import Inventory
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, PartType, Revision
+from roundabout.userdefinedfields.models import FieldValue
 from roundabout.moorings.models import MooringPart
 from roundabout.admintools.models import Printer
 from roundabout.assemblies.models import AssemblyPart
@@ -31,7 +32,7 @@ class BasicSearch(ListView):
         # Check if search query exists, if so add it to context for pagination
         query = self.request.GET.get('q')
         context['checked'] = {}
-        for gname in ['p','i','n','sn']:
+        for gname in ['p','i','n','sn','l','u']:
             context['checked'][gname] = 'checked' if self.request.GET.get(gname)=='✓' else ''
         print(context['checked'])
 
@@ -57,7 +58,7 @@ class BasicSearch(ListView):
                 item['subline'] = 'Part Type: {}'.format(q.part_type)
 
             context['search_items'].append(item)
-        context['search_count'] = len(context['search_items_qs'])
+        #context['search_count'] = len(context['search_items_qs'])
         return context
 
     def get_queryset(self):
@@ -66,21 +67,33 @@ class BasicSearch(ListView):
         inventory_bool = self.request.GET.get('i') == '✓'
         name_bool = self.request.GET.get('n') == '✓'
         sn_bool = self.request.GET.get('sn') == '✓'
+        udf_bool= self.request.GET.get('u') == '✓'
+        loc_bool= self.request.GET.get('l') == '✓'
 
         qs_inv = Inventory.objects.none()
         qs_prt = Part.objects.none()
-        if keywords and any([name_bool,sn_bool]):
+        if keywords and any([name_bool,sn_bool,udf_bool]):
             if inventory_bool:
+                query_inv = Inventory.objects.none()
                 if sn_bool and name_bool: query_inv = Q(serial_number__icontains=keywords)|Q(part__name__icontains=keywords)
                 elif sn_bool:             query_inv = Q(serial_number__icontains=keywords)
                 elif name_bool:           query_inv = Q(part__name__icontains=keywords)
+                if udf_bool:
+                    query_inv = query_inv | Q(fieldvalues__field_value__icontains=keywords)
+                    query_inv = query_inv | Q(part__user_defined_fields__field_name__icontains=keywords)
+                if loc_bool:
+                    query_inv = query_inv | Q(location__name__icontains=keywords)
                 qs_inv = Inventory.objects.filter(query_inv).order_by('serial_number')
 
             if parts_bool:
+                query_prt = Part.objects.none()
                 if sn_bool and name_bool: query_prt = Q(part_number__icontains=keywords)|Q(name__icontains=keywords)
                 elif sn_bool:             query_prt = Q(part_number__icontains=keywords)
                 elif name_bool:           query_prt = Q(name__icontains=keywords)
-                qs_prt = Part.objects.filter(query_prt).order_by('part_number')
+                if udf_bool:              query_prt = query_prt | Q(user_defined_fields__field_name__icontains=keywords)
+
+                try: qs_prt = Part.objects.filter(query_prt).order_by('part_number')
+                except ValueError: pass
 
         return list(qs_inv) + list(qs_prt)
 

@@ -1,6 +1,6 @@
 
       <div id="searchform">
-          <form action="{% url 'search:main' %}" method="get" accept-charset="utf-8" class="form-inline">
+          <form action="{% url 'search:basic' %}" method="get" accept-charset="utf-8" class="form-inline">
 
             <div class="input-group mb-3">
               <input type="text" class="form-control" name="q" type="text" placeholder="Search Serial and Name" id="searchbar-query">
@@ -9,6 +9,8 @@
               </div>
               <input type="hidden" name="i" value="✓">
               <input type="hidden" name="n" value="✓">
+              <input type="hidden" name="u" value="✓">
+              <input type="hidden" name="l" value="✓">
               <input type="hidden" name="sn" value="✓">
             </div>
 

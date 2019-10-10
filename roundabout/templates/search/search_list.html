@@ -11,39 +11,71 @@
   <!-- SEARCH CONTROLS -->
   <div class="col-md-5 search-control">
     <h2>Search Controls</h2>
-    <form action="{% url 'search:main' %}" method="get" accept-charset="utf-8" class="form">
+    <form action="{% url 'search:basic' %}" method="get" accept-charset="utf-8" class="form">
 
       <input type="text" class="form-control" name="q" placeholder="Search Term Here!" id="search-query" value="{{ query }}">
       <br>
 
       <div class="card">
         <div class="card-header">
-          <h4>Where?</h4>
+          <h4>Search Results Type</h4>
         </div>
         <div>
           <p></p>
-          <ul>
-            <li><input class="form-check-input" type="checkbox" value="✓" id="parts-bool" name="p" {{ checked.p }}>
-              <label class="form-check-label" for="parts-bool">Parts</label></li>
-            <li><input class="form-check-input" type="checkbox" value="✓" id="inv-bool" name="i" {{ checked.i }}>
-              <label class="form-check-label" for="inv-bool">Inventory</label></li>
-          </ul>
+
+          <label class="switch">
+            <input type="checkbox" class="form-check-input" value="✓" id="parts-bool" name="p" {{ checked.p }}>>
+            <span class="slider"></span>
+          </label>
+          <label class="form-check-label" for="parts-bool">Parts</label>
+          <br>
+
+          <label class="switch">
+            <input type="checkbox" class="form-check-input" value="✓" id="inv-bool" name="i" {{ checked.i }}>
+            <span class="slider"></span>
+          </label>
+          <label class="form-check-label" for="inv-bool">Inventory</label>
+          <br>
+
         </div>
       </div>
       <br>
 
       <div class="card">
         <div class="card-header">
-          <h4>What?</h4>
+          <h4>Searched Fields</h4>
         </div>
         <div>
           <p></p>
-          <ul>
-            <li><input class="form-check-input" type="checkbox" value="✓" id="name-bool" name="n" {{ checked.n }}>
-              <label class="form-check-label" for="name-bool">Name</label></li>
-            <li><input class="form-check-input" type="checkbox" value="✓" id="sn-bool" name="sn" {{ checked.sn }}>
-              <label class="form-check-label" for="sn-bool">Serial Number</label></li>
-          </ul>
+
+          <label class="switch">
+            <input type="checkbox" class="form-check-input" value="✓" id="name-bool" name="n" {{ checked.n }}>
+            <span class="slider"></span>
+          </label>
+          <label class="form-check-label" for="name-bool">Name</label>
+          <br>
+
+          <label class="switch">
+            <input type="checkbox" class="form-check-input" value="✓" id="sn-bool" name="sn" {{ checked.sn }}>
+            <span class="slider"></span>
+          </label>
+          <label class="form-check-label" for="sn-bool">Serial Number</label>
+          <br>
+
+          <label class="switch">
+            <input type="checkbox" class="form-check-input" value="✓" id="l-bool" name="l" {{ checked.l }}>
+            <span class="slider"></span>
+          </label>
+          <label class="form-check-label" for="l-bool">Location</label>
+          <br>
+
+          <label class="switch">
+            <input type="checkbox" class="form-check-input" value="✓" id="u-bool" name="u" {{ checked.u }}>
+            <span class="slider"></span>
+          </label>
+          <label class="form-check-label" for="u-bool">Custom Fields</label>
+          <br>
+
         </div>
       </div>
 
@@ -61,7 +93,7 @@
         <h3>Search Results</h3>
       </div>
       <div class="card-body">
-        <p><b>{{ search_count }}</b> items match your search!</p>
+        <p><b>{{ page_obj.paginator.count }}</b> items match your search!</p>
         <ul class="list-group list-group-flush">
           {% if search_items %}
 
@@ -93,7 +125,7 @@
                 <!-- Append the searched query to the URL, so that on a search results page,
                   the pagination don't revert to listing all the listview items. -->
                 <li class="page-item">
-                  <a class="page-link" href="{% url 'search:searchbar' %}?{{search}}&page={{ page_obj.previous_page_number }}" tabindex="-1">Previous</a>
+                  <a class="page-link" href="{% url 'search:basic' %}?{{search}}&page={{ page_obj.previous_page_number }}" tabindex="-1">Previous</a>
                 </li>
               {% else %}
                 <li class="page-item disabled">
@@ -101,11 +133,11 @@
                 </li>
               {% endif %}
               {% for object in page_obj.paginator.page_range %}
-                <li class="page-item"><a class="page-link" href="{% url 'search:searchbar' %}?{{search}}&page={{ forloop.counter }}">{{ forloop.counter }}</a></li>
+                <li class="page-item"><a class="page-link" href="{% url 'search:basic' %}?{{search}}&page={{ forloop.counter }}">{{ forloop.counter }}</a></li>
               {% endfor %}
               {% if page_obj.has_next %}
                 <li class="page-item">
-                  <a class="page-link" href="{% url 'search:searchbar' %}?{{search}}&page={{ page_obj.next_page_number }}">Next</a>
+                  <a class="page-link" href="{% url 'search:basic' %}?{{search}}&page={{ page_obj.next_page_number }}">Next</a>
                 </li>
               {% else %}
                 <li class="page-item disabled">
