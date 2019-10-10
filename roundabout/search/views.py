@@ -58,7 +58,6 @@ class BasicSearch(ListView):
                 item['subline'] = 'Part Type: {}'.format(q.part_type)
 
             context['search_items'].append(item)
-        #context['search_count'] = len(context['search_items_qs'])
         return context
 
     def get_queryset(self):
@@ -74,7 +73,6 @@ class BasicSearch(ListView):
         qs_prt = Part.objects.none()
         if keywords and any([name_bool,sn_bool,udf_bool]):
             if inventory_bool:
-                query_inv = Inventory.objects.none()
                 if sn_bool and name_bool: query_inv = Q(serial_number__icontains=keywords)|Q(part__name__icontains=keywords)
                 elif sn_bool:             query_inv = Q(serial_number__icontains=keywords)
                 elif name_bool:           query_inv = Q(part__name__icontains=keywords)
@@ -86,7 +84,6 @@ class BasicSearch(ListView):
                 qs_inv = Inventory.objects.filter(query_inv).order_by('serial_number')
 
             if parts_bool:
-                query_prt = Part.objects.none()
                 if sn_bool and name_bool: query_prt = Q(part_number__icontains=keywords)|Q(name__icontains=keywords)
                 elif sn_bool:             query_prt = Q(part_number__icontains=keywords)
                 elif name_bool:           query_prt = Q(name__icontains=keywords)
