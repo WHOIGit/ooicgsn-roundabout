@@ -38,6 +38,16 @@
                     data-node-type="detail">Photo/Note</a>
 
                 <a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'deployments:ajax_deployment_snapshot' build.id %}"
+                    data-node-id="{{ build.id }}"
+                    data-location-id="{{ build.location.id }}"
+                    data-node-type="detail">Take Snapshot</a>
+
+                <a class="dropdown-item" href="{% url 'reports:build_report' build.id %}"
+                   data-node-id="{{ build.id }}"
+                   data-node-type="detail">Generate Report</a>
+
+                <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'builds:ajax_builds_update' build.id %}"
                     data-node-id="{{ build.id }}"
                     data-location-id="{{ build.location.id }}"

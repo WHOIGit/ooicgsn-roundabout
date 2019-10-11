@@ -34,6 +34,8 @@ urlpatterns = [
     path('userdefinedfields/', include('roundabout.userdefinedfields.urls', namespace='userdefinedfields')),
     path('assemblies/', include('roundabout.assemblies.urls', namespace='assemblies')),
     path('builds/', include('roundabout.builds.urls', namespace='builds')),
+    path('reports/', include('roundabout.reports.urls', namespace='reports')),
+    path('search/', include('roundabout.search.urls', namespace='search')),
     # API urls
     path('api/v1/', include('roundabout.inventory.api.urls')),
     path('api/v1/', include('roundabout.locations.api.urls')),
