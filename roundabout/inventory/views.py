@@ -2,6 +2,7 @@ import json
 import socket
 import os
 import xml.etree.ElementTree as ET
+from dateutil import parser
 
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse, reverse_lazy
@@ -48,7 +49,7 @@ class InventoryNavTreeMixin(LoginRequiredMixin, object):
 
 def load_inventory_navtree(request):
     node_id = request.GET.get('id')
-    print(node_id)
+
     if node_id == '#' or not node_id:
         locations = Location.objects.exclude(root_type='Retired') \
                     .prefetch_related('inventory__part__part_type')
@@ -56,11 +57,19 @@ def load_inventory_navtree(request):
         return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations})
     else:
         build_pk = node_id.split('_')[1]
-        build = Build.objects.get(id=build_pk)
+        build = Build.objects.prefetch_related('assembly__assembly_parts').prefetch_related('inventory').get(id=build_pk)
         return render(request, 'builds/build_tree_assembly.html', {'assembly_parts': build.assembly.assembly_parts,
                                                                    'inventory_qs': build.inventory,
                                                                    'location_pk': build.location_id,
                                                                    'build_pk': build_pk, })
+
+
+# Function to filter navtree by Part Type
+def filter_inventory_navtree(request):
+    part_types = request.GET.getlist('part_types[]')
+    part_types = list(map(int, part_types))
+    locations = Location.objects.exclude(root_type='Retired').prefetch_related('inventory__part__part_type')
+    return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations, 'part_types': part_types})
 
 
 def make_tree_copy(root_part, new_location, deployment_snapshot, parent=None ):
@@ -120,7 +129,7 @@ def print_code_zebraprinter(request, **kwargs):
                     if number == 3:
                         static_text.set('value', item.part.friendly_name_display())
                     else:
-                        static_text.set('value', item.serial_number)
+                        static_text.set('value', item.serial_number.upper())
 
                 content = ET.tostring(root, encoding='utf8').decode('utf8')
 
@@ -140,7 +149,7 @@ def print_code_zebraprinter(request, **kwargs):
                             ^PW400 \
                             ^FO20,20^BY1 \
                             ^BAN,150,Y,N,N \
-                            ^FD{}^FS^XZ'.format(item.serial_number)
+                            ^FD{}^FS^XZ'.format(item.serial_number.upper())
 
         content = content.encode()
 
@@ -340,16 +349,6 @@ def load_destination_subassemblies_by_serialnumber(request):
                                                                       'location': location, })
 
 
-# Funtion to filter navtree by Part Type
-def filter_inventory_navtree(request):
-    part_types = request.GET.getlist('part_types[]')
-    part_types = list(map(int, part_types))
-    locations = Location.objects.prefetch_related('deployments__final_location__mooring_parts__part__part_type') \
-                                .prefetch_related('inventory__part__part_type') \
-                                .prefetch_related('deployments__inventory')
-    return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations, 'part_types': part_types})
-
-
 # Inventory CBV Views for CRUD operations and menu Actions
 # ------------------------------------------------------------------------------
 # AJAX Views
@@ -366,6 +365,15 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         # Get this item's custom fields with most recent Values
         if self.object.fieldvalues.exists():
             custom_fields = self.object.fieldvalues.filter(is_current=True)
+
+            for cf in custom_fields:
+                #Check if UDF field is a DateField, if so format date for display
+                if cf.field.field_type == 'DateField':
+                    try:
+                        dt = parser.parse(cf.field_value)
+                        cf.field_value = dt.strftime("%m-%d-%Y %H:%M:%S")
+                    except:
+                        pass
         else:
             custom_fields = None
 
@@ -522,20 +530,34 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
                         if currentvalue.field_value != str(value) and currentvalue.field_value != value:
                             currentvalue.is_current = False
                             currentvalue.save()
-                            # create new value object
+                            # Create new value object
                             new_fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=value,
                                                                         inventory=self.object, is_current=True, user=self.request.user)
-                            # create action record for history
+                            # Create action record for history
+                            # Check if UDF field is a DateField, if so format date for display
+                            if new_fieldvalue.field.field_type == 'DateField':
+                                try:
+                                    value = value.strftime("%m-%d-%Y %H:%M:%S")
+                                except:
+                                    pass
+
                             self.object.detail = 'Change field value for "%s" to %s' % (currentvalue.field, value)
                             self.object.save()
                             action_record = Action.objects.create(action_type='fieldchange', detail=self.object.detail, location=self.object.location,
                                                                   user=self.request.user, inventory=self.object)
                     else:
                         if value:
-                            # create new value object
+                            # Create new value object
                             fieldvalue = FieldValue.objects.create(field_id=field_id, field_value=value,
                                                                     inventory=self.object, is_current=True, user=self.request.user)
-                            # create action record for history
+                            # Create action record for history
+                            # Check if UDF field is a DateField, if so format date for display
+                            if fieldvalue.field.field_type == 'DateField':
+                                try:
+                                    value = value.strftime("%m-%d-%Y %H:%M:%S")
+                                except:
+                                    pass
+
                             self.object.detail = 'Add initial field value for "%s" to %s' % (fieldvalue.field, value)
                             self.object.save()
                             action_record = Action.objects.create(action_type='fieldchange', detail=self.object.detail, location=self.object.location,

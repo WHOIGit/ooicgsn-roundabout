@@ -22,8 +22,15 @@ def make_tree_copy(root_part, new_assembly, parent=None):
 
 # Load the javascript navtree
 def load_assemblies_navtree(request):
-    assembly_types = AssemblyType.objects.prefetch_related('assemblies__assembly_parts__part')
-    return render(request, 'assemblies/ajax_assembly_navtree.html', {'assembly_types': assembly_types})
+    node_id = request.GET.get('id')
+
+    if node_id == '#' or not node_id:
+        assembly_types = AssemblyType.objects.prefetch_related('assemblies')
+        return render(request, 'assemblies/ajax_assembly_navtree.html', {'assembly_types': assembly_types})
+    else:
+        assembly_pk = node_id.split('_')[1]
+        assembly = Assembly.objects.prefetch_related('assembly_parts').get(id=assembly_pk)
+        return render(request, 'assemblies/assembly_tree_parts.html', {'assembly_parts': assembly.assembly_parts,})
 
 # Function to load Parts based on Part Type filter
 def load_part_templates(request):
@@ -66,7 +73,26 @@ class AssemblyHomeView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView
         return self.render_to_response(context)
 
 
-# Detail view for assemblies
+# Direct Detail view for Assembly Part
+class AssemblyDetailView(LoginRequiredMixin, DetailView):
+    model = Assembly
+    context_object_name = 'assembly'
+    template_name='assemblies/assembly_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(AssemblyDetailView, self).get_context_data(**kwargs)
+        context.update({
+            'node_type': 'assemblies'
+        })
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+
+# AJAX Detail view for assemblies
 class AssemblyAjaxDetailView(LoginRequiredMixin, DetailView):
     model = Assembly
     context_object_name = 'assembly'
@@ -204,7 +230,25 @@ class AssemblyAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, Delete
 
 ### CBV views for AssemblyPart model ###
 
-# Detail view for Assembly Part
+# Direct Detail view for Assembly Part
+class AssemblyPartDetailView(LoginRequiredMixin, DetailView):
+    model = AssemblyPart
+    context_object_name = 'assembly_part'
+    template_name='assemblies/assemblypart_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(AssemblyPartDetailView, self).get_context_data(**kwargs)
+        context.update({
+            'node_type': 'assemblyparts'
+        })
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+# AJAX Detail view for Assembly Part
 class AssemblyPartAjaxDetailView(LoginRequiredMixin, DetailView):
     model = AssemblyPart
     context_object_name = 'assembly_part'
@@ -357,6 +401,24 @@ class AssemblyPartAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, De
 
 
 # Assembly Types Template Views
+
+# Direct Detail view for Assembly Types
+class AssemblyTypeDetailView(LoginRequiredMixin, DetailView):
+    model = AssemblyType
+    context_object_name = 'assembly_type'
+    template_name='assemblies/assembly_type_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(AssemblyTypeDetailView, self).get_context_data(**kwargs)
+        context.update({
+            'node_type': 'assemblytype'
+        })
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
 
 # AJAX Views
 

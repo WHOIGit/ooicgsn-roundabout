@@ -153,7 +153,7 @@
                     <div id="print-barcode" class="print-code{% if inventory_item.part.part_type.name == 'Cable' %}-cable{% endif %}">
                         <div >
 
-          			        <img src='https://barcode.tec-it.com/barcode.ashx?data={{ inventory_item.serial_number }}&code=Code93&dpi=300&unit=Min&imagetype=Png' alt='Barcode Generator TEC-IT'/>
+          			        <img src='https://barcode.tec-it.com/barcode.ashx?data={{ inventory_item.serial_number|upper }}&code=Code93&dpi=300&unit=Min&imagetype=Png' alt='Barcode Generator TEC-IT'/>
                             <p style="font-size:8px; display: block; padding-left:78px;">
                                 {{ inventory_item.part.friendly_name_display }}
                             </p>
@@ -469,6 +469,11 @@
 
 {% block javascript %}
 <script>
+
+    /* Need to set a global JS variable is this item is on a Build to reference build_id */
+    {% if inventory_item.build %}
+        var buildID = 'builds_' + {{ inventory_item.build.id }};
+    {% endif %}
 
     $(document).ready(function(){
         $('.print-code-btn').click(function() {

@@ -6,12 +6,12 @@ app_name = 'parts'
 urlpatterns = [
     path('', view=views.PartsHomeView.as_view(), name='parts_home'),
     path('<int:pk>/', view=views.PartsDetailView.as_view(), name='parts_detail'),
-    path('<int:pk>/<int:current_location>/', view=views.PartsDetailView.as_view(), name='parts_detail'),
     path('add/', view=views.PartsCreateView.as_view(), name='parts_add'),
     path('edit/<int:pk>/', view=views.PartsUpdateView.as_view(), name='parts_update'),
     path('edit/<int:pk>/<int:current_location>/', view=views.PartsUpdateView.as_view(), name='parts_update'),
     path('delete/<int:pk>/', view=views.PartsDeleteView.as_view(), name='parts_delete'),
     path('delete/<int:pk>/<int:parent_pk>/<int:current_location>/', view=views.PartsDeleteView.as_view(), name='parts_delete'),
+    path('part_type/<int:pk>/', view=views.PartsTypeDetailView.as_view(), name='parts_type_detail'),
     # AJAX paths
     path('ajax/load-navtree/', views.load_parts_navtree, name='ajax_load_parts_navtree'),
     path('ajax/detail/<int:pk>/', view=views.PartsAjaxDetailView.as_view(), name='ajax_parts_detail'),

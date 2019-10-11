@@ -15,7 +15,7 @@
                     {% elif assembly_part.part.part_type.name == 'Structural' %}
                         data-jstree='{"icon":"fa fa-cubes"}'
                     {% endif %}
-                     id="assembly_parts_{{ assembly_part.id }}">
+                     id="assemblyparts_{{ assembly_part.id }}">
         {% else %}</li>
             <li {% if assembly_part.part.part_type.name == 'Electrical' %}
                         data-jstree='{"icon":"fa fa-bolt"}'
@@ -28,11 +28,11 @@
                     {% elif assembly_part.part.part_type.name == 'Structural' %}
                         data-jstree='{"icon":"fa fa-cubes"}'
                     {% endif %}
-                     id="assembly_parts_{{ assembly_part.id }}">
+                     id="assemblyparts_{{ assembly_part.id }}">
         {% endif %}
         <a href="#" data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' assembly_part.id %}"
            data-node-id="{{ assembly_part.id }}"
-           data-node-type="detail"
+           data-node-type="assemblyparts"
            class="
            {% if part_types %}
                {% if assembly_part.part.part_type.id in part_types %}

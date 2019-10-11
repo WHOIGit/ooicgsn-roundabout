@@ -44,8 +44,8 @@
                     data-node-type="detail">Take Snapshot</a>
 
                 <a class="dropdown-item" href="{% url 'reports:build_report' build.id %}"
-                   data-node-id="{{ assembly.id }}"
-                   data-node-type="detail">Generate Report <span class="badge badge-success"> NEW!</span></a>
+                   data-node-id="{{ build.id }}"
+                   data-node-type="detail">Generate Report</a>
 
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'builds:ajax_builds_update' build.id %}"
@@ -382,5 +382,8 @@
 
 
 {% block javascript %}
-
+<script>
+    /* Need to set a global JS variable to reference build_id */
+    var buildID = 'builds_' + {{ build.id }};
+</script>
 {% endblock javascript %}

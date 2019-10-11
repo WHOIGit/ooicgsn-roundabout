@@ -1,12 +1,27 @@
 /* Project specific Javascript goes here. */
 
-/* Auto focus to the Serial Number search box on page load */
 $(document).ready(function() {
+    /* Auto focus to the Serial Number search box on page load */
     $('#search-serial-number').focus();
+
+    /* Make the Documentation Inline Formset Jquery work */
+    $('.form-group').removeClass('row');
 });
 
-/* Make the Documentation Inline Formset Jquery work */
-$('.form-group').removeClass('row');
+/* Use History API to load AJAX data on Back button click */
+window.onpopstate = function (event) {
+  if (event.state) {
+      $.ajax({
+          url: event.state.backURL,
+          success: function (data) {
+            $("#detail-view").html(data);
+            $(navTree).jstree(true).deselect_all();
+            $(navTree).jstree(true).select_node(event.state.navTreeNodeID);
+          }
+      });
+  }
+  console.log(event.state);
+};
 
 /* AJAX navtree functions - Global */
 
@@ -29,56 +44,35 @@ $(document).ready(function() {
       }
     });
 
-    /*
-    $(navTree).on('open_node.jstree', function (event, data) {
-        console.log("node =" + data.node.id);
-        openNodes.push(data.node.id);
-        console.log(openNodes);
-    });
-    $(navTree).on('close_node.jstree', function (event, data) {
-        console.log("node =" + data.node.id);
-        var index = openNodes.indexOf(data.node.id);
-        if (index > -1) {
-          openNodes.splice(index, 1);
-        }
-        console.log(openNodes);
-    });
-    */
     var nodeID = navtreePrefix + '_' + $('.card-header').attr('data-object-id');
     console.log(nodeID);
-    $(navTree).jstree(true).select_node(nodeID);
-
-
-    /*
-    $.ajax({
-        url: navURL,
-        success: function (data) {
-
-            $(navTree).html(data);
-            $(navTree).jstree();
-            $(navTree).on('open_node.jstree', function (event, data) {
-                console.log("node =" + data.node.id);
-                openNodes.push(data.node.id);
-                console.log(openNodes);
+    $(navTree).on('ready.jstree', function (event, data) {
+        /* Need to check if the loading item is on a Build, if so need to open the Build tree first */
+        /* buildID variable is set by Django in ajax_inventory_detail or ajax_build_detail template */
+        if (typeof buildID !== 'undefined') {
+            console.log(buildID);
+            data.instance._open_to(buildID);
+            data.instance.open_node(buildID);
+            $(navTree).on("open_node.jstree", function (event, data) {
+                data.instance._open_to(nodeID);
+                data.instance.select_node(nodeID);
             });
-            $(navTree).on('close_node.jstree', function (event, data) {
-                console.log("node =" + data.node.id);
-                var index = openNodes.indexOf(data.node.id);
-                if (index > -1) {
-                  openNodes.splice(index, 1);
-                }
-                console.log(openNodes);
-            });
-            var nodeID = navtreePrefix + '_' + $('.card-header').attr('data-object-id');
-            console.log(nodeID);
-            $(navTree).jstree(true).select_node(nodeID);
-
-
+        } else {
+            data.instance._open_to(nodeID);
+            data.instance.select_node(nodeID);
         }
     });
-    */
+
     $(navTree).on('click','a',function(){
+        var nodeType = $(this).attr("data-node-type");
+
+        if (!nodeType) {
+            nodeType = navtreePrefix;
+        }
+
         var url = $(this).attr("data-detail-url");
+        var nodeID = nodeType + '_' + $(this).attr("data-node-id");
+        var itemID = $(this).attr("data-node-id");
         // Get the li ID for the jsTree node
         var navTreeNodeID = $(this).parent().attr("id");
 
@@ -89,6 +83,28 @@ $(document).ready(function() {
             },
             success: function (data) {
               $("#detail-view").html(data);
+
+              /* Use History API to change browser Back button behavior, create bookmarkable URLs */
+              if (nodeType == 'assemblyparts') {
+                  var bookmarkURL = '/assemblies/assemblypart/' + itemID;
+              } else if (nodeType == 'assemblytype') {
+                  var bookmarkURL = '/assemblies/assemblytype/' + itemID;
+              } else if (nodeType == 'part_type') {
+                  var bookmarkURL = '/parts/part_type/' + itemID;
+              } else {
+                 var bookmarkURL = '/' + nodeType + '/' + itemID
+              }
+
+              var backURL = url
+              var state = {
+                  navTreeNodeID: navTreeNodeID,
+                  itemID: itemID,
+                  nodeType: nodeType,
+                  backURL: backURL,
+                  bookmarkURL: bookmarkURL,
+              };
+              history.pushState(state, '', bookmarkURL);
+              console.log(history.state);
             }
         });
     });
@@ -188,32 +204,6 @@ $(document).ready(function(){
         })
     })
 
-    $('#content-block').on('submit', 'form.deployment-form', function (event) {
-        event.preventDefault()
-        var formData = $(this).serialize()
-        var thisURL = $(this).attr('data-url') || window.location.href
-        $.ajax({
-            method: "POST",
-            url: thisURL,
-            data: formData,
-            success: handleDeploymentFormSuccess,
-            error: handleFormError,
-        })
-    })
-
-    $('#content-block').on('submit', 'form.assembly-part-form', function (event) {
-        event.preventDefault()
-        var formData = $(this).serialize()
-        var thisURL = $(this).attr('data-url') || window.location.href
-        $.ajax({
-            method: "POST",
-            url: thisURL,
-            data: formData,
-            success: handleAssemblyPartFormSuccess,
-            error: handleFormError,
-        })
-    })
-
     function handleFormSuccess(data, textStatus, jqXHR){
         console.log(data)
         console.log(textStatus)
@@ -233,40 +223,14 @@ $(document).ready(function(){
         });
 
         var nodeID = objectTypePrefix + '_' + data.object_id ;
+        console.log(nodeID)
         $(navTree).jstree(true).settings.core.data.url = navURL;
         $(navTree).jstree(true).refresh();
-        $(navTree).on('refresh.jstree', function() {
-            var parentID = $(navTree).jstree(true).get_parent(nodeID);
-            //$(navTree).jstree(true).select_node(nodeID);
-            $(navTree).jstree(true).open_node(parentID);
-         });
-
-        /*$.ajax({
-            url: navURL,
-            success: function (data) {
-                $(navTree).jstree(true).destroy();
-                $(navTree).html(data);
-                $(navTree).jstree();
-                $(navTree).jstree(true).select_node(nodeID);
-                $.each(openNodes, function(key, value) {
-                    $(navTree).jstree(true).open_node(value);
-                });
-                console.log(openNodes);
-                $(navTree).on('open_node.jstree', function (event, data) {
-                    console.log("node =" + data.node.id);
-                    openNodes.push(data.node.id);
-                    console.log(openNodes);
-                });
-                $(navTree).on('close_node.jstree', function (event, data) {
-                    console.log("node =" + data.node.id);
-                    var index = openNodes.indexOf(data.node.id);
-                    if (index > -1) {
-                      openNodes.splice(index, 1);
-                    }
-                    console.log(openNodes);
-                });
-            }
-        });*/
+        $(navTree).on('refresh.jstree', function (event, data) {
+            data.instance.deselect_all();
+            data.instance._open_to(nodeID);
+            data.instance.select_node(nodeID);
+        });
     }
 
     function handleDeleteFormSuccess(data, textStatus, jqXHR){
@@ -294,11 +258,9 @@ $(document).ready(function(){
 
         $(navTree).jstree(true).settings.core.data.url = navURL;
         $(navTree).jstree(true).refresh();
-        $(navTree).on('refresh.jstree', function() {
-            var parentID = $(navTree).jstree(true).get_parent(nodeID);
-            $(navTree).jstree(true).select_node(nodeID);
-            $(navTree).jstree(true).open_node(parentID);
-         });
+        $(navTree).on('refresh.jstree', function (event, data) {
+          data.instance._open_to(nodeID);
+        });
     }
 
     function handleCopyFormSuccess(data, textStatus, jqXHR){
@@ -322,47 +284,6 @@ $(document).ready(function(){
                 $(navTree).jstree();
                 $(navTree).jstree(true).select_node(nodeID);
                 console.log(nodeID);
-            }
-        });
-    }
-
-    function handleAssemblyPartFormSuccess(data, textStatus, jqXHR){
-        console.log(data)
-        console.log(textStatus)
-        console.log(jqXHR)
-        $.ajax({
-            url: '/assemblies/ajax/assemblypart/detail/' + data.object_id + '/',
-            success: function (data) {
-              $("#detail-view").html(data);
-            }
-        });
-        console.log(data.object_id);
-        console.log(navtreePrefix);
-        var nodeID = 'assembly_parts' + '_' + data.object_id ;
-        $.ajax({
-            url: navURL,
-            success: function (data) {
-                $(navTree).jstree(true).destroy();
-                $(navTree).html(data);
-                $(navTree).jstree();
-                $(navTree).jstree(true).select_node(nodeID);
-                $.each(openNodes, function(key, value) {
-                    $(navTree).jstree(true).open_node(value);
-                });
-                console.log(openNodes);
-                $(navTree).on('open_node.jstree', function (event, data) {
-                    console.log("node =" + data.node.id);
-                    openNodes.push(data.node.id);
-                    console.log(openNodes);
-                });
-                $(navTree).on('close_node.jstree', function (event, data) {
-                    console.log("node =" + data.node.id);
-                    var index = openNodes.indexOf(data.node.id);
-                    if (index > -1) {
-                      openNodes.splice(index, 1);
-                    }
-                    console.log(openNodes);
-                });
             }
         });
     }
@@ -430,8 +351,9 @@ $(document).ready(function() {
     $('#content-block').on('click','.ajax-detail-link a',function(){
         var url = $(this).attr("data-detail-url");
         var nodeID = navtreePrefix + '_' + $(this).attr("data-node-id");
+        var itemID = $(this).attr("data-node-id");
         var previousNodeID = navtreePrefix + '_' + $('.card-header').attr('data-object-id');
-        console.log(previousNodeID);
+
         $.ajax({
             url: url,
             beforeSend: function() {
@@ -439,8 +361,19 @@ $(document).ready(function() {
             },
             success: function (data) {
               $("#detail-view").html(data);
-              console.log(nodeID);
               $(navTree).jstree(true).select_node(nodeID);
+
+              /* Use History API to change browser Back button behavior, create bookmarkable URLs */
+              var backURL = url
+              var bookmarkURL = '/' + navtreePrefix + '/' + itemID
+              var state = {
+                  nodeID: nodeID,
+                  itemID: itemID,
+                  backURL: backURL,
+                  bookmarkURL: bookmarkURL,
+              };
+              history.pushState(state, '', bookmarkURL);
+              console.log(history.state);
             }
         });
     });
@@ -454,12 +387,12 @@ $(document).ready(function() {
             success: function (data) {
               $("#detail-view").html(data);
               $(navTree).jstree(true).settings.core.data.url = navURL;
+              $(navTree).on('refresh.jstree', function (event, data) {
+                  data.instance.deselect_all();
+                  data.instance._open_to(nodeID);
+                  data.instance.select_node(nodeID);
+              });
               $(navTree).jstree(true).refresh();
-              $(navTree).on('refresh.jstree', function() {
-                  var parentID = $(navTree).jstree(true).get_parent(nodeID);
-                  $(navTree).jstree(true).select_node(nodeID);
-                  $(navTree).jstree(true).open_node(parentID);
-               });
 
             }
         });
@@ -472,7 +405,7 @@ $(document).ready(function() {
     });
 
     // AJAX function for Filter by Part type
-    $('#content-block').on('change','.filter-checkbox',function(event){
+    $('#content-block').on('change','.filter-checkbox', function(event){
         event.preventDefault();
         var filterList = $("#filter-part-type input:checkbox:checked").map(function(){
           return $(this).val();
@@ -484,68 +417,27 @@ $(document).ready(function() {
             data: {
               'part_types[]': filterList
             },
-            beforeSend: function() {
-                $(navTree).html('<img src="/static/images/loading-icon.gif" class="loading-icon"/>');
-            },
             success: function (data) {
-                $(navTree).jstree(true).destroy();
-                $(navTree).html(data);
-                $(navTree).jstree();
-                $.each(openNodes, function(key, value) {
-                    $(navTree).jstree(true).open_node(value);
-                });
-                $(navTree).on('open_node.jstree', function (event, data) {
-
-                    console.log("node =" + data.node.id);
-                    openNodes.push(data.node.id);
-                    console.log(openNodes);
-                });
-                $(navTree).on('close_node.jstree', function (event, data) {
-                    console.log("node =" + data.node.id);
-                    var index = openNodes.indexOf(data.node.id);
-                    if (index > -1) {
-                      openNodes.splice(index, 1);
-                    }
-                    console.log(openNodes);
-                });
-
+                $(navTree).jstree(true).settings.core.data = data;
+                $(navTree).jstree(true).open_all();
+                $(navTree).jstree(true).refresh();
 
             }
         });
     });
 
-    $('#content-block').on('click','#filter-part-type-clear',function(){
+    $('#content-block').on('click','#filter-part-type-clear', function(event){
+        event.preventDefault();
         $( ".filter-checkbox" ).prop( "checked", false );
         $.ajax({
             url: navURL,
-            beforeSend: function() {
-                $(navTree).html('<img src="/static/images/loading-icon.gif" class="loading-icon"/>');
-            },
             success: function (data) {
-                $(navTree).jstree(true).destroy();
-                $(navTree).html(data);
-                $(navTree).jstree();
-                $.each(openNodes, function(key, value) {
-                    $(navTree).jstree(true).open_node(value);
-                });
-                $(navTree).on('open_node.jstree', function (event, data) {
-
-                    console.log("node =" + data.node.id);
-                    openNodes.push(data.node.id);
-                    console.log(openNodes);
-                });
-                $(navTree).on('close_node.jstree', function (event, data) {
-                    console.log("node =" + data.node.id);
-                    var index = openNodes.indexOf(data.node.id);
-                    if (index > -1) {
-                      openNodes.splice(index, 1);
-                    }
-                    console.log(openNodes);
-                });
-
+                $(navTree).jstree(true).settings.core.data = data;
+                $(navTree).jstree(true).refresh();
 
             }
         });
+
     });
 
 

@@ -14,7 +14,7 @@ django-crispy-forms==1.7.2  # https://github.com/django-crispy-forms/django-cris
 django-redis==4.10.0  # https://github.com/niwinz/django-redis
 
 # Django REST Framework
-djangorestframework==3.9.0  # https://github.com/encode/django-rest-framework
+djangorestframework==3.10.3 # https://github.com/encode/django-rest-framework
 coreapi==2.3.3  # https://github.com/core-api/python-client
 
 # Your custom requirements go here
