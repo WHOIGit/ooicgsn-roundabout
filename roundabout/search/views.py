@@ -31,17 +31,12 @@ class BasicSearch(LoginRequiredMixin, ListView):
 
         # Check if search query exists, if so add it to context for pagination
         query = self.request.GET.get('q')
+        context['query_slug'] = 'q={}'.format(query) if query else ''  #self.request.GET.urlencode()
+        context['query'] = query
         context['checked'] = {}
         for gname in ['p','i','n','sn','l','u']:
             context['checked'][gname] = 'checked' if self.request.GET.get(gname)=='✓' else ''
-        print(context['checked'])
-
-        if query:
-            query_str = 'q={}'.format(query)
-        else:
-            query_str = None
-        context['query'] = query
-        context['query_slug'] = query_str
+            context['query_slug'] += '&{}=✓'.format(gname) if self.request.GET.get(gname)=='✓' else ''
 
         context['search_items'] = []
         for q in context['search_items_qs']:
@@ -58,6 +53,15 @@ class BasicSearch(LoginRequiredMixin, ListView):
                 item['subline'] = 'Part Type: {}'.format(q.part_type)
 
             context['search_items'].append(item)
+
+        if context['page_obj'].paginator.num_pages <=25:
+            context['custom_paginator_range'] = context['page_obj'].paginator.page_range
+        else:
+            currpage = context['page_obj'].number
+            maxpage = context['page_obj'].paginator.num_pages
+            context['custom_paginator_range'] = range(max(1,currpage-10),
+                                                      min(maxpage, currpage+11))
+        print('page',context['page_obj'].number,'of',context['page_obj'].paginator.num_pages, context['custom_paginator_range'])
         return context
 
     def get_queryset(self):
