@@ -25,7 +25,7 @@ from roundabout.userdefinedfields.models import Field
 
 
 
-class ReportsHome(TemplateView):
+class ReportsHome(LoginRequiredMixin, TemplateView):
     template_name = 'reports/reports_home.html'
 
     def get_context_data(self, **kwargs):
@@ -49,7 +49,7 @@ class BuildReport(LoginRequiredMixin, DetailView):
             context[query+'_inv'] = context['build'].inventory.filter(part__name__icontains=query)
         return context
 
-class BuildReportCsvDownload(LoginRequiredMixin,View):
+class BuildReportCsvDownload(LoginRequiredMixin, View):
 
     def get(self,request, pk):
         build = Build.objects.prefetch_related('inventory__part').get(id=pk)
@@ -84,4 +84,3 @@ class BuildReportCsvDownload(LoginRequiredMixin,View):
         writer.writerows(rows)
 
         return response
-

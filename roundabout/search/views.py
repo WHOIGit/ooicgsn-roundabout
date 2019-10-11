@@ -21,7 +21,7 @@ from roundabout.admintools.models import Printer
 from roundabout.assemblies.models import AssemblyPart
 from roundabout.builds.models import Build, BuildAction
 
-class BasicSearch(ListView):
+class BasicSearch(LoginRequiredMixin, ListView):
     template_name = 'search/search_list.html'
     context_object_name = 'search_items_qs'
     paginate_by = 20
@@ -93,4 +93,3 @@ class BasicSearch(ListView):
                 except ValueError: pass
 
         return list(qs_inv) + list(qs_prt)
-
