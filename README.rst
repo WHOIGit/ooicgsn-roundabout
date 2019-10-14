@@ -1,7 +1,7 @@
 Roundabout DB - OOI Parts and Inventory Web Application
 =========================================================
 
-Current Version: 0.2
+Current Version: 1.0
 
 Django application to manage Part, Location, and Deployment Templates, and Inventory tracking for OOI Electrical Engineering. Uses PostgreSQL database.
 
