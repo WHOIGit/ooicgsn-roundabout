@@ -13,7 +13,7 @@ Django application to manage Part, Location, and Deployment Templates, and Inven
 Requirements
 ============
 
-Django 2.0
+Django 2.2
 ------------------
 - Based on Django Cookiecutter template and included apps (http://cookiecutter-django.readthedocs.io/en/latest/index.html)
 - django-mptt - Django app to use Modified Preorder Tree Traversal for hierarchical data models
