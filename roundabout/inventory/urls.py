@@ -1,4 +1,5 @@
 from django.urls import path
+from django.urls import path
 
 from . import views
 
@@ -21,7 +22,6 @@ urlpatterns = [
     # AJAX paths
     path('ajax/load-navtree/', views.load_inventory_navtree, name='ajax_load_inventory_navtree'),
     path('ajax/detail/<int:pk>/', view=views.InventoryAjaxDetailView.as_view(), name='ajax_inventory_detail'),
-    path('ajax/by-mooring-part/detail/<int:pk>/', view=views.InventoryAjaxByMooringPartDetailView.as_view(), name='ajax_inventory_mooring_part_detail'),
     path('ajax/snapshot/detail/<int:pk>/', view=views.InventoryAjaxSnapshotDetailView.as_view(), name='ajax_inventory_snapshot_detail'),
     path('ajax/edit/<int:pk>/', view=views.InventoryAjaxUpdateView.as_view(), name='ajax_inventory_update'),
     path('ajax/add/', view=views.InventoryAjaxCreateBasicView.as_view(), name='ajax_inventory_add'),
@@ -35,10 +35,6 @@ urlpatterns = [
     # Add subassembly paths
     path('ajax/add-subassembly/<int:parent_pk>/', view=views.InventoryAjaxSubassemblyListView.as_view(), name='ajax_inventory_add_subassembly'),
     path('ajax/add-subassembly/action/<int:pk>/<int:parent_pk>/', view=views.InventoryAjaxSubassemblyActionView.as_view(), name='ajax_inventory_add_subassembly_action'),
-    # Add subassembly by Mooring Part
-    path('ajax/add-subassembly/mooring-part/<int:pk>/<int:location_pk>/<int:deployment_pk>/', view=views.InventoryByMooringPartAjaxSubassemblyListView.as_view(), name='ajax_inventory_mooring_part_add_subassembly'),
-    path('ajax/add-subassembly/mooring-part/action/<int:pk>/<int:deployment_pk>/<int:mooring_part_pk>/', view=views.InventoryByMooringPartAjaxSubassemblyActionView.as_view(), name='ajax_inventory_mooring_part_add_subassembly_action'),
-    path('ajax/add-subassembly/mooring-part/action/<int:pk>/<int:deployment_pk>/<int:mooring_part_pk>/<int:parent_pk>/', view=views.InventoryByMooringPartAjaxSubassemblyActionView.as_view(), name='ajax_inventory_mooring_part_add_subassembly_action'),
     # Add subassembly by Assembly Part
     path('ajax/add-subassembly/assembly-part/<int:pk>/<int:location_pk>/<int:build_pk>/', view=views.InventoryAjaxByAssemblyPartListView.as_view(), name='ajax_inventory_assembly_part_add_subassembly'),
     path('ajax/add-subassembly/assembly-part/action/<int:pk>/<int:build_pk>/<int:assembly_part_pk>/', view=views.InventoryAjaxByAssemblyPartyActionView.as_view(), name='ajax_inventory_assembly_part_add_subassembly_action'),
@@ -64,11 +60,9 @@ urlpatterns = [
     path('ajax/load-part-number-for-serialnumber/', views.load_partnumber_create_serialnumber, name='ajax_load_partnumber_create_serialnumber'),
     path('ajax/load-part-templates-for-serialnumber/', views.load_parttemplate_create_serialnumber, name='ajax_load_parttemplate_create_serialnumber'),
     path('ajax/load-subassemblies-by-serialnumber/', views.load_subassemblies_by_serialnumber, name='ajax_load_subassemblies_by_serialnumber'),
-    path('ajax/load-mooringpart-subassemblies-by-serialnumber/', views.load_mooringpart_subassemblies_by_serialnumber, name='ajax_load_mooringpart_subassemblies_by_serialnumber'),
     path('ajax/load-destination-subassemblies-by-serialnumber/', views.load_destination_subassemblies_by_serialnumber, name='ajax_load_destination_subassemblies_by_serialnumber'),
     path('ajax/load-parents/', views.load_parents, name='ajax_load_parents'),
     path('ajax/load-deployments/', views.load_deployments, name='ajax_load_deployments'),
-    path('ajax/load-mooring-parts/', views.load_mooring_parts, name='ajax_load_mooring_parts'),
     path('ajax/filter-navtree/', views.filter_inventory_navtree, name='ajax_filter_inventory_navtree'),
     path('ajax/print-code/<int:pk>/<code_format>/', views.print_code_zebraprinter, name='ajax_print_code'),
 ]

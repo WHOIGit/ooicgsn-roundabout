@@ -1,9 +1,14 @@
 from django.conf import settings
-from django.urls import include, path
+from django.urls import include, path, re_path
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.views.generic import TemplateView
 from django.views import defaults as default_views
+
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
@@ -21,16 +26,23 @@ urlpatterns = [
     ),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
-    # Your stuff: custom urls includes go here
     path('locations/', include('roundabout.locations.urls', namespace='locations')),
     path('parts/', include('roundabout.parts.urls', namespace='parts')),
-    path('moorings/', include('roundabout.moorings.urls', namespace='moorings')),
     path('inventory/', include('roundabout.inventory.urls', namespace='inventory')),
     path('deployments/', include('roundabout.inventory.urls_deployment', namespace='deployments')),
     path('admintools/', include('roundabout.admintools.urls', namespace='admintools')),
     path('userdefinedfields/', include('roundabout.userdefinedfields.urls', namespace='userdefinedfields')),
     path('assemblies/', include('roundabout.assemblies.urls', namespace='assemblies')),
     path('builds/', include('roundabout.builds.urls', namespace='builds')),
+    path('reports/', include('roundabout.reports.urls', namespace='reports')),
+    path('search/', include('roundabout.search.urls', namespace='search')),
+    # API urls
+    path('api/v1/', include('roundabout.inventory.api.urls')),
+    path('api/v1/', include('roundabout.locations.api.urls')),
+    path('api/v1/', include('roundabout.parts.api.urls')),
+    # API JWT token paths
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     #Summernote WYSIWYG
     path('summernote/', include('django_summernote.urls')),
 ] + static(

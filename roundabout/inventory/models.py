@@ -12,7 +12,6 @@ from mptt.models import MPTTModel, TreeForeignKey
 
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
-from roundabout.moorings.models import MooringPart
 from roundabout.assemblies.models import Assembly, AssemblyPart
 from roundabout.builds.models import Build
 from roundabout.users.models import User
@@ -177,8 +176,6 @@ class Inventory(MPTTModel):
                                    on_delete=models.SET_NULL, null=True, blank=True)
     build = models.ForeignKey(Build, related_name='inventory',
                                    on_delete=models.SET_NULL, null=True, blank=True)
-    mooring_part = TreeForeignKey(MooringPart, related_name='inventory',
-                                  on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
     assembly_part = TreeForeignKey(AssemblyPart, related_name='inventory',
                                   on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
     assigned_destination_root = TreeForeignKey('self', related_name='assigned_children',
@@ -190,7 +187,6 @@ class Inventory(MPTTModel):
     test_type = models.CharField(max_length=20, choices=TEST_TYPES, null=True, blank=True)
     flag = models.BooleanField(choices=FLAG_TYPES, blank=False, default=False)
     time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
-    custom_field_values = JSONField(blank=True, null=True)
 
     tracker = FieldTracker(fields=['location', 'deployment', 'parent', 'build'])
 
