@@ -82,7 +82,6 @@ LOCAL_APPS = [
     'roundabout.locations',
     'roundabout.parts',
     'roundabout.inventory',
-    'roundabout.moorings',
     'roundabout.admintools',
     'roundabout.userdefinedfields',
     'roundabout.assemblies',

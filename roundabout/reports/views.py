@@ -17,7 +17,6 @@ from roundabout.assemblies.models import Assembly
 from roundabout.inventory.models import Inventory
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, PartType, Revision
-from roundabout.moorings.models import MooringPart
 from roundabout.admintools.models import Printer
 from roundabout.assemblies.models import AssemblyPart
 from roundabout.builds.models import Build, BuildAction
