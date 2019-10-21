@@ -79,20 +79,22 @@ class BasicSearch(LoginRequiredMixin, ListView):
                 if sn_bool and name_bool: query_inv = Q(serial_number__icontains=keywords)|Q(part__name__icontains=keywords)
                 elif sn_bool:             query_inv = Q(serial_number__icontains=keywords)
                 elif name_bool:           query_inv = Q(part__name__icontains=keywords)
+                else:                     query_inv = Q()
                 if udf_bool:
                     query_inv = query_inv | Q(fieldvalues__field_value__icontains=keywords)
                     query_inv = query_inv | Q(part__user_defined_fields__field_name__icontains=keywords)
                 if loc_bool:
                     query_inv = query_inv | Q(location__name__icontains=keywords)
-                qs_inv = Inventory.objects.filter(query_inv).order_by('serial_number')
+                qs_inv = Inventory.objects.filter(query_inv).order_by('serial_number').distinct()
 
             if parts_bool:
                 if sn_bool and name_bool: query_prt = Q(part_number__icontains=keywords)|Q(name__icontains=keywords)
                 elif sn_bool:             query_prt = Q(part_number__icontains=keywords)
                 elif name_bool:           query_prt = Q(name__icontains=keywords)
+                else:                     query_prt = Q()
                 if udf_bool:              query_prt = query_prt | Q(user_defined_fields__field_name__icontains=keywords)
 
-                try: qs_prt = Part.objects.filter(query_prt).order_by('part_number')
+                try: qs_prt = Part.objects.filter(query_prt).order_by('part_number').distinct()
                 except ValueError: pass
 
         return list(qs_inv) + list(qs_prt)
