@@ -19,7 +19,7 @@ def add_group_permissions(apps, schema_editor):
         create_permissions(app_config, apps=apps, verbosity=0)
 
     # create Admin group, add all permissions
-    group, created = Group.objects.get_or_create(name='admin_test')
+    group, created = Group.objects.get_or_create(name='admin')
     if created or group:
         # get all models for this app
         content_type = ContentType.objects.filter(app_label='builds')
