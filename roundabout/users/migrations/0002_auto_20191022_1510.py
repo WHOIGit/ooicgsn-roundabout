@@ -5,27 +5,27 @@ import environ
 
 env = environ.Env()
 
+def generate_superuser(apps, schema_editor):
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+
+    #DJANGO_DB_NAME = os.environ.get('DJANGO_DB_NAME', "default")
+    DJANGO_SU_NAME = env('DJANGO_SU_NAME')
+    DJANGO_SU_EMAIL = env('DJANGO_SU_EMAIL')
+    DJANGO_SU_PASSWORD = env('DJANGO_SU_PASSWORD')
+
+    superuser = User.objects.create_superuser(
+        username=DJANGO_SU_NAME,
+        email=DJANGO_SU_EMAIL,
+        password=DJANGO_SU_PASSWORD)
+
+    superuser.save()
+
 class Migration(migrations.Migration):
 
     dependencies = [
         ('users', '0001_initial'),
     ]
-
-    def generate_superuser(apps, schema_editor):
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-
-        #DJANGO_DB_NAME = os.environ.get('DJANGO_DB_NAME', "default")
-        DJANGO_SU_NAME = env('DJANGO_SU_NAME')
-        DJANGO_SU_EMAIL = env('DJANGO_SU_EMAIL')
-        DJANGO_SU_PASSWORD = env('DJANGO_SU_PASSWORD')
-
-        superuser = User.objects.create_superuser(
-            username=DJANGO_SU_NAME,
-            email=DJANGO_SU_EMAIL,
-            password=DJANGO_SU_PASSWORD)
-
-        superuser.save()
 
     operations = [
         migrations.RunPython(generate_superuser),
