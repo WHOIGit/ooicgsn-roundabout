@@ -8,13 +8,21 @@ Inventory Only - only allowed to add/edit Field Values, no Field access
 
 from django.db import migrations
 from django.apps import apps
+from django.contrib.contenttypes.management import create_contenttypes
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.management import create_permissions
 
+FieldValue = apps.get_model('userdefinedfields','FieldValue')
 Group = apps.get_model('auth','Group')
 Permission = apps.get_model('auth','Permission')
 
 def add_group_permissions(apps, schema_editor):
+    # Need to create permissions manually since this is a migration
+    for app_config in apps.get_app_configs():
+        app_config.models_module = True
+        create_permissions(app_config, apps=apps, verbosity=0)
+        app_config.models_module = None
+
     # create Admin group, add all permissions
     group, created = Group.objects.get_or_create(name='admin')
     if created or group:
@@ -44,17 +52,16 @@ def add_group_permissions(apps, schema_editor):
     # create Inventory Only group, add limited permissions
     group, created = Group.objects.get_or_create(name='inventory only')
     if created or group:
-        # get FieldValue model for this app
-        content_type = ContentType.objects.get(
-            app_label='userdefinedfields',
-            model='fieldvalue',
-        )
-        # get permissions for only this model
-        permissions = Permission.objects.filter(content_type=content_type)
-        # add permission to group
-        for p in permissions:
-            group.permissions.add(p)
-            group.save()
+        # get all models for this app
+        content_type = ContentType.objects.filter(app_label='userdefinedfields')
+        # loop through each model for the app, get the permissions
+        for c in content_type:
+            print(c)
+            permissions = Permission.objects.filter(content_type=c)
+            # add permission to group
+            for p in permissions:
+                group.permissions.add(p)
+                group.save()
 
 
 class Migration(migrations.Migration):

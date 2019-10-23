@@ -15,6 +15,12 @@ Group = apps.get_model('auth','Group')
 Permission = apps.get_model('auth','Permission')
 
 def add_group_permissions(apps, schema_editor):
+    # Need to create permissions manually since this is a migration
+    for app_config in apps.get_app_configs():
+        app_config.models_module = True
+        create_permissions(app_config, apps=apps, verbosity=0)
+        app_config.models_module = None
+
     # create Admin group, add all permissions
     group, created = Group.objects.get_or_create(name='admin')
     if created or group:
