@@ -252,15 +252,25 @@ def load_new_serialnumber(request):
             part_obj = Part.objects.get(id=part_id)
 
         if part_obj:
-            inventory_qs = Inventory.objects.filter(part=part_obj).filter(serial_number__iregex=r'^(.*?)-[a-zA-Z0-9_]{5}$')
+            # Check if this a Cable, set the serial number variables accordingly
+            if part_obj.part_type.name == 'Cable':
+                regex = '^(.*?)-[a-zA-Z0-9_]{2}$'
+                fragment_length = 2
+                fragment_default = '01'
+            else:
+                regex = '^(.*?)-[a-zA-Z0-9_]{5}$'
+                fragment_length = 5
+                fragment_default = '20001'
+
+            inventory_qs = Inventory.objects.filter(part=part_obj).filter(serial_number__iregex=regex)
             if inventory_qs:
                 inventory_last = inventory_qs.latest('id')
                 last_serial_number_fragment = int(inventory_last.serial_number.split('-')[-1])
                 new_serial_number_fragment = last_serial_number_fragment + 1
                 # Fill fragment with leading zeroes if necessary
-                new_serial_number_fragment = str(new_serial_number_fragment).zfill(5)
+                new_serial_number_fragment = str(new_serial_number_fragment).zfill(fragment_length)
             else:
-                new_serial_number_fragment = 20001
+                new_serial_number_fragment = fragment_default
             new_serial_number = part_obj.part_number + '-' + str(new_serial_number_fragment)
         else:
             new_serial_number = ''
