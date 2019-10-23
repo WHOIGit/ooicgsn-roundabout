@@ -16,7 +16,7 @@ Permission = apps.get_model('auth','Permission')
 
 def add_group_permissions(apps, schema_editor):
     # create Admin group, add all permissions
-    group, created = Group.objects.get_or_create(name='admin_new')
+    group, created = Group.objects.get_or_create(name='admin')
     if created or group:
         # get all models for this app
         content_type = ContentType.objects.filter(app_label='inventory')
