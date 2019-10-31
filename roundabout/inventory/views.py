@@ -239,46 +239,41 @@ def load_revisions_by_partnumber(request):
     return render(request, 'inventory/revisions_dropdown_list_options.html', {'revisions': revisions,})
 
 
-# Function to create Serial Number from Part Number search, load result into form to preview
-def load_partnumber_create_serialnumber(request):
+# Function to create Serial Number from Part Number search or Part Template selection , load result into form to preview
+def load_new_serialnumber(request):
     part_number = request.GET.get('part_number')
+    part_id = request.GET.get('part_id')
 
-    if part_number:
-        part_obj = Part.objects.filter(part_number__icontains=part_number).first()
+    if part_number or part_id:
+        if part_number:
+            part_obj = Part.objects.filter(part_number__icontains=part_number).first()
+
+        if part_id:
+            part_obj = Part.objects.get(id=part_id)
+
         if part_obj:
-            inventory_qs = Inventory.objects.filter(part=part_obj).filter(serial_number__iregex=r'^(.*?)-[a-zA-Z0-9_]{5}$')
+            # Check if this a Cable, set the serial number variables accordingly
+            if part_obj.part_type.name == 'Cable':
+                regex = '^(.*?)-[a-zA-Z0-9_]{2}$'
+                fragment_length = 2
+                fragment_default = '01'
+            else:
+                regex = '^(.*?)-[a-zA-Z0-9_]{5}$'
+                fragment_length = 5
+                fragment_default = '20001'
+
+            inventory_qs = Inventory.objects.filter(part=part_obj).filter(serial_number__iregex=regex)
             if inventory_qs:
                 inventory_last = inventory_qs.latest('id')
                 last_serial_number_fragment = int(inventory_last.serial_number.split('-')[-1])
                 new_serial_number_fragment = last_serial_number_fragment + 1
                 # Fill fragment with leading zeroes if necessary
-                new_serial_number_fragment = str(new_serial_number_fragment).zfill(5)
+                new_serial_number_fragment = str(new_serial_number_fragment).zfill(fragment_length)
             else:
-                new_serial_number_fragment = 20001
+                new_serial_number_fragment = fragment_default
             new_serial_number = part_obj.part_number + '-' + str(new_serial_number_fragment)
         else:
             new_serial_number = ''
-    else:
-        new_serial_number = ''
-    return render(request, 'inventory/serial_number_input.html', {'new_serial_number': new_serial_number, })
-
-
-# Function to create Serial Number from Part Template selected, load result into form to preview
-def load_parttemplate_create_serialnumber(request):
-    part_id = request.GET.get('part_id')
-
-    if part_id:
-        part_obj = Part.objects.get(id=part_id)
-        inventory_qs = Inventory.objects.filter(part=part_obj).filter(serial_number__iregex=r'^(.*?)-[a-zA-Z0-9_]{5}$')
-        if inventory_qs:
-            inventory_last = inventory_qs.latest('id')
-            last_serial_number_fragment = int(inventory_last.serial_number.split('-')[-1])
-            new_serial_number_fragment = last_serial_number_fragment + 1
-            # Fill fragment with leading zeroes if necessary
-            new_serial_number_fragment = str(new_serial_number_fragment).zfill(5)
-        else:
-            new_serial_number_fragment = 20001
-        new_serial_number = part_obj.part_number + '-' + str(new_serial_number_fragment)
     else:
         new_serial_number = ''
     return render(request, 'inventory/serial_number_input.html', {'new_serial_number': new_serial_number, })
