@@ -3,6 +3,7 @@ import socket
 import os
 import xml.etree.ElementTree as ET
 from dateutil import parser
+from itertools import chain
 
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse, reverse_lazy
@@ -11,7 +12,6 @@ from django.db.models import Q
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from itertools import chain
 
 from .models import Inventory, Deployment, Action, DeploymentAction, InventorySnapshot, DeploymentSnapshot
 from .forms import *
@@ -22,6 +22,9 @@ from roundabout.userdefinedfields.models import FieldValue, Field
 from roundabout.assemblies.models import AssemblyPart
 from roundabout.builds.models import Build, BuildAction
 from common.util.mixins import AjaxFormMixin
+
+from django.contrib.sites.models import Site
+current_site = Site.objects.get_current()
 
 # Mixins
 # ------------------------------------------------------------------------------
@@ -253,7 +256,8 @@ def load_new_serialnumber(request):
 
         if part_obj:
             # Check if this a Cable, set the serial number variables accordingly
-            if part_obj.part_type.name == 'Cable':
+            print(current_site.domain)
+            if current_site.domain == 'ooi-rdb.whoi.edu' and part_obj.part_type.name == 'Cable':
                 regex = '^(.*?)-[a-zA-Z0-9_]{2}$'
                 fragment_length = 2
                 fragment_default = '01'
