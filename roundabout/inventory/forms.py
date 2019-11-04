@@ -13,6 +13,9 @@ from .models import Inventory, Deployment, Action, DeploymentSnapshot, PhotoNote
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
 from roundabout.userdefinedfields.models import FieldValue
+# Import environment variables from .env files
+import environ
+env = environ.Env()
 
 
 class InventoryForm(forms.ModelForm):
@@ -89,10 +92,14 @@ class InventoryForm(forms.ModelForm):
 
 
 class InventoryAddForm(forms.ModelForm):
-    serial_number = forms.CharField(strip=True,
-        help_text='Serial Number auto-generated. Click here to override.',
-        widget=forms.TextInput(attrs={'readonly':'readonly'}),
-    )
+    RDB_SERIALNUMBER_CREATE = env.bool('RDB_SERIALNUMBER_CREATE', default=False)
+    if RDB_SERIALNUMBER_CREATE:
+        serial_number = forms.CharField(strip=True,
+            help_text='Serial Number auto-generated. Click here to override.',
+            widget=forms.TextInput(attrs={'readonly':'readonly'}),
+        )
+    else:
+        serial_number = forms.CharField(strip=True)
 
     class Meta:
         model = Inventory
