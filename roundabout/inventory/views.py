@@ -270,15 +270,18 @@ def load_new_serialnumber(request):
                         regex = '^(.*?)-[a-zA-Z0-9_]{2}$'
                         fragment_length = 2
                         fragment_default = '01'
+                        use_part_number = True
                     else:
                         regex = '^(.*?)-[a-zA-Z0-9_]{5}$'
                         fragment_length = 5
                         fragment_default = '20001'
+                        use_part_number = True
                 else:
                     # Basic default serial number pattern (1,2,3,... etc.)
                     regex = '^(.*?)'
                     fragment_length = False
                     fragment_default = '1'
+                    use_part_number = False
 
                 inventory_qs = Inventory.objects.filter(part=part_obj).filter(serial_number__iregex=regex)
                 if inventory_qs:
@@ -291,7 +294,7 @@ def load_new_serialnumber(request):
                 else:
                     new_serial_number_fragment = fragment_default
 
-                if RDB_SERIALNUMBER_OOI_DEFAULT_PATTERN:
+                if use_part_number:
                     new_serial_number = part_obj.part_number + '-' + str(new_serial_number_fragment)
                 else:
                     new_serial_number = str(new_serial_number_fragment)
