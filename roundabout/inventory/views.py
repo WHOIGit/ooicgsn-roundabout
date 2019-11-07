@@ -3,6 +3,7 @@ import socket
 import os
 import xml.etree.ElementTree as ET
 from dateutil import parser
+from itertools import chain
 
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse, reverse_lazy
@@ -11,7 +12,6 @@ from django.db.models import Q
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from itertools import chain
 
 from .models import Inventory, Deployment, Action, DeploymentAction, InventorySnapshot, DeploymentSnapshot
 from .forms import *
@@ -22,6 +22,9 @@ from roundabout.userdefinedfields.models import FieldValue, Field
 from roundabout.assemblies.models import AssemblyPart
 from roundabout.builds.models import Build, BuildAction
 from common.util.mixins import AjaxFormMixin
+# Import environment variables from .env files
+import environ
+env = environ.Env()
 
 # Mixins
 # ------------------------------------------------------------------------------
@@ -241,42 +244,62 @@ def load_revisions_by_partnumber(request):
 
 # Function to create Serial Number from Part Number search or Part Template selection , load result into form to preview
 def load_new_serialnumber(request):
+    # Set pattern variables from .env configuration
+    RDB_SERIALNUMBER_CREATE = env.bool('RDB_SERIALNUMBER_CREATE', default=False)
+    RDB_SERIALNUMBER_OOI_DEFAULT_PATTERN = env.bool('RDB_SERIALNUMBER_OOI_DEFAULT_PATTERN', default=False)
+    RDB_SERIALNUMBER_OOI_WETCABLE_PATTERN = env.bool('RDB_SERIALNUMBER_OOI_WETCABLE_PATTERN', default=False)
+    print(RDB_SERIALNUMBER_CREATE)
+
+    # Set variables from JS request
     part_number = request.GET.get('part_number')
     part_id = request.GET.get('part_id')
+    new_serial_number = ''
 
-    if part_number or part_id:
-        if part_number:
-            part_obj = Part.objects.filter(part_number__icontains=part_number).first()
+    if RDB_SERIALNUMBER_CREATE:
+        if part_number or part_id:
+            if part_number:
+                part_obj = Part.objects.filter(part_number__icontains=part_number).first()
 
-        if part_id:
-            part_obj = Part.objects.get(id=part_id)
+            if part_id:
+                part_obj = Part.objects.get(id=part_id)
 
-        if part_obj:
-            # Check if this a Cable, set the serial number variables accordingly
-            if part_obj.part_type.name == 'Cable':
-                regex = '^(.*?)-[a-zA-Z0-9_]{2}$'
-                fragment_length = 2
-                fragment_default = '01'
-            else:
-                regex = '^(.*?)-[a-zA-Z0-9_]{5}$'
-                fragment_length = 5
-                fragment_default = '20001'
+            if part_obj:
+                if RDB_SERIALNUMBER_OOI_DEFAULT_PATTERN:
+                    # Check if this a Cable, set the serial number variables accordingly
+                    if RDB_SERIALNUMBER_OOI_WETCABLE_PATTERN and part_obj.part_type.name == 'Cable':
+                        regex = '^(.*?)-[a-zA-Z0-9_]{2}$'
+                        fragment_length = 2
+                        fragment_default = '01'
+                    else:
+                        regex = '^(.*?)-[a-zA-Z0-9_]{5}$'
+                        fragment_length = 5
+                        fragment_default = '20001'
+                else:
+                    # Basic default serial number pattern (1,2,3,... etc.)
+                    regex = '^(.*?)'
+                    fragment_length = False
+                    fragment_default = '1'
 
-            inventory_qs = Inventory.objects.filter(part=part_obj).filter(serial_number__iregex=regex)
-            if inventory_qs:
-                inventory_last = inventory_qs.latest('id')
-                last_serial_number_fragment = int(inventory_last.serial_number.split('-')[-1])
-                new_serial_number_fragment = last_serial_number_fragment + 1
-                # Fill fragment with leading zeroes if necessary
-                new_serial_number_fragment = str(new_serial_number_fragment).zfill(fragment_length)
-            else:
-                new_serial_number_fragment = fragment_default
-            new_serial_number = part_obj.part_number + '-' + str(new_serial_number_fragment)
-        else:
-            new_serial_number = ''
-    else:
-        new_serial_number = ''
-    return render(request, 'inventory/serial_number_input.html', {'new_serial_number': new_serial_number, })
+                inventory_qs = Inventory.objects.filter(part=part_obj).filter(serial_number__iregex=regex)
+                if inventory_qs:
+                    inventory_last = inventory_qs.latest('id')
+                    last_serial_number_fragment = int(inventory_last.serial_number.split('-')[-1])
+                    new_serial_number_fragment = last_serial_number_fragment + 1
+                    # Fill fragment with leading zeroes if necessary
+                    if fragment_length:
+                        new_serial_number_fragment = str(new_serial_number_fragment).zfill(fragment_length)
+                else:
+                    new_serial_number_fragment = fragment_default
+
+                if RDB_SERIALNUMBER_OOI_DEFAULT_PATTERN:
+                    new_serial_number = part_obj.part_number + '-' + str(new_serial_number_fragment)
+                else:
+                    new_serial_number = str(new_serial_number_fragment)
+
+    data = {
+        'new_serial_number': new_serial_number,
+    }
+    return JsonResponse(data)
 
 
 # Function to search subassembly options by serial number, load object

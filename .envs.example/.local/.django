@@ -11,6 +11,20 @@ REDIS_URL=redis://redis:6379/0
 # ------------------------------------------------------------------------------
 DJANGO_SECRET_KEY=9vgy4xpSMfbmesHKI5mJjZn2V6tHZhQHgSmvAoGzq4HnLpX1LagUTGiYwHJQNWCo
 
+# Roundabout Specific Django settings
+# ------------------------------------------------------------------------------
+
+# Settings for initial superuser creation
 DJANGO_SU_NAME=admin
 DJANGO_SU_EMAIL=admin@example.com
 DJANGO_SU_PASSWORD=admin
+
+# Settings for serial number generation functions
+# Default pattern - "1, 2, 3, ... etc."
+RDB_SERIALNUMBER_CREATE=True
+
+# Recommended OOI pattern - Part Number + "-20001" fragment
+RDB_SERIALNUMBER_OOI_DEFAULT_PATTERN=True
+
+# Short numbers for cable labels - Part Number + "-01" fragment
+RDB_SERIALNUMBER_OOI_WETCABLE_PATTERN=False

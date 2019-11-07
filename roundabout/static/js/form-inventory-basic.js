@@ -54,7 +54,7 @@ $(document).ready(function() {
             "part_number": partNumber
           },
           success: function (data) {
-            $("#div_id_serial_number div").html(data);
+            $('#id_serial_number').val(data.new_serial_number);
           }
       });
       return false;
@@ -101,7 +101,7 @@ $(document).ready(function() {
               "part_id": partID
             },
             success: function (data) {
-              $("#div_id_serial_number div").html(data);
+              $('#id_serial_number').val(data.new_serial_number);
             }
         });
 
