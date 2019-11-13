@@ -8,7 +8,7 @@ from django.template.defaultfilters import slugify
 from django_summernote.widgets import SummernoteWidget
 from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
 
-from .models import Part, Documentation, Revision
+from .models import Part, PartType, Documentation, Revision
 from roundabout.locations.models import Location
 from roundabout.parts.widgets import PartParentWidget, PartLocationWidget
 from roundabout.userdefinedfields.models import Field, FieldValue
@@ -145,3 +145,13 @@ class PartUdfFieldSetValueForm(forms.Form):
         if partfieldvalues:
             for fieldvalue in partfieldvalues:
                 self.fields['field_value'].initial = fieldvalue.field_value
+
+
+class PartTypeForm(forms.ModelForm):
+
+    class Meta:
+        model = PartType
+        fields = ['name', 'parent' ]
+        labels = {
+        'name': 'Part Type Name'
+    }

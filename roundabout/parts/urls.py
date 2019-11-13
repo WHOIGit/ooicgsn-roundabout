@@ -11,7 +11,6 @@ urlpatterns = [
     path('edit/<int:pk>/<int:current_location>/', view=views.PartsUpdateView.as_view(), name='parts_update'),
     path('delete/<int:pk>/', view=views.PartsDeleteView.as_view(), name='parts_delete'),
     path('delete/<int:pk>/<int:parent_pk>/<int:current_location>/', view=views.PartsDeleteView.as_view(), name='parts_delete'),
-    path('part_type/<int:pk>/', view=views.PartsTypeDetailView.as_view(), name='parts_type_detail'),
     # AJAX paths
     path('ajax/load-navtree/', views.load_parts_navtree, name='ajax_load_parts_navtree'),
     path('ajax/detail/<int:pk>/', view=views.PartsAjaxDetailView.as_view(), name='ajax_parts_detail'),
@@ -27,4 +26,10 @@ urlpatterns = [
     path('ajax/userdefinedfields/remove/action/<int:pk>/<int:field_pk>/', view=views.PartsAjaxRemoveActionUdfFieldView.as_view(), name='ajax_parts_remove_action_udf_field'),
     path('ajax/delete/<int:pk>/', view=views.PartsAjaxDeleteView.as_view(), name='ajax_parts_delete'),
     path('ajax/validate-part-number/', views.validate_part_number, name='ajax_validate_part_number'),
+    # PartType paths
+    path('part_type/<int:pk>/', view=views.PartsTypeDetailView.as_view(), name='parts_type_detail'),
+    path('part_type/', view=views.PartsTypeListView.as_view(), name='parts_type_home'),
+    path('part_type/add/', view=views.PartsTypeCreateView.as_view(), name='parts_type_add'),
+    path('part_type/edit/<int:pk>/', view=views.PartsTypeUpdateView.as_view(), name='parts_type_update'),
+    path('part_type/delete/<int:pk>/', view=views.PartsTypeDeleteView.as_view(), name='parts_type_delete'),
 ]

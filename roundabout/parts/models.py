@@ -12,12 +12,6 @@ from roundabout.userdefinedfields.models import Field
 # Create your models here
 
 class PartType(MPTTModel):
-    PART_TYPES = (
-        ('Cable', 'Cable'),
-        ('Electrical', 'Electrical'),
-        ('Mechanical', 'Mechanical'),
-        ('Sensor', 'Sensor'),
-    )
     name = models.CharField(max_length=255, unique=False)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', on_delete=models.SET_NULL)
 
@@ -29,12 +23,6 @@ class PartType(MPTTModel):
 
 
 class Part(models.Model):
-    PART_TYPES = (
-        ('Cable', 'Cable'),
-        ('Electrical', 'Electrical'),
-        ('Mechanical', 'Mechanical'),
-        ('Sensor', 'Sensor'),
-    )
     name = models.CharField(max_length=255, unique=False, db_index=True)
     friendly_name = models.CharField(max_length=255, unique=False, null=False, blank=True)
     part_type = TreeForeignKey(PartType, related_name='parts', on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
