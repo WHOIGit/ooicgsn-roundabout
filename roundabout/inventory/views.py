@@ -315,6 +315,26 @@ def load_subassemblies_by_serialnumber(request):
     return render(request, 'inventory/available_subassemblies.html', {'inventory_items': inventory_items, 'parent': parent, })
 
 
+# Function to search Build subassembly options by serial number, load object
+def load_build_subassemblies_by_serialnumber(request):
+    serial_number = request.GET.get('serial_number').strip()
+    parent_id = request.GET.get('parent_id')
+    assemblypart_id = request.GET.get('assemblypart_id')
+    build_id = request.GET.get('build_id')
+
+    if parent_id:
+        parent = Inventory.objects.get(id=parent_id)
+    else:
+        parent = None
+    assembly_part = AssemblyPart.objects.get(id=assemblypart_id)
+    build = Build.objects.get(id=build_id)
+    inventory_items = Inventory.objects.filter(serial_number__icontains=serial_number).filter(part=assembly_part.part).filter(build__isnull=True).filter(parent__isnull=True)
+    return render(request, 'inventory/available_build_subassemblies.html', {'inventory_items': inventory_items,
+                                                                      'parent': parent,
+                                                                      'assembly_part': assembly_part,
+                                                                      'build': build, })
+
+
 # Function to search destination assignment subassembly options by serial number, load object
 def load_destination_subassemblies_by_serialnumber(request):
     serial_number = request.GET.get('serial_number').strip()
