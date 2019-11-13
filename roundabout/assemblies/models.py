@@ -82,7 +82,7 @@ class AssemblyPart(MPTTModel):
 
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
-        return 'assembly_parts'
+        return 'assemblyparts'
 
     def get_subassembly_total_cost(self):
         tree = self.get_descendants(include_self=True)
