@@ -115,8 +115,10 @@
                 <i class="fa fa-cog" aria-hidden="true"></i>
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarAdmintools">
-                <a class="dropdown-item" href="{% url 'admintools:printers_home'  %}">Printers</a>
                 <a class="dropdown-item" href="{% url 'userdefinedfields:fields_home'  %}">Custom Fields</a>
+                <a class="dropdown-item" href="{% url 'assemblies:assembly_type_home'  %}">Edit Part Types</a>
+                <a class="dropdown-item" href="{% url 'assemblies:assembly_type_home'  %}">Edit Assembly Types</a>
+                <a class="dropdown-item" href="{% url 'admintools:printers_home'  %}">Printers</a>
             </div>
         </li>
         {% endif %}

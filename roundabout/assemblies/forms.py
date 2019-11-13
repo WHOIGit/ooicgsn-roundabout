@@ -1,7 +1,7 @@
 from django import forms
 from django.forms.models import inlineformset_factory
 
-from .models import Assembly, AssemblyPart
+from .models import Assembly, AssemblyPart, AssemblyType
 
 
 
@@ -58,3 +58,13 @@ class AssemblyPartForm(forms.ModelForm):
             self.fields['parent'].queryset = AssemblyPart.objects.filter(assembly_id=self.assembly_pk)
         elif self.instance.pk:
             self.fields['parent'].queryset = AssemblyPart.objects.filter(assembly=self.instance.assembly)
+
+
+class AssemblyTypeForm(forms.ModelForm):
+
+    class Meta:
+        model = AssemblyType
+        fields = ['name' ]
+        labels = {
+        'name': 'Assembly Type Name'
+    }
