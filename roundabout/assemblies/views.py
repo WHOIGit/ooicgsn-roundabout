@@ -5,7 +5,7 @@ from django.views.generic import View, DetailView, ListView, RedirectView, Updat
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 from .models import Assembly, AssemblyPart, AssemblyType, AssemblyDocument
-from .forms import AssemblyForm, AssemblyPartForm
+from .forms import AssemblyForm, AssemblyPartForm, AssemblyTypeForm
 from roundabout.parts.models import PartType, Part
 from common.util.mixins import AjaxFormMixin
 
@@ -402,6 +402,42 @@ class AssemblyPartAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, De
 
 # Assembly Types Template Views
 
+class AssemblyTypeListView(LoginRequiredMixin, ListView):
+    model = AssemblyType
+    template_name = 'assemblies/assembly_type_list.html'
+    context_object_name = 'assembly_types'
+
+
+class AssemblyTypeCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    model = AssemblyType
+    form_class = AssemblyTypeForm
+    context_object_name = 'assembly_type'
+    template_name = 'assemblies/assembly_type_form.html'
+    permission_required = 'assemblies.add_assembly'
+    redirect_field_name = 'home'
+
+    def get_success_url(self):
+        return reverse('assemblies:assembly_type_home', )
+
+class AssemblyTypeUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = AssemblyType
+    form_class = AssemblyTypeForm
+    context_object_name = 'assembly_type'
+    template_name = 'assemblies/assembly_type_form.html'
+    permission_required = 'assemblies.add_assembly'
+    redirect_field_name = 'home'
+
+    def get_success_url(self):
+        return reverse('assemblies:assembly_type_home', )
+
+
+class AssemblyTypeDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = AssemblyType
+    template_name = 'assemblies/assembly_type_confirm_delete.html'
+    success_url = reverse_lazy('assemblies:assembly_type_home')
+    permission_required = 'assemblies.delete_assembly'
+    redirect_field_name = 'home'
+
 # Direct Detail view for Assembly Types
 class AssemblyTypeDetailView(LoginRequiredMixin, DetailView):
     model = AssemblyType
@@ -421,7 +457,6 @@ class AssemblyTypeDetailView(LoginRequiredMixin, DetailView):
         return self.render_to_response(context)
 
 # AJAX Views
-
 class AssemblyTypeAjaxDetailView(LoginRequiredMixin, DetailView):
     model = AssemblyType
     context_object_name = 'assembly_type'

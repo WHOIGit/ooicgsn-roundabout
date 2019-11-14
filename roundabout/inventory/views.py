@@ -270,15 +270,18 @@ def load_new_serialnumber(request):
                         regex = '^(.*?)-[a-zA-Z0-9_]{2}$'
                         fragment_length = 2
                         fragment_default = '01'
+                        use_part_number = True
                     else:
                         regex = '^(.*?)-[a-zA-Z0-9_]{5}$'
                         fragment_length = 5
                         fragment_default = '20001'
+                        use_part_number = True
                 else:
                     # Basic default serial number pattern (1,2,3,... etc.)
                     regex = '^(.*?)'
                     fragment_length = False
                     fragment_default = '1'
+                    use_part_number = False
 
                 inventory_qs = Inventory.objects.filter(part=part_obj).filter(serial_number__iregex=regex)
                 if inventory_qs:
@@ -291,7 +294,7 @@ def load_new_serialnumber(request):
                 else:
                     new_serial_number_fragment = fragment_default
 
-                if RDB_SERIALNUMBER_OOI_DEFAULT_PATTERN:
+                if use_part_number:
                     new_serial_number = part_obj.part_number + '-' + str(new_serial_number_fragment)
                 else:
                     new_serial_number = str(new_serial_number_fragment)
@@ -310,6 +313,26 @@ def load_subassemblies_by_serialnumber(request):
     parent = Inventory.objects.get(id=parent_id)
     inventory_items = Inventory.objects.filter(serial_number__icontains=serial_number)
     return render(request, 'inventory/available_subassemblies.html', {'inventory_items': inventory_items, 'parent': parent, })
+
+
+# Function to search Build subassembly options by serial number, load object
+def load_build_subassemblies_by_serialnumber(request):
+    serial_number = request.GET.get('serial_number').strip()
+    parent_id = request.GET.get('parent_id')
+    assemblypart_id = request.GET.get('assemblypart_id')
+    build_id = request.GET.get('build_id')
+
+    if parent_id:
+        parent = Inventory.objects.get(id=parent_id)
+    else:
+        parent = None
+    assembly_part = AssemblyPart.objects.get(id=assemblypart_id)
+    build = Build.objects.get(id=build_id)
+    inventory_items = Inventory.objects.filter(serial_number__icontains=serial_number).filter(part=assembly_part.part).filter(build__isnull=True).filter(parent__isnull=True)
+    return render(request, 'inventory/available_build_subassemblies.html', {'inventory_items': inventory_items,
+                                                                      'parent': parent,
+                                                                      'assembly_part': assembly_part,
+                                                                      'build': build, })
 
 
 # Function to search destination assignment subassembly options by serial number, load object

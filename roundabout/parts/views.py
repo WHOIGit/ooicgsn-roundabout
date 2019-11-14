@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.template.defaultfilters import slugify
 
 from .models import Part, PartType, Revision, Documentation
-from .forms import PartForm, RevisionForm, DocumentationFormset, RevisionFormset, PartUdfAddFieldForm, PartUdfFieldSetValueForm
+from .forms import PartForm, PartTypeForm, RevisionForm, DocumentationFormset, RevisionFormset, PartUdfAddFieldForm, PartUdfFieldSetValueForm
 
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory
@@ -709,6 +709,42 @@ class PartsDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
 
 
 # Part Types Template Views
+
+class PartsTypeListView(LoginRequiredMixin, ListView):
+    model = PartType
+    template_name = 'parts/part_type_list.html'
+    context_object_name = 'part_types'
+
+
+class PartsTypeCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    model = PartType
+    form_class = PartTypeForm
+    context_object_name = 'part_type'
+    template_name = 'parts/part_type_form.html'
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
+    def get_success_url(self):
+        return reverse('parts:parts_type_home', )
+
+class PartsTypeUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = PartType
+    form_class = PartTypeForm
+    context_object_name = 'part_type'
+    template_name = 'parts/part_type_form.html'
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
+    def get_success_url(self):
+        return reverse('parts:parts_type_home', )
+
+
+class PartsTypeDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = PartType
+    template_name = 'parts/part_type_confirm_delete.html'
+    success_url = reverse_lazy('parts:parts_type_home')
+    permission_required = 'parts.delete_part'
+    redirect_field_name = 'home'
 
 # Direct detail view
 class PartsTypeDetailView(LoginRequiredMixin, DetailView):

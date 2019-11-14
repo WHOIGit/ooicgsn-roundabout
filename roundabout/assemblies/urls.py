@@ -25,4 +25,8 @@ urlpatterns = [
     path('ajax/load-assembly-parts/', views.load_assembly_parts, name='ajax_load_assembly_parts'),
     # AssemblyType paths
     path('ajax/assemblytype/detail/<int:pk>/', view=views.AssemblyTypeAjaxDetailView.as_view(), name='ajax_assembly_type_detail'),
+    path('assemblytype/', view=views.AssemblyTypeListView.as_view(), name='assembly_type_home'),
+    path('assemblytype/add/', view=views.AssemblyTypeCreateView.as_view(), name='assembly_type_add'),
+    path('assemblytype/edit/<int:pk>/', view=views.AssemblyTypeUpdateView.as_view(), name='assembly_type_update'),
+    path('assemblytype/delete/<int:pk>/', view=views.AssemblyTypeDeleteView.as_view(), name='assembly_type_delete'),
 ]

@@ -1,0 +1,31 @@
+<ul class="list-group list-group-flush">
+
+{% if inventory_items %}
+
+      {% for inventory in inventory_items %}
+
+      <li class="list-group-item">
+          <div class="ajax-add-subassembly-link">
+          {% if inventory.part.friendly_name %} {{ inventory.part.friendly_name}} {% else %} {{ inventory.part.name }} {% endif %}
+          - {{ inventory.serial_number }} <br>Current Location: {{ inventory.location.name }}
+
+          <a href="#"
+              {% if parent %}
+                  data-detail-url="{% url 'inventory:ajax_inventory_assembly_part_add_subassembly_action' inventory.id build.id assembly_part.id parent.id %}"
+              {% else %}
+                  data-detail-url="{% url 'inventory:ajax_inventory_assembly_part_add_subassembly_action' inventory.id build.id assembly_part.id %}"
+              {% endif %}
+              data-node-id="{{ inventory.id }}"
+              class="btn btn-primary btn-sm float-right"
+              role="button">Add</a>
+
+
+          </div>
+      </li>
+
+      {% endfor %}
+{% else %}
+    <p>NONE</p>
+{% endif %}
+
+</ul>

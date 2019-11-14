@@ -60,6 +60,7 @@ urlpatterns = [
     path('ajax/load-new-serialnumber/', views.load_new_serialnumber, name='ajax_load_new_serialnumber'),
     path('ajax/load-subassemblies-by-serialnumber/', views.load_subassemblies_by_serialnumber, name='ajax_load_subassemblies_by_serialnumber'),
     path('ajax/load-destination-subassemblies-by-serialnumber/', views.load_destination_subassemblies_by_serialnumber, name='ajax_load_destination_subassemblies_by_serialnumber'),
+    path('ajax/load-build-subassemblies-by-serialnumber/', views.load_build_subassemblies_by_serialnumber, name='ajax_load_build_subassemblies_by_serialnumber'),
     path('ajax/load-parents/', views.load_parents, name='ajax_load_parents'),
     path('ajax/load-deployments/', views.load_deployments, name='ajax_load_deployments'),
     path('ajax/filter-navtree/', views.filter_inventory_navtree, name='ajax_filter_inventory_navtree'),

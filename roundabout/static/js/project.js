@@ -64,13 +64,15 @@ $(document).ready(function() {
     });
 
     $(navTree).on('click','a',function(){
-        var nodeType = $(this).attr("data-node-type");
 
+        var nodeType = $(this).attr("data-node-type");
+        console.log(nodeType);
         if (!nodeType) {
             nodeType = navtreePrefix;
         }
 
         var url = $(this).attr("data-detail-url");
+        console.log(url);
         var nodeID = nodeType + '_' + $(this).attr("data-node-id");
         var itemID = $(this).attr("data-node-id");
         // Get the li ID for the jsTree node

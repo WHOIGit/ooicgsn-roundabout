@@ -1,7 +1,7 @@
 <ul>
 {% for assembly_type in assembly_types %}
 
-    <li data-jstree='{"icon":"fa fa-rocket"}' id="assemblytype_{{ assembly_type.id }}">
+    <li data-jstree='{"icon":"fa fa-cubes"}' id="assemblytype_{{ assembly_type.id }}">
             <a href="#"
                     data-detail-url="{% url 'assemblies:ajax_assembly_type_detail' assembly_type.id %}"
                     data-node-id='{{ assembly_type.id }}'
