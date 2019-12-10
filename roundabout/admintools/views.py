@@ -4,6 +4,7 @@ import io
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
+from django.db import IntegrityError
 from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
@@ -11,6 +12,7 @@ from .forms import PrinterForm, ImportInventoryForm
 from .models import Printer
 from roundabout.userdefinedfields.models import FieldValue, Field
 from roundabout.inventory.models import Inventory
+from roundabout.parts.models import Part
 
 # Bulk Inventory Import Functions
 # ------------------------------------------
@@ -49,15 +51,30 @@ class ImportInventoryUploadView(FormView):
         csv_file.seek(0)
         reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
         for row in reader:
-            # do something with row data.
-            print(row)
+            # Loop through each row, run validation for different fields
             for key, value in row.items():
                 print(key, value)
+                if key == 'serial_number':
+                    new_item, created = Inventory.objects.get_or_create(serial_number=value.strip())
+                    if not created:
+                        print('Serial Number exists!')
+                        break
+
+                if key == 'part_number':
+                    try:
+                        part = Part.objects.get(part_number=value.strip())
+                    except Part.DoesNotExist:
+                        part = None
+                        print('No matching Part')
+
+                    new_item.part = part
+                    new_item.save()
 
         return super(ImportInventoryUploadView, self).form_valid(form)
 
 
 # Printer functionality
+# ----------------------
 
 class PrinterListView(LoginRequiredMixin, ListView):
     model = Printer
