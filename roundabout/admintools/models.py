@@ -1,6 +1,7 @@
 from django.db import models
+from django.contrib.postgres.fields import JSONField
 
-# Create your models here.
+# AdminTool models
 
 class Printer(models.Model):
     PRINTER_TYPES = (
@@ -16,3 +17,20 @@ class Printer(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class TempImport(models.Model):
+    name = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
+class TempImportItem(models.Model):
+    data = JSONField()
+    tempimport = models.ForeignKey(TempImport, related_name='tempimportitems',
+                                   on_delete=models.CASCADE, null=True, blank=False)
+
+    def __str__(self):
+        return self.id

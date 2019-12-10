@@ -9,7 +9,7 @@ from django.views.generic import View, DetailView, ListView, RedirectView, Updat
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 from .forms import PrinterForm, ImportInventoryForm
-from .models import Printer
+from .models import Printer, TempImport, TempImportItem
 from roundabout.userdefinedfields.models import FieldValue, Field
 from roundabout.inventory.models import Inventory
 from roundabout.parts.models import Part
@@ -48,27 +48,57 @@ class ImportInventoryUploadView(FormView):
 
     def form_valid(self, form):
         csv_file = self.request.FILES['document']
+        # Create or get parent TempImport object
+        tempimport_obj, created = TempImport.objects.get_or_create(name=csv_file.name)
+        # If already exists, reset all the related items
+        if created:
+            tempimport_obj.tempimportitems.all().delete()
+
+        # Set up the Django file object for CSV DictReader
         csv_file.seek(0)
         reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+
         for row in reader:
+            data = {}
             # Loop through each row, run validation for different fields
             for key, value in row.items():
                 print(key, value)
                 if key == 'serial_number':
-                    new_item, created = Inventory.objects.get_or_create(serial_number=value.strip())
-                    if not created:
-                        print('Serial Number exists!')
-                        break
+                    try:
+                        item = Inventory.objects.get(serial_number=value.strip())
+                    except Inventory.DoesNotExist:
+                        item = None
+
+                    if item:
+                        data['serial_number'] = value.strip()
+                    else:
+                        data['serial_number'] = 'ERROR. Serial Number already exists'
 
                 if key == 'part_number':
                     try:
                         part = Part.objects.get(part_number=value.strip())
                     except Part.DoesNotExist:
                         part = None
-                        print('No matching Part')
 
-                    new_item.part = part
-                    new_item.save()
+                    if item:
+                        data['part_number'] = value.strip()
+                    else:
+                        data['part_number'] = 'ERROR. No matching Part Number'
+
+                if key == 'Location':
+                    try:
+                        location = Location.objects.get(name=value.strip())
+                    except Location.DoesNotExist:
+                        location = None
+                        print('No matching Location')
+
+                    if item:
+                        data['Location'] = value.strip()
+                    else:
+                        data['Location'] = 'ERROR. No matching Location'
+
+                tempitem_obj = TempImportItem(data=data, tempimport=tempimport_obj)
+                tempitem_obj.save()
 
         return super(ImportInventoryUploadView, self).form_valid(form)
 
