@@ -1,16 +1,67 @@
+import csv
+import io
+
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
-from .forms import PrinterForm
+from .forms import PrinterForm, ImportInventoryForm
 from .models import Printer
+from roundabout.userdefinedfields.models import FieldValue, Field
+from roundabout.inventory.models import Inventory
+
+# Bulk Inventory Import Functions
+# ------------------------------------------
+# Create a blank CSV template for user to download and populate
+class ImportInventoryCreateTemplateView(View):
+
+    def get(self, request, *args, **kwargs):
+        # Create the HttpResponse object with the appropriate CSV header.
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
+
+        # Create default list of required fields
+        headers = ['Serial Number', 'Part Number', 'Location', 'Notes']
+
+        # Get all UDF fields for column names
+        custom_fields = Field.objects.all()
+
+        if custom_fields:
+            for field in custom_fields:
+                headers.append(field.field_name)
+
+        writer = csv.writer(response)
+        writer.writerow(headers)
+
+        return response
+
+
+# Upload formview for Inventory Bulk upload
+class ImportInventoryUploadView(FormView):
+    form_class = ImportInventoryForm
+    template_name = 'admintools/import_inventory_upload_form.html'
+    success_url = reverse_lazy('admintools:printers_home')
+
+    def form_valid(self, form):
+        csv_file = self.request.FILES['document']
+        csv_file.seek(0)
+        reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+        for row in reader:
+            # do something with row data.
+            print(row)
+            for key, value in row.items():
+                print(key, value)
+
+        return super(ImportInventoryUploadView, self).form_valid(form)
+
 
 # Printer functionality
 
 class PrinterListView(LoginRequiredMixin, ListView):
     model = Printer
-    template_name = 'printer_list.html'
+    template_name = 'admintools/printer_list.html'
     context_object_name = 'printers'
 
 

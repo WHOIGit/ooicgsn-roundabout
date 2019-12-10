@@ -3,6 +3,10 @@ from django import forms
 from .models import Printer
 
 
+class ImportInventoryForm(forms.Form):
+    document = forms.FileField()
+
+
 class PrinterForm(forms.ModelForm):
 
     class Meta:
