@@ -75,9 +75,9 @@ class ImportInventoryUploadView(FormView):
                         item = None
 
                     if not item:
-                        data.append({'serial_number': value.strip()})
+                        data.append({'Serial Number': {'data': value.strip(), 'error': False}})
                     else:
-                        data.append({'serial_number': value + '<div class="alert alert-danger" role="alert">ERROR. Serial Number already exists</div>'})
+                        data.append({'Serial Number': {'data': value.strip(), 'error': True}})
 
                 if key == 'Part Number':
                     try:
@@ -86,9 +86,9 @@ class ImportInventoryUploadView(FormView):
                         part = None
 
                     if part:
-                        data.append({'part_number': value.strip()})
+                        data.append({'Part Number': {'data': value.strip(), 'error': False}})
                     else:
-                        data.append({'part_number': value + '<div class="alert alert-danger" role="alert">ERROR. No matching Part Number</div>'})
+                        data.append({'Part Number': {'data': value.strip(), 'error': True}})
 
 
                 if key == 'Location':
@@ -99,9 +99,9 @@ class ImportInventoryUploadView(FormView):
                         print('No matching Location')
 
                     if location:
-                        data.append({'location': value.strip()})
+                        data.append({'Location': {'data': value.strip(), 'error': False}})
                     else:
-                        data.append({'location': value + '<div class="alert alert-danger" role="alert">ERROR. No matching Location</div>'})
+                        data.append({'Location': {'data': value.strip(), 'error': True}})
 
             print(data)
             tempitem_obj = TempImportItem(data=data, tempimport=tempimport_obj)

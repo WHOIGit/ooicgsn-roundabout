@@ -6,7 +6,7 @@
 <div class="container">
 
   <div class="parts-add-btn">
-      <a href="{% url 'admintools:printers_add' %}" role="button" class="btn btn-primary">Add Printer</a>
+      <a href="{% url 'admintools:printers_add' %}" role="button" class="btn btn-primary">Import Ready! Complete Import</a>
   </div>
   <h2>Preview Import</h2>
 
@@ -28,9 +28,20 @@
         {% for item in tempimport.tempimportitems.all %}
             <tr>
                 {% for i in item.data %}
-                {% for key, value in i.items %}
-                      <td>{{ value|safe }}</td>
-                {% endfor %}
+                    {% for key, value in i.items %}
+                          <td>
+                              {{ value.data }}
+                              {% if value.error %}
+                                {% if key == 'Location' %}
+                                    <div class="alert alert-danger" role="alert">ERROR. No matching Location. Check if Location exists.</div>
+                                {% elif key == 'Part Number' %}
+                                    <div class="alert alert-danger" role="alert">ERROR. No matching Part. Check if Part Number exists.</div>
+                                {% elif key == 'Serial Number' %}
+                                    <div class="alert alert-danger" role="alert">ERROR. Serial Number already exists.</div>
+                                {% endif %}
+                              {% endif %}
+                          </td>
+                    {% endfor %}
                 {% endfor %}
 
             </tr>
