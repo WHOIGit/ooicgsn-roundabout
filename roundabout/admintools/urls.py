@@ -12,4 +12,5 @@ urlpatterns = [
     # Import tool
     path('import/inventory/create-template/', view=views.ImportInventoryCreateTemplateView.as_view(), name='import_inventory_create_template'),
     path('import/inventory/upload/', view=views.ImportInventoryUploadView.as_view(), name='import_inventory_upload'),
+    path('import/inventory/upload/<int:pk>/', view=views.ImportInventoryPreviewDetailView.as_view(), name='import_inventory_preview_detail'),
 ]

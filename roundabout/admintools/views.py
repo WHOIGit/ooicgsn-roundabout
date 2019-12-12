@@ -1,7 +1,8 @@
 import csv
 import io
+import json
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.db import IntegrityError
@@ -13,6 +14,7 @@ from .models import Printer, TempImport, TempImportItem
 from roundabout.userdefinedfields.models import FieldValue, Field
 from roundabout.inventory.models import Inventory
 from roundabout.parts.models import Part
+from roundabout.locations.models import Location
 
 # Bulk Inventory Import Functions
 # ------------------------------------------
@@ -44,14 +46,16 @@ class ImportInventoryCreateTemplateView(View):
 class ImportInventoryUploadView(FormView):
     form_class = ImportInventoryForm
     template_name = 'admintools/import_inventory_upload_form.html'
-    success_url = reverse_lazy('admintools:printers_home')
+
+    def get_success_url(self):
+        return reverse('admintools:import_inventory_preview_detail', args=(self.object.id,))
 
     def form_valid(self, form):
         csv_file = self.request.FILES['document']
         # Create or get parent TempImport object
         tempimport_obj, created = TempImport.objects.get_or_create(name=csv_file.name)
         # If already exists, reset all the related items
-        if created:
+        if not created:
             tempimport_obj.tempimportitems.all().delete()
 
         # Set up the Django file object for CSV DictReader
@@ -59,31 +63,33 @@ class ImportInventoryUploadView(FormView):
         reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
 
         for row in reader:
-            data = {}
+            # Need to put this dictionary in a list to maintain column order
+            data = []
             # Loop through each row, run validation for different fields
             for key, value in row.items():
                 print(key, value)
-                if key == 'serial_number':
+                if key == 'Serial Number':
                     try:
                         item = Inventory.objects.get(serial_number=value.strip())
                     except Inventory.DoesNotExist:
                         item = None
 
-                    if item:
-                        data['serial_number'] = value.strip()
+                    if not item:
+                        data.append({'serial_number': value.strip()})
                     else:
-                        data['serial_number'] = 'ERROR. Serial Number already exists'
+                        data.append({'serial_number': value + '<div class="alert alert-danger" role="alert">ERROR. Serial Number already exists</div>'})
 
-                if key == 'part_number':
+                if key == 'Part Number':
                     try:
                         part = Part.objects.get(part_number=value.strip())
                     except Part.DoesNotExist:
                         part = None
 
-                    if item:
-                        data['part_number'] = value.strip()
+                    if part:
+                        data.append({'part_number': value.strip()})
                     else:
-                        data['part_number'] = 'ERROR. No matching Part Number'
+                        data.append({'part_number': value + '<div class="alert alert-danger" role="alert">ERROR. No matching Part Number</div>'})
+
 
                 if key == 'Location':
                     try:
@@ -92,15 +98,23 @@ class ImportInventoryUploadView(FormView):
                         location = None
                         print('No matching Location')
 
-                    if item:
-                        data['Location'] = value.strip()
+                    if location:
+                        data.append({'location': value.strip()})
                     else:
-                        data['Location'] = 'ERROR. No matching Location'
+                        data.append({'location': value + '<div class="alert alert-danger" role="alert">ERROR. No matching Location</div>'})
 
-                tempitem_obj = TempImportItem(data=data, tempimport=tempimport_obj)
-                tempitem_obj.save()
+            print(data)
+            tempitem_obj = TempImportItem(data=data, tempimport=tempimport_obj)
+            tempitem_obj.save()
 
-        return super(ImportInventoryUploadView, self).form_valid(form)
+        #return super(ImportInventoryUploadView, self).form_valid(form)
+        return HttpResponseRedirect(reverse('admintools:import_inventory_preview_detail', args=(tempimport_obj.id,)))
+
+# Create a blank CSV template for user to download and populate
+class ImportInventoryPreviewDetailView(DetailView):
+    model = TempImport
+    context_object_name = 'tempimport'
+    template_name='admintools/import_tempimport_detail.html'
 
 
 # Printer functionality
