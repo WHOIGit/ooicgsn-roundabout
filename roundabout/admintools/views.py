@@ -47,9 +47,6 @@ class ImportInventoryUploadView(FormView):
     form_class = ImportInventoryForm
     template_name = 'admintools/import_inventory_upload_form.html'
 
-    def get_success_url(self):
-        return reverse('admintools:import_inventory_preview_detail', args=(self.object.id,))
-
     def form_valid(self, form):
         csv_file = self.request.FILES['document']
         # Create or get parent TempImport object
@@ -57,6 +54,7 @@ class ImportInventoryUploadView(FormView):
         # If already exists, reset all the related items
         if not created:
             tempimport_obj.tempimportitems.all().delete()
+        # Error catch variable
 
         # Set up the Django file object for CSV DictReader
         csv_file.seek(0)
@@ -75,9 +73,9 @@ class ImportInventoryUploadView(FormView):
                         item = None
 
                     if not item:
-                        data.append({'Serial Number': {'data': value.strip(), 'error': False}})
+                        data.append({'field_name': 'Serial Number', 'data': value.strip(), 'error': False})
                     else:
-                        data.append({'Serial Number': {'data': value.strip(), 'error': True}})
+                        data.append({'field_name': 'Serial Number', 'data': value.strip(), 'error': True})
 
                 if key == 'Part Number':
                     try:
@@ -86,11 +84,11 @@ class ImportInventoryUploadView(FormView):
                         part = None
 
                     if part:
-                        data.append({'Part Number': {'data': value.strip(), 'error': False}})
+                        data.append({'field_name': 'Part Number', 'data': value.strip(), 'error': False})
                     else:
-                        data.append({'Part Number': {'data': value.strip(), 'error': True}})
+                        data.append({'field_name': 'Part Number', 'data': value.strip(), 'error': True})
 
-
+                """
                 if key == 'Location':
                     try:
                         location = Location.objects.get(name=value.strip())
@@ -102,19 +100,76 @@ class ImportInventoryUploadView(FormView):
                         data.append({'Location': {'data': value.strip(), 'error': False}})
                     else:
                         data.append({'Location': {'data': value.strip(), 'error': True}})
-
+                """
             print(data)
             tempitem_obj = TempImportItem(data=data, tempimport=tempimport_obj)
             tempitem_obj.save()
+            self.tempimport_obj = tempimport_obj
 
-        #return super(ImportInventoryUploadView, self).form_valid(form)
-        return HttpResponseRedirect(reverse('admintools:import_inventory_preview_detail', args=(tempimport_obj.id,)))
+        return super(ImportInventoryUploadView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse('admintools:import_inventory_preview_detail', args=(self.tempimport_obj.id,))
+
+# Complete the import process after successful Preview step
+class ImportInventoryUploadAddActionView(RedirectView):
+    permanent = False
+    query_string = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        try:
+            tempimport_obj = TempImport.objects.get(id=self.kwargs['pk'])
+        except:
+            tempimport_obj = None
+
+        if tempimport_obj:
+            # get all the Inventory items to upload from the Temp tables
+            for item in tempimport_obj.tempimportitems.all():
+                inventory_obj = Inventory()
+
+                for field in item.data:
+                    for key, value in field.items():
+                        print(key, value)
+                        if key == 'Serial Number':
+                            inventory_obj.serial_number = value
+                        elif key == 'Part Number':
+                            part = Part.objects.get(part_number=value)
+                            inventory_obj.part = part
+                        elif key == 'Location':
+                            location = Location.objects.get(name=value.strip)
+                            inventory_obj.location = location
+
+                inventory_obj.save()
+
+        return reverse('admintools:import_inventory_upload_success', )
+
+
+class ImportInventoryUploadSuccessView(TemplateView):
+    template_name = "admintools/import_inventory_upload_success.html"
+
 
 # Create a blank CSV template for user to download and populate
 class ImportInventoryPreviewDetailView(DetailView):
     model = TempImport
     context_object_name = 'tempimport'
     template_name='admintools/import_tempimport_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(ImportInventoryPreviewDetailView, self).get_context_data(**kwargs)
+        # Need to check if any errors exist in the upload so we can disable next step if necessary
+        items = self.object.tempimportitems.all()
+        valid_upload = items.filter(data__0__has_key='error')
+
+        for item in items:
+            print(item.data)
+
+        print(valid_upload.count())
+
+
+        context.update({
+            'valid_upload': 'valid_upload'
+        })
+        return context
 
 
 # Printer functionality

@@ -6,7 +6,7 @@
 <div class="container">
 
   <div class="parts-add-btn">
-      <a href="{% url 'admintools:printers_add' %}" role="button" class="btn btn-primary">Import Ready! Complete Import</a>
+      <a href="{% url 'admintools:import_inventory_upload_add_action' tempimport.id %}" role="button" class="btn btn-primary">Import Ready! Complete Import</a>
   </div>
   <h2>Preview Import</h2>
 
@@ -15,33 +15,32 @@
   <h4>Import from {{ tempimport.name }}</h4>
   <table class="table table-striped table-hover">
       <thead>
-          {% for item in tempimport.tempimportitems.all|slice:":1" %}
-              {% for i in item.data %}
-                  {% for key, value in i.items %}
-                    <th>{{ key }}</th>
-                  {% endfor %}
+          {% for import in tempimport.tempimportitems.all|slice:":1" %}
+              {% for col in import.data %}
+
+                    <th>{{ col.field_name }}</th>
+
               {% endfor %}
           {% endfor %}
 
       </thead>
       <tbody>
-        {% for item in tempimport.tempimportitems.all %}
+        {% for import in tempimport.tempimportitems.all %}
             <tr>
-                {% for i in item.data %}
-                    {% for key, value in i.items %}
+                {% for col in import.data %}
                           <td>
-                              {{ value.data }}
-                              {% if value.error %}
-                                {% if key == 'Location' %}
+                              {{ col.data }}
+                              {% if col.error %}
+                                {% if col.field_name == 'Location' %}
                                     <div class="alert alert-danger" role="alert">ERROR. No matching Location. Check if Location exists.</div>
-                                {% elif key == 'Part Number' %}
+                                {% elif col.field_name == 'Part Number' %}
                                     <div class="alert alert-danger" role="alert">ERROR. No matching Part. Check if Part Number exists.</div>
-                                {% elif key == 'Serial Number' %}
+                                {% elif col.field_name == 'Serial Number' %}
                                     <div class="alert alert-danger" role="alert">ERROR. Serial Number already exists.</div>
                                 {% endif %}
                               {% endif %}
                           </td>
-                    {% endfor %}
+
                 {% endfor %}
 
             </tr>
