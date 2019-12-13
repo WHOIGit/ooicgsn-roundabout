@@ -5,14 +5,19 @@
 {% block content %}
 <div class="container">
 
-  <div class="parts-add-btn">
-      <a href="{% url 'admintools:import_inventory_upload_add_action' tempimport.id %}" role="button" class="btn btn-primary">Import Ready! Complete Import</a>
-  </div>
   <h2>Preview Import</h2>
 
   <hr>
 
-  <h4>Import from {{ tempimport.name }}</h4>
+  <h4>
+      Import from {{ tempimport.name }}
+      {% if valid_upload %}
+          <a href="{% url 'admintools:import_inventory_upload_add_action' tempimport.id %}" role="button" class="btn btn-success ml-3">Import Valid! Click here to complete</a>
+      {% else %}
+          <span class="badge badge-danger ml-3">Import Invalid. Fix the errors listed below.</span>
+      {% endif %}
+  </h4>
+
   <table class="table table-striped table-hover">
       <thead>
           {% for import in tempimport.tempimportitems.all|slice:":1" %}
@@ -29,7 +34,7 @@
             <tr>
                 {% for col in import.data %}
                           <td>
-                              {{ col.data }}
+                              {{ col.field_value }}
                               {% if col.error %}
                                 {% if col.field_name == 'Location' %}
                                     <div class="alert alert-danger" role="alert">ERROR. No matching Location. Check if Location exists.</div>

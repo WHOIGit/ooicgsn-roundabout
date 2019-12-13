@@ -67,29 +67,32 @@ class ImportInventoryUploadView(FormView):
             for key, value in row.items():
                 print(key, value)
                 if key == 'Serial Number':
+                    # Check if Serial Number already being used
                     try:
                         item = Inventory.objects.get(serial_number=value.strip())
                     except Inventory.DoesNotExist:
                         item = None
 
                     if not item:
-                        data.append({'field_name': 'Serial Number', 'data': value.strip(), 'error': False})
+                        data.append({'field_name': 'Serial Number', 'field_value': value.strip(), 'error': False})
                     else:
-                        data.append({'field_name': 'Serial Number', 'data': value.strip(), 'error': True})
+                        data.append({'field_name': 'Serial Number', 'field_value': value.strip(), 'error': True})
 
                 if key == 'Part Number':
+                    # Check if Part template exists
                     try:
                         part = Part.objects.get(part_number=value.strip())
                     except Part.DoesNotExist:
                         part = None
 
                     if part:
-                        data.append({'field_name': 'Part Number', 'data': value.strip(), 'error': False})
+                        data.append({'field_name': 'Part Number', 'field_value': value.strip(), 'error': False})
                     else:
-                        data.append({'field_name': 'Part Number', 'data': value.strip(), 'error': True})
+                        data.append({'field_name': 'Part Number', 'field_value': value.strip(), 'error': True})
 
-                """
+
                 if key == 'Location':
+                    # Check if Location exists
                     try:
                         location = Location.objects.get(name=value.strip())
                     except Location.DoesNotExist:
@@ -97,10 +100,10 @@ class ImportInventoryUploadView(FormView):
                         print('No matching Location')
 
                     if location:
-                        data.append({'Location': {'data': value.strip(), 'error': False}})
+                        data.append({'field_name': 'Location', 'field_value': value.strip(), 'error': False})
                     else:
-                        data.append({'Location': {'data': value.strip(), 'error': True}})
-                """
+                        data.append({'field_name': 'Location', 'field_value': value.strip(), 'error': True})
+
             print(data)
             tempitem_obj = TempImportItem(data=data, tempimport=tempimport_obj)
             tempitem_obj.save()
@@ -110,6 +113,33 @@ class ImportInventoryUploadView(FormView):
 
     def get_success_url(self):
         return reverse('admintools:import_inventory_preview_detail', args=(self.tempimport_obj.id,))
+
+
+# DetailView for the Temporary Import data saved in TempImport model
+class ImportInventoryPreviewDetailView(DetailView):
+    model = TempImport
+    context_object_name = 'tempimport'
+    template_name='admintools/import_tempimport_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(ImportInventoryPreviewDetailView, self).get_context_data(**kwargs)
+        # Need to check if any errors exist in the upload so we can disable next step if necessary
+        importitems_qs = self.object.tempimportitems.all()
+        # set default validation status
+        valid_upload = True
+
+        for item_obj in importitems_qs:
+            for data in item_obj.data:
+                # if any error exists, set validation status and break loop
+                if data['error']:
+                    valid_upload = False
+                    break
+
+        context.update({
+            'valid_upload': valid_upload
+        })
+        return context
+
 
 # Complete the import process after successful Preview step
 class ImportInventoryUploadAddActionView(RedirectView):
@@ -124,52 +154,32 @@ class ImportInventoryUploadAddActionView(RedirectView):
 
         if tempimport_obj:
             # get all the Inventory items to upload from the Temp tables
-            for item in tempimport_obj.tempimportitems.all():
+            for item_obj in tempimport_obj.tempimportitems.all():
                 inventory_obj = Inventory()
 
-                for field in item.data:
-                    for key, value in field.items():
-                        print(key, value)
-                        if key == 'Serial Number':
-                            inventory_obj.serial_number = value
-                        elif key == 'Part Number':
-                            part = Part.objects.get(part_number=value)
-                            inventory_obj.part = part
-                        elif key == 'Location':
-                            location = Location.objects.get(name=value.strip)
-                            inventory_obj.location = location
+                for col in item_obj.data:
+                    if col['field_name'] == 'Serial Number':
+                        inventory_obj.serial_number = col['field_value']
+                    elif col['field_name'] == 'Part Number':
+                        part = Part.objects.get(part_number=col['field_value'])
+                        inventory_obj.part = part
+                    elif col['field_name'] == 'Location':
+                        location = Location.objects.get(name=col['field_value'])
+                        inventory_obj.location = location
 
                 inventory_obj.save()
+                # Create initial history record for item
+                action_record = Action.objects.create(action_type='invadd',
+                                                      detail='Item first added to Inventory', 
+                                                      location=location,
+                                                      user=self.request.user,
+                                                      inventory=inventory_obj)
 
         return reverse('admintools:import_inventory_upload_success', )
 
 
 class ImportInventoryUploadSuccessView(TemplateView):
     template_name = "admintools/import_inventory_upload_success.html"
-
-
-# Create a blank CSV template for user to download and populate
-class ImportInventoryPreviewDetailView(DetailView):
-    model = TempImport
-    context_object_name = 'tempimport'
-    template_name='admintools/import_tempimport_detail.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(ImportInventoryPreviewDetailView, self).get_context_data(**kwargs)
-        # Need to check if any errors exist in the upload so we can disable next step if necessary
-        items = self.object.tempimportitems.all()
-        valid_upload = items.filter(data__0__has_key='error')
-
-        for item in items:
-            print(item.data)
-
-        print(valid_upload.count())
-
-
-        context.update({
-            'valid_upload': 'valid_upload'
-        })
-        return context
 
 
 # Printer functionality
