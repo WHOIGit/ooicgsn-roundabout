@@ -20,7 +20,7 @@ from roundabout.locations.models import Location
 # Bulk Inventory Import Functions
 # ------------------------------------------
 # Create a blank CSV template for user to download and populate
-class ImportInventoryCreateTemplateView(View):
+class ImportInventoryCreateTemplateView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         # Create the HttpResponse object with the appropriate CSV header.
@@ -44,7 +44,7 @@ class ImportInventoryCreateTemplateView(View):
 
 
 # Upload formview for Inventory Bulk upload
-class ImportInventoryUploadView(FormView):
+class ImportInventoryUploadView(LoginRequiredMixin, FormView):
     form_class = ImportInventoryForm
     template_name = 'admintools/import_inventory_upload_form.html'
 
@@ -182,7 +182,7 @@ class ImportInventoryUploadView(FormView):
 
 
 # DetailView for the Temporary Import data saved in TempImport model
-class ImportInventoryPreviewDetailView(DetailView):
+class ImportInventoryPreviewDetailView(LoginRequiredMixin, DetailView):
     model = TempImport
     context_object_name = 'tempimport'
     template_name='admintools/import_tempimport_detail.html'
@@ -208,7 +208,7 @@ class ImportInventoryPreviewDetailView(DetailView):
 
 
 # Complete the import process after successful Preview step
-class ImportInventoryUploadAddActionView(RedirectView):
+class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
     permanent = False
     query_string = False
 
