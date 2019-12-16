@@ -12,7 +12,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from .forms import PrinterForm, ImportInventoryForm
 from .models import Printer, TempImport, TempImportItem
 from roundabout.userdefinedfields.models import FieldValue, Field
-from roundabout.inventory.models import Inventory
+from roundabout.inventory.models import Inventory, Action
 from roundabout.parts.models import Part
 from roundabout.locations.models import Location
 
@@ -75,11 +75,11 @@ class ImportInventoryUploadView(FormView):
                         item = None
 
                     if not item:
-                        data.append({'field_name': 'Serial Number', 'field_value': value.strip(), 'error': False})
+                        data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
                     else:
-                        data.append({'field_name': 'Serial Number', 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
+                        data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
 
-                if key == 'Part Number':
+                elif key == 'Part Number':
                     # Check if Part template exists
                     try:
                         part = Part.objects.get(part_number=value.strip())
@@ -88,32 +88,44 @@ class ImportInventoryUploadView(FormView):
                         error_msg = "No matching Part Number. Check if Part Template exists."
 
                     if part:
-                        data.append({'field_name': 'Part Number', 'field_value': value.strip(), 'error': False})
+                        data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
                     else:
-                        data.append({'field_name': 'Part Number', 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
+                        data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
 
-
-                if key == 'Location':
+                elif key == 'Location':
                     # Check if Location exists and if there's multiple Locations with same name
                     locations = Location.objects.filter(name=value.strip())
 
                     if not locations:
-                        print("no location")
                         location = None
                         error_msg = "No matching Location. Check if Location exists."
                     elif locations.count() > 1:
-                        print("too many locations")
                         location = None
                         error_msg = "Multiple Locations with same name, destination is unclear. Rename Locations or change destination."
                     else:
                         # get Location object out of queryset
                         location = locations.first()
-                        print("ok")
 
                     if location:
-                        data.append({'field_name': 'Location', 'field_value': value.strip(), 'error': False})
+                        data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
                     else:
-                        data.append({'field_name': 'Location', 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
+                        data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
+
+                elif key == 'Notes':
+                        data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
+
+                # Now run through all the Custom Fields, validate type, add to JSON
+                else:
+                    try:
+                        custom_field = Field.objects.get(field_name=key)
+                    except Field.DoesNotExist:
+                        custom_field = None
+                        error_msg = "No matching Custom Field. Check if Field exists."
+
+                    if custom_field:
+                        data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
+                    else:
+                        data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
 
             print(data)
             tempitem_obj = TempImportItem(data=data, tempimport=tempimport_obj)
@@ -177,6 +189,8 @@ class ImportInventoryUploadAddActionView(RedirectView):
                     elif col['field_name'] == 'Location':
                         location = Location.objects.get(name=col['field_value'])
                         inventory_obj.location = location
+                    elif col['field_name'] == 'Notes':
+                        note_detail = col['field_value']
 
                 inventory_obj.save()
                 # Create initial history record for item
@@ -185,6 +199,29 @@ class ImportInventoryUploadAddActionView(RedirectView):
                                                       location=location,
                                                       user=self.request.user,
                                                       inventory=inventory_obj)
+
+                # Create notes history record for item
+                note_record = Action.objects.create(action_type='note',
+                                                      detail=note_detail,
+                                                      location=location,
+                                                      user=self.request.user,
+                                                      inventory=inventory_obj)
+
+                # Add the Custom Fields
+                for col in item_obj.data:
+                    # Get the field
+                    try:
+                        custom_field = Field.objects.get(field_name=col['field_name'])
+                    except:
+                        custom_field = None
+
+                    # Create new value object
+                    if custom_field:
+                        fieldvalue = FieldValue.objects.create(field=custom_field,
+                                                               field_value=col['field_value'],
+                                                               inventory=inventory_obj,
+                                                               is_current=True,
+                                                               user=self.request.user)
 
         return reverse('admintools:import_inventory_upload_success', )
 
