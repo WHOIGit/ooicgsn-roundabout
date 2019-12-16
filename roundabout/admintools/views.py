@@ -1,6 +1,7 @@
 import csv
 import io
 import json
+from dateutil import parser
 
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
@@ -24,7 +25,7 @@ class ImportInventoryCreateTemplateView(View):
     def get(self, request, *args, **kwargs):
         # Create the HttpResponse object with the appropriate CSV header.
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
+        response['Content-Disposition'] = 'attachment; filename="roundabout-inventory-import-template.csv"'
 
         # Create default list of required fields
         headers = ['Serial Number', 'Part Number', 'Location', 'Notes']
@@ -123,7 +124,47 @@ class ImportInventoryUploadView(FormView):
                         error_msg = "No matching Custom Field. Check if Field exists."
 
                     if custom_field:
-                        data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
+                        if custom_field.field_type == 'IntegerField':
+                            try:
+                                value = int(value.strip())
+                                data.append({'field_name': key, 'field_value': value, 'error': False})
+                            except ValueError:
+                                error_msg = "Validation Error. Needs to be an integer."
+                                data.append({'field_name': key, 'field_value': value, 'error': True, 'error_msg': error_msg})
+
+                        if custom_field.field_type == 'DecimalField':
+                            try:
+                                value = float(value.strip())
+                                data.append({'field_name': key, 'field_value': value, 'error': False})
+                            except ValueError:
+                                error_msg = "Validation Error. Needs to be a decimal."
+                                data.append({'field_name': key, 'field_value': value, 'error': True, 'error_msg': error_msg})
+
+                        if custom_field.field_type == 'BooleanField':
+                            # function to check if various versions of Boolean pass
+                            def check_if_bool(self, value):
+                                return value.lower() in ('yes', 'true', 't', '1', 'no', 'false', 'f', '0')
+
+                            # function to translate various versions
+                            def str_to_bool(self, value):
+                                return value.lower() in ('yes', 'true', 't', '1')
+
+                            if check_if_bool(self, value.strip()):
+                                print('Boolean!')
+                                data.append({'field_name': key, 'field_value': str_to_bool(self, value.strip()), 'error': False})
+                            else:
+                                error_msg = "Validation Error. Needs to be a True/False boolean."
+                                data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
+
+                        if custom_field.field_type == 'DateField':
+                            try:
+                                value = parser.parse(value.strip())
+                                value = value.strftime("%Y-%m-%d %H:%M:%S")
+                                data.append({'field_name': key, 'field_value': value, 'error': False})
+                            except:
+                                error_msg = "Validation Error. Needs to be a valid Date Format (ex. mm/dd/yyyy)."
+                                data.append({'field_name': key, 'field_value': value, 'error': True, 'error_msg': error_msg})
+
                     else:
                         data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
 
