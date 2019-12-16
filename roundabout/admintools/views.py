@@ -124,47 +124,49 @@ class ImportInventoryUploadView(FormView):
                         error_msg = "No matching Custom Field. Check if Field exists."
 
                     if custom_field:
-                        if custom_field.field_type == 'IntegerField':
-                            try:
-                                value = int(value.strip())
-                                data.append({'field_name': key, 'field_value': value, 'error': False})
-                            except ValueError:
-                                error_msg = "Validation Error. Needs to be an integer."
-                                data.append({'field_name': key, 'field_value': value, 'error': True, 'error_msg': error_msg})
+                        if value:
+                            if custom_field.field_type == 'IntegerField':
+                                try:
+                                    value = int(value.strip())
+                                    data.append({'field_name': key, 'field_value': value, 'error': False})
+                                except ValueError:
+                                    error_msg = "Validation Error. Needs to be an integer."
+                                    data.append({'field_name': key, 'field_value': value, 'error': True, 'error_msg': error_msg})
 
-                        if custom_field.field_type == 'DecimalField':
-                            try:
-                                value = float(value.strip())
-                                data.append({'field_name': key, 'field_value': value, 'error': False})
-                            except ValueError:
-                                error_msg = "Validation Error. Needs to be a decimal."
-                                data.append({'field_name': key, 'field_value': value, 'error': True, 'error_msg': error_msg})
+                            if custom_field.field_type == 'DecimalField':
+                                try:
+                                    value = float(value.strip())
+                                    data.append({'field_name': key, 'field_value': value, 'error': False})
+                                except ValueError:
+                                    error_msg = "Validation Error. Needs to be a decimal."
+                                    data.append({'field_name': key, 'field_value': value, 'error': True, 'error_msg': error_msg})
 
-                        if custom_field.field_type == 'BooleanField':
-                            # function to check if various versions of Boolean pass
-                            def check_if_bool(self, value):
-                                return value.lower() in ('yes', 'true', 't', '1', 'no', 'false', 'f', '0')
+                            if custom_field.field_type == 'BooleanField':
+                                # function to check if various versions of Boolean pass
+                                def check_if_bool(self, value):
+                                    return value.lower() in ('yes', 'true', 't', '1', 'no', 'false', 'f', '0')
 
-                            # function to translate various versions
-                            def str_to_bool(self, value):
-                                return value.lower() in ('yes', 'true', 't', '1')
+                                # function to translate various versions
+                                def str_to_bool(self, value):
+                                    return value.lower() in ('yes', 'true', 't', '1')
 
-                            if check_if_bool(self, value.strip()):
-                                print('Boolean!')
-                                data.append({'field_name': key, 'field_value': str_to_bool(self, value.strip()), 'error': False})
-                            else:
-                                error_msg = "Validation Error. Needs to be a True/False boolean."
-                                data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
+                                if check_if_bool(self, value.strip()):
+                                    print('Boolean!')
+                                    data.append({'field_name': key, 'field_value': str_to_bool(self, value.strip()), 'error': False})
+                                else:
+                                    error_msg = "Validation Error. Needs to be a True/False boolean."
+                                    data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
 
-                        if custom_field.field_type == 'DateField':
-                            try:
-                                value = parser.parse(value.strip())
-                                value = value.strftime("%Y-%m-%d %H:%M:%S")
-                                data.append({'field_name': key, 'field_value': value, 'error': False})
-                            except:
-                                error_msg = "Validation Error. Needs to be a valid Date Format (ex. mm/dd/yyyy)."
-                                data.append({'field_name': key, 'field_value': value, 'error': True, 'error_msg': error_msg})
-
+                            if custom_field.field_type == 'DateField':
+                                try:
+                                    value = parser.parse(value.strip())
+                                    value = value.strftime("%Y-%m-%d %H:%M:%S")
+                                    data.append({'field_name': key, 'field_value': value, 'error': False})
+                                except:
+                                    error_msg = "Validation Error. Needs to be a valid Date Format (ex. mm/dd/yyyy)."
+                                    data.append({'field_name': key, 'field_value': value, 'error': True, 'error_msg': error_msg})
+                        else:
+                            data.append({'field_name': key, 'field_value': value, 'error': False})
                     else:
                         data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
 
@@ -242,11 +244,12 @@ class ImportInventoryUploadAddActionView(RedirectView):
                                                       inventory=inventory_obj)
 
                 # Create notes history record for item
-                note_record = Action.objects.create(action_type='note',
-                                                      detail=note_detail,
-                                                      location=location,
-                                                      user=self.request.user,
-                                                      inventory=inventory_obj)
+                if note_detail:
+                    note_record = Action.objects.create(action_type='note',
+                                                          detail=note_detail,
+                                                          location=location,
+                                                          user=self.request.user,
+                                                          inventory=inventory_obj)
 
                 # Add the Custom Fields
                 for col in item_obj.data:
@@ -257,20 +260,21 @@ class ImportInventoryUploadAddActionView(RedirectView):
                         custom_field = None
 
                     # Create new value object
-                    if custom_field:
-                        fieldvalue = FieldValue.objects.create(field=custom_field,
-                                                               field_value=col['field_value'],
-                                                               inventory=inventory_obj,
-                                                               is_current=True,
-                                                               user=self.request.user)
-                    else:
-                        # Drop any fields that don't match a custom field into a History Note
-                        note_detail = col['field_name'] + ': ' + col['field_value']
-                        note_record = Action.objects.create(action_type='note',
-                                                              detail=note_detail,
-                                                              location=location,
-                                                              user=self.request.user,
-                                                              inventory=inventory_obj)
+                    if col['field_value']:
+                        if custom_field:
+                            fieldvalue = FieldValue.objects.create(field=custom_field,
+                                                                   field_value=col['field_value'],
+                                                                   inventory=inventory_obj,
+                                                                   is_current=True,
+                                                                   user=self.request.user)
+                        else:
+                            # Drop any fields that don't match a custom field into a History Note
+                            note_detail = col['field_name'] + ': ' + col['field_value']
+                            note_record = Action.objects.create(action_type='note',
+                                                                  detail=note_detail,
+                                                                  location=location,
+                                                                  user=self.request.user,
+                                                                  inventory=inventory_obj)
 
         return reverse('admintools:import_inventory_upload_success', )
 
