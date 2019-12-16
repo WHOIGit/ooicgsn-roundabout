@@ -253,7 +253,7 @@ class ImportInventoryUploadAddActionView(RedirectView):
                     # Get the field
                     try:
                         custom_field = Field.objects.get(field_name=col['field_name'])
-                    except:
+                    except Field.DoesNotExist:
                         custom_field = None
 
                     # Create new value object
@@ -263,6 +263,14 @@ class ImportInventoryUploadAddActionView(RedirectView):
                                                                inventory=inventory_obj,
                                                                is_current=True,
                                                                user=self.request.user)
+                    else:
+                        # Drop any fields that don't match a custom field into a History Note
+                        note_detail = col['field_name'] + ': ' + col['field_value']
+                        note_record = Action.objects.create(action_type='note',
+                                                              detail=note_detail,
+                                                              location=location,
+                                                              user=self.request.user,
+                                                              inventory=inventory_obj)
 
         return reverse('admintools:import_inventory_upload_success', )
 
