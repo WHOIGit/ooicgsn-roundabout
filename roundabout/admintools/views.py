@@ -253,28 +253,29 @@ class ImportInventoryUploadAddActionView(RedirectView):
 
                 # Add the Custom Fields
                 for col in item_obj.data:
-                    # Get the field
-                    try:
-                        custom_field = Field.objects.get(field_name=col['field_name'])
-                    except Field.DoesNotExist:
-                        custom_field = None
+                    if not col['field_name'] == 'Serial Number' and not col['field_name'] == 'Part Number' and not col['field_name'] == 'Location' and not col['field_name'] == 'Notes':
+                        # Get the field
+                        try:
+                            custom_field = Field.objects.get(field_name=col['field_name'])
+                        except Field.DoesNotExist:
+                            custom_field = None
 
-                    # Create new value object
-                    if col['field_value']:
-                        if custom_field:
-                            fieldvalue = FieldValue.objects.create(field=custom_field,
-                                                                   field_value=col['field_value'],
-                                                                   inventory=inventory_obj,
-                                                                   is_current=True,
-                                                                   user=self.request.user)
-                        else:
-                            # Drop any fields that don't match a custom field into a History Note
-                            note_detail = col['field_name'] + ': ' + col['field_value']
-                            note_record = Action.objects.create(action_type='note',
-                                                                  detail=note_detail,
-                                                                  location=location,
-                                                                  user=self.request.user,
-                                                                  inventory=inventory_obj)
+                        # Create new value object
+                        if col['field_value']:
+                            if custom_field:
+                                fieldvalue = FieldValue.objects.create(field=custom_field,
+                                                                       field_value=col['field_value'],
+                                                                       inventory=inventory_obj,
+                                                                       is_current=True,
+                                                                       user=self.request.user)
+                            else:
+                                # Drop any fields that don't match a custom field into a History Note
+                                note_detail = col['field_name'] + ': ' + col['field_value']
+                                note_record = Action.objects.create(action_type='note',
+                                                                      detail=note_detail,
+                                                                      location=location,
+                                                                      user=self.request.user,
+                                                                      inventory=inventory_obj)
 
         return reverse('admintools:import_inventory_upload_success', )
 
