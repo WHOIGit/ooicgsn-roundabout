@@ -70,13 +70,14 @@ class ImportInventoryUploadView(FormView):
                     # Check if Serial Number already being used
                     try:
                         item = Inventory.objects.get(serial_number=value.strip())
+                        error_msg = "Serial Number already exists."
                     except Inventory.DoesNotExist:
                         item = None
 
                     if not item:
                         data.append({'field_name': 'Serial Number', 'field_value': value.strip(), 'error': False})
                     else:
-                        data.append({'field_name': 'Serial Number', 'field_value': value.strip(), 'error': True})
+                        data.append({'field_name': 'Serial Number', 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
 
                 if key == 'Part Number':
                     # Check if Part template exists
@@ -84,25 +85,35 @@ class ImportInventoryUploadView(FormView):
                         part = Part.objects.get(part_number=value.strip())
                     except Part.DoesNotExist:
                         part = None
+                        error_msg = "No matching Part Number. Check if Part Template exists."
 
                     if part:
                         data.append({'field_name': 'Part Number', 'field_value': value.strip(), 'error': False})
                     else:
-                        data.append({'field_name': 'Part Number', 'field_value': value.strip(), 'error': True})
+                        data.append({'field_name': 'Part Number', 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
 
 
                 if key == 'Location':
-                    # Check if Location exists
-                    try:
-                        location = Location.objects.get(name=value.strip())
-                    except Location.DoesNotExist:
+                    # Check if Location exists and if there's multiple Locations with same name
+                    locations = Location.objects.filter(name=value.strip())
+
+                    if not locations:
+                        print("no location")
                         location = None
-                        print('No matching Location')
+                        error_msg = "No matching Location. Check if Location exists."
+                    elif locations.count() > 1:
+                        print("too many locations")
+                        location = None
+                        error_msg = "Multiple Locations with same name, destination is unclear. Rename Locations or change destination."
+                    else:
+                        # get Location object out of queryset
+                        location = locations.first()
+                        print("ok")
 
                     if location:
                         data.append({'field_name': 'Location', 'field_value': value.strip(), 'error': False})
                     else:
-                        data.append({'field_name': 'Location', 'field_value': value.strip(), 'error': True})
+                        data.append({'field_name': 'Location', 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
 
             print(data)
             tempitem_obj = TempImportItem(data=data, tempimport=tempimport_obj)
@@ -170,7 +181,7 @@ class ImportInventoryUploadAddActionView(RedirectView):
                 inventory_obj.save()
                 # Create initial history record for item
                 action_record = Action.objects.create(action_type='invadd',
-                                                      detail='Item first added to Inventory', 
+                                                      detail='Item first added to Inventory',
                                                       location=location,
                                                       user=self.request.user,
                                                       inventory=inventory_obj)

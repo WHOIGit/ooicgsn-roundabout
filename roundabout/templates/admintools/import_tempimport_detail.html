@@ -37,11 +37,11 @@
                               {{ col.field_value }}
                               {% if col.error %}
                                 {% if col.field_name == 'Location' %}
-                                    <div class="alert alert-danger" role="alert">ERROR. No matching Location. Check if Location exists.</div>
+                                    <div class="alert alert-danger" role="alert">ERROR. {{ col.error_msg }}</div>
                                 {% elif col.field_name == 'Part Number' %}
-                                    <div class="alert alert-danger" role="alert">ERROR. No matching Part. Check if Part Number exists.</div>
+                                    <div class="alert alert-danger" role="alert">ERROR. No matching Part. {{ col.error_msg }}</div>
                                 {% elif col.field_name == 'Serial Number' %}
-                                    <div class="alert alert-danger" role="alert">ERROR. Serial Number already exists.</div>
+                                    <div class="alert alert-danger" role="alert">ERROR. {{ col.error_msg }}</div>
                                 {% endif %}
                               {% endif %}
                           </td>
