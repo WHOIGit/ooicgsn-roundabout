@@ -13,6 +13,7 @@ from .forms import *
 from roundabout.assemblies.models import Assembly, AssemblyPart
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory, Action
+from roundabout.admintools.models import Printer
 # Import environment variables from .env files
 import environ
 env = environ.Env()
@@ -127,10 +128,16 @@ class BuildDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(BuildDetailView, self).get_context_data(**kwargs)
-
+        # Get Printers to display in print dropdown
+        printers = Printer.objects.all()
+        # Get assembly part data and inventory data to calculate completeness
         total_parts = AssemblyPart.objects.filter(assembly=self.object.assembly).count()
         total_inventory = self.object.inventory.count()
-        percent_complete = round( (total_inventory / total_parts) * 100 )
+
+        if total_parts > 0:
+            percent_complete = round( (total_inventory / total_parts) * 100 )
+        else:
+            percent_complete = None
 
         action_record = None
         bar_class = None
@@ -142,6 +149,7 @@ class BuildDetailView(LoginRequiredMixin, DetailView):
             action_record = DeploymentAction.objects.filter(deployment=current_deployment).filter(action_type='deploy').first()
 
         context.update({
+            'printers': printers,
             'node_type': 'builds',
             'current_deployment': self.object.current_deployment(),
             'percent_complete': percent_complete,
@@ -163,10 +171,16 @@ class BuildAjaxDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(BuildAjaxDetailView, self).get_context_data(**kwargs)
-
+        # Get Printers to display in print dropdown
+        printers = Printer.objects.all()
+        # Get assembly part data and inventory data to calculate completeness
         total_parts = AssemblyPart.objects.filter(assembly=self.object.assembly).count()
         total_inventory = self.object.inventory.count()
-        percent_complete = round( (total_inventory / total_parts) * 100 )
+
+        if total_parts > 0:
+            percent_complete = round( (total_inventory / total_parts) * 100 )
+        else:
+            percent_complete = None
 
         action_record = None
         bar_class = None
@@ -178,6 +192,7 @@ class BuildAjaxDetailView(LoginRequiredMixin, DetailView):
             action_record = DeploymentAction.objects.filter(deployment=current_deployment).filter(action_type='deploy').first()
 
         context.update({
+            'printers': printers,
             'current_deployment': self.object.current_deployment(),
             'percent_complete': percent_complete,
             'action_record': action_record,
