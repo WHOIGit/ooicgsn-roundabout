@@ -12,7 +12,9 @@
                 <div class="card-body">
 
 
-                    <form class="form-horizontal ajax-form" method="post" action="" id="build-form" data-url='{{ request.build_absolute_uri|safe }}'>
+                    <form class="form-horizontal ajax-form" method="post" action="" id="build-form" 
+                          data-serialnumber-url="{% url 'inventory:ajax_load_new_serialnumber' %}"
+                          data-url='{{ request.build_absolute_uri|safe }}'>
                       {% csrf_token %}
                       {{ form|crispy }}
 

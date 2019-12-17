@@ -1,0 +1,24 @@
+$(document).ready(function() {
+    // AJAX functions for build_detail form
+
+    $("#hint_id_serial_number").click(function () {
+        $("#id_serial_number").removeAttr("readonly");
+    });
+
+    $("#id_assembly").change(function () {
+        var url_serialnumber = $("#build-form").attr("data-serialnumber-url");
+        var assemblyID = $(this).val();
+
+        $.ajax({
+            url: url_serialnumber,
+            data: {
+              "assembly_id": assemblyID
+            },
+            success: function (data) {
+              $('#id_assembly').val(data.new_serial_number);
+            }
+        });
+
+    });
+
+});

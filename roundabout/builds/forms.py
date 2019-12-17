@@ -13,12 +13,16 @@ from roundabout.locations.models import Location
 
 
 class BuildForm(forms.ModelForm):
+    build_number = forms.CharField(strip=True,
+        help_text='Serial Number auto-generated. Click here to override.',
+        widget=forms.TextInput(attrs={'readonly':'readonly'}),
+    )
 
     class Meta:
         model = Build
-        fields = ['build_number', 'assembly', 'location', 'build_notes', ]
+        fields = ['assembly', 'build_number', 'location', 'build_notes', ]
         labels = {
-            'build_number': 'Build ID Number',
+            'build_number': 'Serial Number',
         }
 
 

@@ -43,8 +43,70 @@ def make_tree_copy(root_part, new_location, build_snapshot, parent=None ):
     for child in root_part.get_children():
         make_tree_copy(child, new_location, build_snapshot, new_item)
 
-## CBV views for Builds app ##
 
+# Function to create Serial Number from Assembly Number selection, load result into form to preview
+def load_new_build_id_number(request):
+    # Set pattern variables from .env configuration
+    RDB_SERIALNUMBER_CREATE = env.bool('RDB_SERIALNUMBER_CREATE', default=False)
+    RDB_SERIALNUMBER_OOI_DEFAULT_PATTERN = env.bool('RDB_SERIALNUMBER_OOI_DEFAULT_PATTERN', default=False)
+
+    # Set variables from JS request
+    part_number = request.GET.get('part_number')
+    part_id = request.GET.get('part_id')
+    new_serial_number = ''
+
+    if RDB_SERIALNUMBER_CREATE:
+        if part_number or part_id:
+            if part_number:
+                part_obj = Part.objects.filter(part_number__icontains=part_number).first()
+
+            if part_id:
+                part_obj = Part.objects.get(id=part_id)
+
+            if part_obj:
+                if RDB_SERIALNUMBER_OOI_DEFAULT_PATTERN:
+                    # Check if this a Cable, set the serial number variables accordingly
+                    if RDB_SERIALNUMBER_OOI_WETCABLE_PATTERN and part_obj.part_type.name == 'Cable':
+                        regex = '^(.*?)-[a-zA-Z0-9_]{2}$'
+                        fragment_length = 2
+                        fragment_default = '01'
+                        use_part_number = True
+                    else:
+                        regex = '^(.*?)-[a-zA-Z0-9_]{5}$'
+                        fragment_length = 5
+                        fragment_default = '20001'
+                        use_part_number = True
+                else:
+                    # Basic default serial number pattern (1,2,3,... etc.)
+                    regex = '^(.*?)'
+                    fragment_length = False
+                    fragment_default = '1'
+                    use_part_number = False
+
+                inventory_qs = Inventory.objects.filter(part=part_obj).filter(serial_number__iregex=regex)
+                if inventory_qs:
+                    inventory_last = inventory_qs.latest('id')
+                    last_serial_number_fragment = int(inventory_last.serial_number.split('-')[-1])
+                    new_serial_number_fragment = last_serial_number_fragment + 1
+                    # Fill fragment with leading zeroes if necessary
+                    if fragment_length:
+                        new_serial_number_fragment = str(new_serial_number_fragment).zfill(fragment_length)
+                else:
+                    new_serial_number_fragment = fragment_default
+
+                if use_part_number:
+                    new_serial_number = part_obj.part_number + '-' + str(new_serial_number_fragment)
+                else:
+                    new_serial_number = str(new_serial_number_fragment)
+
+    data = {
+        'new_serial_number': new_serial_number,
+    }
+    return JsonResponse(data)
+
+
+## CBV views for Builds app ##
+# ----------------------------
 # Landing page for Builds
 class BuildHomeView(LoginRequiredMixin, TemplateView):
     template_name = 'builds/build_list.html'
