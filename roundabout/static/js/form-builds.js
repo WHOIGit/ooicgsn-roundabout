@@ -1,8 +1,8 @@
 $(document).ready(function() {
     // AJAX functions for build_detail form
 
-    $("#hint_id_serial_number").click(function () {
-        $("#id_serial_number").removeAttr("readonly");
+    $("#hint_id_build_number").click(function () {
+        $("#id_build_number").removeAttr("readonly");
     });
 
     $("#id_assembly").change(function () {
