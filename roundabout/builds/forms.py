@@ -16,13 +16,14 @@ class BuildForm(forms.ModelForm):
     build_number = forms.CharField(strip=True,
         help_text='Serial Number auto-generated. Click here to override.',
         widget=forms.TextInput(attrs={'readonly':'readonly'}),
+        label='Serial Number',
     )
 
     class Meta:
         model = Build
         fields = ['assembly', 'build_number', 'location', 'build_notes', ]
         labels = {
-            'build_number': 'Serial Number',
+            'build_notes': 'Assembly Notes',
         }
 
     class Media:

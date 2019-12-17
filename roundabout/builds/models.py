@@ -132,7 +132,7 @@ class BuildAction(models.Model):
     FLAG = 'flag'
     RETIREBUILD = 'retirebuild'
     ACT_TYPES = (
-        (BUILDADD, 'Add Build'),
+        (BUILDADD, 'Add Assembly'),
         (LOCATIONCHANGE, 'Location Change'),
         (SUBASSEMBLYCHANGE, 'Subassembly Change'),
         (STARTDEPLOY, 'Start Deployment'),
@@ -146,7 +146,7 @@ class BuildAction(models.Model):
         (HISTORYNOTE, 'Historical Note'),
         (TICKET, 'Work Ticket'),
         (FLAG, 'Flag'),
-        (RETIREBUILD, 'Retire Build'),
+        (RETIREBUILD, 'Retire Assembly'),
     )
     action_type = models.CharField(max_length=20, choices=ACT_TYPES)
     created_at = models.DateTimeField(default=timezone.now)
