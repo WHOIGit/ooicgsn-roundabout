@@ -8,6 +8,7 @@ $(document).ready(function() {
     $("#id_assembly").change(function () {
         var url_serialnumber = $("#build-form").attr("data-serialnumber-url");
         var assemblyID = $(this).val();
+        console.log(assemblyID);
 
         $.ajax({
             url: url_serialnumber,

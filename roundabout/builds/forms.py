@@ -25,6 +25,9 @@ class BuildForm(forms.ModelForm):
             'build_number': 'Serial Number',
         }
 
+    class Media:
+        js = ('js/form-builds.js',)
+
 
 class BuildActionLocationChangeForm(forms.ModelForm):
 
