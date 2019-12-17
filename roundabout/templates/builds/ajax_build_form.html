@@ -13,7 +13,7 @@
 
 
                     <form class="form-horizontal ajax-form" method="post" action="" id="build-form"
-                          data-serialnumber-url="{% url 'inventory:ajax_load_new_serialnumber' %}"
+                          data-serialnumber-url="{% url 'builds:ajax_load_new_build_id_number' %}"
                           data-url='{{ request.build_absolute_uri|safe }}'>
                       {% csrf_token %}
                       {{ form|crispy }}

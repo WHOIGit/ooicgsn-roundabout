@@ -16,7 +16,8 @@ $(document).ready(function() {
               "assembly_id": assemblyID
             },
             success: function (data) {
-              $('#id_assembly').val(data.new_serial_number);
+              console.log(data.new_serial_number);
+              $('#id_build_number').val(data.new_serial_number);
             }
         });
 
