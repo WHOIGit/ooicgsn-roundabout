@@ -235,6 +235,12 @@ a.wh {
     border: none;
 }
 
+/* Template Mode styling for apps that are considered Templates */
+.template #detail-view {
+    border-color: #28a745;
+    background-color: #28a7450d;
+}
+
 /* Custom Fields styling */
 
 /*
