@@ -206,6 +206,7 @@ TEMPLATES = [
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
                 'roundabout.context_processors.template_app_labels',
+                'roundabout.context_processors.template_resolver_names',
             ],
         },
     },
