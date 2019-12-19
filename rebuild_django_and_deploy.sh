@@ -8,24 +8,3 @@ then
     docker-compose -f production.yml run --rm django python manage.py migrate
     docker-compose -f production.yml run --rm django python manage.py collectstatic --noinput
 fi
-
-if [ -e production-demo-site.yml ]
-then
-    docker-compose -f production-demo-site.yml up -d --no-deps --build django_demo
-    docker-compose -f production-demo-site.yml run --rm django_demo python manage.py migrate
-    docker-compose -f production-demo-site.yml run --rm django_demo python manage.py collectstatic --noinput
-fi
-
-if [ -e production-generic-site.yml ]
-then
-    docker-compose -f production-generic-site.yml up -d --no-deps --build django_generic
-    docker-compose -f production-generic-site.yml run --rm django_generic python manage.py migrate
-    docker-compose -f production-generic-site.yml run --rm django_generic python manage.py collectstatic --noinput
-fi
-
-if [ -e production-rov-site.yml ]
-then
-    docker-compose -f production-rov-site.yml up -d --no-deps --build django_rov
-    docker-compose -f production-rov-site.yml run --rm django_rov python manage.py migrate
-    docker-compose -f production-rov-site.yml run --rm django_rov python manage.py collectstatic --noinput
-fi
