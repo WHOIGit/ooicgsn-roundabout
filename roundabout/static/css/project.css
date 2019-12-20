@@ -234,6 +234,12 @@ a.wh {
     border: none;
 }
 
+/* Import Tool */
+
+.preview-import-table {
+    font-size: .8em;
+}
+
 /* Custom Fields styling */
 
 /*

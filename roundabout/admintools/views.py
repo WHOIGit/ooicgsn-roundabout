@@ -238,7 +238,7 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                 inventory_obj.save()
                 # Create initial history record for item
                 action_record = Action.objects.create(action_type='invadd',
-                                                      detail='Item first added to Inventory',
+                                                      detail='Item first added to Inventory by Bulk Import',
                                                       location=location,
                                                       user=self.request.user,
                                                       inventory=inventory_obj)
