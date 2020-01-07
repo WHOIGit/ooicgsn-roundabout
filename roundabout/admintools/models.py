@@ -33,4 +33,4 @@ class TempImportItem(models.Model):
                                    on_delete=models.CASCADE, null=True, blank=False)
 
     def __str__(self):
-        return self.id
+        return str(self.id)
