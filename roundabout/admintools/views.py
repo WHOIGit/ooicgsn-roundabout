@@ -165,10 +165,10 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                                 except:
                                     error_msg = "Validation Error. Needs to be a valid Date Format (ex. mm/dd/yyyy)."
                                     data.append({'field_name': key, 'field_value': value, 'error': True, 'error_msg': error_msg})
-                        else:
-                            data.append({'field_name': key, 'field_value': value, 'error': False})
+                            else:
+                                data.append({'field_name': key, 'field_value': value, 'error': False})
                     else:
-                        data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
+                        data.append({'field_name': key, 'field_value': value, 'error': True, 'error_msg': error_msg})
 
             print(data)
             tempitem_obj = TempImportItem(data=data, tempimport=tempimport_obj)
