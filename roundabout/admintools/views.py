@@ -14,7 +14,7 @@ from .forms import PrinterForm, ImportInventoryForm
 from .models import Printer, TempImport, TempImportItem
 from roundabout.userdefinedfields.models import FieldValue, Field
 from roundabout.inventory.models import Inventory, Action
-from roundabout.parts.models import Part
+from roundabout.parts.models import Part, Revision
 from roundabout.locations.models import Location
 
 # Bulk Inventory Import Functions
@@ -228,7 +228,9 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                         inventory_obj.serial_number = col['field_value']
                     elif col['field_name'] == 'Part Number':
                         part = Part.objects.get(part_number=col['field_value'])
+                        revision = part.revisions.last()
                         inventory_obj.part = part
+                        inventory_obj.revision = revision
                     elif col['field_name'] == 'Location':
                         location = Location.objects.get(name=col['field_value'])
                         inventory_obj.location = location
