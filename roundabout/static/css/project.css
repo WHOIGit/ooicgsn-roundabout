@@ -222,7 +222,8 @@ a.wh {
     color: #dc3545;
 }
 
-#hint_id_serial_number.text-muted:hover {
+#hint_id_serial_number.text-muted:hover,
+#hint_id_build_number.text-muted:hover {
     color: #007bff !important;
     cursor: pointer;
 }
@@ -232,6 +233,12 @@ a.wh {
     height: auto;
     padding: 0;
     border: none;
+}
+
+/* Template Mode styling for apps that are considered Templates */
+.template #detail-view {
+    border-color: #28a745;
+    background-color: #28a7450d;
 }
 
 /* Custom Fields styling */

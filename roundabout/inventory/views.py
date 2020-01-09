@@ -53,8 +53,7 @@ def load_inventory_navtree(request):
     node_id = request.GET.get('id')
 
     if node_id == '#' or not node_id:
-        locations = Location.objects.exclude(root_type='Retired') \
-                    .prefetch_related('inventory__part__part_type')
+        locations = Location.objects.prefetch_related('inventory__part__part_type')
 
         return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations})
     else:
