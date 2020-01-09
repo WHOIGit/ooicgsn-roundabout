@@ -42,11 +42,11 @@
                     data-node-id="{{ build.id }}"
                     data-location-id="{{ build.location.id }}"
                     data-node-type="detail">Take Snapshot</a>
-
+                <!---
                 <a class="dropdown-item" href="{% url 'reports:build_report' build.id %}"
                    data-node-id="{{ build.id }}"
                    data-node-type="detail">Generate Report</a>
-
+                --->
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'builds:ajax_builds_update' build.id %}"
                     data-node-id="{{ build.id }}"
@@ -114,10 +114,71 @@
       </div>
     </div>
 
+    <p>Build Serial Number: {{ build.build_number }}<br>
+        <a class="btn btn-outline-info btn-sm" data-toggle="collapse" href="#collapseBarCode" role="button" aria-expanded="false" aria-controls="collapseBarCode">
+          Print Barcode
+        </a>
+    </p>
 
-    <p>Build ID Number: {{ build.build_number }}</p>
 
-    <p>Assembly: {{ build.assembly }}</p>
+
+    <div class="collapse" id="collapseBarCode">
+      <div class="card card-body">
+            <form>
+              <div class="form-group">
+                <label for="label-printer">Select Label Printer</label>
+                <select class="form-control form-control-sm" id="label-printer">
+                    {% for printer in printers %}
+                        <option value="{{ printer.ip_domain }}" data-printer-type="{{ printer.printer_type }}">{{ printer.name }}</option>
+                    {% endfor %}
+                </select>
+
+              </div>
+            </form>
+
+          <table>
+            <tr>
+
+                <td>
+                    <div id="print-barcode" class="print-code">
+                        <div >
+
+                            <img src='https://barcode.tec-it.com/barcode.ashx?data={{ build.build_number|upper }}&code=Code93&dpi=300&unit=Min&imagetype=Png' alt='Barcode Generator TEC-IT'/>
+                            <p style="font-size:8px; display: block; padding-left:78px;">
+                                {{ build.assembly.name }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <button id="print-barcode-btn" class="btn btn-sm btn-primary print-code-btn"
+                            data-printcode-url="{% url 'inventory:ajax_print_code' build.id 'bar93' %}"
+                            data-serial-number="{{ build.build_number }}">Click to Print</button>
+                    <!--<button onclick="printDiv('print-barcode');" class="btn btn-sm btn-primary">Click to Print</button>-->
+
+                </td>
+                <td>
+                    <div id="print-qrcode" class="print-code">
+                        <div >
+                            <img style="width:46px;" src='https://barcode.tec-it.com/barcode.ashx?data={{ build.build_number }}&code=QRCode&dpi=300&unit=Min&imagetype=Png' alt='Barcode Generator TEC-IT'/>
+                            <p style="font-size:7px; font-family:Arial; display: block;">{{ build.build_number }}<br>
+                                {{ build.assembly.name }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <button id="print-qrcode-btn" class="btn btn-sm btn-primary print-code-btn"
+                            data-printcode-url="{% url 'inventory:ajax_print_code' build.id 'QR' %}"
+                            data-serial-number="{{ build.build_number }}">Click to Print</button>
+                </td>
+            </tr>
+          </table>
+
+          <div class="" role="alert" id="print-status-alert" style="display:none;"></div>
+
+      </div>
+    </div>
+
+    <p>Assembly Template: {{ build.assembly }}</p>
 
     <p>Assembly Type: {{ build.assembly.assembly_type }}</p>
 
@@ -145,14 +206,16 @@
 
         <p>Total Time at Sea: {{ build.total_time_at_sea|time_at_sea_display }}</p>
 
-        <h6>Percent Built</h6>
+        {% if percent_complete %}
+            <h6>Percent Built</h6>
 
-        <div class="progress" style="height: 20px;">
-            {% if percent_complete == 0 %} {{ percent_complete }}% {% endif %}
-          <div class="progress-bar progress-bar-striped bg-info" role="progressbar" style="width: {{ percent_complete }}%;" aria-valuenow="{{ percent_complete }}" aria-valuemin="0" aria-valuemax="100">
-              <span>{{ percent_complete }}%</span>
-          </div>
-        </div>
+            <div class="progress" style="height: 20px;">
+                {% if percent_complete == 0 %} {{ percent_complete }}% {% endif %}
+              <div class="progress-bar progress-bar-striped bg-info" role="progressbar" style="width: {{ percent_complete }}%;" aria-valuenow="{{ percent_complete }}" aria-valuemin="0" aria-valuemax="100">
+                  <span>{{ percent_complete }}%</span>
+              </div>
+            </div>
+        {% endif %}
 
 
 

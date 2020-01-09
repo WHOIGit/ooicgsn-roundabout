@@ -5,16 +5,19 @@
                     {% if build.id %}
                     <h3>{{ build }}</h3>
                     {% else %}
-                    <h3>Create New Build</h3>
+                    <h3>Create New Assembly</h3>
                     {% endif %}
                 </div>
 
                 <div class="card-body">
 
 
-                    <form class="form-horizontal ajax-form" method="post" action="" id="build-form" data-url='{{ request.build_absolute_uri|safe }}'>
+                    <form class="form-horizontal ajax-form" method="post" action="" id="build-form"
+                          data-serialnumber-url="{% url 'builds:ajax_load_new_build_id_number' %}"
+                          data-url='{{ request.build_absolute_uri|safe }}'>
                       {% csrf_token %}
                       {{ form|crispy }}
+                      {{ form.media }}
 
                       <div class="row">
                           {% if form.errors %}
@@ -38,9 +41,9 @@
                       <div class="control-group">
                         <div class="controls">
                           {% if build.id %}
-                              <button type="submit" class="btn btn-primary">Update Build</button>
+                              <button type="submit" class="btn btn-primary">Update Assembly</button>
                           {% else %}
-                              <button type="submit" class="btn btn-primary">Create Build</button>
+                              <button type="submit" class="btn btn-primary">Create Assembly</button>
                           {% endif %}
                         </div>
                       </div>

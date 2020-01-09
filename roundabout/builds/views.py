@@ -13,6 +13,10 @@ from .forms import *
 from roundabout.assemblies.models import Assembly, AssemblyPart
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory, Action
+from roundabout.admintools.models import Printer
+# Import environment variables from .env files
+import environ
+env = environ.Env()
 
 # Load the javascript navtree
 def load_builds_navtree(request):
@@ -43,8 +47,61 @@ def make_tree_copy(root_part, new_location, build_snapshot, parent=None ):
     for child in root_part.get_children():
         make_tree_copy(child, new_location, build_snapshot, new_item)
 
-## CBV views for Builds app ##
 
+# Function to create Serial Number from Assembly Number selection, load result into form to preview
+def load_new_build_id_number(request):
+    # Set pattern variables from .env configuration
+    RDB_SERIALNUMBER_CREATE = env.bool('RDB_SERIALNUMBER_CREATE', default=False)
+    RDB_SERIALNUMBER_OOI_DEFAULT_PATTERN = env.bool('RDB_SERIALNUMBER_OOI_DEFAULT_PATTERN', default=False)
+
+    # Set variables from JS request
+    assembly_id = request.GET.get('assembly_id')
+    new_build_id_number = ''
+
+    if RDB_SERIALNUMBER_CREATE:
+        if assembly_id:
+            try:
+                assembly_obj = Assembly.objects.get(id=assembly_id)
+            except Assembly.DoesNotExist:
+                assembly_obj = None
+
+            if assembly_obj:
+                if RDB_SERIALNUMBER_OOI_DEFAULT_PATTERN:
+                    regex = '^(.*?)-[a-zA-Z0-9_]{5}$'
+                    fragment_length = 5
+                    fragment_default = '20001'
+                    use_assembly_number = True
+                else:
+                    # Basic default serial number pattern (1,2,3,... etc.)
+                    regex = '^(.*?)'
+                    fragment_length = False
+                    fragment_default = '1'
+                    use_assembly_number = False
+
+                builds_qs = Build.objects.filter(assembly=assembly_obj).filter(build_number__iregex=regex)
+                if builds_qs:
+                    build_last = builds_qs.latest('id')
+                    last_serial_number_fragment = int(build_last.build_number.split('-')[-1])
+                    new_serial_number_fragment = last_serial_number_fragment + 1
+                    # Fill fragment with leading zeroes if necessary
+                    if fragment_length:
+                        new_serial_number_fragment = str(new_serial_number_fragment).zfill(fragment_length)
+                else:
+                    new_serial_number_fragment = fragment_default
+
+                if use_assembly_number:
+                    new_serial_number = assembly_obj.assembly_number + '-' + str(new_serial_number_fragment)
+                else:
+                    new_serial_number = str(new_serial_number_fragment)
+
+    data = {
+        'new_serial_number': new_serial_number,
+    }
+    return JsonResponse(data)
+
+
+## CBV views for Builds app ##
+# ----------------------------
 # Landing page for Builds
 class BuildHomeView(LoginRequiredMixin, TemplateView):
     template_name = 'builds/build_list.html'
@@ -71,10 +128,16 @@ class BuildDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(BuildDetailView, self).get_context_data(**kwargs)
-
+        # Get Printers to display in print dropdown
+        printers = Printer.objects.all()
+        # Get assembly part data and inventory data to calculate completeness
         total_parts = AssemblyPart.objects.filter(assembly=self.object.assembly).count()
         total_inventory = self.object.inventory.count()
-        percent_complete = round( (total_inventory / total_parts) * 100 )
+
+        if total_parts > 0:
+            percent_complete = round( (total_inventory / total_parts) * 100 )
+        else:
+            percent_complete = None
 
         action_record = None
         bar_class = None
@@ -86,6 +149,7 @@ class BuildDetailView(LoginRequiredMixin, DetailView):
             action_record = DeploymentAction.objects.filter(deployment=current_deployment).filter(action_type='deploy').first()
 
         context.update({
+            'printers': printers,
             'node_type': 'builds',
             'current_deployment': self.object.current_deployment(),
             'percent_complete': percent_complete,
@@ -107,10 +171,16 @@ class BuildAjaxDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(BuildAjaxDetailView, self).get_context_data(**kwargs)
-
+        # Get Printers to display in print dropdown
+        printers = Printer.objects.all()
+        # Get assembly part data and inventory data to calculate completeness
         total_parts = AssemblyPart.objects.filter(assembly=self.object.assembly).count()
         total_inventory = self.object.inventory.count()
-        percent_complete = round( (total_inventory / total_parts) * 100 )
+
+        if total_parts > 0:
+            percent_complete = round( (total_inventory / total_parts) * 100 )
+        else:
+            percent_complete = None
 
         action_record = None
         bar_class = None
@@ -122,6 +192,7 @@ class BuildAjaxDetailView(LoginRequiredMixin, DetailView):
             action_record = DeploymentAction.objects.filter(deployment=current_deployment).filter(action_type='deploy').first()
 
         context.update({
+            'printers': printers,
             'current_deployment': self.object.current_deployment(),
             'percent_complete': percent_complete,
             'action_record': action_record,
