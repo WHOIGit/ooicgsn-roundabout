@@ -50,23 +50,23 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
 
     def form_valid(self, form):
         csv_file = self.request.FILES['document']
-        # Create or get parent TempImport object
-        tempimport_obj, created = TempImport.objects.get_or_create(name=csv_file.name)
-        # If already exists, reset all the related items
-        if not created:
-            tempimport_obj.tempimportitems.all().delete()
-        # Error catch variable
-
         # Set up the Django file object for CSV DictReader
         csv_file.seek(0)
         reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+        # Get the column headers to save with parent TempImport object
+        headers = reader.fieldnames
+
+        # Create or get parent TempImport object
+        tempimport_obj, created = TempImport.objects.get_or_create(name=csv_file.name, column_headers=headers)
+        # If already exists, reset all the related items
+        if not created:
+            tempimport_obj.tempimportitems.all().delete()
 
         for row in reader:
             # Need to put this dictionary in a list to maintain column order
             data = []
             # Loop through each row, run validation for different fields
             for key, value in row.items():
-                print(key, value)
                 if key == 'Serial Number':
                     # Check if Serial Number already being used
                     try:
@@ -170,7 +170,6 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                     else:
                         data.append({'field_name': key, 'field_value': value, 'error': True, 'error_msg': error_msg})
 
-            print(data)
             tempitem_obj = TempImportItem(data=data, tempimport=tempimport_obj)
             tempitem_obj.save()
             self.tempimport_obj = tempimport_obj
