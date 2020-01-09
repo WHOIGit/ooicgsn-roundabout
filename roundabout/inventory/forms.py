@@ -321,13 +321,14 @@ class ActionMoveToTrashForm(forms.ModelForm):
 
     class Meta:
         model = Inventory
-        fields = ['location', 'detail', 'parent', 'deployment', 'assembly_part', 'assigned_destination_root']
+        fields = ['location', 'detail', 'parent', 'deployment', 'assembly_part', 'assigned_destination_root', 'build']
         widgets = {
             'location': forms.HiddenInput(),
             'parent': forms.HiddenInput(),
             'deployment': forms.HiddenInput(),
             'assembly_part': forms.HiddenInput(),
             'assigned_destination_root': forms.HiddenInput(),
+            'build': forms.HiddenInput(),
         }
         labels = {
             'detail': 'Reasons for moving to Trash Bin',
@@ -340,6 +341,7 @@ class ActionMoveToTrashForm(forms.ModelForm):
         self.initial['deployment'] = ''
         self.initial['assembly_part'] = ''
         self.initial['assigned_destination_root'] = ''
+        self.initial['build'] = ''
         self.initial['detail'] = ''
 
 
