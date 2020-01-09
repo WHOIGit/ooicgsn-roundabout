@@ -222,7 +222,8 @@ a.wh {
     color: #dc3545;
 }
 
-#hint_id_serial_number.text-muted:hover {
+#hint_id_serial_number.text-muted:hover,
+#hint_id_build_number.text-muted:hover {
     color: #007bff !important;
     cursor: pointer;
 }
@@ -234,10 +235,17 @@ a.wh {
     border: none;
 }
 
+<<<<<<< HEAD
 /* Import Tool */
 
 .preview-import-table {
     font-size: .8em;
+=======
+/* Template Mode styling for apps that are considered Templates */
+.template #detail-view {
+    border-color: #28a745;
+    background-color: #28a7450d;
+>>>>>>> ce581a6e7adfb4907fc224902def27d6470efd81
 }
 
 /* Custom Fields styling */
