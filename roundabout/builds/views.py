@@ -210,7 +210,7 @@ class BuildAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
     def form_valid(self, form):
         self.object = form.save()
 
-        action_record = BuildAction.objects.create(action_type='buildadd', detail='Assembly created.', location=self.object.location,
+        action_record = BuildAction.objects.create(action_type='buildadd', detail='Build created.', location=self.object.location,
                                                    user=self.request.user, build=self.object)
 
         response = HttpResponseRedirect(self.get_success_url())

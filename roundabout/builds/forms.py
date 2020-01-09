@@ -23,7 +23,7 @@ class BuildForm(forms.ModelForm):
         model = Build
         fields = ['assembly', 'build_number', 'location', 'build_notes', ]
         labels = {
-            'build_notes': 'Assembly Notes',
+            'build_notes': 'Build Notes',
         }
 
     class Media:
