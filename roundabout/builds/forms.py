@@ -16,7 +16,7 @@ class BuildForm(forms.ModelForm):
     build_number = forms.CharField(strip=True,
         help_text='Serial Number auto-generated. Click here to override.',
         widget=forms.TextInput(attrs={'readonly':'readonly'}),
-        label='Serial Number',
+        label='Build Number',
     )
 
     class Meta:
