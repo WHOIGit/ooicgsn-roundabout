@@ -6,7 +6,7 @@ Current Version: 1.0
 Django application to manage Part, Location, and Deployment Templates, and Inventory tracking for OOI Electrical Engineering. Uses PostgreSQL database.
 
 
-:License: MIT
+:License: GPL v3
 
 
 ============
