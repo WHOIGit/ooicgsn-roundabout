@@ -19,7 +19,7 @@ class Build(models.Model):
             (True, "Flagged"),
             (False, "Unflagged"),
     )
-    build_number = models.CharField(max_length=255, unique=True, db_index=True)
+    build_number = models.CharField(max_length=255, unique=False, db_index=True)
     location = TreeForeignKey(Location, related_name='builds',
                               on_delete=models.SET_NULL, null=True, blank=False)
     assembly = models.ForeignKey(Assembly, related_name='builds',
