@@ -1,3 +1,5 @@
+import requests
+
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
@@ -210,6 +212,18 @@ class AssemblyAjaxCopyView(LoginRequiredMixin, PermissionRequiredMixin, AjaxForm
             return response
 
 
+# View to make API request to a separate RDB instance and copy an Assembly Template
+class AssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = 'assemblies.add_assembly'
+    
+    def get(self, request, *args, **kwargs):
+        request_url = 'http://localhost:8000/api/v1/assemblies/1/'
+        assembly_request = requests.get(request_url)
+        new_assembly = assembly_request.json()
+        print(new_assembly)
+        return HttpResponse('Hello, World!')
+
+
 class AssemblyAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Assembly
     template_name = 'assemblies/ajax_assembly_confirm_delete.html'
@@ -247,6 +261,7 @@ class AssemblyPartDetailView(LoginRequiredMixin, DetailView):
         self.object = self.get_object()
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
+
 
 # AJAX Detail view for Assembly Part
 class AssemblyPartAjaxDetailView(LoginRequiredMixin, DetailView):
