@@ -40,6 +40,7 @@ urlpatterns = [
     path('api/v1/', include('roundabout.inventory.api.urls')),
     path('api/v1/', include('roundabout.locations.api.urls')),
     path('api/v1/', include('roundabout.parts.api.urls')),
+    path('api/v1/', include('roundabout.assemblies.api.urls')),
     # API JWT token paths
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
