@@ -91,6 +91,11 @@
         <h3>Search Results</h3>
       </div>
       <div class="card-body">
+      {% if query_slug %}
+        <form action="{% url 'search:csv' 'basic' query_slug %}" method="get">
+          <button class="button float-right" type="submit">Download CSV</button>
+        </form>
+      {%  endif %}
         <p><b>{{ page_obj.paginator.count }}</b> items match your search! This is page <b>{{ page_obj.number }}</b> of <b>{{ page_obj.paginator.num_pages }}</b></p>
         <ul class="list-group list-group-flush">
           {% if search_items %}

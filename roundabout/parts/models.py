@@ -68,6 +68,12 @@ class Part(models.Model):
         else:
             return self.name
 
+    def csv_row(self,headers):
+        #TODO
+        # rn this is not being searched for....
+        #TODO ALSO search in UDF field DEFAULTS for certain parts. eg. model:motorola is a default for many telemetry part templates udf.
+        return []
+
 
 class Revision(models.Model):
     revision_code = models.CharField(max_length=255, unique=False, db_index=True, default='A')
