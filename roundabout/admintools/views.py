@@ -1,6 +1,7 @@
 import csv
 import io
 import json
+import requests
 from dateutil import parser
 
 from django.http import HttpResponse, HttpResponseRedirect
@@ -286,6 +287,26 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
 
 class ImportInventoryUploadSuccessView(TemplateView):
     template_name = "admintools/import_inventory_upload_success.html"
+
+
+# Assembly Template import tool
+# Import an existing Assembly template from a separate RDB instance
+
+# View to make API request to a separate RDB instance and copy an Assembly Template
+class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = 'assemblies.add_assembly'
+
+    def get(self, request, *args, **kwargs):
+        request_url = 'http://localhost:8000/api/v1/assemblies/1/'
+        assembly_request = requests.get(request_url)
+        new_assembly = assembly_request.json()
+        print(new_assembly['name'])
+        print(new_assembly['assembly_parts'])
+        for assembly_part in new_assembly['assembly_parts']:
+            print(assembly_part)
+            print(assembly_part['part']['name'])
+        return HttpResponse('Hello, World!')
+
 
 
 # Printer functionality

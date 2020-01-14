@@ -29,6 +29,4 @@ urlpatterns = [
     path('assemblytype/add/', view=views.AssemblyTypeCreateView.as_view(), name='assembly_type_add'),
     path('assemblytype/edit/<int:pk>/', view=views.AssemblyTypeUpdateView.as_view(), name='assembly_type_update'),
     path('assemblytype/delete/<int:pk>/', view=views.AssemblyTypeDeleteView.as_view(), name='assembly_type_delete'),
-    # API service requests
-    path('api/assembly_import/', view=views.AssemblyAPIRequestCopyView.as_view(), name='assembly_api_request_import'),
 ]

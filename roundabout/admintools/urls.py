@@ -13,6 +13,8 @@ urlpatterns = [
     path('import/inventory/create-template/', view=views.ImportInventoryCreateTemplateView.as_view(), name='import_inventory_create_template'),
     path('import/inventory/upload/', view=views.ImportInventoryUploadView.as_view(), name='import_inventory_upload'),
     path('import/inventory/upload/<int:pk>/', view=views.ImportInventoryPreviewDetailView.as_view(), name='import_inventory_preview_detail'),
-    path('import/inventory/upload/add/<int:pk>/', view=views.ImportInventoryUploadAddActionView.as_view(), name='import_inventory_upload_add_action'),   
+    path('import/inventory/upload/add/<int:pk>/', view=views.ImportInventoryUploadAddActionView.as_view(), name='import_inventory_upload_add_action'),
     path('import/inventory/upload/success/', view=views.ImportInventoryUploadSuccessView.as_view(), name='import_inventory_upload_success'),
+    # API service requests
+    path('import/assembly/api-request/', view=views.ImportAssemblyAPIRequestCopyView.as_view(), name='import_assembly_api_request'),
 ]
