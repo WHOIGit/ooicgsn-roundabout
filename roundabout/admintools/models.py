@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 
+from roundabout.assemblies.models import AssemblyType
+from roundabout.parts.models import Part
+
 # AdminTool models
 
 class Printer(models.Model):
@@ -35,3 +38,12 @@ class TempImportItem(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+
+# Assembly base model
+class TempImportAssembly(models.Model):
+    name = models.CharField(max_length=255, unique=False, db_index=True)
+    assembly_type = models.ForeignKey(AssemblyType, related_name='assemblies',
+                                    on_delete=models.SET_NULL, null=True, blank=True)
+    assembly_number = models.CharField(max_length=100, unique=False, db_index=True, null=False, blank=True)
+    description = models.TextField(blank=True)
