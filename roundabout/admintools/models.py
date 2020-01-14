@@ -1,4 +1,5 @@
 from django.db import models
+from mptt.models import MPTTModel, TreeForeignKey
 from django.contrib.postgres.fields import JSONField
 
 from roundabout.assemblies.models import AssemblyType
@@ -54,15 +55,20 @@ class TempImportAssembly(models.Model):
 
 
 # Assembly parts model
-class TempImportAssemblyPart(models.Model):
+class TempImportAssemblyPart(MPTTModel):
     assembly = models.ForeignKey(TempImportAssembly, related_name='temp_assembly_parts',
                           on_delete=models.CASCADE, null=False, blank=False)
     part = models.ForeignKey(Part, related_name='temp_assembly_parts',
                           on_delete=models.CASCADE, null=False, blank=False)
+    parent = TreeForeignKey('self', related_name='children',
+                            on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     previous_id = models.IntegerField(null=True, blank=True)
-    parent = models.IntegerField(null=True, blank=True)
+    previous_parent = models.IntegerField(null=True, blank=True)
     note = models.TextField(blank=True)
     order =  models.CharField(max_length=255, null=True, blank=True)
+
+    class MPTTMeta:
+        order_insertion_by = ['order']
 
     def __str__(self):
         return self.part.name

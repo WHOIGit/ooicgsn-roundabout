@@ -18,6 +18,7 @@ from roundabout.inventory.models import Inventory, Action
 from roundabout.parts.models import Part, Revision
 from roundabout.locations.models import Location
 from roundabout.assemblies.models import AssemblyType, Assembly, AssemblyPart
+from roundabout.assemblies.views import make_tree_copy
 
 # Bulk Inventory Import Functions
 # ------------------------------------------
@@ -338,19 +339,31 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
                     temp_assembly_part_obj = TempImportAssemblyPart(assembly=temp_assembly_obj,
                                                                     part=part,
                                                                     previous_id=assembly_part['id'],
-                                                                    parent=assembly_part['parent'],
+                                                                    previous_parent=assembly_part['parent'],
                                                                     note=assembly_part['note'],
                                                                     order=assembly_part['order'])
                     temp_assembly_part_obj.save()
-                    print(part)    
 
-        print(new_assembly['name'])
-        print(new_assembly['assembly_parts'])
-        for assembly_part in new_assembly['assembly_parts']:
-            print(assembly_part)
-            print(assembly_part['part']['name'])
+            # run through the temp Assembly Parts again to set the correct Parent structure for MPTT
+            for temp_assembly_part in temp_assembly_obj.temp_assembly_parts.all():
+                # Check if there's a previous_parent, if so we need to find the correct new object
+                if temp_assembly_part.previous_parent:
+                    parent_obj = TempImportAssemblyPart.objects.get(previous_id=temp_assembly_part.previous_parent)
+                    temp_assembly_part.parent = parent_obj
+                    temp_assembly_part.save()
+
+            # copy the Temp Assembly to real destination table
+            assembly_obj = Assembly(name=temp_assembly_obj.name,
+                                    assembly_type=temp_assembly_obj.assembly_type,
+                                    assembly_number=temp_assembly_obj.assembly_number,
+                                    description=temp_assembly_obj.description)
+            assembly_obj.save()
+            
+            for temp_assembly_part in temp_assembly_obj.temp_assembly_parts.all():
+                if temp_assembly_part.is_root_node():
+                    make_tree_copy(temp_assembly_part, assembly_obj, temp_assembly_part.parent)
+
         return HttpResponse('Temp object saved')
-
 
 
 # Printer functionality
