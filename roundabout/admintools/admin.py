@@ -6,3 +6,5 @@ from .models import *
 admin.site.register(Printer)
 admin.site.register(TempImport)
 admin.site.register(TempImportItem)
+admin.site.register(TempImportAssembly)
+admin.site.register(TempImportAssemblyPart)

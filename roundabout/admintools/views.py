@@ -12,11 +12,12 @@ from django.views.generic import View, DetailView, ListView, RedirectView, Updat
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 from .forms import PrinterForm, ImportInventoryForm
-from .models import Printer, TempImport, TempImportItem
+from .models import *
 from roundabout.userdefinedfields.models import FieldValue, Field
 from roundabout.inventory.models import Inventory, Action
 from roundabout.parts.models import Part, Revision
 from roundabout.locations.models import Location
+from roundabout.assemblies.models import AssemblyType, Assembly, AssemblyPart
 
 # Bulk Inventory Import Functions
 # ------------------------------------------
@@ -297,15 +298,58 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
     permission_required = 'assemblies.add_assembly'
 
     def get(self, request, *args, **kwargs):
+        # Get the Assembly data from RDB API
         request_url = 'http://localhost:8000/api/v1/assemblies/1/'
         assembly_request = requests.get(request_url)
         new_assembly = assembly_request.json()
+
+        # Get or create new parent Temp Assembly
+        temp_assembly_obj, created = TempImportAssembly.objects.get_or_create(name=new_assembly['name'],
+                                                                              assembly_number=new_assembly['assembly_number'],
+                                                                              description=new_assembly['description'],)
+        # If already exists, reset all the related items
+        if not created:
+            temp_assembly_obj.temp_assembly_parts.all().delete()
+
+        try:
+            assembly_type = AssemblyType.objects.get(name=new_assembly['assembly_type']['name'])
+            import_error = False
+        except AssemblyType.DoesNotExist:
+            assembly_type = None
+            import_error = True
+            import_error_msg = 'Assembly Type does not exist in this RDB. Please add it, and try again.'
+
+        if not import_error:
+            # add Assembly Type to the parent object
+            temp_assembly_obj.assembly_type = assembly_type
+            temp_assembly_obj.save()
+
+            # import all Assembly Parts to temp table
+            for assembly_part in new_assembly['assembly_parts']:
+                # Need to validate that the Part template exists
+                try:
+                    part = Part.objects.get(part_number=assembly_part['part']['part_number'])
+                except Part.DoesNotExist:
+                    part = None
+                    import_error = True
+                    import_error_msg = 'Part Number does not exist in this RDB. Please add Part Template, and try again.'
+
+                if not import_error:
+                    temp_assembly_part_obj = TempImportAssemblyPart(assembly=temp_assembly_obj,
+                                                                    part=part,
+                                                                    previous_id=assembly_part['id'],
+                                                                    parent=assembly_part['parent'],
+                                                                    note=assembly_part['note'],
+                                                                    order=assembly_part['order'])
+                    temp_assembly_part_obj.save()
+                    print(part)    
+
         print(new_assembly['name'])
         print(new_assembly['assembly_parts'])
         for assembly_part in new_assembly['assembly_parts']:
             print(assembly_part)
             print(assembly_part['part']['name'])
-        return HttpResponse('Hello, World!')
+        return HttpResponse('Temp object saved')
 
 
 

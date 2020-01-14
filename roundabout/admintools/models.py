@@ -47,6 +47,10 @@ class TempImportAssembly(models.Model):
                                     on_delete=models.SET_NULL, null=True, blank=True)
     assembly_number = models.CharField(max_length=100, unique=False, null=False, blank=True)
     description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
 
 
 # Assembly parts model
@@ -58,4 +62,7 @@ class TempImportAssemblyPart(models.Model):
     previous_id = models.IntegerField(null=True, blank=True)
     parent = models.IntegerField(null=True, blank=True)
     note = models.TextField(blank=True)
-    order = models.IntegerField(null=True, blank=True)
+    order =  models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return self.part.name
