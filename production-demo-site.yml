@@ -3,40 +3,40 @@
 version: '3.5'
 
 volumes:
-  production_postgres_data_testing: {}
-  production_postgres_data_backups_testing: {}
-  static_volume_testing: {}
-  media_volume_testing: {}
+  production_postgres_data_demo: {}
+  production_postgres_data_backups_demo: {}
+  static_volume_demo: {}
+  media_volume_demo: {}
 
 services:
-  django_testing:
+  django_demo:
     build:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
     image: roundabout_demo_django
-    container_name: django_testing
+    container_name: django_demo
     depends_on:
-      - postgres_testing
+      - postgres_demo
     volumes:
-      - static_volume_testing:/app/staticfiles  # <-- bind the static files
-      - media_volume_testing:/app/media  # <-- bind the media files
+      - static_volume_demo:/app/staticfiles  # <-- bind the static files
+      - media_volume_demo:/app/media  # <-- bind the media files
     env_file:
-      - ./.envs/.production/.django
-      - ./.envs/.production/.postgres
+      - ./.envs/.production/.django_demo
+      - ./.envs/.production/.postgres_demo
     restart: unless-stopped
     command: /start
 
-  postgres_testing:
+  postgres_demo:
     build:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
-    image: roundabout_testing_postgres
-    container_name: postgres_testing
+    image: roundabout_demo_postgres
+    container_name: postgres_demo
     volumes:
-      - production_postgres_data_testing:/var/lib/postgresql/data
-      - production_postgres_data_backups_testing:/backups
+      - production_postgres_data_demo:/var/lib/postgresql/data
+      - production_postgres_data_backups_demo:/backups
     env_file:
-      - ./.envs/.production/.postgres_testing
+      - ./.envs/.production/.postgres_demo
     restart: unless-stopped
 
 networks:

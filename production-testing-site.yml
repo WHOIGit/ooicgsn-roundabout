@@ -1,4 +1,4 @@
-# rdb-demo.whoi.edu containers
+# rdb-testing.whoi.edu containers
 # requires the main roundabout-network to be running
 version: '3.5'
 
