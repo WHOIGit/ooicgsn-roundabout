@@ -366,7 +366,7 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
 
             make_tree_copy(temp_assembly_root_part, assembly_obj, temp_assembly_root_part.parent)
 
-        return HttpResponse('Temp object saved')
+        return HttpResponse('<h1>New Assembly Template Imported!</h1>')
 
 
 # Printer functionality
