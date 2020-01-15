@@ -300,10 +300,9 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
 
     def get(self, request, *args, **kwargs):
         # Get the Assembly data from RDB API
-        request_url = 'http://localhost:8000/api/v1/assemblies/1/'
-        assembly_request = requests.get(request_url)
+        request_url = 'https://ooi-cgrdb-staging.whoi.net/api/v1/assemblies/9/'
+        assembly_request = requests.get(request_url, verify=False)
         new_assembly = assembly_request.json()
-
         # Get or create new parent Temp Assembly
         temp_assembly_obj, created = TempImportAssembly.objects.get_or_create(name=new_assembly['name'],
                                                                               assembly_number=new_assembly['assembly_number'],
@@ -343,6 +342,7 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
                                                                     note=assembly_part['note'],
                                                                     order=assembly_part['order'])
                     temp_assembly_part_obj.save()
+                    print(temp_assembly_part_obj)
 
             # run through the temp Assembly Parts again to set the correct Parent structure for MPTT
             for temp_assembly_part in temp_assembly_obj.temp_assembly_parts.all():
@@ -352,16 +352,19 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
                     temp_assembly_part.parent = parent_obj
                     temp_assembly_part.save()
 
+            # Rebuild the TempImportAssemblyPart MPTT tree to ensure correct structure for copying
+            TempImportAssemblyPart._tree_manager.rebuild()
+
             # copy the Temp Assembly to real destination table
             assembly_obj = Assembly(name=temp_assembly_obj.name,
                                     assembly_type=temp_assembly_obj.assembly_type,
                                     assembly_number=temp_assembly_obj.assembly_number,
                                     description=temp_assembly_obj.description)
             assembly_obj.save()
-            
-            for temp_assembly_part in temp_assembly_obj.temp_assembly_parts.all():
-                if temp_assembly_part.is_root_node():
-                    make_tree_copy(temp_assembly_part, assembly_obj, temp_assembly_part.parent)
+
+            temp_assembly_root_part = temp_assembly_obj.temp_assembly_parts.first().get_root()
+
+            make_tree_copy(temp_assembly_root_part, assembly_obj, temp_assembly_root_part.parent)
 
         return HttpResponse('Temp object saved')
 
