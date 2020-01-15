@@ -13,7 +13,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
-    image: roundabout_demo_django
+    image: roundabout_testing_django
     container_name: django_testing
     depends_on:
       - postgres_testing
