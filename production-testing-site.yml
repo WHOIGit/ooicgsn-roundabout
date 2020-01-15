@@ -1,0 +1,45 @@
+# rdb-demo.whoi.edu containers
+# requires the main roundabout-network to be running
+version: '3.5'
+
+volumes:
+  production_postgres_data_testing: {}
+  production_postgres_data_backups_testing: {}
+  static_volume_testing: {}
+  media_volume_testing: {}
+
+services:
+  django_testing:
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    image: roundabout_demo_django
+    container_name: django_testing
+    depends_on:
+      - postgres_testing
+    volumes:
+      - static_volume_testing:/app/staticfiles  # <-- bind the static files
+      - media_volume_testing:/app/media  # <-- bind the media files
+    env_file:
+      - ./.envs/.production/.django
+      - ./.envs/.production/.postgres
+    restart: unless-stopped
+    command: /start
+
+  postgres_testing:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: roundabout_testing_postgres
+    container_name: postgres_testing
+    volumes:
+      - production_postgres_data_testing:/var/lib/postgresql/data
+      - production_postgres_data_backups_testing:/backups
+    env_file:
+      - ./.envs/.production/.postgres_testing
+    restart: unless-stopped
+
+networks:
+  default:
+    external:
+      name: roundabout-network
