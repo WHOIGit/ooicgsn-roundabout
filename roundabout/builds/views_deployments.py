@@ -19,6 +19,16 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
     context_object_name = 'deployment'
     template_name='builds/ajax_deployment_form.html'
 
+    def get_context_data(self, **kwargs):
+        context = super(DeploymentAjaxCreateView, self).get_context_data(**kwargs)
+        if 'build_pk' in self.kwargs:
+            build = Build.objects.get(id=self.kwargs['build_pk'])
+        # Add Build to the context to validate date options
+        context.update({
+            'build': build
+        })
+        return context
+
     def get_initial(self):
         #Returns the initial data to use for forms on this view.
         initial = super(DeploymentAjaxCreateView, self).get_initial()
@@ -33,7 +43,9 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
     def form_valid(self, form):
         self.object = form.save()
+        # Update the Build instance to match any Deployment changes
         build = self.object.build
+        build.location = self.object.location
         build.is_deployed = True
         build.save()
 
@@ -209,7 +221,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             for item in inventory_items:
                 if item.is_root_node():
                     make_tree_copy(item, base_location, snapshot, item.parent)
-        """    
+        """
 
         # Get all Inventory items on Build, match location and add Action
         inventory_items = Inventory.objects.filter(build=build)

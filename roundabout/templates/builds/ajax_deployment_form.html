@@ -14,6 +14,7 @@
         {% else %}
             <h3>Start New {{ label_deployments_app_singular }} </h3>
         {% endif %}
+        {{ build }}
     </div>
 
     <div class="card-body">
@@ -90,9 +91,11 @@
             {% if deployment.id %}
                 // Convert the UTC datetime in the database to user's local time for validation
                 var local_date = moment.utc('{{ latest_action_record.created_at|date:"SHORT_DATE_FORMAT" }} {{ latest_action_record.created_at|time:"H:i" }}').local().format('YYYY-MM-DD HH:mm:ss');
-                options_obj.options.maxDate = '{% tomorrow "%m/%d/%Y %H:%M" %}';
-                options_obj.options.minDate = local_date;
+            {% else %}
+                var local_date = moment.utc('{{ build.created_at|date:"SHORT_DATE_FORMAT" }} {{ build.created_at|time:"H:i" }}').local().format('YYYY-MM-DD HH:mm:ss');
             {% endif %}
+            options_obj.options.minDate = local_date;
+            options_obj.options.maxDate = '{% tomorrow "%m/%d/%Y %H:%M" %}';
             options_obj.options.useCurrent = true;
             console.log(options_obj);
             $('#id_date').attr('dp_config', JSON.stringify(options_obj));
