@@ -159,7 +159,6 @@ class DeploymentForm(forms.ModelForm):
                 "showClear": True,
                 "showTodayButton": True,
                 "maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
-                "useCurrent": True,
             }
         ),
         initial=timezone.now
@@ -317,7 +316,6 @@ class DeploymentActionRecoverForm(forms.ModelForm):
                 "showClose": True,
                 "showClear": True,
                 "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
             }
         ),
         initial=timezone.now()

@@ -45,7 +45,7 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         # Create Build Action record for deployment
         build_detail = '%s Deployment started.' % (self.object.deployment_number)
         build_record = BuildAction.objects.create(action_type='startdeploy', detail=build_detail, location=self.object.location,
-                                                   user=self.request.user, build=build)
+                                                   user=self.request.user, build=build, created_at=action_date)
 
         response = HttpResponseRedirect(self.get_success_url())
 
