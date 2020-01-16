@@ -136,7 +136,7 @@ class BuildAction(models.Model):
         (LOCATIONCHANGE, 'Location Change'),
         (SUBASSEMBLYCHANGE, 'Subassembly Change'),
         (STARTDEPLOY, 'Start Deployment'),
-        (REMOVEFROMDEPLOYMENT, 'Remove from Deployment'),
+        (REMOVEFROMDEPLOYMENT, 'Deployment Ended'),
         (DEPLOYMENTBURNIN, 'Deployment Burnin'),
         (DEPLOYMENTTOSEA, 'Deployment to Sea'),
         (DEPLOYMENTUPDATE, 'Deployment Update'),

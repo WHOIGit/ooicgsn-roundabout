@@ -23,7 +23,7 @@
         {% endif %}
 
         {% if action_type == 'retire' %}
-            <h4 class="mt-3 mb-3">Please confirm that {{ deployment.deployment_number }} is ready to be Retired.</h4>
+            <h4 class="mt-3 mb-3">Please confirm that {{ deployment.deployment_number }} is ready to end.</h4>
         {% endif %}
 
         <form class="form-horizontal ajax-form" method="post" action="" id="deployment-form" data-url='{{ request.build_absolute_uri|safe }}'>
@@ -55,7 +55,7 @@
                   {% if action_type == 'deploy' %}
                       <button type="submit" class="btn btn-danger">Confirm Deploy to Sea</button>
                   {% elif action_type == 'retire' %}
-                      <button type="submit" class="btn btn-danger">Confirm Retirement</button>
+                      <button type="submit" class="btn btn-danger">Confirm End of Deployment</button>
                   {% else %}
                       <button type="submit" class="btn btn-primary">Update {{ label_deployments_app_singular }} </button>
                   {% endif %}
@@ -83,28 +83,23 @@
 
 <script>
     // Update the DatePicker options to set the minDate/maxDate option with the last action date
-    {% if deployment.id %}
+
         function updateDatePicker() {
             var picker_options = $('#id_date').attr('dp_config');
             var options_obj = JSON.parse(picker_options);
-            // Convert the UTC datetime in the database to user's local time for validation
-            var local_date = moment.utc('{{ latest_action_record.created_at|date:"SHORT_DATE_FORMAT" }} {{ latest_action_record.created_at|time:"H:i" }}').local().format('YYYY-MM-DD HH:mm:ss');
-            //options_obj.options.maxDate = '{% tomorrow "%m/%d/%Y %H:%M" %}';
-            //options_obj.options.minDate = local_date;
-            options_obj.options.useCurrent = false;
+            {% if deployment.id %}
+                // Convert the UTC datetime in the database to user's local time for validation
+                var local_date = moment.utc('{{ latest_action_record.created_at|date:"SHORT_DATE_FORMAT" }} {{ latest_action_record.created_at|time:"H:i" }}').local().format('YYYY-MM-DD HH:mm:ss');
+                options_obj.options.maxDate = '{% tomorrow "%m/%d/%Y %H:%M" %}';
+                options_obj.options.minDate = local_date;
+            {% endif %}
+            options_obj.options.useCurrent = true;
             console.log(options_obj);
-
-            //var local_date = moment.utc(options_obj.options.minDate ).local().format('YYYY-MM-DD HH:mm:ss');
-            console.log(local_date);
             $('#id_date').attr('dp_config', JSON.stringify(options_obj));
-            //var test = $('#id_date').data("DateTimePicker").date();
-            console.log(local_date);
 
         }
         updateDatePicker();
 
-
-    {% endif %}
 </script>
 
 

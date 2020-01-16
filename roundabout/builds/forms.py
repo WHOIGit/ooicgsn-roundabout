@@ -157,11 +157,11 @@ class DeploymentForm(forms.ModelForm):
                 #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
                 "showClose": True,
                 "showClear": True,
-                "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
+                "showTodayButton": False,
             }
         ),
-        initial=timezone.now
+        initial=timezone.now,
+        help_text='Set all date/times to UTC time zone.',
     )
 
     def __init__(self, *args, **kwargs):
@@ -192,11 +192,11 @@ class DeploymentActionBurninForm(forms.ModelForm):
                 #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
                 "showClose": True,
                 "showClear": True,
-                "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
+                "showTodayButton": False,
             }
         ),
-        initial=timezone.now
+        initial=timezone.now,
+        help_text='Set all date/times to UTC time zone.',
     )
 
     def __init__(self, *args, **kwargs):
@@ -221,11 +221,12 @@ class DeploymentActionDeployForm(forms.ModelForm):
                 #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
                 "showClose": True,
                 "showClear": True,
-                "showTodayButton": True,
+                "showTodayButton": False,
                 #"maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
             }
         ),
-        initial=timezone.now
+        initial=timezone.now,
+        help_text='Set all date/times to UTC time zone.',
     )
     # Add lat/long, depth fields for the Action record
     latitude = forms.DecimalField(required=False)
@@ -268,11 +269,11 @@ class DeploymentActionDetailsForm(forms.ModelForm):
                 #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
                 "showClose": True,
                 "showClear": True,
-                "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
+                "showTodayButton": False,
             }
         ),
-        initial=timezone.now
+        initial=timezone.now,
+        help_text='Set all date/times to UTC time zone.',
     )
     # Add lat/long, depth fields for the Action record
     latitude = forms.DecimalField(required=False)
@@ -309,16 +310,17 @@ class DeploymentActionRecoverForm(forms.ModelForm):
             'location': 'Select location to recover Deployment to:',
         }
 
-    # Add custom date field to allow user to pick date for the Action
+    # Add custom date field to allow user to pick date for the Action record
     date = forms.DateTimeField( widget=DateTimePickerInput(
             options={
-                #"format": "MM/DD/YYYY, HH:mm:ss", # moment date-time format
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
                 "showClose": True,
                 "showClear": True,
-                "showTodayButton": True,
+                "showTodayButton": False,
             }
         ),
-        initial=timezone.now()
+        initial=timezone.now,
+        help_text='Set all date/times to UTC time zone.',
     )
 
     def __init__(self, *args, **kwargs):
@@ -344,13 +346,9 @@ class DeploymentActionRetireForm(forms.ModelForm):
                 #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
                 "showClose": True,
                 "showClear": True,
-                "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
+                "showTodayButton": False,
             }
         ),
-        initial=timezone.now
+        initial=timezone.now,
+        help_text='Set all date/times to UTC time zone.',
     )
-
-    def __init__(self, *args, **kwargs):
-        super(DeploymentActionRetireForm, self).__init__(*args, **kwargs)
-        self.initial['location'] = Location.objects.get(root_type='Retired')
