@@ -21,8 +21,8 @@ services:
       - static_volume_testing:/app/staticfiles  # <-- bind the static files
       - media_volume_testing:/app/media  # <-- bind the media files
     env_file:
-      - ./.envs/.production/.django
-      - ./.envs/.production/.postgres
+      - ./.envs/.production/.django_testing
+      - ./.envs/.production/.postgres_testing
     restart: unless-stopped
     command: /start
 
