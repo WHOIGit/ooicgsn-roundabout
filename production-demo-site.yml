@@ -37,7 +37,7 @@ services:
       - production_postgres_data_backups_demo:/backups
     env_file:
       - ./.envs/.production/.postgres_demo
-    restart: unless-stopped  
+    restart: unless-stopped
 
 networks:
   default:

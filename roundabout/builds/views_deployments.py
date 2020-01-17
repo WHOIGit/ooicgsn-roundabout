@@ -19,6 +19,16 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
     context_object_name = 'deployment'
     template_name='builds/ajax_deployment_form.html'
 
+    def get_context_data(self, **kwargs):
+        context = super(DeploymentAjaxCreateView, self).get_context_data(**kwargs)
+        if 'build_pk' in self.kwargs:
+            build = Build.objects.get(id=self.kwargs['build_pk'])
+        # Add Build to the context to validate date options
+        context.update({
+            'build': build
+        })
+        return context
+
     def get_initial(self):
         #Returns the initial data to use for forms on this view.
         initial = super(DeploymentAjaxCreateView, self).get_initial()
@@ -33,7 +43,9 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
     def form_valid(self, form):
         self.object = form.save()
+        # Update the Build instance to match any Deployment changes
         build = self.object.build
+        build.location = self.object.location
         build.is_deployed = True
         build.save()
 
@@ -45,7 +57,7 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         # Create Build Action record for deployment
         build_detail = '%s Deployment started.' % (self.object.deployment_number)
         build_record = BuildAction.objects.create(action_type='startdeploy', detail=build_detail, location=self.object.location,
-                                                   user=self.request.user, build=build)
+                                                   user=self.request.user, build=build, created_at=action_date)
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -125,7 +137,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             action_type_inventory = 'deploymentrecover'
 
         if action_type == 'retire':
-            self.object.detail = '%s Retired.' % (self.object.deployment_number)
+            self.object.detail = '%s Ended.' % (self.object.deployment_number)
             action_type_inventory = 'removefromdeployment'
 
         if action_type == 'details':
@@ -137,25 +149,6 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         # Get the date for the Action Record from the custom form field
         action_date = form.cleaned_data['date']
 
-        """
-        # Create automatic Snapshot when Deployed to Sea or Recovered
-        if action_type == 'deploy' or action_type == 'recover':
-            # Create a Snapshot when Deployment is Deployed
-            deployment = self.object
-            base_location = Location.objects.get(root_type='Snapshots')
-            inventory_items = deployment.inventory.all()
-
-            snapshot = DeploymentSnapshot.objects.create(deployment=deployment,
-                                                         location=base_location,
-                                                         snapshot_location=deployment.location,
-                                                         notes=self.object.detail,
-                                                         created_at=action_date, )
-
-            # Now create Inventory Item Snapshots with make_tree_copy function for Deployment Snapshot
-            for item in inventory_items:
-                if item.is_root_node():
-                    make_tree_copy(item, base_location, snapshot, item.parent)
-        """
         # If Deploying to Sea or Updating deployment, set Depth, Lat/Long
         if action_type == 'deploy' or action_type == 'details':
             latitude = form.cleaned_data['latitude']
@@ -186,17 +179,8 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
                                               user=self.request.user, deployment=self.object, created_at=action_date,
                                               latitude=latitude, longitude=longitude, depth=depth)
 
-
-
         # Update Build location, create Action Record
         build = self.object.build
-
-        # Create Build Action record for deployment
-        if action_type == 'deploy':
-            self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
-
-        build_record = BuildAction.objects.create(action_type=action_type_inventory, detail=self.object.detail, location=self.object.location,
-                                                   user=self.request.user, build=build, created_at=action_date)
 
         # If action_type is not "retire", update Build location
         if action_type != 'retire':
@@ -208,9 +192,36 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
 
         build.save()
 
+        # Create Build Action record for deployment
+        if action_type == 'deploy':
+            self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
+
+        build_record = BuildAction.objects.create(action_type=action_type_inventory, detail=self.object.detail, location=build.location,
+                                                   user=self.request.user, build=build, created_at=action_date)
+
         #update Time at Sea if Recovered from Sea with Build model method
         if action_type == 'recover':
             build.update_time_at_sea()
+
+        """
+        # Create automatic Snapshot when Deployed to Sea or Recovered
+        if action_type == 'deploy' or action_type == 'recover':
+            # Create a Snapshot when Deployment is Deployed
+            deployment = self.object
+            base_location = Location.objects.get(root_type='Snapshots')
+            inventory_items = deployment.inventory.all()
+
+            snapshot = DeploymentSnapshot.objects.create(deployment=deployment,
+                                                         location=base_location,
+                                                         snapshot_location=deployment.location,
+                                                         notes=self.object.detail,
+                                                         created_at=action_date, )
+
+            # Now create Inventory Item Snapshots with make_tree_copy function for Deployment Snapshot
+            for item in inventory_items:
+                if item.is_root_node():
+                    make_tree_copy(item, base_location, snapshot, item.parent)
+        """
 
         # Get all Inventory items on Build, match location and add Action
         inventory_items = Inventory.objects.filter(build=build)
