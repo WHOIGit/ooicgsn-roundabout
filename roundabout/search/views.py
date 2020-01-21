@@ -38,30 +38,10 @@ class BasicSearch(LoginRequiredMixin, ListView):
             context['checked'][gname] = 'checked' if self.request.GET.get(gname)=='✓' else ''
             context['query_slug'] += '&{}=✓'.format(gname) if self.request.GET.get(gname)=='✓' else ''
 
-        context['search_items'] = []
-        for q in context['search_items_qs']:
-            item = {}
-            item['id'] = q.id
-            item['type'] = q.__class__.__name__
-            if isinstance(q,Inventory):
-                item['href'] = reverse('inventory:inventory_detail',args=[q.id])
-                item['entry'] = '{} - {}'.format(q.serial_number,q.part.name)
-                item['subline'] = 'Inventory Location: {}'.format(q.location)
-            elif isinstance(q,Part):
-                item['href'] = reverse('parts:parts_detail',args=[q.id])
-                item['entry'] = '{} - {}'.format(q.part_number,q.name)
-                item['subline'] = 'Part Type: {}'.format(q.part_type)
+        context['search_items'] = search_list_item_formatting(context['search_items_qs'])
 
-            context['search_items'].append(item)
+        limit_paginator(context,25)
 
-        if context['page_obj'].paginator.num_pages <=25:
-            context['custom_paginator_range'] = context['page_obj'].paginator.page_range
-        else:
-            currpage = context['page_obj'].number
-            maxpage = context['page_obj'].paginator.num_pages
-            context['custom_paginator_range'] = range(max(1,currpage-10),
-                                                      min(maxpage, currpage+11))
-        print('page',context['page_obj'].number,'of',context['page_obj'].paginator.num_pages, context['custom_paginator_range'])
         return context
 
     def get_queryset(self):
@@ -113,20 +93,39 @@ def basic_query(qs):
 
     return list(qs_inv) + list(qs_prt)
 
-@register.filter(name='range')
-def times(number):
-    return range(1,number+1)
+
+def search_list_item_formatting(search_items_qs):
+    items = []
+    for q in search_items_qs:
+        item = dict(id=q.id, type=q.__class__.__name__)
+        if isinstance(q, Inventory):
+            item['href'] = reverse('inventory:inventory_detail', args=[q.id])
+            item['entry'] = '{} - {}'.format(q.serial_number, q.part.name)
+            item['subline'] = 'Inventory Location: {}'.format(q.location)
+        elif isinstance(q, Part):
+            item['href'] = reverse('parts:parts_detail', args=[q.id])
+            item['entry'] = '{} - {}'.format(q.part_number, q.name)
+            item['subline'] = 'Part Type: {}'.format(q.part_type)
+        if isinstance(q, Build):
+            item['href'] = reverse('builds:builds_detail', args=[q.id])
+            item['entry'] = '{} - {}'.format(q.build_number, q.name)
+            item['subline'] = 'Build Location: {}'.format(q.location)
+        elif isinstance(q, Assembly):
+            item['href'] = reverse('assemblies:assembly_detail', args=[q.id])
+            item['entry'] = '{} - {}'.format(q.assembly_number, q.name)
+            item['subline'] = 'Assembly Type: {}'.format(q.assembly_type)
+        items.append(item)
+    return items
 
 
-def adv_query(query_slug):
-    if not query_slug: return []
-    tups = [pair.split('=',1) for pair in query_slug.split('&')]
+def parse_adv_slug(query_slug):
+    tups = [pair.split('=', 1) for pair in query_slug.split('&')]
     # eg: ('m0', 'inventory') ('m0_f0', 'serial') ('m0_l0', 'icontains') ('m0_q0', '333')
     #                         ('m0_f1', 'serial') ('m0_l1', 'icontains') ('m0_q1', '')
     cards = dict()
-    #card = dict(model='',queries={0:dict(field='',lookup='',query=''),})
+    #card = dict(model='',queries={'0':dict(field='',lookup='',query=''),})
     for key, val in tups:
-        if key=='page': continue
+        if key == 'page': continue
         if val == '': val = None
         key = key.split('_')
         if len(key) == 1:
@@ -149,6 +148,14 @@ def adv_query(query_slug):
                 cards[card_key]['queries'][query_key_index][query_key_type] = val
             except KeyError:
                 cards[card_key]['queries'][query_key_index] = {query_key_type: val}
+    for card_key in cards:
+        cards[card_key]['queries'] =  {i:flq_dict for i,flq_dict in enumerate(cards[card_key]['queries'].values())}
+    return cards
+
+def adv_query(query_slug):
+    if not query_slug: return []
+
+    cards = parse_adv_slug(query_slug)
 
     for card in cards.values():
         model = card['model']
@@ -156,7 +163,7 @@ def adv_query(query_slug):
             model = Inventory
         elif model == 'part':
             model = Part
-        elif model == 'build':
+        elif model == 'builds':
             model = Build
         elif model == 'assembly':
             model = Assembly
@@ -201,7 +208,6 @@ class AdvSearch(LoginRequiredMixin,ListView):
     def get_queryset(self):
         return adv_query(self.request.META['QUERY_STRING'])
 
-
     def get_context_data(self, **kwargs):
         context = super(AdvSearch, self).get_context_data(**kwargs)
 
@@ -209,39 +215,26 @@ class AdvSearch(LoginRequiredMixin,ListView):
         if '&page=' in context['query_slug']:
             context['query_slug'] = context['query_slug'].split('&page=')[0]
 
-        context['search_items'] = []
-        for q in context['search_items_qs']:
-            item = {}
-            item['id'] = q.id
-            item['type'] = q.__class__.__name__
-            if isinstance(q,Inventory):
-                item['href'] = reverse('inventory:inventory_detail',args=[q.id])
-                item['entry'] = '{} - {}'.format(q.serial_number,q.part.name)
-                item['subline'] = 'Inventory Location: {}'.format(q.location)
-            elif isinstance(q,Part):
-                item['href'] = reverse('parts:parts_detail',args=[q.id])
-                item['entry'] = '{} - {}'.format(q.part_number,q.name)
-                item['subline'] = 'Part Type: {}'.format(q.part_type)
-            if isinstance(q,Build):
-                item['href'] = reverse('build:build_detail',args=[q.id])
-                item['entry'] = '{} - {}'.format(q.build_number,q.name)
-                item['subline'] = 'Build Location: {}'.format(q.location)
-            elif isinstance(q,Assembly):
-                item['href'] = reverse('assemblies:assembly_detail',args=[q.id])
-                item['entry'] = '{} - {}'.format(q.assembly_number,q.name)
-                item['subline'] = 'Assembly Type: {}'.format(q.assembly_type)
-            context['search_items'].append(item)
+        if context['query_slug']:
+            cards = parse_adv_slug(context['query_slug'])
+            context['prev_cards'] = json.dumps(cards)
+            print(context['prev_cards'])
 
-        if context['page_obj'].paginator.num_pages <=25:
-            context['custom_paginator_range'] = context['page_obj'].paginator.page_range
-        else:
-            currpage = context['page_obj'].number
-            maxpage = context['page_obj'].paginator.num_pages
-            context['custom_paginator_range'] = range(max(1,currpage-10),
-                                                      min(maxpage, currpage+11))
-        print('page',context['page_obj'].number,'of',context['page_obj'].paginator.num_pages, context['custom_paginator_range'])
+        context['search_items'] = search_list_item_formatting(context['search_items_qs'])
+
+        limit_paginator(context,25)
 
         return context
+
+def limit_paginator(context,max_to_show):
+    if context['page_obj'].paginator.num_pages <= max_to_show:
+        context['custom_paginator_range'] = context['page_obj'].paginator.page_range
+    else:
+        currpage = context['page_obj'].number
+        maxpage = context['page_obj'].paginator.num_pages
+        context['custom_paginator_range'] = range(max(1, currpage-10),
+                                                  min(maxpage, currpage+11))
+    #print('page', context['page_obj'].number, 'of', context['page_obj'].paginator.num_pages, context['custom_paginator_range'])
 
 import csv
 class CsvDownloadSearch(LoginRequiredMixin, View):

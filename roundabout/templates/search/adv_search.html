@@ -3,6 +3,22 @@
 {% load mptt_tags %}
 {% load crispy_forms_tags %}
 {% block title %}Adv. Search{% endblock %}
+{% block javascript %}
+  <script type="text/javascript" src="/static/js/form-search.js"></script>
+  <script>window.addEventListener("load", function(){
+    {% if prev_cards %}
+      const prev_cards = jQuery.parseJSON('{{ prev_cards|escapejs }}')
+      for( let card in prev_cards ){
+          const type =  prev_cards[card]['model']
+          const rows_data = prev_cards[card]['queries']
+          insert_card(type,rows_data)
+      }
+    {% else %}
+      insert_card('inventory')
+    {% endif %}
+
+  })</script>
+{% endblock javascript %}
 {% block content %}
 
 
@@ -11,12 +27,15 @@
   <!-- SEARCH CONTROLS -->
   <div class="col-md-5 search-control">
     <h2>Advanced Search</h2>
-    <form action="{% url 'search:adv' %}" method="get" accept-charset="utf-8" class="form">
-
-      {% include "search/_adv_card.html" with cindex='XX' ctype='inventory'%}<br>
-      {% include "search/_adv_card.html" with cindex=1 ctype='part'%}<br>
-      {% include "search/_adv_card.html" with cindex=2 ctype='build'%}<br>
-      {% include "search/_adv_card.html" with cindex=3 ctype='assembly'%}<br>
+    <form id='adv-search-form' action="{% url 'search:adv' %}" method="get" accept-charset="utf-8" class="form">
+      <div id='adv-search-cards'>
+      {% comment %}
+        {% include "search/_adv_card.html" with cindex='XX' ctype='inventory'%}<br>
+        {% include "search/_adv_card.html" with cindex=1 ctype='part'%}<br>
+        {% include "search/_adv_card.html" with cindex=2 ctype='build'%}<br>
+        {% include "search/_adv_card.html" with cindex=3 ctype='assembly'%}<br>
+      {% endcomment %}
+      </div>
 
       <button class="btn btn-primary float-right" type="submit"><i class="fa fa-search"></i> Submit</button>
     </form>
@@ -100,6 +119,3 @@
 </div>
 
 {% endblock content %}
-{% block javascript %}
-  <script type="text/javascript" src="/static/js/form-search.js"></script>
-{% endblock javascript %}
