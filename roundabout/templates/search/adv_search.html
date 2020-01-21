@@ -29,12 +29,7 @@
     <h2>Advanced Search</h2>
     <form id='adv-search-form' action="{% url 'search:adv' %}" method="get" accept-charset="utf-8" class="form">
       <div id='adv-search-cards'>
-      {% comment %}
-        {% include "search/_adv_card.html" with cindex='XX' ctype='inventory'%}<br>
-        {% include "search/_adv_card.html" with cindex=1 ctype='part'%}<br>
-        {% include "search/_adv_card.html" with cindex=2 ctype='build'%}<br>
-        {% include "search/_adv_card.html" with cindex=3 ctype='assembly'%}<br>
-      {% endcomment %}
+
       </div>
 
       <button class="btn btn-primary float-right" type="submit"><i class="fa fa-search"></i> Submit</button>
