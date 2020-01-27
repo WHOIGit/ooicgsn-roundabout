@@ -12,6 +12,8 @@
                         data-jstree='{"icon":"fa fa-camera"}'
                     {% elif part.part_type.name == 'Structural' %}
                         data-jstree='{"icon":"fa fa-cubes"}'
+                    {% else %}
+                        data-jstree='{"icon":"fa fa-cube"}'
                     {% endif %}
                      id="parts_{{ part.id }}"><a href="#" data-detail-url="{% url 'parts:ajax_parts_detail' part.id %}"
                         data-node-id="{{ part.id }}"

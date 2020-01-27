@@ -18,6 +18,8 @@
                                 data-jstree='{"icon":"fa fa-camera"}'
                             {% elif inv.part.part_type.name == 'Structural' %}
                                 data-jstree='{"icon":"fa fa-cubes"}'
+                            {% else %}
+                                data-jstree='{"icon":"fa fa-cube"}'
                             {% endif %}
                             id="inventory_{{ inv.id }}">
                 {% else %}
@@ -31,6 +33,8 @@
                                 data-jstree='{"icon":"fa fa-camera"}'
                             {% elif inv.part.part_type.name == 'Structural' %}
                                 data-jstree='{"icon":"fa fa-cubes"}'
+                            {% else %}
+                                data-jstree='{"icon":"fa fa-cube"}'
                             {% endif %}
                             id="inventory_{{ inv.id }}">
                 {% endif %}
