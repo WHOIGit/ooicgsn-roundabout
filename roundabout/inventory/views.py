@@ -588,6 +588,20 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
 
         return form_class_name
 
+    def get_context_data(self, **kwargs):
+        context = super(InventoryAjaxActionView, self).get_context_data(**kwargs)
+        # Get latest detail information if part is flagged
+        if Action.objects.filter( Q(action_type='flag') & Q(inventory_id=self.object.id) ).exists() and self.kwargs['action_type'] == 'flag':
+            context.update({
+                'latest_flag': Action.objects.filter( Q(action_type='flag') & Q(inventory_id=self.object.id) ).latest('created_at')
+            })
+        if 'action_type' in self.kwargs:
+            context['action_type'] = self.kwargs['action_type']
+        else:
+            context['action_type'] = None
+
+        return context
+
     def form_valid(self, form):
         if self.kwargs['action_type'] == 'locationchange':
             # Find previous location to add to Detail field text
@@ -663,6 +677,16 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
             #self.kwargs['action_type'] = self.object.get_flag_display()
 
         if self.kwargs['action_type'] == 'subchange':
+            # Find if it was removed from Build as well
+            old_build_pk = self.object.tracker.previous('build')
+            if old_build_pk:
+                old_build = Build.objects.get(pk=old_build_pk)
+                self.object.detail = ' Removed from %s. ' % (old_build) + self.object.detail
+
+                # Create Build Action record for adding inventory item
+                build_detail = '%s removed from Build' % (self.object)
+                build_record = BuildAction.objects.create(action_type='subassemblychange', detail=build_detail, location=old_build.location,
+                                                           user=self.request.user, build=old_build)
             # Find previous parent to add to Detail field text
             old_parent_pk = self.object.tracker.previous('parent')
             if old_parent_pk:

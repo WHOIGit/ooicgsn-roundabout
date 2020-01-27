@@ -320,14 +320,20 @@
                   {% recursetree inventory_item.get_descendants %}
                       <li class="list-group-item">
                           <div class="ajax-detail-link">
+
                               <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' node.id %}"
                                  data-node-id="{{ node.id }}"
                                  data-location-id="{{ node.location.id }}"
                                  data-node-type="detail" class="subassembly-name">{{ node.part.name }} - {{ node.serial_number }}</a>
 
-                          <a href="{% url 'inventory:inventory_action' 'subchange' node.id node.location.id %}"
+
+
+                              <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_action' 'subchange' node.id %}"
+                              data-node-id="{{ node.id }}"
                               class="btn btn-danger btn-sm float-right"
                               role="button">Remove</a>
+
+
 
                               <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' node.id %}"
                                  data-node-id="{{ node.id }}"
@@ -335,6 +341,7 @@
                                  data-node-type="detail"
                                   class="btn btn-primary btn-sm float-right mr-2"
                                   role="button">Edit</a>
+                        
 
                           {% if not node.is_leaf_node %}
                               <ul class="list-group list-group-flush">
