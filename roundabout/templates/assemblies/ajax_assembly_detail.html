@@ -38,6 +38,12 @@
     <p>Total Assembly Cost: ${{ assembly.get_assembly_total_cost|intcomma }}
 
     {% if assembly.builds.exists %}
+        <div class="alert alert-warning" role="alert">
+            <b>NOTICE:</b>  This Assembly template has existing Builds. Any edits you make to this
+            template will be reflected in those Builds. If you want to create a new version of this Assembly,
+            but keep existing Builds unchanged, please create a <b>NEW REVISION</b>.
+        </div>
+
         <h5>Current Builds for this Assembly template</h5>
 
         <ul class="list-group list-group-flush">
