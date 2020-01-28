@@ -1,14 +1,28 @@
     <div class="card-body">
         <div class="side-p">
             <h3>Are you sure?</h3>
-            <p>You're about to delete {{ object }}. Please confirm.</p>
+            {% if assembly_part.inventory.exists %}
+                <div class="alert alert-danger" role="alert">
+                    <h5>Warning! This Assembly Part has live inventory on existing Builds!</h5>
+
+                    <ul>
+                        {% for item in assembly_part.inventory.all %}
+                            <li>Build: {{ item.build }} - {{ item }}</li>
+                        {% endfor %}
+                    </ul>
+
+                    <p>If you delete this Assembly Part, the existing Inventory items will be
+                        removed from Builds and placed in the same current Location as the Build.</p>
+                </div>
+            {% endif %}
+            <p>You're about to delete {{ assembly_part }} assembly part. Please confirm.</p>
             <form action="" method="post" class="delete-form"
                   data-url='{{ request.build_absolute_uri|safe }}'>
                 {% csrf_token %}
                 <input class="btn btn-light cancel-btn"
                        type="button" value="Cancel"
-                       data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' object.id %}"
-                       data-node-id="{{ object.id }}" />
+                       data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' assembly_part.id %}"
+                       data-node-id="{{ assembly_part.id }}" />
                 <input class="btn btn-danger" type="submit" value="Confirm"/>
             </form>
         </div>
