@@ -21,6 +21,8 @@
                             data-jstree='{"icon":"fa fa-camera"}'
                         {% elif assembly_part.part.part_type.name == 'Structural' %}
                             data-jstree='{"icon":"fa fa-cubes"}'
+                        {% else %}
+                            data-jstree='{"icon":"fa fa-cube"}'
                         {% endif %}
 
                         {% if assembly_part.id in inventory_dict %}
@@ -39,6 +41,8 @@
                             data-jstree='{"icon":"fa fa-camera"}'
                         {% elif assembly_part.part.part_type.name == 'Structural' %}
                             data-jstree='{"icon":"fa fa-cubes"}'
+                        {% else %}
+                            data-jstree='{"icon":"fa fa-cube"}'
                         {% endif %}
 
                         {% if assembly_part.id in inventory %}
