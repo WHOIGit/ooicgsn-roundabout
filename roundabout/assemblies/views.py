@@ -7,6 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from .models import Assembly, AssemblyPart, AssemblyType, AssemblyDocument
 from .forms import AssemblyForm, AssemblyPartForm, AssemblyTypeForm
 from roundabout.parts.models import PartType, Part
+from roundabout.inventory.models import Action
 from common.util.mixins import AjaxFormMixin
 
 
@@ -392,6 +393,17 @@ class AssemblyPartAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, De
 
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
+
+        # Need to check if there's Inventory on this AssemblyPart. If so, need to bump them off the Build
+        if self.object.inventory.exists():
+            for item in self.object.inventory.all():
+                item.detail = 'Removed from %s' % (item.build)
+                action_record = Action.objects.create(action_type='removefrombuild', detail=item.detail, location=item.location,
+                                                      user=self.request.user, inventory=item)
+                item.build = None
+                item.assembly_part = None
+                item.save()
+
         data = {
             'message': "Successfully submitted form data.",
             'object_type': self.object.get_object_type(),
