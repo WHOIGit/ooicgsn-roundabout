@@ -5,14 +5,30 @@
                 <div class="alert alert-danger" role="alert">
                     <h5>Warning! This Assembly Part has live inventory on existing Builds!</h5>
 
-                    <ul>
+                    <ul class="list-group list-group-flush">
+
                         {% for item in assembly_part.inventory.all %}
-                            <li>Build: {{ item.build }} - {{ item }}</li>
+
+                            <li class="list-group-item">
+                                <a href="{% url 'inventory:inventory_detail' item.id %}" data-detail-url="{% url 'inventory:ajax_inventory_detail' item.id %}"
+                                   data-node-id="{{ item.id }}"
+                                   data-location-id="{{ item.location.id }}"
+                                   data-node-type="detail"
+                                   class="btn btn-primary btn-sm float-right"
+                                   role="button">View</a>
+                                Build: {{ item.build }}<br>
+                                Inventory Item: {{ item }}<br>
+                                Current Location: {{ item.build.location }}
+
+                            </li>
+
                         {% endfor %}
+
                     </ul>
 
                     <p>If you delete this Assembly Part, the existing Inventory items will be
-                        removed from Builds and placed in the same current Location as the Build.</p>
+                        removed from Builds and placed in the same current Location as the Build. If you want
+                        the current Builds to remain unchanged, please create a <b>NEW REVISION</b> instead.</p>
                 </div>
             {% endif %}
             <p>You're about to delete {{ assembly_part }} assembly part. Please confirm.</p>
