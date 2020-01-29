@@ -1,5 +1,6 @@
 from django.db import models
 from mptt.models import MPTTModel, TreeForeignKey
+from model_utils import FieldTracker
 
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part
@@ -73,6 +74,8 @@ class AssemblyPart(MPTTModel):
                             on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     note = models.TextField(blank=True)
     order = models.CharField(max_length=255, null=False, blank=True, db_index=True)
+
+    tracker = FieldTracker(fields=['part',])
 
     class MPTTMeta:
         order_insertion_by = ['order']

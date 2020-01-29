@@ -356,7 +356,25 @@ class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
         return reverse('assemblies:ajax_assemblyparts_detail', args=(self.object.id, ))
 
     def form_valid(self, form):
+        # Get previous Part template object to check if it changed
+        old_part_pk = self.object.tracker.previous('part')
+
         self.object = form.save()
+
+        print(self.object.part.id)
+        print(old_part_pk)
+
+        if self.object.part.id != old_part_pk:
+            # Need to check if there's Inventory on this AssemblyPart. If so, need to bump them off the Build
+            if self.object.inventory.exists():
+                for item in self.object.inventory.all():
+                    item.detail = 'Removed from %s' % (item.build)
+                    action_record = Action.objects.create(action_type='removefrombuild', detail=item.detail, location=item.location,
+                                                          user=self.request.user, inventory=item)
+                    item.build = None
+                    item.assembly_part = None
+                    item.save()
+
 
         if self.object.part.friendly_name:
             self.object.order = self.object.part.friendly_name
@@ -368,7 +386,6 @@ class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
-            print(form.cleaned_data)
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
