@@ -7,14 +7,20 @@
   <script type="text/javascript" src="/static/js/form-search.js"></script>
   <script>window.addEventListener("load", function(){
     {% if prev_cards %}
+      $("#adv-search-cards").empty()
       const prev_cards = jQuery.parseJSON('{{ prev_cards|escapejs }}')
+      let model = 'inventory'
       for( let card in prev_cards ){
           const type =  prev_cards[card]['model']
+          model = type
           const rows_data = prev_cards[card]['queries']
           insert_card(type,rows_data)
       }
+      document.getElementById('model-select').value = model
+
     {% else %}
       insert_card('inventory')
+      //document.getElementById('model-select').value = 'inventory'
     {% endif %}
 
   })</script>
@@ -28,11 +34,19 @@
   <div class="col-md-5 search-control">
     <h2>Advanced Search</h2>
     <form id='adv-search-form' action="{% url 'search:adv' %}" method="get" accept-charset="utf-8" class="form">
-      <div id='adv-search-cards'>
-
+      <div class="form-inline">
+        <label class="form-check-label pr-2" for="model-select"><h4>Search for </h4></label>
+        <select class="form-control" id="model-select" onchange="replace_cards(this)">
+          <option value="inventory" >Inventory</option>
+          <option value="part"      >Part</option>
+          <option value="builds"    >Build</option>
+          <option value="assembly"  >Assembly</option>
+        </select>
       </div>
+      <div id='adv-search-cards'></div>
 
-      <button class="btn btn-primary float-right" type="submit"><i class="fa fa-search"></i> Submit</button>
+      <button class="btn btn-primary float-right m-1" type="submit"><i class="fa fa-search"></i> Submit</button>
+      <a href="{% url 'search:adv' %}"><button type='button' class="btn btn-primary float-right m-1">RESET</button></a>
     </form>
   </div>
 

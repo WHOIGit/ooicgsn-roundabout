@@ -18,19 +18,12 @@ String.prototype.replaceAll = function(search, replacement) {
 
 function create_card(card_name,type,rows_data=null){
 
-    var card_html = `<div class="card" id="qcard_c{{ cindex }}">{{ card_header }}{{ card_body }}</div>`
+    var card_html = `<div class="card qcard" id="qcard_c{{ cindex }}">{{ card_header }}{{ card_body }}</div>`
 
     var card_header = `
   <div class="card-header form-group form-inline">
-
-    <label class="form-check-label pr-2" for="model-select_c{{ cindex }}"><h4>Search for </h4></label>
-    <select class="form-control" id="model-select_c{{ cindex }}" name="m{{ cindex }}" onchange="replace_card({{ cindex }})">
-      <option value="inventory" >Inventory</option>
-      <option value="part"      >Part</option>
-      <option value="builds"    >Build</option>
-      <option value="assembly"  >Assembly</option>
-    </select>
-  </div>`
+    <input type="hidden" value="{{ type }}" name="m{{ cindex }}">
+  </div>`.replace('{{ type }}',type)
 
     if (type === 'inventory'){
         card_header = card_header.replace('value="inventory"','value="inventory" selected')}
@@ -76,14 +69,22 @@ function insert_card(type,rows_data=null){
     var new_card = str2html(create_card(name,type,rows_data))
     cards.appendChild(new_card)
 }
-function replace_card(name){
+function replace_card(name){ // DEPRICATED
     var card_id = 'qcard_c{{ cindex }}'.replace('{{ cindex }}',name)
     var card = document.getElementById(card_id)
     var type_selector_id = 'model-select_c{{ cindex }}'.replace('{{ cindex }}',name)
-    var type_selector = document.getElementById(type_selector_id)
-    var type = type_selector.value
+    //var type_selector = document.getElementById(type_selector_id)
+    var type = $("#model-select").value
     var new_card = str2html(create_card(name,type))
     card.parentNode.replaceChild(new_card, card)
+}
+function replace_cards(selectObj){
+    $("#adv-search-cards").empty()
+    const card_type = selectObj.value //$("#model-select")
+    insert_card(card_type)
+
+    //var cards = document.getElementsByClassName('qcard')
+
 }
 
 function create_row(card_idx,type, row_index,row_data=null){
@@ -187,7 +188,8 @@ function remove_row(row_idx) {
 var prev_row_idx_percard = {}
 function insert_row(card_idx){
     var card_id = 'qcard_c{{ cindex }}'.replace('{{ cindex }}',card_idx)
-    var type_selector_id = 'model-select_c{{ cindex }}'.replace('{{ cindex }}',card_idx)
+    //var type_selector_id = 'model-select_c{{ cindex }}'.replace('{{ cindex }}',card_idx)
+    var type_selector_id = 'model-select'
     var type_selector = document.getElementById(type_selector_id)
     var type = type_selector.value
 
