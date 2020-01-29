@@ -120,8 +120,8 @@ def search_list_item_formatting(search_items_qs):
 
 def parse_adv_slug(query_slug):
     tups = [pair.split('=', 1) for pair in query_slug.split('&')]
-    # eg: ('m0', 'inventory') ('m0_f0', 'serial') ('m0_l0', 'icontains') ('m0_q0', '333')
-    #                         ('m0_f1', 'serial') ('m0_l1', 'icontains') ('m0_q1', '')
+    # eg: ('model', 'inventory') ('m0_f0', 'serial') ('m0_l0', 'icontains') ('m0_q0', '333')
+    #                            ('m0_f1', 'serial') ('m0_l1', 'icontains') ('m0_q1', '')
     cards = dict()
     #card = dict(model='',queries={'0':dict(field='',lookup='',query=''),})
     for key, val in tups:
