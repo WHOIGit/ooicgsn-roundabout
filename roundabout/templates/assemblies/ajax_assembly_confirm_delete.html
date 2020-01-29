@@ -25,12 +25,33 @@
                         {% endfor %}
 
                     </ul>
-
+                    <div class="ajax-detail-link">
                     <p class="mt-3">If you delete this Assembly Part, the existing Inventory items will be
                         removed from Builds and placed in the same current Location as the Build. If you want
-                        the current Builds to remain unchanged, please create a <b>NEW REVISION</b> instead.</p>
+                        the current Builds to remain unchanged, please create a
+                            <a href="#"
+                            data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly_part.assembly.id %}"
+                            data-node-id="{{ assembly_part.assembly.id }}"
+                            data-node-type="detail"><b>NEW VERSION</b></a> instead.</p>
+                    </div>
                 </div>
+
+            {% elif assembly_part.assembly.builds.exists %}
+
+                <div class="alert alert-warning" role="alert">
+                    <b>NOTICE:</b>  This Assembly template has existing Builds. Any edits you make to this
+                    template will be reflected in those Builds. If you want to create a new version of this Assembly,
+                    but keep existing Builds unchanged, please create a
+                    <div class="ajax-detail-link">
+                        <a href="#"
+                        data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly_part.assembly.id %}"
+                        data-node-id="{{ assembly_part.assembly.id }}"
+                        data-node-type="detail"><b>NEW VERSION</b></a>
+                    </div>
+                </div>
+
             {% endif %}
+
             <p>You're about to delete {{ assembly_part }} assembly part. Please confirm.</p>
             <form action="" method="post" class="delete-form"
                   data-url='{{ request.build_absolute_uri|safe }}'>
