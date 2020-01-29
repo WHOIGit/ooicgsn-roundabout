@@ -268,10 +268,12 @@ class AssemblyPartAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
 
     def get_context_data(self, **kwargs):
         context = super(AssemblyPartAjaxCreateView, self).get_context_data(**kwargs)
+        assembly = Assembly.objects.get(id=self.kwargs['assembly_pk'])
 
         context.update({
             'part_types': PartType.objects.all(),
-            'assembly': Assembly.objects.get(id=self.kwargs['assembly_pk'])
+            'assembly': assembly,
+            'builds': assembly.builds.all()
         })
         if 'parent_pk' in self.kwargs:
             context.update({
@@ -334,7 +336,9 @@ class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
         context = super(AssemblyPartAjaxUpdateView, self).get_context_data(**kwargs)
         # Add Parts list to context to build form filter
         context.update({
-            'part_types': PartType.objects.all()
+            'part_types': PartType.objects.all(),
+            'assembly': self.object.assembly,
+            'builds': self.object.assembly.builds.all()
         })
         if 'parent_pk' in self.kwargs:
             context.update({
@@ -346,8 +350,6 @@ class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
         kwargs = super(AssemblyPartAjaxUpdateView, self).get_form_kwargs()
         if 'parent_pk' in self.kwargs:
             kwargs['parent_pk'] = self.kwargs['parent_pk']
-        if 'current_location' in self.kwargs:
-            kwargs['current_location'] = self.kwargs['current_location']
         return kwargs
 
     def get_success_url(self):
@@ -362,12 +364,6 @@ class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
             self.object.order = self.object.part.name
 
         self.object.save()
-
-        if self.object.get_descendants():
-            children = self.object.get_descendants()
-            for child in children:
-                child.location_id = self.object.location_id
-                child.save()
 
         response = HttpResponseRedirect(self.get_success_url())
 

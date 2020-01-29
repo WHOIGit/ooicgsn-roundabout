@@ -42,12 +42,13 @@
             <b>NOTICE:</b>  This Assembly template has existing Builds. Any edits you make to this
             template will be reflected in those Builds. If you want to create a new version of this Assembly,
             but keep existing Builds unchanged, please create a
-            <div class="ajax-detail-link">
+            <span class="ajax-detail-link">
                 <a href="#"
                 data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly.id %}"
                 data-node-id="{{ assembly.id }}"
                 data-node-type="detail"><b>NEW VERSION</b></a>
-            </div>
+            </span> of this Assembly instead.
+
         </div>
 
         <h5>Current Builds for this Assembly template</h5>
