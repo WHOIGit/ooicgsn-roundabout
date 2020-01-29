@@ -139,10 +139,28 @@
             <div class="control-group">
               <div class="controls">
                 {% if assembly_part.id %}
-                <button type="submit" class="btn btn-primary">Update Assembly Part</button>
+                    <button type="submit" class="btn btn-primary">Update Assembly Part</button>
                 {% else %}
-                <button type="submit" class="btn btn-primary">Add Assembly Part</button>
+                    <button type="submit" class="btn btn-primary">Add Assembly Part</button>
                 {% endif %}
+
+                {% if assembly_part.id %}
+                    <input class="btn btn-light cancel-btn"
+                       type="button" value="Cancel"
+                       data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' assembly_part.id %}"
+                       data-node-id="{{ assembly_part.id }}" />
+                {% elif parent.id %}
+                    <input class="btn btn-light cancel-btn"
+                       type="button" value="Cancel"
+                       data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' parent.id %}"
+                       data-node-id="{{ parent.id }}" />
+                {% else %}
+                    <input class="btn btn-light cancel-btn"
+                       type="button" value="Cancel"
+                       data-detail-url="{% url 'assemblies:ajax_assemblies_detail' assembly.id %}"
+                       data-node-id="{{ assembly.id }}" />
+                {% endif %}
+
               </div>
             </div>
           </form>
