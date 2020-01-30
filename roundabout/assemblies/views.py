@@ -214,6 +214,7 @@ class AssemblyAjaxCopyView(LoginRequiredMixin, PermissionRequiredMixin, AjaxForm
 class AssemblyAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Assembly
     template_name = 'assemblies/ajax_assembly_confirm_delete.html'
+    context_object_name = 'assembly'
     permission_required = 'assemblies.delete_assembly'
     redirect_field_name = 'home'
 
@@ -400,7 +401,7 @@ class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
 class AssemblyPartAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = AssemblyPart
     context_object_name='assembly_part'
-    template_name = 'assemblies/ajax_assembly_confirm_delete.html'
+    template_name = 'assemblies/ajax_assemblypart_confirm_delete.html'
     permission_required = 'assemblies.change_assembly'
     redirect_field_name = 'home'
 
