@@ -7,6 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from .models import Assembly, AssemblyPart, AssemblyType, AssemblyDocument
 from .forms import AssemblyForm, AssemblyPartForm, AssemblyTypeForm
 from roundabout.parts.models import PartType, Part
+from roundabout.inventory.models import Action
 from common.util.mixins import AjaxFormMixin
 
 
@@ -213,6 +214,7 @@ class AssemblyAjaxCopyView(LoginRequiredMixin, PermissionRequiredMixin, AjaxForm
 class AssemblyAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Assembly
     template_name = 'assemblies/ajax_assembly_confirm_delete.html'
+    context_object_name = 'assembly'
     permission_required = 'assemblies.delete_assembly'
     redirect_field_name = 'home'
 
@@ -267,10 +269,12 @@ class AssemblyPartAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
 
     def get_context_data(self, **kwargs):
         context = super(AssemblyPartAjaxCreateView, self).get_context_data(**kwargs)
+        assembly = Assembly.objects.get(id=self.kwargs['assembly_pk'])
 
         context.update({
             'part_types': PartType.objects.all(),
-            'assembly': Assembly.objects.get(id=self.kwargs['assembly_pk'])
+            'assembly': assembly,
+            'builds': assembly.builds.all()
         })
         if 'parent_pk' in self.kwargs:
             context.update({
@@ -333,7 +337,9 @@ class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
         context = super(AssemblyPartAjaxUpdateView, self).get_context_data(**kwargs)
         # Add Parts list to context to build form filter
         context.update({
-            'part_types': PartType.objects.all()
+            'part_types': PartType.objects.all(),
+            'assembly': self.object.assembly,
+            'builds': self.object.assembly.builds.all()
         })
         if 'parent_pk' in self.kwargs:
             context.update({
@@ -345,15 +351,31 @@ class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
         kwargs = super(AssemblyPartAjaxUpdateView, self).get_form_kwargs()
         if 'parent_pk' in self.kwargs:
             kwargs['parent_pk'] = self.kwargs['parent_pk']
-        if 'current_location' in self.kwargs:
-            kwargs['current_location'] = self.kwargs['current_location']
         return kwargs
 
     def get_success_url(self):
         return reverse('assemblies:ajax_assemblyparts_detail', args=(self.object.id, ))
 
     def form_valid(self, form):
+        # Get previous Part template object to check if it changed
+        old_part_pk = self.object.tracker.previous('part')
+
         self.object = form.save()
+
+        print(self.object.part.id)
+        print(old_part_pk)
+
+        if self.object.part.id != old_part_pk:
+            # Need to check if there's Inventory on this AssemblyPart. If so, need to bump them off the Build
+            if self.object.inventory.exists():
+                for item in self.object.inventory.all():
+                    item.detail = 'Removed from %s' % (item.build)
+                    action_record = Action.objects.create(action_type='removefrombuild', detail=item.detail, location=item.location,
+                                                          user=self.request.user, inventory=item)
+                    item.build = None
+                    item.assembly_part = None
+                    item.save()
+
 
         if self.object.part.friendly_name:
             self.object.order = self.object.part.friendly_name
@@ -362,16 +384,9 @@ class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
 
         self.object.save()
 
-        if self.object.get_descendants():
-            children = self.object.get_descendants()
-            for child in children:
-                child.location_id = self.object.location_id
-                child.save()
-
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
-            print(form.cleaned_data)
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
@@ -386,12 +401,23 @@ class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
 class AssemblyPartAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = AssemblyPart
     context_object_name='assembly_part'
-    template_name = 'assemblies/ajax_assembly_confirm_delete.html'
+    template_name = 'assemblies/ajax_assemblypart_confirm_delete.html'
     permission_required = 'assemblies.change_assembly'
     redirect_field_name = 'home'
 
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
+
+        # Need to check if there's Inventory on this AssemblyPart. If so, need to bump them off the Build
+        if self.object.inventory.exists():
+            for item in self.object.inventory.all():
+                item.detail = 'Removed from %s' % (item.build)
+                action_record = Action.objects.create(action_type='removefrombuild', detail=item.detail, location=item.location,
+                                                      user=self.request.user, inventory=item)
+                item.build = None
+                item.assembly_part = None
+                item.save()
+
         data = {
             'message': "Successfully submitted form data.",
             'object_type': self.object.get_object_type(),

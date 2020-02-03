@@ -36,6 +36,10 @@ class AssemblyPartForm(forms.ModelForm):
             'note': 'Design Notes'
         }
 
+        widgets = {
+            'assembly': forms.HiddenInput(),
+        }
+
     class Media:
         js = ('js/form-assemblyparts.js',)
 

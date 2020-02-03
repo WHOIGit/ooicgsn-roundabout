@@ -5,13 +5,22 @@
                     {% if assembly.id %}
                         <h3>{{ assembly.name }}</h3>
                     {% elif assembly_to_copy %}
-                        <h3>Copy Assembly "{{ assembly_to_copy.name }}" to Create a New Assembly</h3>
+                        <h3>Copy Assembly template "{{ assembly_to_copy.name }}"</h3>
                     {% else %}
                         <h3>Add Assembly</h3>
                     {% endif %}
                 </div>
 
                 <div class="card-body">
+                    {% if assembly_to_copy %}
+                        <div class="alert alert-primary" role="alert">
+                         <p>Use this form to create a new version of the existing Assembly template: <b>{{ assembly_to_copy.name }}</b>.</p>
+
+                         <p>The new version will have the same template structure as the original, but all existing Builds
+                         will remain unchanged.</p>
+
+                        </div>
+                    {% endif %}
 
 
                     <form class="form-horizontal ajax-form" method="post" action="" id="assembly-form" data-url='{{ request.build_absolute_uri|safe }}'>
