@@ -45,6 +45,7 @@
       </div>
       <div id='adv-search-cards'></div>
 
+      <button class="btn btn-primary float-left m-1" type="button" onclick="insert_card(document.getElementById('model-select').value)"><i class="fa fa-plus"></i> New Card</button>
       <button class="btn btn-primary float-right m-1" type="submit"><i class="fa fa-search"></i> Submit</button>
       <a href="{% url 'search:adv' %}"><button type='button' class="btn btn-primary float-right m-1">RESET</button></a>
     </form>
