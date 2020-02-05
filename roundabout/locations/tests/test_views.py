@@ -18,7 +18,7 @@ class LocationDetailTests(TestCase):
         User = get_user_model()
         content_type = ContentType.objects.get_for_model(Location)
         self.permission = Permission.objects.get(content_type=content_type, codename='add_location')
-        group_name = "admin"
+        group_name = "admin_test"
         self.group = Group(name=group_name)
         self.group.save()
         self.user = User.objects.create_user(self.username, password=self.password, is_active=True)

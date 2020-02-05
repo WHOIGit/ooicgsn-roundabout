@@ -2,7 +2,6 @@ import factory
 from random import randint
 
 from roundabout.inventory.models import Inventory, Deployment
-from roundabout.moorings.models import MooringPart
 from roundabout.locations.tests.factories import LocationFactory
 from roundabout.parts.tests.factories import PartFactory
 
