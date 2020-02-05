@@ -56,10 +56,10 @@ The environmental variables include several standard required Django settings th
 - POSTGRES_USER
 - POSTGRES_PASSWORD
 
-In addition to standard Django variables, Roundabout uses some custom environmental variables to set the pattern for the auto-generation of Serial Numbers. There are several options available for you to choose from:
+In addition to standard Django variables, Roundabout uses some custom environmental variables to set the pattern for the auto-generation of Serial Numbers. There are several options available for you to choose from in the ``.env/production/django`` file:
 
-1) If you want to enable basic Serial Number auto-generation, set the ``RDB_SERIALNUMBER_CREATE`` variable to True. This will create Serial Numbers with a basic numeric pattern - "1, 2, 3, ... etc."
-2) If you want to use the Serial Number pattern recommended by OOI, then also set the ``RDB_SERIALNUMBER_OOI_DEFAULT_PATTERN`` variable to True. This will create Serial Numbers with the following pattern: "Part Number" + "-20001, -20002, -20003, etc."
+1) If you want to enable basic Serial Number auto-generation, set the ``RDB_SERIALNUMBER_CREATE`` variable to ``True``. This will create Serial Numbers with a basic numeric pattern - "1, 2, 3, ... etc."
+2) If you want to use the Serial Number pattern recommended by OOI, then also set the ``RDB_SERIALNUMBER_OOI_DEFAULT_PATTERN`` variable to ``True``. This will create Serial Numbers with the following pattern: "Part Number" + "-20001, -20002, -20003, etc."
 
 NGINX Settings
 ^^^^^^^^^^^^^^
@@ -78,7 +78,7 @@ Deployment Steps
 ----------------
 
 1) Clone the repository to whatever directory on your server you want to use.
-2) Upload your NEW ``.envs`` directory and ``.ssl`` directory (if using) to the application root directory
+2) Upload your NEW ``.envs`` directory and ``.ssl`` directory (if using) to the application root directory.
 3) Run the following Docker Compose commands:
 
 .. code:: console
@@ -91,7 +91,7 @@ Deployment Steps
 Using Roundabout for the First Time
 --------------------------------
  
-Not that your site is up and running, you can login by clicking the "Sign In" link and using the default user credentials created when the site was spun up. These credentials are set in the ``.env/production/django`` file, and - unless you changed them before starting the site -- default to:
+Not that your site is up and running, you can login by clicking the "Sign In" link and using the default user credentials created when the site was spun up for the first time. These credentials are set in the ``.env/production/django`` file, and - unless you changed them before starting the site -- default to:
  
 - Username: admin
 - Password: admin
