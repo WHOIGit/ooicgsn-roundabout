@@ -27,16 +27,23 @@ JS/CSS
 - jsTree 3.3
 - Bootstrap 4
 
-
+============
 Deployment
+============
+
+Production
 ----------
 
-The following details how to deploy this application.
+Prerequisites
+^^^^^^^^^^^^^
 
+To deploy a production instance of Roundabout, you need to have the following items in place:
+- A web server with ports 80 and 443 available
+- Docker and docker-compose installed on the server (`<https://docs.docker.com/compose/install/>`_)
+- Git installed on the server 
 
-
-Docker
-^^^^^^
+Local Docker Development
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 See detailed `cookiecutter-django Docker documentation`_.
 
