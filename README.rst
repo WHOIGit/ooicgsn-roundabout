@@ -38,9 +38,17 @@ Prerequisites
 ^^^^^^^^^^^^^
 
 To deploy a production instance of Roundabout, you need to have the following items in place:
+
 - A web server with ports 80 and 443 available
 - Docker and docker-compose installed on the server (`<https://docs.docker.com/compose/install/>`_)
-- Git installed on the server 
+- Git installed on the server
+
+Environmental Variables
+^^^^^^^^^^^^^^^^^^^^^^^
+Roundabout relies heavily on environmental variables. The environmental variables include secrets like database usernames/passwords.
+These variable should NOT be kept in version control. The repository includes a ".envs.example" directory that you can use as
+a template to create your own ".envs" directory. Roundabout requires this ".envs" directory to be in the application root level directory.
+
 
 Local Docker Development
 ^^^^^^^^^^^^^^^^^^^^^^^^
