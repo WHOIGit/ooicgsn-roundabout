@@ -1,4 +1,4 @@
-# This software is licensed *GNU General Public License v2.0 or any later version*. The currently-existing applicable GPL licenses (v2 & v3) are provided in this file, for your reference. 
+### This software is licensed **GNU General Public License v2.0 or any later version**. The currently-existing applicable GPL licenses (v2 & v3) are provided in this file, for your reference. 
 ______________________________________________________________________
 
 ### GNU GENERAL PUBLIC LICENSE
