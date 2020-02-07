@@ -300,7 +300,7 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
 
     def get(self, request, *args, **kwargs):
         # Get the Assembly data from RDB API
-        request_url = 'https://rdb-demo.whoi.edu/api/v1/assemblies/16/'
+        request_url = 'https://rdb-demo.whoi.edu/api/v1/assemblies/14/'
         assembly_request = requests.get(request_url, verify=False)
         new_assembly = assembly_request.json()
         # Get or create new parent Temp Assembly
