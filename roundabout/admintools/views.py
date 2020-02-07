@@ -362,11 +362,11 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
                                     description=temp_assembly_obj.description)
             assembly_obj.save()
 
-            temp_assembly_root_part = temp_assembly_obj.temp_assembly_parts.first().get_root()
+            for ap in temp_assembly_obj.temp_assembly_parts.all():
+                if ap.is_root_node():
+                    make_tree_copy(ap, assembly_obj, ap.parent)
 
-            make_tree_copy(temp_assembly_root_part, assembly_obj, temp_assembly_root_part.parent)
-
-        return HttpResponse('<h1>New Assembly Template Imported!</h1>')
+        return HttpResponse('<h1>New Assembly Template Imported! - %s</h1>' % (import_error))
 
 
 # Printer functionality
