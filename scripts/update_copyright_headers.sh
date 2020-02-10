@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# Script to add Copyright/License headers to code:
+# .py, .yml, .js., .css, .html, .h, .c, and .cpp files
+#
+# Note: This script does NOT work on .sh files, so please used
+# the header file in
+# ooicgsn-roundabout/docs/copyright/gpl2_and_later_header.txt
+# to add the header manually to Bash scripts.
+#
+# Usage: ./update_copyright_headers.sh
+#
+
 scripts_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 code_dir="${scripts_dir}/.."
 header="${code_dir}/docs/copyright/gpl2_and_later_header.txt"
