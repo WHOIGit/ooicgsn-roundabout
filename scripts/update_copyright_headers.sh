@@ -3,9 +3,10 @@
 scripts_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 code_dir="${scripts_dir}/.."
 
-declare -a file_type_list = ("py_yml" "js_css" "html")
+#declare -a file_type_list = ("py_yml" "js_css" "html")
 
-for file_type in "${file_type_list[@]}"
+for file_type in "py_yml" "js_css" "html"
+#for file_type in "${file_type_list[@]}"
 do
     echo "$file_type"
     
