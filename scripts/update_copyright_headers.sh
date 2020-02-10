@@ -8,6 +8,9 @@
 # ooicgsn-roundabout/docs/copyright/gpl2_and_later_header.txt
 # to add the header manually to Bash scripts.
 #
+# This script can be run multiple times, and only one header
+# will appear on the affected files.
+#
 # Usage: ./update_copyright_headers.sh
 #
 
