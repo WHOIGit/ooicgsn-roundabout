@@ -35,18 +35,24 @@ do
     esac
     
     find $code_dir -regex '.*/.*\.\($regex_match)' | while read -r file; do    
-        endtext='If not, see <http:\/\/www.gnu.org\/licenses\/>.'
-        l=$(grep -n "$endtext" $file | tail -1 | cut -d ":" -f 1)    
-        if [[ $l == "" ]]; then
-            l=0
-        else
-            l=$(($l+1))
+
+        if [ "$file" != "__init__.py" ];
+
+           endtext='If not, see <http:\/\/www.gnu.org\/licenses\/>.'
+           l=$(grep -n "$endtext" $file | tail -1 | cut -d ":" -f 1)    
+           if [[ $l == "" ]]; then
+               l=0
+           else
+               l=$(($l+1))
+           fi
+           tail -n +$l $file | sed '/./,$!d' > /tmp/copyright_tmp
+
+           cat $comment_start $code_dir/docs/copyright/gpl2_and_later_header.txt $comment_end /tmp/copyright_tmp > $file
+           
+           rm /tmp/copyright_tmp 
+           
+           echo "Updated" `realpath $file`
+           
         fi
-        tail -n +$l $file | sed '/./,$!d' > /tmp/copyright_tmp
-        
-        cat $comment_start $code_dir/docs/copyright/gpl2_and_later_header.txt $comment_end /tmp/copyright_tmp > $file
-        rm /tmp/copyright_tmp 
-        
-        echo "Updated" `realpath $file`
     done
 done
