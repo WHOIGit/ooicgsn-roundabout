@@ -27,9 +27,10 @@
                     </div>
 
 
-                        <p>Part Number: {{ assembly_part.part.part_number }}</p>
+                        <p>Part Number: <a href="{% url 'parts:parts_detail' assembly_part.part.id %}">{{ assembly_part.part.part_number }}</a> </p>
                         <p>Part Type: {{ assembly_part.part.part_type }}</p>
-                        <p>Current Inventory: {{ assembly_part.part.get_part_inventory_count }}
+                        <p>Current Inventory: {{ assembly_part.part.get_part_inventory_count }}</p>
+                        <p></p>
                     <hr>
                         {% if assembly_part.parent.id %}
                             <p class="ajax-detail-link">Parent Assembly:
@@ -38,35 +39,16 @@
                         {% endif %}
 
                         {% if assembly_part.children.exists %}
-                            <p>Total Assembly Cost: ${{ assembly_part.get_subassembly_total_cost|intcomma }}
+                            <p>Total Subassembly Cost: ${{ assembly_part.get_subassembly_total_cost|intcomma }}
                         {% endif %}
 
-
-
-                    {% if assembly_part.part.documentation.all %}
-
-                       {% define "active" as active_doc_tab %}
-                       {% define "" as active_sub_tab %}
-
-                    {% else %}
-
-                       {% define "" as active_doc_tab %}
-                       {% define "active show" as active_sub_tab %}
-
-                    {% endif %}
 
                     <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
-
-                        {% if assembly_part.part.documentation.all %}
-                          <li class="nav-item">
-                            <a class="nav-link {{ active_doc_tab }}" id="documentation-tab" data-toggle="tab" href="#documentation" role="tab" aria-controls="documentation" aria-selected="false">Documentation</a>
-                          </li>
-                        {% endif %}
 
                         {% if assembly_part.children.exists %}
                             <li class="nav-item">
 
-                                <a class="nav-link {{ active_sub_tab }}" id="subassemblies-tab" data-toggle="tab" href="#subassemblies" role="tab" aria-controls="subassemblies" aria-selected="false">Subassemblies</a>
+                                <a class="nav-link active show" id="subassemblies-tab" data-toggle="tab" href="#subassemblies" role="tab" aria-controls="subassemblies" aria-selected="false">Subassemblies</a>
 
                             </li>
                         {% endif %}
@@ -85,30 +67,9 @@
 
                     <div class="tab-content" id="inventory-tabs">
 
-                        {% if assembly_part.part.documentation.exists %}
-
-                        <div class="tab-pane fade show {{active_doc_tab}}" id="documentation" role="tabpanel" aria-labelledby="documentation-tab">
-                                <table class="table table-tight">
-                                    <thead>
-                                      <th>Document</th>
-                                      <th class="text-right">Document Type</th>
-
-                                    </thead>
-                                    <tbody>
-                                      {% for document in  assembly_part.part.documentation.all %}
-                                    <tr>
-                                        <td><a href="{{ document.doc_link }}" target="_blank">{{ document.name }}</a></td>
-                                        <td class="text-right">{{ document.doc_type }}</td>
-                                    </tr>
-                                      {% endfor %}
-                                    </tbody>
-                              </table>
-                          </div>
-                        {% endif %}
-
                         {% if assembly_part.children.exists %}
 
-                            <div class="tab-pane fade {{ active_sub_tab }}" id="subassemblies" role="tabpanel" aria-labelledby="subassemblies-tab">
+                            <div class="tab-pane fade active show" id="subassemblies" role="tabpanel" aria-labelledby="subassemblies-tab">
 
                                       <ul class="list-group list-group-flush">
 

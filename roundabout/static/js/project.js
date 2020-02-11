@@ -372,7 +372,7 @@ $(document).ready(function() {
                   nodeID: nodeID,
                   itemID: itemID,
                   backURL: backURL,
-                  bookmarkURL: bookmarkURL,
+                  bookmarkURL: bookmarkURL, // <--- THIS IS WRONG FOR ASSEMBLY PARTS
               };
               history.pushState(state, '', bookmarkURL);
               console.log(history.state);
