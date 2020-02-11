@@ -36,7 +36,7 @@
             <p class="ajax-detail-link">Parent Assembly:
                 <a href="#" data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' assembly_part.parent.id %}"
                             data-node-id="{{ assembly_part.parent.id }}"
-                            data-node-type="assemblyparts">{{ assembly_part.parent.part.name }}</a></p>
+                            data-node-type="{{ assembly_part.get_object_type }}">{{ assembly_part.parent.part.name }}</a></p>
         {% endif %}
 
         {% if assembly_part.children.exists %}
@@ -79,14 +79,14 @@
                                     <div class="ajax-detail-link">
                                     <a data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' node.id %}"
                                         data-node-id="{{ node.id }}"
-                                        data-node-type="assemblyparts"
+                                        data-node-type="{{ node.get_object_type }}"
                                         href="#"
                                         class="subassembly-name">{{ node.part.name }}</a>
 
 
                                     <a data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' node.id  %}"
                                         data-node-id="{{ node.id }}"
-                                        data-node-type="assemblyparts"
+                                        data-node-type="{{ node.get_object_type }}"
                                         href="#"
                                         class="btn btn-primary btn-sm float-right mr-2"
                                         role="button">Edit</a>

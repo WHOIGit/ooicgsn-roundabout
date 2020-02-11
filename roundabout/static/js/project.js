@@ -177,7 +177,7 @@ $(document).ready(function() {
         var url = $(this).attr("data-detail-url");
         var nodeID = nodeType + '_' + $(this).attr("data-node-id");
         var itemID = $(this).attr("data-node-id");
-        var previousNodeID = navtreePrefix + '_' + $('.card-header').attr('data-object-id');
+        var previousNodeID = nodeType + '_' + $('.card-header').attr('data-object-id');
 
         $.ajax({
             url: url,
