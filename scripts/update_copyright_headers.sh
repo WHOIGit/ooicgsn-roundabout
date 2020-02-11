@@ -18,15 +18,21 @@ scripts_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 code_dir="${scripts_dir}/.."
 header="${code_dir}/docs/copyright/gpl2_and_later_header.txt"
 
-for file_type in "py_yml" "js_css_h_c_cpp" "html" 
+for file_type in "py" "yml" "js_css_h_c_cpp" "html" 
 do    
     # all .py, .yml, .js., .css, and .html files
     case $file_type in
         
-        py_yml)
+        py)
             comment_start='"""'
             comment_end='"""'
-            regex_match='.*/.*\.\(py\|yml\)'
+            regex_match='.*/.*\.\(py\)'
+            ;;
+        
+        yml)
+            comment_start='#'
+            comment_end='#'
+            regex_match='.*/.*\.\(yml\)'
             ;;
         
         js_css_h_c_cpp)
