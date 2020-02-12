@@ -102,5 +102,8 @@
 
 
 {% block javascript %}
-
+<script>
+    /* Need to set a global JS variable to reference assembly_id for navtree functions */
+    var assemblyID = 'assemblies_' + {{ assembly.id }};
+</script>
 {% endblock javascript %}

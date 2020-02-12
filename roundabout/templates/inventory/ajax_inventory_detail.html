@@ -235,7 +235,9 @@
         {% recursetree inventory_item.get_ancestors %}
                 {% if node.is_child_node %}&#187;{% endif %}
                 <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' node.id %}"
-                            data-node-id="{{ node.id }}">{{ node.part.name }} - {{ node.serial_number }}</a>
+                            data-node-id="{{ node.id }}"
+                            data-node-type="{{ node.get_object_type }}">
+                            {{ node.part.name }} - {{ node.serial_number }}</a>
                 {% if not node.is_leaf_node %}
                     {{ children }}
                 {% endif %}
@@ -345,7 +347,8 @@
                               <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' node.id %}"
                                  data-node-id="{{ node.id }}"
                                  data-location-id="{{ node.location.id }}"
-                                 data-node-type="detail" class="subassembly-name">{{ node.part.name }} - {{ node.serial_number }}</a>
+                                 data-node-type="{{ node.get_object_type }}"
+                                 class="subassembly-name">{{ node.part.name }} - {{ node.serial_number }}</a>
 
 
 
@@ -359,10 +362,10 @@
                               <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' node.id %}"
                                  data-node-id="{{ node.id }}"
                                  data-location-id="{{ node.location.id }}"
-                                 data-node-type="detail"
+                                 data-node-type="{{ node.get_object_type }}"
                                   class="btn btn-primary btn-sm float-right mr-2"
                                   role="button">Edit</a>
-                        
+
 
                           {% if not node.is_leaf_node %}
                               <ul class="list-group list-group-flush">
@@ -498,7 +501,7 @@
 {% block javascript %}
 <script>
 
-    /* Need to set a global JS variable is this item is on a Build to reference build_id */
+    /* Need to set a global JS variable is this item is on a Build to reference build_id for navtree functions */
     {% if inventory_item.build %}
         var buildID = 'builds_' + {{ inventory_item.build.id }};
     {% endif %}
