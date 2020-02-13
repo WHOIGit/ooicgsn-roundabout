@@ -24,6 +24,10 @@ from django.forms.models import inlineformset_factory
 
 from .models import Assembly, AssemblyPart, AssemblyType
 
+# Get the app label names from the core utility functions
+from roundabout.core.utils import set_app_labels
+labels = set_app_labels()
+
 
 class AssemblyForm(forms.ModelForm):
 

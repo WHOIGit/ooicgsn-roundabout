@@ -100,6 +100,7 @@ LOCAL_APPS = [
     'roundabout.users.apps.UsersAppConfig',
     # Your stuff: custom apps go here
     'common',
+    'roundabout.core',
     'roundabout.locations',
     'roundabout.parts',
     'roundabout.inventory',
