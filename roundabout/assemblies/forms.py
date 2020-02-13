@@ -57,7 +57,7 @@ class AssemblyPartForm(forms.ModelForm):
         fields = ['assembly', 'part', 'parent', 'note']
         labels = {
             'part': 'Select Part Template',
-            'parent': 'Parent Assembly',
+            'parent': 'Parent %s Part' % (labels['label_assemblies_app_singular']),
             'note': 'Design Notes'
         }
 
@@ -95,5 +95,5 @@ class AssemblyTypeForm(forms.ModelForm):
         model = AssemblyType
         fields = ['name' ]
         labels = {
-        'name': 'Assembly Type Name'
+        'name': '%s Type Name' % (labels['label_assemblies_app_singular']),
     }
