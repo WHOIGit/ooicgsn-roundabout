@@ -35,8 +35,9 @@ class AssemblyForm(forms.ModelForm):
         model = Assembly
         fields = ['name', 'assembly_type', 'assembly_number', 'description', ]
         labels = {
-            'name': 'Assembly Name',
-            'assembly_number': 'Assembly ID Number',
+            'name': '%s Name' % (labels['label_assemblies_app_singular']),
+            'assembly_type': '%s Type' % (labels['label_assemblies_app_singular']),
+            'assembly_number': '%s ID Number' % (labels['label_assemblies_app_singular']),
         }
 
     def __init__(self, *args, **kwargs):
