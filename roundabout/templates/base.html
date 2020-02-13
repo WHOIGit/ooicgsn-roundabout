@@ -80,11 +80,11 @@
       <ul class="navbar-nav mr-auto">
 
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'inventory:inventory_home' %}">Inventory</a>
+          <a class="nav-link" href="{% url 'inventory:inventory_home' %}">{{ label_inventory_app_plural }}</a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'builds:builds_home' %}">Builds</a>
+          <a class="nav-link" href="{% url 'builds:builds_home' %}">{{ label_builds_app_plural }}</a>
         </li>
     <!--
         <li class="nav-item">
