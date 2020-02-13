@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -23,7 +23,6 @@ from django import forms
 from django.forms.models import inlineformset_factory
 
 from .models import Assembly, AssemblyPart, AssemblyType
-
 
 
 class AssemblyForm(forms.ModelForm):

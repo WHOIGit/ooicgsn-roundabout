@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -40,46 +40,47 @@
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'assemblies:ajax_assemblies_update' assembly.id %}"
                     data-node-id="{{ assembly.id }}"
-                    data-node-type="detail">Edit Assembly Details</a>
+                    data-node-type="detail">Edit {{ label_assemblies_app_singular }} Details</a>
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly.id %}"
                     data-node-id="{{ assembly.id }}"
-                    data-node-type="detail">Copy Assembly Template</a>
+                    data-node-type="detail">Copy {{ label_assemblies_app_singular }} Template</a>
             </div>
 
       </div>
     </div>
 
-    <p>Assembly ID Number: {{ assembly.assembly_number }}</p>
+    <p>{{ label_assemblies_app_singular }} ID Number: {{ assembly.assembly_number }}</p>
 
-    <p>Assembly Type: {{ assembly.assembly_type }}</p>
+    <p>{{ label_assemblies_app_singular }} Type: {{ assembly.assembly_type }}</p>
 
     <p>Description: {{ assembly.description }}</p>
 
-    <p>Total Assembly Cost: ${{ assembly.get_assembly_total_cost|intcomma }}
+    <p>Total {{ label_assemblies_app_singular }} Cost: ${{ assembly.get_assembly_total_cost|intcomma }}
 
     {% if assembly.builds.exists %}
         <div class="alert alert-warning" role="alert">
-            <b>NOTICE:</b>  This Assembly template has existing Builds. Any edits you make to this
-            template will be reflected in those Builds. If you want to create a new version of this Assembly,
-            but keep existing Builds unchanged, please create a
+            <b>NOTICE:</b>  This {{ label_assemblies_app_singular }} template has existing {{ label_builds_app_plural }}.
+            Any edits you make to this template will be reflected in those {{ label_builds_app_plural }}.
+            If you want to create a new version of this {{ label_assemblies_app_singular }} ,
+            but keep existing {{ label_builds_app_plural }} unchanged, please create a
             <span class="ajax-detail-link">
                 <a href="#"
                 data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly.id %}"
                 data-node-id="{{ assembly.id }}"
                 data-node-type="detail"><b>NEW VERSION</b></a>
-            </span> of this Assembly instead.
+            </span> of this {{ label_assemblies_app_singular }}  instead.
 
         </div>
 
-        <h5>Current Builds for this Assembly template</h5>
+        <h5>Current {{ label_builds_app_plural }} for this {{ label_assemblies_app_singular }}  template</h5>
 
         <ul class="list-group list-group-flush">
 
             {% for build in assembly.builds.all %}
 
                 <li class="list-group-item">
-                    Build: {{ build }}<br>
+                    {{ label_builds_app_singular }}: {{ build }}<br>
                     Current Location: {{ build.location }}
                     <a href="{% url 'builds:builds_detail' build.id %}" data-detail-url="{% url 'builds:ajax_builds_detail' build.id %}"
                        data-node-id="{{ build.id }}"
