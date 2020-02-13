@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -31,20 +31,23 @@ from django_summernote.widgets import SummernoteInplaceWidget, SummernoteWidget
 from .models import Build, BuildAction, BuildSnapshot, PhotoNote
 from roundabout.inventory.models import Deployment, DeploymentAction
 from roundabout.locations.models import Location
-
+# Get the app label names from the core utility functions
+from roundabout.core.utils import set_app_labels
+labels = set_app_labels()
 
 class BuildForm(forms.ModelForm):
     build_number = forms.CharField(strip=True,
-        help_text='Serial Number auto-generated. Click here to override.',
+        help_text='%s Number auto-generated. Click here to override.' % (labels['label_builds_app_singular']),
         widget=forms.TextInput(attrs={'readonly':'readonly'}),
-        label='Build Number',
+        label='%s Number' % (labels['label_builds_app_singular']),
     )
 
     class Meta:
         model = Build
         fields = ['assembly', 'build_number', 'location', 'build_notes', ]
         labels = {
-            'build_notes': 'Build Notes',
+            'assembly': labels['label_assemblies_app_singular'],
+            'build_notes': '%s Notes' % (labels['label_builds_app_singular']),
         }
 
     class Media:
@@ -165,7 +168,8 @@ class DeploymentForm(forms.ModelForm):
 
         labels = {
             'location': 'Current Location',
-            'deployed_location': 'Final Deploy Location',
+            'deployment_number': '%s Number' % (labels['label_deployments_app_singular']),
+            'deployed_location': 'Final %s Location' % (labels['label_deployments_app_singular']),
         }
 
         widgets = {
@@ -185,17 +189,6 @@ class DeploymentForm(forms.ModelForm):
         help_text='Set all date/times to UTC time zone.',
     )
 
-    def __init__(self, *args, **kwargs):
-        super(DeploymentForm, self).__init__(*args, **kwargs)
-        # Check what Site we're on, change form label if obs-rdb.whoi.edu
-        current_site = Site.objects.get_current()
-        if current_site.domain == 'obs-rdb.whoi.edu':
-            deployment_number_label = 'Experiment Number'
-        else:
-            deployment_number_label = 'Deployment Number'
-
-        self.fields['deployment_number'].label = deployment_number_label
-
 
 class DeploymentActionBurninForm(forms.ModelForm):
 
@@ -204,7 +197,7 @@ class DeploymentActionBurninForm(forms.ModelForm):
         fields = ['location', 'deployed_location']
         labels = {
             'location': 'Select Location for Burn In',
-            'deployed_location': 'Final Deploy Location',
+            'deployed_location': 'Final %s Location' % (labels['label_deployments_app_singular']),
         }
 
     # Add custom date field to allow user to pick date for the Action
@@ -233,7 +226,7 @@ class DeploymentActionDeployForm(forms.ModelForm):
         model = Deployment
         fields = ['location',]
         labels = {
-            'location': 'Deployment Location',
+            'location': '%s Location' % (labels['label_deployments_app_singular']),
         }
 
     # Add custom date field to allow user to pick date for the Action record
@@ -281,7 +274,7 @@ class DeploymentActionDetailsForm(forms.ModelForm):
         model = Deployment
         fields = ['location',]
         labels = {
-            'location': 'Deployment Location',
+            'location': '%s Location' % (labels['label_deployments_app_singular']),
         }
 
     # Add custom date field to allow user to pick date for the Action record
@@ -328,7 +321,7 @@ class DeploymentActionRecoverForm(forms.ModelForm):
         model = Deployment
         fields = ['location',]
         labels = {
-            'location': 'Select location to recover Deployment to:',
+            'location': 'Select Location to recover %s to:' % (labels['label_deployments_app_singular']),
         }
 
     # Add custom date field to allow user to pick date for the Action record

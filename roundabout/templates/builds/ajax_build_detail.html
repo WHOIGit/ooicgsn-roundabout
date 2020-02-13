@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -66,7 +66,7 @@
                     data-detail-url="{% url 'builds:ajax_builds_update' build.id %}"
                     data-node-id="{{ build.id }}"
                     data-location-id="{{ build.location.id }}"
-                    data-node-type="detail">Edit Build Details</a>
+                    data-node-type="detail">Edit {{ label_builds_app_singular }} Details</a>
 
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'builds:ajax_builds_snapshot' build.id %}"
@@ -106,7 +106,7 @@
                         data-detail-url="{% url 'builds:ajax_deployment_action' 'details' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
-                        data-node-type="detail">Update Deployment Details</a>
+                        data-node-type="detail">Update {{ label_deployments_app_singular }} Details</a>
 
                     <a class="dropdown-item" href="#"
                         data-detail-url="{% url 'builds:ajax_deployment_action' 'recover' build.current_deployment.id build.id %}"
@@ -129,7 +129,7 @@
       </div>
     </div>
 
-    <p>Build Serial Number: {{ build.build_number }}<br>
+    <p>{{ label_builds_app_singular }} Number: {{ build.build_number }}<br>
         <a class="btn btn-outline-info btn-sm" data-toggle="collapse" href="#collapseBarCode" role="button" aria-expanded="false" aria-controls="collapseBarCode">
           Print Barcode
         </a>
@@ -197,7 +197,7 @@
 
     <p>Assembly Type: {{ build.assembly.assembly_type }}</p>
 
-    <p>Build Notes: {{ build.build_notes }}</p>
+    <p>{{ label_builds_app_singular }} Notes: {{ build.build_notes }}</p>
 
     <hr>
     <div id="build-status">
@@ -455,7 +455,7 @@
 
 <div class="mt-3 ajax-btn">
 
-    <a href="#" data-update-url="{% url 'builds:ajax_builds_action' 'retirebuild' build.id %}" role="button" class="btn btn-danger parts-delete">Retire Build</a>
+    <a href="#" data-update-url="{% url 'builds:ajax_builds_action' 'retirebuild' build.id %}" role="button" class="btn btn-danger parts-delete">Retire {{ label_builds_app_singular }}</a>
 </div>
 
 
