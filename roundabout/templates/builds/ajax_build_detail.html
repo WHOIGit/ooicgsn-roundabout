@@ -97,7 +97,7 @@
                         data-detail-url="{% url 'builds:ajax_deployment_action' 'deploy' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
-                        data-node-type="detail">Deploy to Sea</a>
+                        data-node-type="detail">Deploy to Field</a>
                 {% endif %}
 
                 {% if build.current_deployment.current_deployment_status == 'deploy' %}
@@ -112,7 +112,7 @@
                         data-detail-url="{% url 'builds:ajax_deployment_action' 'recover' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
-                        data-node-type="detail">Recover from Sea</a>
+                        data-node-type="detail">Recover from Field</a>
                 {% endif %}
 
                 {% if build.current_deployment.current_deployment_status == 'recover' %}
@@ -219,7 +219,7 @@
 
         <p>Current Location: {{ build.location }}</p>
 
-        <p>Total Time at Sea: {{ build.total_time_at_sea|time_at_sea_display }}</p>
+        <p>Total Time in Field: {{ build.total_time_at_sea|time_at_sea_display }}</p>
 
         {% if percent_complete %}
             <h6>Percent Built</h6>
@@ -249,7 +249,7 @@
         <p>Final {{ label_deployments_app_singular }} Location: {{ current_deployment.deployed_location }}</p>
 
         {% if build.current_deployment_time_at_sea %}
-            <p>Current {{ label_deployments_app_singular }} Time at Sea: {{ build.current_deployment_time_at_sea|time_at_sea_display }}
+            <p>Current {{ label_deployments_app_singular }} Time in Field: {{ build.current_deployment_time_at_sea|time_at_sea_display }}
         {% endif %}
 
         <h6>{{ label_deployments_app_singular }} Status</h6>
