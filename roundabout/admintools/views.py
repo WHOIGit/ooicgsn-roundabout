@@ -329,6 +329,8 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
                                                                               assembly_number=new_assembly['assembly_number'],
                                                                               description=new_assembly['description'],)
         # If already exists, reset all the related items
+        error_count = 0
+        error_parts = []
         if not created:
             temp_assembly_obj.temp_assembly_parts.all().delete()
 
@@ -353,6 +355,8 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
                 except Part.DoesNotExist:
                     part = None
                     import_error = True
+                    error_count += 1
+                    error_parts.append(assembly_part['part']['part_number'])
                     import_error_msg = 'Part Number does not exist in this RDB. Please add Part Template, and try again.'
 
                 if not import_error:
@@ -387,7 +391,7 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
                 if ap.is_root_node():
                     make_tree_copy(ap, assembly_obj, ap.parent)
 
-        return HttpResponse('<h1>New Assembly Template Imported! - %s</h1>' % (import_error))
+        return HttpResponse('<h1>New Assembly Template Imported! - %s</h1><p>Errors count: %s</p><p>%s</p>' % (import_error, error_count, error_parts))
 
 
 # Printer functionality
