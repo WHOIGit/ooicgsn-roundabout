@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -20,6 +20,7 @@
 """
 
 from django.db import models
+from django.utils import timezone
 from mptt.models import MPTTModel, TreeForeignKey
 from model_utils import FieldTracker
 
@@ -35,6 +36,7 @@ class AssemblyType(models.Model):
 
     def __str__(self):
         return self.name
+
 
 # Assembly base model
 class Assembly(models.Model):
@@ -64,6 +66,20 @@ class Assembly(models.Model):
             total_cost = total_cost + cost
 
         return total_cost
+
+
+class AssemblyRevision(models.Model):
+    revision_code = models.CharField(max_length=255, unique=False, db_index=True, default='A')
+    revision_note = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    assembly = models.ForeignKey(Assembly, related_name='revisions',
+                          on_delete=models.CASCADE, null=False, blank=False, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at', '-revision_code']
+
+    def __str__(self):
+        return '%s - %s' % (self.revision_code, self.assembly.name)
 
 
 # Assembly documentation model
