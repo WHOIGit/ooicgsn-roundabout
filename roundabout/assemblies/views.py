@@ -164,8 +164,8 @@ class AssemblyAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         documentation_form.instance = revision
         documentation_instances = documentation_form.save(commit=False)
         # Update Documentation objects to have Revision key
-        #for instance in documentation_instances:
-        #    instance.revision = revision
+        for instance in documentation_instances:
+            print(instance)
         documentation_form.save()
 
         response = HttpResponseRedirect(self.get_success_url())

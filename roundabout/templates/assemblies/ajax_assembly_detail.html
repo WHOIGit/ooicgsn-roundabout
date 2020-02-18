@@ -58,6 +58,91 @@
 
     <p>Total {{ label_assemblies_app_singular }} Cost: ${{ assembly.get_assembly_total_cost|intcomma }}
 
+    <h4>Revisions</h4>
+
+    <hr>
+    <ul class="list-group">
+    {% for revision in assembly.assembly_revisions.all %}
+
+            <li class="list-group-item">
+                <a class="collapsed" data-toggle="collapse" href="#revision-{{ revision.id }}" aria-expanded="false" aria-controls="revision-{{ revision.id }}">
+                    Revision: {{ revision.revision_code }}
+                </a>
+<!--
+                <a data-toggle="collapse" href="#revision-{{ revision.id }}" role="button" aria-expanded="false" aria-controls="revision-{{ revision.id }}">
+                    <i class="fa fa-plus-circle"></i>
+                </a>
+-->
+                <a data-toggle="collapse" class="collapsed text-right" href="#revision-{{ revision.id }}" aria-controls="revision-{{ revision.id }}" aria-expanded="false" role="button">
+                    <i class="fa" aria-hidden="true"></i>
+                    <span class="sr-only">Expand/Collapse Revision {{ revision.revision_code }}</span>
+                </a>
+
+                <div class="collapse mt-3" id="revision-{{ revision.id }}">
+                      <hr>
+                      {% if revision.revision_note %}
+                          <p>Revision Notes: {{ revision.revision_note|safe  }}</p>
+                      {% endif %}
+                    <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+                        {% if revision.documentation.all %}
+                          <li class="nav-item">
+                            <a class="nav-link active" id="documentation-tab" data-toggle="tab" href="#documentation" role="tab" aria-controls="documentation" aria-selected="false">Documentation</a>
+                          </li>
+                        {% endif %}
+                    </ul>
+
+                    <div class="tab-content" id="inventory-tabs">
+
+                        {% if revision.assembly_documents.all %}
+
+                        <div class="tab-pane fade show active" id="documentation" role="tabpanel" aria-labelledby="documentation-tab">
+                                <table class="table table-tight">
+                                    <thead>
+                                      <th>Document</th>
+                                      <th class="text-right">Document Type</th>
+
+                                    </thead>
+                                    <tbody>
+                                      {% for document in revision.assembly_documents.all %}
+                                    <tr>
+                                        <td><a href="{{ document.doc_link }}" target="_blank">{{ document.name }}</a></td>
+                                        <td class="text-right">{{ document.doc_type }}</td>
+                                    </tr>
+                                      {% endfor %}
+                                    </tbody>
+                              </table>
+                          </div>
+                        {% endif %}
+
+                    </div>
+                    <hr>
+                    <div class="ajax-detail-link">
+
+                          <a href="#"
+                             data-detail-url="{% url 'parts:ajax_parts_update_revision' revision.id %}"
+                             data-node-id="{{ revision.id }}"
+                             data-node-type="edit"
+                             class="btn btn-primary btn-sm float-left mr-2"
+                             role="button">Edit Revision</a>
+
+                         {% if multiple_revision %}
+                             <a href="#"
+                               data-detail-url="{% url 'parts:ajax_parts_delete_revision' revision.id %}"
+                               data-node-id="{{ revision.id }}"
+                               data-node-type="edit"
+                               class="btn btn-danger btn-sm float-left"
+                               role="button">Delete Revision</a>
+                         {% endif %}
+
+                    </div>
+
+                </div>
+
+        </li>
+
+    {% endfor %}
+    </ul>
+
     {% if assembly.builds.exists %}
         <div class="alert alert-warning" role="alert">
             <b>NOTICE:</b>  This {{ label_assemblies_app_singular }} template has existing {{ label_builds_app_plural }}.

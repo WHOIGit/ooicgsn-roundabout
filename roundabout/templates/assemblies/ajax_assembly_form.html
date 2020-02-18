@@ -18,7 +18,7 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 -->
-
+{% load static i18n %}
 {% load crispy_forms_tags %}
 {{ form.media }}
 
@@ -44,7 +44,8 @@
     {% endif %}
 
 
-    <form class="form-horizontal ajax-form" method="post" action="" id="assembly-form" data-url='{{ request.build_absolute_uri|safe }}'>
+    <form class="form-horizontal ajax-form" method="post" action="" id="assembly-form"
+          data-url='{{ request.build_absolute_uri|safe }}'>
       {% csrf_token %}
       {{ form|crispy }}
 
@@ -163,7 +164,7 @@
     $(document).ready(function() {
 
         $('.documentation-form tbody tr').formset({
-            prefix: 'documentation',
+            prefix: 'assembly_documents',
             addText: 'add document',
             deleteText: 'remove',
         });
