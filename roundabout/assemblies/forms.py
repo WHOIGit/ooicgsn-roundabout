@@ -21,8 +21,10 @@
 
 from django import forms
 from django.forms.models import inlineformset_factory
+from django_summernote.widgets import SummernoteWidget
+from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
 
-from .models import Assembly, AssemblyPart, AssemblyType
+from .models import Assembly, AssemblyPart, AssemblyType, AssemblyRevision
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
 labels = set_app_labels()
@@ -38,6 +40,9 @@ class AssemblyForm(forms.ModelForm):
             'assembly_type': '%s Type' % (labels['label_assemblies_app_singular']),
             'assembly_number': '%s ID Number' % (labels['label_assemblies_app_singular']),
         }
+        widgets = {
+            'description': SummernoteWidget(),
+        }
 
     def __init__(self, *args, **kwargs):
 
@@ -47,6 +52,35 @@ class AssemblyForm(forms.ModelForm):
             self.pk = None
 
         super(AssemblyForm, self).__init__(*args, **kwargs)
+
+AssemblyRevisionFormset = inlineformset_factory(Assembly, AssemblyRevision,
+                                                fields=('revision_code', 'revision_note'),
+                                                        widgets={
+                                                            'revision_note': SummernoteWidget(),
+                                                        }, extra=1, can_delete=False)
+
+
+class AssemblyRevisionForm(forms.ModelForm):
+
+    class Meta:
+        model = AssemblyRevision
+        fields = ['revision_code', 'created_at', 'revision_note', 'assembly']
+        labels = {
+            'created_at': 'Release Date',
+            'note': 'Revision Notes',
+        }
+        widgets = {
+            'created_at': DatePickerInput(
+                options={
+                    "format": "MM/DD/YYYY", # moment date-time format
+                    "showClose": True,
+                    "showClear": True,
+                    "showTodayButton": True,
+                }
+            ),
+            'revision_note': SummernoteWidget(),
+            'assembly': forms.HiddenInput(),
+        }
 
 
 class AssemblyPartForm(forms.ModelForm):

@@ -20,6 +20,7 @@
 -->
 
 {% load crispy_forms_tags %}
+{{ form.media }}
 
 <div class="card-header">
     {% if assembly.id %}
@@ -65,6 +66,45 @@
 
 
       </div>
+
+      {% if not assembly %}
+           <h4>Revision Information</h4>
+            <table class="table table-tight">
+              <thead>
+                <th>Revision Code</th>
+              </thead>
+              <tbody>
+                  {{ revision_form.management_form }}
+
+                  {% if revision_form.errors %}
+                  <tr>
+                    <div class="alert alert-danger">
+                    {% for dict in revision_form.errors %}
+
+                        {% for error in dict.values %}
+                          {{ error|escape }}
+                        {% endfor %}
+
+                    {% endfor %}
+                    </div>
+                  </tr>
+                 {% endif %}
+
+                  {% for rev in revision_form %}
+
+                    <tr>
+                        <td>{{ rev.revision_code }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                          <p>Notes on this Revision</p>
+                          {{ rev.revision_note }}
+                        </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+        {% endif %}
 
       <div class="control-group">
         <div class="controls">
