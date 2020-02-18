@@ -24,7 +24,7 @@ from django.forms.models import inlineformset_factory
 from django_summernote.widgets import SummernoteWidget
 from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
 
-from .models import Assembly, AssemblyPart, AssemblyType, AssemblyRevision
+from .models import Assembly, AssemblyPart, AssemblyType, AssemblyRevision, AssemblyDocument
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
 labels = set_app_labels()
@@ -58,6 +58,7 @@ AssemblyRevisionFormset = inlineformset_factory(Assembly, AssemblyRevision,
                                                         widgets={
                                                             'revision_note': SummernoteWidget(),
                                                         }, extra=1, can_delete=False)
+AssemblyDocumentationFormset = inlineformset_factory(AssemblyRevision, AssemblyDocument, fields=('name', 'doc_type', 'doc_link'), extra=1, can_delete=True)
 
 
 class AssemblyRevisionForm(forms.ModelForm):

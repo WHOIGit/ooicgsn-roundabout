@@ -54,7 +54,7 @@
 
     <p>{{ label_assemblies_app_singular }} Type: {{ assembly.assembly_type }}</p>
 
-    <p>Description: {{ assembly.description }}</p>
+    <p>Description: {{ assembly.description|safe }}</p>
 
     <p>Total {{ label_assemblies_app_singular }} Cost: ${{ assembly.get_assembly_total_cost|intcomma }}
 

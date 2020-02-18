@@ -68,42 +68,80 @@
       </div>
 
       {% if not assembly %}
-           <h4>Revision Information</h4>
-            <table class="table table-tight">
-              <thead>
-                <th>Revision Code</th>
-              </thead>
-              <tbody>
-                  {{ revision_form.management_form }}
+      <h4>Revision Information</h4>
+       <table class="table table-tight">
+         <thead>
+           <th>Revision Code</th>
+         </thead>
+         <tbody>
+             {{ revision_form.management_form }}
 
-                  {% if revision_form.errors %}
-                  <tr>
-                    <div class="alert alert-danger">
-                    {% for dict in revision_form.errors %}
+             {% if revision_form.errors %}
+             <tr>
+               <div class="alert alert-danger">
+               {% for dict in revision_form.errors %}
 
-                        {% for error in dict.values %}
-                          {{ error|escape }}
-                        {% endfor %}
+                   {% for error in dict.values %}
+                     {{ error|escape }}
+                   {% endfor %}
 
-                    {% endfor %}
-                    </div>
-                  </tr>
-                 {% endif %}
+               {% endfor %}
+               </div>
+             </tr>
+            {% endif %}
 
-                  {% for rev in revision_form %}
+             {% for rev in revision_form %}
 
-                    <tr>
-                        <td>{{ rev.revision_code }}</td>
-                    </tr>
-                    <tr>
-                        <td colspan="3">
-                          <p>Notes on this Revision</p>
-                          {{ rev.revision_note }}
-                        </td>
-                    </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+               <tr>
+                   <td>{{ rev.revision_code }}</td>
+               </tr>
+               <tr>
+                   <td colspan="3">
+                     <p>Notes on this Revision</p>
+                     {{ rev.revision_note }}
+                   </td>
+               </tr>
+             {% endfor %}
+           </tbody>
+         </table>
+
+
+         <div class="col-md-12">
+          <h5>Revision Documentation</h5>
+           <table class="table table-tight documentation-form">
+             <thead>
+               <th>Document</th>
+               <th class="text-right">Document Type</th>
+               <th class="text-right">Link</th>
+             </thead>
+             <tbody>
+               {{ documentation_form.management_form }}
+
+               {% if documentation_form.errors %}
+               <tr>
+                 <div class="alert alert-danger">
+                 {% for dict in documentation_form.errors %}
+
+                     {% for error in dict.values %}
+                       {{ error|escape }}
+                     {% endfor %}
+
+                 {% endfor %}
+                 </div>
+               </tr>
+              {% endif %}
+
+               {% for doc in documentation_form %}
+
+                 <tr>
+                     <td>{% if doc.id  %}{{ doc.DELETE }}{% endif %} {{ doc.id }} {{ doc.name }}</td>
+                     <td class="text-right">{{ doc.doc_type }}</td>
+                     <td class="text-right">{{ doc.doc_link }} </td>
+                 </tr>
+               {% endfor %}
+             </tbody>
+           </table>
+         </div>
         {% endif %}
 
       <div class="control-group">
@@ -121,5 +159,14 @@
 </div>
 
 {% block javascript %}
+<script type="text/javascript">
+    $(document).ready(function() {
 
+        $('.documentation-form tbody tr').formset({
+            prefix: 'documentation',
+            addText: 'add document',
+            deleteText: 'remove',
+        });
+    });
+</script>
 {% endblock javascript %}

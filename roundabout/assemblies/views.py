@@ -26,7 +26,7 @@ from django.views.generic import View, DetailView, ListView, RedirectView, Updat
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 from .models import Assembly, AssemblyPart, AssemblyType, AssemblyDocument, AssemblyRevision
-from .forms import AssemblyForm, AssemblyPartForm, AssemblyTypeForm, AssemblyRevisionForm, AssemblyRevisionFormset
+from .forms import AssemblyForm, AssemblyPartForm, AssemblyTypeForm, AssemblyRevisionForm, AssemblyRevisionFormset, AssemblyDocumentationFormset
 from roundabout.parts.models import PartType, Part
 from roundabout.inventory.models import Action
 from common.util.mixins import AjaxFormMixin
@@ -135,7 +135,8 @@ class AssemblyAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         revision_form = AssemblyRevisionFormset(instance=self.object)
-        return self.render_to_response(self.get_context_data(form=form, revision_form=revision_form))
+        documentation_form = AssemblyDocumentationFormset(instance=self.object)
+        return self.render_to_response(self.get_context_data(form=form, revision_form=revision_form, documentation_form=documentation_form))
 
     def post(self, request, *args, **kwargs):
         self.object = None
@@ -143,16 +144,29 @@ class AssemblyAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         form = self.get_form(form_class)
         revision_form = AssemblyRevisionFormset(
             self.request.POST, instance=self.object)
+        documentation_form = AssemblyDocumentationFormset(
+            self.request.POST, instance=self.object)
 
-        if (form.is_valid() and revision_form.is_valid()):
-            return self.form_valid(form, revision_form)
-        return self.form_invalid(form, revision_form)
+        if (form.is_valid() and revision_form.is_valid() and documentation_form.is_valid()):
+            return self.form_valid(form, revision_form, documentation_form)
+        return self.form_invalid(form, revision_form, documentation_form)
 
-    def form_valid(self, form):
+    def form_valid(self, form, revision_form, documentation_form):
         self.object = form.save()
         # Save the Revision inline model form
         revision_form.instance = self.object
         revision_instances = revision_form.save()
+        # Get the Revision object by looping through instance list
+        for instance in revision_instances:
+            revision = instance
+
+        # Save the Documentation inline model form
+        documentation_form.instance = revision
+        documentation_instances = documentation_form.save(commit=False)
+        # Update Documentation objects to have Revision key
+        #for instance in documentation_instances:
+        #    instance.revision = revision
+        documentation_form.save()
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -169,15 +183,13 @@ class AssemblyAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
             return response
 
     def form_invalid(self, form, documentation_form):
-        form_errors = revision_form.errors
+        form_errors = documentation_form.errors
 
         if self.request.is_ajax():
             data = form.errors
             return JsonResponse(data, status=400)
         else:
-            return self.render_to_response(self.get_context_data(form=form,
-                                                                revision_form=revision_form,
-                                                                form_errors=form_errors))
+            return self.render_to_response(self.get_context_data(form=form, revision_form=revision_form, documentation_form=documentation_form, form_errors=form_errors))
 
     def get_success_url(self):
         return reverse('assemblies:ajax_assemblies_detail', args=(self.object.id,))

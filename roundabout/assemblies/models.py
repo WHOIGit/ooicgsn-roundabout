@@ -72,7 +72,7 @@ class AssemblyRevision(models.Model):
     revision_code = models.CharField(max_length=255, unique=False, db_index=True, default='A')
     revision_note = models.TextField(blank=True)
     created_at = models.DateTimeField(default=timezone.now)
-    assembly = models.ForeignKey(Assembly, related_name='revisions',
+    assembly = models.ForeignKey(Assembly, related_name='assembly_revisions',
                           on_delete=models.CASCADE, null=False, blank=False, db_index=True)
 
     class Meta:
@@ -91,7 +91,7 @@ class AssemblyDocument(models.Model):
     name = models.CharField(max_length=255, unique=False)
     doc_type = models.CharField(max_length=20, choices=DOC_TYPES)
     doc_link = models.CharField(max_length=1000)
-    assembly = models.ForeignKey(Assembly, related_name='assembly_documents',
+    assembly_revision = models.ForeignKey(AssemblyRevision, related_name='assembly_documents',
                              on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
