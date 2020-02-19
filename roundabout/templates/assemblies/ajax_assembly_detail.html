@@ -36,15 +36,20 @@
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'assemblies:ajax_assemblyparts_add' assembly.id %}"
                     data-node-id="{{ assembly.id }}"
-                    data-node-type="detail">Add Top Level Part</a>
+                    data-node-type="{{ node_type }}">Add Top Level Part</a>
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'assemblies:ajax_assemblies_update' assembly.id %}"
                     data-node-id="{{ assembly.id }}"
-                    data-node-type="detail">Edit {{ label_assemblies_app_singular }} Details</a>
+                    data-node-type="{{ node_type }}">Edit {{ label_assemblies_app_singular }} Details</a>
+                <hr>
+                <a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly.id %}"
+                    data-node-id="{{ assembly.id }}"
+                    data-node-type="{{ node_type }}">Create New Revision</a>
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly.id %}"
                     data-node-id="{{ assembly.id }}"
-                    data-node-type="detail">Copy {{ label_assemblies_app_singular }} Template</a>
+                    data-node-type="{{ node_type }}">Copy {{ label_assemblies_app_singular }} Template</a>
             </div>
 
       </div>

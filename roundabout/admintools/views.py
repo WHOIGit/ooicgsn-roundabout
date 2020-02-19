@@ -39,7 +39,7 @@ from roundabout.inventory.models import Inventory, Action
 from roundabout.parts.models import Part, Revision
 from roundabout.locations.models import Location
 from roundabout.assemblies.models import AssemblyType, Assembly, AssemblyPart
-from roundabout.assemblies.views import make_tree_copy
+from roundabout.assemblies.views import _make_tree_copy
 
 # Bulk Inventory Import Functions
 # ------------------------------------------
@@ -389,7 +389,7 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
 
             for ap in temp_assembly_obj.temp_assembly_parts.all():
                 if ap.is_root_node():
-                    make_tree_copy(ap, assembly_obj, ap.parent)
+                    _make_tree_copy(ap, assembly_obj, ap.parent)
 
         return HttpResponse('<h1>New Assembly Template Imported! - %s</h1><p>Errors count: %s</p><p>%s</p>' % (import_error, error_count, error_parts))
 

@@ -36,11 +36,11 @@ from common.util.mixins import AjaxFormMixin
 # ------------------------------------------------------------------------------
 
 # Makes a copy of the tree starting at "root_part", move to new Assembly, reparenting it to "parent"
-def make_tree_copy(root_part, new_assembly, parent=None):
+def _make_tree_copy(root_part, new_assembly, parent=None):
     new_ap = AssemblyPart.objects.create(assembly=new_assembly, part=root_part.part, parent=parent, order=root_part.order)
 
     for child in root_part.get_children():
-        make_tree_copy(child, new_assembly, new_ap)
+        _make_tree_copy(child, new_assembly, new_ap)
 
 # Load the javascript navtree
 def load_assemblies_navtree(request):
@@ -225,7 +225,7 @@ class AssemblyAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         return reverse('assemblies:ajax_assemblies_detail', args=(self.object.id,))
 
 
-# View to copy full Assembly Template
+# View to copy full Assembly Template to new Assembly object
 class AssemblyAjaxCopyView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, CreateView):
     model = Assembly
     form_class = AssemblyForm
@@ -247,9 +247,6 @@ class AssemblyAjaxCopyView(LoginRequiredMixin, PermissionRequiredMixin, AjaxForm
             kwargs['pk'] = self.kwargs['pk']
         return kwargs
 
-    def get_success_url(self):
-        return reverse('assemblies:ajax_assemblies_detail', args=(self.object.id,))
-
     def form_valid(self, form, **kwargs):
         self.object = form.save()
 
@@ -259,7 +256,7 @@ class AssemblyAjaxCopyView(LoginRequiredMixin, PermissionRequiredMixin, AjaxForm
 
         for ap in assembly_parts:
             if ap.is_root_node():
-                make_tree_copy(ap, self.object, ap.parent)
+                _make_tree_copy(ap, self.object, ap.parent)
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -274,6 +271,9 @@ class AssemblyAjaxCopyView(LoginRequiredMixin, PermissionRequiredMixin, AjaxForm
             return JsonResponse(data)
         else:
             return response
+
+    def get_success_url(self):
+        return reverse('assemblies:ajax_assemblies_detail', args=(self.object.id,))
 
 
 class AssemblyAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
@@ -293,6 +293,90 @@ class AssemblyAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, Delete
         self.object.delete()
 
         return JsonResponse(data)
+
+
+### CBV views for AssemblyRevision model ###
+
+# Create new Assembly Revision form
+class AssemblyAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, CreateView):
+    model = AssemblyRevision
+    form_class = AssemblyRevisionForm
+    context_object_name = 'revision'
+    template_name='assemblies/ajax_assembly_revision_form.html'
+    permission_required = 'assemblies.add_assembly'
+    redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super(AssemblyAjaxCreateRevisionView, self).get_context_data(**kwargs)
+        assembly_pk = self.kwargs['assembly_pk']
+        assembly_obj = Assembly.objects.get(id=assembly_pk)
+        current_revision_obj = AssemblyRevision.objects.filter(assembly=assembly_obj).last()
+
+        context.update({
+            'assembly': assembly_obj,
+            'current_revision': current_revision_obj,
+        })
+        return context
+
+    def get(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        documentation_form = AssemblyDocumentationFormset(instance=self.object)
+        return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form))
+
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        documentation_form = AssemblyDocumentationFormset(
+            self.request.POST, instance=self.object)
+
+        if (form.is_valid() and documentation_form.is_valid()):
+            return self.form_valid(form, documentation_form)
+        return self.form_invalid(form, documentation_form)
+
+    def get_initial(self):
+        #Returns the initial data from current revision
+        initial = super(AssemblyAjaxCreateRevisionView, self).get_initial()
+        # get the current revision object, prepopolate fields
+        assembly_pk = self.kwargs['assembly_pk']
+        assembly_obj = Assembly.objects.get(id=assembly_pk)
+        current_revision_obj = AssemblyRevision.objects.filter(assembly=assembly_obj).last()
+        initial['assembly'] = assembly_obj
+        initial['revision_code'] = None
+
+        return initial
+
+    def form_valid(self, form, documentation_form):
+        self.object = form.save()
+        documentation_form.instance = self.object
+        documentation_form.save()
+        response = HttpResponseRedirect(self.get_success_url())
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.part.id,
+                'object_type': self.object.part.get_object_type(),
+                'detail_path': self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def form_invalid(self, form, documentation_form):
+        form_errors = documentation_form.errors
+
+        if self.request.is_ajax():
+            data = form.errors
+            return JsonResponse(data, status=400)
+        else:
+            return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form, form_errors=form_errors))
+
+    def get_success_url(self):
+        return reverse('assemblies:ajax_assembly_detail', args=(self.object.assembly.id, ))
 
 
 ### CBV views for AssemblyPart model ###

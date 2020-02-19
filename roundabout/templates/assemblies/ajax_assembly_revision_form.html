@@ -1,0 +1,135 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+{% load static i18n %}
+{% load mptt_tags %}
+{% load crispy_forms_tags %}
+{{ form.media }}
+
+
+        <div class="card-header">
+            {% if assembly %}
+                <h3>{{ part.name }}</h3>
+                <h4>Add New {{ label_assemblies_app_singular }} Revision</h4>
+            {% else %}
+                <h3>{{ revision.part.name }}</h3>
+                <h4>Edit Revision: {{ revision.revision_code }}</h4>
+            {% endif %}
+        </div>
+
+        <div class="card-body">
+            {% if assembly %}
+                <p><b>Current Revision Code: {{ current_revision.revision_code }}</b>
+            {% endif %}
+
+              <form class="form-horizontal parts ajax-form" method="post" action=""
+                    data-url='{{ request.build_absolute_uri|safe }}'
+                    data-partnumber-url=''
+                    id="parts-form">
+                {% csrf_token %}
+
+                {{ form|crispy }}
+
+                <div class="row">
+                    {% if form.errors %}
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <div class="alert alert-danger">
+                                    <strong>{{ error|escape }}</strong>
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                <strong>{{ error|escape }}</strong>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                <div class="col-md-12">
+                  <table class="table table-tight">
+                    <thead>
+                      <th>Document</th>
+                      <th class="text-right">Document Type</th>
+                      <th class="text-right">Link</th>
+                    </thead>
+                    <tbody>
+                      {{ documentation_form.management_form }}
+
+                      {% if documentation_form.errors %}
+                      <tr>
+                        <div class="alert alert-danger">
+                        {% for dict in documentation_form.errors %}
+
+                            {% for error in dict.values %}
+                              {{ error|escape }}
+                            {% endfor %}
+
+                        {% endfor %}
+                        </div>
+                      </tr>
+                     {% endif %}
+
+                      {% for doc in documentation_form %}
+
+                        <tr>
+                            <td>{% if doc.id  %}{{ doc.DELETE }}{% endif %} {{ doc.id }} {{ doc.name }}</td>
+                            <td class="text-right">{{ doc.doc_type }}</td>
+                            <td class="text-right">{{ doc.doc_link }} </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                </div>
+
+                <div class="control-group">
+                  <div class="controls">
+                    {% if part %}
+                        <button type="submit" class="btn btn-primary">Add Revision</button>
+                    {% else %}
+                        <button type="submit" class="btn btn-primary">Update Revision</button>
+                    {% endif %}
+                  </div>
+                </div>
+              </form>
+
+          </div>
+
+
+
+{% block javascript %}
+
+<script type="text/javascript">
+
+$(document).ready(function() {
+
+    $('#parts-form tbody tr').formset({
+        prefix: 'documentation',
+        addText: 'add document',
+        deleteText: 'remove',
+    });
+
+});
+
+</script>
+
+{% endblock javascript %}
