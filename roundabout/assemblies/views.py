@@ -42,17 +42,19 @@ def _make_tree_copy(root_part, new_assembly, parent=None):
     for child in root_part.get_children():
         _make_tree_copy(child, new_assembly, new_ap)
 
+
 # Load the javascript navtree
 def load_assemblies_navtree(request):
     node_id = request.GET.get('id')
 
     if node_id == '#' or not node_id:
-        assembly_types = AssemblyType.objects.prefetch_related('assemblies')
+        assembly_types = AssemblyType.objects.prefetch_related('assemblies__assembly_revisions')
         return render(request, 'assemblies/ajax_assembly_navtree.html', {'assembly_types': assembly_types})
     else:
-        assembly_pk = node_id.split('_')[1]
-        assembly = Assembly.objects.prefetch_related('assembly_parts').get(id=assembly_pk)
-        return render(request, 'assemblies/assembly_tree_parts.html', {'assembly_parts': assembly.assembly_parts,})
+        revision_pk = node_id.split('_')[1]
+        revision_obj = AssemblyRevision.objects.prefetch_related('assembly_parts').get(id=revision_pk)
+        return render(request, 'assemblies/assembly_tree_parts.html', {'assembly_parts': revision_obj.assembly_parts})
+
 
 # Function to load Parts based on Part Type filter
 def load_part_templates(request):
@@ -73,8 +75,9 @@ def load_assembly_parts(request):
         assembly_parts_list = AssemblyPart.objects.filter(assembly=assembly).prefetch_related('part')
     return render(request, 'inventory/assemblyparts_dropdown_list_options.html', {'assembly_parts': assembly_parts_list})
 
-## CBV views for Assembly app ##
 
+## CBV views for Assembly app ##
+# ------------------------------------------------------------------------------
 # Landing page for assemblies
 class AssemblyHomeView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
     template_name = 'assemblies/assembly_list.html'

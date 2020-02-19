@@ -31,7 +31,8 @@ def create_default_first_revision():
     assemblies_qs = Assembly.objects.all()
     for assembly in assemblies_qs:
         revision = AssemblyRevision.objects.create(assembly=assembly, revision_code='A')
-        print('%s - %s') % (assembly, revision)
+        message = '%s - %s' % (assembly, revision)
+        print(message)
 
 
 # Move all existing Assembly Parts to the new Revision, remove link to parent Assembly
@@ -44,3 +45,4 @@ def move_assemblyparts_to_revision():
             ap.assembly_revision = revision
             ap.assembly = None
             ap.save()
+            print(ap)
