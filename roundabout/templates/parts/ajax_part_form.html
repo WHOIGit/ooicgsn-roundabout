@@ -176,7 +176,7 @@
 $(document).ready(function() {
 
     $('.documentation-form tbody tr').formset({
-        prefix: 'documentation',
+        prefix: 'documentation', // <-- Needs to match the Django related_name for the models
         addText: 'add document',
         deleteText: 'remove',
     });

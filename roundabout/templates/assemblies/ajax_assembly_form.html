@@ -164,7 +164,7 @@
     $(document).ready(function() {
 
         $('.documentation-form tbody tr').formset({
-            prefix: 'assembly_documents',
+            prefix: 'assembly_documents', // <-- Needs to match the Django related_name for the models
             addText: 'add document',
             deleteText: 'remove',
         });
