@@ -26,18 +26,16 @@
 
 
         <div class="card-header">
-            {% if assembly %}
-                <h3>{{ part.name }}</h3>
+            {% if revision %}
                 <h4>Add New {{ label_assemblies_app_singular }} Revision</h4>
             {% else %}
-                <h3>{{ revision.part.name }}</h3>
                 <h4>Edit Revision: {{ revision.revision_code }}</h4>
             {% endif %}
         </div>
 
         <div class="card-body">
-            {% if assembly %}
-                <p><b>Current Revision Code: {{ current_revision.revision_code }}</b>
+            {% if revision %}
+                <p><b>Current Revision Code: {{ revision.revision_code }}</b>
             {% endif %}
 
               <form class="form-horizontal parts ajax-form" method="post" action=""
@@ -123,7 +121,7 @@
 $(document).ready(function() {
 
     $('#parts-form tbody tr').formset({
-        prefix: 'documentation',
+        prefix: 'assembly_documents', // <-- Needs to match the Django related_name for the models
         addText: 'add document',
         deleteText: 'remove',
     });

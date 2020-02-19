@@ -43,6 +43,15 @@ def _make_tree_copy(root_part, new_assembly, parent=None):
         _make_tree_copy(child, new_assembly, new_ap)
 
 
+# Makes a copy of the Assembly Revisiontree starting at "root_part",
+# move to new Revision, reparenting it to "parent"
+def _make_revision_tree_copy(root_part, new_revision, parent=None):
+    new_ap = AssemblyPart.objects.create(assembly_revision=new_revision, part=root_part.part, parent=parent, order=root_part.order)
+
+    for child in root_part.get_children():
+        _make_revision_tree_copy(child, new_revision, new_ap)
+
+
 # Load the javascript navtree
 def load_assemblies_navtree(request):
     node_id = request.GET.get('id')
@@ -311,13 +320,11 @@ class AssemblyAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin
 
     def get_context_data(self, **kwargs):
         context = super(AssemblyAjaxCreateRevisionView, self).get_context_data(**kwargs)
-        assembly_pk = self.kwargs['assembly_pk']
-        assembly_obj = Assembly.objects.get(id=assembly_pk)
-        current_revision_obj = assembly_obj.assembly_revisions.last()
+        revision_pk = self.kwargs['revision_pk']
+        revision_obj = AssemblyRevision.objects.get(id=revision_pk)
 
         context.update({
-            'assembly': assembly_obj,
-            'current_revision': current_revision_obj,
+            'revision': revision_obj,
         })
         return context
 
@@ -343,26 +350,41 @@ class AssemblyAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin
         #Returns the initial data from current revision
         initial = super(AssemblyAjaxCreateRevisionView, self).get_initial()
         # get the current revision object, prepopolate fields
-        assembly_pk = self.kwargs['assembly_pk']
-        assembly_obj = Assembly.objects.get(id=assembly_pk)
-        current_revision_obj = AssemblyRevision.objects.filter(assembly=assembly_obj).last()
-        initial['assembly'] = assembly_obj
+        revision_pk = self.kwargs['revision_pk']
+        revision_obj = AssemblyRevision.objects.get(id=revision_pk)
+        initial['assembly'] = revision_obj.assembly
         initial['revision_code'] = None
 
         return initial
+
+    def get_form_kwargs(self):
+        kwargs = super(AssemblyAjaxCreateRevisionView, self).get_form_kwargs()
+        if 'revision_pk' in self.kwargs:
+            kwargs['revision_pk'] = self.kwargs['revision_pk']
+        return kwargs
 
     def form_valid(self, form, documentation_form):
         self.object = form.save()
         documentation_form.instance = self.object
         documentation_form.save()
+
+        # Need to copy the current Revision template to new Revision
+        revision_pk = self.kwargs['revision_pk']
+        revision_obj = AssemblyRevision.objects.get(id=revision_pk)
+        assembly_parts = revision_obj.assembly_parts.all()
+
+        for ap in assembly_parts:
+            if ap.is_root_node():
+                _make_revision_tree_copy(ap, self.object, ap.parent)
+
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
             print(form.cleaned_data)
             data = {
                 'message': "Successfully submitted form data.",
-                'object_id': self.object.part.id,
-                'object_type': self.object.part.get_object_type(),
+                'object_id': self.object.assembly.id,
+                'object_type': self.object.assembly.get_object_type(),
                 'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
@@ -379,7 +401,7 @@ class AssemblyAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin
             return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form, form_errors=form_errors))
 
     def get_success_url(self):
-        return reverse('assemblies:ajax_assembly_detail', args=(self.object.assembly.id, ))
+        return reverse('assemblies:ajax_assemblies_detail', args=(self.object.assembly.id,))
 
 
 ### CBV views for AssemblyPart model ###

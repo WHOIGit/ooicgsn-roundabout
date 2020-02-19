@@ -50,7 +50,6 @@ class AssemblyForm(forms.ModelForm):
             self.pk = kwargs.pop('pk')
         else:
             self.pk = None
-
         super(AssemblyForm, self).__init__(*args, **kwargs)
 
 AssemblyRevisionFormset = inlineformset_factory(Assembly, AssemblyRevision,
@@ -82,6 +81,14 @@ class AssemblyRevisionForm(forms.ModelForm):
             'revision_note': SummernoteWidget(),
             'assembly': forms.HiddenInput(),
         }
+
+    def __init__(self, *args, **kwargs):
+
+        if 'revision_pk' in kwargs:
+            self.revision_pk = kwargs.pop('revision_pk')
+        else:
+            self.revision_pk = None
+        super(AssemblyRevisionForm, self).__init__(*args, **kwargs)
 
 
 class AssemblyPartForm(forms.ModelForm):

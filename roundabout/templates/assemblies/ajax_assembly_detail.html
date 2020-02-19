@@ -43,7 +43,7 @@
                     data-node-type="{{ node_type }}">Edit {{ label_assemblies_app_singular }} Details</a>
                 <hr>
                 <a class="dropdown-item" href="#"
-                    data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly.id %}"
+                    data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly.assembly_revisions.last.id %}"
                     data-node-id="{{ assembly.id }}"
                     data-node-type="{{ node_type }}">Create New Revision</a>
                 <a class="dropdown-item" href="#"
@@ -149,7 +149,7 @@
     </ul>
 
     <hr>
-    
+
     {% if assembly.builds.exists %}
         <div class="alert alert-warning" role="alert">
             <b>NOTICE:</b>  This {{ label_assemblies_app_singular }} template has existing {{ label_builds_app_plural }}.

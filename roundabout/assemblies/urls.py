@@ -37,7 +37,7 @@ urlpatterns = [
     path('ajax/copy/<int:pk>/', view=views.AssemblyAjaxCopyView.as_view(), name='ajax_assemblies_copy'),
     path('ajax/load-navtree/', views.load_assemblies_navtree, name='ajax_load_assemblies_navtree'),
     # Revision paths
-    path('ajax/revision/create/<int:assembly_pk>/', view=views.AssemblyAjaxCreateRevisionView.as_view(), name='ajax_assemblies_create_revision'),
+    path('ajax/revision/create/<int:revision_pk>/', view=views.AssemblyAjaxCreateRevisionView.as_view(), name='ajax_assemblies_create_revision'),
     path('ajax/revision/edit/<int:pk>/', view=views.AssemblyAjaxCreateRevisionView.as_view(), name='ajax_assemblies_update_revision'),
     path('ajax/revision/delete/<int:pk>/', view=views.AssemblyAjaxCreateRevisionView.as_view(), name='ajax_assemblies_delete_revision'),
     # AssemblyPart paths
