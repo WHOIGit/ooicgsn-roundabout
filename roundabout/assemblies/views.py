@@ -310,7 +310,7 @@ class AssemblyAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin
         context = super(AssemblyAjaxCreateRevisionView, self).get_context_data(**kwargs)
         assembly_pk = self.kwargs['assembly_pk']
         assembly_obj = Assembly.objects.get(id=assembly_pk)
-        current_revision_obj = AssemblyRevision.objects.filter(assembly=assembly_obj).last()
+        current_revision_obj = assembly_obj.assembly_revisions.last()
 
         context.update({
             'assembly': assembly_obj,

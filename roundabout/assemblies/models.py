@@ -104,7 +104,9 @@ class AssemblyDocument(models.Model):
 # Assembly parts model
 class AssemblyPart(MPTTModel):
     assembly = models.ForeignKey(Assembly, related_name='assembly_parts',
-                          on_delete=models.CASCADE, null=False, blank=False, db_index=True)
+                          on_delete=models.CASCADE, null=True, blank=True, db_index=True)
+    assembly_revision = models.ForeignKey(AssemblyRevision, related_name='assembly_parts',
+                          on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     part = models.ForeignKey(Part, related_name='assembly_parts',
                           on_delete=models.CASCADE, null=False, blank=False, db_index=True)
     parent = TreeForeignKey('self', related_name='children',
