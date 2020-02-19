@@ -1,3 +1,24 @@
+"""
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or 
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+"""
+
 import csv
 import io
 import json
@@ -300,7 +321,7 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
 
     def get(self, request, *args, **kwargs):
         # Get the Assembly data from RDB API
-        request_url = 'https://rdb-demo.whoi.edu/api/v1/assemblies/14/'
+        request_url = 'https://rdb-demo.whoi.edu/api/v1/assemblies/16/'
         assembly_request = requests.get(request_url, verify=False)
         new_assembly = assembly_request.json()
         # Get or create new parent Temp Assembly
@@ -362,11 +383,11 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
                                     description=temp_assembly_obj.description)
             assembly_obj.save()
 
-            temp_assembly_root_part = temp_assembly_obj.temp_assembly_parts.first().get_root()
+            for ap in temp_assembly_obj.temp_assembly_parts.all():
+                if ap.is_root_node():
+                    make_tree_copy(ap, assembly_obj, ap.parent)
 
-            make_tree_copy(temp_assembly_root_part, assembly_obj, temp_assembly_root_part.parent)
-
-        return HttpResponse('<h1>New Assembly Template Imported!</h1>')
+        return HttpResponse('<h1>New Assembly Template Imported! - %s</h1>' % (import_error))
 
 
 # Printer functionality
