@@ -162,7 +162,7 @@ class BuildAction(models.Model):
         (STARTDEPLOY, 'Start %s' % (labels['label_deployments_app_singular'])),
         (REMOVEFROMDEPLOYMENT, '%s Ended' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTTOSEA, '%s to Sea' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTTOSEA, '%s to Field' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTUPDATE, '%s Update' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTRECOVER, '%s Recovered' % (labels['label_deployments_app_singular'])),
         (TEST, 'Test'),

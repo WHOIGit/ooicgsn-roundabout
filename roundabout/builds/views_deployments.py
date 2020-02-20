@@ -154,11 +154,11 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             action_type_inventory = 'deploymentburnin'
 
         if action_type == 'deploy':
-            self.object.detail = '%s Deployed to: %s. ' % (self.object.deployment_number, self.object.location)
+            self.object.detail = '%s Deployed to Field: %s. ' % (self.object.deployment_number, self.object.location)
             action_type_inventory = 'deploymenttosea'
 
         if action_type == 'recover':
-            self.object.detail = '%s Recovered to %s. ' % (self.object.deployment_number, self.object.location)
+            self.object.detail = '%s Recovered to: %s. ' % (self.object.deployment_number, self.object.location)
             action_type_inventory = 'deploymentrecover'
 
         if action_type == 'retire':

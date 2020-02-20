@@ -213,12 +213,6 @@ class DeploymentActionBurninForm(forms.ModelForm):
         help_text='Set all date/times to UTC time zone.',
     )
 
-    def __init__(self, *args, **kwargs):
-        super(DeploymentActionBurninForm, self).__init__(*args, **kwargs)
-        root_node = Location.objects.get(root_type='Land')
-        location_list = root_node.get_descendants()
-        self.fields['location'].queryset = location_list
-
 
 class DeploymentActionDeployForm(forms.ModelForm):
 
@@ -339,9 +333,6 @@ class DeploymentActionRecoverForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(DeploymentActionRecoverForm, self).__init__(*args, **kwargs)
-        root_node = Location.objects.get(root_type='Land')
-        location_list = root_node.get_descendants()
-        self.fields['location'].queryset = location_list
         self.fields['location'].required = True
 
 
