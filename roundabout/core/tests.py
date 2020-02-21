@@ -1,4 +1,4 @@
-<!--
+"""
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
 # This file is part of the Roundabout Database project ("RDB" or
@@ -17,23 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
--->
+"""
 
-{% load static i18n %}
+from django.test import TestCase
 
-
-<div class="card-header"><h3>{{ assembly_type.name }}s</h3></div>
-
-<div class="card-body">
-
-
-
-
-</div>
-
-
-
-{% block javascript %}
-
-
-{% endblock javascript %}
+# Create your tests here.

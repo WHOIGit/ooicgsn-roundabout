@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -25,7 +25,7 @@
                     {% if build.id %}
                     <h3>{{ build }}</h3>
                     {% else %}
-                    <h3>Create New Assembly</h3>
+                    <h3>Create New {{ label_builds_app_singular }}</h3>
                     {% endif %}
                 </div>
 
@@ -61,9 +61,9 @@
                       <div class="control-group">
                         <div class="controls">
                           {% if build.id %}
-                              <button type="submit" class="btn btn-primary">Update Assembly</button>
+                              <button type="submit" class="btn btn-primary">Update {{ label_builds_app_singular }}</button>
                           {% else %}
-                              <button type="submit" class="btn btn-primary">Create Assembly</button>
+                              <button type="submit" class="btn btn-primary">Create {{ label_builds_app_singular }}</button>
                           {% endif %}
                         </div>
                       </div>

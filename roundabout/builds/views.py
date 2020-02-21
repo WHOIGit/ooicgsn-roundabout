@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -35,6 +35,9 @@ from roundabout.assemblies.models import Assembly, AssemblyPart
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory, Action
 from roundabout.admintools.models import Printer
+# Get the app label names from the core utility functions
+from roundabout.core.utils import set_app_labels
+labels = set_app_labels()
 # Import environment variables from .env files
 import environ
 env = environ.Env()
@@ -55,8 +58,8 @@ def load_builds_navtree(request):
                                                                    'location_pk': build.location_id,
                                                                    'build_pk': build_pk, })
 
-# Function to copy Inventory items for Build Snapshots
-def make_tree_copy(root_part, new_location, build_snapshot, parent=None ):
+# Internal function to copy Inventory items for Build Snapshots
+def _make_tree_copy(root_part, new_location, build_snapshot, parent=None ):
     # Makes a copy of the tree starting at "root_part", move to new Location, reparenting it to "parent"
     if root_part.part.friendly_name:
         part_name = root_part.part.friendly_name
@@ -66,7 +69,7 @@ def make_tree_copy(root_part, new_location, build_snapshot, parent=None ):
     new_item = InventorySnapshot.objects.create(location=new_location, inventory=root_part, parent=parent, build=build_snapshot, order=part_name)
 
     for child in root_part.get_children():
-        make_tree_copy(child, new_location, build_snapshot, new_item)
+        _make_tree_copy(child, new_location, build_snapshot, new_item)
 
 
 # Function to create Serial Number from Assembly Number selection, load result into form to preview
@@ -230,8 +233,8 @@ class BuildAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
     def form_valid(self, form):
         self.object = form.save()
-
-        action_record = BuildAction.objects.create(action_type='buildadd', detail='Build created.', location=self.object.location,
+        action_detail = '%s created.' % (labels['label_builds_app_singular'])
+        action_record = BuildAction.objects.create(action_type='buildadd', detail=action_detail, location=self.object.location,
                                                    user=self.request.user, build=self.object)
 
         response = HttpResponseRedirect(self.get_success_url())
@@ -494,7 +497,7 @@ class BuildAjaxSnapshotCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView)
 
         for item in inventory_items:
             if item.is_root_node():
-                make_tree_copy(item, build.location, build_snapshot, item.parent)
+                _make_tree_copy(item, build.location, build_snapshot, item.parent)
 
         response = HttpResponseRedirect(self.get_success_url())
 

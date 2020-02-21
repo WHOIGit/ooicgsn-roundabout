@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -36,7 +36,9 @@ from roundabout.parts.models import Part, Revision
 from roundabout.assemblies.models import Assembly, AssemblyPart
 from roundabout.builds.models import Build
 from roundabout.users.models import User
-
+# Get the app label names from the core utility functions
+from roundabout.core.utils import set_app_labels
+labels = set_app_labels()
 # Model Managers
 
 
@@ -121,7 +123,7 @@ class Deployment(models.Model):
         deployment_status_label = None
         # get short label text for Deployment status
         if self.current_deployment_status() == 'create':
-            deployment_status_label = 'Initial Deployment'
+            deployment_status_label = 'Initial %s' % (labels['label_deployments_app_singular'])
         elif self.current_deployment_status() == 'burnin':
             deployment_status_label = 'Burn In'
         elif self.current_deployment_status() == 'deploy':
@@ -336,12 +338,12 @@ class Action(models.Model):
         (INVCHANGE, 'Inventory Change'),
         (LOCATIONCHANGE, 'Location Change'),
         (SUBCHANGE, 'Subassembly Change'),
-        (ADDTOBUILD, 'Add to Build'),
-        (REMOVEFROMBUILD, 'Remove from Build'),
-        (DEPLOYMENTBURNIN, 'Deployment Burnin'),
-        (DEPLOYMENTTOSEA, 'Deployment to Sea'),
-        (DEPLOYMENTUPDATE, 'Deployment Update'),
-        (DEPLOYMENTRECOVER, 'Deployment Recovered'),
+        (ADDTOBUILD, 'Add to %s' % (labels['label_builds_app_singular'])),
+        (REMOVEFROMBUILD, 'Remove from %s' % (labels['label_builds_app_singular'])),
+        (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTTOSEA, '%s to Field' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTUPDATE, '%s Update' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTRECOVER, '%s Recovered' % (labels['label_deployments_app_singular'])),
         (ASSIGNDEST, 'Assign Destination'),
         (REMOVEDEST, 'Remove Destination'),
         (TEST, 'Test'),
@@ -401,12 +403,12 @@ class DeploymentAction(models.Model):
     BURNIN = 'burnin'
     DETAILS = 'details'
     ACT_TYPES = (
-        (DEPLOY, 'Deployed to Sea'),
-        (RECOVER, 'Recovered from Sea'),
+        (DEPLOY, 'Deployed to Field'),
+        (RECOVER, 'Recovered from Field'),
         (RETIRE, 'Retired'),
         (CREATE, 'Created'),
         (BURNIN, 'Burn In'),
-        (DETAILS, 'Deployment Details'),
+        (DETAILS, '%s Details' % (labels['label_deployments_app_singular'])),
     )
     action_type = models.CharField(max_length=20, choices=ACT_TYPES)
     created_at = models.DateTimeField(default=timezone.now)

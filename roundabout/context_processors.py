@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -18,6 +18,16 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 """
+
+# Import environment variables from .env files
+from roundabout.core.utils import set_app_labels
+
+# Set sitewide template variable for headings/labels display
+# Uses environmental variables from .env files
+
+def template_set_app_labels(request):
+    labels = set_app_labels()
+    return labels
 
 # make thes App, Namespace, URL names available for templates
 def template_resolver_names(request):
