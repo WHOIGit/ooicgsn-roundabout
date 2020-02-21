@@ -1,12 +1,12 @@
 Roundabout DB - OOI Parts and Inventory Web Application
 =========================================================
 
-Current Version: 1.0.3
+Current Version: 1.1.0
 
 Django application to manage Part, Location, and Assembly Templates, and Inventory tracking for OOI-CGSN arrays. Uses PostgreSQL database.
 
 
-:License: GPL v3
+:License: GPL v2.0 or later
 
 
 ============
@@ -64,7 +64,7 @@ In addition to standard Django variables, Roundabout uses some custom environmen
 NGINX Settings
 ^^^^^^^^^^^^^^
 
-The Docker production deployment uses a NGINX container as a web server and proxy to the Django app. An example NGINX conf file (``nginx-example.conf.EXAMPLE``) is included in the ``/compose/production/nginx/`` directory that you can use as a template for HTTP or HTTPS deployment. 
+The Docker production deployment uses a NGINX container as a web server and proxy to the Django app. An example NGINX conf file (``nginx-example.conf.EXAMPLE``) is included in the ``/compose/production/nginx/`` directory that you can use as a template for HTTP or HTTPS deployment.
 
 If using SSL, you also need to upload your SSL certificates to the the application root level directory in a new ``/.ssl/certs/`` directory.  These will be copied into the NGINX container when Docker builds the containers.  This directory should also NOT be kept in version control. If you're not using SSL (you should really use SSL), comment out the following line in the production.yml file and update the NGINX conf file accordingly:
 
@@ -85,29 +85,29 @@ Deployment Steps
 
     docker-compose -f production.yml build
     docker-compose -f production.yml up -d
-    
-4) You're done! Site should be availabe at whatever domain you specified in NGINX.
- 
+
+4) You're done! Site should be available at whatever domain you specified in NGINX.
+
 Using Roundabout for the First Time
 --------------------------------
- 
+
 Not that your site is up and running, you can login by clicking the "Sign In" link and using the default user credentials created when the site was spun up for the first time. These credentials are set in the ``.env/production/django`` file, and - unless you changed them before starting the site -- default to:
- 
+
 - Username: admin
 - Password: admin
- 
+
 You should update these immediately after logging in the first time by clicking the "My Profile" link.
- 
+
 Alfresco
 ---------
- 
+
 The standard Roundabout production deployment also includes a standalone Alfresco document management application running in separate Docker containers. You can access Alfresco at https://YOURDOMAIN.com/share/
- 
+
 Initial login info is:
- 
+
 - Username: admin
 - Password: admin
- 
+
 If you don't have the need for a document management system running alongside your RDB site, you can simply remove the four Alfresco container Services in the ``production.yml`` Docker Compose file - ``alfresco``, ``alfresco-share``, ``alfresco-postgres``, and ``alfresco-solr6`` - and the three Volumes defined in the ``volumes`` section - ``alfresco-repo-data``, ``alfresco-postgres-data``, ``alfresco-solr-data``.
 
 Local Docker Development
