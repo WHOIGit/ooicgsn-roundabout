@@ -57,6 +57,7 @@ urlpatterns = [
     path('builds/', include('roundabout.builds.urls', namespace='builds')),
     path('reports/', include('roundabout.reports.urls', namespace='reports')),
     path('search/', include('roundabout.search.urls', namespace='search')),
+    path('calibrations/', include('roundabout.calibrations.urls', namespace='calibrations')),
     # API urls
     path('api/v1/', include('roundabout.inventory.api.urls')),
     path('api/v1/', include('roundabout.locations.api.urls')),
