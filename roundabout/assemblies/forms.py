@@ -47,6 +47,7 @@ class AssemblyForm(forms.ModelForm):
             self.pk = None
 
         super(AssemblyForm, self).__init__(*args, **kwargs)
+        self.fields['assembly_type'].required = True
 
 
 class AssemblyPartForm(forms.ModelForm):
