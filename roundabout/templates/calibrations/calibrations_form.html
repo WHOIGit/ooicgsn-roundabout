@@ -34,12 +34,8 @@
 <div class="card-body">
 
     {% if latest_flag.detail %}<p><strong>Why Flagged:</strong> {{ latest_flag.detail }}</p>{% endif %}
-    <form class="form-horizontal ajax-form" 
-        method="post" 
-        action="" 
-        id="calibration-action-form"
-        enctype="multipart/form-data" 
-        data-url='{{ request.build_absolute_uri|safe }}'>
+    <form class="form-horizontal ajax-form" method="post" action="" id="calibration-action-form"
+        enctype="multipart/form-data" data-url='{{ request.build_absolute_uri|safe }}'>
         {% csrf_token %}
         {{ form.media }}
         {{ form|crispy }}

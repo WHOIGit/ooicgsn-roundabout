@@ -1,10 +1,11 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import CreateView
 from .models import Calibration
 from .forms import CalibrationAddForm
 from common.util.mixins import AjaxFormMixin
+from django.urls import reverse, reverse_lazy
 
 # Calibraitons landing page
 class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
@@ -21,7 +22,7 @@ class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         return context
 
     def get_success_url(self):
-        return reverse('calibrations:calibrations_detail', args=(self.object.id,))
+        return reverse('calibrations:calibrations_form')
 
     def form_valid(self, form):
         self.object = form.save()

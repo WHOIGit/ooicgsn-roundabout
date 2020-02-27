@@ -5,8 +5,7 @@ class CalibrationAddForm(forms.ModelForm):
 
     class Meta:
         model = Calibration
-        fields = ['name', 'coefficient']
+        fields = ['name']
         labels = {
-            'name': 'Name',
-            'coefficient': 'Coefficient Value',
+            'name': 'Name'
         }

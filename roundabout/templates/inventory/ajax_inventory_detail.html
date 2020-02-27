@@ -298,6 +298,12 @@
           <a class="nav-link" id="part-template-tab" data-toggle="tab" href="#part-template" role="tab" aria-controls="part-template" aria-selected="false">Part Specs</a>
         </li>
 
+       
+        <li class="nav-item">
+          <a class="nav-link" id="calibration-template-tab" data-toggle="tab" href="#calibration-template" role="tab" aria-controls="calibration-template" aria-selected="false">{{inventory_item.part.part_type}} Calibration</a>
+        </li>
+  
+
     </ul>
 
     <div class="tab-content" id="inventory-tabs">
@@ -480,6 +486,23 @@
 
         </div>
 
+        <div class="tab-pane fade" id="calibration-template" role="tabpanel" aria-labelledby="calibration-template-tab">
+
+            <table class="table table-striped action-table">
+
+                <thead>
+                  <th>Name</th>
+                </thead>
+
+                <tbody>
+                  {% for calibration in  inventory_item.part.calibrations.all %}
+                    <tr>
+                        <td>{{ calibration.name }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+          </table> 
+        </div>
 
     </div>
 
