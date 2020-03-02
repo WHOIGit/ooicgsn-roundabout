@@ -336,7 +336,7 @@ class Action(models.Model):
         (INVADD, 'Add Inventory'),
         (INVCHANGE, 'Inventory Change'),
         (LOCATIONCHANGE, 'Location Change'),
-        (SUBCHANGE, 'Subassembly Change'),
+        (SUBCHANGE, 'Sub-%s Change' % (labels['label_assemblies_app_singular'])),
         (ADDTOBUILD, 'Add to %s' % (labels['label_builds_app_singular'])),
         (REMOVEFROMBUILD, 'Remove from %s' % (labels['label_builds_app_singular'])),
         (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
