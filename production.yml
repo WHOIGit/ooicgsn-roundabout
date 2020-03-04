@@ -121,7 +121,7 @@ services:
     environment:
       - REPO_HOST=alfresco
       - REPO_PORT=8080
-      - JAVA_OPTS: "
+      JAVA_OPTS: "
                 -Xms500m
                 -Xmx500m
                 -Dalfresco.host=localhost
