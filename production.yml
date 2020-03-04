@@ -119,8 +119,8 @@ services:
     image: alfresco/alfresco-share:6.2.0
     container_name: alfresco-share
     environment:
-      - REPO_HOST=alfresco
-      - REPO_PORT=8080
+      REPO_HOST: 'alfresco'
+      REPO_PORT: '8080'
       JAVA_OPTS: "
                 -Xms500m
                 -Xmx500m
