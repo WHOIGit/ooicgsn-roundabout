@@ -1,4 +1,4 @@
-FROM alfresco/alfresco-content-repository-community:6.0.7-ga
+FROM alfresco/alfresco-content-repository-community:latest
 
 # Fix to https://issues.alfresco.com/jira/browse/ALF-22013
 ENV LC_ALL C.UTF-8 \
