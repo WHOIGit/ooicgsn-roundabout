@@ -75,10 +75,7 @@ services:
 
   ### Alfreso Community Edition deployment containers: alfresco, alfresco-share, alfresco-postgres, alfresco-solr6
   alfresco:
-    # image: alfresco/alfresco-content-repository-community:6.0.5-ea
-    build:
-      context: .
-      dockerfile: ./compose/production/alfresco/Dockerfile
+    image: alfresco/alfresco-content-repository-community:6.2.0-ga
     container_name: alfresco
     depends_on:
             - alfresco-postgres
@@ -93,6 +90,13 @@ services:
             -Dsolr.secureComms=none
             -Dsolr.base.url=/solr
             -Dindex.subsystem.name=solr6
+            -Ddeployment.method=DOCKER_COMPOSE
+            -Dshare.host=127.0.0.1
+            -Dshare.port=8080
+            -Dalfresco.host=localhost
+            -Dalfresco.port=8080
+            -Daos.baseUrlOverwrite=http://localhost:8080/alfresco/aos
+            -Dmessaging.broker.url=\"failover:(nio://activemq:61616)?timeout=3000&jms.useCompression=true\"
             -Ddeployment.method=DOCKER_COMPOSE
             "
     volumes:
@@ -112,14 +116,19 @@ services:
       - roundabout-network
 
   alfresco-share:
-    # image: alfresco/alfresco-share:6.0.a
-    build:
-      context: .
-      dockerfile: ./compose/production/share/Dockerfile
+    image: alfresco/alfresco-share:6.2.0
     container_name: alfresco-share
     environment:
       - REPO_HOST=alfresco
       - REPO_PORT=8080
+      - JAVA_OPTS: "
+                -Xms500m
+                -Xmx500m
+                -Dalfresco.host=localhost
+                -Dalfresco.port=8080
+                -Dalfresco.context=alfresco
+                -Dalfresco.protocol=http
+                "
     networks:
       - roundabout-network
     volumes:
@@ -137,6 +146,7 @@ services:
       - alfresco-postgres-data:/var/lib/postgresql/data
     ports:
       - 5433:5432
+    command: postgres -c max_connections=300 -c log_min_messages=LOG
     networks:
       - roundabout-network
 
