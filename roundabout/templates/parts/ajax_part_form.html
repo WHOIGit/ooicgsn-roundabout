@@ -213,7 +213,11 @@ $(document).ready(function() {
         addText: 'add document',
         deleteText: 'remove',
     });
-
+    $('.calibration-form tbody tr').formset({
+        prefix: 'calibration',
+        addText: 'add calibration',
+        deleteText: 'remove',
+    });
     // AJAX functions for form
 
     $("#id_part_number").on("blur", function(){

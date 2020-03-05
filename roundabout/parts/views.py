@@ -152,12 +152,14 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
             self.request.POST, instance=self.object)
         documentation_form = DocumentationFormset(
             self.request.POST, instance=self.object)
+        calibration_form = CalibrationFormset(
+            self.request.POST, instance=self.object)
 
-        if (form.is_valid() and revision_form.is_valid() and documentation_form.is_valid()):
-            return self.form_valid(form, revision_form, documentation_form)
-        return self.form_invalid(form, revision_form, documentation_form)
+        if (form.is_valid() and revision_form.is_valid() and documentation_form.is_valid() and calibration_form.is_valid()):
+            return self.form_valid(form, revision_form, documentation_form, calibration_form)
+        return self.form_invalid(form, revision_form, documentation_form, calibration_form)
 
-    def form_valid(self, form, revision_form, documentation_form):
+    def form_valid(self, form, revision_form, documentation_form, calibration_form):
         self.object = form.save()
         # Save the Revision inline model form
         revision_form.instance = self.object
@@ -173,6 +175,10 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         #for instance in documentation_instances:
         #    instance.revision = revision
         documentation_form.save()
+
+        # Save Calibration form
+        calibration_form.instance = self.object
+        calibration_form.save()
 
         # Check for any global Part Type custom fields for this Part
         custom_fields = self.object.part_type.custom_fields.all()
@@ -195,14 +201,14 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         else:
             return response
 
-    def form_invalid(self, form, documentation_form):
+    def form_invalid(self, form, documentation_form, calibration_form):
         form_errors = documentation_form.errors
 
         if self.request.is_ajax():
             data = form.errors
             return JsonResponse(data, status=400)
         else:
-            return self.render_to_response(self.get_context_data(form=form, revision_form=revision_form, documentation_form=documentation_form, form_errors=form_errors))
+            return self.render_to_response(self.get_context_data(form=form, revision_form=revision_form, documentation_form=documentation_form, calibration_form=calibration_form, form_errors=form_errors))
 
     def get_success_url(self):
         return reverse('parts:ajax_parts_detail', args=(self.object.id, ))

@@ -207,6 +207,20 @@
                         {% endfor %}
                     </ul>
 
+                    <hr>
+
+                    
+
+                    <h4>Calibrations</h4>
+
+                    <ul class = 'list-group'>
+                        {% for calibration in part_template.calibration.all %}
+                            <li class = 'list-group-item'>
+                                {{ calibration.name }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    
 
                     <div class="ajax-detail-link">
                         <hr>
