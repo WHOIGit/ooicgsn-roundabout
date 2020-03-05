@@ -47,7 +47,7 @@ class Build(models.Model):
     location = TreeForeignKey(Location, related_name='builds',
                               on_delete=models.SET_NULL, null=True, blank=False)
     assembly = models.ForeignKey(Assembly, related_name='builds',
-                             on_delete=models.CASCADE, null=True, blank=True, db_index=True)
+                             on_delete=models.CASCADE, null=False, db_index=True)
     build_notes = models.TextField(blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)

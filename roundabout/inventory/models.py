@@ -253,7 +253,6 @@ class Inventory(MPTTModel):
 
     # get the time at sea for the current deployment only (if item is at sea)
     def current_deployment_time_at_sea(self):
-        root_location = self.location.get_root()
         if self.build and self.build.is_deployed:
             try:
                 action_deploy_to_sea = Action.objects.filter(inventory=self).filter(action_type='deploymenttosea').latest('created_at')
@@ -337,7 +336,7 @@ class Action(models.Model):
         (INVADD, 'Add Inventory'),
         (INVCHANGE, 'Inventory Change'),
         (LOCATIONCHANGE, 'Location Change'),
-        (SUBCHANGE, 'Subassembly Change'),
+        (SUBCHANGE, 'Sub-%s Change' % (labels['label_assemblies_app_singular'])),
         (ADDTOBUILD, 'Add to %s' % (labels['label_builds_app_singular'])),
         (REMOVEFROMBUILD, 'Remove from %s' % (labels['label_builds_app_singular'])),
         (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),

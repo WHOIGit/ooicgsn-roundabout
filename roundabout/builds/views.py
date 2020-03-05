@@ -346,8 +346,11 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
             #self.kwargs['action_type'] = self.object.get_flag_display()
 
         action_form = form.save()
-        action_record = BuildAction.objects.create(action_type=self.kwargs['action_type'], detail=self.object.detail, location=self.object.location,
-                                              user=self.request.user, build=self.object)
+        action_record = BuildAction.objects.create(action_type=self.kwargs['action_type'], 
+                                                   detail=self.object.detail,
+                                                   location=self.object.location,
+                                                   user=self.request.user,
+                                                   build=self.object)
 
         response = HttpResponseRedirect(self.get_success_url())
 
