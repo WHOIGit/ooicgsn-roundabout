@@ -31,7 +31,7 @@ from django.core.exceptions import ValidationError
 from django.template.defaultfilters import slugify
 
 from .models import Part, PartType, Revision, Documentation
-from .forms import PartForm, PartTypeForm, RevisionForm, DocumentationFormset, RevisionFormset, PartUdfAddFieldForm, PartUdfFieldSetValueForm
+from .forms import PartForm, PartTypeForm, RevisionForm, DocumentationFormset, RevisionFormset, PartUdfAddFieldForm, PartUdfFieldSetValueForm, CalibrationFormset
 
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory
@@ -141,7 +141,8 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         form = self.get_form(form_class)
         revision_form = RevisionFormset(instance=self.object)
         documentation_form = DocumentationFormset(instance=self.object)
-        return self.render_to_response(self.get_context_data(form=form, revision_form=revision_form, documentation_form=documentation_form))
+        calibration_form = CalibrationFormset(instance=self.object)
+        return self.render_to_response(self.get_context_data(form=form, revision_form=revision_form, documentation_form=documentation_form, calibration_form=calibration_form))
 
     def post(self, request, *args, **kwargs):
         self.object = None
