@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -43,6 +43,9 @@ from roundabout.userdefinedfields.models import FieldValue, Field
 from roundabout.assemblies.models import AssemblyPart
 from roundabout.builds.models import Build, BuildAction
 from common.util.mixins import AjaxFormMixin
+# Get the app label names from the core utility functions
+from roundabout.core.utils import set_app_labels
+labels = set_app_labels()
 # Import environment variables from .env files
 import environ
 env = environ.Env()
@@ -664,7 +667,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 self.object.detail = ' Removed from %s. ' % (old_build) + self.object.detail
 
                 # Create Build Action record for adding inventory item
-                build_detail = '%s removed from Build' % (self.object)
+                build_detail = '%s removed from %s' % (self.object, labels['label_builds_app_singular'])
                 build_record = BuildAction.objects.create(action_type='subassemblychange', detail=build_detail, location=old_build.location,
                                                            user=self.request.user, build=old_build)
 
@@ -705,14 +708,14 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 self.object.detail = ' Removed from %s. ' % (old_build) + self.object.detail
 
                 # Create Build Action record for adding inventory item
-                build_detail = '%s removed from Build' % (self.object)
+                build_detail = '%s removed from %s' % (self.object, labels['label_builds_app_singular'])
                 build_record = BuildAction.objects.create(action_type='subassemblychange', detail=build_detail, location=old_build.location,
                                                            user=self.request.user, build=old_build)
             # Find previous parent to add to Detail field text
             old_parent_pk = self.object.tracker.previous('parent')
             if old_parent_pk:
                 old_parent = Inventory.objects.get(pk=old_parent_pk)
-                parent_detail = 'Subassembly %s removed. ' % (self.object) + self.object.detail
+                parent_detail = 'Sub-%s %s removed. ' % (labels['label_assemblies_app_singular'], self.object) + self.object.detail
                 self.object.detail = 'Removed from %s. ' % (old_parent) + self.object.detail
 
                 # Add Action Record for Parent Assembly
@@ -969,7 +972,7 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
             detail = detail + ' Moved to %s.' % (inventory_item.location)
         if inventory_item.parent:
             detail = detail + ' Added to %s' % (inventory_item.parent)
-            parent_record = Action.objects.create(action_type='subchange', detail='Subassembly %s added.' % (inventory_item), location=inventory_item.location,
+            parent_record = Action.objects.create(action_type='subchange', detail='Sub-%s %s added.' % (labels['label_assemblies_app_singular'], inventory_item), location=inventory_item.location,
                                                   user=self.request.user, inventory=inventory_item.parent)
         action_record = Action.objects.create(action_type='addtobuild', detail=detail, location=inventory_item.location,
                                               user=self.request.user, inventory=inventory_item)
@@ -1010,7 +1013,7 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
                                                   user=self.request.user, inventory=item)
 
         # Create Build Action record for adding inventory item
-        detail = '%s added to Build' % (inventory_item)
+        detail = '%s added to %s' % (inventory_item, labels['label_builds_app_singular'])
         build_record = BuildAction.objects.create(action_type='subassemblychange', detail=detail, location=build.location,
                                                    user=self.request.user, build=build)
 
@@ -1242,7 +1245,7 @@ class InventoryAjaxParentActionView(RedirectView):
         detail = 'Added to %s.' % (parent)
         if subassembly.build:
             detail = detail + ' Moved to %s' % (subassembly.build)
-        parent_detail = 'Subassembly %s added.' % (subassembly)
+        parent_detail = 'Sub-%s %s added.' % (labels['label_assemblies_app_singular'], subassembly)
         action_record = Action.objects.create(action_type='subchange', detail=detail, location=parent.location,
                                               user=self.request.user, inventory=subassembly)
         parent_action_record = Action.objects.create(action_type='subchange', detail=parent_detail, location=parent.location,
@@ -1327,7 +1330,7 @@ class InventoryAjaxSubassemblyActionView(RedirectView):
         detail = 'Added to %s.' % (parent)
         if subassembly.build:
             detail = detail + ' Moved to %s' % (subassembly.build)
-        parent_detail = 'Subassembly %s added.' % (subassembly)
+        parent_detail = 'Sub-%s %s added.' % (labels['label_assemblies_app_singular'], subassembly)
         action_record = Action.objects.create(action_type='subchange', detail=detail, location=parent.location,
                                               user=self.request.user, inventory=subassembly)
         parent_action_record = Action.objects.create(action_type='subchange', detail=parent_detail, location=parent.location,
@@ -1422,7 +1425,7 @@ class InventoryAjaxByAssemblyPartyActionView(LoginRequiredMixin, RedirectView):
         detail = 'Moved to %s.' % (subassembly.build)
         if subassembly.parent:
             detail = detail + ' Added to %s' % (subassembly.parent)
-            parent_record = Action.objects.create(action_type='subchange', detail='Subassembly %s added.' % (subassembly), location=subassembly.location,
+            parent_record = Action.objects.create(action_type='subchange', detail='Sub-%s %s added.' % (labels['label_assemblies_app_singular'], subassembly), location=subassembly.location,
                                                   user=self.request.user, inventory=subassembly.parent)
         if subassembly.build:
             action_type = 'addtobuild'
@@ -1469,7 +1472,7 @@ class InventoryAjaxByAssemblyPartyActionView(LoginRequiredMixin, RedirectView):
                                                   user_id=self.request.user.id, inventory_id=item.id)
 
         # Create Build Action record for adding inventory item
-        detail = '%s added to Build' % (subassembly)
+        detail = '%s added to %s' % (subassembly, labels['label_builds_app_singular'])
         build_record = BuildAction.objects.create(action_type='subassemblychange', detail=detail, location=build.location,
                                                    user=self.request.user, build=build)
 
@@ -1573,247 +1576,6 @@ class InventoryHomeTestView(InventoryNavTreeMixin, TemplateView):
         self.object = self.get_object()
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
-
-
-class InventoryCreateView(InventoryNavTreeMixin, CreateView):
-    model = Inventory
-    form_class = InventoryForm
-    template_name='inventory/inventory_action_form.html'
-
-    def get_success_url(self):
-        return reverse('inventory:inventory_detail', args=(self.object.id, self.object.location_id))
-
-    def get_context_data(self, **kwargs):
-        context = super(InventoryCreateView, self).get_context_data(**kwargs)
-        # Add Parts list to context to build form filter
-        context.update({
-            'part_types': PartType.objects.all()
-        })
-        if 'parent_pk' in self.kwargs:
-            context.update({
-                'parent': Inventory.objects.get(id=self.kwargs['parent_pk'])
-            })
-        return context
-
-    def get_form_kwargs(self):
-        kwargs = super(InventoryCreateView, self).get_form_kwargs()
-        if 'parent_pk' in self.kwargs:
-            kwargs['parent_pk'] = self.kwargs['parent_pk']
-        if 'current_location' in self.kwargs:
-            kwargs['current_location'] = self.kwargs['current_location']
-        return kwargs
-
-    def get_initial(self):
-        #Returns the initial data to use for forms on this view.
-        initial = super(InventoryCreateView, self).get_initial()
-        if 'parent_pk' in self.kwargs:
-            parent = Inventory.objects.get(id=self.kwargs['parent_pk'])
-            part_templates = Part.objects.get(id=parent.part.id)
-            if parent.deployment:
-                initial['deployment'] = parent.deployment.id
-            initial['parent'] = self.kwargs['parent_pk']
-            initial['location'] = self.kwargs['current_location']
-            initial['part'] = part_templates
-        elif 'current_location' in self.kwargs:
-            initial['location'] = self.kwargs['current_location']
-        return initial
-
-    def form_valid(self, form):
-        self.object = form.save()
-        action_record = Action.objects.create(action_type='invadd', detail='Item first added to Inventory', location_id=self.object.location_id,
-                                              user_id=self.request.user.id, inventory_id=self.object.id)
-
-        if 'parent_pk' in self.kwargs:
-            detail = 'Subassembly %s added' % (self.object.serial_number)
-            parent_action_record = Action.objects.create(action_type='subchange', detail=detail, location_id=self.object.location_id,
-                                                        user_id=self.request.user.id, inventory_id=self.kwargs['parent_pk'])
-        return HttpResponseRedirect(self.get_success_url())
-
-
-class InventoryUpdateView(InventoryNavTreeMixin, UpdateView):
-    model = Inventory
-    form_class = InventoryForm
-    context_object_name='inventory_item'
-    template_name='inventory/inventory_action_form.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(InventoryUpdateView, self).get_context_data(**kwargs)
-        # Get latest detail information if part is flagged
-        if Action.objects.filter( Q(action_type='flag') & Q(inventory_id=self.object.id) ).exists() and self.kwargs['action_type'] == 'flag':
-            context.update({
-                'latest_flag': Action.objects.filter( Q(action_type='flag') & Q(inventory_id=self.object.id) ).latest('created_at')
-            })
-
-        if 'action_type' in self.kwargs:
-            context['action_type'] = self.kwargs['action_type']
-        else:
-            context['action_type'] = None
-
-        return context
-
-    def get_success_url(self):
-        return reverse('inventory:inventory_detail', args=(self.object.id, self.object.location_id))
-
-
-class InventoryActionView(InventoryUpdateView):
-
-    def get_form_class(self):
-        ACTION_FORMS = {
-            "subchange" : ActionSubassemblyChangeForm,
-            "test" : ActionTestForm,
-            "note" : ActionNoteForm,
-            "flag" : ActionFlagForm,
-        }
-        action_type = self.kwargs['action_type']
-        form_class_name = ACTION_FORMS[action_type]
-
-        return form_class_name
-
-    def form_valid(self, form):
-
-        if self.kwargs['action_type'] == 'invchange':
-            # Find if it was removed from Parent assembly. Add note.
-            old_parent_pk = self.object.tracker.previous('parent')
-            if old_parent_pk:
-                old_parent = Inventory.objects.get(pk=old_parent_pk)
-                parent_detail = 'Subassembly %s removed. ' % (self.object) + self.object.detail
-                # Add Action Record for Parent Assembly
-                action_record = Action.objects.create(action_type='subchange', detail=parent_detail, location_id=old_parent.location_id,
-                                                      user_id=self.request.user.id, inventory_id=old_parent_pk)
-                # Add note to instance Detail field for Action Record
-                self.object.detail = 'Removed from %s.' % (old_parent) + self.object.detail
-
-            # Find if it was added to Parent assembly. Add note.
-            if self.object.parent:
-                parent_detail = 'Subassembly %s added. ' % (self.object) + self.object.detail
-                # Add Action Record for Parent Assembly
-                action_record = Action.objects.create(action_type='subchange', detail=parent_detail, location_id=self.object.parent.location_id,
-                                                      user_id=self.request.user.id, inventory_id=self.object.parent.id)
-
-            # Find previous location to add to Detail field text
-            old_location_pk = self.object.tracker.previous('location')
-            if old_location_pk:
-                old_location = Location.objects.get(pk=old_location_pk)
-                if old_location.name != self.object.location.name:
-                    self.object.detail = 'Moved to %s from %s. ' % (self.object.location.name, old_location) + self.object.detail
-
-            # Get any subassembly children items, move their location to match parent and add Action to history
-            queryset = Inventory.objects.get(id=self.object.id).get_descendants()
-            for item in queryset:
-                item.location_id = self.object.location_id
-                item.deployment_id = self.object.deployment_id
-                if old_location.name != self.object.location.name:
-                    item.detail = 'Moved to %s from %s' % (self.object.location.name, old_location.name)
-                else:
-                    item.detail = 'Parent Inventory Change'
-                item.save()
-                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location_id=item.location_id,
-                                                      user_id=self.request.user.id, inventory_id=item.id)
-
-        elif self.kwargs['action_type'] == 'test':
-            self.object.detail = '%s: %s. ' % (self.object.get_test_type_display(), self.object.get_test_result_display()) + self.object.detail
-
-        elif self.kwargs['action_type'] == 'flag':
-            self.kwargs['action_type'] = self.object.get_flag_display()
-
-        elif self.kwargs['action_type'] == 'subchange':
-            # Find previous parent to add to Detail field text
-            old_parent_pk = self.object.tracker.previous('parent')
-            if old_parent_pk:
-                old_parent = Inventory.objects.get(pk=old_parent_pk)
-                parent_detail = 'Subassembly %s removed. ' % (self.object) + self.object.detail
-                self.object.detail = 'Removed from %s. Moved to %s. ' % (old_parent, self.object.location.name) + self.object.detail
-
-                # Add Action Record for Parent Assembly
-                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=parent_detail, location_id=self.object.location_id,
-                                                      user_id=self.request.user.id, inventory_id=old_parent_pk)
-
-        action_form = form.save()
-        action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=self.object.detail, location_id=self.object.location_id,
-                                              user_id=self.request.user.id, inventory_id=self.object.id)
-
-        return HttpResponseRedirect(self.get_success_url())
-
-
-class InventorySubassemblyListView(InventoryNavTreeMixin, ListView):
-    model = Inventory
-    template_name = 'inventory/inventory_subassembly_existing.html'
-    context_object_name = 'inventory_item'
-
-    def get_context_data(self, **kwargs):
-        context = super(InventorySubassemblyListView, self).get_context_data(**kwargs)
-        parent = Inventory.objects.get(id=self.kwargs['pk'])
-        part_templates = Part.objects.get(id=parent.part.id).get_children()
-        inventory_item = Inventory.objects.filter(part__in=part_templates).exclude(location=parent.location)
-
-        context.update({
-            'inventory_item': inventory_item
-        })
-        context.update({
-            'parent': parent
-        })
-
-        return context
-
-
-class InventorySubassemblyActionView(RedirectView):
-    permanent = False
-    query_string = True
-
-    def get_redirect_url(self, *args, **kwargs):
-        subassembly = get_object_or_404(Inventory, pk=kwargs['pk'])
-        parent = get_object_or_404(Inventory, pk=kwargs['parent_pk'])
-        subassembly.location = parent.location
-        subassembly.deployment = parent.deployment
-        subassembly.parent = parent
-        subassembly.save()
-
-        return reverse('inventory:inventory_detail', args=(self.kwargs['parent_pk'], self.kwargs['current_location']) ) + '#subassemblies'
-
-
-class InventoryDeleteView(DeleteView):
-    model = Inventory
-    success_url = reverse_lazy('inventory:inventory_home')
-
-
-class InventorySearchSerialList(InventoryNavTreeMixin, ListView):
-    # Display a Inventory List page filtered by serial number.
-    model = Inventory
-    template_name = 'inventory/inventory_search_list.html'
-    context_object_name = 'inventory_item'
-    paginate_by = 20
-
-    def get_context_data(self, **kwargs):
-        context = super(InventorySearchSerialList, self).get_context_data(**kwargs)
-
-        # Check if search query exists, if so add it to context for pagination
-        keywords = self.request.GET.get('q')
-
-        if keywords:
-            search = 'q=' + keywords
-        else:
-            search = None
-
-        context.update({
-            'part_types': PartType.objects.all(),
-            'node_type': 'inventory',
-            'search': search,
-        })
-        return context
-
-    def get_queryset(self):
-        qs = Inventory.objects.none()
-        keywords = self.request.GET.get('q')
-        if keywords:
-            qs = Inventory.objects.filter(serial_number__icontains=keywords)
-        return qs
-
-
-class InventoryDeploymentDetailView(InventoryNavTreeMixin, DetailView):
-    model = Deployment
-    template_name='inventory/inventory_deployment_detail.html'
-    context_object_name='deployment'
-    current_location = None
 
 
 ####################### Deployment views ########################

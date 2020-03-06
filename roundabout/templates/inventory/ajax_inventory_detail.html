@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -56,7 +56,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_add_subassembly' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id }}"
-                data-node-type="detail">Add Subassembly</a>
+                data-node-type="detail">Add Sub-{{ label_assemblies_app_singular }}</a>
         {% endif %}
 
         {% if not inventory_item.build and not inventory_item.parent and not inventory_item.assembly_part %}
@@ -64,7 +64,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_add_to_parent' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Add to Parent Assembly</a>
+                data-node-type="detail">Add to Parent {{ label_assemblies_app_singular }}</a>
         {% endif %}
 
         {% if not inventory_item.build and inventory_item.parent %}
@@ -72,7 +72,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'subchange' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Remove from Parent Assembly</a>
+                data-node-type="detail">Remove from Parent {{ label_assemblies_app_singular }}</a>
         {% endif %}
 
         {% if not inventory_item.build and not inventory_item.parent %}
@@ -80,7 +80,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_add_to_build' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Add to Build</a>
+                data-node-type="detail">Add to {{ label_builds_app_singular }}</a>
         {% endif %}
 
         {% if inventory_item.build %}
@@ -88,7 +88,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'removefrombuild' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Remove from Build</a>
+                data-node-type="detail">Remove from {{ label_builds_app_singular }}</a>
         {% endif %}
 
         {% if inventory_item.assembly_part and not inventory_item.build and not inventory_item.parent %}
@@ -223,16 +223,17 @@
     <p>Revision: {{ inventory_item.revision.revision_code }}</p>
     <p>Current Location: {{ inventory_item.location.name }}</p>
     {% if inventory_item.build %}
-        <p>Current Build: {{ inventory_item.build }}</p>
+        <p>Current {{ label_builds_app_singular }}: {{ inventory_item.build }}</p>
     {% endif %}
-    <p>Time at Sea: {{ inventory_item.total_time_at_sea|time_at_sea_display }}</p>
+    <p>Total Time in Field: {{ inventory_item.total_time_at_sea|time_at_sea_display }}</p>
     {% if inventory_item.current_deployment_time_at_sea %}
-        <p>Current Deployment Time at Sea: {{ inventory_item.current_deployment_time_at_sea|time_at_sea_display }}
+        <p>Current {{ label_deployments_app_singular }} Time in Field: {{ inventory_item.current_deployment_time_at_sea|time_at_sea_display }}
     {% endif %}
 
     {% if inventory_item.parent %}
     <p class="ajax-detail-link">Parent Assembly:
         {% recursetree inventory_item.get_ancestors %}
+
                 {% if node.is_child_node %}&#187;{% endif %}
                 <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' node.id %}"
                             data-node-id="{{ node.id }}"
@@ -270,7 +271,7 @@
 
         {% if inventory_item.get_descendants %}
             <li class="nav-item">
-              <a class="nav-link" id="subassemblies-tab" data-toggle="tab" href="#subassemblies" role="tab" aria-controls="subassemblies" aria-selected="false">Subassemblies</a>
+              <a class="nav-link" id="subassemblies-tab" data-toggle="tab" href="#subassemblies" role="tab" aria-controls="subassemblies" aria-selected="false">Sub-{{ label_assemblies_app_plural }}</a>
             </li>
         {% endif %}
 

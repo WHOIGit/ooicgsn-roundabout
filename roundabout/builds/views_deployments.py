@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -30,6 +30,9 @@ from .models import Build, BuildAction
 from .forms import *
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory, Action, Deployment, DeploymentAction
+# Get the app label names from the core utility functions
+from roundabout.core.utils import set_app_labels
+labels = set_app_labels()
 
 ## CBV views for Deployments as part of Builds app ##
 
@@ -72,11 +75,12 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
         # Get the date for the Action Record from the custom form field
         action_date = form.cleaned_data['date']
-        action_record = DeploymentAction.objects.create(action_type='create', detail='Deployment created', location=self.object.location,
+        action_detail = '%s created' % (labels['label_deployments_app_singular'])
+        action_record = DeploymentAction.objects.create(action_type='create', detail=action_detail, location=self.object.location,
                                                         user=self.request.user, deployment=self.object, created_at=action_date)
 
         # Create Build Action record for deployment
-        build_detail = '%s Deployment started.' % (self.object.deployment_number)
+        build_detail = '%s %s started.' % (self.object.deployment_number, labels['label_deployments_app_singular'])
         build_record = BuildAction.objects.create(action_type='startdeploy', detail=build_detail, location=self.object.location,
                                                    user=self.request.user, build=build, created_at=action_date)
 
@@ -150,11 +154,11 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             action_type_inventory = 'deploymentburnin'
 
         if action_type == 'deploy':
-            self.object.detail = '%s Deployed to Sea: %s. ' % (self.object.deployment_number, self.object.location)
+            self.object.detail = '%s Deployed to Field: %s. ' % (self.object.deployment_number, self.object.location)
             action_type_inventory = 'deploymenttosea'
 
         if action_type == 'recover':
-            self.object.detail = '%s Recovered from Sea to %s. ' % (self.object.deployment_number, self.object.location)
+            self.object.detail = '%s Recovered to: %s. ' % (self.object.deployment_number, self.object.location)
             action_type_inventory = 'deploymentrecover'
 
         if action_type == 'retire':

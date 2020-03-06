@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -23,7 +23,9 @@ from django import forms
 from django.forms.models import inlineformset_factory
 
 from .models import Assembly, AssemblyPart, AssemblyType
-
+# Get the app label names from the core utility functions
+from roundabout.core.utils import set_app_labels
+labels = set_app_labels()
 
 
 class AssemblyForm(forms.ModelForm):
@@ -32,8 +34,9 @@ class AssemblyForm(forms.ModelForm):
         model = Assembly
         fields = ['name', 'assembly_type', 'assembly_number', 'description', ]
         labels = {
-            'name': 'Assembly Name',
-            'assembly_number': 'Assembly ID Number',
+            'name': '%s Name' % (labels['label_assemblies_app_singular']),
+            'assembly_type': '%s Type' % (labels['label_assemblies_app_singular']),
+            'assembly_number': '%s ID Number' % (labels['label_assemblies_app_singular']),
         }
 
     def __init__(self, *args, **kwargs):
@@ -44,6 +47,7 @@ class AssemblyForm(forms.ModelForm):
             self.pk = None
 
         super(AssemblyForm, self).__init__(*args, **kwargs)
+        self.fields['assembly_type'].required = True
 
 
 class AssemblyPartForm(forms.ModelForm):
@@ -53,7 +57,7 @@ class AssemblyPartForm(forms.ModelForm):
         fields = ['assembly', 'part', 'parent', 'note']
         labels = {
             'part': 'Select Part Template',
-            'parent': 'Parent Assembly',
+            'parent': 'Parent %s Part' % (labels['label_assemblies_app_singular']),
             'note': 'Design Notes'
         }
 
@@ -91,5 +95,5 @@ class AssemblyTypeForm(forms.ModelForm):
         model = AssemblyType
         fields = ['name' ]
         labels = {
-        'name': 'Assembly Type Name'
+        'name': '%s Type Name' % (labels['label_assemblies_app_singular']),
     }
