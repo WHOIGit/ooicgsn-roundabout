@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -37,5 +37,5 @@ urlpatterns = [
     path('ajax/detail/<int:pk>/', view=views.LocationsAjaxDetailView.as_view(), name='ajax_location_detail'),
     path('ajax/edit/<int:pk>/', view=views.LocationsAjaxUpdateView.as_view(), name='ajax_location_update'),
     path('ajax/add/', view=views.LocationsAjaxCreateView.as_view(), name='ajax_location_add'),
-    path('ajax/delete/<int:pk>/', view=views.LocationsAjaxDeleteView.as_view(), name='ajax_location_delete'),
+    path('ajax/delete/<int:pk>/', view=views.LocationsAjaxDeleteFormView.as_view(), name='ajax_location_delete'),
 ]

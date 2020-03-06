@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -29,17 +29,6 @@ urlpatterns = [
     path('', view=views.InventoryHomeView.as_view(), name='inventory_home'),
     path('test/', view=views.InventoryHomeTestView.as_view(), name='inventory_home_test'),
     path('<int:pk>/', view=views.InventoryDetailView.as_view(), name='inventory_detail'),
-    path('add/', view=views.InventoryCreateView.as_view(), name='inventory_add'),
-    path('add/<int:current_location>/', view=views.InventoryCreateView.as_view(), name='inventory_add'),
-    path('add/<int:parent_pk>/<int:current_location>/', view=views.InventoryCreateView.as_view(), name='inventory_add'),
-    path('edit/<int:pk>/', view=views.InventoryUpdateView.as_view(), name='inventory_update'),
-    path('edit/<int:pk>/<int:current_location>/', view=views.InventoryUpdateView.as_view(), name='inventory_update'),
-    path('action/<action_type>/<int:pk>/<int:current_location>/', view=views.InventoryActionView.as_view(), name='inventory_action'),
-    path('subassembly_ex/<int:pk>/<int:current_location>/', view=views.InventorySubassemblyListView.as_view(), name='inventory_subassembly_existing'),
-    path('subassembly_ex/add/<int:pk>/<int:parent_pk>/<int:current_location>/', view=views.InventorySubassemblyActionView.as_view(), name='inventory_subassembly_existing_add'),
-    path('delete/<int:pk>/', view=views.InventoryDeleteView.as_view(), name='inventory_delete'),
-    path('search_serial/', view=views.InventorySearchSerialList.as_view(), name='inventory_search_serial'),
-    path('deployment/<int:pk>/<int:current_location>/', view=views.InventoryDeploymentDetailView.as_view(), name='inventory_deployment_detail'),
     # AJAX paths
     path('ajax/load-navtree/', views.load_inventory_navtree, name='ajax_load_inventory_navtree'),
     path('ajax/detail/<int:pk>/', view=views.InventoryAjaxDetailView.as_view(), name='ajax_inventory_detail'),

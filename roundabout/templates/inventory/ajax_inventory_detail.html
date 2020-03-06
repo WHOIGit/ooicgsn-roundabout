@@ -56,7 +56,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_add_subassembly' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id }}"
-                data-node-type="detail">Add Subassembly</a>
+                data-node-type="detail">Add Sub-{{ label_assemblies_app_singular }}</a>
         {% endif %}
 
         {% if not inventory_item.build and not inventory_item.parent and not inventory_item.assembly_part %}
@@ -64,7 +64,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_add_to_parent' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Add to Parent Assembly</a>
+                data-node-type="detail">Add to Parent {{ label_assemblies_app_singular }}</a>
         {% endif %}
 
         {% if not inventory_item.build and inventory_item.parent %}
@@ -72,7 +72,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'subchange' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Remove from Parent Assembly</a>
+                data-node-type="detail">Remove from Parent {{ label_assemblies_app_singular }}</a>
         {% endif %}
 
         {% if not inventory_item.build and not inventory_item.parent %}
@@ -271,7 +271,7 @@
 
         {% if inventory_item.get_descendants %}
             <li class="nav-item">
-              <a class="nav-link" id="subassemblies-tab" data-toggle="tab" href="#subassemblies" role="tab" aria-controls="subassemblies" aria-selected="false">Subassemblies</a>
+              <a class="nav-link" id="subassemblies-tab" data-toggle="tab" href="#subassemblies" role="tab" aria-controls="subassemblies" aria-selected="false">Sub-{{ label_assemblies_app_plural }}</a>
             </li>
         {% endif %}
 
