@@ -309,22 +309,29 @@ class AssemblyAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, Delete
 
 ### CBV views for AssemblyRevision model ###
 
+# AJAX Detail view for Assembly Revision
+class AssemblyRevisionAjaxDetailView(LoginRequiredMixin, DetailView):
+    model = AssemblyRevision
+    context_object_name = 'assembly_revision'
+    template_name='assemblies/ajax_assemblyrevision_detail.html'
+
+
 # Create new Assembly Revision form
-class AssemblyAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, CreateView):
+class AssemblyRevisionAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, CreateView):
     model = AssemblyRevision
     form_class = AssemblyRevisionForm
-    context_object_name = 'revision'
+    context_object_name = 'assembly_revision'
     template_name='assemblies/ajax_assembly_revision_form.html'
     permission_required = 'assemblies.add_assembly'
     redirect_field_name = 'home'
 
     def get_context_data(self, **kwargs):
-        context = super(AssemblyAjaxCreateRevisionView, self).get_context_data(**kwargs)
-        revision_pk = self.kwargs['revision_pk']
-        revision_obj = AssemblyRevision.objects.get(id=revision_pk)
+        context = super(AssemblyRevisionAjaxCreateView, self).get_context_data(**kwargs)
+        assembly_revision_pk = self.kwargs['assembly_revision_pk']
+        assembly_revision = AssemblyRevision.objects.get(id=assembly_revision_pk)
 
         context.update({
-            'revision': revision_obj,
+            'assembly_revision': assembly_revision,
         })
         return context
 
@@ -348,19 +355,19 @@ class AssemblyAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin
 
     def get_initial(self):
         #Returns the initial data from current revision
-        initial = super(AssemblyAjaxCreateRevisionView, self).get_initial()
+        initial = super(AssemblyRevisionAjaxCreateView, self).get_initial()
         # get the current revision object, prepopolate fields
-        revision_pk = self.kwargs['revision_pk']
-        revision_obj = AssemblyRevision.objects.get(id=revision_pk)
-        initial['assembly'] = revision_obj.assembly
+        assembly_revision_pk = self.kwargs['assembly_revision_pk']
+        assembly_revision = AssemblyRevision.objects.get(id=assembly_revision_pk)
+        initial['assembly'] = assembly_revision.assembly
         initial['revision_code'] = None
 
         return initial
 
     def get_form_kwargs(self):
-        kwargs = super(AssemblyAjaxCreateRevisionView, self).get_form_kwargs()
-        if 'revision_pk' in self.kwargs:
-            kwargs['revision_pk'] = self.kwargs['revision_pk']
+        kwargs = super(AssemblyRevisionAjaxCreateView, self).get_form_kwargs()
+        if 'assembly_revision_pk' in self.kwargs:
+            kwargs['assembly_revision_pk'] = self.kwargs['assembly_revision_pk']
         return kwargs
 
     def form_valid(self, form, documentation_form):
@@ -369,9 +376,9 @@ class AssemblyAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin
         documentation_form.save()
 
         # Need to copy the current Revision template to new Revision
-        revision_pk = self.kwargs['revision_pk']
-        revision_obj = AssemblyRevision.objects.get(id=revision_pk)
-        assembly_parts = revision_obj.assembly_parts.all()
+        assembly_revision_pk = self.kwargs['assembly_revision_pk']
+        assembly_revision = AssemblyRevision.objects.get(id=assembly_revision_pk)
+        assembly_parts = assembly_revision.assembly_parts.all()
 
         for ap in assembly_parts:
             if ap.is_root_node():
@@ -383,7 +390,7 @@ class AssemblyAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin
             print(form.cleaned_data)
             data = {
                 'message': "Successfully submitted form data.",
-                'object_id': self.object.assembly.id,
+                'object_id': self.object.id,
                 'object_type': self.object.assembly.get_object_type(),
                 'detail_path': self.get_success_url(),
             }
@@ -401,7 +408,64 @@ class AssemblyAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin
             return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form, form_errors=form_errors))
 
     def get_success_url(self):
-        return reverse('assemblies:ajax_assemblies_detail', args=(self.object.assembly.id,))
+        return reverse('assemblies:ajax_assemblyrevision_detail', args=(self.object.id,))
+
+
+class AssemblyRevisionAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, UpdateView):
+    model = AssemblyRevision
+    form_class = AssemblyRevisionForm
+    context_object_name = 'assembly_revision'
+    template_name='assemblies/ajax_assembly_revision_form.html'
+    permission_required = 'assemblies.add_assembly'
+    redirect_field_name = 'home'
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        documentation_form = AssemblyDocumentationFormset(instance=self.object)
+        return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form))
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        documentation_form = AssemblyDocumentationFormset(
+            self.request.POST, instance=self.object)
+
+        if (form.is_valid() and documentation_form.is_valid()):
+            return self.form_valid(form, documentation_form)
+        return self.form_invalid(form, documentation_form)
+
+    def form_valid(self, form, documentation_form):
+        self.object = form.save()
+        documentation_form.instance = self.object
+        documentation_form.save()
+        response = HttpResponseRedirect(self.get_success_url())
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+                'object_type': self.object.assembly.get_object_type(),
+                'detail_path': self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def form_invalid(self, form, documentation_form):
+        form_errors = documentation_form.errors
+
+        if self.request.is_ajax():
+            data = form.errors
+            return JsonResponse(data, status=400)
+        else:
+            return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form, form_errors=form_errors))
+
+    def get_success_url(self):
+        return reverse('assemblies:ajax_assemblyrevision_detail', args=(self.object.id,))
 
 
 ### CBV views for AssemblyPart model ###
@@ -443,12 +507,12 @@ class AssemblyPartAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
 
     def get_context_data(self, **kwargs):
         context = super(AssemblyPartAjaxCreateView, self).get_context_data(**kwargs)
-        assembly = Assembly.objects.get(id=self.kwargs['assembly_pk'])
+        assembly_revision = AssemblyRevision.objects.get(id=self.kwargs['assembly_revision_pk'])
 
         context.update({
             'part_types': PartType.objects.all(),
-            'assembly': assembly,
-            'builds': assembly.builds.all()
+            'assembly_revision': assembly_revision,
+            'builds': assembly_revision.builds.all()
         })
         if 'parent_pk' in self.kwargs:
             context.update({
@@ -458,7 +522,7 @@ class AssemblyPartAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
 
     def get_form_kwargs(self):
         kwargs = super(AssemblyPartAjaxCreateView, self).get_form_kwargs()
-        kwargs['assembly_pk'] = self.kwargs['assembly_pk']
+        kwargs['assembly_revision_pk'] = self.kwargs['assembly_revision_pk']
         if 'parent_pk' in self.kwargs:
             kwargs['parent_pk'] = self.kwargs['parent_pk']
         return kwargs
@@ -466,7 +530,7 @@ class AssemblyPartAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
     def get_initial(self):
         #Returns the initial data to use for forms on this view.
         initial = super(AssemblyPartAjaxCreateView, self).get_initial()
-        initial['assembly'] = self.kwargs['assembly_pk']
+        initial['assembly_revision'] = self.kwargs['assembly_revision_pk']
         if 'parent_pk' in self.kwargs:
             initial['parent'] = self.kwargs['parent_pk']
         return initial
@@ -512,8 +576,8 @@ class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
         # Add Parts list to context to build form filter
         context.update({
             'part_types': PartType.objects.all(),
-            'assembly': self.object.assembly,
-            'builds': self.object.assembly.builds.all()
+            'assembly_revision': self.object.assembly_revision,
+            'builds': self.object.assembly_revision.builds.all()
         })
         if 'parent_pk' in self.kwargs:
             context.update({

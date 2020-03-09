@@ -1,0 +1,144 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+{% load humanize %}
+
+<div class="card-header" data-object-id="{{ assembly_revision.id }}">
+    <h3>{{ assembly_revision.assembly.name }} - Revision {{ assembly_revision.revision_code }}</h3>
+</div>
+
+<div class="card-body">
+
+    <div class="dropdown float-right">
+      <button id="action" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-primary">
+        Choose Action
+      </button>
+      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="action">
+            <div class="ajax-detail-link">
+                <a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'assemblies:ajax_assemblyparts_add' assembly_revision.id %}"
+                    data-node-id="{{ assembly.id }}"
+                    data-node-type="{{ node_type }}">Add Top Level Part</a>
+                <a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'assemblies:ajax_assemblies_update_revision' assembly_revision.id %}"
+                    data-node-id="{{ assembly.id }}"
+                    data-node-type="{{ node_type }}">Edit Revision Details</a>
+                <hr>
+                <a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly_revision.id %}"
+                    data-node-id="{{ assembly.id }}"
+                    data-node-type="{{ node_type }}">Create New Revision</a>
+            </div>
+
+      </div>
+    </div>
+
+    <p>{{ label_assemblies_app_singular }} ID Number: {{ assembly_revision.assembly.assembly_number }}</p>
+
+    <p>{{ label_assemblies_app_singular }} Type: {{ assembly_revision.assembly.assembly_type }}</p>
+
+    <p>{{ label_assemblies_app_singular }} Description: {{ assembly_revision.assembly.description|safe }}</p>
+
+    <h5>Revision Details</h5>
+
+    <hr>
+
+    <p>Total {{ label_assemblies_app_singular }} Revision Cost: ${{ assembly_revision.get_assembly_total_cost|intcomma }}
+
+    {% if assembly_revision.revision_note %}
+        <p>Revision Notes: {{ assembly_revision.revision_note|safe  }}</p>
+    {% endif %}
+
+
+    {% if assembly_revision.assembly_documents.exists %}
+
+    <div class="tab-pane fade show active" id="documentation" role="tabpanel" aria-labelledby="documentation-tab">
+            <table class="table table-tight">
+                <thead>
+                  <th>Document</th>
+                  <th class="text-right">Document Type</th>
+
+                </thead>
+                <tbody>
+                  {% for document in assembly_revision.assembly_documents.all %}
+                <tr>
+                    <td><a href="{{ document.doc_link }}" target="_blank">{{ document.name }}</a></td>
+                    <td class="text-right">{{ document.doc_type }}</td>
+                </tr>
+                  {% endfor %}
+                </tbody>
+          </table>
+      </div>
+    {% endif %}
+
+
+    <hr>
+
+    {% if assembly_revision.builds.exists %}
+        <div class="alert alert-warning" role="alert">
+            <b>NOTICE:</b>  This {{ label_assemblies_app_singular }} template has existing {{ label_builds_app_plural }}.
+            Any edits you make to this template will be reflected in those {{ label_builds_app_plural }}.
+            If you want to create a new version of this {{ label_assemblies_app_singular }} ,
+            but keep existing {{ label_builds_app_plural }} unchanged, please create a
+            <span class="ajax-detail-link">
+                <a href="#"
+                data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly.id %}"
+                data-node-id="{{ assembly.id }}"
+                data-node-type="detail"><b>NEW VERSION</b></a>
+            </span> of this {{ label_assemblies_app_singular }}  instead.
+
+        </div>
+
+        <h5>Current {{ label_builds_app_plural }} for this {{ label_assemblies_app_singular }}  template</h5>
+
+        <ul class="list-group list-group-flush">
+
+            {% for build in revision.builds.all %}
+
+                <li class="list-group-item">
+                    {{ label_builds_app_singular }}: {{ build }}<br>
+                    Current Location: {{ build.location }}
+                    <a href="{% url 'builds:builds_detail' build.id %}" data-detail-url="{% url 'builds:ajax_builds_detail' build.id %}"
+                       data-node-id="{{ build.id }}"
+                       data-location-id="{{ build.location.id }}"
+                       data-node-type="detail"
+                       class="btn btn-primary btn-sm float-right"
+                       role="button">View</a>
+                </li>
+
+            {% endfor %}
+
+        </ul>
+
+    {% endif %}
+
+
+<div class="mt-5 ajax-btn">
+    <a href="#" data-update-url="{% url 'assemblies:ajax_assemblies_delete' assembly_revision.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
+</div>
+
+
+{% block javascript %}
+<script>
+    /* Need to set a global JS variable to reference assembly_id for navtree functions */
+    var assemblyID = 'assemblies_' + {{ assembly_revision.assembly.id }};
+</script>
+{% endblock javascript %}

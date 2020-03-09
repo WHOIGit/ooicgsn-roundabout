@@ -56,17 +56,6 @@ class Assembly(models.Model):
     def get_object_type(self):
         return 'assemblies'
 
-    def get_assembly_total_cost(self):
-        tree = self.assembly_parts.all()
-        total_cost = 0
-
-        for item in tree:
-            revision = item.part.revisions.first()
-            cost = revision.unit_cost
-            total_cost = total_cost + cost
-
-        return total_cost
-
 
 class AssemblyRevision(models.Model):
     revision_code = models.CharField(max_length=255, unique=False, db_index=True, default='A')
@@ -80,6 +69,17 @@ class AssemblyRevision(models.Model):
 
     def __str__(self):
         return '%s - %s' % (self.revision_code, self.assembly.name)
+
+    def get_assembly_total_cost(self):
+        tree = self.assembly_parts.all()
+        total_cost = 0
+
+        for item in tree:
+            revision = item.part.revisions.first()
+            cost = revision.unit_cost
+            total_cost = total_cost + cost
+
+        return total_cost
 
 
 # Assembly documentation model

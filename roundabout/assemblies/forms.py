@@ -85,10 +85,10 @@ class AssemblyRevisionForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
 
-        if 'revision_pk' in kwargs:
-            self.revision_pk = kwargs.pop('revision_pk')
+        if 'assembly_revision_pk' in kwargs:
+            self.assembly_revision_pk = kwargs.pop('assembly_revision_pk')
         else:
-            self.revision_pk = None
+            self.assembly_revision_pk = None
         super(AssemblyRevisionForm, self).__init__(*args, **kwargs)
 
 
@@ -96,7 +96,7 @@ class AssemblyPartForm(forms.ModelForm):
 
     class Meta:
         model = AssemblyPart
-        fields = ['assembly', 'part', 'parent', 'note']
+        fields = ['assembly_revision', 'part', 'parent', 'note']
         labels = {
             'part': 'Select Part Template',
             'parent': 'Parent %s Part' % (labels['label_assemblies_app_singular']),
@@ -104,7 +104,7 @@ class AssemblyPartForm(forms.ModelForm):
         }
 
         widgets = {
-            'assembly': forms.HiddenInput(),
+            'assembly_revision': forms.HiddenInput(),
         }
 
     class Media:
@@ -112,10 +112,10 @@ class AssemblyPartForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
 
-        if 'assembly_pk' in kwargs:
-            self.assembly_pk = kwargs.pop('assembly_pk')
+        if 'assembly_revision_pk' in kwargs:
+            self.assembly_revision_pk = kwargs.pop('assembly_revision_pk')
         else:
-            self.assembly_pk = None
+            self.assembly_revision_pk = None
 
         if 'parent_pk' in kwargs:
             self.parent_pk = kwargs.pop('parent_pk')
@@ -125,10 +125,10 @@ class AssemblyPartForm(forms.ModelForm):
         super(AssemblyPartForm, self).__init__(*args, **kwargs)
         #self.fields['parent'].queryset = MooringPart.objects.none()
         #self.fields['parent'].queryset = AssemblyPart.objects.filter(id=self.parent_pk)
-        if self.assembly_pk:
-            self.fields['parent'].queryset = AssemblyPart.objects.filter(assembly_id=self.assembly_pk)
+        if self.assembly_revision_pk:
+            self.fields['parent'].queryset = AssemblyPart.objects.filter(assembly_revision_id=self.assembly_revision_pk)
         elif self.instance.pk:
-            self.fields['parent'].queryset = AssemblyPart.objects.filter(assembly=self.instance.assembly)
+            self.fields['parent'].queryset = AssemblyPart.objects.filter(assembly_revision=self.instance.assembly_revision)
 
 
 class AssemblyTypeForm(forms.ModelForm):

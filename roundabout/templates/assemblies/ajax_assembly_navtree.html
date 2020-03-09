@@ -42,7 +42,7 @@
 
                             <li data-jstree='{"icon":"fa fa-rocket"}' id="assemblyrevisions_{{ revision.id }}" class="jstree-closed">
                                     <a href="#"
-                                            data-detail-url="{% url 'assemblies:ajax_assemblies_detail' revision.id %}"
+                                            data-detail-url="{% url 'assemblies:ajax_assemblyrevision_detail' revision.id %}"
                                             data-node-id='{{ revision.id }}'
                                             data-node-type="assemblyrevisions">Revision {{ revision.revision_code }}</a>
                              </li>

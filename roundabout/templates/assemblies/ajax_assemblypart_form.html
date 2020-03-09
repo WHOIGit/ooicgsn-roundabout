@@ -32,7 +32,7 @@
     {% elif parent.id %}
         <h3>Add Sub-{{ label_assemblies_app_singular }} to {{ parent.part.name }} </h3>
     {% else %}
-        <h3>Add Part to Assembly</h3>
+        <h3>Add Part to {{ label_assemblies_app_singular }} Revision</h3>
     {% endif %}
 </div>
 
@@ -68,7 +68,7 @@
                 the current {{ label_builds_app_plural }} to remain unchanged, please create a
                     <span class="ajax-detail-link">
                         <a href="#"
-                        data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly.id %}"
+                        data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly_revision.id %}"
                         data-node-id="{{ assembly.id }}"
                         data-node-type="detail"><b>NEW VERSION</b></a> of this {{ label_assemblies_app_singular }} instead.
                     </span>
@@ -83,7 +83,7 @@
             but keep existing {{ label_builds_app_plural }} unchanged, please create a
             <span class="ajax-detail-link">
                 <a href="#"
-                data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly.id %}"
+                data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly_revision.id %}"
                 data-node-id="{{ assembly.id }}"
                 data-node-type="detail"><b>NEW VERSION</b></a> of this {{ label_assemblies_app_singular }} instead.
             </span>
@@ -177,7 +177,7 @@
         {% else %}
             <input class="btn btn-light cancel-btn"
                type="button" value="Cancel"
-               data-detail-url="{% url 'assemblies:ajax_assemblies_detail' assembly.id %}"
+               data-detail-url="{% url 'assemblies:ajax_assemblyrevision_detail' assembly_revision.id %}"
                data-node-id="{{ assembly.id }}" />
         {% endif %}
 
