@@ -31,7 +31,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from common.util.mixins import AjaxFormMixin
 from .models import Build, BuildAction, BuildSnapshot, InventorySnapshot, PhotoNote
 from .forms import *
-from roundabout.assemblies.models import Assembly, AssemblyPart
+from roundabout.assemblies.models import Assembly, AssemblyPart, AssemblyRevision
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory, Action
 from roundabout.admintools.models import Printer
@@ -122,6 +122,15 @@ def load_new_build_id_number(request):
         'new_serial_number': new_serial_number,
     }
     return JsonResponse(data)
+
+
+# Function to load Assembly Revisions based on Assembly
+def load_assembly_revisions(request):
+    assembly_id = request.GET.get('assembly_id')
+    revisions = AssemblyRevision.objects.none()
+    if assembly_id:
+        revisions = AssemblyRevision.objects.filter(assembly_id=assembly_id)
+    return render(request, 'builds/revisions_dropdown_list_options.html', {'revisions': revisions,})
 
 
 ## CBV views for Builds app ##
@@ -346,7 +355,7 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
             #self.kwargs['action_type'] = self.object.get_flag_display()
 
         action_form = form.save()
-        action_record = BuildAction.objects.create(action_type=self.kwargs['action_type'], 
+        action_record = BuildAction.objects.create(action_type=self.kwargs['action_type'],
                                                    detail=self.object.detail,
                                                    location=self.object.location,
                                                    user=self.request.user,

@@ -41,7 +41,7 @@ urlpatterns = [
     path('ajax/revision/detail/<int:pk>/', view=views.AssemblyRevisionAjaxDetailView.as_view(), name='ajax_assemblyrevision_detail'),
     path('ajax/revision/create/<int:assembly_revision_pk>/', view=views.AssemblyRevisionAjaxCreateView.as_view(), name='ajax_assemblies_create_revision'),
     path('ajax/revision/edit/<int:pk>/', view=views.AssemblyRevisionAjaxUpdateView.as_view(), name='ajax_assemblies_update_revision'),
-    path('ajax/revision/delete/<int:pk>/', view=views.AssemblyRevisionAjaxCreateView.as_view(), name='ajax_assemblies_delete_revision'),
+    path('ajax/revision/delete/<int:pk>/', view=views.AssemblyRevisionAjaxDeleteView.as_view(), name='ajax_assemblies_delete_revision'),
     # AssemblyPart paths
     path('ajax/assemblypart/detail/<int:pk>/', view=views.AssemblyPartAjaxDetailView.as_view(), name='ajax_assemblyparts_detail'),
     path('ajax/assemblypart/add/<int:assembly_revision_pk>/', view=views.AssemblyPartAjaxCreateView.as_view(), name='ajax_assemblyparts_add'),

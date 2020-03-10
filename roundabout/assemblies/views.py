@@ -484,6 +484,25 @@ class AssemblyRevisionAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin
         return reverse('assemblies:ajax_assemblyrevision_detail', args=(self.object.id,))
 
 
+class AssemblyRevisionAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = AssemblyRevision
+    template_name = 'assemblies/ajax_assembly_revision_confirm_delete.html'
+    context_object_name = 'assembly_revision'
+    permission_required = 'assemblies.delete_assembly'
+    redirect_field_name = 'home'
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        data = {
+            'message': "Successfully submitted form data.",
+            'parent_id': self.object.id,
+            'object_type': self.object.get_object_type(),
+        }
+        self.object.delete()
+
+        return JsonResponse(data)
+
+
 ### CBV views for AssemblyPart model ###
 
 # Direct Detail view for Assembly Part
