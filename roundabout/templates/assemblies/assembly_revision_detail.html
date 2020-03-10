@@ -1,0 +1,63 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+{% extends "base.html" %}
+{% load static i18n %}
+{% load mptt_tags %}
+
+{% block title %}{{ label_assemblies_app_plural }}{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-md-5 navtree-container">
+        <h2>{{ label_assemblies_app_plural }}</h2>
+
+        <div id="jstree-navtree" data-navtree-url="{% url 'assemblies:ajax_load_assemblies_navtree' %}"
+                                 data-node-type="{{ node_type }}">
+            <img src="{% static 'images/loading-icon.gif' %}" class="loading-icon"/>
+            <!-- AJAX navtree inserted here! -->
+        </div>
+
+    </div>
+    <div class="col-md-7 inventory-detail">
+
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="parts-add-btn">
+                    <a href="#" data-create-url="{% url 'assemblies:ajax_assemblies_add' %}" role="button" class="btn btn-primary">Create New {{ label_assemblies_app_singular }}</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="detail-view">
+
+            {% include "assemblies/ajax_assembly_revision_detail.html" %}
+
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block javascript %}
+
+{% endblock javascript %}

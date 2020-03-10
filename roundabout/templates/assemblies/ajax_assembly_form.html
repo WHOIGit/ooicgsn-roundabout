@@ -69,46 +69,9 @@
       </div>
 
       {% if not assembly %}
-      <h4>Revision Information</h4>
-       <table class="table table-tight">
-         <thead>
-           <th>Revision Code</th>
-         </thead>
-         <tbody>
-             {{ revision_form.management_form }}
-
-             {% if revision_form.errors %}
-             <tr>
-               <div class="alert alert-danger">
-               {% for dict in revision_form.errors %}
-
-                   {% for error in dict.values %}
-                     {{ error|escape }}
-                   {% endfor %}
-
-               {% endfor %}
-               </div>
-             </tr>
-            {% endif %}
-
-             {% for rev in revision_form %}
-
-               <tr>
-                   <td>{{ rev.revision_code }}</td>
-               </tr>
-               <tr>
-                   <td colspan="3">
-                     <p>Notes on this Revision</p>
-                     {{ rev.revision_note }}
-                   </td>
-               </tr>
-             {% endfor %}
-           </tbody>
-         </table>
-
 
          <div class="col-md-12">
-          <h5>Revision Documentation</h5>
+          <h6>Revision Documentation</h6>
            <table class="table table-tight documentation-form">
              <thead>
                <th>Document</th>

@@ -26,16 +26,16 @@
 
 
         <div class="card-header">
-            {% if revision %}
+            {% if copy_revision %}
                 <h4>Add New {{ label_assemblies_app_singular }} Revision</h4>
             {% else %}
-                <h4>Edit Revision: {{ revision.revision_code }}</h4>
+                <h4>Edit Revision: {{ assembly_revision.revision_code }}</h4>
             {% endif %}
         </div>
 
         <div class="card-body">
-            {% if revision %}
-                <p><b>Current Revision Code: {{ revision.revision_code }}</b>
+            {% if copy_revision %}
+                <p><b>Current Revision Code: {{ copy_revision.revision_code }}</b>
             {% endif %}
 
               <form class="form-horizontal parts ajax-form" method="post" action=""
@@ -101,8 +101,8 @@
 
                 <div class="control-group">
                   <div class="controls">
-                    {% if revision %}
-                        <button type="submit" class="btn btn-primary">Add Revision</button>
+                    {% if copy_revision %}
+                        <button type="submit" class="btn btn-primary">Create New Revision</button>
                     {% else %}
                         <button type="submit" class="btn btn-primary">Update Revision</button>
                     {% endif %}

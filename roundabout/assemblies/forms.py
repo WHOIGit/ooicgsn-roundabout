@@ -31,10 +31,13 @@ labels = set_app_labels()
 
 
 class AssemblyForm(forms.ModelForm):
+    revision_code = forms.CharField(strip=True, initial='A',
+        help_text='Enter a Revision Code for the initial version of this Assembly. Defaults to "A"',
+    )
 
     class Meta:
         model = Assembly
-        fields = ['name', 'assembly_type', 'assembly_number', 'description', ]
+        fields = ['name', 'assembly_type', 'assembly_number', 'description', 'revision_code' ]
         labels = {
             'name': '%s Name' % (labels['label_assemblies_app_singular']),
             'assembly_type': '%s Type' % (labels['label_assemblies_app_singular']),
@@ -46,19 +49,15 @@ class AssemblyForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
 
-        if 'pk' in kwargs:
-            self.pk = kwargs.pop('pk')
+        if 'assembly_to_copy_pk' in kwargs:
+            self.assembly_to_copy_pk = kwargs.pop('assembly_to_copy_pk')
         else:
-            self.pk = None
+            self.assembly_to_copy_pk = None
         super(AssemblyForm, self).__init__(*args, **kwargs)
         self.fields['assembly_type'].required = True
 
-AssemblyRevisionFormset = inlineformset_factory(Assembly, AssemblyRevision,
-                                                fields=('revision_code', 'revision_note'),
-                                                        widgets={
-                                                            'revision_note': SummernoteWidget(),
-                                                        }, extra=1, can_delete=False)
-AssemblyDocumentationFormset = inlineformset_factory(AssemblyRevision, AssemblyDocument, fields=('name', 'doc_type', 'doc_link'), extra=1, can_delete=True)
+        if self.instance.pk:
+            del self.fields['revision_code']
 
 
 class AssemblyRevisionForm(forms.ModelForm):
@@ -90,6 +89,14 @@ class AssemblyRevisionForm(forms.ModelForm):
         else:
             self.assembly_revision_pk = None
         super(AssemblyRevisionForm, self).__init__(*args, **kwargs)
+
+
+AssemblyRevisionFormset = inlineformset_factory(Assembly, AssemblyRevision, form=AssemblyRevisionForm,
+                                                fields=('revision_code', 'revision_note'),
+                                                        widgets={
+                                                            'revision_note': SummernoteWidget(),
+                                                        }, extra=1, can_delete=False)
+AssemblyDocumentationFormset = inlineformset_factory(AssemblyRevision, AssemblyDocument, fields=('name', 'doc_type', 'doc_link'), extra=1, can_delete=True)
 
 
 class AssemblyPartForm(forms.ModelForm):
@@ -137,5 +144,5 @@ class AssemblyTypeForm(forms.ModelForm):
         model = AssemblyType
         fields = ['name' ]
         labels = {
-        'name': '%s Type Name' % (labels['label_assemblies_app_singular']),
-    }
+            'name': '%s Type Name' % (labels['label_assemblies_app_singular']),
+        }

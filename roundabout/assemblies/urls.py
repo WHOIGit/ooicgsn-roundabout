@@ -28,13 +28,14 @@ urlpatterns = [
     path('', view=views.AssemblyHomeView.as_view(), name='assemblies_home'),
     path('<int:pk>/', view=views.AssemblyDetailView.as_view(), name='assembly_detail'),
     path('assemblypart/<int:pk>/', view=views.AssemblyPartDetailView.as_view(), name='assemblypart_detail'),
+    path('assemblyrevision/<int:pk>/', view=views.AssemblyRevisionDetailView.as_view(), name='assemblyrevision_detail'),
     path('assemblytype/<int:pk>/', view=views.AssemblyTypeDetailView.as_view(), name='assemblytype_detail'),
     # AJAX paths
     path('ajax/detail/<int:pk>/', view=views.AssemblyAjaxDetailView.as_view(), name='ajax_assemblies_detail'),
     path('ajax/add/', view=views.AssemblyAjaxCreateView.as_view(), name='ajax_assemblies_add'),
     path('ajax/edit/<int:pk>/', view=views.AssemblyAjaxUpdateView.as_view(), name='ajax_assemblies_update'),
     path('ajax/delete/<int:pk>/', view=views.AssemblyAjaxDeleteView.as_view(), name='ajax_assemblies_delete'),
-    path('ajax/copy/<int:pk>/', view=views.AssemblyAjaxCopyView.as_view(), name='ajax_assemblies_copy'),
+    path('ajax/copy/<int:assembly_to_copy_pk>/', view=views.AssemblyAjaxCopyView.as_view(), name='ajax_assemblies_copy'),
     path('ajax/load-navtree/', views.load_assemblies_navtree, name='ajax_load_assemblies_navtree'),
     # Revision paths
     path('ajax/revision/detail/<int:pk>/', view=views.AssemblyRevisionAjaxDetailView.as_view(), name='ajax_assemblyrevision_detail'),

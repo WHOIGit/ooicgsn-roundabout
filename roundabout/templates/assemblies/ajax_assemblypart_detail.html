@@ -37,11 +37,11 @@
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'assemblies:ajax_assemblyparts_add' assembly_part.assembly_revision.id assembly_part.id %}"
                     data-node-id="{{ assembly_part.id }}"
-                    data-node-type="detail">Add New Sub-{{ label_assemblies_app_singular }}</a>
+                    data-node-type="{{ node_type }}">Add New Sub-{{ label_assemblies_app_singular }}</a>
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'assemblies:ajax_assemblyparts_update' assembly_part.id %}"
                     data-node-id="{{ assembly_part.id }}"
-                    data-node-type="detail">Edit Sub-{{ label_assemblies_app_singular }} Part Template</a>
+                    data-node-type="{{ node_type }}">Edit Sub-{{ label_assemblies_app_singular }} Part Template</a>
             </div>
 
       </div>

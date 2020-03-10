@@ -60,15 +60,20 @@ class Assembly(models.Model):
 class AssemblyRevision(models.Model):
     revision_code = models.CharField(max_length=255, unique=False, db_index=True, default='A')
     revision_note = models.TextField(blank=True)
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Release Date')
     assembly = models.ForeignKey(Assembly, related_name='assembly_revisions',
                           on_delete=models.CASCADE, null=False, blank=False, db_index=True)
 
     class Meta:
         ordering = ['-created_at', '-revision_code']
+        get_latest_by = 'created_at'
 
     def __str__(self):
         return '%s - %s' % (self.revision_code, self.assembly.name)
+
+    # method to set the object_type variable to send to Javascript AJAX functions
+    def get_object_type(self):
+        return 'assemblyrevisions'
 
     def get_assembly_total_cost(self):
         tree = self.assembly_parts.all()
