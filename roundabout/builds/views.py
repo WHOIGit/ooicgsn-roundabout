@@ -52,11 +52,12 @@ def load_builds_navtree(request):
         return render(request, 'builds/ajax_build_navtree.html', {'locations': locations})
     else:
         build_pk = node_id.split('_')[1]
-        build = Build.objects.prefetch_related('assembly__assembly_parts').prefetch_related('inventory').get(id=build_pk)
-        return render(request, 'builds/build_tree_assembly.html', {'assembly_parts': build.assembly.assembly_parts,
+        build = Build.objects.prefetch_related('assembly_revision__assembly_parts').prefetch_related('inventory').get(id=build_pk)
+        return render(request, 'builds/build_tree_assembly.html', {'assembly_parts': build.assembly_revision.assembly_parts,
                                                                    'inventory_qs': build.inventory,
                                                                    'location_pk': build.location_id,
                                                                    'build_pk': build_pk, })
+
 
 # Internal function to copy Inventory items for Build Snapshots
 def _make_tree_copy(root_part, new_location, build_snapshot, parent=None ):
