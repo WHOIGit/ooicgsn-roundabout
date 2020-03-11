@@ -49,11 +49,11 @@
 
                 <p class="mt-3">If you delete this {{ label_assemblies_app_singular }} Part, the existing {{ label_inventory_app_singular }}
                     items will be removed from {{ label_builds_app_plural }} and placed in the same current Location as the {{ label_builds_app_singular }}. If you want
-                    the current     {{ label_builds_app_plural }} to remain unchanged, please create a
+                    the current {{ label_builds_app_plural }} to remain unchanged, please create a
                     <span class="ajax-detail-link">
                         <a href="#"
-                        data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly_part.assembly.id %}"
-                        data-node-id="{{ assembly_part.assembly.id }}"
+                        data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly_part.assembly_revision.id %}"
+                        data-node-id="{{ assembly_part.assembly_revision.id }}"
                         data-node-type="detail"><b>NEW VERSION</b></a>
                     </span> of this {{ label_assemblies_app_singular }} instead.</p>
 
@@ -67,8 +67,8 @@
                 but keep existing {{ label_builds_app_plural }} unchanged, please create a
                 <span class="ajax-detail-link">
                     <a href="#"
-                    data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly_part.assembly.id %}"
-                    data-node-id="{{ assembly_part.assembly.id }}"
+                    data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly_part.assembly_revision.id %}"
+                    data-node-id="{{ assembly_part.assembly_revision.id }}"
                     data-node-type="detail"><b>NEW VERSION</b></a>
                 </span>  of this {{ label_assemblies_app_singular }} instead.
 

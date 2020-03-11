@@ -65,7 +65,7 @@ class AssemblyRevision(models.Model):
                           on_delete=models.CASCADE, null=False, blank=False, db_index=True)
 
     class Meta:
-        ordering = ['-created_at', '-revision_code']
+        ordering = ['-id', '-revision_code']
         get_latest_by = 'created_at'
 
     def __str__(self):
