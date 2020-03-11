@@ -212,14 +212,26 @@
                     
 
                     <h4>Calibrations</h4>
-
-                    <ul class = 'list-group'>
-                        {% for calibration in part_template.calibration.all %}
-                            <li class = 'list-group-item'>
-                                {{ calibration.name }}
-                            </li>
-                        {% endfor %}
-                    </ul>
+                    <table class="table table-striped action-table">
+                        <thead>
+                            <th>Name</th>
+                            <th>Value</th>
+                            <th>Notes</th>
+                            <th>Created</th>
+                        </thead>
+                        <tbody>
+                            {% for cal in part_template.calibration.all %}
+                                {% for coeff in cal.coefficient.all %}
+                                    <tr>
+                                        <td>{{ cal.name }}</td>
+                                        <td>{{ coeff.value }}</td>
+                                        <td>{{ coeff.notes }}</td>
+                                        <td>{{ coeff.created_at }}</td>
+                                    </tr>
+                                {% endfor %}  
+                            {% endfor %}
+                        </tbody>
+                    </table> 
                     
 
                     <div class="ajax-detail-link">

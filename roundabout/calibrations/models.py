@@ -23,9 +23,10 @@ class Coefficient(models.Model):
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     inventory = models.ForeignKey(Inventory, related_name='coefficient', on_delete=models.CASCADE, null=True)
+    calibration = models.ForeignKey(Calibration, related_name='coefficient', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
-        return self.name
+        return self.value
 
     def get_object_type(self):
-        return 'calibration'
+        return 'coefficient'

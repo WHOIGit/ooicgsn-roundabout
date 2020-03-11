@@ -300,7 +300,7 @@
 
        
         <li class="nav-item">
-          <a class="nav-link" id="calibration-template-tab" data-toggle="tab" href="#calibration-template" role="tab" aria-controls="calibration-template" aria-selected="false">Calibrations</a>
+          <a class="nav-link" id="calibration-template-tab" data-toggle="tab" href="#calibration-template" role="tab" aria-controls="calibration-template" aria-selected="false">Calibration Coefficient History</a>
         </li>
   
 
@@ -492,14 +492,22 @@
 
                 <thead>
                   <th>Name</th>
+                  <th>Value</th>
+                  <th>Notes</th>
+                  <th>Created</th>
                 </thead>
 
                 <tbody>
-                  {% for calibration in  inventory_item.part.calibrations.all %}
+                    {% for cal in inventory_item.part.calibration.all %}
+                    {% for coeff in cal.coefficient.all %}
                     <tr>
-                        <td>{{ calibration.name }}</td>
+                        <td>{{ cal.name }}</td>
+                        <td>{{ coeff.value }}</td>
+                        <td>{{ coeff.notes }}</td>
+                        <td>{{ coeff.created_at }}</td>
                     </tr>
-                  {% endfor %}
+                    {% endfor %}  
+                    {% endfor %}
                 </tbody>
           </table> 
         </div>

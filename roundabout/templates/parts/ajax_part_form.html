@@ -144,36 +144,43 @@
 
                 <div class="col-md-12">
                   <h5>Calibrations</h5>
-                   <table class="table table-tight calibration-form">
-                     <thead>
-                       <th>Name</th>
-                     </thead>
-                     <tbody>
-                       {{ calibration_form.management_form }}
+                  <table class="table table-tight calibration-form">
+                    <thead>
+                        <th>Name</th>
+                        <th>Value</th>
+                        <th>Notes</th>
+                    </thead>
+                    <tbody>
+                        {{ calibration_form.management_form }}
+                        {{ coefficient_form.management_form }}
 
-                       {% if calibration_form.errors %}
-                       <tr>
-                         <div class="alert alert-danger">
-                         {% for dict in calibration_form.errors %}
+                        {% if calibration_form.errors %}
+                          <tr>
+                              <div class="alert alert-danger">
+                                {% for dict in calibration_form.errors %}
 
-                             {% for error in dict.values %}
-                               {{ error|escape }}
-                             {% endfor %}
+                                  {% for error in dict.values %}
+                                    {{ error|escape }}
+                                  {% endfor %}
 
-                         {% endfor %}
-                         </div>
-                       </tr>
-                      {% endif %}
+                                {% endfor %}
+                              </div>
+                          </tr>
+                        {% endif %}
 
-                       {% for cal in calibration_form %}
+                      {% for cal in calibration_form %}
+                      {% for coeff in coefficient_form %}
 
-                         <tr>
-                             <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.name }}</td>
-                         </tr>
-                       {% endfor %}
-                     </tbody>
-                   </table>
-                 </div>
+                        <tr>
+                            <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.name }}</td>
+                            <td>{{ cal.id }} {{ coeff.value }}</td>
+                            <td>{{ cal.id }} {{ coeff.notes }}</td>
+                        </tr>
+                      {% endfor %}
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
 
                 <div class="control-group">
                   <div class="controls">

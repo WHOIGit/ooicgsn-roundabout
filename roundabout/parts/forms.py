@@ -34,6 +34,7 @@ from roundabout.locations.models import Location
 from roundabout.parts.widgets import PartParentWidget, PartLocationWidget
 from roundabout.userdefinedfields.models import Field, FieldValue
 from roundabout.calibrations.models import Calibration, Coefficient
+from roundabout.inventory.models import Inventory
 
 
 class PartForm(forms.ModelForm):
@@ -62,6 +63,7 @@ RevisionFormset = inlineformset_factory(Part, Revision, fields=('revision_code',
     }, extra=1, can_delete=False)
 DocumentationFormset = inlineformset_factory(Revision, Documentation, fields=('name', 'doc_type', 'doc_link'), extra=1, can_delete=True)
 CalibrationFormset = inlineformset_factory(Part, Calibration, fields=('name',), extra=1, can_delete=True)
+CoefficientFormset = inlineformset_factory(Calibration, Coefficient, fields=('value','notes',), extra=1, can_delete=True)
 
 
 class RevisionForm(forms.ModelForm):
