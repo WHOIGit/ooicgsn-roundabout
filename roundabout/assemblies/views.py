@@ -325,6 +325,7 @@ class AssemblyRevisionDetailView(LoginRequiredMixin, DetailView):
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
 
+
 # AJAX Detail view for Assembly Revision
 class AssemblyRevisionAjaxDetailView(LoginRequiredMixin, DetailView):
     model = AssemblyRevision
