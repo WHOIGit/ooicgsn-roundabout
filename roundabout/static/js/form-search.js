@@ -1,7 +1,23 @@
-
-// PLUS SIGN ON_CLICK, show next (index'd) div block + hide that "+" button
-
-// TYPE DROPDOWN ON_SELECT, show the coresponding div block (by index + id), erase value of prev. selection if any
+/*
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+*/
 
 function str2html(html_string) {
     const template = document.createElement('template');
@@ -22,7 +38,7 @@ function create_card(card_name,type,rows_data=null){
 
     var card_header = `
   <div class="card-header form-group form-inline">
-    <input type="hidden" value="{{ type }}" name="m{{ cindex }}">
+    <!--<input type="hidden" value="{{ type }}" name="m{{ cindex }}">-->
   </div>`.replace('{{ type }}',type)
 
     if (type === 'inventory'){
@@ -54,9 +70,8 @@ function create_card(card_name,type,rows_data=null){
     }
 
     var plus_button = `<button type='button' class="btn btn-primary-sm" id="qfield_+AND_c{{ cindex }}" href="#"
-                      onclick="insert_row(target_card='{{ cindex }}');return false;" >
-                      <i class="fa fa-plus"></i> AND</button>`
-
+                      onclick="insert_row(card_idx='{{ cindex }}',type='{{ type }}');return false;" >
+                      <i class="fa fa-plus"></i> AND</button>`.replace('{{ type }}',type)
     card_body = card_body.replace('{{ card_rows }}',card_rows).replace('{{ plus_button }}',plus_button)
     card_html = card_html.replace('{{ card_header }}', card_header).replace('{{ card_body }}', card_body)
     card_html = card_html.replaceAll('{{ cindex }}',card_name)
@@ -72,9 +87,9 @@ function insert_card(type,rows_data=null){
 function replace_card(name){ // DEPRICATED
     var card_id = 'qcard_c{{ cindex }}'.replace('{{ cindex }}',name)
     var card = document.getElementById(card_id)
-    var type_selector_id = 'model-select_c{{ cindex }}'.replace('{{ cindex }}',name)
+    //var type_selector_id = 'model-select_c{{ cindex }}'.replace('{{ cindex }}',name)
     //var type_selector = document.getElementById(type_selector_id)
-    var type = $("#model-select").value
+    var type = '{{ model }}' //$("#model-select").value
     var new_card = str2html(create_card(name,type))
     card.parentNode.replaceChild(new_card, card)
 }
@@ -87,25 +102,25 @@ function replace_cards(selectObj){
 
 }
 
-function create_row(card_idx,type, row_index,row_data=null){
-    let init_field = ''
+function create_row(card_idx, type, row_index,row_data=null){
+    let init_fields = []
     let init_lookup = 'icontains'
     let init_query = ''
     if (row_data){
-        init_field =  row_data['field']
+        init_fields =  row_data['fields']
         init_lookup = row_data['lookup']
         init_query = row_data['query']
     }
     else{
-        if (type === 'inventory'){      init_field = 'serial_number'    }
-        else if (type === 'part'){      init_field = 'part_number'      }
-        else if (type === 'builds'){    init_field = 'build_number'     }
-        else if (type === 'assembly'){  init_field = 'assembly_number'  }
+        if (type === 'inventory'){      init_fields = []    }
+        else if (type === 'part'){      init_fields = []            }
+        else if (type === 'builds'){    init_fields = []     }
+        else if (type === 'assembly'){  init_fields = []  }
     }
 
     const row_id = "qfield-row_c{{ cindex }}_f{{ findex }}"
     let row = `<div id="{{ row_id }}" class="form-group form-inline">
-                 <select class="form-control col-md-4" id="field-select_c{{ cindex }}_f{{ findex }}" name="m{{ cindex }}_f{{ findex }}">{{ options }}</select>{{ lookup }}{{ query }}{{ minus_button }}</div>`
+                 <select class="selectpicker form-control col-md-4" multiple id="field-select_c{{ cindex }}_f{{ findex }}" name="m{{ cindex }}_f{{ findex }}">{{ options }}</select>{{ lookup }}{{ query }}{{ minus_button }}</div>`
     row = row.replace("{{ row_id }}",row_id)
     let options = ''
     if (type === 'inventory'){
@@ -134,7 +149,7 @@ function create_row(card_idx,type, row_index,row_data=null){
                    <option value="user_defined_fields__field_name">UDF Name</option>`
     }
 
-    else if (type === 'builds'){
+    else if (type === 'build'){
         options = `<option value="build_number">Build Number</option>
                    <option value="assembly__name">Name</option>
                    <option value="assembly__assembly_type__name">Type</option>
@@ -157,8 +172,11 @@ function create_row(card_idx,type, row_index,row_data=null){
                    <option value="assembly_type__name">Type</option>
                    <option value="description">Description</option>`
     }
-    options = options.replace('value="{{ opt }}"'.replace('{{ opt }}',init_field),
-                              'value="{{ opt }}" selected'.replace('{{ opt }}',init_field))
+
+    for (let init_field of init_fields){
+        options = options.replace('value="{{ opt }}"'.replace('{{ opt }}',init_field),
+                                  'value="{{ opt }}" selected'.replace('{{ opt }}',init_field))
+    }
 
     let lookup = `<select class="form-control col-md-3" id="qfield-lookup_c{{ cindex }}_f{{ findex }}" name="m{{ cindex }}_l{{ findex }}">
                     <option value="icontains">Contains</option>
@@ -186,13 +204,11 @@ function remove_row(row_idx) {
 }
 
 var prev_row_idx_percard = {}
-function insert_row(card_idx){
+function insert_row(card_idx,type){
     var card_id = 'qcard_c{{ cindex }}'.replace('{{ cindex }}',card_idx)
-    //var type_selector_id = 'model-select_c{{ cindex }}'.replace('{{ cindex }}',card_idx)
-    var type_selector_id = 'model-select'
-    var type_selector = document.getElementById(type_selector_id)
-    var type = type_selector.value
-
+    ////var type_selector_id = 'model-select_c{{ cindex }}'.replace('{{ cindex }}',card_idx)
+    //var type_selector_id = 'model-select'
+    //var type_selector = document.getElementById(type_selector_id)
     var rows_div_id = 'fields_c{{ cindex }}'.replace('{{ cindex }}',card_idx)
     var rows_div = document.getElementById(rows_div_id)
 

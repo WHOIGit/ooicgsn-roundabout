@@ -1,26 +1,44 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
 {% extends "base.html" %}
 {% load static i18n %}
 {% load mptt_tags %}
 {% load crispy_forms_tags %}
+{% load render_table from django_tables2 %}
 {% block title %}Adv. Search{% endblock %}
 {% block javascript %}
   <script type="text/javascript" src="/static/js/form-search.js"></script>
   <script>window.addEventListener("load", function(){
+    const model = '{{ model }}'
+
     {% if prev_cards %}
       $("#adv-search-cards").empty()
       const prev_cards = jQuery.parseJSON('{{ prev_cards|escapejs }}')
-      let model = 'inventory'
       for( let card in prev_cards ){
-          const type =  prev_cards[card]['model']
-          model = type
-          const rows_data = prev_cards[card]['queries']
-          insert_card(type,rows_data)
+          insert_card(model,prev_cards[card])
       }
-      document.getElementById('model-select').value = model
 
     {% else %}
-      insert_card('inventory')
-      //document.getElementById('model-select').value = 'inventory'
+      insert_card(model)
     {% endif %}
 
   })</script>
@@ -32,22 +50,26 @@
 
   <!-- SEARCH CONTROLS -->
   <div class="col-md-5 search-control">
-    <h2>Advanced Search</h2>
-    <form id='adv-search-form' action="{% url 'search:adv' %}" method="get" accept-charset="utf-8" class="form">
-      <div class="form-inline">
-        <label class="form-check-label pr-2" for="model-select"><h4>Search for </h4></label>
-        <select class="form-control" id="model-select" onchange="replace_cards(this)">
-          <option value="inventory" >Inventory</option>
-          <option value="part"      >Part</option>
-          <option value="builds"    >Build</option>
-          <option value="assembly"  >Assembly</option>
-        </select>
+    <h2>Search: {{ model }}</h2>
+      <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Search for... {{ model }}
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+          <a class="dropdown-item" href={% url 'search:inventory' %}>Inventory</a>
+          <a class="dropdown-item" href={% url 'search:part' %}>Part</a>
+          <a class="dropdown-item" href={% url 'search:build' %}>Build</a>
+          <a class="dropdown-item" href={% url 'search:assembly' %}>Assembly</a>
+        </div>
       </div>
-      <div id='adv-search-cards'></div>
 
-      <button class="btn btn-primary float-left m-1" type="button" onclick="insert_card(document.getElementById('model-select').value)"><i class="fa fa-plus"></i> New Card</button>
+    <form id='adv-search-form' method="get" accept-charset="utf-8" class="form">
+
+      <div id='adv-search-cards'>  </div>
+
+      <button class="btn btn-primary float-left m-1" type="button" onclick="insert_card('{{ model }}')"><i class="fa fa-plus"></i> New Card</button>
       <button class="btn btn-primary float-right m-1" type="submit"><i class="fa fa-search"></i> Submit</button>
-      <a href="{% url 'search:adv' %}"><button type='button' class="btn btn-primary float-right m-1">RESET</button></a>
+      <a href="{{ self_url }}"><button type='button' class="btn btn-primary float-right m-1">RESET</button></a>
     </form>
   </div>
 
@@ -59,68 +81,16 @@
         <h3>Search Results</h3>
       </div>
       <div class="card-body">
+
         {% if query_slug %}
-        <form action="{% url 'search:csv' 'adv' query_slug %}" method="get">
+        <form action="{% url 'search:csv' model query_slug %}" method="get">
           <button class="button float-right" type="submit">Download CSV</button>
         </form>
         {% endif %}
-        <p><b>{{ page_obj.paginator.count }}</b> items match your search! This is page <b>{{ page_obj.number }}</b> of <b>{{ page_obj.paginator.num_pages }}</b></p>
-        <ul class="list-group list-group-flush">
-          {% if search_items %}
 
-            {% for item in search_items %}
-              <li class="list-group-item">
-                <div >
-                  <a href="{{  item.href }}">
-                  {{ item.entry }}
-                  </a>
-                  <br>
-                  {{ item.subline }}
-                  <a href="{{  item.href }}"
-                    class="btn btn-primary btn-sm float-right"
-                    role="button">View</a>
-                </div>
-              </li>
-            {% endfor %}
-
-          {% endif %}
-        </ul>
-
-
-        <!-- Bootstrap Pagination -->
-        {% if is_paginated %}
-          <hr>
-          <nav aria-label="search-pagination">
-            <ul class="pagination justify-content-center pagination-sm">
-
-              {% if page_obj.has_previous %}
-                <!-- Append the searched query to the URL, so that on a search results page,
-                  the pagination don't revert to listing all the listview items. -->
-                <li class="page-item">
-                  <a class="page-link" href="{% url 'search:adv' %}?{{query_slug}}&page={{ page_obj.previous_page_number }}" tabindex="-1">Previous</a>
-                </li>
-              {% else %}
-                <li class="page-item disabled">
-                  <a class="page-link" href="#" tabindex="-1">Previous</a>
-                </li>
-              {% endif %}
-
-              {% for page_number in custom_paginator_range %}
-                <li class="page-item"><a class="page-link" href="{% url 'search:adv' %}?{{query_slug}}&page={{ page_number }}">{{ page_number }}</a></li>
-              {% endfor %}
-
-              {% if page_obj.has_next %}
-                <li class="page-item">
-                  <a class="page-link" href="{% url 'search:adv' %}?{{query_slug}}&page={{ page_obj.next_page_number }}">Next</a>
-                </li>
-              {% else %}
-                <li class="page-item disabled">
-                  <a class="page-link" href="#">Next</a>
-                </li>
-              {% endif %}
-
-            </ul>
-          </nav>
+        {% if table %}
+          <p><b>{{ table.paginator.count }}</b> items match your search!</p>
+          {% render_table table %}
         {% endif %}
 
       </div>
