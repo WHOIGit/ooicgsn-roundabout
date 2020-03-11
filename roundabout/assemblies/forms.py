@@ -18,9 +18,12 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 """
+from pprint import pprint
 
 from django import forms
 from django.forms.models import inlineformset_factory
+from django.core.exceptions import ValidationError
+
 from django_summernote.widgets import SummernoteWidget
 from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
 
@@ -89,6 +92,18 @@ class AssemblyRevisionForm(forms.ModelForm):
         else:
             self.assembly_revision_pk = None
         super(AssemblyRevisionForm, self).__init__(*args, **kwargs)
+
+    def clean_revision_code(self):
+        # Need to check if the Revision Code is already in use on this Assembly
+        revision_code = self.cleaned_data['revision_code']
+        previous_revision = AssemblyRevision.objects.get(id=self.assembly_revision_pk)
+        revisions = AssemblyRevision.objects.filter(assembly=previous_revision.assembly)
+
+        for revision in revisions:
+            if revision.revision_code == revision_code:
+                raise ValidationError('Revision Code already in use on this Assembly. Choose unique code.')
+
+        return revision_code
 
 
 AssemblyRevisionFormset = inlineformset_factory(Assembly, AssemblyRevision, form=AssemblyRevisionForm,

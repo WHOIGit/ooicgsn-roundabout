@@ -154,9 +154,9 @@
             but keep existing {{ label_builds_app_plural }} unchanged, please create a
             <span class="ajax-detail-link">
                 <a href="#"
-                data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly.id %}"
+                data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly.assembly_revisions.first.id %}"
                 data-node-id="{{ assembly.id }}"
-                data-node-type="detail"><b>NEW VERSION</b></a>
+                data-node-type="{{ assembly.get_object_type }}"><b>NEW REVISION</b></a>
             </span> of this {{ label_assemblies_app_singular }}  instead.
 
         </div>
@@ -173,7 +173,7 @@
                     <a href="{% url 'builds:builds_detail' build.id %}" data-detail-url="{% url 'builds:ajax_builds_detail' build.id %}"
                        data-node-id="{{ build.id }}"
                        data-location-id="{{ build.location.id }}"
-                       data-node-type="detail"
+                       data-node-type="{{ build.get_object_type }}"
                        class="btn btn-primary btn-sm float-right"
                        role="button">View</a>
                 </li>

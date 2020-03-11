@@ -94,15 +94,15 @@
 
     {% if assembly_revision.builds.exists %}
         <div class="alert alert-warning" role="alert">
-            <b>NOTICE:</b>  This {{ label_assemblies_app_singular }} template has existing {{ label_builds_app_plural }}.
+            <b>NOTICE:</b>  This {{ label_assemblies_app_singular }} Revision has existing {{ label_builds_app_plural }}.
             Any edits you make to this template will be reflected in those {{ label_builds_app_plural }}.
             If you want to create a new version of this {{ label_assemblies_app_singular }} ,
             but keep existing {{ label_builds_app_plural }} unchanged, please create a
             <span class="ajax-detail-link">
                 <a href="#"
-                data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly.id %}"
-                data-node-id="{{ assembly.id }}"
-                data-node-type="detail"><b>NEW VERSION</b></a>
+                data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly_revision.id %}"
+                data-node-id="{{ assembly_revision.id }}"
+                data-node-type="{{ assembly_revision.get_object_type }}"><b>NEW REVISION</b></a>
             </span> of this {{ label_assemblies_app_singular }}  instead.
 
         </div>
@@ -111,7 +111,7 @@
 
         <ul class="list-group list-group-flush">
 
-            {% for build in revision.builds.all %}
+            {% for build in assembly_revision.builds.all %}
 
                 <li class="list-group-item">
                     {{ label_builds_app_singular }}: {{ build }}<br>
@@ -119,7 +119,7 @@
                     <a href="{% url 'builds:builds_detail' build.id %}" data-detail-url="{% url 'builds:ajax_builds_detail' build.id %}"
                        data-node-id="{{ build.id }}"
                        data-location-id="{{ build.location.id }}"
-                       data-node-type="detail"
+                       data-node-type="{{ build.get_object_type }}"
                        class="btn btn-primary btn-sm float-right"
                        role="button">View</a>
                 </li>
