@@ -54,6 +54,12 @@ class BuildForm(forms.ModelForm):
     class Media:
         js = ('js/form-builds.js',)
 
+    def __init__(self, *args, **kwargs):
+        super(BuildForm, self).__init__(*args, **kwargs)
+        if self.instance.pk:
+            del self.fields['assembly']
+            del self.fields['assembly_revision']
+
 
 class BuildActionLocationChangeForm(forms.ModelForm):
 
