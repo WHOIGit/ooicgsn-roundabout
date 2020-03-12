@@ -96,12 +96,15 @@ class AssemblyRevisionForm(forms.ModelForm):
     def clean_revision_code(self):
         # Need to check if the Revision Code is already in use on this Assembly
         revision_code = self.cleaned_data['revision_code']
-        previous_revision = AssemblyRevision.objects.get(id=self.assembly_revision_pk)
-        revisions = AssemblyRevision.objects.filter(assembly=previous_revision.assembly)
+        try:
+            previous_revision = AssemblyRevision.objects.get(id=self.assembly_revision_pk)
+            revisions = AssemblyRevision.objects.filter(assembly=previous_revision.assembly)
 
-        for revision in revisions:
-            if revision.revision_code == revision_code:
-                raise ValidationError('Revision Code already in use on this Assembly. Choose unique code.')
+            for revision in revisions:
+                if revision.revision_code == revision_code:
+                    raise ValidationError('Revision Code already in use on this Assembly. Choose unique code.')
+        except:
+            pass
 
         return revision_code
 

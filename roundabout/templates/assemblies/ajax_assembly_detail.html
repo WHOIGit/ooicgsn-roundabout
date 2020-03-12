@@ -80,8 +80,9 @@
                 </a>
 
                 <div class="collapse mt-3" id="revision-{{ revision.id }}">
-                      <hr>
+
                       {% if revision.revision_note %}
+                          <hr>
                           <p>Revision Notes: {{ revision.revision_note|safe  }}</p>
                       {% endif %}
                     <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
@@ -120,20 +121,11 @@
                     <div class="ajax-detail-link">
 
                           <a href="#"
-                             data-detail-url="{% url 'parts:ajax_parts_update_revision' revision.id %}"
+                             data-detail-url="{% url 'assemblies:ajax_assemblies_update_revision' revision.id %}"
                              data-node-id="{{ revision.id }}"
                              data-node-type="edit"
                              class="btn btn-primary btn-sm float-left mr-2"
                              role="button">Edit Revision</a>
-
-                         {% if multiple_revision %}
-                             <a href="#"
-                               data-detail-url="{% url 'parts:ajax_parts_delete_revision' revision.id %}"
-                               data-node-id="{{ revision.id }}"
-                               data-node-type="edit"
-                               class="btn btn-danger btn-sm float-left"
-                               role="button">Delete Revision</a>
-                         {% endif %}
 
                     </div>
 
