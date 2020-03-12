@@ -20,6 +20,7 @@
 """
 
 from .models import Assembly, AssemblyPart, AssemblyType, AssemblyDocument, AssemblyRevision
+from roundabout.builds.models import Build
 
 # Utility functions for use with Assembly models
 # ------------------------------------------------------------------------------
@@ -48,3 +49,10 @@ def move_assemblyparts_to_revision():
             print(ap)
 
 # Step 3 - Assign all existing Builds to the new Assembly Revision
+def assign_builds_to_revision():
+    builds = Build.objects.all()
+    for build in builds:
+        revision = build.assembly.assembly_revisions.last()
+        build.assembly_revision = revision
+        build.save()
+        
