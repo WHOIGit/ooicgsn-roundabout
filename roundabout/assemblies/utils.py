@@ -27,7 +27,7 @@ from roundabout.builds.models import Build
 
 # Functions to migrate legacy Assemblies to new Assembly Revision version
 # ------------------------------------------------------------------------------
-# Create a new default "A" revision for all existing Assemblies - Step 1 in migration
+# Step 1 in migration - Create a new default "A" revision for all existing Assemblies
 def create_default_first_revision():
     assemblies_qs = Assembly.objects.all()
     for assembly in assemblies_qs:
@@ -36,7 +36,7 @@ def create_default_first_revision():
         print(message)
 
 
-# Move all existing Assembly Parts to the new Revision, remove link to parent Assembly - Step 2
+# Step 2 - Move all existing Assembly Parts to the new Revision, remove link to parent Assembly
 def move_assemblyparts_to_revision():
     assemblies_qs = Assembly.objects.all()
     for assembly in assemblies_qs:
@@ -55,4 +55,3 @@ def assign_builds_to_revision():
         revision = build.assembly.assembly_revisions.last()
         build.assembly_revision = revision
         build.save()
-        
