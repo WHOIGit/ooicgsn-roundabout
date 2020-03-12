@@ -59,7 +59,7 @@ class InventoryNavTreeMixin(LoginRequiredMixin, object):
         context = super(InventoryNavTreeMixin, self).get_context_data(**kwargs)
         context.update({
             'locations': Location.objects.exclude(root_type='Retired')
-                        .prefetch_related('builds__assembly__assembly_parts__part__part_type')
+                        .prefetch_related('builds__assembly_revision__assembly_parts__part__part_type')
                         .prefetch_related('inventory__part__part_type').prefetch_related('builds__inventory').prefetch_related('builds__deployments')
         })
         if 'current_location' in self.kwargs:
@@ -82,8 +82,8 @@ def load_inventory_navtree(request):
         return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations})
     else:
         build_pk = node_id.split('_')[1]
-        build = Build.objects.prefetch_related('assembly__assembly_parts').prefetch_related('inventory').get(id=build_pk)
-        return render(request, 'builds/build_tree_assembly.html', {'assembly_parts': build.assembly.assembly_parts,
+        build = Build.objects.prefetch_related('assembly_revision__assembly_parts').prefetch_related('inventory').get(id=build_pk)
+        return render(request, 'builds/build_tree_assembly.html', {'assembly_parts': build.assembly_revision.assembly_parts,
                                                                    'inventory_qs': build.inventory,
                                                                    'location_pk': build.location_id,
                                                                    'build_pk': build_pk, })

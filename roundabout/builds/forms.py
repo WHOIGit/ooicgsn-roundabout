@@ -44,9 +44,10 @@ class BuildForm(forms.ModelForm):
 
     class Meta:
         model = Build
-        fields = ['assembly', 'build_number', 'location', 'build_notes', ]
+        fields = ['assembly', 'assembly_revision', 'build_number', 'location', 'build_notes', ]
         labels = {
             'assembly': labels['label_assemblies_app_singular'],
+            'assembly_revision': '%s Revision' % labels['label_assemblies_app_singular'],
             'build_notes': '%s Notes' % (labels['label_builds_app_singular']),
         }
 

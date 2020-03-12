@@ -1,0 +1,78 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<div class="card-body">
+    <div class="side-p">
+        <h3>Are you sure?</h3>
+        {% if assembly_revision.builds.exists %}
+            <div class="alert alert-danger" role="alert">
+                <h5>Warning! This {{ label_assemblies_app_singular }} has existing {{ label_builds_app_plural }}!</h5>
+
+                <ul class="list-group list-group-flush">
+
+                    {% for build in assembly_revision.builds.all %}
+
+                        <li class="list-group-item">
+                            {{ label_builds_app_singular }}: {{ build }}<br>
+                            Current Location: {{ build.location }}
+                            <a href="{% url 'builds:builds_detail' build.id %}" data-detail-url="{% url 'builds:ajax_builds_detail' build.id %}"
+                               data-node-id="{{ build.id }}"
+                               data-location-id="{{ build.location.id }}"
+                               data-node-type="detail"
+                               class="btn btn-primary btn-sm float-right"
+                               role="button">View</a>
+                        </li>
+
+                    {% endfor %}
+
+                </ul>
+
+                <p class="mt-3">If you delete this {{ label_assemblies_app_singular }} Revision, the existing {{ label_inventory_app_singular }}
+                    items will be removed from {{ label_builds_app_plural }} and placed in the same current Location as the
+                    {{ label_builds_app_singular }}. All {{ label_builds_app_plural }} will be deleted.
+                    If you want the current {{ label_builds_app_plural }} to remain unchanged, please create a
+                    <span class="ajax-detail-link">
+                        <a href="#"
+                        data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly.id %}"
+                        data-node-id="{{ assembly.id }}"
+                        data-node-type="detail"><b>NEW VERSION</b></a>
+                    </span> of this {{ label_assemblies_app_singular }} instead.</p>
+
+            </div>
+
+        {% endif %}
+
+        <p>You're about to delete {{ assembly_revision }} {{ label_assemblies_app_singular }}. Please confirm.</p>
+        <form action="" method="post" class="delete-form"
+              data-url='{{ request.build_absolute_uri|safe }}'>
+            {% csrf_token %}
+            <input class="btn btn-light cancel-btn"
+                   type="button" value="Cancel"
+                   data-detail-url="{% url 'assemblies:ajax_assemblyrevision_detail' assembly_revision.id %}"
+                   data-node-id="{{ assembly_revision.id }}" />
+            <input class="btn btn-danger" type="submit" value="Confirm"/>
+        </form>
+    </div>
+</div>
+
+{% block javascript %}
+
+{% endblock javascript %}

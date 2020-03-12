@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -31,11 +31,25 @@
             <ul>
             {% for assembly in assembly_type.assemblies.all %}
 
-                <li data-jstree='{"icon":"fa fa-rocket"}' id="assemblies_{{ assembly.id }}" class="jstree-closed">
+                <li data-jstree='{"icon":"fa fa-rocket"}' id="assemblies_{{ assembly.id }}">
                         <a href="#"
                                 data-detail-url="{% url 'assemblies:ajax_assemblies_detail' assembly.id %}"
                                 data-node-id='{{ assembly.id }}'
                                 data-node-type="assemblies">{{ assembly.name }}</a>
+
+                        <ul>
+                        {% for revision in assembly.assembly_revisions.all %}
+
+                            <li data-jstree='{"icon":"fa fa-plus-square-o"}' id="assemblyrevisions_{{ revision.id }}" class="jstree-closed">
+                                    <a href="#"
+                                            data-detail-url="{% url 'assemblies:ajax_assemblyrevision_detail' revision.id %}"
+                                            data-node-id='{{ revision.id }}'
+                                            data-node-type="assemblyrevisions">Revision {{ revision.revision_code }}</a>
+                             </li>
+
+                        {% endfor %}
+                        </ul>
+
                  </li>
 
             {% endfor %}
