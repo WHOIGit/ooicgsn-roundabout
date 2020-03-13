@@ -253,7 +253,7 @@ class Inventory(MPTTModel):
 
     # get the time at sea for the current deployment only (if item is at sea)
     def current_deployment_time_at_sea(self):
-        if self.build and self.build.current_deployment_status() == 'deploy':
+        if self.build and self.build.current_deployment().current_deployment_status() == 'deploy':
             try:
                 action_deploy_to_sea = Action.objects.filter(inventory=self).filter(action_type='deploymenttosea').latest('created_at')
             except Action.DoesNotExist:
