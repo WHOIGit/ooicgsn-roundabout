@@ -2,14 +2,14 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import CreateView
-from .models import Calibration
+from .models import CoefficientName
 from .forms import CalibrationAddForm
 from common.util.mixins import AjaxFormMixin
 from django.urls import reverse, reverse_lazy
 
 # Calibraitons landing page
 class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
-    model = Calibration
+    model = CoefficientName
     form_class = CalibrationAddForm
     context_object_name = 'calibration_item'
     template_name ='calibrations/calibrations_form.html'

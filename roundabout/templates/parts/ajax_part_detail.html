@@ -215,20 +215,12 @@
                     <table class="table table-striped action-table">
                         <thead>
                             <th>Name</th>
-                            <th>Value</th>
-                            <th>Notes</th>
-                            <th>Created</th>
                         </thead>
                         <tbody>
-                            {% for cal in part_template.calibration.all %}
-                                {% for coeff in cal.coefficient.all %}
-                                    <tr>
-                                        <td>{{ cal.name }}</td>
-                                        <td>{{ coeff.value }}</td>
-                                        <td>{{ coeff.notes }}</td>
-                                        <td>{{ coeff.created_at }}</td>
-                                    </tr>
-                                {% endfor %}  
+                            {% for cal in part_template.coefficient_names.all %}
+                                <tr>
+                                    <td>{{ cal.calibration_name }}</td>
+                                </tr>
                             {% endfor %}
                         </tbody>
                     </table> 

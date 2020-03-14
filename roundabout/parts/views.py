@@ -31,7 +31,7 @@ from django.core.exceptions import ValidationError
 from django.template.defaultfilters import slugify
 
 from .models import Part, PartType, Revision, Documentation
-from .forms import PartForm, PartTypeForm, RevisionForm, DocumentationFormset, RevisionFormset, PartUdfAddFieldForm, PartUdfFieldSetValueForm, CalibrationFormset, CoefficientFormset
+from .forms import PartForm, PartTypeForm, RevisionForm, DocumentationFormset, RevisionFormset, PartUdfAddFieldForm, PartUdfFieldSetValueForm, CalibrationFormset
 
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory
@@ -142,8 +142,7 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         revision_form = RevisionFormset(instance=self.object)
         documentation_form = DocumentationFormset(instance=self.object)
         calibration_form = CalibrationFormset(instance=self.object)
-        coefficient_form = CoefficientFormset(instance=self.object)
-        return self.render_to_response(self.get_context_data(form=form, revision_form=revision_form, documentation_form=documentation_form, calibration_form=calibration_form, coefficient_form=coefficient_form))
+        return self.render_to_response(self.get_context_data(form=form, revision_form=revision_form, documentation_form=documentation_form, calibration_form=calibration_form))
 
     def post(self, request, *args, **kwargs):
         self.object = None
@@ -155,14 +154,12 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
             self.request.POST, instance=self.object)
         calibration_form = CalibrationFormset(
             self.request.POST, instance=self.object)
-        coefficient_form = CoefficientFormset(
-            self.request.POST, instance=self.object)
 
-        if (form.is_valid() and revision_form.is_valid() and documentation_form.is_valid() and calibration_form.is_valid() and coefficient_form.is_valid()):
-            return self.form_valid(form, revision_form, documentation_form, calibration_form, coefficient_form)
-        return self.form_invalid(form, revision_form, documentation_form, calibration_form, coefficient_form)
+        if (form.is_valid() and revision_form.is_valid() and documentation_form.is_valid() and calibration_form.is_valid()):
+            return self.form_valid(form, revision_form, documentation_form, calibration_form)
+        return self.form_invalid(form, revision_form, documentation_form, calibration_form)
 
-    def form_valid(self, form, revision_form, documentation_form, calibration_form, coefficient_form):
+    def form_valid(self, form, revision_form, documentation_form, calibration_form):
         self.object = form.save()
         # Save the Revision inline model form
         revision_form.instance = self.object
@@ -182,13 +179,6 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         # Save Calibration form
         calibration_form.instance = self.object
         saved_cals = calibration_form.save()
-
-        # Save Coefficient form
-        for cal in saved_cals:
-            coefficient_form.instance = cal
-            coefficient_form.save()
-
-        
 
         # Check for any global Part Type custom fields for this Part
         custom_fields = self.object.part_type.custom_fields.all()
@@ -211,14 +201,14 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         else:
             return response
 
-    def form_invalid(self, form, documentation_form, calibration_form, coefficient_form):
+    def form_invalid(self, form, documentation_form, calibration_form):
         form_errors = documentation_form.errors
 
         if self.request.is_ajax():
             data = form.errors
             return JsonResponse(data, status=400)
         else:
-            return self.render_to_response(self.get_context_data(form=form, revision_form=revision_form, documentation_form=documentation_form, calibration_form=calibration_form, coefficient_form=coefficient_form, form_errors=form_errors))
+            return self.render_to_response(self.get_context_data(form=form, revision_form=revision_form, documentation_form=documentation_form, calibration_form=calibration_form, form_errors=form_errors))
 
     def get_success_url(self):
         return reverse('parts:ajax_parts_detail', args=(self.object.id, ))

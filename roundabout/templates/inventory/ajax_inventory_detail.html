@@ -492,22 +492,14 @@
 
                 <thead>
                   <th>Name</th>
-                  <th>Value</th>
-                  <th>Notes</th>
-                  <th>Created</th>
                 </thead>
 
                 <tbody>
-                    {% for cal in inventory_item.part.calibration.all %}
-                    {% for coeff in cal.coefficient.all %}
+                    {% for cal in inventory_item.part.coefficient_names.all %}
                     <tr>
-                        <td>{{ cal.name }}</td>
-                        <td>{{ coeff.value }}</td>
-                        <td>{{ coeff.notes }}</td>
-                        <td>{{ coeff.created_at }}</td>
+                        <td>{{ cal.calibration_name }}</td>
                     </tr>
                     {% endfor %}  
-                    {% endfor %}
                 </tbody>
           </table> 
         </div>

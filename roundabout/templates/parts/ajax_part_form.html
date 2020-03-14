@@ -147,12 +147,9 @@
                   <table class="table table-tight calibration-form">
                     <thead>
                         <th>Name</th>
-                        <th>Value</th>
-                        <th>Notes</th>
                     </thead>
                     <tbody>
                         {{ calibration_form.management_form }}
-                        {{ coefficient_form.management_form }}
 
                         {% if calibration_form.errors %}
                           <tr>
@@ -169,14 +166,10 @@
                         {% endif %}
 
                       {% for cal in calibration_form %}
-                      {% for coeff in coefficient_form %}
 
                         <tr>
-                            <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.name }}</td>
-                            <td>{{ cal.id }} {{ coeff.value }}</td>
-                            <td>{{ cal.id }} {{ coeff.notes }}</td>
+                            <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.calibration_name }}</td>
                         </tr>
-                      {% endfor %}
                       {% endfor %}
                     </tbody>
                   </table>
@@ -221,7 +214,7 @@ $(document).ready(function() {
         deleteText: 'remove',
     });
     $('.calibration-form tbody tr').formset({
-        prefix: 'calibration',
+        prefix: 'coefficient_names',
         addText: 'add calibration',
         deleteText: 'remove',
     });

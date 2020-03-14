@@ -1,11 +1,11 @@
 from django import forms
-from .models import Calibration
+from .models import CoefficientName
 
 class CalibrationAddForm(forms.ModelForm):
 
     class Meta:
-        model = Calibration
-        fields = ['name']
+        model = CoefficientName
+        fields = ['calibration_name']
         labels = {
-            'name': 'Name'
+            'calibration_name': 'Name'
         }
