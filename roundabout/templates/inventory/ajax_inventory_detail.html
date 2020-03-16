@@ -491,13 +491,21 @@
             <table class="table table-striped action-table">
 
                 <thead>
+                  <th>Date</th>
                   <th>Name</th>
+                  <th>Value</th>
+                  <th>Notes</th>
+                  <th>User</th>
                 </thead>
 
                 <tbody>
-                    {% for cal in inventory_item.part.coefficient_names.all %}
+                    {% for caL_event in inventory_item.calibration_events.all %}
                     <tr>
-                        <td>{{ cal.calibration_name }}</td>
+                        <td>{{ caL_event.calibration_date }}</td>
+                        <td>{{ caL_event.coefficient_values.all }}</td>
+                        <td>{{ caL_event.coefficient_values.value }}</td>
+                        <td>{{ caL_event.coefficient_values.notes }}</td>
+                        <td>{{ caL_event.user_draft.username }}</td> 
                     </tr>
                     {% endfor %}  
                 </tbody>

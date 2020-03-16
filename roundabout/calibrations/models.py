@@ -12,7 +12,7 @@ class CoefficientName(models.Model):
     part = models.ForeignKey(Part, related_name='coefficient_names', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
-        return self.name
+        return self.calibration_name
 
     def get_object_type(self):
         return 'coefficient_name'
@@ -20,36 +20,38 @@ class CoefficientName(models.Model):
 
 class CalibrationEvent(models.Model):
     APPROVAL_STATUS = (
-            (True, "Approved"),
-            (False, "Draft"),
+        (True, "Approved"),
+        (False, "Draft"),
     )
     created_at = models.DateTimeField(default=timezone.now)
     calibration_date = models.DateTimeField(default=timezone.now)
     user_draft = models.ForeignKey(User, related_name='calibration_events_drafter',
-                             on_delete=models.SET_NULL, null=True, blank=False)
+                                   on_delete=models.SET_NULL, null=True, blank=False)
     user_approver = models.ForeignKey(User, related_name='calibration_events_approver',
-                             on_delete=models.SET_NULL, null=True, blank=False)
+                                      on_delete=models.SET_NULL, null=True, blank=False)
     inventory = models.ForeignKey(Inventory, related_name='calibration_events', on_delete=models.CASCADE, null=False)
     deployment = models.ForeignKey(Deployment, related_name='calibration_events', on_delete=models.CASCADE, null=True)
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
 
     def __str__(self):
-        return self.name
+        return self.calibration_date
 
     def get_object_type(self):
         return 'calibration_event'
 
 
-
 class CoefficientValue(models.Model):
-    value = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], null=False, blank=True, default='0.00')
+    value = models.DecimalField(max_digits=9, decimal_places=2, validators=[
+                                MinValueValidator(Decimal('0.00'))], null=False, blank=True, default='0.00')
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(default=timezone.now)
-    coefficient_name = models.ForeignKey(CoefficientName, related_name='coefficient_values', on_delete=models.CASCADE, null=True)
-    calibration_event = models.ForeignKey(CalibrationEvent, related_name='coefficient_values', on_delete=models.CASCADE, null=True)
+    coefficient_name = models.ForeignKey(
+        CoefficientName, related_name='coefficient_values', on_delete=models.CASCADE, null=True)
+    calibration_event = models.ForeignKey(
+        CalibrationEvent, related_name='coefficient_values', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
-        return self.value
+        return self.notes
 
     def get_object_type(self):
         return 'coefficient_value'
