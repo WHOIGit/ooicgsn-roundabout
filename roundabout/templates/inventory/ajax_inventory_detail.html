@@ -487,31 +487,33 @@
         </div>
 
         <div class="tab-pane fade" id="calibration-template" role="tabpanel" aria-labelledby="calibration-template-tab">
-
-            <table class="table table-striped action-table">
-
-                <thead>
-                  <th>Date</th>
-                  <th>Name</th>
-                  <th>Value</th>
-                  <th>Notes</th>
-                  <th>User</th>
-                </thead>
-
-                <tbody>
-                    {% for caL_event in inventory_item.calibration_events.all %}
-                    <tr>
-                        <td>{{ caL_event.calibration_date }}</td>
-                        <td>{{ caL_event.coefficient_values.all }}</td>
-                        <td>{{ caL_event.coefficient_values.value }}</td>
-                        <td>{{ caL_event.coefficient_values.notes }}</td>
-                        <td>{{ caL_event.user_draft.username }}</td> 
-                    </tr>
-                    {% endfor %}  
-                </tbody>
-          </table> 
+            {% for cal_event in inventory_item.calibration_events.all %}
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Calibration Date: {{ cal_event.calibration_date }}</li>
+                    <li class="list-group-item">User (Draft): {{ cal_event.user_draft.username }}</li>
+                    <li class="list-group-item">User (Approved): {{ cal_event.user_approver.username }}</li>
+                    <li class="list-group-item">Approved: {{ cal_event.approved }}</li>
+                    <li class="list-group-item">
+                        <table class="table table-striped action-table">
+                            <thead>
+                                <th>Name</th>
+                                <th>Value</th>
+                                <th>Notes</th>
+                            </thead>
+                            <tbody>
+                                {% for coeff_val in cal_event.coefficient_values.all %}
+                                    <tr>
+                                        <td>{{ coeff_val.coefficient_name }}</td>
+                                        <td>{{ coeff_val.value }}</td>
+                                        <td>{{ coeff_val.notes }}</td>
+                                    </tr>
+                                {% endfor %}  
+                            </tbody>
+                        </table> 
+                    </li>
+                </ul>
+            {% endfor %}
         </div>
-
     </div>
 
 

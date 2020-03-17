@@ -46,9 +46,11 @@ class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         coefficient_form.instance = coeffname_inst
         coefficient_form.save()
 
-        inv_inst = coeffname_inst.part.inventory.all()
-        inv_id = inv_inst[0]
-        event_record = CalibrationEvent.objects.create(inventory=inv_id, user_draft=self.request.user)
+        inventory = coeffname_inst.part.inventory.all()
+        inv_inst = inventory[0]
+        event_record = CalibrationEvent.objects.create(inventory=inv_inst, user_draft=self.request.user)
+
+        self.inv_inst_id = inv_inst.id
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -74,4 +76,4 @@ class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
             return self.render_to_response(self.get_context_data(form=form, coefficient_form=coefficient_form, form_errors=form_errors))
 
     def get_success_url(self):
-        return reverse('inventory:ajax_inventory_detail', args=(self.object.id, ))
+        return reverse('inventory:ajax_inventory_detail', args=(self.inv_inst_id, ))

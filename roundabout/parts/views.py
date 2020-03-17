@@ -178,8 +178,8 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
 
         # Save Calibration form
         calibration_form.instance = self.object
-        saved_cals = calibration_form.save()
-
+        calibration_form.save()
+        
         # Check for any global Part Type custom fields for this Part
         custom_fields = self.object.part_type.custom_fields.all()
 
@@ -201,7 +201,7 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         else:
             return response
 
-    def form_invalid(self, form, documentation_form, calibration_form):
+    def form_invalid(self, form, revision_form, documentation_form, calibration_form):
         form_errors = documentation_form.errors
 
         if self.request.is_ajax():

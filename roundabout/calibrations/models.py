@@ -17,6 +17,11 @@ class CoefficientName(models.Model):
     def get_object_type(self):
         return 'coefficient_name'
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['calibration_name'], name='unique_name'),
+        ]
+
 
 class CalibrationEvent(models.Model):
     APPROVAL_STATUS = (
