@@ -2,7 +2,7 @@
 
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -28,25 +28,4 @@ then
     docker-compose -f production.yml up -d --no-deps --build django
     docker-compose -f production.yml run --rm django python manage.py migrate
     docker-compose -f production.yml run --rm django python manage.py collectstatic --noinput
-fi
-
-if [ -e production-demo-site.yml ]
-then
-    docker-compose -f production-demo-site.yml up -d --no-deps --build django_demo
-    docker-compose -f production-demo-site.yml run --rm django_demo python manage.py migrate
-    docker-compose -f production-demo-site.yml run --rm django_demo python manage.py collectstatic --noinput
-fi
-
-if [ -e production-generic-site.yml ]
-then
-    docker-compose -f production-generic-site.yml up -d --no-deps --build django_generic
-    docker-compose -f production-generic-site.yml run --rm django_generic python manage.py migrate
-    docker-compose -f production-generic-site.yml run --rm django_generic python manage.py collectstatic --noinput
-fi
-
-if [ -e production-rov-site.yml ]
-then
-    docker-compose -f production-rov-site.yml up -d --no-deps --build django_rov
-    docker-compose -f production-rov-site.yml run --rm django_rov python manage.py migrate
-    docker-compose -f production-rov-site.yml run --rm django_rov python manage.py collectstatic --noinput
 fi
