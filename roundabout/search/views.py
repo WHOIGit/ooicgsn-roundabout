@@ -105,9 +105,10 @@ def parse_adv_slug(model, query_slug):
 
 
 def adv_query(model, query_slug):
-    if not query_slug: return []
+    if '&' not in query_slug: return model.objects.all()
 
     cards = parse_adv_slug(model, query_slug)
+    if not cards: return model.objects.all()
 
     for card in cards.values():
         print('NEW CARD:',card)
@@ -145,7 +146,8 @@ def adv_query(model, query_slug):
                 if str(e).startswith('unsupported operand type(s) for +'):
                     results = list(results)+list(card['qs'])
                 else: print(type(e), e)
-    return results if results else []
+
+    return results if results else model.objects.none()
 
 def search_context(context, raw_slug):
     context['query_slug'] = raw_slug

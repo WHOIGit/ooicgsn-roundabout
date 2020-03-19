@@ -19,7 +19,10 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
+from django.utils.html import format_html
+from django.urls import reverse
 import django_tables2 as tables
+from django.db.models import Count
 from roundabout.inventory.models import Inventory
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, PartType, Revision
@@ -28,27 +31,70 @@ from roundabout.admintools.models import Printer
 from roundabout.assemblies.models import AssemblyPart,Assembly
 from roundabout.builds.models import Build, BuildAction
 
-
-class InventoryTable(tables.Table):
+class SearchTable(tables.Table):
     class Meta:
+        template_name = "django_tables2/bootstrap4.html"
+
+class InventoryTable(SearchTable):
+    class Meta(SearchTable.Meta):
         model = Inventory
-        template_name = "django_tables2/bootstrap4.html"
-        fields = ("serial_number", 'part__name', 'location__name','location__location_type', "created_at","updated_at")
+        fields = ("serial_number", 'part', 'location', "created_at","updated_at")
 
-class PartTable(tables.Table):
-    class Meta:
+    def render_serial_number(self, value, record):
+        item_url = reverse("inventory:inventory_detail", args=[record.pk])
+        html_string = '<a href={}>{}</a>'.format(item_url, value)
+        return format_html(html_string)
+
+    def render_part(self,record):
+        item_url = reverse("parts:parts_detail", args=[record.part.pk])
+        name = record.part.friendly_name_display()
+        html_string = '{} <a href={}>➤</a>'.format(name, item_url)
+        return format_html(html_string)
+
+class PartTable(SearchTable):
+    class Meta(SearchTable.Meta):
         model = Part
-        template_name = "django_tables2/bootstrap4.html"
-        fields = ("part_number", 'friendly_name', 'part_type__name',"created_at","updated_at")
+        fields = ("part_number", 'name', 'part_type__name','inventory_count')
 
-class BuildTable(tables.Table):
-    class Meta:
+    part_type__name = tables.Column(verbose_name='Type')
+    inventory_count = tables.Column(empty_values=())
+
+    def render_part_number(self, value, record):
+        item_url = reverse("parts:parts_detail", args=[record.pk])
+        html_string = '<a href={}>{}</a>'.format(item_url, value)
+        return format_html(html_string)
+
+    def render_name(self,record):
+        return record.friendly_name_display()
+
+    def render_inventory_count(self,record):
+        return record.get_part_inventory_count()
+    def order_inventory_count(self, queryset, is_ascending):
+        queryset = queryset.annotate(count=Count('inventory'))\
+                           .order_by(("" if is_ascending else "-")+'count')
+        return queryset, True
+
+
+class BuildTable(SearchTable):
+    class Meta(SearchTable.Meta):
         model = Build
-        template_name = "django_tables2/bootstrap4.html"
-        fields = ("build_number", 'assembly__name','location__name', "created_at","updated_at",'time_at_sea')
+        fields = ('build','name','build_number','location',"created_at","updated_at",'is_deployed','time_at_sea')
 
-class AssemblyTable(tables.Table):
-    class Meta:
+    build=tables.Column(empty_values=(),attrs={"th": {"style": "white-space:nowrap;"}})
+
+    def render_build(self, record):
+        item_url = reverse("builds:builds_detail", args=[record.pk])
+        html_string = '<a href={}>{}-{}</a>'.format(item_url, record.assembly.assembly_number, record.build_number.replace('Build ',''))
+        return format_html(html_string)
+
+
+class AssemblyTable(SearchTable):
+    class Meta(SearchTable.Meta):
         model = Assembly
-        template_name = "django_tables2/bootstrap4.html"
-        fields = ("assembly_number", 'name', "created_at","updated_at")
+        fields = ("assembly_number", 'name', 'assembly_type')
+
+    def render_assembly_number(self, value, record):
+        item_url = reverse("assemblies:assembly_detail", args=[record.pk])
+        html_string = '<a href={}>{}</a>'.format(item_url, value)
+        return format_html(html_string)
+
