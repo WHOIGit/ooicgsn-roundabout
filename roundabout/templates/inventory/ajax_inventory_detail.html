@@ -144,10 +144,10 @@
 
 
             <a class="dropdown-item" href="#"
-                data-detail-url="{% url 'calibrations:calibrations_form' %}"
+                data-detail-url="{% url 'calibrations:calibrations_form' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Add {{inventory_item.part.part_type}} calibration</a>
+                data-node-type="detail">Add Calibration Coefficients</a>
 
 
       </div>
@@ -487,32 +487,51 @@
         </div>
 
         <div class="tab-pane fade" id="calibration-template" role="tabpanel" aria-labelledby="calibration-template-tab">
-            {% for cal_event in inventory_item.calibration_events.all %}
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item">Calibration Date: {{ cal_event.calibration_date }}</li>
-                    <li class="list-group-item">User (Draft): {{ cal_event.user_draft.username }}</li>
-                    <li class="list-group-item">User (Approved): {{ cal_event.user_approver.username }}</li>
-                    <li class="list-group-item">Approved: {{ cal_event.approved }}</li>
+            <ul class="list-group">
+                {% for event in inventory_item.calibration_events.all %}
                     <li class="list-group-item">
-                        <table class="table table-striped action-table">
-                            <thead>
-                                <th>Name</th>
-                                <th>Value</th>
-                                <th>Notes</th>
-                            </thead>
-                            <tbody>
-                                {% for coeff_val in cal_event.coefficient_values.all %}
-                                    <tr>
-                                        <td>{{ coeff_val.coefficient_name }}</td>
-                                        <td>{{ coeff_val.value }}</td>
-                                        <td>{{ coeff_val.notes }}</td>
-                                    </tr>
-                                {% endfor %}  
-                            </tbody>
-                        </table> 
+                        <a class="collapsed" data-toggle="collapse" href="#event-{{ event.id }}" aria-expanded="false" aria-controls="event-{{ event.id }}">
+                            {{ event.calibration_date }}
+                        </a>
+                        <a data-toggle="collapse" class="collapsed text-right" href="#event-{{ event.id }}" aria-controls="event-{{ event.id }}" aria-expanded="false" role="button">
+                            <i class="fa" aria-hidden="true"></i>
+                            <span class="sr-only">Expand/Collapse Calibration {{ event.calibration_date }}</span>
+                        </a>
+                        <div class="collapse mt-3" id="event-{{ event.id }}">
+                            <hr>
+                            <p>Approved: {{ event.approved }}</p>
+                            <p>Approved by: {{ event.user_approver.username }}</p>
+                            <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+                                <li class="nav-item">
+                                <a class="nav-link active" id="documentation-tab" data-toggle="tab" href="#coefficients" role="tab" aria-controls="coefficients" aria-selected="false">Coefficients</a>
+                                </li>
+                            </ul>
+                            <div class="tab-content" id="inventory-tabs">
+                                {% if event.coefficient_values.all %}
+                                    <div class="tab-pane fade show active" id="coefficients" role="tabpanel" aria-labelledby="coefficients-tab">
+                                        <table class="table table-tight">
+                                            <thead>
+                                                <th>Name</th>
+                                                <th>Value</th>
+                                                <th>Notes</th>
+                                            </thead>
+                                            <tbody>
+                                                {% for val in event.coefficient_values.all %}
+                                                    <tr>
+                                                        <td>{{ val.coefficient_name }}</td>
+                                                        <td>{{ val.value }}</td>
+                                                        <td>{{ val.notes }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
                     </li>
-                </ul>
-            {% endfor %}
+                {% endfor %}
+            </ul>
         </div>
     </div>
 

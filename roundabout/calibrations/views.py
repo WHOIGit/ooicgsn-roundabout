@@ -12,7 +12,7 @@ from roundabout.inventory.models import Inventory
 
 # Calibraitons landing page
 class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
-    model = CoefficientName
+    model = CalibrationEvent
     form_class = CalibrationAddForm
     context_object_name = 'part_template'
     template_name='calibrations/calibrations_form.html'
@@ -40,17 +40,16 @@ class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
     def form_valid(self, form, coefficient_form):
         self.object = form.save()
 
-        # Save CoefficientValue form using CoefficientName instance
+        # # Save CoefficientValue form using CoefficientName instance
         calibration_name = form.cleaned_data['coefficient_name']
         coeffname_inst = CoefficientName.objects.get(calibration_name=calibration_name)
-        coefficient_form.instance = coeffname_inst
-        coefficient_form.save()
+        coefficient_form.coefficient_name = coeffname_inst
 
         inventory = coeffname_inst.part.inventory.all()
         inv_inst = inventory[0]
         event_record = CalibrationEvent.objects.create(inventory=inv_inst, user_draft=self.request.user)
-
-        self.inv_inst_id = inv_inst.id
+        coefficient_form.instance = event_record
+        coefficient_form.save()
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -76,4 +75,4 @@ class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
             return self.render_to_response(self.get_context_data(form=form, coefficient_form=coefficient_form, form_errors=form_errors))
 
     def get_success_url(self):
-        return reverse('inventory:ajax_inventory_detail', args=(self.inv_inst_id, ))
+        return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ))

@@ -1,5 +1,5 @@
 from django import forms
-from .models import CoefficientName, CoefficientValue
+from .models import CoefficientName, CoefficientValue, CalibrationEvent
 from django.forms.models import inlineformset_factory
 
 class CalibrationAddForm(forms.ModelForm):
@@ -13,4 +13,4 @@ class CalibrationAddForm(forms.ModelForm):
             'notes': 'Notes'
         }
 
-CoefficientFormset = inlineformset_factory(CoefficientName, CoefficientValue, fields=('value','notes',), extra=1, can_delete=True)
+CoefficientFormset = inlineformset_factory(CalibrationEvent, CoefficientValue, fields=('value','notes',), extra=1, can_delete=True)
