@@ -148,7 +148,7 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                         error_msg = "No matching Custom Field. Check if Field exists."
 
                     if custom_field:
-                        if value:
+                        if value and not value.isspace():
                             if custom_field.field_type == 'IntegerField':
                                 try:
                                     value = int(value.strip())
