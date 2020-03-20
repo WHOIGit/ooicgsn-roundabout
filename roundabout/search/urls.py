@@ -29,7 +29,6 @@ urlpatterns = [
     path('part',view=views.PartTableView.as_view(),name='part'),
     path('build', view=views.BuildTableView.as_view(), name='build'),
     path('assembly', view=views.AssemblyTableView.as_view(), name='assembly'),
-    path('csv/<str:model>/<str:qslug>',view=views.CsvDownloadSearch.as_view(), name='csv'),
     path('searchbar', view=views.searchbar_redirect, name='searchbar')
 
 ]

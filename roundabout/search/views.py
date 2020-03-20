@@ -106,7 +106,7 @@ def parse_adv_slug(model, query_slug):
 
 def adv_query(model, query_slug):
     if '&' not in query_slug: return model.objects.all()
-
+    query_slug = query_slug.replace('&_export=csv','')
     cards = parse_adv_slug(model, query_slug)
     if not cards: return model.objects.all()
 
@@ -164,8 +164,9 @@ def search_context(context, raw_slug):
 import django_tables2 as tables
 from django_tables2 import SingleTableView
 from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable
+from django_tables2.export.views import ExportMixin
 
-class InventoryTableView(LoginRequiredMixin,SingleTableView):
+class InventoryTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
     model = Inventory
     table_class = InventoryTable
     context_object_name = 'search_items_qs'
@@ -181,7 +182,7 @@ class InventoryTableView(LoginRequiredMixin,SingleTableView):
         context['self_url'] = self.request.META['PATH_INFO']
         return search_context(context, self.request.META['QUERY_STRING'])
 
-class PartTableView(LoginRequiredMixin,SingleTableView):
+class PartTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
     model = Part
     table_class = PartTable
     context_object_name = 'search_items_qs'
@@ -197,7 +198,7 @@ class PartTableView(LoginRequiredMixin,SingleTableView):
         context['self_url'] = self.request.META['PATH_INFO']
         return search_context(context, self.request.META['QUERY_STRING'])
 
-class BuildTableView(LoginRequiredMixin,SingleTableView):
+class BuildTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
     model = Build
     table_class = BuildTable
     context_object_name = 'search_items_qs'
@@ -213,7 +214,7 @@ class BuildTableView(LoginRequiredMixin,SingleTableView):
         context['self_url'] = self.request.META['PATH_INFO']
         return search_context(context, self.request.META['QUERY_STRING'])
 
-class AssemblyTableView(LoginRequiredMixin,SingleTableView):
+class AssemblyTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
     model = Assembly
     table_class = AssemblyTable
     context_object_name = 'search_items_qs'
@@ -229,35 +230,3 @@ class AssemblyTableView(LoginRequiredMixin,SingleTableView):
         context['self_url'] = self.request.META['PATH_INFO']
         return search_context(context, self.request.META['QUERY_STRING'])
 
-import csv
-class CsvDownloadSearch(LoginRequiredMixin, View):
-    def get(self,request,model,qslug):
-
-        if model == 'inventory':  model=Inventory
-        elif model == 'part':     model=Part
-        elif model == 'build':    model=Build
-        elif model == 'assembly': model=Assembly
-        else: return
-
-        results = adv_query(model,qslug)
-        response = HttpResponse(content_type='text/csv')
-        filename = "search.csv"
-        response['Content-Disposition'] = 'attachment; filename='+filename
-
-        header = ['Type','SN','Name','Location','Subtype']
-        rows=[]
-        for item in results:
-            if isinstance(item,Inventory):
-                rows.append(['Inventory',item.serial_number,item.part.name,item.location,''])
-            elif isinstance(item,Part):
-                rows.append(['Part',item.part_number,item.name,'',item.part_type])
-            elif isinstance(item,Build):
-                rows.append(['Build',item.build_number,item.name,item.location,''])
-            elif isinstance(item,Assembly):
-                rows.append(['Assembly',item.assembly_number,item.name,'',item.assembly_type])
-
-        writer = csv.writer(response)
-        writer.writerow(header)
-        writer.writerows(rows)
-
-        return response

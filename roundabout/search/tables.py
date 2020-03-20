@@ -44,12 +44,17 @@ class InventoryTable(SearchTable):
         item_url = reverse("inventory:inventory_detail", args=[record.pk])
         html_string = '<a href={}>{}</a>'.format(item_url, value)
         return format_html(html_string)
+    def value_serial_number(self,record):
+        return record.serial_number
 
     def render_part(self,record):
         item_url = reverse("parts:parts_detail", args=[record.part.pk])
         name = record.part.friendly_name_display()
         html_string = '{} <a href={}>➤</a>'.format(name, item_url)
         return format_html(html_string)
+    def value_part(self,record):
+        return record.part.name
+
 
 class PartTable(SearchTable):
     class Meta(SearchTable.Meta):

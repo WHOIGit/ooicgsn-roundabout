@@ -24,6 +24,8 @@
 {% load mptt_tags %}
 {% load crispy_forms_tags %}
 {% load render_table from django_tables2 %}
+{% load export_url from django_tables2 %}
+{% load querystring from django_tables2 %}
 {% block title %}Adv. Search{% endblock %}
 {% block javascript %}
   <script type="text/javascript" src="/static/js/form-search.js"></script>
@@ -85,11 +87,7 @@
       </div>
       <div class="card-body">
 
-        {% if query_slug %}
-        <form action="{% url 'search:csv' model query_slug %}" method="get">
-          <button class="button float-right" type="submit">Download CSV</button>
-        </form>
-        {% endif %}
+          <a role="button" class="btn btn-secondary btn-sm float-right" href="{% querystring '_export'='csv' %}">Download CSV</a>
 
         {% if table %}
           <p><b>{{ table.paginator.count }}</b> items match your search!</p>
