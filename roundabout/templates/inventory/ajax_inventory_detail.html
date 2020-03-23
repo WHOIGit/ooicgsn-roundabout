@@ -491,7 +491,7 @@
                 {% for event in inventory_item.calibration_events.all %}
                     <li class="list-group-item">
                         <a class="collapsed" data-toggle="collapse" href="#event-{{ event.id }}" aria-expanded="false" aria-controls="event-{{ event.id }}">
-                            {{ event.calibration_date }}
+                            {{ event.calibration_date|date:"n/j/y" }}
                         </a>
                         <a data-toggle="collapse" class="collapsed text-right" href="#event-{{ event.id }}" aria-controls="event-{{ event.id }}" aria-expanded="false" role="button">
                             <i class="fa" aria-hidden="true"></i>
@@ -501,6 +501,7 @@
                             <hr>
                             <p>Approved: {{ event.approved }}</p>
                             <p>Approved by: {{ event.user_approver.username }}</p>
+                            <p>Drafted by: {{ event.user_draft.username }}</p>
                             <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
                                 <li class="nav-item">
                                 <a class="nav-link active" id="documentation-tab" data-toggle="tab" href="#coefficients" role="tab" aria-controls="coefficients" aria-selected="false">Coefficients</a>

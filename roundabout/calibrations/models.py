@@ -19,7 +19,7 @@ class CoefficientName(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['calibration_name'], name='unique_name'),
+            models.UniqueConstraint(fields=['part','calibration_name'], name='unique_names_per_part'),
         ]
 
 
@@ -46,8 +46,8 @@ class CalibrationEvent(models.Model):
 
 
 class CoefficientValue(models.Model):
-    value = models.DecimalField(max_digits=9, decimal_places=2, validators=[
-                                MinValueValidator(Decimal('0.00'))], null=False, blank=True, default='0.00')
+    # 
+    value = models.CharField(max_length=20, unique=False, db_index=False)
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     coefficient_name = models.ForeignKey(

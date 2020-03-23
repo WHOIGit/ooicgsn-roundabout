@@ -41,6 +41,39 @@
         {{ coefficient_form.management_form }}
         {{ form|crispy }}
 
+        <div class="col-md-12">
+            <h5>Calibrations</h5>
+            <table class="table table-tight calibration-form">
+              <thead>
+                  <th>Name</th>
+              </thead>
+              <tbody>
+
+                  {% if coefficient_form.errors %}
+                    <tr>
+                        <div class="alert alert-danger">
+                          {% for dict in coefficient_form.errors %}
+
+                            {% for error in dict.values %}
+                              {{ error|escape }}
+                            {% endfor %}
+
+                          {% endfor %}
+                        </div>
+                    </tr>
+                  {% endif %}
+
+                {% for coeff in coefficient_form %}
+                    <tr>
+                        <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.coefficient_name }}</td>
+                        <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.value }}</td>
+                        <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.notes }}</td>
+                    </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
         <div class="row">
             {% if form.errors %}
             {% for field in form %}
@@ -86,6 +119,15 @@
 
 
 {% block javascript %}
+<script type="text/javascript">
 
+    $(document).ready(function() {
+        $('.calibration-form tbody tr').formset({
+            prefix: 'coefficient_values',
+            addText: 'Add Coefficient',
+            deleteText: 'remove',
+        });
+    })
 
+</script>
 {% endblock javascript %}

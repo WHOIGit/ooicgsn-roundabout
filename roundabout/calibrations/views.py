@@ -14,7 +14,7 @@ from roundabout.inventory.models import Inventory
 class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
     model = CalibrationEvent
     form_class = CalibrationAddForm
-    context_object_name = 'part_template'
+    context_object_name = 'event_template'
     template_name='calibrations/calibrations_form.html'
 
     def get(self, request, *args, **kwargs):
@@ -38,17 +38,12 @@ class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         return self.form_invalid(form, coefficient_form)
 
     def form_valid(self, form, coefficient_form):
+        inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
+        form.instance.inventory = inv_inst
+        form.instance.user_draft = self.request.user
         self.object = form.save()
-
-        # # Save CoefficientValue form using CoefficientName instance
-        calibration_name = form.cleaned_data['coefficient_name']
-        coeffname_inst = CoefficientName.objects.get(calibration_name=calibration_name)
-        coefficient_form.coefficient_name = coeffname_inst
-
-        inventory = coeffname_inst.part.inventory.all()
-        inv_inst = inventory[0]
-        event_record = CalibrationEvent.objects.create(inventory=inv_inst, user_draft=self.request.user)
-        coefficient_form.instance = event_record
+        
+        coefficient_form.instance = self.object
         coefficient_form.save()
 
         response = HttpResponseRedirect(self.get_success_url())
