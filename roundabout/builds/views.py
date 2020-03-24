@@ -436,7 +436,7 @@ class BuildPhotoUploadAjaxCreateView(View):
 
     def post(self, request, **kwargs):
         form = BuildActionPhotoUploadForm(self.request.POST, self.request.FILES)
-        print(form.errors)
+
         if form.is_valid():
             photo_note = form.save()
             photo_note.build_id = self.kwargs['pk']
@@ -449,8 +449,7 @@ class BuildPhotoUploadAjaxCreateView(View):
                     'file_type': photo_note.file_type() }
         else:
             data = {'is_valid': False,
-                    'errors': form.errors,
-            }
+                    'errors': form.errors,}
         return JsonResponse(data)
 
 

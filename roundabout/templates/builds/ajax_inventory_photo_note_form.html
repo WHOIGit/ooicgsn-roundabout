@@ -166,13 +166,10 @@ $(function () {
         } else {
             console.log('error');
             let errors = data.result.errors.photo;
-            console.log(errors);
             errors.forEach((item, index) => {
                 console.log(item);
                 $(".upload-errors").append('<div class="ajax-error alert alert-danger">' + item + '</div>');
             });
-
-
         }
     }
   });

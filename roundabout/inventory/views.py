@@ -849,7 +849,8 @@ class ActionPhotoUploadAjaxCreateView(View):
                     'photo_id': photo_note.id,
                     'file_type': photo_note.file_type() }
         else:
-            data = {'is_valid': False}
+            data = {'is_valid': False,
+                    'errors': form.errors,}
         return JsonResponse(data)
 
 
