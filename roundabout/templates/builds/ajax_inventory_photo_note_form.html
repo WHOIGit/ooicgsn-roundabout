@@ -75,6 +75,9 @@
       </tbody>
     </table>
 
+    <div class="row upload-errors">
+    </div>
+
     <form class="form-horizontal ajax-form" method="post" action="" id="inventory-photo-note-form" enctype="multipart/form-data"
           data-url='{{ request.build_absolute_uri|safe }}'>
       {% csrf_token %}
@@ -137,47 +140,40 @@ $(function () {
   var photoIDList = [];
 
   $("#fileupload").fileupload({
-    /*
+
     add: function(e, data) {
-              var uploadErrors = [];
-              var acceptFileTypes = /(\.|\/)(pdf|xlsx|xls|docx|doc|gif|jpe?g|png)$/i;
-              if(data.originalFiles[0]['type'].length && !acceptFileTypes.test(data.originalFiles[0]['type'])) {
-                  uploadErrors.push('Not an accepted file type');
-              }
-
-              data.originalFiles.forEach(function (item, index) {
-                    console.log(item['type']);
-              });
-
-
-              if(data.originalFiles[0]['size'].length && data.originalFiles[0]['size'] > 5000000) {
-                  uploadErrors.push('Filesize is too big');
-              }
-
-              if(uploadErrors.length > 0) {
-                  alert(uploadErrors.join("\n"));
-              } else {
-                  data.submit();
-              }
-      },*/
+        $(".upload-errors .ajax-error").remove();
+        data.submit();
+    },
     dataType: 'json',
     done: function (e, data) {  /* PROCESS THE RESPONSE FROM THE SERVER */
-      if (data.result.is_valid) {
         console.log(data);
-        if (data.result.file_type == 'image') {
-            $("#gallery tbody").prepend(
-              "<tr><td width='25%'><img src='" + data.result.url + "' width='100%'></td><td><a href='" + data.result.url + "' target='_blank'>" + data.result.name + "</a></td></tr>"
-            )
-        } else {
-            $("#gallery tbody").prepend(
-              "<tr><td width='25%' class='text-center'><i class='fa fa-file fa-3x'></i></td><td><a href='" + data.result.url + "' target='_blank'>" + data.result.name + "</a></td></tr>"
-            )
-        }
+        if (data.result.is_valid) {
 
-        // Add Photo IDs to array, change hidden input field value
-        photoIDList.push(data.result.photo_id);
-        $('#id_photo_ids').val(photoIDList);
-      }
+            if (data.result.file_type == 'image') {
+                $("#gallery tbody").prepend(
+                  "<tr><td width='25%'><img src='" + data.result.url + "' width='100%'></td><td><a href='" + data.result.url + "' target='_blank'>" + data.result.name + "</a></td></tr>"
+                )
+            } else {
+                $("#gallery tbody").prepend(
+                  "<tr><td width='25%' class='text-center'><i class='fa fa-file fa-3x'></i></td><td><a href='" + data.result.url + "' target='_blank'>" + data.result.name + "</a></td></tr>"
+                )
+            }
+
+            // Add Photo IDs to array, change hidden input field value
+            photoIDList.push(data.result.photo_id);
+            $('#id_photo_ids').val(photoIDList);
+        } else {
+            console.log('error');
+            let errors = data.result.errors.photo;
+            console.log(errors);
+            errors.forEach((item, index) => {
+                console.log(item);
+                $(".upload-errors").append('<div class="ajax-error alert alert-danger">' + item + '</div>');
+            });
+
+
+        }
     }
   });
 
