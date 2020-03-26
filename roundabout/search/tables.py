@@ -30,6 +30,25 @@ from roundabout.userdefinedfields.models import FieldValue
 from roundabout.admintools.models import Printer
 from roundabout.assemblies.models import AssemblyPart,Assembly
 from roundabout.builds.models import Build, BuildAction
+from roundabout.userdefinedfields.models import Field
+
+UDF_FIELDS = list(Field.objects.all().order_by('id'))
+
+def thing(qs, udf_id, name=None):
+    print('LAMBDA', udf_id, name)
+    f = qs.filter(field__id=udf_id, is_current=True)
+    #print('LAMBDA', udf_id , f, name)
+    return f
+
+class UDF_Column(tables.ManyToManyColumn):
+    def __init__(self,udf,*args,**kwargs):
+
+        super().__init__(accessor='fieldvalues', verbose_name=udf.field_name,
+                         filter=lambda qs: thing(qs,udf.id,name='UDF_Column:'+udf.field_name))#qs.filter(field__field_name=udf.field_name, is_current=True))
+
+    #def render(self, value):
+    #    print(type(value),value)
+    #    return value
 
 class SearchTable(tables.Table):
     class Meta:
@@ -38,7 +57,57 @@ class SearchTable(tables.Table):
 class InventoryTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Inventory
-        fields = ("serial_number", 'part', 'location', "created_at","updated_at")
+        fields = ["serial_number", 'part', ]#'location', "created_at", "updated_at" ] #+ udf_field_names
+
+    #TODO with filterview auto select filtere'd columns: https://stackoverflow.com/questions/52686382/dynamic-columns-with-singletablemixin-and-filterview-in-django
+
+    '''def __init__(self, data, extra_columns=[], *args, **kwargs):
+
+        extra_columns.extend(self.udf_cols())
+        #extra_columns.extend(reversed(self.udf_cols()))
+
+        super().__init__(data, extra_columns=extra_columns, *args, **kwargs)
+        self.extra_columns = extra_columns
+    '''
+
+    @staticmethod
+    def udf_cols():
+
+        udf_fields = Field.objects.all().order_by('id')
+
+        msisdn_col = tables.ManyToManyColumn(verbose_name='MSISDN (hard)', accessor='fieldvalues',
+                                          filter=lambda qs:  thing(qs,2))
+        sim_col = tables.ManyToManyColumn(verbose_name='Sim (hard)', accessor='fieldvalues',
+                                        filter=lambda qs:  thing(qs,3))
+        manuf_col = tables.ManyToManyColumn(verbose_name='Manuf (hard)', accessor='fieldvalues',
+                                          filter=lambda qs:  thing(qs,4))
+        model_col = tables.ManyToManyColumn(verbose_name='Model (hard)', accessor='fieldvalues',
+                                         filter=lambda qs:  thing(qs,5))
+        imei_col = tables.ManyToManyColumn(verbose_name='IMEI (hard)', accessor='fieldvalues',
+                                        filter=lambda qs:  thing(qs,1))
+
+        extra_cols = [('UDF1_imei_h',imei_col),('UDF3_sim_h',sim_col)]
+
+        print('LOOP FIELDS:')
+        for udf in udf_fields[2:5]:
+            col_filter = lambda qs:  thing(qs,udf.id,name='Loop:'+udf.field_name)
+            print('    id=',udf.id,udf.field_name,id(col_filter))
+            col_name = 'UDF{}_{}'.format(udf.id,udf.field_name.lower().replace(' ','_'))
+            col_kwargs = dict(verbose_name=udf.field_name+' (soft {})'.format(udf.id),
+                              accessor='fieldvalues',
+                              filter=col_filter)
+            col_obj = tables.ManyToManyColumn(**col_kwargs)
+            # UNCOMMENT TO SHOW THAT EVEN IF NOT USED, FINAL LOOP FILTER IS USED
+            #if udf.field_name=='Model':
+            #    col_obj = tables.Column(empty_values=())
+            extra_cols.append( (col_name,col_obj) )
+
+        extra_cols.append(('UDF5_model_h',model_col))
+        extra_cols.append(('UDF4_manuf_h',manuf_col))
+        extra_cols.append(('UDF2_msisdn_h',msisdn_col))
+        filters = [id(col[1].filter) for col in extra_cols]
+        print('All Filters Different?',len(filters) == len(set(filters)),filters)
+        return extra_cols
 
     def render_serial_number(self, value, record):
         item_url = reverse("inventory:inventory_detail", args=[record.pk])
@@ -55,6 +124,16 @@ class InventoryTable(SearchTable):
     def value_part(self,record):
         return record.part.name
 
+for udf in UDF_FIELDS:
+    print('{} {} {:>14}'.format(udf.id, udf.field_name.lower().replace(' ','_'), udf.field_name))
+    InventoryTable.base_columns[udf.field_name] = UDF_Column(udf)
+'''            tables.ManyToManyColumn(verbose_name=udf.field_name,
+                                    accessor='fieldvalues',
+                                    filter=lambda qs: qs.filter(field__id=udf.id))
+    # Part Number,Serial Number,Location,Notes,
+    # Manufacturer Serial Number,WHOI Property  Number,OOI Property Number,Model,Firmware Version,Manufacturer,Current Status,Latest Calibration Date,Incoming Inspection History,QCT History,Pre-Deployment History,Post-Deployment History,RMA/Shipping History,DO Number,Date Received,Deployment History
+'''
+#print(InventoryTable.__dict__)
 
 class PartTable(SearchTable):
     class Meta(SearchTable.Meta):

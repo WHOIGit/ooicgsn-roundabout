@@ -120,7 +120,7 @@ function create_row(card_idx, type, row_index,row_data=null){
 
     const row_id = "qfield-row_c{{ cindex }}_f{{ findex }}"
     let row = `<div id="{{ row_id }}" class="form-group form-inline">
-                 <select class="selectpicker form-control col-md-4" multiple id="field-select_c{{ cindex }}_f{{ findex }}" name="m{{ cindex }}_f{{ findex }}">{{ options }}</select>{{ lookup }}{{ query }}{{ minus_button }}</div>`
+                 <select size='7' class="selectpicker form-control col-md-4" multiple id="field-select_c{{ cindex }}_f{{ findex }}" name="m{{ cindex }}_f{{ findex }}">{{ options }}</select>{{ lookup }}{{ query }}{{ minus_button }}</div>`
     row = row.replace("{{ row_id }}",row_id)
     let options = ''
     if (type === 'inventory'){
@@ -141,7 +141,7 @@ function create_row(card_idx, type, row_index,row_data=null){
                    <option value="location__location_type">Type</option>
                    <option value="location__root_type">Root</option>
                    <option disabled style="font-style:italic">--User-Defined-Fields--</option>
-                   <option value="part__user_defined_fields__field_name">UDF Name</option>
+                   <option value="fieldvalues__field__field_name">UDF Name</option>
                    <option value="fieldvalues__field_value">UDF Value</option>`
     }
 

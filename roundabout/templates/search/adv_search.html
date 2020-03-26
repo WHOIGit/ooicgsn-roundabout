@@ -72,9 +72,34 @@
 
       <div id='adv-search-cards'>  </div>
 
-      <button class="btn btn-primary float-left m-1" type="button" onclick="insert_card('{{ model }}')"><i class="fa fa-plus"></i> New Card</button>
-      <button class="btn btn-primary float-right m-1" type="submit"><i class="fa fa-search"></i> Submit</button>
-      <a href="{{ self_url }}"><button type='button' class="btn btn-primary float-right m-1">RESET</button></a>
+      <div class="row ml-1">
+        <button class="btn btn-primary" type="button" onclick="insert_card('{{ model }}')"><i class="fa fa-plus"></i> New Card</button>
+        <div class="ml-auto mr-3">
+          <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i> Submit</button>
+          <a class="btn btn-primary" href="{{ self_url }}">RESET</a>
+        </div>
+      </div>
+
+      <br>
+      <div id="search-column-selector-card" class="card">
+        <div class="card-header">
+          Table Columns
+        </div>
+        <div class="card-body">
+        <select class="selectpicker form-control col-md-6" multiple id="search-columns-selector" name="h" size="12">
+          {% for header in column_selection %}
+          <option {% if header.value %}value="{{ header.value }}" {% endif %}
+                  {% if header.selected %}selected{% endif %}
+                  {% if header.disabled %}disabled{% endif %}
+                  {% if header.style %}style="{{ header.style }}"{% endif %}>
+            {{ header.name }}
+          </option>
+          {% endfor %}
+        </select>
+        </div>
+      </div>
+
+
     </form>
   </div>
 
