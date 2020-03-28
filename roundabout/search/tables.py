@@ -21,8 +21,11 @@
 
 from django.utils.html import format_html
 from django.urls import reverse
-import django_tables2 as tables
 from django.db.models import Count
+
+import django_tables2 as tables
+from django_tables2_column_shifter.tables import ColumnShiftTable
+
 from roundabout.inventory.models import Inventory
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, PartType, Revision
@@ -32,88 +35,67 @@ from roundabout.assemblies.models import AssemblyPart,Assembly
 from roundabout.builds.models import Build, BuildAction
 from roundabout.userdefinedfields.models import Field
 
+
 UDF_FIELDS = list(Field.objects.all().order_by('id'))
-
-def thing(qs, udf_id, name=None):
-    print('LAMBDA', udf_id, name)
-    f = qs.filter(field__id=udf_id, is_current=True)
-    #print('LAMBDA', udf_id , f, name)
-    return f
-
 class UDF_Column(tables.ManyToManyColumn):
+
+    prefix = 'udf-'
+
     def __init__(self,udf,*args,**kwargs):
+        self.udf = udf
+        super().__init__(accessor='fieldvalues', verbose_name=udf.field_name, orderable=True, default='',
+                         filter=lambda qs: qs.filter(field__id=udf.id, is_current=True))
 
-        super().__init__(accessor='fieldvalues', verbose_name=udf.field_name,
-                         filter=lambda qs: thing(qs,udf.id,name='UDF_Column:'+udf.field_name))#qs.filter(field__field_name=udf.field_name, is_current=True))
+    # TESTING
+    #def foot_func(self, table, bound_column):
+    #    a = [self.filter(getattr(x,self.accessor,None)) for x in table.data]
+    #    print('FOOT',self.udf.id, a)
+    #    s = len([x for x in a if x])
+    #    return s
 
+    #TESTING
     #def render(self, value):
-    #    print(type(value),value)
-    #    return value
+    #    print('UDF_RENDER:', self.udf.field_name, self.filter(value) if value.exists() else self.default)
+    #    return super().render(value)
 
-class SearchTable(tables.Table):
+class SearchTable(ColumnShiftTable):
     class Meta:
         template_name = "django_tables2/bootstrap4.html"
 
 class InventoryTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Inventory
-        fields = ["serial_number", 'part', ]#'location', "created_at", "updated_at" ] #+ udf_field_names
+        fields = ['serial_number', 'part', 'part__part_number', 'location','revision__note', 'created_at', 'updated_at' ]
+
+    serial_number = tables.Column(verbose_name='Serial Number')
+    part__part_number = tables.Column(verbose_name='Part Number', visible = False)
+    revision__note = tables.Column(verbose_name='Notes')
+
+    def set_column_default_show(self,table_data):
+        self.column_default_show = ['serial_number', 'part', 'part__part_number', 'location']
+
+        qs_list = Field.objects.none()
+        for x in table_data:
+            qs_list = qs_list.union(x.part.user_defined_fields.all())
+
+        actual_udf_IDs = list(qs_list.values_list('id',flat=True))
+
+        for bound_col in self.columns:
+            if bound_col.name.startswith(UDF_Column.prefix):
+                udf_col = bound_col.column
+                if udf_col.udf.id in actual_udf_IDs:
+                    self.column_default_show.append(bound_col.name)
+                    #bound_col.column.visible = False  # completely removes it from the interface, but will exist in export, but also does not allow for it to be shown again.
+                    #bound_col.column.exclude_from_export = True # removes column from the export list!
 
     #TODO with filterview auto select filtere'd columns: https://stackoverflow.com/questions/52686382/dynamic-columns-with-singletablemixin-and-filterview-in-django
-
-    '''def __init__(self, data, extra_columns=[], *args, **kwargs):
-
-        extra_columns.extend(self.udf_cols())
-        #extra_columns.extend(reversed(self.udf_cols()))
-
-        super().__init__(data, extra_columns=extra_columns, *args, **kwargs)
-        self.extra_columns = extra_columns
-    '''
-
-    @staticmethod
-    def udf_cols():
-
-        udf_fields = Field.objects.all().order_by('id')
-
-        msisdn_col = tables.ManyToManyColumn(verbose_name='MSISDN (hard)', accessor='fieldvalues',
-                                          filter=lambda qs:  thing(qs,2))
-        sim_col = tables.ManyToManyColumn(verbose_name='Sim (hard)', accessor='fieldvalues',
-                                        filter=lambda qs:  thing(qs,3))
-        manuf_col = tables.ManyToManyColumn(verbose_name='Manuf (hard)', accessor='fieldvalues',
-                                          filter=lambda qs:  thing(qs,4))
-        model_col = tables.ManyToManyColumn(verbose_name='Model (hard)', accessor='fieldvalues',
-                                         filter=lambda qs:  thing(qs,5))
-        imei_col = tables.ManyToManyColumn(verbose_name='IMEI (hard)', accessor='fieldvalues',
-                                        filter=lambda qs:  thing(qs,1))
-
-        extra_cols = [('UDF1_imei_h',imei_col),('UDF3_sim_h',sim_col)]
-
-        print('LOOP FIELDS:')
-        for udf in udf_fields[2:5]:
-            col_filter = lambda qs:  thing(qs,udf.id,name='Loop:'+udf.field_name)
-            print('    id=',udf.id,udf.field_name,id(col_filter))
-            col_name = 'UDF{}_{}'.format(udf.id,udf.field_name.lower().replace(' ','_'))
-            col_kwargs = dict(verbose_name=udf.field_name+' (soft {})'.format(udf.id),
-                              accessor='fieldvalues',
-                              filter=col_filter)
-            col_obj = tables.ManyToManyColumn(**col_kwargs)
-            # UNCOMMENT TO SHOW THAT EVEN IF NOT USED, FINAL LOOP FILTER IS USED
-            #if udf.field_name=='Model':
-            #    col_obj = tables.Column(empty_values=())
-            extra_cols.append( (col_name,col_obj) )
-
-        extra_cols.append(('UDF5_model_h',model_col))
-        extra_cols.append(('UDF4_manuf_h',manuf_col))
-        extra_cols.append(('UDF2_msisdn_h',msisdn_col))
-        filters = [id(col[1].filter) for col in extra_cols]
-        print('All Filters Different?',len(filters) == len(set(filters)),filters)
-        return extra_cols
 
     def render_serial_number(self, value, record):
         item_url = reverse("inventory:inventory_detail", args=[record.pk])
         html_string = '<a href={}>{}</a>'.format(item_url, value)
         return format_html(html_string)
     def value_serial_number(self,record):
+        #print(record.id)
         return record.serial_number
 
     def render_part(self,record):
@@ -124,16 +106,9 @@ class InventoryTable(SearchTable):
     def value_part(self,record):
         return record.part.name
 
-for udf in UDF_FIELDS:
-    print('{} {} {:>14}'.format(udf.id, udf.field_name.lower().replace(' ','_'), udf.field_name))
-    InventoryTable.base_columns[udf.field_name] = UDF_Column(udf)
-'''            tables.ManyToManyColumn(verbose_name=udf.field_name,
-                                    accessor='fieldvalues',
-                                    filter=lambda qs: qs.filter(field__id=udf.id))
-    # Part Number,Serial Number,Location,Notes,
-    # Manufacturer Serial Number,WHOI Property  Number,OOI Property Number,Model,Firmware Version,Manufacturer,Current Status,Latest Calibration Date,Incoming Inspection History,QCT History,Pre-Deployment History,Post-Deployment History,RMA/Shipping History,DO Number,Date Received,Deployment History
-'''
-#print(InventoryTable.__dict__)
+    def render_revision__note(self,value):
+        return format_html(value)
+
 
 class PartTable(SearchTable):
     class Meta(SearchTable.Meta):

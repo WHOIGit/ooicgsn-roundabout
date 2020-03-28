@@ -127,6 +127,7 @@ function create_row(card_idx, type, row_index,row_data=null){
         options = `<option value="part__name">Name</option>
                    <option value="serial_number">Serial Number</option>
                    <option value="build__assembly__name">Build</option>
+                   <option value="revision__note">Note</option>
                    <option value="created_at">Date Created</option>
                    <option value="updated_at">Date Modified</option>
 
@@ -134,7 +135,6 @@ function create_row(card_idx, type, row_index,row_data=null){
                    <option value="part__part_type__name">Part Type</option>
                    <option value="part__unit_cost">Unit Cost</option>
                    <option value="part__refurbishment_cost">Refurb Cost</option>
-                   <option value="part__note">Note</option>
 
                    <option disabled style="font-style:italic">--Location--</option>
                    <option value="location__name">Name</option>

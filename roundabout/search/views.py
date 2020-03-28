@@ -106,10 +106,13 @@ def parse_adv_slug(model, query_slug):
 
 
 def adv_query(model, query_slug):
-    if '&' not in query_slug: return model.objects.all()
-    query_slug = query_slug.replace('&_export=csv','')
+    if '_export=csv' in query_slug:
+        query_slug = query_slug[:query_slug.index('_export=csv')]
+    if query_slug.endswith('&'): query_slug = query_slug[:-1]
+    print(query_slug)
+    if '&' not in query_slug: return list(model.objects.all().order_by('id'))
     cards = parse_adv_slug(model, query_slug)
-    if not cards: return model.objects.all()
+    if not cards: return list(model.objects.all().order_by('id'))
 
     for card in cards.values():
         print('NEW CARD:',card)
@@ -131,7 +134,7 @@ def adv_query(model, query_slug):
             # eg: Q(<field>__<lookup>=<query>) where eg: field = "part__part_number" and lookup = "icontains"
         if query:
             print('final card query:',query)
-            card['qs'] = model.objects.filter(query).distinct()
+            card['qs'] = model.objects.filter(query).distinct().order_by('id')
         else:
             pass#card['qs'] = model.objects.none()
 
@@ -164,7 +167,7 @@ def search_context(context, raw_slug):
 
 import django_tables2 as tables
 from django_tables2 import SingleTableView
-from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, thing
+from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, UDF_FIELDS, UDF_Column
 from django_tables2.export.views import ExportMixin
 
 class InventoryTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
@@ -172,9 +175,18 @@ class InventoryTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
     table_class = InventoryTable
     context_object_name = 'search_items_qs'
     template_name = 'search/adv_search.html'
+    exclude_columns = []
 
-    #def get_table_kwargs(self):
-    #    return {'extra_columns':self.table_class.udf_cols()}
+    def get_table_kwargs(self):
+        extra_cols = []
+        for udf in UDF_FIELDS:
+            safename =  UDF_Column.prefix+'{:03}--'.format(udf.id)+''.join([ c if c.isalnum() or c=='-' else '_' for c in udf.field_name.lower().replace(' ','-') ])
+            #print('{} {:>3}'.format(udf.id, safename))
+            extra_cols.append( (safename, UDF_Column(udf)) )
+        #exclude cols from download
+        #try: self.exclude_columns = self.request.GET.get('excluded_columns').split(',')
+        #except AttributeError: self.exclude_columns = []
+        return {'extra_columns':extra_cols}
 
     def get_queryset(self):
         resp = adv_query(self.model, self.request.META['QUERY_STRING'])
@@ -185,40 +197,13 @@ class InventoryTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
         context['model']='inventory'
         context['self_url'] = self.request.META['PATH_INFO']
 
-        cols = ["serial_number", 'part', 'location', "created_at", "updated_at"]
-        cols = [dict(value=col,name=col.replace('_',' ').title(),selected=False) for col in cols]
-        udf_fields = Field.objects.all().order_by('id')
-        #<option disabled style="font-style:italic">--User-Defined-Fields--</option>
-        #< option value = "part__part_type__name" selected> Part Type </option >
-        disabled_row = dict(name='--User-Defined-Fields--', style="font-style:italic", disabled=True)
-        udf_fields = [disabled_row] + [dict(value='part__user_defined_fields__field_name___{}'.format(f.id),name=f.field_name,selected=False) for f in udf_fields]
-        cols_old = cols + udf_fields
+        #cols = {name:col.column for name,col in context['table'].columns.columns.items()}
+        #col_names = [name for name,col in cols.items()]
 
-        for col in context['table'].columns.columns:
-            if hasattr(context['table'].columns.columns[col].column,'filter') and col.startswith('UDF')  and not 'manu' in col and not col.endswith('_h'): #TODO toggle endswith
-                udf_id = int(col.split('_',1)[0].replace('UDF',''))
-                context['table'].columns.columns[col].column.filter = lambda qs: thing(qs,udf_id,name='REBOOT:'+col)#qs.filter(field__id=udf_id, is_current=True)
-                print('CORRECTION:', col, context['table'].columns.columns[col].column.filter)
+        # setting default shown columns, only columns who which have any data* in them will show
+        # * well actually it looks at the Part of the inventory and keeps all UDF's that appear there for the whole table.
+        context['table'].set_column_default_show(self.get_table_data())
 
-        cols = {name:col.column for name,col in context['table'].columns.columns.items()}
-        col_filters = {name:col.column.filter for name,col in context['table'].columns.columns.items() if hasattr(col.column,'filter')}
-        print('## CONTEXT:',{n:id(f) for n,f in col_filters.items()})
-        for name,f in col_filters.items():
-            try:f(3)
-            except: pass
-        col_names = [name for name,col in cols.items()]
-        context['column_selection'] = [dict(value=col, name=col, selected=False) for col in col_names]
-        #print(context['column_selection'] )
-        '''print('table:',context['table'].__dict__.keys())
-        print('table.columns (BoundColumns):',context['table'].columns.__dict__)
-        print('table.columns.columns:',context['table'].columns.columns.items())
-        print('table.data:',context['table'].data.__dict__.keys())
-        print('table.data.data',context['table'].data.data.__dict__.keys())
-        print('table.data.data.model', context['table'].data.data.model)
-        print('table.data.data._sticky_filter', context['table'].data.data._sticky_filter)
-        print('table.data.data.query', context['table'].data.data.query)
-        print('table.data.data._known_related_objects', context['table'].data.data._known_related_objects)
-        '''
         context.update(search_context(context, self.request.META['QUERY_STRING']))
         print(' '*10+'CONTEXT END')
         return context

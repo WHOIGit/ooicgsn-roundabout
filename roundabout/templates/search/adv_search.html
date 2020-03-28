@@ -80,25 +80,6 @@
         </div>
       </div>
 
-      <br>
-      <div id="search-column-selector-card" class="card">
-        <div class="card-header">
-          Table Columns
-        </div>
-        <div class="card-body">
-        <select class="selectpicker form-control col-md-6" multiple id="search-columns-selector" name="h" size="12">
-          {% for header in column_selection %}
-          <option {% if header.value %}value="{{ header.value }}" {% endif %}
-                  {% if header.selected %}selected{% endif %}
-                  {% if header.disabled %}disabled{% endif %}
-                  {% if header.style %}style="{{ header.style }}"{% endif %}>
-            {{ header.name }}
-          </option>
-          {% endfor %}
-        </select>
-        </div>
-      </div>
-
 
     </form>
   </div>
@@ -112,7 +93,8 @@
       </div>
       <div class="card-body">
 
-          <a role="button" class="btn btn-secondary btn-sm float-right" href="{% querystring '_export'='csv' %}">Download CSV</a>
+          <button class="btn btn-secondary btn-sm float-right"
+                  onclick='window.location.href = "{% querystring '_export'='csv' %}&excluded_columns="+$.django_tables2_column_shifter_hidden();'>Download CSV</button>
 
         {% if table %}
           <p><b>{{ table.paginator.count }}</b> items match your search!</p>

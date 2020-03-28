@@ -96,6 +96,8 @@ THIRD_PARTY_APPS = [
     'django_summernote', #WYSIWYG
     'bootstrap_datepicker_plus', # Date Picker
     'django_tables2', # interactive tables views
+    'django_tables2_column_shifter', # show/hide tables2 columns
+    'django_filters',  # for database searching
 ]
 LOCAL_APPS = [
     'roundabout.users.apps.UsersAppConfig',
