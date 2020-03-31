@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -84,11 +84,7 @@
 
                     {% if action_type == 'subchange' %}
                         <p>Select a new Location for this item. Item will be removed from Parent assembly and Build.</p>
-                    <!--
-                        <p>You may move this subassembly to another Parent or Location by using the form below.  To delete this Inventory Item from the system, click the Delete button.</p>
-                        <p><a href="{% url 'inventory:inventory_delete' inventory_item.id %}" role="button" class="btn btn-danger">Delete</a></p>
-                        <hr>
-                    -->
+                    
                     {% endif %}
 
                     {% if latest_flag.detail %}<p><strong>Why Flagged:</strong> {{ latest_flag.detail }}</p>{% endif %}
