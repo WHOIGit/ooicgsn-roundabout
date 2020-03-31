@@ -41,6 +41,10 @@ from roundabout.locations.models import Location
 from roundabout.assemblies.models import AssemblyType, Assembly, AssemblyPart
 from roundabout.assemblies.views import make_tree_copy
 
+# Test URL for Sentry.io logging
+def trigger_error(request):
+    division_by_zero = 1 / 0
+
 # Bulk Inventory Import Functions
 # ------------------------------------------
 # Create a blank CSV template for user to download and populate

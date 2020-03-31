@@ -10,7 +10,3 @@ Collectfast==0.6.2  # https://github.com/antonagestam/collectfast
 # ------------------------------------------------------------------------------
 django-storages[boto3]==1.7.1  # https://github.com/jschneier/django-storages
 django-anymail[mailgun]==5.0  # https://github.com/anymail/django-anymail
-
-# Raven is the Sentry client
-# --------------------------
-raven==6.4.0
