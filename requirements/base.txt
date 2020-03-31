@@ -23,3 +23,6 @@ django-mptt==0.9.1
 django-summernote==0.8.11.4
 whitenoise==4.1.2
 django-bootstrap-datepicker-plus==3.0.5
+
+# Sentry error logging
+sentry-sdk==0.14.3
