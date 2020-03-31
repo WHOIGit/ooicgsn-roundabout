@@ -41,6 +41,10 @@ from roundabout.locations.models import Location
 from roundabout.assemblies.models import AssemblyType, Assembly, AssemblyPart
 from roundabout.assemblies.views import make_tree_copy
 
+# Test URL for Sentry.io logging
+def trigger_error(request):
+    division_by_zero = 1 / 0
+
 # Bulk Inventory Import Functions
 # ------------------------------------------
 # Create a blank CSV template for user to download and populate
@@ -148,7 +152,7 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                         error_msg = "No matching Custom Field. Check if Field exists."
 
                     if custom_field:
-                        if value:
+                        if value and not value.isspace():
                             if custom_field.field_type == 'IntegerField':
                                 try:
                                     value = int(value.strip())
@@ -273,11 +277,15 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
 
                 # Create notes history record for item
                 if note_detail:
-                    note_record = Action.objects.create(action_type='note',
-                                                          detail=note_detail,
-                                                          location=location,
-                                                          user=self.request.user,
-                                                          inventory=inventory_obj)
+                    # Split the field on "|" delimiter to add multiple Notes
+                    note_list = note_detail.split('|')
+                    for note in note_list:
+                        if note:
+                            note_record = Action.objects.create(action_type='note',
+                                                                  detail=note,
+                                                                  location=location,
+                                                                  user=self.request.user,
+                                                                  inventory=inventory_obj)
 
                 # Add the Custom Fields
                 for col in item_obj.data:

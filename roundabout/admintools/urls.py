@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -25,6 +25,7 @@ from . import views
 
 app_name = 'admintools'
 urlpatterns = [
+    path('sentry-debug/', views.trigger_error),
     # Printers
     path('printers/', view=views.PrinterListView.as_view(), name='printers_home'),
     path('printers/add/', view=views.PrinterCreateView.as_view(), name='printers_add'),
