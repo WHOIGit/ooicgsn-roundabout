@@ -19,6 +19,7 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
+import operator  # for direct access to | ~ & operators used by Q objects
 import json
 import socket
 import os
@@ -63,13 +64,13 @@ def searchbar_redirect(request):
     return resp
 
 
-def parse_adv_slug(model, query_slug):
+def parse_adv_slug(query_slug):
     query_slug = unquote(query_slug)
     tups = [pair.split('=', 1) for pair in query_slug.split('&')]
     # eg: ('model', 'inventory') ('m0_f0', 'serial') ('m0_f0', 'name') ('m0_l0', 'icontains') ('m0_q0', '333')
     #                            ('m0_f1', 'serial')                   ('m0_l1', 'icontains') ('m0_q1', '222')
     cards = dict()
-    #card = dict(model='',queries={'0':dict(field=[''],lookup='',query=''),})
+    #card = dict(rows=[dict(field=[''], lookup='', query='', nega=False)])
     for key, val in tups:
         if key == 'page': continue
         if val == '': val = None
@@ -106,49 +107,56 @@ def parse_adv_slug(model, query_slug):
 
 
 def adv_query(model, query_slug):
-    if '_export=csv' in query_slug:
-        query_slug = query_slug[:query_slug.index('_export=csv')]
-    if query_slug.endswith('&'): query_slug = query_slug[:-1]
-    print(query_slug)
-    if '&' not in query_slug: return model.objects.all().exclude(location__root_type='Trash').order_by('id')
-    cards = parse_adv_slug(model, query_slug)
-    if not cards: return list(model.objects.all().order_by('id'))
 
+    cards = parse_adv_slug(query_slug)
+
+    final_Qs = []
     for card in cards.values():
-        print('NEW CARD:',card)
-        query = None
-        for query_dict in card.values():
-            if query_dict['query'] is None: continue
-            multiselect_query = None
-            for field in query_dict['fields']:
-                Q_string = 'Q({field}__{lookup}={query})'.format(**query_dict, field=field)
-                Q_kwarg = {'{field}__{lookup}'.format(field=field, lookup=query_dict['lookup']): query_dict['query']}
-                if multiselect_query:
-                    multiselect_query = multiselect_query | Q(**Q_kwarg)  # queries from multiselects are is OR'd
-                else:
-                    multiselect_query = Q(**Q_kwarg)
+        print('CARD:',card)
+        card_Qs = []
+        for row in card.values():
+            if row['query'] is None: continue  # skip this row
+            Q_kwargs = []
+            for field in row['fields']:
+                # TODO: field x lookup VALIDATION HERE
+                # eg: Q(<field>__<lookup>=<query>) where eg: field = "part__part_number" and lookup = "icontains"
+                #Q_string = 'Q({field}__{lookup}={query})'.format(**row, field=field)
+                Q_kwarg = {'{field}__{lookup}'.format(field=field, lookup=row['lookup']): row['query']}
+                Q_kwargs.append(Q_kwarg)
 
-            if query:
-                query = query & multiselect_query  # queries from different rows are AND'd
-            else: query = multiselect_query
-            # eg: Q(<field>__<lookup>=<query>) where eg: field = "part__part_number" and lookup = "icontains"
-        if query:
-            print('final card query:',query)
-            card['qs'] = model.objects.filter(query).distinct()
+            if len(Q_kwargs) > 1:
+                row_Q = operator.or_(*[Q(**Q_kwarg) for Q_kwarg in Q_kwargs])
+            elif Q_kwargs:
+                row_Q = Q(**Q_kwargs[0])
+            else:
+                row_Q = None
+            #if row['nega'] and row_Q:
+            #    row_Q = operator.inv(row_Q)
+            if row_Q:
+                card_Qs.append(row_Q)
+            # ROW DONE
+        if len(card_Qs)>1:
+            card_Q = operator.and_(*card_Qs)
+        elif card_Qs:
+            card_Q = card_Qs[0]
         else:
-            pass#card['qs'] = model.objects.none()
+            card_Q = None
+        if card_Q:
+            final_Qs.append(card_Q)
+        # CARD DONE
 
-    results = model.objects.none()
-    for card in cards.values():
-        if 'qs' not in card.keys(): continue
-        try:
-            results = results.union(card['qs'])
-        except TypeError as e:
-            if str(e).startswith('unsupported operand type(s) for +'):
-                results = results.union(card['qs'])
-            else: print(type(e), e)
+    if len(final_Qs)>1:
+        final_Q = operator.or_(*final_Qs)
+    elif final_Qs:
+        final_Q = final_Qs[0]
+    else:
+        final_Q = None
 
-    return list(results)
+    if final_Q:
+        return model.objects.filter(final_Q).distinct()
+    else:
+        return model.objects.all().exclude(location__root_type='Trash')
+
 
 def search_context(context, raw_slug):
     context['query_slug'] = raw_slug
@@ -156,7 +164,7 @@ def search_context(context, raw_slug):
         context['query_slug'] = context['query_slug'].split('&page=')[0]
 
     if context['query_slug']:
-        cards = parse_adv_slug(context['model'],context['query_slug'])
+        cards = parse_adv_slug(context['query_slug'])
         context['prev_cards'] = json.dumps(cards)
 
     #if len(context['query_objs']) == 0: context['table'] = None
