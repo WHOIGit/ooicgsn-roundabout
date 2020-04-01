@@ -40,7 +40,7 @@
                         <ul>
                         {% for revision in assembly.assembly_revisions.all %}
 
-                            <li data-jstree='{"icon":"fa fa-plus-square-o"}' id="assemblyrevisions_{{ revision.id }}" class="jstree-closed">
+                            <li data-jstree='{"icon":"far fa-dot-circle"}' id="assemblyrevisions_{{ revision.id }}" class="jstree-closed">
                                     <a href="#"
                                             data-detail-url="{% url 'assemblies:ajax_assemblyrevision_detail' revision.id %}"
                                             data-node-id='{{ revision.id }}'
