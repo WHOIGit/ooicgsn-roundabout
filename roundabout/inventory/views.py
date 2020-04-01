@@ -655,12 +655,34 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                     item.detail = 'Moved to %s from %s' % (self.object.location.name, old_location.name)
                 else:
                     item.detail = 'Parent Inventory Change'
+
+                # If "movetotrash", need to remove all Build/AssemblyPart/Destination data for children
+                if self.kwargs['action_type'] =='movetotrash':
+                    if item.build:
+                        item.detail = 'Removed from %s. ' % (item.build) + item.detail
+                        # Create Build Action record
+                        build_detail = '%s removed from %s' % (item, labels['label_builds_app_singular'])
+                        build_record = BuildAction.objects.create(action_type='subassemblychange', detail=build_detail, location=item.build.location,
+                                                                   user=self.request.user, build=item.build)
+                    item.build = None
+                    item.assembly_part = None
+                    item.assigned_destination_root = None
                 item.save()
                 action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location_id=item.location_id,
                                                       user_id=self.request.user.id, inventory_id=item.id)
 
             # If "movetotrash", need to remove all Build/AssemblyPart/Destination data
             if self.kwargs['action_type'] =='movetotrash':
+                # Find Build it was removed from
+                old_build_pk = self.object.tracker.previous('build')
+                if old_build_pk:
+                    old_build = Build.objects.get(pk=old_build_pk)
+                    self.object.detail = ' Removed from %s. ' % (old_build) + self.object.detail
+
+                    # Create Build Action record
+                    build_detail = '%s removed from %s' % (self.object, labels['label_builds_app_singular'])
+                    build_record = BuildAction.objects.create(action_type='subassemblychange', detail=build_detail, location=old_build.location,
+                                                               user=self.request.user, build=old_build)
                 self.object.build = None
                 self.object.assembly_part = None
                 self.object.assigned_destination_root = None
@@ -673,7 +695,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 old_build = Build.objects.get(pk=old_build_pk)
                 self.object.detail = ' Removed from %s. ' % (old_build) + self.object.detail
 
-                # Create Build Action record for adding inventory item
+                # Create Build Action record
                 build_detail = '%s removed from %s' % (self.object, labels['label_builds_app_singular'])
                 build_record = BuildAction.objects.create(action_type='subassemblychange', detail=build_detail, location=old_build.location,
                                                            user=self.request.user, build=old_build)
@@ -681,6 +703,10 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
             # Get any subassembly children items, add Action to history
             subassemblies = self.object.get_descendants()
             for item in subassemblies:
+                # Create Build Action record
+                build_detail = '%s removed from %s' % (item, labels['label_builds_app_singular'])
+                build_record = BuildAction.objects.create(action_type='subassemblychange', detail=build_detail, location=item.build.location,
+                                                           user=self.request.user, build=item.build)
                 item.assembly_part = None
                 item.build = None
                 item.location = self.object.location
