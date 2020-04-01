@@ -74,11 +74,12 @@ class InventoryTable(SearchTable):
     def set_column_default_show(self,table_data):
         self.column_default_show = ['serial_number', 'part', 'part__part_number', 'location']
 
-        qs_list = Field.objects.none()
-        for x in table_data:
-            qs_list = qs_list.union(x.part.user_defined_fields.all())
-
-        actual_udf_IDs = list(qs_list.values_list('id',flat=True))
+        try: actual_udf_IDs = set(table_data.values_list('fieldvalues__field__id',flat=True))
+        except AttributeError: # sometimes qs is returned as a list
+            qs_list = Field.objects.none()
+            for x in table_data:
+                qs_list = qs_list.union(x.part.user_defined_fields.all())
+            actual_udf_IDs = list(qs_list.values_list('id',flat=True))
 
         for bound_col in self.columns:
             if bound_col.name.startswith(UDF_Column.prefix):

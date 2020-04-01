@@ -27,6 +27,7 @@
 {% load export_url from django_tables2 %}
 {% load querystring from django_tables2 %}
 {% block title %}Adv. Search{% endblock %}
+
 {% block javascript %}
   <script type="text/javascript" src="/static/js/form-search.js"></script>
   <script>window.addEventListener("load", function(){
@@ -68,31 +69,34 @@
         </div>
       </div>
     </div>
+
     <form id='adv-search-form' method="get" accept-charset="utf-8" class="form">
-
+    {% if filter %}
+      {{ filter.form.as_p }}
+    {% else %}
       <div id='adv-search-cards'>  </div>
-
+    {% endif %}
       <div class="row ml-1">
-        <button class="btn btn-primary" type="button" onclick="insert_card('{{ model }}')"><i class="fa fa-plus"></i> New Card</button>
+        {% if not filter %}<button class="btn btn-primary" type="button" onclick="insert_card('{{ model }}')"><i class="fa fa-plus"></i> New Card</button>{% endif %}
         <div class="ml-auto mr-3">
           <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i> Submit</button>
           <a class="btn btn-primary" href="{{ self_url }}">RESET</a>
         </div>
       </div>
 
-
     </form>
+
   </div>
 
 
   <!-- LISTVIEW -->
   <div class="col-md-7 search-results">
+
     <div class="card" id="search-list-view">
       <div class="card-header">
         <h3>Search Results</h3>
       </div>
       <div class="card-body">
-
           <button class="btn btn-secondary btn-sm float-right"
                   onclick='window.location.href = "{% querystring '_export'='csv' %}&excluded_columns="+$.django_tables2_column_shifter_hidden();'>Download CSV</button>
 

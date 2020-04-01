@@ -97,7 +97,7 @@ THIRD_PARTY_APPS = [
     'bootstrap_datepicker_plus', # Date Picker
     'django_tables2', # interactive tables views
     'django_tables2_column_shifter', # show/hide tables2 columns
-    'django_filters',  # for database searching
+    'django_filters',  # for database searching experiment
 ]
 LOCAL_APPS = [
     'roundabout.users.apps.UsersAppConfig',

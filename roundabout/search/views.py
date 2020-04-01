@@ -110,7 +110,7 @@ def adv_query(model, query_slug):
         query_slug = query_slug[:query_slug.index('_export=csv')]
     if query_slug.endswith('&'): query_slug = query_slug[:-1]
     print(query_slug)
-    if '&' not in query_slug: return list(model.objects.all().order_by('id'))
+    if '&' not in query_slug: return model.objects.all().exclude(location__root_type='Trash').order_by('id')
     cards = parse_adv_slug(model, query_slug)
     if not cards: return list(model.objects.all().order_by('id'))
 
@@ -134,24 +134,21 @@ def adv_query(model, query_slug):
             # eg: Q(<field>__<lookup>=<query>) where eg: field = "part__part_number" and lookup = "icontains"
         if query:
             print('final card query:',query)
-            card['qs'] = model.objects.filter(query).distinct().order_by('id')
+            card['qs'] = model.objects.filter(query).distinct()
         else:
             pass#card['qs'] = model.objects.none()
 
-    results = None
+    results = model.objects.none()
     for card in cards.values():
         if 'qs' not in card.keys(): continue
-        if not results:
-            results = card['qs']
-        else:
-            try:
-                results = results+card['qs']
-            except TypeError as e:
-                if str(e).startswith('unsupported operand type(s) for +'):
-                    results = list(results)+list(card['qs'])
-                else: print(type(e), e)
+        try:
+            results = results.union(card['qs'])
+        except TypeError as e:
+            if str(e).startswith('unsupported operand type(s) for +'):
+                results = results.union(card['qs'])
+            else: print(type(e), e)
 
-    return results if results else model.objects.none()
+    return list(results)
 
 def search_context(context, raw_slug):
     context['query_slug'] = raw_slug
@@ -162,25 +159,29 @@ def search_context(context, raw_slug):
         cards = parse_adv_slug(context['model'],context['query_slug'])
         context['prev_cards'] = json.dumps(cards)
 
-    if len(context['search_items_qs']) == 0: context['table'] = None
+    #if len(context['query_objs']) == 0: context['table'] = None
     return context
 
 import django_tables2 as tables
 from django_tables2 import SingleTableView
-from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, UDF_FIELDS, UDF_Column
 from django_tables2.export.views import ExportMixin
+from django_filters.views import FilterView
 
-class InventoryTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
+from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, UDF_FIELDS, UDF_Column
+from .filters import InventoryFilter
+
+class InventoryTableView(LoginRequiredMixin,ExportMixin,SingleTableView,FilterView):
     model = Inventory
     table_class = InventoryTable
-    context_object_name = 'search_items_qs'
+    context_object_name = 'query_objs'
     template_name = 'search/adv_search.html'
     exclude_columns = []
+    filterset_class = InventoryFilter
 
     def get_table_kwargs(self):
         extra_cols = []
         for udf in UDF_FIELDS:
-            safename =  UDF_Column.prefix+'{:03}--'.format(udf.id)+''.join([ c if c.isalnum() or c=='-' else '_' for c in udf.field_name.lower().replace(' ','-') ])
+            safename =  UDF_Column.prefix+'{:03}--'.format(udf.id)+''.join([ c if c.isalnum() or c=='-' else '_' for c in udf.field_name.lower().replace(' ','-').replace('id','xx') ])
             #print('{} {:>3}'.format(udf.id, safename))
             extra_cols.append( (safename, UDF_Column(udf)) )
         #exclude cols from download
@@ -189,13 +190,22 @@ class InventoryTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
         return {'extra_columns':extra_cols}
 
     def get_queryset(self):
-        resp = adv_query(self.model, self.request.META['QUERY_STRING'])
+        if self.request.META['QUERY_STRING'].startswith('m0_'):
+            resp = adv_query(self.model, self.request.META['QUERY_STRING'])
+        else:
+            qs = self.model.objects.all().exclude(location__root_type='Trash').order_by('id')
+            resp = self.filterset_class(self.request.GET, queryset=qs).qs
         return resp
 
     def get_context_data(self, **kwargs):
         context = super(InventoryTableView, self).get_context_data(**kwargs)
         context['model']='inventory'
         context['self_url'] = self.request.META['PATH_INFO']
+        if self.request.META['QUERY_STRING'].startswith('m0_'):
+            pass
+        else:
+            context['filter'] = self.filterset_class(self.request.GET)
+            f = context['filter']
 
         #cols = {name:col.column for name,col in context['table'].columns.columns.items()}
         #col_names = [name for name,col in cols.items()]
@@ -203,6 +213,8 @@ class InventoryTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
         # setting default shown columns, only columns who which have any data* in them will show
         # * well actually it looks at the Part of the inventory and keeps all UDF's that appear there for the whole table.
         context['table'].set_column_default_show(self.get_table_data())
+
+        print('SHOWME:',context['table'].column_default_show)
 
         context.update(search_context(context, self.request.META['QUERY_STRING']))
         print(' '*10+'CONTEXT END')

@@ -26,4 +26,4 @@ django-bootstrap-datepicker-plus==3.0.5
 django-tables2==2.2.1  # https://github.com/jieter/django-tables2
 tablib==1.1  # https://github.com/jazzband/tablib it's for exporting tabular data, for tables2 exporting/downloading
 django-tables2-column-shifter==0.5.2  # for showing/hiding columns for tables2
-django-filter==2.2.0
+django-filter==2.2.0 # filter tool experiment
