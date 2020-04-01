@@ -165,23 +165,20 @@ def search_context(context, raw_slug):
 import django_tables2 as tables
 from django_tables2 import SingleTableView
 from django_tables2.export.views import ExportMixin
-from django_filters.views import FilterView
 
 from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, UDF_FIELDS, UDF_Column
-from .filters import InventoryFilter
 
-class InventoryTableView(LoginRequiredMixin,ExportMixin,SingleTableView,FilterView):
+class InventoryTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
     model = Inventory
     table_class = InventoryTable
     context_object_name = 'query_objs'
     template_name = 'search/adv_search.html'
     exclude_columns = []
-    filterset_class = InventoryFilter
 
     def get_table_kwargs(self):
         extra_cols = []
         for udf in UDF_FIELDS:
-            safename =  UDF_Column.prefix+'{:03}--'.format(udf.id)+''.join([ c if c.isalnum() or c=='-' else '_' for c in udf.field_name.lower().replace(' ','-').replace('id','xx') ])
+            safename =  UDF_Column.prefix+'{:03}'.format(udf.id) #+'--'+''.join([ c if c.isalnum() or c=='-' else '_' for c in udf.field_name.lower().replace(' ','-').replace('id','xx') ])
             #print('{} {:>3}'.format(udf.id, safename))
             extra_cols.append( (safename, UDF_Column(udf)) )
         #exclude cols from download
@@ -194,18 +191,13 @@ class InventoryTableView(LoginRequiredMixin,ExportMixin,SingleTableView,FilterVi
             resp = adv_query(self.model, self.request.META['QUERY_STRING'])
         else:
             qs = self.model.objects.all().exclude(location__root_type='Trash').order_by('id')
-            resp = self.filterset_class(self.request.GET, queryset=qs).qs
+            resp = qs
         return resp
 
     def get_context_data(self, **kwargs):
         context = super(InventoryTableView, self).get_context_data(**kwargs)
         context['model']='inventory'
         context['self_url'] = self.request.META['PATH_INFO']
-        if self.request.META['QUERY_STRING'].startswith('m0_'):
-            pass
-        else:
-            context['filter'] = self.filterset_class(self.request.GET)
-            f = context['filter']
 
         #cols = {name:col.column for name,col in context['table'].columns.columns.items()}
         #col_names = [name for name,col in cols.items()]

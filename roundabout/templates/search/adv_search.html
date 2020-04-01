@@ -71,13 +71,9 @@
     </div>
 
     <form id='adv-search-form' method="get" accept-charset="utf-8" class="form">
-    {% if filter %}
-      {{ filter.form.as_p }}
-    {% else %}
       <div id='adv-search-cards'>  </div>
-    {% endif %}
       <div class="row ml-1">
-        {% if not filter %}<button class="btn btn-primary" type="button" onclick="insert_card('{{ model }}')"><i class="fa fa-plus"></i> New Card</button>{% endif %}
+        <button class="btn btn-primary" type="button" onclick="insert_card('{{ model }}')"><i class="fa fa-plus"></i> New Card</button>
         <div class="ml-auto mr-3">
           <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i> Submit</button>
           <a class="btn btn-primary" href="{{ self_url }}">RESET</a>
