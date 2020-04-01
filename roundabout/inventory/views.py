@@ -627,7 +627,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
         return context
 
     def form_valid(self, form):
-        if self.kwargs['action_type'] == 'locationchange':
+        if self.kwargs['action_type'] == 'locationchange' or self.kwargs['action_type'] =='movetotrash':
             # Find previous location to add to Detail field text
             old_location_pk = self.object.tracker.previous('location')
             if old_location_pk:
@@ -658,6 +658,13 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 item.save()
                 action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location_id=item.location_id,
                                                       user_id=self.request.user.id, inventory_id=item.id)
+
+            # If "movetotrash", need to remove all Build/AssemblyPart/Destination data
+            if self.kwargs['action_type'] =='movetotrash':
+                self.object.build = None
+                self.object.assembly_part = None
+                self.object.assigned_destination_root = None
+                self.object.save()
 
         if self.kwargs['action_type'] == 'removefrombuild':
             # Find Build it was removed from
@@ -905,7 +912,7 @@ class InventoryAjaxAddToBuildListView(LoginRequiredMixin, TemplateView):
 
         if inventory_item.assembly_part:
             for build in builds:
-                for assembly_part in build.assembly.assembly_parts.all():
+                for assembly_part in build.assembly_revision.assembly_parts.all():
                     if assembly_part != inventory_item.assembly_part:
                         x = False
                     else:
@@ -915,7 +922,7 @@ class InventoryAjaxAddToBuildListView(LoginRequiredMixin, TemplateView):
                     builds = builds.exclude(id=build.id)
         else:
             for build in builds:
-                for assembly_part in build.assembly.assembly_parts.all():
+                for assembly_part in build.assembly_revision.assembly_parts.all():
                     if assembly_part.part != inventory_item.part:
                         x = False
                     else:
@@ -924,12 +931,12 @@ class InventoryAjaxAddToBuildListView(LoginRequiredMixin, TemplateView):
                 if not x:
                     builds = builds.exclude(id=build.id)
 
-        builds = builds.prefetch_related('assembly__assembly_parts__part')
+        builds = builds.prefetch_related('assembly_revision__assembly_parts__part')
 
         if inventory_item.assembly_part:
             assembly_parts = AssemblyPart.objects.filter(id=inventory_item.assembly_part.id)
         else:
-            assembly_parts = AssemblyPart.objects.filter(part=inventory_item.part).filter(assembly__builds__in=builds).select_related().distinct()
+            assembly_parts = AssemblyPart.objects.filter(part=inventory_item.part).filter(assembly_revision__builds__in=builds).select_related().distinct()
 
         context.update({
             'inventory_item': inventory_item
@@ -1027,7 +1034,7 @@ class InventoryAjaxAssignDestinationView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super(InventoryAjaxAssignDestinationView, self).get_context_data(**kwargs)
         inventory_item = Inventory.objects.get(id=self.kwargs['pk'])
-        assembly_parts = AssemblyPart.objects.filter(part=inventory_item.part).order_by('assembly').select_related()
+        assembly_parts = AssemblyPart.objects.filter(part=inventory_item.part).order_by('assembly_revision').select_related()
 
         context.update({
             'inventory_item': inventory_item

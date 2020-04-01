@@ -42,14 +42,14 @@
 
             {% if assembly_parts %}
 
-                {% regroup assembly_parts by assembly as assembly_list %}
-                {% for assembly in assembly_list %}
+                {% regroup assembly_parts by assembly_revision as assembly_list %}
+                {% for assembly_revision in assembly_list %}
 
                 <div class="card">
                     <div class="card-header" id="heading-{{ forloop.counter }}">
                       <h5 class="mb-0">
                         <button class="btn btn-link" data-toggle="collapse" data-target="#collapse-{{ forloop.counter }}" aria-expanded="true" aria-controls="collapse-{{ forloop.counter }}">
-                          <b>{{ assembly.grouper }}</b>
+                          <b>{{ assembly_revision.grouper.assembly }} - Revision {{ assembly_revision.grouper.revision_code }}</b>
                         </button>
                       </h5>
                     </div>
@@ -57,9 +57,9 @@
                     <div id="collapse-{{ forloop.counter }}" class="collapse" aria-labelledby="heading-{{ assembly.id }}" data-parent="#available-assembly-parts">
                       <div class="card-body ajax-add-subassembly-link">
                           <ul class="list-group list-group-flush">
-                           {% for assembly_part in assembly.list %}
+                           {% for assembly_part in assembly_revision.list %}
                                 <li class="list-group-item">
-                                   <b>{{ assembly_part.assembly }}</b> <br>
+                                   <b>{{ assembly_part.assembly_revision.assembly }} - Revision {{ assembly_part.assembly_revision.revision_code }}</b> <br>
 
                                    {% if assembly_part.get_ancestors %}
                                        {{ assembly_part.get_ancestors|tree_path:" > " }} >
