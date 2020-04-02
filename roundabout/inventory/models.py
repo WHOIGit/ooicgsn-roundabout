@@ -196,24 +196,6 @@ class Inventory(MPTTModel):
     def __str__(self):
         return self.serial_number
 
-    def csv_row(self,headers):
-        row = []
-        for header in headers:
-            header = header.lower().replace(' ','_')
-            if header.lower()=='type':
-                cell='Inventory'
-            elif header in ['sn', 'serial_number']:
-                cell=self.serial_number
-            elif header in ['name','part_name']:
-                cell=self.part.name
-            elif header in ['location','loc']:
-                cell=self.location
-            #elif header in TODO UDF
-            else:
-                cell=''
-            row.append(cell)
-        return row
-
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
         return 'inventory'
