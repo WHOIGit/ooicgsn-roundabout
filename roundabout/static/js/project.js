@@ -365,8 +365,16 @@ $(document).ready(function(){
             method: "POST",
             url: thisURL,
             data: formData,
+            beforeSend: function() {
+                // Show spinner container
+                $("#spinner-loader").show();
+            },
             success: handleFormSuccess,
             error: handleFormError,
+            complete:function(data){
+                // Hide spinner container
+                $("#spinner-loader").hide();
+            }
         })
     })
 
