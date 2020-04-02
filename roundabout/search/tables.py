@@ -26,17 +26,15 @@ from django.db.models import Count
 import django_tables2 as tables
 from django_tables2_column_shifter.tables import ColumnShiftTable
 
+from roundabout.parts.models import Part
+from roundabout.builds.models import Build
 from roundabout.inventory.models import Inventory
-from roundabout.locations.models import Location
-from roundabout.parts.models import Part, PartType, Revision
-from roundabout.userdefinedfields.models import FieldValue
-from roundabout.admintools.models import Printer
-from roundabout.assemblies.models import AssemblyPart,Assembly
-from roundabout.builds.models import Build, BuildAction
+from roundabout.assemblies.models import Assembly
 from roundabout.userdefinedfields.models import Field
 
 
 UDF_FIELDS = list(Field.objects.all().order_by('id'))
+
 class UDF_Column(tables.ManyToManyColumn):
 
     prefix = 'udf-'
@@ -46,27 +44,20 @@ class UDF_Column(tables.ManyToManyColumn):
         super().__init__(accessor='fieldvalues', verbose_name=udf.field_name, orderable=True, default='',
                          filter=lambda qs: qs.filter(field__id=udf.id, is_current=True))
 
-    # TESTING
-    #def foot_func(self, table, bound_column):
-    #    a = [self.filter(getattr(x,self.accessor,None)) for x in table.data]
-    #    print('FOOT',self.udf.id, a)
-    #    s = len([x for x in a if x])
-    #    return s
-
-    #TESTING
-    #def render(self, value):
-    #    print('UDF_RENDER:', self.udf.field_name, self.filter(value) if value.exists() else self.default)
-    #    return super().render(value)
 
 class SearchTable(ColumnShiftTable):
     class Meta:
         template_name = "django_tables2/bootstrap4.html"
 
+    def set_column_default_show(self, table_data):
+        self.column_default_show = None
+
+
 class InventoryTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Inventory
         fields = ['serial_number', 'part', 'part__part_number', 'location','revision__note', 'created_at', 'updated_at' ]
-
+    # TODO more columns, incl. whatever you searched on
     serial_number = tables.Column(verbose_name='Serial Number')
     part__part_number = tables.Column(verbose_name='Part Number', visible = False)
     revision__note = tables.Column(verbose_name='Notes')
@@ -74,12 +65,7 @@ class InventoryTable(SearchTable):
     def set_column_default_show(self,table_data):
         self.column_default_show = ['serial_number', 'part', 'part__part_number', 'location']
 
-        try: actual_udf_IDs = set(table_data.values_list('fieldvalues__field__id',flat=True))
-        except AttributeError: # sometimes qs is returned as a list
-            qs_list = Field.objects.none()
-            for x in table_data:
-                qs_list = qs_list.union(x.part.user_defined_fields.all())
-            actual_udf_IDs = list(qs_list.values_list('id',flat=True))
+        actual_udf_IDs = set(table_data.values_list('fieldvalues__field__id', flat=True))
 
         for bound_col in self.columns:
             if bound_col.name.startswith(UDF_Column.prefix):
@@ -89,7 +75,6 @@ class InventoryTable(SearchTable):
                     #bound_col.column.visible = False  # completely removes it from the interface, but will exist in export, but also does not allow for it to be shown again.
                     #bound_col.column.exclude_from_export = True # removes column from the export list!
 
-    #TODO with filterview auto select filtere'd columns: https://stackoverflow.com/questions/52686382/dynamic-columns-with-singletablemixin-and-filterview-in-django
 
     def render_serial_number(self, value, record):
         item_url = reverse("inventory:inventory_detail", args=[record.pk])
@@ -146,6 +131,7 @@ class BuildTable(SearchTable):
         item_url = reverse("builds:builds_detail", args=[record.pk])
         html_string = '<a href={}>{}-{}</a>'.format(item_url, record.assembly.assembly_number, record.build_number.replace('Build ',''))
         return format_html(html_string)
+    #TODO def value_build(self, record)
 
 
 class AssemblyTable(SearchTable):
