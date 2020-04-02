@@ -22,7 +22,7 @@ from roundabout.assemblies.models import AssemblyPart
 from roundabout.builds.models import Build, BuildAction
 from roundabout.userdefinedfields.models import Field
 
-
+#TODO this folder is proooobably mostly garbage now... use search
 
 class ReportsHome(LoginRequiredMixin, TemplateView):
     template_name = 'reports/reports_home.html'
