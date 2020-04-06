@@ -48,12 +48,10 @@
                   <th>Name</th>
               </thead>
               <tbody>
-
                   {% if coefficient_form.errors %}
                     <tr>
                         <div class="alert alert-danger">
                           {% for dict in coefficient_form.errors %}
-
                             {% for error in dict.values %}
                               {{ error|escape }}
                             {% endfor %}
@@ -73,7 +71,7 @@
               </tbody>
             </table>
           </div>
-
+          
         <div class="row">
             {% if form.errors %}
             {% for field in form %}
@@ -89,8 +87,6 @@
             </div>
             {% endfor %}
             {% endif %}
-
-
         </div>
 
         <div class="control-group">

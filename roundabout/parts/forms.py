@@ -43,10 +43,11 @@ class PartForm(forms.ModelForm):
 
     class Meta:
         model = Part
-        fields = ['part_number', 'name', 'friendly_name', 'part_type']
+        fields = ['part_number', 'name', 'friendly_name', 'part_type', 'cal_dec_places']
         labels = {
             'parent': 'Parent Assembly',
-            'note': 'Part Template Notes'
+            'note': 'Part Template Notes',
+            'cal_dec_places': 'Max Calibration Coefficient decimal places'
         }
 """
     def clean_part_number(self):
