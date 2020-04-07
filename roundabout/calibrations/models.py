@@ -10,17 +10,12 @@ from decimal import Decimal
 class CoefficientName(models.Model):
     calibration_name = models.CharField(max_length=255, unique=False, db_index=True)
     part = models.ForeignKey(Part, related_name='coefficient_names', on_delete=models.CASCADE, null=True)
-
     def __str__(self):
         return self.calibration_name
-
     def get_object_type(self):
         return 'coefficient_name'
-
     class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['calibration_name','part'], name='unique_names_per_part'),
-        ]
+        ordering = ['calibration_name']
 
 
 class CalibrationEvent(models.Model):
@@ -35,13 +30,10 @@ class CalibrationEvent(models.Model):
     inventory = models.ForeignKey(Inventory, related_name='calibration_events', on_delete=models.CASCADE, null=False)
     deployment = models.ForeignKey(Deployment, related_name='calibration_events', on_delete=models.CASCADE, null=True)
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
-
     def __str__(self):
         return self.calibration_date
-
     def get_object_type(self):
         return 'calibration_event'
-
     class Meta:
         ordering = ['-calibration_date']
 
@@ -52,9 +44,7 @@ class CoefficientValue(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     coefficient_name = models.ForeignKey(CoefficientName, related_name='coefficient_values', on_delete=models.CASCADE, null=True)
     calibration_event = models.ForeignKey(CalibrationEvent, related_name='coefficient_values', on_delete=models.CASCADE, null=True)
-
     def __str__(self):
         return self.notes
-
     def get_object_type(self):
         return 'coefficient_value'

@@ -497,11 +497,19 @@
                             <i class="fa" aria-hidden="true"></i>
                             <span class="sr-only">Expand/Collapse Calibration {{ event.calibration_date }}</span>
                         </a>
+                        <div class = 'ajax-detail-link pull-right'>
+                            <a  href="#"
+                            class="btn btn-primary btn-sm float-left mr-2"
+                            role="button"
+                            data-detail-url="{% url 'calibrations:event_form' event.id %}"
+                            data-node-id="{{ event.id }}"
+                            data-node-type="detail">Edit Coefficients</a>
+                        </div>
                         <div class="collapse mt-3" id="event-{{ event.id }}">
                             <hr>
                             <p>Approved: {{ event.approved }}</p>
                             <p>Approved by: {{ event.user_approver.username }}</p>
-                            <p>Drafted by: {{ event.user_draft.username }}</p>
+                            <p>Last Updated by: {{ event.user_draft.username }}</p>
                             <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
                                 <li class="nav-item">
                                 <a class="nav-link active" id="documentation-tab" data-toggle="tab" href="#coefficients" role="tab" aria-controls="coefficients" aria-selected="false">Coefficients</a>
@@ -600,6 +608,15 @@
         });
 
     });
+
+    var inv_part_type = '{{inventory_item.part.part_type}}';
+    if (inv_part_type == 'Instrument') {
+        $('#calibration-template-tab').show();
+        $('#calibration-template').show();
+    } else {
+        $('#calibration-template-tab').hide();
+        $('#calibration-template').hide();
+    }
 
 </script>
 {% endblock javascript %}

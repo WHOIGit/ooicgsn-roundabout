@@ -27,8 +27,7 @@ class CoefficientValueForm(forms.ModelForm):
         super(CoefficientValueForm, self).__init__(*args, **kwargs)
         if hasattr(self,'inv_id'):
             inv_inst = Inventory.objects.get(id=self.inv_id)
-            part_inst = Part.objects.get(id=inv_inst.part.id)
-            self.fields['coefficient_name'].queryset = CoefficientName.objects.filter(part=part_inst)
+            self.fields['coefficient_name'].queryset = CoefficientName.objects.filter(part=inv_inst.part)
 
 
 CoefficientFormset = inlineformset_factory(
