@@ -3,6 +3,7 @@ from .models import CoefficientName, CoefficientValue, CalibrationEvent
 from roundabout.inventory.models import Inventory
 from roundabout.parts.models import Part
 from django.forms.models import inlineformset_factory, BaseInlineFormSet
+from bootstrap_datepicker_plus import DatePickerInput
 
 class CalibrationAddForm(forms.ModelForm):
     class Meta:
@@ -13,7 +14,14 @@ class CalibrationAddForm(forms.ModelForm):
             'approved': 'Approved'
         }
         widgets = {
-            'calibration_date': forms.DateInput(),
+            'calibration_date': DatePickerInput(
+                options={
+                    "format": "MM/DD/YYYY", # moment date-time format
+                    "showClose": True,
+                    "showClear": True,
+                    "showTodayButton": True,
+                }
+            )
         }
 
 
