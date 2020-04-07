@@ -46,6 +46,7 @@ from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, UDF_FI
 
 
 def searchbar_redirect(request):
+    # TODO probably js based but: make the default model to search on match the page/app.
     print('SEARCHBAR: ',request.GET)
     model = request.GET['model']
     url = 'search:'+model
@@ -68,6 +69,20 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
     #context_object_name = 'query_objs'
     template_name = 'search/adv_search.html'
     exclude_columns = []
+
+    STR_LOOKUPS = ['contains', 'icontains', 'exact', 'iexact',
+                   'startswith', 'istartswith', 'endswith', 'iendswith', 'regex', 'iregex']
+    NUM_LOOKUPS = ['exact', 'gt', 'gte', 'lt', 'lte', 'range']
+    DATE_LOOKUPS= ['date', 'year', 'iso_year', 'month', 'day', 'week', 'week_day',
+                   'quarter', 'time', 'hour', 'minute', 'second'] + NUM_LOOKUPS
+    ITER_LOOKUPS = ['in']
+
+    STR_LOOKUPS = []
+    NUM_LOOKUPS = []
+    DATE_LOOKUPS = []+NUM_LOOKUPS
+    ITER_LOOKUPS = ["in"]
+    BOOL_LOOKUPS = ["iexact"]
+
 
     def get_search_cards(self):
         GET = self.request.GET
@@ -173,6 +188,13 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
         context['prev_cards'] = json.dumps(cards)
         context['model'] = self.model.__name__
 
+        avail_lookups = [dict(value='icontains',text='Contains'),
+                         dict(value='exact',    text='Exact'),
+                         dict(value='gte',      text='>='),
+                         dict(value='lte',      text='<='),]
+        context['avail_lookups'] = json.dumps(avail_lookups)
+        context['avail_fields'] = json.dumps([dict(value="id", text="Database ID", legal_lookups=['exact'])])
+
         # Setting default shown columns, only columns who which have any data* in them will show
         # * well actually it looks at the Part of the inventory and keeps all UDF's that appear there for the whole table.
         context['table'].set_column_default_show(self.get_table_data())
@@ -204,7 +226,35 @@ class InventoryTableView(GenericSearchTableView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        #TODO pass on fields to include with <options>
+
+        avail_fields = [dict(value="part__name",              text="Name", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="serial_number",  text="Serial Number", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="build__assembly__name",  text="Build", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="revision__note",          text="Note", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="created_at",      text="Date Created", legal_lookups=self.DATE_LOOKUPS),
+                        dict(value="updated_at",     text="Date Modified", legal_lookups=self.DATE_LOOKUPS),
+
+                        dict(value=None, text="--Part--", disabled=True),
+                        dict(value="part__part_type__name",    text="Part Type", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="part__unit_cost",          text="Unit Cost", legal_lookups=self.NUM_LOOKUPS),
+                        dict(value="part__refurbishment_cost", text="Refurb Cost", legal_lookups=self.NUM_LOOKUPS),
+
+                        dict(value=None, text="--Location--", disabled=True),
+                        dict(value="location__name",          text="Name", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="location__location_type", text="Type", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="location__root_type",     text="Root", legal_lookups=self.STR_LOOKUPS),
+
+                        dict(value=None, text="--User-Defined-Fields--", disabled=True),
+                        dict(value="fieldvalues__field__field_name", text="UDF Name", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="fieldvalues__field_value",       text="UDF Value",
+                             legal_lookups=self.STR_LOOKUPS+self.NUM_LOOKUPS+self.ITER_LOOKUPS),]
+
+        for field in avail_fields:
+            if "disabled" not in field:
+                field["disabled"] = False
+
+        context["avail_fields"] = json.dumps(avail_fields)
+
         return context
 
 
@@ -214,7 +264,23 @@ class PartTableView(GenericSearchTableView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        #TODO pass on fields to include with <options>
+
+        avail_fields = [dict(value="name",                      text="Name", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="part_number",        text="Part Number", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="part_type__name",      text="Part Type", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="unit_cost",            text="Unit Cost", legal_lookups=self.NUM_LOOKUPS),
+                        dict(value="refurbishment_cost", text="Refurb Cost", legal_lookups=self.NUM_LOOKUPS),
+                        dict(value="note",                      text="Note", legal_lookups=self.STR_LOOKUPS),
+
+                        dict(value=None, text="--User-Defined-Fields--", disabled=True),
+                        dict(value="user_defined_fields__field_name", text="UDF Name", legal_lookups=self.STR_LOOKUPS),]
+
+        for field in avail_fields:
+            if "disabled" not in field:
+                field["disabled"] = False
+
+        context["avail_fields"] = json.dumps(avail_fields)
+
         return context
 
 
@@ -224,7 +290,27 @@ class BuildTableView(GenericSearchTableView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        #TODO pass on fields to include with <options>
+
+        avail_fields = [dict(value="assembly__name",                text="Name", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="build_number",          text="Build Number", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="assembly__assembly_type__name", text="Type", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="assembly__description",  text="Description", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="build_notes",                  text="Notes", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="detail",                      text="Detail", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="is_deployed",           text="is-deployed?", legal_lookups=self.BOOL_LOOKUPS),
+                        dict(value="time_at_sea",            text="Time at Sea", legal_lookups=self.NUM_LOOKUPS),
+                        dict(value="created_at",            text="Date Created", legal_lookups=self.DATE_LOOKUPS),
+                        dict(value="updated_at",           text="Date Modified", legal_lookups=self.DATE_LOOKUPS),
+
+                        dict(value=None, text="--Location--", disabled=True),
+                        dict(value="location__name",          text="Name", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="location__location_type", text="Type", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="location__root_type",     text="Root", legal_lookups=self.STR_LOOKUPS),]
+
+
+
+        context["avail_fields"] = json.dumps(avail_fields)
+
         return context
 
 
@@ -234,6 +320,17 @@ class AssemblyTableView(GenericSearchTableView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        #TODO pass on fields to include with <options>
-        return context
 
+        avail_fields = [dict(value="name",                text="Name", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="assembly_number",   text="Number", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="assembly_type__name", text="Type", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="description",  text="Description", legal_lookups=self.STR_LOOKUPS),
+                        ]
+
+        for field in avail_fields:
+            if "disabled" not in field:
+                field["disabled"] = False
+
+        context["avail_fields"] = json.dumps(avail_fields)
+
+        return context

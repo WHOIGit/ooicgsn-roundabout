@@ -33,25 +33,38 @@
   <script>
     const page_model = '{{ model }}'
 
-    function reset_cards(cards=[]){
+    function reset_cards(cards=null,fields=null){
       $("#adv-search-cards").empty()
       if (cards.length>0) {
         for (let card of cards) {
-          insert_card(page_model, card)
+          insert_card(page_model, card, fields)
         }
       }
-      else{ insert_card(page_model) }
+      else{ insert_card(page_model, null, fields) }
     }
 
     {% if prev_cards %}
-    const prev_cards = jQuery.parseJSON('{{ prev_cards|escapejs }}')
+    const prev_cards = jQuery.parseJSON("{{ prev_cards|escapejs }}")
     {% else %}
-    const prev_cards = []
+    const prev_cards = null
     {% endif %}
 
-    console.log(page_model,prev_cards)
+    {% if avail_fields %}
+    const avail_fields = jQuery.parseJSON("{{ avail_fields|escapejs }}")
+    {% else %}
+    const avail_fields = [{value:'id',text:'Database ID',disabled:false, legal_lookups:['exact']}]
+    {% endif %}
 
-    window.addEventListener("load", function(){reset_cards(prev_cards)})
+    {% if avail_lookups %}
+    const avail_lookups = jQuery.parseJSON("{{ avail_lookups|escapejs }}")
+    {% else %}
+    const avail_lookups = [{value: "icontains", text: "Contains"},
+                           {value:     "exact", text:    "Exact"}]
+    {% endif %}
+
+    //console.log(page_model,prev_cards, avail_lookups)
+
+    window.addEventListener("load", function(){reset_cards(prev_cards,avail_fields)})
 
   </script>
 {% endblock javascript %}

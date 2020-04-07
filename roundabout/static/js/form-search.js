@@ -32,7 +32,7 @@ String.prototype.replaceAll = function(search, replacement) {
 };
 
 
-function create_card(card_name,model,card_data=null){
+function create_card(card_name, model, card_data=null, fields=null){
 
     const card_id = 'qcard_c{{ cindex }}'
     let card_html = `<div class="card qcard mb-2" id="{{ card_id }}">{{ card_header }}{{ card_body }}</div>`.replace('{{ card_id }}',card_id)
@@ -57,28 +57,29 @@ function create_card(card_name,model,card_data=null){
     let card_rows = ''
     if (card_data){
         for (let row_idx in card_data['rows']){
-            card_rows = card_rows+create_row(card_name,model,row_idx,card_data['rows'][row_idx])
+            card_rows = card_rows+create_row(card_name,model,row_idx,card_data['rows'][row_idx],fields)
           }
     }
     else{
-        card_rows = create_row(card_name,model,0)
+        card_rows = create_row(card_name,model,0,null, fields)
     }
 
     let plus_button = `<button type='button' class="btn btn-primary-sm" id="qfield_+ROW_c{{ cindex }}" href="#"
-                      onclick="insert_row(card_idx='{{ cindex }}',model='{{ model }}');return false;" >
+                      onclick="insert_row(card_idx='{{ cindex }}',model='{{ model }}',field_options='globalhack');return false;" >
                       <i class="fa fa-plus"></i> ROW</button>`.replace('{{ model }}',model)
+    //plus_button = plus_button.replace('{{ field_options }}',fields)
     card_body = card_body.replace('{{ card_rows }}',card_rows).replace('{{ plus_button }}',plus_button)
     card_html = card_html.replace('{{ card_header }}', card_header).replace('{{ card_body }}', card_body)
     card_html = card_html.replaceAll('{{ cindex }}',card_name)
     return card_html
 }
 
-function insert_card(model,card_data=null){
+function insert_card(model,card_data=null,fields=null){
     const cards = document.getElementById('adv-search-cards')
     let name = cards.children.length + 1
     if (card_data){ name = card_data['card_id'] }
     else if (name===1){name=''}
-    const new_card = str2html(create_card(name,model,card_data))
+    const new_card = str2html(create_card(name,model,card_data,fields))
     cards.appendChild(new_card)
     enable_fancy_toggle(target_class='fancy-toggle--nega')
 }
@@ -96,7 +97,7 @@ function change_select_multicity(id,size){
     return true
 }
 
-function create_row(card_idx, model, row_index,row_data=null){
+function create_row(card_idx, model, row_index,row_data=null,field_options=null){
     let init_fields = []
     let init_lookup = 'icontains'
     let init_query = ''
@@ -145,78 +146,36 @@ function create_row(card_idx, model, row_index,row_data=null){
     fields = fields.replaceAll('{{ field_select_id }}',field_select_id)
 
     let options = ''
-    if (model === 'Inventory'){
-        options = `<option value="part__name">Name</option>
-                   <option value="serial_number">Serial Number</option>
-                   <option value="build__assembly__name">Build</option>
-                   <option value="revision__note">Note</option>
-                   <option value="created_at">Date Created</option>
-                   <option value="updated_at">Date Modified</option>
-
-                   <option disabled style="font-style:italic" >--Part--</option>
-                   <option value="part__part_type__name">Part Type</option>
-                   <option value="part__unit_cost">Unit Cost</option>
-                   <option value="part__refurbishment_cost">Refurb Cost</option>
-
-                   <option disabled style="font-style:italic" >--Location--</option>
-                   <option value="location__name">Name</option>
-                   <option value="location__location_type">Type</option>
-                   <option value="location__root_type">Root</option>
-                   <option disabled style="font-style:italic" >--User-Defined-Fields--</option>
-                   <option value="fieldvalues__field__field_name">UDF Name</option>
-                   <option value="fieldvalues__field_value">UDF Value</option>`
-    }
-
-    else if (model === 'Part'){
-        options = `<option value="part_number">Part Number</option>
-                   <option value="name">Name</option>
-                   <option value="part_type__name">Part Type</option>
-                   <option value="unit_cost">Unit Cost</option>
-                   <option value="refurbishment_cost">Refurb Cost</option>
-                   <option value="note">Note</option>
-                   <option disabled style="font-style:italic" >--User-Defined-Fields--</option>
-                   <option value="user_defined_fields__field_name">UDF Name</option>`
-    }
-
-    else if (model === 'Build'){
-        options = `<option value="build_number">Build Number</option>
-                   <option value="assembly__name">Name</option>
-                   <option value="assembly__assembly_type__name">Type</option>
-                   <option value="assembly__description">Description</option>
-                   <option value="created_at">Date Created</option>
-                   <option value="updated_at">Date Modified</option>
-                   <option value="build_notes">Notes</option>
-                   <option value="detail">Detail</option>
-                   <option value="is_deployed">is-deployed?</option>
-                   <option value="time_at_sea">Time at Sea</option>
-                   <option disabled style="font-style:italic" >--Location--</option>
-                   <option value="location__name">Name</option>
-                   <option value="location__location_type">Type</option>
-                   <option value="location__root_type">Root</option>`
-    }
-
-    else if (model === 'Assembly'){
-        options = `<option value="assembly_number">Number</option>
-                   <option value="name">Name</option>
-                   <option value="assembly_type__name">Type</option>
-                   <option value="description">Description</option>`
-    }
-
-    for (let init_field of init_fields){
-        options = options.replace('value="{{ opt }}"'.replace('{{ opt }}',init_field),
-                                  'selected value="{{ opt }}"'.replace('{{ opt }}',init_field))
-    }
+    let option = ''
+    if (field_options){ for (const field of field_options){
+        if (field['disabled']){
+            option = `<option disabled style="font-style:italic" >${ field['text'] }</option>`
+        }
+        else if ( init_fields.includes(field['value']) ){
+            option = `<option selected value="${ field['value'] }">${ field['text'] }</option>`
+        }
+        else{
+            option = `<option value="${ field['value'] }">${ field['text'] }</option>`
+        }
+        options = options + option
+    }}
     options = options.replaceAll('value="','value="{{ cindex }}.{{ rindex }}.')
     fields = fields.replace('{{ options }}',options)
 
+    let lookup_options = ''
+    if (avail_lookups){for (const lookup of avail_lookups){
+        if ( init_lookup === lookup['value'] ) {
+            option = `<option selected value="${lookup['value']}">${lookup['text']}</option>`
+        } else {
+            option = `<option value="${lookup['value']}">${lookup['text']}</option>`
+        }
+        lookup_options = lookup_options + option
+    }}
     let lookup = `<div class="form-inline col-md-2 px-1"><select class="form-control col-md-12 px-1" id="qfield-lookup_c{{ cindex }}_r{{ rindex }}" name="l" >
-                    <option value="icontains">Contains</option>
-                    <option value="exact">is-Exactly</option>
-                    <option value="gte">>=</option>
-                    <option value="lte"><=</option>
+                    ${lookup_options}
                   </select></div>`
-    lookup = lookup.replace('value="{{ opt }}"'.replace('{{ opt }}',init_lookup),
-                            'value="{{ opt }}" selected'.replace('{{ opt }}',init_lookup))
+    //lookup = lookup.replace('value="{{ opt }}"'.replace('{{ opt }}',init_lookup),
+    //                        'value="{{ opt }}" selected'.replace('{{ opt }}',init_lookup))
     lookup = lookup.replaceAll('value="','value="{{ cindex }}.{{ rindex }}.')
 
     let query = `<div class="form-inline col-md-3 px-1 falseQ-textinput">
@@ -245,7 +204,7 @@ function remove_elem(elem_id) {
 }
 
 const prev_row_idx_percard = {}
-function insert_row(card_idx,model){
+function insert_row(card_idx,model,field_options=null){
     const card_id = 'qcard_c{{ cindex }}'.replace('{{ cindex }}',card_idx)
     ////var type_selector_id = 'model-select_c{{ cindex }}'.replace('{{ cindex }}',card_idx)
     //var type_selector_id = 'model-select'
@@ -257,8 +216,12 @@ function insert_row(card_idx,model){
     if (card_idx in prev_row_idx_percard){prev_row_idx_percard[card_idx] += 1}
     else {prev_row_idx_percard[card_idx] = rows_div.children.length}
 
+    // data objects can't be passed through button onclick functions, so here's a hack
+    if (field_options === 'globalhack'){
+        field_options = avail_fields   }
+
     const new_row_index = prev_row_idx_percard[card_idx]
-    const new_row = str2html(create_row(card_idx,model,new_row_index))
+    const new_row = str2html(create_row(card_idx,model,new_row_index,null,field_options))
     rows_div.appendChild(new_row)
     enable_fancy_toggle(target_class='fancy-toggle--nega')
 }
