@@ -34,21 +34,21 @@ String.prototype.replaceAll = function(search, replacement) {
 
 function create_card(card_name, model, card_data=null, fields=null){
 
-    const card_id = 'qcard_c{{ cindex }}'
-    let card_html = `<div class="card qcard mb-2" id="{{ card_id }}">{{ card_header }}{{ card_body }}</div>`.replace('{{ card_id }}',card_id)
+    const card_id = `qcard_c${card_name}`
+    let card_html = `<div class="card qcard mb-2" id=${card_id} >{{ card_header }}{{ card_body }}</div>`
 
     let card_header = `<div class="card-header container-fluid">
                          <div class="row">
-                           <div class="col-md-10"><h4>Search Block {{ card_name }}</h4></div>
+                           <div class="col-md-10"><h4>Search Block ${card_name}</h4></div>
                            <div class="col-md-2 float-right">
-                             <span class="pull-right clickable close-icon" data-effect="fadeOut" onclick="remove_elem('{{ card_id }}')"><i class="fa fa-times"></i></span>
+                             <span class="pull-right clickable close-icon" data-effect="fadeOut" onclick="remove_elem('${card_id}')"><i class="fa fa-times"></i></span>
                            </div>
                          </div>
-                       </div>`.replace('{{ card_id }}',card_id).replace('{{ card_name }}',card_name)
+                       </div>`
 
     let card_body = `
       <div class="card-body">
-        <div id="fields_c{{ cindex }}">
+        <div id="fields_c${card_name}">
           {{ card_rows }}
         </div>
         {{ plus_button }}
@@ -64,23 +64,28 @@ function create_card(card_name, model, card_data=null, fields=null){
         card_rows = create_row(card_name,model,0,null, fields)
     }
 
-    let plus_button = `<button type='button' class="btn btn-primary-sm" id="qfield_+ROW_c{{ cindex }}" href="#"
+    let plus_button = `<button type='button' class="btn btn-primary-sm" id="qfield_+ROW_c${card_name}" href="#"
                       data-toggle="tooltip" title="Results for a card are filtered by ALL the rows"
-                      onclick="insert_row(card_idx='{{ cindex }}',model='{{ model }}',field_options='globalhack');return false;" >
-                      <i class="fa fa-plus"></i> ROW</button>`.replace('{{ model }}',model)
+                      onclick="insert_row(card_idx='${card_name}',model='${model}',field_options='globalhack');return false;" >
+                      <i class="fa fa-plus"></i> ROW</button>`
     //plus_button = plus_button.replace('{{ field_options }}',fields)
     card_body = card_body.replace('{{ card_rows }}',card_rows).replace('{{ plus_button }}',plus_button)
     card_html = card_html.replace('{{ card_header }}', card_header).replace('{{ card_body }}', card_body)
-    card_html = card_html.replaceAll('{{ cindex }}',card_name)
+    //card_html = card_html.replaceAll('{{ cindex }}',card_name)
     return card_html
 }
 
-function insert_card(model,card_data=null,fields=null){
+function insert_card(model,card_data=null,field_options=null){
     const cards = document.getElementById('adv-search-cards')
     let name = cards.children.length + 1
     if (card_data){ name = card_data['card_id'] }
     else if (name===1){name=''}
-    const new_card = str2html(create_card(name,model,card_data,fields))
+
+    // data objects can't be passed through button onclick functions, so here's a hack
+    if (field_options === 'globalhack'){
+        field_options = avail_fields   }
+
+    const new_card = str2html(create_card(name,model,card_data,field_options))
     cards.appendChild(new_card)
     enable_fancy_toggle(target_class='fancy-toggle--nega')
     $('[data-tooltip="tooltip"]').tooltip();
@@ -119,25 +124,26 @@ function create_row(card_idx, model, row_index,row_data=null,field_options=null)
         else if (model === 'Assembly'){  init_fields = []   }
     }
 
-    const row_id = "qfield-row_c{{ cindex }}_r{{ rindex }}"
-    let row = `<div id="{{ row_id }}" class="form-group form-inline searchcard-row">
+    const row_id = `qfield-row_c${card_idx}_r${row_index}`
+    let row = `<div id=${row_id} class="form-group form-inline searchcard-row">
                  {{ nega }}{{ fields }}{{ lookup }}{{ query }}{{ minus_button }}</div>`
-    row = row.replace("{{ row_id }}",row_id)
+    //row = row.replace("{{ row_id }}",row_id)
 
-    const field_select_id = "field-select_c{{ cindex }}_r{{ rindex }}"
+    const field_select_id = `field-select_c${card_idx}_r${row_index}`
     let fields = `<div class="form-inline input-group col-md-5 px-1">
                       <div class="input-group-prepend">
-                          <button class="btn btn-default input-group-text" type="button" data-toggle="dropdown" data-tooltip="tooltip" title="Results for a row will match the query against ANY of the selected fields">
+                          <button class="btn btn-default input-group-text" type="button" data-toggle="dropdown"
+                                  data-tooltip="tooltip" title="Results for a row will match the query against ANY of the selected fields">
                               <span class="fa fa-ellipsis-v"></span>
                               <ul class="dropdown-menu">
-                                  <li><a class="dropdown-item" href="javascript:void(0)" onclick="change_select_multicity('{{ field_select_id }}',null)">Single</a></li>
-                                  <li><a class="dropdown-item" href="javascript:void(0)" onclick="change_select_multicity('{{ field_select_id }}',6)">Multi 6</a></li>
-                                  <li><a class="dropdown-item" href="javascript:void(0)" onclick="change_select_multicity('{{ field_select_id }}',12)">Multi 12</a></li>
+                                  <li><a class="dropdown-item" href="javascript:void(0)" onclick="change_select_multicity('${field_select_id}',null)">Single</a></li>
+                                  <li><a class="dropdown-item" href="javascript:void(0)" onclick="change_select_multicity('${field_select_id}',6)">Multi 6</a></li>
+                                  <li><a class="dropdown-item" href="javascript:void(0)" onclick="change_select_multicity('${field_select_id}',12)">Multi 12</a></li>
                               </ul>
                            </select>
                        </div>
                        <select class="selectpicker form-control col-md-12 searchcard-row--fields"
-                               id="{{ field_select_id }}"
+                               id=${field_select_id}
                                name="f" {{ multi }}>
                            {{ options }}
                        </select>
@@ -145,7 +151,7 @@ function create_row(card_idx, model, row_index,row_data=null,field_options=null)
     if (init_multi) {
            fields = fields.replace('{{ multi }}', 'size=6 multiple')
     }else{ fields = fields.replace('{{ multi }}', 'size=1') }
-    fields = fields.replaceAll('{{ field_select_id }}',field_select_id)
+    //fields = fields.replaceAll('{{ field_select_id }}',field_select_id)
 
     let options = ''
     let option = ''
@@ -161,42 +167,42 @@ function create_row(card_idx, model, row_index,row_data=null,field_options=null)
         }
         options = options + option
     }}
-    options = options.replaceAll('value="','value="{{ cindex }}.{{ rindex }}.')
+    //options = options.replaceAll('value="','value="{{ cindex }}.{{ rindex }}.')
     fields = fields.replace('{{ options }}',options)
 
     let lookup_options = ''
     if (avail_lookups){for (const lookup of avail_lookups){
+        const value = `${card_idx}.${row_index}.${lookup['value']}`
         if ( init_lookup === lookup['value'] ) {
-            option = `<option selected value="${lookup['value']}">${lookup['text']}</option>`
+            option = `<option selected value=${value}>${lookup['text']}</option>`
         } else {
-            option = `<option value="${lookup['value']}">${lookup['text']}</option>`
+            option = `<option value=${value}>${lookup['text']}</option>`
         }
         lookup_options = lookup_options + option
     }}
-    let lookup = `<div class="form-inline col-md-2 px-1"><select class="form-control col-md-12 px-1 searchcard-row--lookup" id="qfield-lookup_c{{ cindex }}_r{{ rindex }}" name="l" >
+    let lookup = `<div class="form-inline col-md-2 px-1"><select class="form-control col-md-12 px-1 searchcard-row--lookup" id="qfield-lookup_c${card_idx}_r${row_index}" name="l" >
                     ${lookup_options}
                   </select></div>`
     //lookup = lookup.replace('value="{{ opt }}"'.replace('{{ opt }}',init_lookup),
     //                        'value="{{ opt }}" selected'.replace('{{ opt }}',init_lookup))
-    lookup = lookup.replaceAll('value="','value="{{ cindex }}.{{ rindex }}.')
+    //lookup = lookup.replaceAll('value="','value="{{ cindex }}.{{ rindex }}.')
 
     let query = `<div class="form-inline col-md-3 px-1 falseQ-textinput">
-                     <input type="text" class="form-control col-md-12" id="field-query_c{{ cindex }}_r{{ rindex }}" value="{{ init_query }}">
-                     <input type="hidden" id="field-hiddenquery_c{{ cindex }}_r{{ rindex }}" name="q" value="{{ cindex }}.{{ rindex }}.">
+                     <input type="text" class="form-control col-md-12" id="field-query_c${card_idx}_r${row_index}" value="${init_query}">
+                     <input type="hidden" id="field-hiddenquery_c${card_idx}_r${row_index}" name="q" value="${card_idx}.${row_index}.">
                  </div>`
-    query = query.replace('{{ init_query }}',init_query)
 
     let remove_button = `<button type='button' class="btn btn-primary-sm float-right" href="#"
-                      onclick="remove_elem('{{ row_id }}')" >
-                      <i class="fa fa-minus"></i></button>`.replace("{{ row_id }}",row_id)
+                      onclick="remove_elem('${row_id}')" >
+                      <i class="fa fa-minus"></i></button>`
 
-    let nega = `<input class="form-check-input fancy-toggle--nega" data-toggle="toggle" type="checkbox" id="qfield-nega_c{{ cindex }}_r{{ rindex }}" name="n" value="1">`
+    let nega = `<input class="form-check-input fancy-toggle--nega" data-toggle="toggle" type="checkbox" id="qfield-nega_c${card_idx}_r${row_index}" name="n" value="${card_idx}.${row_index}.1">`
     if (init_nega === true){
-        nega = nega.replace('value="1"','checked value="1"')}
-    nega = nega.replace('value="','value="{{ cindex }}.{{ rindex }}.')
+        nega = nega.replace('value=','checked value=')}
+    //nega = nega.replace('value="','value="{{ cindex }}.{{ rindex }}.')
 
     row = row.replace('{{ fields }}',fields).replace('{{ lookup }}',lookup).replace('{{ query }}',query).replace('{{ minus_button }}',remove_button).replace('{{ nega }}',nega)
-    row = row.replaceAll('{{ rindex }}',row_index).replaceAll('{{ cindex }}',card_idx)
+    //row = row.replaceAll('{{ rindex }}',row_index).replaceAll('{{ cindex }}',card_idx)
     return row
 }
 
@@ -207,11 +213,7 @@ function remove_elem(elem_id) {
 
 const prev_row_idx_percard = {}
 function insert_row(card_idx,model,field_options=null){
-    const card_id = 'qcard_c{{ cindex }}'.replace('{{ cindex }}',card_idx)
-    ////var type_selector_id = 'model-select_c{{ cindex }}'.replace('{{ cindex }}',card_idx)
-    //var type_selector_id = 'model-select'
-    //var type_selector = document.getElementById(type_selector_id)
-    const rows_div_id = 'fields_c{{ cindex }}'.replace('{{ cindex }}',card_idx)
+    const rows_div_id = `fields_c${card_idx}`
     const rows_div = document.getElementById(rows_div_id)
 
     // prevents duplicate row indices from dynamically removed rows
