@@ -85,9 +85,9 @@
           </button>
           <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
             <a class="dropdown-item" href={% url 'search:inventory' %}>Inventory</a>
-            <a class="dropdown-item" href={% url 'search:part' %}>Part</a>
-            <a class="dropdown-item" href={% url 'search:build' %}>Build</a>
-            <a class="dropdown-item" href={% url 'search:assembly' %}>Assembly</a>
+            <a class="dropdown-item" href={% url 'search:part' %}>Parts</a>
+            <a class="dropdown-item" href={% url 'search:build' %}>Builds</a>
+            <a class="dropdown-item" href={% url 'search:assembly' %}>Assemblies</a>
           </div>
         </div>
       </div>
@@ -96,7 +96,8 @@
     <form id='adv-search-form' method="get" accept-charset="utf-8" class="form" onsubmit="DoSubmit();">
       <div id='adv-search-cards'>  </div>
       <div class="row ml-1">
-        <button class="btn btn-primary" type="button" onclick="insert_card('{{ model }}')"><i class="fa fa-plus"></i> New Card</button>
+        <button class="btn btn-primary" type="button" onclick="insert_card('{{ model }}')" data-toggle="tooltip" title="Results from different cards are compounded">
+          <i class="fa fa-plus"></i> New Card</button>
         <div class="ml-auto mr-3">
           <button class="btn btn-primary" type="button" onclick="reset_cards(prev_cards)">RESET</button>
           <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i> Submit</button>

@@ -65,6 +65,7 @@ function create_card(card_name, model, card_data=null, fields=null){
     }
 
     let plus_button = `<button type='button' class="btn btn-primary-sm" id="qfield_+ROW_c{{ cindex }}" href="#"
+                      data-toggle="tooltip" title="Results for a card are filtered by ALL the rows"
                       onclick="insert_row(card_idx='{{ cindex }}',model='{{ model }}',field_options='globalhack');return false;" >
                       <i class="fa fa-plus"></i> ROW</button>`.replace('{{ model }}',model)
     //plus_button = plus_button.replace('{{ field_options }}',fields)
@@ -82,6 +83,7 @@ function insert_card(model,card_data=null,fields=null){
     const new_card = str2html(create_card(name,model,card_data,fields))
     cards.appendChild(new_card)
     enable_fancy_toggle(target_class='fancy-toggle--nega')
+    $('[data-tooltip="tooltip"]').tooltip();
 }
 
 function change_select_multicity(id,size){
@@ -118,14 +120,14 @@ function create_row(card_idx, model, row_index,row_data=null,field_options=null)
     }
 
     const row_id = "qfield-row_c{{ cindex }}_r{{ rindex }}"
-    let row = `<div id="{{ row_id }}" class="form-group form-inline">
+    let row = `<div id="{{ row_id }}" class="form-group form-inline searchcard-row">
                  {{ nega }}{{ fields }}{{ lookup }}{{ query }}{{ minus_button }}</div>`
     row = row.replace("{{ row_id }}",row_id)
 
     const field_select_id = "field-select_c{{ cindex }}_r{{ rindex }}"
     let fields = `<div class="form-inline input-group col-md-5 px-1">
                       <div class="input-group-prepend">
-                          <button class="btn btn-default input-group-text" type="button" data-toggle="dropdown">
+                          <button class="btn btn-default input-group-text" type="button" data-toggle="dropdown" data-tooltip="tooltip" title="Results for a row will match the query against ANY of the selected fields">
                               <span class="fa fa-ellipsis-v"></span>
                               <ul class="dropdown-menu">
                                   <li><a class="dropdown-item" href="javascript:void(0)" onclick="change_select_multicity('{{ field_select_id }}',null)">Single</a></li>
@@ -134,7 +136,7 @@ function create_row(card_idx, model, row_index,row_data=null,field_options=null)
                               </ul>
                            </select>
                        </div>
-                       <select class="selectpicker form-control col-md-12"
+                       <select class="selectpicker form-control col-md-12 searchcard-row--fields"
                                id="{{ field_select_id }}"
                                name="f" {{ multi }}>
                            {{ options }}
@@ -171,7 +173,7 @@ function create_row(card_idx, model, row_index,row_data=null,field_options=null)
         }
         lookup_options = lookup_options + option
     }}
-    let lookup = `<div class="form-inline col-md-2 px-1"><select class="form-control col-md-12 px-1" id="qfield-lookup_c{{ cindex }}_r{{ rindex }}" name="l" >
+    let lookup = `<div class="form-inline col-md-2 px-1"><select class="form-control col-md-12 px-1 searchcard-row--lookup" id="qfield-lookup_c{{ cindex }}_r{{ rindex }}" name="l" >
                     ${lookup_options}
                   </select></div>`
     //lookup = lookup.replace('value="{{ opt }}"'.replace('{{ opt }}',init_lookup),
@@ -224,6 +226,7 @@ function insert_row(card_idx,model,field_options=null){
     const new_row = str2html(create_row(card_idx,model,new_row_index,null,field_options))
     rows_div.appendChild(new_row)
     enable_fancy_toggle(target_class='fancy-toggle--nega')
+    $('[data-tooltip="tooltip"]').tooltip();
 }
 
 function enable_fancy_toggle(target_class=null,target_id=null, toggle_kwargs=null){
@@ -241,6 +244,28 @@ function enable_fancy_toggle(target_class=null,target_id=null, toggle_kwargs=nul
 }
 
 function DoSubmit(){
+
+    //TODO
+    //field x lookup  validation
+    // see searchcard-row, searchcard-row--fields, searchcard-row--lookup
+    const rows = $('.searchcard-row')
+    rows.each(function(){
+        const row = $(this)
+        const field_values = $(this).find('.searchcard-row--fields').val()
+        const lookup_input = $(this).find('.searchcard-row--lookup')
+        const lookup_value = lookup_input.val()
+        console.log(field_values,lookup_value)
+        //then match up the results of fields with avail_fields[idx]['value']
+        //and make sure the lookup is in the corresponding avail_fields[idx]['legal_lookups']
+        //for each field_value in field_values
+        //idx = avail_fields.findIndex(f => f.value == field_value)
+        //if ( avail_fields[idx].legal_lookups.includes(lookup_value) ){
+        // do nothing, you're fine
+        // }
+        // else { set lookup_input to be red + set a flag to not-submit page}
+        })
+
+    //adding card and row info to query field responses
     const q_divs = $('.falseQ-textinput')
     q_divs.each(function(){
         const q_div = $(this).get(0)
@@ -248,5 +273,6 @@ function DoSubmit(){
         const hidden_elem = q_div.lastElementChild
         hidden_elem.value = hidden_elem.value + visible_elem.value
     })
+
     return true
 }
