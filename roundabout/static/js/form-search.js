@@ -238,40 +238,44 @@ function enable_fancy_toggle(target_class=null,target_id=null, toggle_kwargs=nul
 
 function DoSubmit(e){
 
-    //TODO
-    //field x lookup  validation
-    // see searchcard-row, searchcard-row--fields, searchcard-row--lookup
+    // VALIDATION
     let validation_alerts = []
     const rows = $('.searchcard-row')
     rows.each(function(){
         const field_input = $(this).find('.searchcard-row--fields')
         const lookup_input = $(this).find('.searchcard-row--lookup')
         const query_input = $(this).find('.searchcard-row--querybox')
+
         let field_values = null
         try { field_values = field_input.val().map(elem => elem.split('.')[2]) }
         catch(e){ field_values = [field_input.val().split('.')[2]]}
-        const lookup_value = lookup_input.val().split('.')[2]
+        //let field_texts = Array.from(field_input.get(0).selectedOptions).map(o => o.innerText)
 
-        console.log(field_values,lookup_value, query_input.val(), Boolean(query_input.val()))
+        const lookup_value = lookup_input.val().split('.')[2]
+        //const lookup_text = Array.from(field_input.get(0).selectedOptions).map(o => o.innerText)[0]
+
+        // alert if query text box empty
         if (!query_input.val()){
             validation_alerts.push('Query textboxes cannot be left empty')
         }
 
         field_values.forEach(function(field_value){
             console.log(field_value)
-            const idx = avail_fields.findIndex(f => f.value == field_value)
+            const idx = avail_fields.findIndex(f => f.text == field_value)
             if ( ! avail_fields[idx].legal_lookups.includes(lookup_value) ){
                 validation_alerts.push(`Field "${field_value}" cannot be used with "${lookup_value}"`)
             }
         })})
 
     if (validation_alerts.length>0){
+        // There are alerts, Prevent Submission!
         e.preventDefault() // stops form from submitting
         validation_alerts = [... new Set(validation_alerts)]
         validation_alerts = validation_alerts.join("\n")
         alert(validation_alerts)
     }
-    else {
+
+    else { // VALIDATION SUCCESSFULL !
         //adding card and row info to query field responses
         const q_divs = $('.falseQ-textinput')
         q_divs.each(function () {
