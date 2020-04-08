@@ -93,7 +93,7 @@
       </div>
     </div>
 
-    <form id='adv-search-form' method="get" accept-charset="utf-8" class="form" onsubmit="DoSubmit();">
+    <form id='adv-search-form' method="get" accept-charset="utf-8" class="form" onsubmit="DoSubmit(event)">
       <div id='adv-search-cards'>  </div>
       <div class="row ml-1">
         <button class="btn btn-primary" type="button" onclick="insert_card('{{ model }}',null,'globalhack')" data-toggle="tooltip" title="Results from different cards are compounded">

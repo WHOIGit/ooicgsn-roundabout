@@ -68,10 +68,8 @@ function create_card(card_name, model, card_data=null, fields=null){
                       data-toggle="tooltip" title="Results for a card are filtered by ALL the rows"
                       onclick="insert_row(card_idx='${card_name}',model='${model}',field_options='globalhack');return false;" >
                       <i class="fa fa-plus"></i> ROW</button>`
-    //plus_button = plus_button.replace('{{ field_options }}',fields)
     card_body = card_body.replace('{{ card_rows }}',card_rows).replace('{{ plus_button }}',plus_button)
     card_html = card_html.replace('{{ card_header }}', card_header).replace('{{ card_body }}', card_body)
-    //card_html = card_html.replaceAll('{{ cindex }}',card_name)
     return card_html
 }
 
@@ -87,7 +85,7 @@ function insert_card(model,card_data=null,field_options=null){
 
     const new_card = str2html(create_card(name,model,card_data,field_options))
     cards.appendChild(new_card)
-    enable_fancy_toggle(target_class='fancy-toggle--nega')
+    enable_fancy_toggle('fancy-toggle--nega')
     $('[data-tooltip="tooltip"]').tooltip();
 }
 
@@ -127,7 +125,6 @@ function create_row(card_idx, model, row_index,row_data=null,field_options=null)
     const row_id = `qfield-row_c${card_idx}_r${row_index}`
     let row = `<div id=${row_id} class="form-group form-inline searchcard-row">
                  {{ nega }}{{ fields }}{{ lookup }}{{ query }}{{ minus_button }}</div>`
-    //row = row.replace("{{ row_id }}",row_id)
 
     const field_select_id = `field-select_c${card_idx}_r${row_index}`
     let fields = `<div class="form-inline input-group col-md-5 px-1">
@@ -151,23 +148,22 @@ function create_row(card_idx, model, row_index,row_data=null,field_options=null)
     if (init_multi) {
            fields = fields.replace('{{ multi }}', 'size=6 multiple')
     }else{ fields = fields.replace('{{ multi }}', 'size=1') }
-    //fields = fields.replaceAll('{{ field_select_id }}',field_select_id)
 
     let options = ''
     let option = ''
     if (field_options){ for (const field of field_options){
+        const value = `${card_idx}.${row_index}.${field['value']}`
         if (field['disabled']){
             option = `<option disabled style="font-style:italic" >${ field['text'] }</option>`
         }
         else if ( init_fields.includes(field['value']) ){
-            option = `<option selected value="${ field['value'] }">${ field['text'] }</option>`
+            option = `<option selected value="${value}">${ field['text'] }</option>`
         }
         else{
-            option = `<option value="${ field['value'] }">${ field['text'] }</option>`
+            option = `<option value="${value}">${ field['text'] }</option>`
         }
         options = options + option
     }}
-    //options = options.replaceAll('value="','value="{{ cindex }}.{{ rindex }}.')
     fields = fields.replace('{{ options }}',options)
 
     let lookup_options = ''
@@ -183,12 +179,9 @@ function create_row(card_idx, model, row_index,row_data=null,field_options=null)
     let lookup = `<div class="form-inline col-md-2 px-1"><select class="form-control col-md-12 px-1 searchcard-row--lookup" id="qfield-lookup_c${card_idx}_r${row_index}" name="l" >
                     ${lookup_options}
                   </select></div>`
-    //lookup = lookup.replace('value="{{ opt }}"'.replace('{{ opt }}',init_lookup),
-    //                        'value="{{ opt }}" selected'.replace('{{ opt }}',init_lookup))
-    //lookup = lookup.replaceAll('value="','value="{{ cindex }}.{{ rindex }}.')
 
     let query = `<div class="form-inline col-md-3 px-1 falseQ-textinput">
-                     <input type="text" class="form-control col-md-12" id="field-query_c${card_idx}_r${row_index}" value="${init_query}">
+                     <input type="text" class="form-control col-md-12 searchcard-row--querybox" id="field-query_c${card_idx}_r${row_index}" value="${init_query}">
                      <input type="hidden" id="field-hiddenquery_c${card_idx}_r${row_index}" name="q" value="${card_idx}.${row_index}.">
                  </div>`
 
@@ -199,10 +192,8 @@ function create_row(card_idx, model, row_index,row_data=null,field_options=null)
     let nega = `<input class="form-check-input fancy-toggle--nega" data-toggle="toggle" type="checkbox" id="qfield-nega_c${card_idx}_r${row_index}" name="n" value="${card_idx}.${row_index}.1">`
     if (init_nega === true){
         nega = nega.replace('value=','checked value=')}
-    //nega = nega.replace('value="','value="{{ cindex }}.{{ rindex }}.')
 
     row = row.replace('{{ fields }}',fields).replace('{{ lookup }}',lookup).replace('{{ query }}',query).replace('{{ minus_button }}',remove_button).replace('{{ nega }}',nega)
-    //row = row.replaceAll('{{ rindex }}',row_index).replaceAll('{{ cindex }}',card_idx)
     return row
 }
 
@@ -245,36 +236,49 @@ function enable_fancy_toggle(target_class=null,target_id=null, toggle_kwargs=nul
     }
 }
 
-function DoSubmit(){
+function DoSubmit(e){
 
     //TODO
     //field x lookup  validation
     // see searchcard-row, searchcard-row--fields, searchcard-row--lookup
+    let validation_alerts = []
     const rows = $('.searchcard-row')
     rows.each(function(){
-        const row = $(this)
-        const field_values = $(this).find('.searchcard-row--fields').val()
+        const field_input = $(this).find('.searchcard-row--fields')
         const lookup_input = $(this).find('.searchcard-row--lookup')
-        const lookup_value = lookup_input.val()
-        console.log(field_values,lookup_value)
-        //then match up the results of fields with avail_fields[idx]['value']
-        //and make sure the lookup is in the corresponding avail_fields[idx]['legal_lookups']
-        //for each field_value in field_values
-        //idx = avail_fields.findIndex(f => f.value == field_value)
-        //if ( avail_fields[idx].legal_lookups.includes(lookup_value) ){
-        // do nothing, you're fine
-        // }
-        // else { set lookup_input to be red + set a flag to not-submit page}
+        const query_input = $(this).find('.searchcard-row--querybox')
+        let field_values = null
+        try { field_values = field_input.val().map(elem => elem.split('.')[2]) }
+        catch(e){ field_values = [field_input.val().split('.')[2]]}
+        const lookup_value = lookup_input.val().split('.')[2]
+
+        console.log(field_values,lookup_value, query_input.val(), Boolean(query_input.val()))
+        if (!query_input.val()){
+            validation_alerts.push('Query textboxes cannot be left empty')
+        }
+
+        field_values.forEach(function(field_value){
+            console.log(field_value)
+            const idx = avail_fields.findIndex(f => f.value == field_value)
+            if ( ! avail_fields[idx].legal_lookups.includes(lookup_value) ){
+                validation_alerts.push(`Field "${field_value}" cannot be used with "${lookup_value}"`)
+            }
+        })})
+
+    if (validation_alerts.length>0){
+        e.preventDefault() // stops form from submitting
+        validation_alerts = [... new Set(validation_alerts)]
+        validation_alerts = validation_alerts.join("\n")
+        alert(validation_alerts)
+    }
+    else {
+        //adding card and row info to query field responses
+        const q_divs = $('.falseQ-textinput')
+        q_divs.each(function () {
+            const q_div = $(this).get(0)
+            const visible_elem = q_div.firstElementChild
+            const hidden_elem = q_div.lastElementChild
+            hidden_elem.value = hidden_elem.value + visible_elem.value
         })
-
-    //adding card and row info to query field responses
-    const q_divs = $('.falseQ-textinput')
-    q_divs.each(function(){
-        const q_div = $(this).get(0)
-        const visible_elem = q_div.firstElementChild
-        const hidden_elem = q_div.lastElementChild
-        hidden_elem.value = hidden_elem.value + visible_elem.value
-    })
-
-    return true
+    }
 }

@@ -76,12 +76,12 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
     DATE_LOOKUPS= ['date', 'year', 'iso_year', 'month', 'day', 'week', 'week_day',
                    'quarter', 'time', 'hour', 'minute', 'second'] + NUM_LOOKUPS
     ITER_LOOKUPS = ['in']
-
-    STR_LOOKUPS = []
-    NUM_LOOKUPS = []
-    DATE_LOOKUPS = []+NUM_LOOKUPS
-    ITER_LOOKUPS = ["in"]
     BOOL_LOOKUPS = ["iexact"]
+
+    #STR_LOOKUPS = []
+    #NUM_LOOKUPS = []
+    #DATE_LOOKUPS = []+NUM_LOOKUPS
+    #ITER_LOOKUPS = ["in"]
 
 
     def get_search_cards(self):
