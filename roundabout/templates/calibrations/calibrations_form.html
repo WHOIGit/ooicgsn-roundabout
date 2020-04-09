@@ -45,7 +45,10 @@
             <h5>Calibrations</h5>
             <table class="table table-tight calibration-form">
               <thead>
-                  <th>Name</th>
+                  <th>Calibration Name</th>
+                  <th>Calibration Coefficient</th>
+                  <th>Coeffcient Notation Format</th>
+                  <th>Addtl. Notes</th>
               </thead>
               <tbody>
                   {% if coefficient_form.errors %}
@@ -65,6 +68,7 @@
                     <tr>
                         <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.coefficient_name }}</td>
                         <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.value }}</td>
+                        <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.notation_format }}</td>
                         <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.notes }}</td>
                     </tr>
                 {% endfor %}

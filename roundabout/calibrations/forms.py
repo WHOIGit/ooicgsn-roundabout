@@ -28,7 +28,13 @@ class CalibrationAddForm(forms.ModelForm):
 class CoefficientValueForm(forms.ModelForm):
     class Meta:
         model = CoefficientValue
-        fields = ['coefficient_name','value','notes']
+        fields = ['coefficient_name','value','notes','notation_format']
+        labels = {
+            'coefficient_name': 'Calibration Name',
+            'value': 'Calibration Coefficient',
+            'notes': 'Notes',
+            'notation_format': 'Notation Format'
+        }
     def __init__(self, *args, **kwargs):
         if 'inv_id' in kwargs:
             self.inv_id = kwargs.pop('inv_id')
@@ -42,7 +48,7 @@ CoefficientFormset = inlineformset_factory(
     CalibrationEvent, 
     CoefficientValue, 
     form=CoefficientValueForm,
-    fields=('coefficient_name','value','notes',), 
+    fields=('coefficient_name','value','notes','notation_format'), 
     extra=1, 
     can_delete=True
     )

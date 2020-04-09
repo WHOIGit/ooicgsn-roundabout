@@ -39,8 +39,14 @@ class CalibrationEvent(models.Model):
 
 
 class CoefficientValue(models.Model):
+    NOTATION_FORMAT = (
+        ("scientific", "Scientific"),
+        ("engineering", "Engineering"),
+        ("standard", "Standard"),
+    )
     value = models.CharField(max_length = 20, unique = False, db_index = False)
     notes = models.TextField(blank=True)
+    notation_format = models.CharField(max_length=12, choices=NOTATION_FORMAT, null=False, blank=False, default="standard")
     created_at = models.DateTimeField(default=timezone.now)
     coefficient_name = models.ForeignKey(CoefficientName, related_name='coefficient_values', on_delete=models.CASCADE, null=True)
     calibration_event = models.ForeignKey(CalibrationEvent, related_name='coefficient_values', on_delete=models.CASCADE, null=True)

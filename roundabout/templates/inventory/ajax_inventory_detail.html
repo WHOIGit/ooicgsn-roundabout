@@ -143,7 +143,9 @@
                 data-node-type="detail">Edit Inventory Details</a>
 
 
-            <a class="dropdown-item" href="#"
+            <a  id="add_coefficient_action"
+                class="dropdown-item" 
+                href="#"
                 data-detail-url="{% url 'calibrations:calibrations_form' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
@@ -611,9 +613,11 @@
 
     var inv_part_type = '{{inventory_item.part.part_type}}';
     if (inv_part_type == 'Instrument') {
+        $('#add_coefficient_action').show();
         $('#calibration-template-tab').show();
         $('#calibration-template').show();
     } else {
+        $('#add_coefficient_action').hide();
         $('#calibration-template-tab').hide();
         $('#calibration-template').hide();
     }
