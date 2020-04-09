@@ -48,7 +48,7 @@ class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
                 form_coeff_val = form.cleaned_data.get('value')
                 form_notation_format = form.cleaned_data.get('notation_format')
                 part_dec_places = inv_inst.part.cal_dec_places
-                sigfig_formatted_value = round(form_coeff_val, decimals = part_dec_places, notation=form_notation_format)
+                sigfig_formatted_value = round(form_coeff_val, decimals = part_dec_places, notation = form_notation_format)
             except:
                 raise validators.ValidationError(
                     ('Invalid value')
@@ -115,7 +115,7 @@ class CalibrationsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
             form_coeff_val = form.cleaned_data.get('value')
             form_notation_format = form.cleaned_data.get('notation_format')
             part_dec_places = inv_inst.part.cal_dec_places
-            sigfig_formatted_value = round(form_coeff_val, decimals = part_dec_places, notation=form_notation_format)
+            sigfig_formatted_value = round(form_coeff_val, decimals = part_dec_places, notation = form_notation_format)
             form.instance.value = sigfig_formatted_value
         coefficient_form.save()
         response = HttpResponseRedirect(self.get_success_url())
