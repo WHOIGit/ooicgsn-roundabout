@@ -30,7 +30,7 @@ from django.core.validators import FileExtensionValidator
 from model_utils import FieldTracker
 
 from roundabout.locations.models import Location
-from roundabout.assemblies.models import Assembly
+from roundabout.assemblies.models import Assembly, AssemblyRevision
 from roundabout.users.models import User
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
@@ -48,6 +48,8 @@ class Build(models.Model):
                               on_delete=models.SET_NULL, null=True, blank=False)
     assembly = models.ForeignKey(Assembly, related_name='builds',
                              on_delete=models.CASCADE, null=False, db_index=True)
+    assembly_revision = models.ForeignKey(AssemblyRevision, related_name='builds',
+                             on_delete=models.CASCADE, null=True, db_index=True)
     build_notes = models.TextField(blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
@@ -59,14 +61,14 @@ class Build(models.Model):
     tracker = FieldTracker(fields=['location',])
 
     class Meta:
-        ordering = ['assembly', 'build_number']
+        ordering = ['assembly_revision', 'build_number']
 
     def __str__(self):
-        return '%s - %s' % (self.build_number, self.assembly.name)
+        return '%s - %s' % (self.build_number, self.assembly_revision.assembly.name)
 
     @property
     def name(self):
-        return self.assembly.name
+        return self.assembly_revision.assembly.name
 
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):

@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -38,7 +38,8 @@ urlpatterns = [
     path('ajax/load-navtree/', views.load_builds_navtree, name='ajax_load_builds_navtree'),
     path('ajax/snapshot/<int:pk>/', view=views.BuildAjaxSnapshotCreateView.as_view(), name='ajax_builds_snapshot'),
     # AJAX filter paths
-    path('ajax/load-new-buildid-number/', views.load_new_build_id_number, name='ajax_load_new_build_id_number'),
+    path('ajax/load-assembly-revisions/', views.load_new_build_id_number, name='ajax_load_new_build_id_number'),
+    path('ajax/load-new-buildid-number/', views.load_assembly_revisions, name='ajax_load_assembly_revisions'),
     # Deployment paths
     path('ajax/deployment/add/<int:build_pk>/', view=views_deployments.DeploymentAjaxCreateView.as_view(), name='ajax_deployment_add'),
     path('ajax/deployment/action/<action_type>/<int:pk>/<int:build_pk>/', view=views_deployments.DeploymentAjaxActionView.as_view(), name='ajax_deployment_action'),
