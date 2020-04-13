@@ -278,9 +278,21 @@ function DoSubmit(e){
             if ( ! avail_fields[idx].legal_lookups.includes(lookup_value) ){
                 validation_alerts.push(`Field "${field_text}" cannot be used with "${lookup_text}".`)
             }
+
+            //Assert that date input is valid
+            if (avail_fields[idx].legal_lookups.includes('date_lookup') ) {
+                if ( !( query_value.match(/^\d{4}-\d{2}-\d{2}$/) ||
+                        query_value.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)) ){
+                    validation_alerts.push(`Date query "${query_value}" is invalid. Must use "YYYY-MM-DD" or "YYYY-MM-DD HH:MM" format`)
+                }
+                else if (! Date.parse(query_value)){
+                    validation_alerts.push(`Date query "${query_value}" is invalid`)
+                }
+
+            }
             //Assert that gte lte must be numerical
-            if ( ['gte','lte'].includes(lookup_value) && isNaN(query_value)){
-                validation_alerts.push(query_value + ' is not a number!')
+            else if ( ['gte','lte'].includes(lookup_value) && isNaN(query_value)){
+                validation_alerts.push(`Numerical or Date query "${query_value}" is invalid.`)
             }
 
             //Assert that boolean field recieves only legal boolean input/query
@@ -291,7 +303,7 @@ function DoSubmit(e){
                 else if(['FALSE','false','F','f','0','no','No','No','n','N'].includes(query_value))
                     { query_input.val('False') }
                 else {
-                    validation_alerts.push(`Boolean query must be "True" or "False", "${query_value}'" is invalid.`)
+                    validation_alerts.push(`Boolean query "${query_value}" is invalid, must be "True" or "False".`)
                 }
             }
 
