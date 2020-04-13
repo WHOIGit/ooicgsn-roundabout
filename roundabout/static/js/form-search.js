@@ -20,8 +20,8 @@
 */
 
 function str2html(html_string) {
-    const template = document.createElement('template');
-    template.innerHTML = html_string;
+    const template = document.createElement('template')
+    template.innerHTML = html_string
     if (template.content.childNodes.length===1){
           return template.content.firstChild
     }else{return template.content.childNodes}
@@ -29,8 +29,17 @@ function str2html(html_string) {
 String.prototype.replaceAll = function(search, replacement) {
     const target = this
     return target.split(search).join(replacement)
-};
+}
 
+function reset_cards(cards=null,fields=null){
+  $("#adv-search-cards").empty()
+  if (cards.length>0) {
+    for (let card of cards) {
+      insert_card(page_model, card, fields)
+    }
+  }
+  else{ insert_card(page_model, null, fields) }
+}
 
 function create_card(card_name, model, card_data=null, fields=null){
 
@@ -137,7 +146,7 @@ function create_row(card_idx, model, row_index,row_data=null,field_options=null)
                                   <li><a class="dropdown-item" href="javascript:void(0)" onclick="change_select_multicity('${field_select_id}',6)">Multi 6</a></li>
                                   <li><a class="dropdown-item" href="javascript:void(0)" onclick="change_select_multicity('${field_select_id}',12)">Multi 12</a></li>
                               </ul>
-                           </select>
+                           </button>
                        </div>
                        <select class="selectpicker form-control col-md-12 searchcard-row--fields"
                                id=${field_select_id}
@@ -237,6 +246,11 @@ function enable_fancy_toggle(target_class=null,target_id=null, toggle_kwargs=nul
 }
 
 function DoSubmit(e){
+    //e.preventDefault()
+
+    //prevent double submission
+    submit_button = $('#searchform-submit-button')
+    submit_button.prop('disabled', true)
 
     // VALIDATION
     let validation_alerts = []
@@ -246,25 +260,41 @@ function DoSubmit(e){
         const lookup_input = $(this).find('.searchcard-row--lookup')
         const query_input = $(this).find('.searchcard-row--querybox')
 
-        let field_values = null
-        try { field_values = field_input.val().map(elem => elem.split('.')[2]) }
-        catch(e){ field_values = [field_input.val().split('.')[2]]}
-        //let field_texts = Array.from(field_input.get(0).selectedOptions).map(o => o.innerText)
+        let field_values = Array.from(field_input.get(0).selectedOptions).map(o => o.value).map(v => v.split('.')[2])
+        let field_texts = Array.from(field_input.get(0).selectedOptions).map(o => o.innerText)
 
         const lookup_value = lookup_input.val().split('.')[2]
-        //const lookup_text = Array.from(field_input.get(0).selectedOptions).map(o => o.innerText)[0]
+        const lookup_text = Array.from(lookup_input.get(0).selectedOptions).map(o => o.innerText)[0]
+
+        const query_value = query_input.val()
 
         // alert if query text box empty
         if (!query_input.val()){
-            validation_alerts.push('Query textboxes cannot be left empty')
+            validation_alerts.push('Query textboxes cannot be left empty.')
         }
 
-        field_values.forEach(function(field_value){
-            console.log(field_value)
-            const idx = avail_fields.findIndex(f => f.text == field_value)
+        field_texts.forEach(function(field_text){
+            const idx = avail_fields.findIndex(f => f.text === field_text)
             if ( ! avail_fields[idx].legal_lookups.includes(lookup_value) ){
-                validation_alerts.push(`Field "${field_value}" cannot be used with "${lookup_value}"`)
+                validation_alerts.push(`Field "${field_text}" cannot be used with "${lookup_text}".`)
             }
+            //Assert that gte lte must be numerical
+            if ( ['gte','lte'].includes(lookup_value) && isNaN(query_value)){
+                validation_alerts.push(query_value + ' is not a number!')
+            }
+
+            //Assert that boolean field recieves only legal boolean input/query
+            if (avail_fields[idx].legal_lookups.includes('bool_lookup') ){
+                if (['True','False'].includes(query_value)) {  }
+                else if(['TRUE','true','T','t','1','yes','Yes','YES','y','Y'].includes(query_value))
+                    { query_input.val('True') }
+                else if(['FALSE','false','F','f','0','no','No','No','n','N'].includes(query_value))
+                    { query_input.val('False') }
+                else {
+                    validation_alerts.push(`Boolean query must be "True" or "False", "${query_value}'" is invalid.`)
+                }
+            }
+
         })})
 
     if (validation_alerts.length>0){
@@ -273,6 +303,7 @@ function DoSubmit(e){
         validation_alerts = [... new Set(validation_alerts)]
         validation_alerts = validation_alerts.join("\n")
         alert(validation_alerts)
+        submit_button.prop('disabled', false)
     }
 
     else { // VALIDATION SUCCESSFULL !
@@ -284,5 +315,62 @@ function DoSubmit(e){
             const hidden_elem = q_div.lastElementChild
             hidden_elem.value = hidden_elem.value + visible_elem.value
         })
+        submit_button.find('span').toggleClass('fa-search fa-spinner fa-spin')
     }
+}
+
+function csvdownload_spinner(on_or_off =null){
+    const csv_button = $('#search--download-csv-button')
+    const button_icon = csv_button.find('span')
+    if (on_or_off === 'on'){
+        csv_button.prop('disabled',true)
+        button_icon.addClass('fa-spinner fa-spin')
+        button_icon.removeClass('fa-download')
+    }
+    else if (on_or_off === 'off'){
+        csv_button.prop('disabled',false)
+        button_icon.removeClass('fa-spinner fa-spin')
+        button_icon.addClass('fa-download')
+    }
+    else{ // straight up toggle
+        if (csv_button.prop('disabled'))
+           {csv_button.prop('disabled',false)}
+        else{ csv_button.prop('disabled',true) }
+        button_icon.toggleClass('fa-download fa-spinner fa-spin')
+    }
+}
+
+function DownloadCSV(href_base, vis_only=null){
+
+    let href = href_base
+    if(vis_only){
+        href = `${href}&excluded_columns="${$.django_tables2_column_shifter_hidden()}"`
+    }
+    //window.location.href = href  //the old way it was done, no access to "onload"
+
+    var oReq = new XMLHttpRequest()
+    oReq.open("GET", href, true)
+    oReq.responseType = "blob"
+
+    oReq.onload = function(oEvent) {
+        var resp = oReq.response
+        console.log('ONLOAD',resp)
+        csvdownload_spinner('off')
+        saveData(resp,`RDB_${page_model}.csv`)
+    }
+    csvdownload_spinner('on')
+    oReq.send()
+}
+
+function saveData(blob, fileName)
+{
+    const a = document.createElement("a")
+    document.body.appendChild(a)
+    a.style = "display: none"
+
+    const url = window.URL.createObjectURL(blob)
+    a.href = url
+    a.download = fileName
+    a.click()
+    window.URL.revokeObjectURL(url)
 }

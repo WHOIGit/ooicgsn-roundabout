@@ -33,16 +33,6 @@
   <script>
     const page_model = '{{ model }}'
 
-    function reset_cards(cards=null,fields=null){
-      $("#adv-search-cards").empty()
-      if (cards.length>0) {
-        for (let card of cards) {
-          insert_card(page_model, card, fields)
-        }
-      }
-      else{ insert_card(page_model, null, fields) }
-    }
-
     {% if prev_cards %}
     const prev_cards = jQuery.parseJSON("{{ prev_cards|escapejs }}")
     {% else %}
@@ -61,8 +51,6 @@
     const avail_lookups = [{value: "icontains", text: "Contains"},
                            {value:     "exact", text:    "Exact"}]
     {% endif %}
-
-    //console.log(page_model,prev_cards, avail_lookups)
 
     window.addEventListener("load", function(){reset_cards(prev_cards,avail_fields)})
 
@@ -100,7 +88,8 @@
           <i class="fa fa-plus"></i> New Card</button>
         <div class="ml-auto mr-3">
           <button class="btn btn-primary" type="button" onclick="reset_cards(prev_cards,'globalhack')">RESET</button>
-          <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i> Submit</button>
+          <button id='searchform-submit-button' class="btn btn-primary" type="submit">
+            <span class="fa fa-search"></span> Submit</button>
         </div>
       </div>
 
@@ -117,8 +106,18 @@
         <h3>Search Results</h3>
       </div>
       <div class="card-body">
-          <button class="btn btn-secondary btn-sm float-right"
-                  onclick='window.location.href = "{% querystring '_export'='csv' %}&excluded_columns="+$.django_tables2_column_shifter_hidden();'>Download CSV</button>
+
+          <button id="search--download-csv-button" class="btn btn-secondary btn-sm float-right" type="button" data-toggle="dropdown">
+              <span id="search--download-csv-button--span" class="fa fa-download"></span> Download CSV
+              <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="javascript:void(0)"
+                         onclick='DownloadCSV(href_base = "{% querystring '_export'='csv' %}", vis_only=true);'>
+                            Visible Columns</a></li>
+                  <li><a class="dropdown-item" href="javascript:void(0)"
+                         onclick='DownloadCSV(href_base = "{% querystring '_export'='csv' %}", vis_only=false);'>
+                            All (Include Hidden Columns)</a></li>
+              </ul>
+          </button>
 
         {% if table %}
           <p><b>{{ table.paginator.count }}</b> items match your search!</p>
