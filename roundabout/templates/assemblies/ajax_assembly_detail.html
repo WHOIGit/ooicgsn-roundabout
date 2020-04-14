@@ -34,17 +34,18 @@
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="action">
             <div class="ajax-detail-link">
                 <a class="dropdown-item" href="#"
-                    data-detail-url="{% url 'assemblies:ajax_assemblyparts_add' assembly.id %}"
-                    data-node-id="{{ assembly.id }}"
-                    data-node-type="detail">Add Top Level Part</a>
-                <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'assemblies:ajax_assemblies_update' assembly.id %}"
                     data-node-id="{{ assembly.id }}"
-                    data-node-type="detail">Edit {{ label_assemblies_app_singular }} Details</a>
+                    data-node-type="{{ node_type }}">Edit {{ label_assemblies_app_singular }} Details</a>
+                <hr>
+                <a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly.assembly_revisions.first.id %}"
+                    data-node-id="{{ assembly.id }}"
+                    data-node-type="{{ node_type }}">Create New Revision</a>
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly.id %}"
                     data-node-id="{{ assembly.id }}"
-                    data-node-type="detail">Copy {{ label_assemblies_app_singular }} Template</a>
+                    data-node-type="{{ node_type }}">Copy {{ label_assemblies_app_singular }} Template</a>
             </div>
 
       </div>
@@ -54,9 +55,88 @@
 
     <p>{{ label_assemblies_app_singular }} Type: {{ assembly.assembly_type }}</p>
 
-    <p>Description: {{ assembly.description }}</p>
+    <p>Description: {{ assembly.description|safe }}</p>
 
     <p>Total {{ label_assemblies_app_singular }} Cost: ${{ assembly.get_assembly_total_cost|intcomma }}
+
+    <h4>Revisions</h4>
+
+    <hr>
+    <ul class="list-group">
+    {% for revision in assembly.assembly_revisions.all %}
+
+            <li class="list-group-item">
+                <a class="collapsed" data-toggle="collapse" href="#revision-{{ revision.id }}" aria-expanded="false" aria-controls="revision-{{ revision.id }}">
+                    Revision: {{ revision.revision_code }}
+                </a>
+<!--
+                <a data-toggle="collapse" href="#revision-{{ revision.id }}" role="button" aria-expanded="false" aria-controls="revision-{{ revision.id }}">
+                    <i class="fa fa-plus-circle"></i>
+                </a>
+-->
+                <a data-toggle="collapse" class="collapsed text-right" href="#revision-{{ revision.id }}" aria-controls="revision-{{ revision.id }}" aria-expanded="false" role="button">
+                    <i class="fa" aria-hidden="true"></i>
+                    <span class="sr-only">Expand/Collapse Revision {{ revision.revision_code }}</span>
+                </a>
+
+                <div class="collapse mt-3" id="revision-{{ revision.id }}">
+
+                      {% if revision.revision_note %}
+                          <hr>
+                          <p>Revision Notes: {{ revision.revision_note|safe  }}</p>
+                      {% endif %}
+                    <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+                        {% if revision.documentation.all %}
+                          <li class="nav-item">
+                            <a class="nav-link active" id="documentation-tab" data-toggle="tab" href="#documentation" role="tab" aria-controls="documentation" aria-selected="false">Documentation</a>
+                          </li>
+                        {% endif %}
+                    </ul>
+
+                    <div class="tab-content" id="inventory-tabs">
+
+                        {% if revision.assembly_documents.all %}
+
+                        <div class="tab-pane fade show active" id="documentation" role="tabpanel" aria-labelledby="documentation-tab">
+                                <table class="table table-tight">
+                                    <thead>
+                                      <th>Document</th>
+                                      <th class="text-right">Document Type</th>
+
+                                    </thead>
+                                    <tbody>
+                                      {% for document in revision.assembly_documents.all %}
+                                    <tr>
+                                        <td><a href="{{ document.doc_link }}" target="_blank">{{ document.name }}</a></td>
+                                        <td class="text-right">{{ document.doc_type }}</td>
+                                    </tr>
+                                      {% endfor %}
+                                    </tbody>
+                              </table>
+                          </div>
+                        {% endif %}
+
+                    </div>
+                    <hr>
+                    <div class="ajax-detail-link">
+
+                          <a href="#"
+                             data-detail-url="{% url 'assemblies:ajax_assemblies_update_revision' revision.id %}"
+                             data-node-id="{{ revision.id }}"
+                             data-node-type="edit"
+                             class="btn btn-primary btn-sm float-left mr-2"
+                             role="button">Edit Revision</a>
+
+                    </div>
+
+                </div>
+
+        </li>
+
+    {% endfor %}
+    </ul>
+
+    <hr>
 
     {% if assembly.builds.exists %}
         <div class="alert alert-warning" role="alert">
@@ -66,9 +146,9 @@
             but keep existing {{ label_builds_app_plural }} unchanged, please create a
             <span class="ajax-detail-link">
                 <a href="#"
-                data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly.id %}"
+                data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly.assembly_revisions.first.id %}"
                 data-node-id="{{ assembly.id }}"
-                data-node-type="detail"><b>NEW VERSION</b></a>
+                data-node-type="{{ assembly.get_object_type }}"><b>NEW REVISION</b></a>
             </span> of this {{ label_assemblies_app_singular }}  instead.
 
         </div>
@@ -85,7 +165,7 @@
                     <a href="{% url 'builds:builds_detail' build.id %}" data-detail-url="{% url 'builds:ajax_builds_detail' build.id %}"
                        data-node-id="{{ build.id }}"
                        data-location-id="{{ build.location.id }}"
-                       data-node-type="detail"
+                       data-node-type="{{ build.get_object_type }}"
                        class="btn btn-primary btn-sm float-right"
                        role="button">View</a>
                 </li>

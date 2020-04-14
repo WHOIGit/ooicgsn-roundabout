@@ -64,7 +64,7 @@
                       <div class="card-body ajax-add-subassembly-link">
                           <ul class="list-group list-group-flush">
                               {% for assembly_part in assembly_parts %}
-                                  {% if assembly_part.assembly == build.assembly %}
+                                  {% if assembly_part.assembly_revision == build.assembly_revision %}
                                    <li class="list-group-item">
 
                                       {% if assembly_part.get_ancestors %}
