@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -20,7 +20,7 @@
 """
 
 from django.db import models
-
+from django.contrib.postgres.fields import JSONField
 
 # Create your models here.
 
@@ -31,11 +31,13 @@ class Field(models.Model):
         ('DecimalField', 'Decimal Field'),
         ('BooleanField', 'Boolean Field'),
         ('DateField', 'Date Field'),
+        ('ChoiceField', 'Dropdown Field'),
     )
     field_name = models.CharField(max_length=255, unique=True, db_index=True)
     field_description = models.CharField(max_length=255, null=False, blank=True)
     field_type = models.CharField(max_length=100, choices=FIELD_TYPES)
     field_default_value = models.CharField(max_length=255, null=False, blank=True)
+    choice_field_options = JSONField(blank=True)
     global_for_part_types = models.ManyToManyField('parts.PartType', blank=True, related_name='custom_fields')
 
     class Meta:
