@@ -24,6 +24,7 @@ from django.urls import reverse
 from django.db.models import Count
 
 import django_tables2 as tables
+from django_tables2.columns import Column, DateTimeColumn, BooleanColumn
 from django_tables2_column_shifter.tables import ColumnShiftTable
 
 from roundabout.parts.models import Part
@@ -48,32 +49,49 @@ class UDF_Column(tables.ManyToManyColumn):
 class SearchTable(ColumnShiftTable):
     class Meta:
         template_name = "django_tables2/bootstrap4.html"
+        base_shown_cols = []
 
     def set_column_default_show(self, table_data):
-        self.column_default_show = None
+        if not self.Meta.base_shown_cols:
+            self.column_default_show = None
+        else:
+            search_cols = [col for col in self.sequence if col.startswith('searchcol-')]
+            extra_cols = [col for col in self.sequence if col.startswith('extracol-')]
+            self.column_default_show = self.Meta.base_shown_cols + search_cols
+
 
 
 class InventoryTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Inventory
-        fields = ['serial_number', 'part', 'part__part_number', 'location','revision__note', 'created_at', 'updated_at' ]
-    # TODO more columns, incl. whatever you searched on
-    serial_number = tables.Column(verbose_name='Serial Number')
-    part__part_number = tables.Column(verbose_name='Part Number', visible = False)
-    revision__note = tables.Column(verbose_name='Notes')
+        fields = ['serial_number','part__name','location__name','revision__note']
+        base_shown_cols = ['serial_number', 'part__name', 'location__name']
+
+    # default columns
+    serial_number = Column(verbose_name='Serial Number',
+              linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('pk')]))
+    part__name = Column(verbose_name='Name')
+    location__name = Column(verbose_name='Location')
+    revision__note = Column(verbose_name='Notes')
 
     def set_column_default_show(self,table_data):
-        self.column_default_show = ['serial_number', 'part', 'part__part_number', 'location']
+        search_cols = [col for col in self.sequence if col.startswith('searchcol-')]
+        extra_cols = [col for col in self.sequence if col.startswith('extracol-')]
+        udf_cols = [col for col in self.sequence if col.startswith(UDF_Column.prefix) \
+                                                 or col.startswith('searchcol-'+UDF_Column.prefix)]
+        self.column_default_show = self.Meta.base_shown_cols + search_cols
 
+        # Uncomment to (a) show all UDF's with data, (b) remove UDF cols with no data
+        # get a list of unique UDF id's present in query-results
+        # if an ID is not present, then that UDF column will have zero entries.
         actual_udf_IDs = set(table_data.values_list('fieldvalues__field__id', flat=True))
-
-        for bound_col in self.columns:
-            if bound_col.name.startswith(UDF_Column.prefix):
-                udf_col = bound_col.column
-                if udf_col.udf.id in actual_udf_IDs:
-                    self.column_default_show.append(bound_col.name)
-                    #bound_col.column.visible = False  # completely removes it from the interface, but will exist in export, but also does not allow for it to be shown again.
-                    #bound_col.column.exclude_from_export = True # removes column from the export list!
+        udf_boundcols = [bc for bc in self.columns if bc.name.startswith(UDF_Column.prefix)]
+        for bound_col in udf_boundcols:                          # for all the table's UDF columns
+            if bound_col.column.udf.id in actual_udf_IDs:        # if the id is present, then it has has data
+                pass #self.column_default_show.append(bound_col.name)  # and the column should be shown by default
+            else:                                                # ELSE
+                bound_col.column.visible = False                 # Remove column from the interface, but will exist in export.
+                bound_col.column.exclude_from_export = True      # Removes column from the export list!
 
 
     def render_serial_number(self, value, record):
@@ -81,7 +99,6 @@ class InventoryTable(SearchTable):
         html_string = '<a href={}>{}</a>'.format(item_url, value)
         return format_html(html_string)
     def value_serial_number(self,record):
-        #print(record.id)
         return record.serial_number
 
     def render_part(self,record):
@@ -90,24 +107,24 @@ class InventoryTable(SearchTable):
         html_string = '{} <a href={}>➤</a>'.format(name, item_url)
         return format_html(html_string)
     def value_part(self,record):
-        return record.part.name
+        return record.part.friendly_name_display()
 
     def render_revision__note(self,value):
         return format_html(value)
+    def value_revision__note(self,record):
+        return record.revision.note
 
 
 class PartTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Part
-        fields = ("part_number", 'name', 'part_type__name','inventory_count')
+        fields = ["part_number", 'name', 'part_type__name','inventory_count']
+        base_shown_cols = fields
 
+    part_number = tables.Column(verbose_name='Part Number',
+                   linkify=dict(viewname='parts:parts_detail',args=[tables.A('pk')]))
     part_type__name = tables.Column(verbose_name='Type')
     inventory_count = tables.Column(empty_values=())
-
-    def render_part_number(self, value, record):
-        item_url = reverse("parts:parts_detail", args=[record.pk])
-        html_string = '<a href={}>{}</a>'.format(item_url, value)
-        return format_html(html_string)
 
     def render_name(self,record):
         return record.friendly_name_display()
@@ -119,28 +136,49 @@ class PartTable(SearchTable):
                            .order_by(("" if is_ascending else "-")+'count')
         return queryset, True
 
+    def set_column_default_show(self,table_data):
+        search_cols = [col for col in self.sequence if col.startswith('searchcol-')]
+        extra_cols = [col for col in self.sequence if col.startswith('extracol-')]
+        udf_cols = [col for col in self.sequence if col.startswith(UDF_Column.prefix) \
+                                                 or col.startswith('searchcol-'+UDF_Column.prefix)]
+        self.column_default_show = self.Meta.base_shown_cols + search_cols
+
+        # Uncomment to (a) show all UDF's with data, (b) remove UDF cols with no data
+        # get a list of unique UDF id's present in query-results
+        # if an ID is not present, then that UDF column will have zero entries.
+        actual_udf_IDs = set(table_data.values_list('fieldvalues__field__id', flat=True))
+        udf_boundcols = [bc for bc in self.columns if bc.name.startswith(UDF_Column.prefix)]
+        for bound_col in udf_boundcols:                          # for all the table's UDF columns
+            if bound_col.column.udf.id in actual_udf_IDs:        # if the id is present, then it has has data
+                pass #self.column_default_show.append(bound_col.name)  # and the column should be shown by default
+            else:                                                # ELSE
+                bound_col.column.visible = False                 # Remove column from the interface, but will exist in export.
+                bound_col.column.exclude_from_export = True      # Removes column from the export list!
 
 class BuildTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Build
-        fields = ('build','name','build_number','location',"created_at","updated_at",'is_deployed','time_at_sea')
+        fields = ['build','assembly__name','build_number','assembly__assembly_type__name','location__name','is_deployed','time_at_sea']
+        base_shown_cols = ['build','assembly__assembly_type__name','location__name','is_deployed','time_at_sea']
 
-    build=tables.Column(empty_values=(),attrs={"th": {"style": "white-space:nowrap;"}})
+    build=tables.Column(empty_values=(), attrs={"th": {"style": "white-space:nowrap;"}})
+    location__name = tables.Column(verbose_name='Location', accessor='location__name')
+    assembly__assembly_type__name = tables.Column(verbose_name='Type')
 
     def render_build(self, record):
         item_url = reverse("builds:builds_detail", args=[record.pk])
         html_string = '<a href={}>{}-{}</a>'.format(item_url, record.assembly.assembly_number, record.build_number.replace('Build ',''))
         return format_html(html_string)
-    #TODO def value_build(self, record)
+    def value_build(self,record):
+        return '{}-{}'.format(record.assembly.assembly_number, record.build_number.replace('Build ',''))
 
 
 class AssemblyTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Assembly
-        fields = ("assembly_number", 'name', 'assembly_type')
+        fields = ['assembly_number', 'name', 'assembly_type__name', 'description']
+        base_shown_cols = ['assembly_number', 'name', 'assembly_type__name']
 
-    def render_assembly_number(self, value, record):
-        item_url = reverse("assemblies:assembly_detail", args=[record.pk])
-        html_string = '<a href={}>{}</a>'.format(item_url, value)
-        return format_html(html_string)
+    assembly_number = tables.Column(linkify=dict(viewname='assemblies:assembly_detail',args=[tables.A('pk')]))
+
 

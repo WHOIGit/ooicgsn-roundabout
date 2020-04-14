@@ -34,6 +34,7 @@ from django.db.models import Q
 from django.shortcuts import redirect
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
+import django_tables2 as tables
 from django_tables2 import SingleTableView
 from django_tables2.export.views import ExportMixin
 
@@ -74,14 +75,10 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
                    'startswith', 'istartswith', 'endswith', 'iendswith', 'regex', 'iregex']
     NUM_LOOKUPS = ['exact', 'gt', 'gte', 'lt', 'lte', 'range']
     DATE_LOOKUPS= ['date', 'year', 'iso_year', 'month', 'day', 'week', 'week_day',
-                   'quarter', 'time', 'hour', 'minute', 'second'] + NUM_LOOKUPS
+                   'quarter', 'time', 'hour', 'minute', 'second'] + NUM_LOOKUPS + ['date_lookup']
     ITER_LOOKUPS = ['in']
-    BOOL_LOOKUPS = ["iexact"]
-
-    #STR_LOOKUPS = []
-    #NUM_LOOKUPS = []
-    #DATE_LOOKUPS = []+NUM_LOOKUPS
-    #ITER_LOOKUPS = ["in"]
+    BOOL_LOOKUPS = ['exact','iexact','bool_lookup']
+    # TODO bool_lookup and date_lookup is a hack. Instead, add these as a dict to context and have legal_lookups hold the keys to appropriate context dict
 
 
     def get_search_cards(self):
@@ -193,7 +190,19 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
                          dict(value='gte',      text='>='),
                          dict(value='lte',      text='<='),]
         context['avail_lookups'] = json.dumps(avail_lookups)
-        context['avail_fields'] = json.dumps([dict(value="id", text="Database ID", legal_lookups=['exact'])])
+
+        lcats = dict(
+            STR_LOOKUPS  = ['contains', 'exact', 'startswith', 'endswith', 'regex',
+                          'icontains','iexact','istartswith','iendswith','iregex'],
+            NUM_LOOKUPS  = ['exact', 'gt', 'gte', 'lt', 'lte', 'range'],
+            DATE_LOOKUPS = ['date', 'year', 'iso_year', 'month', 'day', 'week',
+                           'week_day', 'quarter', 'time', 'hour', 'minute', 'second'] +
+                           ['exact', 'gt', 'gte', 'lt', 'lte', 'range'],
+            ITER_LOOKUPS = ['in'],
+            BOOL_LOOKUPS = ['exact','iexact'], )
+        context['lookup_categories'] = json.dumps(lcats)
+
+        context['avail_fields'] = json.dumps(self.get_avail_fields())
 
         # Setting default shown columns, only columns who which have any data* in them will show
         # * well actually it looks at the Part of the inventory and keeps all UDF's that appear there for the whole table.
@@ -201,21 +210,75 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
 
         return context
 
+    def get_avail_fields(self):
+        # default, this should be overwritten by non-generic search class views
+        avail_fields = [dict(value="id", text="Database ID", legal_lookups=['exact'])]
+        return avail_fields
+
+    def get_table_kwargs(self, field_exceptions=[]):
+        extra_cols = []
+
+        queried_fields = []
+        udfname_queries = []
+        udfvalue_queries = []
+
+        for card in self.get_search_cards():
+            for row in card['rows']:
+                for field in row['fields']:
+                    if field not in field_exceptions:
+                        queried_fields.append(field)
+        queried_fields = set(queried_fields)
+
+        for field in self.get_avail_fields():
+            if field['value'] is not None \
+               and not field['text'].startswith('UDF') \
+               and field['value'] not in self.table_class.Meta.fields:
+                if field['value'] in queried_fields:
+                    safename = 'searchcol-{}'.format(field['value'])
+                else:
+                    safename = 'extracol-{}'.format(field['value'])
+
+                if 'date_lookup' in field['legal_lookups']:
+                    col = tables.DateTimeColumn(verbose_name=field['text'], accessor=field['value'])
+                elif 'bool_lookup' in field['legal_lookups']:
+                    col = tables.BooleanColumn(verbose_name=field['text'], accessor=field['value'])
+                else:
+                    col = tables.Column(verbose_name=field['text'], accessor=field['value'])
+
+                extra_cols.append( (safename,col) )
+
+        # exclude cols from download
+        try: self.exclude_columns = self.request.GET.get('excluded_columns').split(',')
+        except AttributeError: self.exclude_columns = []
+        return {'extra_columns':extra_cols}
+
 
 class InventoryTableView(GenericSearchTableView):
     model = Inventory
     table_class = InventoryTable
 
     def get_table_kwargs(self):
-        extra_cols = []
+        kwargs = super().get_table_kwargs(field_exceptions=['fieldvalues__field__field_name','fieldvalues__field_value'])
+
+        udfname_queries = []
+        udfvalue_queries = []
+        for card in self.get_search_cards():
+            for row in card['rows']:
+                if 'fieldvalues__field__field_name' in row['fields']:
+                    udfname_queries.append(row['query'])  # capture this row's query
+                #elif 'fieldvalues__field_value' in row['fields']:
+                #    udfvalue_queries.append(row['query']) # TODO show all UDF that match this ?? How??
+
+        # UDF Cols: these have to be added before the table is made
+        # since we don't yet know which UDF columns will have data
+        # see table_class.set_column_default_show for logics
         for udf in UDF_FIELDS:
-            safename =  UDF_Column.prefix+'{:03}'.format(udf.id) #+'--'+''.join([ c if c.isalnum() or c=='-' else '_' for c in udf.field_name.lower().replace(' ','-').replace('id','xx') ])
-            #print('{} {:>3}'.format(udf.id, safename))
-            extra_cols.append( (safename, UDF_Column(udf)) )
-        #exclude cols from download
-        #try: self.exclude_columns = self.request.GET.get('excluded_columns').split(',')
-        #except AttributeError: self.exclude_columns = []
-        return {'extra_columns':extra_cols}
+            safename =  UDF_Column.prefix+'{:03}'.format(udf.id)
+            if any([qry.lower() in udf.field_name.lower() for qry in udfname_queries]):
+                safename = 'searchcol-'+safename
+            kwargs['extra_columns'].append( (safename, UDF_Column(udf)) )
+
+        return kwargs
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -224,9 +287,7 @@ class InventoryTableView(GenericSearchTableView):
         qs = qs.prefetch_related(*fetch_me)
         return qs
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
+    def get_avail_fields(self):
         avail_fields = [dict(value="part__name",              text="Name", legal_lookups=self.STR_LOOKUPS),
                         dict(value="serial_number",  text="Serial Number", legal_lookups=self.STR_LOOKUPS),
                         dict(value="build__assembly__name",  text="Build", legal_lookups=self.STR_LOOKUPS),
@@ -235,26 +296,24 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="updated_at",     text="Date Modified", legal_lookups=self.DATE_LOOKUPS),
 
                         dict(value=None, text="--Part--", disabled=True),
+                        dict(value="part__part_number",        text="Part Number", legal_lookups=self.STR_LOOKUPS),
                         dict(value="part__part_type__name",    text="Part Type", legal_lookups=self.STR_LOOKUPS),
                         dict(value="part__unit_cost",          text="Unit Cost", legal_lookups=self.NUM_LOOKUPS),
                         dict(value="part__refurbishment_cost", text="Refurb Cost", legal_lookups=self.NUM_LOOKUPS),
 
                         dict(value=None, text="--Location--", disabled=True),
                         dict(value="location__name",          text="Name", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="location__location_type", text="Type", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="location__root_type",     text="Root", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="location__location_type", text="Location Type", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="location__root_type",     text="Location Root", legal_lookups=self.STR_LOOKUPS),
 
                         dict(value=None, text="--User-Defined-Fields--", disabled=True),
                         dict(value="fieldvalues__field__field_name", text="UDF Name", legal_lookups=self.STR_LOOKUPS),
                         dict(value="fieldvalues__field_value",       text="UDF Value",
                              legal_lookups=self.STR_LOOKUPS+self.NUM_LOOKUPS+self.ITER_LOOKUPS),]
+        return avail_fields
 
-        for field in avail_fields:
-            if "disabled" not in field:
-                field["disabled"] = False
-
-        context["avail_fields"] = json.dumps(avail_fields)
-
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         return context
 
 
@@ -262,9 +321,7 @@ class PartTableView(GenericSearchTableView):
     model = Part
     table_class = PartTable
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
+    def get_avail_fields(self):
         avail_fields = [dict(value="name",                      text="Name", legal_lookups=self.STR_LOOKUPS),
                         dict(value="part_number",        text="Part Number", legal_lookups=self.STR_LOOKUPS),
                         dict(value="part_type__name",      text="Part Type", legal_lookups=self.STR_LOOKUPS),
@@ -274,13 +331,37 @@ class PartTableView(GenericSearchTableView):
 
                         dict(value=None, text="--User-Defined-Fields--", disabled=True),
                         dict(value="user_defined_fields__field_name", text="UDF Name", legal_lookups=self.STR_LOOKUPS),]
+        return avail_fields
 
-        for field in avail_fields:
-            if "disabled" not in field:
-                field["disabled"] = False
+    def get_table_kwargs(self):
+        kwargs = super().get_table_kwargs(field_exceptions=['user_defined_fields__field_name'])
 
-        context["avail_fields"] = json.dumps(avail_fields)
+        udfname_queries = []
+        cards = self.get_search_cards()
+        for card in cards:
+            for row in card['rows']:
+                if 'user_defined_fields__field_name' in row['fields']:
+                    udfname_queries.append(row['query'])  # capture this row's query
 
+        # UDF Cols: these have to be added before the table is made
+        # since we don't yet know which UDF columns will have data
+        # see table_class.set_column_default_show for logics
+        for udf in UDF_FIELDS:
+            safename =  UDF_Column.prefix+'{:03}'.format(udf.id)
+            if any([qry.lower() in udf.field_name.lower() for qry in udfname_queries]):
+                safename = 'searchcol-'+safename
+            kwargs['extra_columns'].append( (safename, UDF_Column(udf)) )
+
+        return kwargs
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        fetch_me = ['user_defined_fields','part_type']
+        qs = qs.prefetch_related(*fetch_me)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         return context
 
 
@@ -288,9 +369,7 @@ class BuildTableView(GenericSearchTableView):
     model = Build
     table_class = BuildTable
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
+    def get_avail_fields(self):
         avail_fields = [dict(value="assembly__name",                text="Name", legal_lookups=self.STR_LOOKUPS),
                         dict(value="build_number",          text="Build Number", legal_lookups=self.STR_LOOKUPS),
                         dict(value="assembly__assembly_type__name", text="Type", legal_lookups=self.STR_LOOKUPS),
@@ -299,6 +378,7 @@ class BuildTableView(GenericSearchTableView):
                         dict(value="detail",                      text="Detail", legal_lookups=self.STR_LOOKUPS),
                         dict(value="is_deployed",           text="is-deployed?", legal_lookups=self.BOOL_LOOKUPS),
                         dict(value="time_at_sea",            text="Time at Sea", legal_lookups=self.NUM_LOOKUPS),
+                        dict(value="flag",                   text="is-flagged?", legal_lookups=self.BOOL_LOOKUPS),
                         dict(value="created_at",            text="Date Created", legal_lookups=self.DATE_LOOKUPS),
                         dict(value="updated_at",           text="Date Modified", legal_lookups=self.DATE_LOOKUPS),
 
@@ -306,11 +386,10 @@ class BuildTableView(GenericSearchTableView):
                         dict(value="location__name",          text="Name", legal_lookups=self.STR_LOOKUPS),
                         dict(value="location__location_type", text="Type", legal_lookups=self.STR_LOOKUPS),
                         dict(value="location__root_type",     text="Root", legal_lookups=self.STR_LOOKUPS),]
+        return avail_fields
 
-
-
-        context["avail_fields"] = json.dumps(avail_fields)
-
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         return context
 
 
@@ -318,19 +397,14 @@ class AssemblyTableView(GenericSearchTableView):
     model = Assembly
     table_class = AssemblyTable
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
+    def get_avail_fields(self):
         avail_fields = [dict(value="name",                text="Name", legal_lookups=self.STR_LOOKUPS),
                         dict(value="assembly_number",   text="Number", legal_lookups=self.STR_LOOKUPS),
                         dict(value="assembly_type__name", text="Type", legal_lookups=self.STR_LOOKUPS),
                         dict(value="description",  text="Description", legal_lookups=self.STR_LOOKUPS),
                         ]
+        return avail_fields
 
-        for field in avail_fields:
-            if "disabled" not in field:
-                field["disabled"] = False
-
-        context["avail_fields"] = json.dumps(avail_fields)
-
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         return context
