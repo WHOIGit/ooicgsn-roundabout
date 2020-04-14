@@ -27,7 +27,7 @@
 
 {% for location,structure in locations_by_mooring|tree_info %}
 
-    {% if structure.new_level %}<ul><li data-jstree='{"icon":"fa fa-map-marker"}'>{% else %}</li><li data-jstree='{"icon":"fa fa-map-marker"}'>{% endif %}
+    {% if structure.new_level %}<ul><li data-jstree='{"icon":"fa fa-map-marker-alt"}'>{% else %}</li><li data-jstree='{"icon":"fa fa-map-marker-alt"}'>{% endif %}
         {{ location.name }}
 
             {% if location.inventory.exists %}

@@ -18,8 +18,9 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 -->
-
+{% load static i18n %}
 {% load crispy_forms_tags %}
+{{ form.media }}
 
 <div class="card-header">
     {% if assembly.id %}
@@ -43,7 +44,8 @@
     {% endif %}
 
 
-    <form class="form-horizontal ajax-form" method="post" action="" id="assembly-form" data-url='{{ request.build_absolute_uri|safe }}'>
+    <form class="form-horizontal ajax-form" method="post" action="" id="assembly-form"
+          data-url='{{ request.build_absolute_uri|safe }}'>
       {% csrf_token %}
       {{ form|crispy }}
 
@@ -66,6 +68,46 @@
 
       </div>
 
+      {% if not assembly %}
+
+         <div class="col-md-12">
+          <h6>Revision Documentation</h6>
+           <table class="table table-tight documentation-form">
+             <thead>
+               <th>Document</th>
+               <th class="text-right">Document Type</th>
+               <th class="text-right">Link</th>
+             </thead>
+             <tbody>
+               {{ documentation_form.management_form }}
+
+               {% if documentation_form.errors %}
+               <tr>
+                 <div class="alert alert-danger">
+                 {% for dict in documentation_form.errors %}
+
+                     {% for error in dict.values %}
+                       {{ error|escape }}
+                     {% endfor %}
+
+                 {% endfor %}
+                 </div>
+               </tr>
+              {% endif %}
+
+               {% for doc in documentation_form %}
+
+                 <tr>
+                     <td>{% if doc.id  %}{{ doc.DELETE }}{% endif %} {{ doc.id }} {{ doc.name }}</td>
+                     <td class="text-right">{{ doc.doc_type }}</td>
+                     <td class="text-right">{{ doc.doc_link }} </td>
+                 </tr>
+               {% endfor %}
+             </tbody>
+           </table>
+         </div>
+        {% endif %}
+
       <div class="control-group">
         <div class="controls">
           {% if assembly.id %}
@@ -81,5 +123,14 @@
 </div>
 
 {% block javascript %}
+<script type="text/javascript">
+    $(document).ready(function() {
 
+        $('.documentation-form tbody tr').formset({
+            prefix: 'assembly_documents', // <-- Needs to match the Django related_name for the models
+            addText: 'add document',
+            deleteText: 'remove',
+        });
+    });
+</script>
 {% endblock javascript %}
