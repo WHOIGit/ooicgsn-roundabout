@@ -483,14 +483,6 @@
            data-detail-url="{% url 'inventory:ajax_inventory_action' 'movetotrash' inventory_item.id %}"
            data-node-id="{{ inventory_item.id }}"
            role="button" class="btn btn-danger parts-delete">Move to Trash</a>
-<!---
-    {% if perms.inventory.delete %}
-         <a href="#"
-            data-detail-url="{% url 'inventory:ajax_inventory_delete' inventory_item.id %}"
-            data-node-id="{{ inventory_item.id }}"
-            role="button" class="btn btn-danger parts-delete">Delete Permanently</a>
-    {% endif %}
---->
     </div>
 
 

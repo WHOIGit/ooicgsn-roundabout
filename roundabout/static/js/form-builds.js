@@ -1,7 +1,7 @@
 /*
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -28,8 +28,19 @@ $(document).ready(function() {
 
     $("#id_assembly").change(function () {
         var url_serialnumber = $("#build-form").attr("data-serialnumber-url");
+        var url_assemblyrevision = $("#build-form").attr("data-assemblyrevision-url");
         var assemblyID = $(this).val();
         console.log(assemblyID);
+
+        $.ajax({
+            url: url_assemblyrevision,
+            data: {
+              "assembly_id": assemblyID
+            },
+            success: function (data) {
+              $("#id_assembly_revision").html(data);
+            }
+        });
 
         $.ajax({
             url: url_serialnumber,
