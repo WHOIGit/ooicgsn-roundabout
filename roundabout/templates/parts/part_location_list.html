@@ -26,9 +26,9 @@
         {% for location,structure in locations|tree_info %}
 
                 {% if structure.new_level %}
-                    <ul><li data-jstree='{"icon":"fa fa-map-marker"}'>
+                    <ul><li data-jstree='{"icon":"fa fa-map-marker-alt"}'>
                 {% else %}
-                    </li><li data-jstree='{"icon":"fa fa-map-marker"}'>
+                    </li><li data-jstree='{"icon":"fa fa-map-marker-alt"}'>
                 {% endif %}
                     <a href="#" data-location-id='{{ location.id }}'>{{ location.name }} {% if location.location_id %} ({{ location.location_id }}) {% endif %}</a>
                     {% if location.parts.exists %}
