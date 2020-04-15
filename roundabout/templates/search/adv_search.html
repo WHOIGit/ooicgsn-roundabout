@@ -1,0 +1,141 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+{% extends "base.html" %}
+{% load static i18n %}
+{% load mptt_tags %}
+{% load crispy_forms_tags %}
+{% load render_table from django_tables2 %}
+{% load export_url from django_tables2 %}
+{% load querystring from django_tables2 %}
+{% block title %}{{ model }} Search{% endblock %}
+
+{% block javascript %}
+  <script type="text/javascript" src="/static/js/form-search.js"></script>
+  <script>
+    const page_model = '{{ model }}'
+
+    {% if prev_cards %}
+    const prev_cards = jQuery.parseJSON("{{ prev_cards|escapejs }}")
+    {% else %}
+    const prev_cards = null
+    {% endif %}
+
+    {% if avail_fields %}
+    const avail_fields = jQuery.parseJSON("{{ avail_fields|escapejs }}")
+    {% else %}
+    const avail_fields = [{value:'id',text:'Database ID',disabled:false, legal_lookups:['exact']}]
+    {% endif %}
+
+    {% if avail_lookups %}
+    const avail_lookups = jQuery.parseJSON("{{ avail_lookups|escapejs }}")
+    {% else %}
+    const avail_lookups = [{value: "icontains", text: "Contains"},
+                           {value:     "exact", text:    "Exact"}]
+    {% endif %}
+
+    {% if lookup_categories %}
+    const lookup_categories = jQuery.parseJSON("{{ lookup_categories|escapejs }}")
+    {% else %}
+    const lookup_categories = {STR_LOOKUPS : ['icontains', 'exact'],
+                               NUM_LOOKUPS : ['exact','gte','lte'],
+                               DATE_LOOKUPS: ['exact','gte','lte'],
+                               BOOL_LOOKUPS: ['exact'] }
+    {% endif %}
+
+    window.addEventListener("load", function(){reset_cards(prev_cards,avail_fields)})
+
+  </script>
+{% endblock javascript %}
+
+
+{% block content %}
+
+<div class="row">
+
+  <!-- SEARCH CONTROLS -->
+  <div class="col-md-5 search-control">
+    <div class="row">
+      <div class="col-sm-10 d-flex">
+        <h2>Search: </h2>
+        <div class="dropdown ml-3">
+          <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            {{ model }}
+          </button>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <a class="dropdown-item" href={% url 'search:inventory' %}>Inventory</a>
+            <a class="dropdown-item" href={% url 'search:part' %}>Parts</a>
+            <a class="dropdown-item" href={% url 'search:build' %}>Builds</a>
+            <a class="dropdown-item" href={% url 'search:assembly' %}>Assemblies</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form id='adv-search-form' method="get" accept-charset="utf-8" class="form" onsubmit="DoSubmit(event)">
+      <div id='adv-search-cards'>  </div>
+      <div class="row ml-1">
+        <button class="btn btn-primary" type="button" onclick="insert_card('{{ model }}',null,'globalhack')" data-toggle="tooltip" title="Results from different cards are compounded">
+          <i class="fa fa-plus"></i> New Card</button>
+        <div class="ml-auto mr-3">
+          <button class="btn btn-primary" type="button" onclick="reset_cards(prev_cards,'globalhack')">RESET</button>
+          <button id='searchform-submit-button' class="btn btn-primary" type="submit">
+            <span class="fa fa-search"></span> Submit</button>
+        </div>
+      </div>
+
+    </form>
+
+  </div>
+
+
+  <!-- LISTVIEW -->
+  <div class="col-md-7 search-results">
+
+    <div class="card" id="search-list-view">
+      <div class="card-header">
+        <h3>Search Results</h3>
+      </div>
+      <div class="card-body">
+
+          <button id="search--download-csv-button" class="btn btn-secondary btn-sm float-right" type="button" data-toggle="dropdown">
+              <span id="search--download-csv-button--span" class="fa fa-download"></span> Download CSV
+              <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="javascript:void(0)"
+                         onclick='DownloadCSV(href_base = "{% querystring '_export'='csv' %}", vis_only=true);'>
+                            Visible Columns</a></li>
+                  <li><a class="dropdown-item" href="javascript:void(0)"
+                         onclick='DownloadCSV(href_base = "{% querystring '_export'='csv' %}", vis_only=false);'>
+                            All (Include Hidden Columns)</a></li>
+              </ul>
+          </button>
+
+        {% if table %}
+          <p><b>{{ table.paginator.count }}</b> items match your search!</p>
+          {% render_table table %}
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}

@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -20,102 +20,395 @@
 """
 
 import json
-import socket
-import os
-import xml.etree.ElementTree as ET
+import operator
+from functools import reduce
+from urllib.parse import unquote
 
-from django.shortcuts import render, get_object_or_404
-from django.urls import reverse, reverse_lazy
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, QueryDict
+#from django.shortcuts import render, get_object_or_404
+#from django.template.defaultfilters import register
+#from django.urls import reverse, reverse_lazy
+#from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, QueryDict
+#from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
+#from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
 from django.db.models import Q
-from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
-from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
+from django.shortcuts import redirect
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from itertools import chain
+
+import django_tables2 as tables
+from django_tables2 import SingleTableView
+from django_tables2.export.views import ExportMixin
 
 from roundabout.inventory.models import Inventory
-from roundabout.locations.models import Location
-from roundabout.parts.models import Part, PartType, Revision
-from roundabout.userdefinedfields.models import FieldValue
-from roundabout.admintools.models import Printer
-from roundabout.assemblies.models import AssemblyPart
-from roundabout.builds.models import Build, BuildAction
+from roundabout.parts.models import Part
+from roundabout.assemblies.models import Assembly
+from roundabout.builds.models import Build
 
-class BasicSearch(LoginRequiredMixin, ListView):
-    template_name = 'search/search_list.html'
-    context_object_name = 'search_items_qs'
-    paginate_by = 20
+from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, UDF_FIELDS, UDF_Column
 
-    def get_context_data(self, **kwargs):
-        context = super(BasicSearch, self).get_context_data(**kwargs)
 
-        # Check if search query exists, if so add it to context for pagination
-        query = self.request.GET.get('q')
-        context['query_slug'] = 'q={}'.format(query) if query else ''  #self.request.GET.urlencode()
-        context['query'] = query
-        context['checked'] = {}
-        for gname in ['p','i','n','sn','l','u']:
-            context['checked'][gname] = 'checked' if self.request.GET.get(gname)=='✓' else ''
-            context['query_slug'] += '&{}=✓'.format(gname) if self.request.GET.get(gname)=='✓' else ''
+def searchbar_redirect(request):
+    model = request.GET['model']
+    url = 'search:'+model
+    resp = redirect(url)
 
-        context['search_items'] = []
-        for q in context['search_items_qs']:
-            item = {}
-            item['id'] = q.id
-            item['type'] = q.__class__.__name__
-            if isinstance(q,Inventory):
-                item['href'] = reverse('inventory:inventory_detail',args=[q.id])
-                item['entry'] = '{} - {}'.format(q.serial_number,q.part.name)
-                item['subline'] = 'Inventory Location: {}'.format(q.location)
-            elif isinstance(q,Part):
-                item['href'] = reverse('parts:parts_detail',args=[q.id])
-                item['entry'] = '{} - {}'.format(q.part_number,q.name)
-                item['subline'] = 'Part Type: {}'.format(q.part_type)
+    query = request.GET['query']
+    if query:
+        if model=='inventory':      get = '?f=.0.part__name&f=.0.serial_number&f=.0.revision__note&f=.0.location__name&l=.0.icontains&q=.0.{query}'
+        elif model=='part':         get = '?f=.0.part_number&f=.0.name&l=.0.icontains&q=.0.{query}'
+        elif model == 'build':      get = '?f=.0.build_number&f=.0.assembly__name&f=.0.assembly__assembly_type__name&f=.0.assembly__description&f=.0.build_notes&f=.0.detail&f=.0.location__name&l=.0.icontains&q=.0.{query}'
+        elif model == 'assembly':   get = '?f=.0.assembly_number&f=.0.name&f=.0.assembly_type__name&f=.0.description&l=.0.icontains&q=.0.{query}'
+        get = get.format(query=query)
+        resp['Location'] += get
+    return resp
 
-            context['search_items'].append(item)
 
-        if context['page_obj'].paginator.num_pages <=25:
-            context['custom_paginator_range'] = context['page_obj'].paginator.page_range
-        else:
-            currpage = context['page_obj'].number
-            maxpage = context['page_obj'].paginator.num_pages
-            context['custom_paginator_range'] = range(max(1,currpage-10),
-                                                      min(maxpage, currpage+11))
-        print('page',context['page_obj'].number,'of',context['page_obj'].paginator.num_pages, context['custom_paginator_range'])
-        return context
+class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
+    model = None
+    table_class = None
+    context_object_name = 'query_objs'
+    template_name = 'search/adv_search.html'
+    exclude_columns = []
+
+    def get_search_cards(self):
+        GET = self.request.GET
+        fields = GET.getlist('f')
+        lookups = GET.getlist('l')
+        queries = GET.getlist('q')
+        negas = GET.getlist('n')
+
+        fields = [unquote(f).split('.',2)+['f'] for f in fields]
+        lookups = [unquote(l).split('.',2)+['l'] for l in lookups]
+        queries = [unquote(q).split('.',2)+['q'] for q in queries]
+        negas = [unquote(n).split('.',2)+['n'] for n in negas]
+
+        all_things = fields+lookups+queries+negas
+
+        cards = []
+        card_IDs = sorted(set([c for c,r,v,t in all_things]))
+        for card_id in card_IDs:
+            card_things = [(c,r,v,t) for c,r,v,t in all_things if c==card_id]
+            row_IDs = sorted(set([r for c,r,v,t in card_things]))
+            rows = []
+            for row_id in row_IDs:
+                row_items = [(v,t) for c,r,v,t in card_things if r==row_id]
+                fields = [v for v,t in row_items if t=='f']
+                lookup = [v for v,t in row_items if t=='l']
+                query = [v for v,t in row_items if t=='q']
+                nega = [v for v,t in row_items if t=='n']
+                # TODO: VALIDATION HERE?
+                try:
+                    assert len(fields) >=1
+                    assert len(lookup)==1
+                    assert len(query)==1 and query[0]
+                    assert len(nega) <= 1
+                except AssertionError:
+                    continue
+                row = dict(#row_id=row_id,
+                           fields=fields,
+                           lookup=lookup[0],
+                           query=query[0],
+                           nega=bool(nega),
+                           multi=len(fields)>1)
+                rows.append(row)
+            cards.append(dict(card_id=card_id, rows=rows))
+            # TODO placeholder to add more values to given card, like name
+
+        return cards
 
     def get_queryset(self):
-        keywords = self.request.GET.get('q')
-        parts_bool = self.request.GET.get('p') == '✓'
-        inventory_bool = self.request.GET.get('i') == '✓'
-        name_bool = self.request.GET.get('n') == '✓'
-        sn_bool = self.request.GET.get('sn') == '✓'
-        udf_bool= self.request.GET.get('u') == '✓'
-        loc_bool= self.request.GET.get('l') == '✓'
+        cards = self.get_search_cards()
 
-        qs_inv = Inventory.objects.none()
-        qs_prt = Part.objects.none()
-        if keywords and any([name_bool,sn_bool,udf_bool]):
-            if inventory_bool:
-                if sn_bool and name_bool: query_inv = Q(serial_number__icontains=keywords)|Q(part__name__icontains=keywords)
-                elif sn_bool:             query_inv = Q(serial_number__icontains=keywords)
-                elif name_bool:           query_inv = Q(part__name__icontains=keywords)
-                else:                     query_inv = Q()
-                if udf_bool:
-                    query_inv = query_inv | Q(fieldvalues__field_value__icontains=keywords)
-                    query_inv = query_inv | Q(part__user_defined_fields__field_name__icontains=keywords)
-                if loc_bool:
-                    query_inv = query_inv | Q(location__name__icontains=keywords)
-                qs_inv = Inventory.objects.filter(query_inv).order_by('serial_number').distinct()
+        final_Qs = []
+        for card in cards:
+            print('CARD:', card)
+            card_Qs = []
+            for row in card['rows']:
+                Q_kwargs = []
+                for field in row['fields']:
+                    # TODO: field x lookup VALIDATION HERE?
+                    # eg: Q(<field>__<lookup>=<query>) where eg: field = "part__part_number" and lookup = "icontains"
+                    #Q_string = 'Q({field}__{lookup}={query})'.format(**row, field=field)
+                    Q_kwarg = {'{field}__{lookup}'.format(field=field, lookup=row['lookup']): row['query']}
+                    Q_kwargs.append(Q_kwarg)
 
-            if parts_bool:
-                if sn_bool and name_bool: query_prt = Q(part_number__icontains=keywords)|Q(name__icontains=keywords)
-                elif sn_bool:             query_prt = Q(part_number__icontains=keywords)
-                elif name_bool:           query_prt = Q(name__icontains=keywords)
-                else:                     query_prt = Q()
-                if udf_bool:              query_prt = query_prt | Q(user_defined_fields__field_name__icontains=keywords)
+                if len(Q_kwargs) > 1:
+                    row_Q = reduce(operator.or_,[Q(**Q_kwarg) for Q_kwarg in Q_kwargs])
+                elif Q_kwargs:
+                    row_Q = Q(**Q_kwargs[0])
+                else:
+                    row_Q = None
+                if row['nega'] and row_Q:
+                    row_Q = operator.inv(row_Q)
+                if row_Q:
+                    card_Qs.append(row_Q)
+                # ROW DONE
+            if len(card_Qs) > 1:
+                card_Q = reduce(operator.and_,card_Qs)
+            elif card_Qs:
+                card_Q = card_Qs[0]
+            else:
+                card_Q = None
+            if card_Q:
+                final_Qs.append(card_Q)
+            # CARD DONE
 
-                try: qs_prt = Part.objects.filter(query_prt).order_by('part_number').distinct()
-                except ValueError: pass
+        if len(final_Qs) > 1:
+            final_Q = reduce(operator.or_,final_Qs)
+        elif final_Qs:
+            final_Q = final_Qs[0]
+        else:
+            final_Q = None
 
-        return list(qs_inv) + list(qs_prt)
+        if final_Q:
+            return self.model.objects.filter(final_Q).distinct()
+        else:
+            #return self.model.objects.none()
+            return self.model.objects.all()
+
+
+    def get_context_data(self, **kwargs):
+        context = super(GenericSearchTableView, self).get_context_data(**kwargs)
+
+        # Cards to initiate previous columns
+        cards = self.get_search_cards()
+        context['prev_cards'] = json.dumps(cards)
+        context['model'] = self.model.__name__
+
+        avail_lookups = [dict(value='icontains',text='Contains'),
+                         dict(value='exact',    text='Exact'),
+                         dict(value='gte',      text='>='),
+                         dict(value='lte',      text='<='),]
+        context['avail_lookups'] = json.dumps(avail_lookups)
+
+        lcats = dict(
+            STR_LOOKUPS  = ['contains', 'exact', 'startswith', 'endswith', 'regex',
+                          'icontains','iexact','istartswith','iendswith','iregex'],
+            NUM_LOOKUPS  = ['exact', 'gt', 'gte', 'lt', 'lte', 'range'],
+            DATE_LOOKUPS = ['date', 'year', 'iso_year', 'month', 'day', 'week',
+                           'week_day', 'quarter', 'time', 'hour', 'minute', 'second'] +
+                           ['exact', 'gt', 'gte', 'lt', 'lte', 'range'],
+            ITER_LOOKUPS = ['in'],
+            BOOL_LOOKUPS = ['exact','iexact'], )
+        context['lookup_categories'] = json.dumps(lcats)
+
+        context['avail_fields'] = json.dumps(self.get_avail_fields())
+
+        # Setting default shown columns based on table_class's Meta.base_shown_cols attrib,
+        # and "searchcol-" extra_columns (see get_table_kwargs())
+        # For Parts and Inventory, set_column_default_show is overwritten
+        # such as to hide UDF colums that don't belong / dont have data.
+        context['table'].set_column_default_show(self.get_table_data())
+
+        return context
+
+    def get_avail_fields(self):
+        # default, this should be overwritten by non-generic search class views
+        avail_fields = [dict(value="id", text="Database ID", legal_lookups=['exact'])]
+        return avail_fields
+
+    def get_table_kwargs(self, field_exceptions=[]):
+        # Provides additional parameters to table_class upon instantiation.
+        # in this case, adds columns from get_avail_fields().
+        # Queried fields are prefixed with "searchcol-"
+        # such that they will be shown by default by set_column_default_show
+
+        extra_cols = []
+        queried_fields = []
+
+        for card in self.get_search_cards():
+            for row in card['rows']:
+                for field in row['fields']:
+                    if field not in field_exceptions:
+                        queried_fields.append(field)
+        queried_fields = set(queried_fields)
+
+        for field in self.get_avail_fields():
+            if field['value'] is not None \
+               and not field['text'].startswith('UDF') \
+               and field['value'] not in self.table_class.Meta.fields:
+                if field['value'] in queried_fields:
+                    safename = 'searchcol-{}'.format(field['value'])
+                else:
+                    safename = 'extracol-{}'.format(field['value'])
+
+                if 'DATE_LOOKUPS' == field['legal_lookups']:
+                    col = tables.DateTimeColumn(verbose_name=field['text'], accessor=field['value'])
+                elif 'BOOL_LOOKUPS' == field['legal_lookups']:
+                    col = tables.BooleanColumn(verbose_name=field['text'], accessor=field['value'])
+                else:
+                    col = tables.Column(verbose_name=field['text'], accessor=field['value'])
+
+                extra_cols.append( (safename,col) )
+
+        # exclude cols from download
+        try: self.exclude_columns = self.request.GET.get('excluded_columns').split(',')
+        except AttributeError: self.exclude_columns = []
+        return {'extra_columns':extra_cols}
+
+
+class InventoryTableView(GenericSearchTableView):
+    model = Inventory
+    table_class = InventoryTable
+
+    def get_table_kwargs(self):
+        kwargs = super().get_table_kwargs(field_exceptions=['fieldvalues__field__field_name','fieldvalues__field_value'])
+
+        udfname_queries = []
+        udfvalue_queries = []
+        for card in self.get_search_cards():
+            for row in card['rows']:
+                if 'fieldvalues__field__field_name' in row['fields']:
+                    udfname_queries.append(row['query'])  # capture this row's query
+                #elif 'fieldvalues__field_value' in row['fields']:
+                #    udfvalue_queries.append(row['query']) # TODO show all UDF that match this ?? How??
+
+        # UDF Cols: these have to be added before the table is made
+        # since we don't yet know which UDF columns will have data
+        # see table_class.set_column_default_show for logics
+        for udf in UDF_FIELDS:
+            safename =  UDF_Column.prefix+'{:03}'.format(udf.id)
+            if any([qry.lower() in udf.field_name.lower() for qry in udfname_queries]):
+                safename = 'searchcol-'+safename
+            kwargs['extra_columns'].append( (safename, UDF_Column(udf)) )
+
+        return kwargs
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs = qs.exclude(location__root_type='Trash')
+        fetch_me = ['fieldvalues','fieldvalues__field','part','location','revision']
+        qs = qs.prefetch_related(*fetch_me)
+        return qs
+
+    def get_avail_fields(self):
+        avail_fields = [dict(value="part__name",              text="Name", legal_lookups='STR_LOOKUPS'),
+                        dict(value="serial_number",  text="Serial Number", legal_lookups='STR_LOOKUPS'),
+                        dict(value="build__assembly__name",  text="Build", legal_lookups='STR_LOOKUPS'),
+                        dict(value="revision__note",          text="Note", legal_lookups='STR_LOOKUPS'),
+                        dict(value="created_at",      text="Date Created", legal_lookups='DATE_LOOKUPS'),
+                        dict(value="updated_at",     text="Date Modified", legal_lookups='DATE_LOOKUPS'),
+
+                        dict(value=None, text="--Part--", disabled=True),
+                        dict(value="part__part_number",        text="Part Number", legal_lookups='STR_LOOKUPS'),
+                        dict(value="part__part_type__name",    text="Part Type",   legal_lookups='STR_LOOKUPS'),
+                        dict(value="part__unit_cost",          text="Unit Cost",   legal_lookups='NUM_LOOKUPS'),
+                        dict(value="part__refurbishment_cost", text="Refurb Cost", legal_lookups='NUM_LOOKUPS'),
+
+                        dict(value=None, text="--Location--", disabled=True),
+                        dict(value="location__name",          text="Name",          legal_lookups='STR_LOOKUPS'),
+                        dict(value="location__location_type", text="Location Type", legal_lookups='STR_LOOKUPS'),
+                        dict(value="location__root_type",     text="Location Root", legal_lookups='STR_LOOKUPS'),
+
+                        dict(value=None, text="--User-Defined-Fields--", disabled=True),
+                        dict(value="fieldvalues__field__field_name", text="UDF Name",  legal_lookups='STR_LOOKUPS'),
+                        dict(value="fieldvalues__field_value",       text="UDF Value", legal_lookups='STR_LOOKUPS'),]
+        return avail_fields
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+
+class PartTableView(GenericSearchTableView):
+    model = Part
+    table_class = PartTable
+
+    def get_avail_fields(self):
+        avail_fields = [dict(value="name",                      text="Name", legal_lookups='STR_LOOKUPS'),
+                        dict(value="part_number",        text="Part Number", legal_lookups='STR_LOOKUPS'),
+                        dict(value="part_type__name",      text="Part Type", legal_lookups='STR_LOOKUPS'),
+                        dict(value="unit_cost",            text="Unit Cost", legal_lookups='NUM_LOOKUPS'),
+                        dict(value="refurbishment_cost", text="Refurb Cost", legal_lookups='NUM_LOOKUPS'),
+                        dict(value="note",                      text="Note", legal_lookups='STR_LOOKUPS'),
+
+                        dict(value=None, text="--User-Defined-Fields--", disabled=True),
+                        dict(value="user_defined_fields__field_name", text="UDF Name", legal_lookups='STR_LOOKUPS'),]
+        return avail_fields
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        fetch_me = ['user_defined_fields','part_type']
+        qs = qs.prefetch_related(*fetch_me)
+        return qs
+
+    def get_table_kwargs(self):
+        kwargs = super().get_table_kwargs(field_exceptions=['user_defined_fields__field_name'])
+
+        udfname_queries = []
+        for card in self.get_search_cards():
+            for row in card['rows']:
+                if 'user_defined_fields__field_name' in row['fields']:
+                    udfname_queries.append(row['query'])  # capture this row's query
+
+        # UDF Cols: these have to be added before the table is made
+        # since we don't yet know which UDF columns will have data
+        # see table_class.set_column_default_show for logics
+        for udf in UDF_FIELDS:
+            safename =  UDF_Column.prefix+'{:03}'.format(udf.id)
+            if any([qry.lower() in udf.field_name.lower() for qry in udfname_queries]):
+                safename = 'searchcol-'+safename
+            kwargs['extra_columns'].append( (safename, UDF_Column(udf)) )
+
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+
+class BuildTableView(GenericSearchTableView):
+    model = Build
+    table_class = BuildTable
+
+    def get_avail_fields(self):
+        avail_fields = [dict(value="assembly__name",                text="Name", legal_lookups='STR_LOOKUPS'),
+                        dict(value="build_number",          text="Build Number", legal_lookups='STR_LOOKUPS'),
+                        dict(value="assembly__assembly_type__name", text="Type", legal_lookups='STR_LOOKUPS'),
+                        dict(value="assembly__description",  text="Description", legal_lookups='STR_LOOKUPS'),
+                        dict(value="build_notes",                  text="Notes", legal_lookups='STR_LOOKUPS'),
+                        dict(value="detail",                      text="Detail", legal_lookups='STR_LOOKUPS'),
+                        dict(value="is_deployed",           text="is-deployed?", legal_lookups='BOOL_LOOKUPS'),
+                        dict(value="time_at_sea",            text="Time at Sea", legal_lookups='NUM_LOOKUPS'),
+                        dict(value="flag",                   text="is-flagged?", legal_lookups='BOOL_LOOKUPS'),
+                        dict(value="created_at",            text="Date Created", legal_lookups='DATE_LOOKUPS'),
+                        dict(value="updated_at",           text="Date Modified", legal_lookups='DATE_LOOKUPS'),
+
+                        dict(value=None, text="--Location--", disabled=True),
+                        dict(value="location__name",          text="Name", legal_lookups='STR_LOOKUPS'),
+                        dict(value="location__location_type", text="Type", legal_lookups='STR_LOOKUPS'),
+                        dict(value="location__root_type",     text="Root", legal_lookups='STR_LOOKUPS'),]
+        return avail_fields
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs = qs.exclude(location__root_type='Trash')
+        fetch_me = ['assembly','assembly__assembly_type','location']
+        qs = qs.prefetch_related(*fetch_me)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+
+class AssemblyTableView(GenericSearchTableView):
+    model = Assembly
+    table_class = AssemblyTable
+
+    def get_avail_fields(self):
+        avail_fields = [dict(value="name",                text="Name", legal_lookups='STR_LOOKUPS'),
+                        dict(value="assembly_number",   text="Number", legal_lookups='STR_LOOKUPS'),
+                        dict(value="assembly_type__name", text="Type", legal_lookups='STR_LOOKUPS'),
+                        dict(value="description",  text="Description", legal_lookups='STR_LOOKUPS'),
+                        ]
+        return avail_fields
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        fetch_me = ['assembly_type']
+        qs = qs.prefetch_related(*fetch_me)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
