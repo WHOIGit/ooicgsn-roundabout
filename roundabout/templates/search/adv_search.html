@@ -52,6 +52,15 @@
                            {value:     "exact", text:    "Exact"}]
     {% endif %}
 
+    {% if lookup_categories %}
+    const lookup_categories = jQuery.parseJSON("{{ lookup_categories|escapejs }}")
+    {% else %}
+    const lookup_categories = {STR_LOOKUPS : ['icontains', 'exact'],
+                               NUM_LOOKUPS : ['exact','gte','lte'],
+                               DATE_LOOKUPS: ['exact','gte','lte'],
+                               BOOL_LOOKUPS: ['exact'] }
+    {% endif %}
+
     window.addEventListener("load", function(){reset_cards(prev_cards,avail_fields)})
 
   </script>

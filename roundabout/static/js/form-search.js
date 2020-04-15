@@ -249,7 +249,7 @@ function DoSubmit(e){
     //e.preventDefault()
 
     //prevent double submission
-    submit_button = $('#searchform-submit-button')
+    const submit_button = $('#searchform-submit-button')
     submit_button.prop('disabled', true)
 
     // VALIDATION
@@ -275,12 +275,12 @@ function DoSubmit(e){
 
         field_texts.forEach(function(field_text){
             const idx = avail_fields.findIndex(f => f.text === field_text)
-            if ( ! avail_fields[idx].legal_lookups.includes(lookup_value) ){
+            if ( ! lookup_categories[avail_fields[idx].legal_lookups].includes(lookup_value) ){
                 validation_alerts.push(`Field "${field_text}" cannot be used with "${lookup_text}".`)
             }
 
             //Assert that date input is valid
-            if (avail_fields[idx].legal_lookups.includes('date_lookup') ) {
+            if (avail_fields[idx].legal_lookups === 'DATE_LOOKUPS') {
                 if ( !( query_value.match(/^\d{4}-\d{2}-\d{2}$/) ||
                         query_value.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)) ){
                     validation_alerts.push(`Date query "${query_value}" is invalid. Must use "YYYY-MM-DD" or "YYYY-MM-DD HH:MM" format`)
@@ -290,13 +290,13 @@ function DoSubmit(e){
                 }
 
             }
-            //Assert that gte lte must be numerical
+            //Assert that gte lte must be numerical (or a date)
             else if ( ['gte','lte'].includes(lookup_value) && isNaN(query_value)){
-                validation_alerts.push(`Numerical or Date query "${query_value}" is invalid.`)
+                validation_alerts.push(`"<=" or ">=" query for "${query_value}" is invalid.`)
             }
 
             //Assert that boolean field recieves only legal boolean input/query
-            if (avail_fields[idx].legal_lookups.includes('bool_lookup') ){
+            if (avail_fields[idx].legal_lookups === 'BOOL_LOOKUPS'){
                 if (['True','False'].includes(query_value)) {  }
                 else if(['TRUE','true','T','t','1','yes','Yes','YES','y','Y'].includes(query_value))
                     { query_input.val('True') }
@@ -330,6 +330,9 @@ function DoSubmit(e){
         submit_button.find('span').toggleClass('fa-search fa-spinner fa-spin')
     }
 }
+
+
+// CSV DOWNLOADING STUFF //
 
 function csvdownload_spinner(on_or_off =null){
     const csv_button = $('#search--download-csv-button')

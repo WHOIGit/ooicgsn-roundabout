@@ -47,8 +47,6 @@ from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, UDF_FI
 
 
 def searchbar_redirect(request):
-    # TODO probably js based but: make the default model to search on match the page/app.
-    print('SEARCHBAR: ',request.GET)
     model = request.GET['model']
     url = 'search:'+model
     resp = redirect(url)
@@ -67,19 +65,9 @@ def searchbar_redirect(request):
 class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
     model = None
     table_class = None
-    #context_object_name = 'query_objs'
+    context_object_name = 'query_objs'
     template_name = 'search/adv_search.html'
     exclude_columns = []
-
-    STR_LOOKUPS = ['contains', 'icontains', 'exact', 'iexact',
-                   'startswith', 'istartswith', 'endswith', 'iendswith', 'regex', 'iregex']
-    NUM_LOOKUPS = ['exact', 'gt', 'gte', 'lt', 'lte', 'range']
-    DATE_LOOKUPS= ['date', 'year', 'iso_year', 'month', 'day', 'week', 'week_day',
-                   'quarter', 'time', 'hour', 'minute', 'second'] + NUM_LOOKUPS + ['date_lookup']
-    ITER_LOOKUPS = ['in']
-    BOOL_LOOKUPS = ['exact','iexact','bool_lookup']
-    # TODO bool_lookup and date_lookup is a hack. Instead, add these as a dict to context and have legal_lookups hold the keys to appropriate context dict
-
 
     def get_search_cards(self):
         GET = self.request.GET
@@ -107,7 +95,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
                 lookup = [v for v,t in row_items if t=='l']
                 query = [v for v,t in row_items if t=='q']
                 nega = [v for v,t in row_items if t=='n']
-                # TODO VERIFICATION response
+                # TODO: VALIDATION HERE?
                 try:
                     assert len(fields) >=1
                     assert len(lookup)==1
@@ -122,7 +110,8 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
                            nega=bool(nega),
                            multi=len(fields)>1)
                 rows.append(row)
-            cards.append(dict(card_id=card_id, rows=rows)) # TODO placeholder to add more values to given card
+            cards.append(dict(card_id=card_id, rows=rows))
+            # TODO placeholder to add more values to given card, like name
 
         return cards
 
@@ -136,7 +125,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
             for row in card['rows']:
                 Q_kwargs = []
                 for field in row['fields']:
-                    # TODO: field x lookup VALIDATION HERE
+                    # TODO: field x lookup VALIDATION HERE?
                     # eg: Q(<field>__<lookup>=<query>) where eg: field = "part__part_number" and lookup = "icontains"
                     #Q_string = 'Q({field}__{lookup}={query})'.format(**row, field=field)
                     Q_kwarg = {'{field}__{lookup}'.format(field=field, lookup=row['lookup']): row['query']}
@@ -154,7 +143,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
                     card_Qs.append(row_Q)
                 # ROW DONE
             if len(card_Qs) > 1:
-                card_Q = operator.and_(*card_Qs)
+                card_Q = reduce(operator.and_,card_Qs)
             elif card_Qs:
                 card_Q = card_Qs[0]
             else:
@@ -204,8 +193,10 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
 
         context['avail_fields'] = json.dumps(self.get_avail_fields())
 
-        # Setting default shown columns, only columns who which have any data* in them will show
-        # * well actually it looks at the Part of the inventory and keeps all UDF's that appear there for the whole table.
+        # Setting default shown columns based on table_class's Meta.base_shown_cols attrib,
+        # and "searchcol-" extra_columns (see get_table_kwargs())
+        # For Parts and Inventory, set_column_default_show is overwritten
+        # such as to hide UDF colums that don't belong / dont have data.
         context['table'].set_column_default_show(self.get_table_data())
 
         return context
@@ -216,11 +207,13 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
         return avail_fields
 
     def get_table_kwargs(self, field_exceptions=[]):
-        extra_cols = []
+        # Provides additional parameters to table_class upon instantiation.
+        # in this case, adds columns from get_avail_fields().
+        # Queried fields are prefixed with "searchcol-"
+        # such that they will be shown by default by set_column_default_show
 
+        extra_cols = []
         queried_fields = []
-        udfname_queries = []
-        udfvalue_queries = []
 
         for card in self.get_search_cards():
             for row in card['rows']:
@@ -238,9 +231,9 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
                 else:
                     safename = 'extracol-{}'.format(field['value'])
 
-                if 'date_lookup' in field['legal_lookups']:
+                if 'DATE_LOOKUPS' == field['legal_lookups']:
                     col = tables.DateTimeColumn(verbose_name=field['text'], accessor=field['value'])
-                elif 'bool_lookup' in field['legal_lookups']:
+                elif 'BOOL_LOOKUPS' == field['legal_lookups']:
                     col = tables.BooleanColumn(verbose_name=field['text'], accessor=field['value'])
                 else:
                     col = tables.Column(verbose_name=field['text'], accessor=field['value'])
@@ -288,28 +281,27 @@ class InventoryTableView(GenericSearchTableView):
         return qs
 
     def get_avail_fields(self):
-        avail_fields = [dict(value="part__name",              text="Name", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="serial_number",  text="Serial Number", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="build__assembly__name",  text="Build", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="revision__note",          text="Note", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="created_at",      text="Date Created", legal_lookups=self.DATE_LOOKUPS),
-                        dict(value="updated_at",     text="Date Modified", legal_lookups=self.DATE_LOOKUPS),
+        avail_fields = [dict(value="part__name",              text="Name", legal_lookups='STR_LOOKUPS'),
+                        dict(value="serial_number",  text="Serial Number", legal_lookups='STR_LOOKUPS'),
+                        dict(value="build__assembly__name",  text="Build", legal_lookups='STR_LOOKUPS'),
+                        dict(value="revision__note",          text="Note", legal_lookups='STR_LOOKUPS'),
+                        dict(value="created_at",      text="Date Created", legal_lookups='DATE_LOOKUPS'),
+                        dict(value="updated_at",     text="Date Modified", legal_lookups='DATE_LOOKUPS'),
 
                         dict(value=None, text="--Part--", disabled=True),
-                        dict(value="part__part_number",        text="Part Number", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="part__part_type__name",    text="Part Type", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="part__unit_cost",          text="Unit Cost", legal_lookups=self.NUM_LOOKUPS),
-                        dict(value="part__refurbishment_cost", text="Refurb Cost", legal_lookups=self.NUM_LOOKUPS),
+                        dict(value="part__part_number",        text="Part Number", legal_lookups='STR_LOOKUPS'),
+                        dict(value="part__part_type__name",    text="Part Type",   legal_lookups='STR_LOOKUPS'),
+                        dict(value="part__unit_cost",          text="Unit Cost",   legal_lookups='NUM_LOOKUPS'),
+                        dict(value="part__refurbishment_cost", text="Refurb Cost", legal_lookups='NUM_LOOKUPS'),
 
                         dict(value=None, text="--Location--", disabled=True),
-                        dict(value="location__name",          text="Name", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="location__location_type", text="Location Type", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="location__root_type",     text="Location Root", legal_lookups=self.STR_LOOKUPS),
+                        dict(value="location__name",          text="Name",          legal_lookups='STR_LOOKUPS'),
+                        dict(value="location__location_type", text="Location Type", legal_lookups='STR_LOOKUPS'),
+                        dict(value="location__root_type",     text="Location Root", legal_lookups='STR_LOOKUPS'),
 
                         dict(value=None, text="--User-Defined-Fields--", disabled=True),
-                        dict(value="fieldvalues__field__field_name", text="UDF Name", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="fieldvalues__field_value",       text="UDF Value",
-                             legal_lookups=self.STR_LOOKUPS+self.NUM_LOOKUPS+self.ITER_LOOKUPS),]
+                        dict(value="fieldvalues__field__field_name", text="UDF Name",  legal_lookups='STR_LOOKUPS'),
+                        dict(value="fieldvalues__field_value",       text="UDF Value", legal_lookups='STR_LOOKUPS'),]
         return avail_fields
 
     def get_context_data(self, **kwargs):
@@ -322,23 +314,28 @@ class PartTableView(GenericSearchTableView):
     table_class = PartTable
 
     def get_avail_fields(self):
-        avail_fields = [dict(value="name",                      text="Name", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="part_number",        text="Part Number", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="part_type__name",      text="Part Type", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="unit_cost",            text="Unit Cost", legal_lookups=self.NUM_LOOKUPS),
-                        dict(value="refurbishment_cost", text="Refurb Cost", legal_lookups=self.NUM_LOOKUPS),
-                        dict(value="note",                      text="Note", legal_lookups=self.STR_LOOKUPS),
+        avail_fields = [dict(value="name",                      text="Name", legal_lookups='STR_LOOKUPS'),
+                        dict(value="part_number",        text="Part Number", legal_lookups='STR_LOOKUPS'),
+                        dict(value="part_type__name",      text="Part Type", legal_lookups='STR_LOOKUPS'),
+                        dict(value="unit_cost",            text="Unit Cost", legal_lookups='NUM_LOOKUPS'),
+                        dict(value="refurbishment_cost", text="Refurb Cost", legal_lookups='NUM_LOOKUPS'),
+                        dict(value="note",                      text="Note", legal_lookups='STR_LOOKUPS'),
 
                         dict(value=None, text="--User-Defined-Fields--", disabled=True),
-                        dict(value="user_defined_fields__field_name", text="UDF Name", legal_lookups=self.STR_LOOKUPS),]
+                        dict(value="user_defined_fields__field_name", text="UDF Name", legal_lookups='STR_LOOKUPS'),]
         return avail_fields
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        fetch_me = ['user_defined_fields','part_type']
+        qs = qs.prefetch_related(*fetch_me)
+        return qs
 
     def get_table_kwargs(self):
         kwargs = super().get_table_kwargs(field_exceptions=['user_defined_fields__field_name'])
 
         udfname_queries = []
-        cards = self.get_search_cards()
-        for card in cards:
+        for card in self.get_search_cards():
             for row in card['rows']:
                 if 'user_defined_fields__field_name' in row['fields']:
                     udfname_queries.append(row['query'])  # capture this row's query
@@ -354,12 +351,6 @@ class PartTableView(GenericSearchTableView):
 
         return kwargs
 
-    def get_queryset(self):
-        qs = super().get_queryset()
-        fetch_me = ['user_defined_fields','part_type']
-        qs = qs.prefetch_related(*fetch_me)
-        return qs
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
@@ -370,23 +361,30 @@ class BuildTableView(GenericSearchTableView):
     table_class = BuildTable
 
     def get_avail_fields(self):
-        avail_fields = [dict(value="assembly__name",                text="Name", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="build_number",          text="Build Number", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="assembly__assembly_type__name", text="Type", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="assembly__description",  text="Description", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="build_notes",                  text="Notes", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="detail",                      text="Detail", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="is_deployed",           text="is-deployed?", legal_lookups=self.BOOL_LOOKUPS),
-                        dict(value="time_at_sea",            text="Time at Sea", legal_lookups=self.NUM_LOOKUPS),
-                        dict(value="flag",                   text="is-flagged?", legal_lookups=self.BOOL_LOOKUPS),
-                        dict(value="created_at",            text="Date Created", legal_lookups=self.DATE_LOOKUPS),
-                        dict(value="updated_at",           text="Date Modified", legal_lookups=self.DATE_LOOKUPS),
+        avail_fields = [dict(value="assembly__name",                text="Name", legal_lookups='STR_LOOKUPS'),
+                        dict(value="build_number",          text="Build Number", legal_lookups='STR_LOOKUPS'),
+                        dict(value="assembly__assembly_type__name", text="Type", legal_lookups='STR_LOOKUPS'),
+                        dict(value="assembly__description",  text="Description", legal_lookups='STR_LOOKUPS'),
+                        dict(value="build_notes",                  text="Notes", legal_lookups='STR_LOOKUPS'),
+                        dict(value="detail",                      text="Detail", legal_lookups='STR_LOOKUPS'),
+                        dict(value="is_deployed",           text="is-deployed?", legal_lookups='BOOL_LOOKUPS'),
+                        dict(value="time_at_sea",            text="Time at Sea", legal_lookups='NUM_LOOKUPS'),
+                        dict(value="flag",                   text="is-flagged?", legal_lookups='BOOL_LOOKUPS'),
+                        dict(value="created_at",            text="Date Created", legal_lookups='DATE_LOOKUPS'),
+                        dict(value="updated_at",           text="Date Modified", legal_lookups='DATE_LOOKUPS'),
 
                         dict(value=None, text="--Location--", disabled=True),
-                        dict(value="location__name",          text="Name", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="location__location_type", text="Type", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="location__root_type",     text="Root", legal_lookups=self.STR_LOOKUPS),]
+                        dict(value="location__name",          text="Name", legal_lookups='STR_LOOKUPS'),
+                        dict(value="location__location_type", text="Type", legal_lookups='STR_LOOKUPS'),
+                        dict(value="location__root_type",     text="Root", legal_lookups='STR_LOOKUPS'),]
         return avail_fields
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs = qs.exclude(location__root_type='Trash')
+        fetch_me = ['assembly','assembly__assembly_type','location']
+        qs = qs.prefetch_related(*fetch_me)
+        return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -398,12 +396,18 @@ class AssemblyTableView(GenericSearchTableView):
     table_class = AssemblyTable
 
     def get_avail_fields(self):
-        avail_fields = [dict(value="name",                text="Name", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="assembly_number",   text="Number", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="assembly_type__name", text="Type", legal_lookups=self.STR_LOOKUPS),
-                        dict(value="description",  text="Description", legal_lookups=self.STR_LOOKUPS),
+        avail_fields = [dict(value="name",                text="Name", legal_lookups='STR_LOOKUPS'),
+                        dict(value="assembly_number",   text="Number", legal_lookups='STR_LOOKUPS'),
+                        dict(value="assembly_type__name", text="Type", legal_lookups='STR_LOOKUPS'),
+                        dict(value="description",  text="Description", legal_lookups='STR_LOOKUPS'),
                         ]
         return avail_fields
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        fetch_me = ['assembly_type']
+        qs = qs.prefetch_related(*fetch_me)
+        return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
