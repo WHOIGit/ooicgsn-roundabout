@@ -1,3 +1,24 @@
+"""
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+"""
+
 import os
 import datetime
 from datetime import timedelta
@@ -15,7 +36,9 @@ from roundabout.parts.models import Part, Revision
 from roundabout.assemblies.models import Assembly, AssemblyPart
 from roundabout.builds.models import Build
 from roundabout.users.models import User
-
+# Get the app label names from the core utility functions
+from roundabout.core.utils import set_app_labels
+labels = set_app_labels()
 # Model Managers
 
 
@@ -100,7 +123,7 @@ class Deployment(models.Model):
         deployment_status_label = None
         # get short label text for Deployment status
         if self.current_deployment_status() == 'create':
-            deployment_status_label = 'Initial Deployment'
+            deployment_status_label = 'Initial %s' % (labels['label_deployments_app_singular'])
         elif self.current_deployment_status() == 'burnin':
             deployment_status_label = 'Burn In'
         elif self.current_deployment_status() == 'deploy':
@@ -230,8 +253,7 @@ class Inventory(MPTTModel):
 
     # get the time at sea for the current deployment only (if item is at sea)
     def current_deployment_time_at_sea(self):
-        root_location = self.location.get_root()
-        if root_location.root_type == 'Sea':
+        if self.build and self.build.current_deployment() and self.build.current_deployment().current_deployment_status() == 'deploy':
             try:
                 action_deploy_to_sea = Action.objects.filter(inventory=self).filter(action_type='deploymenttosea').latest('created_at')
             except Action.DoesNotExist:
@@ -314,13 +336,13 @@ class Action(models.Model):
         (INVADD, 'Add Inventory'),
         (INVCHANGE, 'Inventory Change'),
         (LOCATIONCHANGE, 'Location Change'),
-        (SUBCHANGE, 'Subassembly Change'),
-        (ADDTOBUILD, 'Add to Build'),
-        (REMOVEFROMBUILD, 'Remove from Build'),
-        (DEPLOYMENTBURNIN, 'Deployment Burnin'),
-        (DEPLOYMENTTOSEA, 'Deployment to Sea'),
-        (DEPLOYMENTUPDATE, 'Deployment Update'),
-        (DEPLOYMENTRECOVER, 'Deployment Recovered'),
+        (SUBCHANGE, 'Sub-%s Change' % (labels['label_assemblies_app_singular'])),
+        (ADDTOBUILD, 'Add to %s' % (labels['label_builds_app_singular'])),
+        (REMOVEFROMBUILD, 'Remove from %s' % (labels['label_builds_app_singular'])),
+        (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTTOSEA, '%s to Field' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTUPDATE, '%s Update' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTRECOVER, '%s Recovered' % (labels['label_deployments_app_singular'])),
         (ASSIGNDEST, 'Assign Destination'),
         (REMOVEDEST, 'Remove Destination'),
         (TEST, 'Test'),
@@ -380,12 +402,12 @@ class DeploymentAction(models.Model):
     BURNIN = 'burnin'
     DETAILS = 'details'
     ACT_TYPES = (
-        (DEPLOY, 'Deployed to Sea'),
-        (RECOVER, 'Recovered from Sea'),
+        (DEPLOY, 'Deployed to Field'),
+        (RECOVER, 'Recovered from Field'),
         (RETIRE, 'Retired'),
         (CREATE, 'Created'),
         (BURNIN, 'Burn In'),
-        (DETAILS, 'Deployment Details'),
+        (DETAILS, '%s Details' % (labels['label_deployments_app_singular'])),
     )
     action_type = models.CharField(max_length=20, choices=ACT_TYPES)
     created_at = models.DateTimeField(default=timezone.now)

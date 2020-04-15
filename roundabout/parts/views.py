@@ -1,3 +1,24 @@
+"""
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+"""
+
 import re
 import json
 
@@ -10,7 +31,7 @@ from django.core.exceptions import ValidationError
 from django.template.defaultfilters import slugify
 
 from .models import Part, PartType, Revision, Documentation
-from .forms import PartForm, RevisionForm, DocumentationFormset, RevisionFormset, PartUdfAddFieldForm, PartUdfFieldSetValueForm
+from .forms import PartForm, PartTypeForm, RevisionForm, DocumentationFormset, RevisionFormset, PartUdfAddFieldForm, PartUdfFieldSetValueForm
 
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory
@@ -709,6 +730,42 @@ class PartsDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
 
 
 # Part Types Template Views
+
+class PartsTypeListView(LoginRequiredMixin, ListView):
+    model = PartType
+    template_name = 'parts/part_type_list.html'
+    context_object_name = 'part_types'
+
+
+class PartsTypeCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    model = PartType
+    form_class = PartTypeForm
+    context_object_name = 'part_type'
+    template_name = 'parts/part_type_form.html'
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
+    def get_success_url(self):
+        return reverse('parts:parts_type_home', )
+
+class PartsTypeUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = PartType
+    form_class = PartTypeForm
+    context_object_name = 'part_type'
+    template_name = 'parts/part_type_form.html'
+    permission_required = 'parts.add_part'
+    redirect_field_name = 'home'
+
+    def get_success_url(self):
+        return reverse('parts:parts_type_home', )
+
+
+class PartsTypeDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = PartType
+    template_name = 'parts/part_type_confirm_delete.html'
+    success_url = reverse_lazy('parts:parts_type_home')
+    permission_required = 'parts.delete_part'
+    redirect_field_name = 'home'
 
 # Direct detail view
 class PartsTypeDetailView(LoginRequiredMixin, DetailView):

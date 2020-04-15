@@ -102,6 +102,7 @@ LOCAL_APPS = [
     'roundabout.users.apps.UsersAppConfig',
     # Your stuff: custom apps go here
     'common',
+    'roundabout.core',
     'roundabout.locations',
     'roundabout.parts',
     'roundabout.inventory',
@@ -228,7 +229,8 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
-                'roundabout.context_processors.template_app_labels',
+                'roundabout.context_processors.template_set_app_labels',
+                'roundabout.context_processors.template_resolver_names',
             ],
         },
     },

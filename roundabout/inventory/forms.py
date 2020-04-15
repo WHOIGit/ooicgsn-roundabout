@@ -1,8 +1,31 @@
+"""
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+"""
+
 import datetime
+from decimal import Decimal
 
 from django import forms
 from django.forms.models import inlineformset_factory
 from django.utils import timezone
+
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, Div, Field
 from django_summernote.widgets import SummernoteInplaceWidget, SummernoteWidget
@@ -10,9 +33,13 @@ from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
 from django.contrib.sites.models import Site
 
 from .models import Inventory, Deployment, Action, DeploymentSnapshot, PhotoNote
+from .validators import validate_udffield_decimal
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
 from roundabout.userdefinedfields.models import FieldValue
+# Import environment variables from .env files
+import environ
+env = environ.Env()
 
 
 class InventoryForm(forms.ModelForm):
@@ -58,8 +85,8 @@ class InventoryForm(forms.ModelForm):
                         self.fields['udffield_' + str(field.id)] = forms.IntegerField(label=str(field.field_name), required=False,
                                                             help_text=str(field.field_description))
                     elif field.field_type == 'DecimalField':
-                        self.fields['udffield_' + str(field.id)] = forms.DecimalField(label=str(field.field_name), required=False,
-                                                            help_text=str(field.field_description))
+                        self.fields['udffield_' + str(field.id)] = forms.CharField(label=str(field.field_name), required=False,
+                                                            help_text=str(field.field_description), validators=[validate_udffield_decimal])
                     elif field.field_type == 'DateField':
                         self.fields['udffield_' + str(field.id)] = forms.DateTimeField(label=str(field.field_name), required=False,
                                                             help_text=str(field.field_description),
@@ -89,10 +116,14 @@ class InventoryForm(forms.ModelForm):
 
 
 class InventoryAddForm(forms.ModelForm):
-    serial_number = forms.CharField(strip=True,
-        help_text='Serial Number auto-generated. Click here to override.',
-        widget=forms.TextInput(attrs={'readonly':'readonly'}),
-    )
+    RDB_SERIALNUMBER_CREATE = env.bool('RDB_SERIALNUMBER_CREATE', default=False)
+    if RDB_SERIALNUMBER_CREATE:
+        serial_number = forms.CharField(strip=True,
+            help_text='Serial Number auto-generated. Click here to override.',
+            widget=forms.TextInput(attrs={'readonly':'readonly'}),
+        )
+    else:
+        serial_number = forms.CharField(strip=True)
 
     class Meta:
         model = Inventory
@@ -314,13 +345,14 @@ class ActionMoveToTrashForm(forms.ModelForm):
 
     class Meta:
         model = Inventory
-        fields = ['location', 'detail', 'parent', 'deployment', 'assembly_part', 'assigned_destination_root']
+        fields = ['location', 'detail', 'parent', 'deployment', 'assembly_part', 'assigned_destination_root', 'build']
         widgets = {
             'location': forms.HiddenInput(),
             'parent': forms.HiddenInput(),
             'deployment': forms.HiddenInput(),
             'assembly_part': forms.HiddenInput(),
             'assigned_destination_root': forms.HiddenInput(),
+            'build': forms.HiddenInput(),
         }
         labels = {
             'detail': 'Reasons for moving to Trash Bin',
@@ -333,6 +365,7 @@ class ActionMoveToTrashForm(forms.ModelForm):
         self.initial['deployment'] = ''
         self.initial['assembly_part'] = ''
         self.initial['assigned_destination_root'] = ''
+        self.initial['build'] = ''
         self.initial['detail'] = ''
 
 

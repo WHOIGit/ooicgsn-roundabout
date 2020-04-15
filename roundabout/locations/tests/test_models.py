@@ -1,8 +1,28 @@
+"""
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or 
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+"""
+
 import pytest
 
 from django.test import TestCase
 from roundabout.locations.tests.factories import LocationFactory
-from roundabout.moorings.tests.factories import MooringPartFactory
 from roundabout.parts.tests.factories import PartFactory, RevisionFactory
 
 pytestmark = pytest.mark.django_db
@@ -13,13 +33,3 @@ def test_location_model():
     location = LocationFactory(name="Test Location")
     assert location.name == "Test Location"
     assert location.__str__() == "Test Location"
-
-def test_get_mooring_total_cost():
-    """ Test get_mooring_total_cost method model """
-    part = PartFactory(name="Test Part")
-    revision = RevisionFactory(part=part, unit_cost=5.00)
-    location = LocationFactory(name="Test Location")
-    # create parent MooringPart to be a parent
-    parent = MooringPartFactory(parent__parent=None, part=part, location=location)
-    mooring = MooringPartFactory(part=part, location=location, parent=parent)
-    assert location.get_mooring_total_cost() == 10.00

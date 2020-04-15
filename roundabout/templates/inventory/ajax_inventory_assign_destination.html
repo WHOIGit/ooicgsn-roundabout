@@ -1,3 +1,23 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
 
 {% load static i18n %}
 {% load mptt_tags %}
@@ -16,20 +36,20 @@
 
     <div class="card-body">
 
-        <p>The following Assembly template destinations are available for this Part.</p>
+        <p>The following {{ label_assemblies_app_singular }} template destinations are available for this Part.</p>
 
         <div id="available-assembly-parts">
 
             {% if assembly_parts %}
 
-                {% regroup assembly_parts by assembly as assembly_list %}
-                {% for assembly in assembly_list %}
+                {% regroup assembly_parts by assembly_revision as assembly_list %}
+                {% for assembly_revision in assembly_list %}
 
                 <div class="card">
                     <div class="card-header" id="heading-{{ forloop.counter }}">
                       <h5 class="mb-0">
                         <button class="btn btn-link" data-toggle="collapse" data-target="#collapse-{{ forloop.counter }}" aria-expanded="true" aria-controls="collapse-{{ forloop.counter }}">
-                          <b>{{ assembly.grouper }}</b>
+                          <b>{{ assembly_revision.grouper.assembly }} - Revision {{ assembly_revision.grouper.revision_code }}</b>
                         </button>
                       </h5>
                     </div>
@@ -37,9 +57,9 @@
                     <div id="collapse-{{ forloop.counter }}" class="collapse" aria-labelledby="heading-{{ assembly.id }}" data-parent="#available-assembly-parts">
                       <div class="card-body ajax-add-subassembly-link">
                           <ul class="list-group list-group-flush">
-                           {% for assembly_part in assembly.list %}
+                           {% for assembly_part in assembly_revision.list %}
                                 <li class="list-group-item">
-                                   <b>{{ assembly_part.assembly }}</b> <br>
+                                   <b>{{ assembly_part.assembly_revision.assembly }} - Revision {{ assembly_part.assembly_revision.revision_code }}</b> <br>
 
                                    {% if assembly_part.get_ancestors %}
                                        {{ assembly_part.get_ancestors|tree_path:" > " }} >

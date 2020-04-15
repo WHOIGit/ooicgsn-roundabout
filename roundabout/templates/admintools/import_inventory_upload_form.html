@@ -1,0 +1,96 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or 
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Bulk Upload Inventory Items{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h2>Bulk Upload Tool for Inventory Items</h2>
+
+  <p>Use this tool to perform a bulk upload of Inventory items.</p>
+
+  <hr>
+
+  <h4>Step 1: Download a CSV spreadsheet template.</h4>
+
+  <p>Click the button below to download a blank CSV template with headers for all the required and available Custom Fields.
+  </p>
+
+  <p>
+      <a href="{% url 'admintools:import_inventory_create_template' %}" role="button" class="btn btn-primary">Download CSV template</a>
+  </p>
+
+  <h4>Step 2: Fill out the CSV template with data for new Inventory items to upload.</h4>
+
+  <p>Don't change any prefilled headers or the upload will fail. You may leave any Custom Fields that you don't need for this import blank or
+  remove them from the spreadsheet.</p>
+
+  <p>The following fields are required for the upload to proceed:</p>
+
+  <ul>
+      <li><b>Serial Number</b>  - Must be a unique identifier that's not already in use.</li>
+      <li><b>Part Number</b>  - Use the Part Number field from your Part Templates to match the item to a Part.</li>
+      <li><b>Location</b>  - Use the name field (ex. "Land") of an existing Location to give the item a destination.</li>
+  </ul>
+
+  <p>The <b>Notes</b>  field is not required, but any text in this field will be added as a Note to the item's History. You may use
+  this field for any notes you don't want to put in a Custom Field.</p>
+
+  <h4>Step 3: Upload your completed CSV template</h4>
+
+  <p>Use the form below to upload your filled out CSV sheet. After the document is uploaded, you'll be
+  presented with a Preview table that will list any errors that need to be fixed, or give you the green light to complete the process.</p>
+
+
+  <form class="form-horizontal" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form|crispy }}
+
+    <div class="row">
+        {% if form.errors %}
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <div class="alert alert-danger">
+                    <strong>{{ error|escape }}</strong>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+
+    </div>
+
+    <div class="control-group">
+      <div class="controls">
+        <button type="submit" class="btn btn-primary">Run Import Preview</button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

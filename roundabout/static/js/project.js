@@ -1,3 +1,24 @@
+/*
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+*/
+
 /* Project specific Javascript goes here. */
 
 $(document).ready(function() {
@@ -47,12 +68,22 @@ $(document).ready(function() {
     var nodeID = navtreePrefix + '_' + $('.card-header').attr('data-object-id');
     console.log(nodeID);
     $(navTree).on('ready.jstree', function (event, data) {
-        /* Need to check if the loading item is on a Build, if so need to open the Build tree first */
+        /* Need to check if the loading item is on a Build or Assembly Revision template,
+           if so need to open the parent tree first */
         /* buildID variable is set by Django in ajax_inventory_detail or ajax_build_detail template */
+        /* assemblyID variable is set by Django in ajax_assembly_detail or ajax_assemblypart_detail template */
         if (typeof buildID !== 'undefined') {
             console.log(buildID);
             data.instance._open_to(buildID);
             data.instance.open_node(buildID);
+            $(navTree).on("open_node.jstree", function (event, data) {
+                data.instance._open_to(nodeID);
+                data.instance.select_node(nodeID);
+            });
+        } else if (typeof assemblyID !== 'undefined') {
+            console.log(assemblyID);
+            data.instance._open_to(assemblyID);
+            data.instance.open_node(assemblyID);
             $(navTree).on("open_node.jstree", function (event, data) {
                 data.instance._open_to(nodeID);
                 data.instance.select_node(nodeID);
@@ -64,13 +95,15 @@ $(document).ready(function() {
     });
 
     $(navTree).on('click','a',function(){
-        var nodeType = $(this).attr("data-node-type");
 
+        var nodeType = $(this).attr("data-node-type");
+        console.log(nodeType);
         if (!nodeType) {
             nodeType = navtreePrefix;
         }
 
         var url = $(this).attr("data-detail-url");
+        console.log(url);
         var nodeID = nodeType + '_' + $(this).attr("data-node-id");
         var itemID = $(this).attr("data-node-id");
         // Get the li ID for the jsTree node
@@ -89,6 +122,8 @@ $(document).ready(function() {
                   var bookmarkURL = '/assemblies/assemblypart/' + itemID;
               } else if (nodeType == 'assemblytype') {
                   var bookmarkURL = '/assemblies/assemblytype/' + itemID;
+              } else if (nodeType == 'assemblyrevisions') {
+                  var bookmarkURL = '/assemblies/assemblyrevision/' + itemID;
               } else if (nodeType == 'part_type') {
                   var bookmarkURL = '/parts/part_type/' + itemID;
               } else {
@@ -108,6 +143,163 @@ $(document).ready(function() {
             }
         });
     });
+
+});
+
+/* AJAX template functions - Global */
+
+$(document).ready(function() {
+
+    // AJAX functions for Add Button
+    $('#content-block').on('click','.parts-add-btn a', function(){
+        var url = $(this).attr("data-create-url");
+        console.log(url);
+
+        $.ajax({
+            url: url,
+            success: function (data) {
+              $("#detail-view").html(data);
+            }
+        });
+    });
+
+    // AJAX functions for Update/Delete Buttons
+    $('#content-block').on('click','.ajax-btn a', function(){
+        var url = $(this).attr("data-update-url");
+        console.log(url);
+
+        $.ajax({
+            url: url,
+            success: function (data) {
+              $("#detail-view").html(data);
+            }
+        });
+    });
+
+    // AJAX call for Cancel Button to go back to object detail
+    $('#content-block').on('click','input.cancel-btn',function(){
+        var url = $(this).attr("data-detail-url");
+        var nodeID = $(this).attr("data-node-id");
+        console.log(url);
+        $.ajax({
+            url: url,
+            success: function (data) {
+              $("#detail-view").html(data);
+            }
+        });
+    });
+
+    // AJAX functions for Detail template
+    $('#content-block').on('click','.ajax-detail-link a',function(){
+        var nodeType = $(this).attr("data-node-type");
+        console.log(nodeType);
+        if (!nodeType) {
+            nodeType = navtreePrefix;
+        }
+
+        var url = $(this).attr("data-detail-url");
+        var nodeID = nodeType + '_' + $(this).attr("data-node-id");
+        var itemID = $(this).attr("data-node-id");
+        var previousNodeID = nodeType + '_' + $('.card-header').attr('data-object-id');
+
+        $.ajax({
+            url: url,
+            beforeSend: function() {
+               $(navTree).jstree(true).deselect_node(previousNodeID);
+            },
+            success: function (data) {
+              $("#detail-view").html(data);
+              $(navTree).jstree(true).select_node(nodeID);
+
+              /* Use History API to change browser Back button behavior, create bookmarkable URLs */
+              if (nodeType == 'assemblyparts') {
+                  var bookmarkURL = '/assemblies/assemblypart/' + itemID;
+              } else if (nodeType == 'assemblytype') {
+                  var bookmarkURL = '/assemblies/assemblytype/' + itemID;
+              } else if (nodeType == 'assemblyrevisions') {
+                  var bookmarkURL = '/assemblies/assemblyrevision/' + itemID;
+              } else if (nodeType == 'part_type') {
+                  var bookmarkURL = '/parts/part_type/' + itemID;
+              } else {
+                 var bookmarkURL = '/' + nodeType + '/' + itemID
+              }
+
+              var backURL = url
+              var state = {
+                  itemID: itemID,
+                  nodeType: nodeType,
+                  backURL: backURL,
+                  bookmarkURL: bookmarkURL,
+              };
+
+              history.pushState(state, '', bookmarkURL);
+              console.log(history.state);
+            }
+        });
+    });
+
+    // AJAX functions for Add Subassembly/Assign Destination template
+    $('#content-block').on('click','.ajax-add-subassembly-link a',function(){
+        var url = $(this).attr("data-detail-url");
+        var nodeID = navtreePrefix + '_' + $(this).attr("data-node-id");
+        $.ajax({
+            url: url,
+            success: function (data) {
+              $("#detail-view").html(data);
+              $(navTree).jstree(true).settings.core.data.url = navURL;
+              $(navTree).on('refresh.jstree', function (event, data) {
+                  data.instance.deselect_all();
+                  data.instance._open_to(nodeID);
+                  data.instance.select_node(nodeID);
+              });
+              $(navTree).jstree(true).refresh();
+
+            }
+        });
+    });
+
+    // Open tabs links with URL hash
+    $(function () {
+        var hash = window.location.hash;
+        hash && $('ul.nav a[href="' + hash + '"]').tab('show');
+    });
+
+    // AJAX function for Filter by Part type
+    $('#content-block').on('change','.filter-checkbox', function(event){
+        event.preventDefault();
+        var filterList = $("#filter-part-type input:checkbox:checked").map(function(){
+          return $(this).val();
+        }).get();
+        console.log(filterList);
+        var navFilterURL = $('#filter-part-type').attr("data-navtree-filter-url");
+        $.ajax({
+            url: navFilterURL,
+            data: {
+              'part_types[]': filterList
+            },
+            success: function (data) {
+                $(navTree).jstree(true).settings.core.data = data;
+                $(navTree).jstree(true).open_all();
+                $(navTree).jstree(true).refresh();
+
+            }
+        });
+    });
+
+    $('#content-block').on('click','#filter-part-type-clear', function(event){
+        event.preventDefault();
+        $( ".filter-checkbox" ).prop( "checked", false );
+        $.ajax({
+            url: navURL,
+            success: function (data) {
+                $(navTree).jstree(true).settings.core.data = data;
+                $(navTree).jstree(true).refresh();
+
+            }
+        });
+
+    });
+
 
 });
 
@@ -173,8 +365,16 @@ $(document).ready(function(){
             method: "POST",
             url: thisURL,
             data: formData,
+            beforeSend: function() {
+                // Show spinner container
+                $("#spinner-loader").show();
+            },
             success: handleFormSuccess,
             error: handleFormError,
+            complete:function(data){
+                // Hide spinner container
+                $("#spinner-loader").hide();
+            }
         })
     })
 
@@ -303,145 +503,6 @@ $(document).ready(function(){
         });
     }
 })
-
-/* AJAX template functions - Global */
-
-$(document).ready(function() {
-
-    // AJAX functions for Add Button
-    $('#content-block').on('click','.parts-add-btn a', function(){
-        var url = $(this).attr("data-create-url");
-        console.log(url);
-
-        $.ajax({
-            url: url,
-            success: function (data) {
-              $("#detail-view").html(data);
-            }
-        });
-    });
-
-    // AJAX functions for Update/Delete Buttons
-    $('#content-block').on('click','.ajax-btn a', function(){
-        var url = $(this).attr("data-update-url");
-        console.log(url);
-
-        $.ajax({
-            url: url,
-            success: function (data) {
-              $("#detail-view").html(data);
-            }
-        });
-    });
-
-    // AJAX call for Cancel Button to go back to object detail
-    $('#content-block').on('click','input.cancel-btn',function(){
-        var url = $(this).attr("data-detail-url");
-        var nodeID = $(this).attr("data-node-id");
-        console.log(url);
-        $.ajax({
-            url: url,
-            success: function (data) {
-              $("#detail-view").html(data);
-            }
-        });
-    });
-
-    // AJAX functions for Detail template
-    $('#content-block').on('click','.ajax-detail-link a',function(){
-        var url = $(this).attr("data-detail-url");
-        var nodeID = navtreePrefix + '_' + $(this).attr("data-node-id");
-        var itemID = $(this).attr("data-node-id");
-        var previousNodeID = navtreePrefix + '_' + $('.card-header').attr('data-object-id');
-
-        $.ajax({
-            url: url,
-            beforeSend: function() {
-               $(navTree).jstree(true).deselect_node(previousNodeID);
-            },
-            success: function (data) {
-              $("#detail-view").html(data);
-              $(navTree).jstree(true).select_node(nodeID);
-
-              /* Use History API to change browser Back button behavior, create bookmarkable URLs */
-              var backURL = url
-              var bookmarkURL = '/' + navtreePrefix + '/' + itemID
-              var state = {
-                  nodeID: nodeID,
-                  itemID: itemID,
-                  backURL: backURL,
-                  bookmarkURL: bookmarkURL,
-              };
-              history.pushState(state, '', bookmarkURL);
-              console.log(history.state);
-            }
-        });
-    });
-
-    // AJAX functions for Add Subassembly/Assign Destination template
-    $('#content-block').on('click','.ajax-add-subassembly-link a',function(){
-        var url = $(this).attr("data-detail-url");
-        var nodeID = navtreePrefix + '_' + $(this).attr("data-node-id");
-        $.ajax({
-            url: url,
-            success: function (data) {
-              $("#detail-view").html(data);
-              $(navTree).jstree(true).settings.core.data.url = navURL;
-              $(navTree).on('refresh.jstree', function (event, data) {
-                  data.instance.deselect_all();
-                  data.instance._open_to(nodeID);
-                  data.instance.select_node(nodeID);
-              });
-              $(navTree).jstree(true).refresh();
-
-            }
-        });
-    });
-
-    // Open tabs links with URL hash
-    $(function () {
-        var hash = window.location.hash;
-        hash && $('ul.nav a[href="' + hash + '"]').tab('show');
-    });
-
-    // AJAX function for Filter by Part type
-    $('#content-block').on('change','.filter-checkbox', function(event){
-        event.preventDefault();
-        var filterList = $("#filter-part-type input:checkbox:checked").map(function(){
-          return $(this).val();
-        }).get();
-        console.log(filterList);
-        var navFilterURL = $('#filter-part-type').attr("data-navtree-filter-url");
-        $.ajax({
-            url: navFilterURL,
-            data: {
-              'part_types[]': filterList
-            },
-            success: function (data) {
-                $(navTree).jstree(true).settings.core.data = data;
-                $(navTree).jstree(true).open_all();
-                $(navTree).jstree(true).refresh();
-
-            }
-        });
-    });
-
-    $('#content-block').on('click','#filter-part-type-clear', function(event){
-        event.preventDefault();
-        $( ".filter-checkbox" ).prop( "checked", false );
-        $.ajax({
-            url: navURL,
-            success: function (data) {
-                $(navTree).jstree(true).settings.core.data = data;
-                $(navTree).jstree(true).refresh();
-
-            }
-        });
-
-    });
-
-
-});
 
 /* Function to print specific page DIV */
 function printDiv(eleId){

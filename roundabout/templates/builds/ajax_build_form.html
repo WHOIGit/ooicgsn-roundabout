@@ -1,3 +1,23 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
 
                 {% load crispy_forms_tags %}
 
@@ -5,16 +25,20 @@
                     {% if build.id %}
                     <h3>{{ build }}</h3>
                     {% else %}
-                    <h3>Create New Build</h3>
+                    <h3>Create New {{ label_builds_app_singular }}</h3>
                     {% endif %}
                 </div>
 
                 <div class="card-body">
 
 
-                    <form class="form-horizontal ajax-form" method="post" action="" id="build-form" data-url='{{ request.build_absolute_uri|safe }}'>
+                    <form class="form-horizontal ajax-form" method="post" action="" id="build-form"
+                          data-serialnumber-url="{% url 'builds:ajax_load_new_build_id_number' %}"
+                          data-assemblyrevision-url="{% url 'builds:ajax_load_assembly_revisions' %}"
+                          data-url='{{ request.build_absolute_uri|safe }}'>
                       {% csrf_token %}
                       {{ form|crispy }}
+                      {{ form.media }}
 
                       <div class="row">
                           {% if form.errors %}
@@ -38,9 +62,9 @@
                       <div class="control-group">
                         <div class="controls">
                           {% if build.id %}
-                              <button type="submit" class="btn btn-primary">Update Build</button>
+                              <button type="submit" class="btn btn-primary">Update {{ label_builds_app_singular }}</button>
                           {% else %}
-                              <button type="submit" class="btn btn-primary">Create Build</button>
+                              <button type="submit" class="btn btn-primary">Create {{ label_builds_app_singular }}</button>
                           {% endif %}
                         </div>
                       </div>

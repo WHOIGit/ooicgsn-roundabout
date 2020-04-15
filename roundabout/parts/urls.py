@@ -1,3 +1,24 @@
+"""
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or 
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+"""
+
 from django.urls import path
 
 from . import views
@@ -11,7 +32,6 @@ urlpatterns = [
     path('edit/<int:pk>/<int:current_location>/', view=views.PartsUpdateView.as_view(), name='parts_update'),
     path('delete/<int:pk>/', view=views.PartsDeleteView.as_view(), name='parts_delete'),
     path('delete/<int:pk>/<int:parent_pk>/<int:current_location>/', view=views.PartsDeleteView.as_view(), name='parts_delete'),
-    path('part_type/<int:pk>/', view=views.PartsTypeDetailView.as_view(), name='parts_type_detail'),
     # AJAX paths
     path('ajax/load-navtree/', views.load_parts_navtree, name='ajax_load_parts_navtree'),
     path('ajax/detail/<int:pk>/', view=views.PartsAjaxDetailView.as_view(), name='ajax_parts_detail'),
@@ -27,4 +47,10 @@ urlpatterns = [
     path('ajax/userdefinedfields/remove/action/<int:pk>/<int:field_pk>/', view=views.PartsAjaxRemoveActionUdfFieldView.as_view(), name='ajax_parts_remove_action_udf_field'),
     path('ajax/delete/<int:pk>/', view=views.PartsAjaxDeleteView.as_view(), name='ajax_parts_delete'),
     path('ajax/validate-part-number/', views.validate_part_number, name='ajax_validate_part_number'),
+    # PartType paths
+    path('part_type/<int:pk>/', view=views.PartsTypeDetailView.as_view(), name='parts_type_detail'),
+    path('part_type/', view=views.PartsTypeListView.as_view(), name='parts_type_home'),
+    path('part_type/add/', view=views.PartsTypeCreateView.as_view(), name='parts_type_add'),
+    path('part_type/edit/<int:pk>/', view=views.PartsTypeUpdateView.as_view(), name='parts_type_update'),
+    path('part_type/delete/<int:pk>/', view=views.PartsTypeDeleteView.as_view(), name='parts_type_delete'),
 ]

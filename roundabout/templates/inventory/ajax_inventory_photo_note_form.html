@@ -1,115 +1,138 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
 
 {% load static i18n %}
 {% load mptt_tags %}
 {% load crispy_forms_tags %}
 
-                <div class="card-header">
-                    {% if inventory_item.id %}
-                        <h3>{{ inventory_item.part.name }}</h3>
-                    {% else %}
-                        <h3>Add Inventory</h3>
-                    {% endif %}
+<div class="card-header">
+    {% if inventory_item.id %}
+        <h3>{{ inventory_item.part.name }}</h3>
+    {% else %}
+        <h3>Add Inventory</h3>
+    {% endif %}
 
-                    <p>{{ inventory_item.serial_number }}</p>
-
-
-                </div>
-
-                <div class="card-body">
-
-                    <div class="d-none d-lg-block">
-                        {# 1. BUTTON TO TRIGGER THE ACTION #}
-                        <button type="button" class="btn btn-primary js-upload-photos">
-                          <i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload photos/documents
-                        </button>
-
-                        <div class="jumbotron text-muted text-center" style="padding-top: 4rem; padding-bottom: 4rem;">
-                            <i class="fa fa-arrow-down" aria-hidden="true" style="font-size: 4rem;"></i>
-
-                          <h3>Drop Photos/Documents Here to Upload</h3>
-                        </div>
-                    </div>
-
-                    {# 2. FILE INPUT TO BE USED BY THE PLUG-IN #}
-                    <input id="fileupload" type="file" name="photo" multiple
-                           style="display: none;"
-                           data-url="{% url 'inventory:ajax_photo_upload_action' inventory_item.id %}"
-                           data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
-
-                    <div class="d-md-block d-lg-none">
-                        {# 1. BUTTON TO TRIGGER THE ACTION #}
-                        <button type="button" class="btn btn-primary js-upload-photos">
-                          <i class="fa fa-camera" aria-hidden="true"></i>Take a photo
-                        </button>
-                    </div>
-
-                    {# 3. TABLE TO DISPLAY THE UPLOADED PHOTO #}
-                    <table id="gallery" class="table table-bordered">
-                      <thead>
-                        <tr>
-                          <th colspan="2">Attached items</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {% for photo in photos %}
-                          <tr>
-                              <td>
-                                <img src="{{ photo.photo.url }}" width="100%"> <br>
-                              </td>
-                            <td><a href="{{ photo.photo.url }}" target="_blank">{{ photo.photo.name }}</a></td>
-                          </tr>
-                        {% endfor %}
-                      </tbody>
-                    </table>
-
-                    <form class="form-horizontal ajax-form" method="post" action="" id="inventory-photo-note-form" enctype="multipart/form-data"
-                          data-url='{{ request.build_absolute_uri|safe }}'>
-                      {% csrf_token %}
-                      {{ form|crispy }}
-                      {{ form.media }}
-
-                      <div class="row">
-                          {% if form.errors %}
-                              {% for field in form %}
-                                  {% for error in field.errors %}
-                                      <div class="alert alert-danger">
-                                          <strong>{{ error|escape }}</strong>
-                                      </div>
-                                  {% endfor %}
-                              {% endfor %}
-                              {% for error in form.non_field_errors %}
-                                  <div class="alert alert-danger">
-                                      <strong>{{ error|escape }}</strong>
-                                  </div>
-                              {% endfor %}
-                          {% endif %}
+    <p>{{ inventory_item.serial_number }}</p>
 
 
+</div>
+
+<div class="card-body">
+
+    <div class="d-none d-lg-block">
+        {# 1. BUTTON TO TRIGGER THE ACTION #}
+        <button type="button" class="btn btn-primary js-upload-photos">
+          <i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload photos/documents
+        </button>
+
+        <div class="jumbotron text-muted text-center" style="padding-top: 4rem; padding-bottom: 4rem;">
+            <i class="fa fa-arrow-down" aria-hidden="true" style="font-size: 4rem;"></i>
+
+          <h3>Drop Photos/Documents Here to Upload</h3>
+        </div>
+    </div>
+
+    {# 2. FILE INPUT TO BE USED BY THE PLUG-IN #}
+    <input id="fileupload" type="file" name="photo" multiple
+           style="display: none;"
+           data-url="{% url 'inventory:ajax_photo_upload_action' inventory_item.id %}"
+           data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
+
+    <div class="d-md-block d-lg-none">
+        {# 1. BUTTON TO TRIGGER THE ACTION #}
+        <button type="button" class="btn btn-primary js-upload-photos">
+          <i class="fa fa-camera" aria-hidden="true"></i>Take a photo
+        </button>
+    </div>
+
+    {# 3. TABLE TO DISPLAY THE UPLOADED PHOTO #}
+    <table id="gallery" class="table table-bordered">
+      <thead>
+        <tr>
+          <th colspan="2">Attached items</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for photo in photos %}
+          <tr>
+              <td>
+                <img src="{{ photo.photo.url }}" width="100%"> <br>
+              </td>
+            <td><a href="{{ photo.photo.url }}" target="_blank">{{ photo.photo.name }}</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="row upload-errors">
+    </div>
+
+    <form class="form-horizontal ajax-form" method="post" action="" id="inventory-photo-note-form" enctype="multipart/form-data"
+          data-url='{{ request.build_absolute_uri|safe }}'>
+      {% csrf_token %}
+      {{ form|crispy }}
+      {{ form.media }}
+
+      <div class="row">
+          {% if form.errors %}
+              {% for field in form %}
+                  {% for error in field.errors %}
+                      <div class="alert alert-danger">
+                          <strong>{{ error|escape }}</strong>
                       </div>
-
-                      <div class="control-group">
-                        <div class="controls">
-                              <button type="submit" class="btn btn-primary">Add Note</button>
-
-                             {% if inventory_item.id %}
-                              <input class="btn btn-light cancel-btn"
-                                     type="button" value="Cancel"
-                                     data-detail-url="{% url 'inventory:ajax_inventory_detail' inventory_item.id %}"
-                                     data-node-id="{{ inventory_item.id }}" />
-                             {% endif %}
-                        </div>
-                      </div>
-                    </form>
+                  {% endfor %}
+              {% endfor %}
+              {% for error in form.non_field_errors %}
+                  <div class="alert alert-danger">
+                      <strong>{{ error|escape }}</strong>
+                  </div>
+              {% endfor %}
+          {% endif %}
 
 
-                </div>
+      </div>
+
+      <div class="control-group">
+        <div class="controls">
+              <button type="submit" class="btn btn-primary">Add Note</button>
+
+             {% if inventory_item.id %}
+              <input class="btn btn-light cancel-btn"
+                     type="button" value="Cancel"
+                     data-detail-url="{% url 'inventory:ajax_inventory_detail' inventory_item.id %}"
+                     data-node-id="{{ inventory_item.id }}" />
+             {% endif %}
+        </div>
+      </div>
+    </form>
+
+
+</div>
 
 
 {% block javascript %}
 {# JQUERY FILE UPLOAD SCRIPTS #}
-  <script src="{% static 'js/jquery-file-upload/vendor/jquery.ui.widget.js' %}"></script>
-  <script src="{% static 'js/jquery-file-upload/jquery.iframe-transport.js' %}"></script>
-  <script src="{% static 'js/jquery-file-upload/jquery.fileupload.js' %}"></script>
+  <script src="{% static 'js/vendor/jquery-file-upload/vendor/jquery.ui.widget.js' %}"></script>
+  <script src="{% static 'js/vendor/jquery-file-upload/jquery.iframe-transport.js' %}"></script>
+  <script src="{% static 'js/vendor/jquery-file-upload/jquery.fileupload.js' %}"></script>
 
 <script>
 $(function () {
@@ -124,47 +147,36 @@ $(function () {
   var photoIDList = [];
 
   $("#fileupload").fileupload({
-    /*
+
     add: function(e, data) {
-              var uploadErrors = [];
-              var acceptFileTypes = /(\.|\/)(pdf|xlsx|xls|docx|doc|gif|jpe?g|png)$/i;
-              if(data.originalFiles[0]['type'].length && !acceptFileTypes.test(data.originalFiles[0]['type'])) {
-                  uploadErrors.push('Not an accepted file type');
-              }
-
-              data.originalFiles.forEach(function (item, index) {
-                    console.log(item['type']);
-              });
-
-
-              if(data.originalFiles[0]['size'].length && data.originalFiles[0]['size'] > 5000000) {
-                  uploadErrors.push('Filesize is too big');
-              }
-
-              if(uploadErrors.length > 0) {
-                  alert(uploadErrors.join("\n"));
-              } else {
-                  data.submit();
-              }
-      },*/
+        $(".upload-errors .ajax-error").remove();
+        data.submit();
+     },
     dataType: 'json',
     done: function (e, data) {  /* PROCESS THE RESPONSE FROM THE SERVER */
-      if (data.result.is_valid) {
-        console.log(data);
-        if (data.result.file_type == 'image') {
-            $("#gallery tbody").prepend(
-              "<tr><td width='25%'><img src='" + data.result.url + "' width='100%'></td><td><a href='" + data.result.url + "' target='_blank'>" + data.result.name + "</a></td></tr>"
-            )
-        } else {
-            $("#gallery tbody").prepend(
-              "<tr><td width='25%' class='text-center'><i class='fa fa-file fa-3x'></i></td><td><a href='" + data.result.url + "' target='_blank'>" + data.result.name + "</a></td></tr>"
-            )
-        }
+        if (data.result.is_valid) {
+            console.log(data);
+            if (data.result.file_type == 'image') {
+                $("#gallery tbody").prepend(
+                  "<tr><td width='25%'><img src='" + data.result.url + "' width='100%'></td><td><a href='" + data.result.url + "' target='_blank'>" + data.result.name + "</a></td></tr>"
+                )
+            } else {
+                $("#gallery tbody").prepend(
+                  "<tr><td width='25%' class='text-center'><i class='fa fa-file fa-3x'></i></td><td><a href='" + data.result.url + "' target='_blank'>" + data.result.name + "</a></td></tr>"
+                )
+            }
 
-        // Add Photo IDs to array, change hidden input field value
-        photoIDList.push(data.result.photo_id);
-        $('#id_photo_ids').val(photoIDList);
-      }
+            // Add Photo IDs to array, change hidden input field value
+            photoIDList.push(data.result.photo_id);
+            $('#id_photo_ids').val(photoIDList);
+        } else {
+            console.log('error');
+            let errors = data.result.errors.photo;
+            errors.forEach((item, index) => {
+                console.log(item);
+                $(".upload-errors").append('<div class="ajax-error alert alert-danger">' + item + '</div>');
+            });
+        }
     }
   });
 

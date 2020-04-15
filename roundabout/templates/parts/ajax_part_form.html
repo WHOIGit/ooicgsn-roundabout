@@ -1,142 +1,163 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
 {% load static i18n %}
 {% load mptt_tags %}
 {% load crispy_forms_tags %}
 {{ form.media }}
 
-        <div class="card-header">
-            {% if part_template %}
-                <h3>{{ part_template.name }}</h3>
-            {% else %}
-                <h3>Add Part Template</h3>
-            {% endif %}
+<div class="card-header">
+    {% if part_template %}
+        <h3>{{ part_template.name }}</h3>
+    {% else %}
+        <h3>Add Part Template</h3>
+    {% endif %}
 
+</div>
+
+<div class="card-body">
+
+      <form class="form-horizontal parts ajax-form" method="post" action=""
+            data-url='{{ request.build_absolute_uri|safe }}'
+            data-partnumber-url='{% url 'parts:ajax_validate_part_number' %}'
+            id="parts-form">
+        {% csrf_token %}
+
+        {{ form|crispy }}
+
+
+        <div class="row">
+            {% if form.errors %}
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger">
+                            <strong>{{ error|escape }}</strong>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endif %}
         </div>
 
-        <div class="card-body">
+        {% if not part_template %}
+             <h4>Revision Information</h4>
+              <table class="table table-tight">
+                <thead>
+                  <th>Revision Code</th>
+                  <th class="text-right">Unit Cost</th>
+                  <th class="text-right">Refurbishment Cost</th>
+                </thead>
+                <tbody>
+                    {{ revision_form.management_form }}
 
-              <form class="form-horizontal parts ajax-form" method="post" action=""
-                    data-url='{{ request.build_absolute_uri|safe }}'
-                    data-partnumber-url='{% url 'parts:ajax_validate_part_number' %}'
-                    id="parts-form">
-                {% csrf_token %}
+                    {% if revision_form.errors %}
+                    <tr>
+                      <div class="alert alert-danger">
+                      {% for dict in revision_form.errors %}
 
-                {{ form|crispy }}
+                          {% for error in dict.values %}
+                            {{ error|escape }}
+                          {% endfor %}
+
+                      {% endfor %}
+                      </div>
+                    </tr>
+                   {% endif %}
+
+                    {% for rev in revision_form %}
+
+                      <tr>
+                          <td>{{ rev.revision_code }}</td>
+                          <td class="text-right">{{ rev.unit_cost }}</td>
+                          <td class="text-right">{{ rev.refurbishment_cost }} </td>
+                      </tr>
+                      <tr>
+                          <td colspan="3">
+                            <p>Notes on this Revision</p>
+                            {{ rev.note }}
+                          </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
 
 
-                <div class="row">
-                    {% if form.errors %}
-                        {% for field in form %}
-                            {% for error in field.errors %}
-                                <div class="alert alert-danger">
-                                    <strong>{{ error|escape }}</strong>
-                                </div>
+                <div class="col-md-12">
+                 <h5>Revision Documentation</h5>
+                  <table class="table table-tight documentation-form">
+                    <thead>
+                      <th>Document</th>
+                      <th class="text-right">Document Type</th>
+                      <th class="text-right">Link</th>
+                    </thead>
+                    <tbody>
+                      {{ documentation_form.management_form }}
+
+                      {% if documentation_form.errors %}
+                      <tr>
+                        <div class="alert alert-danger">
+                        {% for dict in documentation_form.errors %}
+
+                            {% for error in dict.values %}
+                              {{ error|escape }}
                             {% endfor %}
+
                         {% endfor %}
-                        {% for error in form.non_field_errors %}
-                            <div class="alert alert-danger">
-                                <strong>{{ error|escape }}</strong>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-
-                {% if not part_template %}
-                     <h4>Revision Information</h4>
-                      <table class="table table-tight">
-                        <thead>
-                          <th>Revision Code</th>
-                          <th class="text-right">Unit Cost</th>
-                          <th class="text-right">Refurbishment Cost</th>
-                        </thead>
-                        <tbody>
-                            {{ revision_form.management_form }}
-
-                            {% if revision_form.errors %}
-                            <tr>
-                              <div class="alert alert-danger">
-                              {% for dict in revision_form.errors %}
-
-                                  {% for error in dict.values %}
-                                    {{ error|escape }}
-                                  {% endfor %}
-
-                              {% endfor %}
-                              </div>
-                            </tr>
-                           {% endif %}
-
-                            {% for rev in revision_form %}
-
-                              <tr>
-                                  <td>{{ rev.revision_code }}</td>
-                                  <td class="text-right">{{ rev.unit_cost }}</td>
-                                  <td class="text-right">{{ rev.refurbishment_cost }} </td>
-                              </tr>
-                              <tr>
-                                  <td colspan="3">
-                                    <p>Notes on this Revision</p>
-                                    {{ rev.note }}
-                                  </td>
-                              </tr>
-                            {% endfor %}
-                          </tbody>
-                        </table>
-
-
-                        <div class="col-md-12">
-                         <h5>Revision Documentation</h5>
-                          <table class="table table-tight documentation-form">
-                            <thead>
-                              <th>Document</th>
-                              <th class="text-right">Document Type</th>
-                              <th class="text-right">Link</th>
-                            </thead>
-                            <tbody>
-                              {{ documentation_form.management_form }}
-
-                              {% if documentation_form.errors %}
-                              <tr>
-                                <div class="alert alert-danger">
-                                {% for dict in documentation_form.errors %}
-
-                                    {% for error in dict.values %}
-                                      {{ error|escape }}
-                                    {% endfor %}
-
-                                {% endfor %}
-                                </div>
-                              </tr>
-                             {% endif %}
-
-                              {% for doc in documentation_form %}
-
-                                <tr>
-                                    <td>{% if doc.id  %}{{ doc.DELETE }}{% endif %} {{ doc.id }} {{ doc.name }}</td>
-                                    <td class="text-right">{{ doc.doc_type }}</td>
-                                    <td class="text-right">{{ doc.doc_link }} </td>
-                                </tr>
-                              {% endfor %}
-                            </tbody>
-                          </table>
                         </div>
-                {% endif %}
+                      </tr>
+                     {% endif %}
 
-                <div class="control-group">
-                  <div class="controls">
-                    {% if part_template.id %}
-                    <button type="submit" class="btn btn-primary">Update Part</button>
-                    {% else %}
-                    <button type="submit" class="btn btn-primary">Add Part</button>
-                    {% endif %}
-                  </div>
+                      {% for doc in documentation_form %}
+
+                        <tr>
+                            <td>{% if doc.id  %}{{ doc.DELETE }}{% endif %} {{ doc.id }} {{ doc.name }}</td>
+                            <td class="text-right">{{ doc.doc_type }}</td>
+                            <td class="text-right">{{ doc.doc_link }} </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
                 </div>
-              </form>
+        {% endif %}
 
-            </div>
-
-
-
+        <div class="control-group">
+          <div class="controls">
+            {% if part_template.id %}
+            <button type="submit" class="btn btn-primary">Update Part</button>
+            {% else %}
+            <button type="submit" class="btn btn-primary">Add Part</button>
+            {% endif %}
           </div>
+        </div>
+      </form>
+
+    </div>
+
+
+
+  </div>
 
 
 
@@ -155,7 +176,7 @@
 $(document).ready(function() {
 
     $('.documentation-form tbody tr').formset({
-        prefix: 'documentation',
+        prefix: 'documentation', // <-- Needs to match the Django related_name for the models
         addText: 'add document',
         deleteText: 'remove',
     });

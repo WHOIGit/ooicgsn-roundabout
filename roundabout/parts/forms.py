@@ -1,3 +1,24 @@
+"""
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+"""
+
 import datetime
 import re
 
@@ -8,7 +29,7 @@ from django.template.defaultfilters import slugify
 from django_summernote.widgets import SummernoteWidget
 from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
 
-from .models import Part, Documentation, Revision
+from .models import Part, PartType, Documentation, Revision
 from roundabout.locations.models import Location
 from roundabout.parts.widgets import PartParentWidget, PartLocationWidget
 from roundabout.userdefinedfields.models import Field, FieldValue
@@ -145,3 +166,13 @@ class PartUdfFieldSetValueForm(forms.Form):
         if partfieldvalues:
             for fieldvalue in partfieldvalues:
                 self.fields['field_value'].initial = fieldvalue.field_value
+
+
+class PartTypeForm(forms.ModelForm):
+
+    class Meta:
+        model = PartType
+        fields = ['name', 'parent' ]
+        labels = {
+        'name': 'Part Type Name'
+    }

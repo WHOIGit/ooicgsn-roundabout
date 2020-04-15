@@ -1,3 +1,23 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
 
 {% load static i18n %}
 {% load mptt_tags %}
@@ -6,97 +26,166 @@
 
 
 
-        <div class="card-header">
-            {% if assembly_part.id %}
-                <h3>{{ assembly_part.part.name }}</h3>
-            {% elif parent.id %}
-                <h3>Add Subassembly to {{ parent.part.name }} </h3>
-            {% else %}
-                <h3>Add Part to Assembly</h3>
-            {% endif %}
+<div class="card-header">
+    {% if assembly_part.id %}
+        <h3>{{ assembly_part.part.name }}</h3>
+    {% elif parent.id %}
+        <h3>Add Sub-{{ label_assemblies_app_singular }} to {{ parent.part.name }} </h3>
+    {% else %}
+        <h3>Add Part to {{ label_assemblies_app_singular }} Revision</h3>
+    {% endif %}
+</div>
+
+<div class="card-body">
+
+    {% if assembly_part.inventory.exists %}
+        <div class="alert alert-danger" role="alert">
+            <h5>Warning! This {{ label_assemblies_app_singular }} Part has live inventory on existing {{ label_builds_app_plural }}!</h5>
+
+            <ul class="list-group list-group-flush">
+
+                {% for item in assembly_part.inventory.all %}
+
+                    <li class="list-group-item">
+                        <a href="{% url 'inventory:inventory_detail' item.id %}" data-detail-url="{% url 'inventory:ajax_inventory_detail' item.id %}"
+                           data-node-id="{{ item.id }}"
+                           data-location-id="{{ item.location.id }}"
+                           data-node-type="detail"
+                           class="btn btn-primary btn-sm float-right"
+                           role="button">View</a>
+                        {{ label_builds_app_singular }}: {{ item.build }}<br>
+                        {{ label_inventory_app_singular }} Item: {{ item }}<br>
+                        Current Location: {{ item.build.location }}
+
+                    </li>
+
+                {% endfor %}
+
+            </ul>
+
+            <p class="mt-3">If you change this {{ label_assemblies_app_singular }} Part, the existing {{ label_inventory_app_singular}} items will be
+                removed from {{ label_builds_app_plural }} and placed in the same current Location as the {{ label_builds_app_singular }}. If you want
+                the current {{ label_builds_app_plural }} to remain unchanged, please create a
+                    <span class="ajax-detail-link">
+                        <a href="#"
+                        data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly_revision.id %}"
+                        data-node-id="{{ assembly.id }}"
+                        data-node-type="detail"><b>NEW REVISION</b></a> of this {{ label_assemblies_app_singular }} instead.
+                    </span>
+                </p>
+
         </div>
 
-        <div class="card-body">
+    {% elif builds %}
+        <div class="alert alert-warning" role="alert">
+            <b>NOTICE:</b>  This {{ label_assemblies_app_singular }} template has existing {{ label_builds_app_plural }}. Any edits you make to this
+            template will be reflected in those {{ label_builds_app_plural }}. If you want to create a new version of this {{ label_assemblies_app_singular }},
+            but keep existing {{ label_builds_app_plural }} unchanged, please create a
+            <span class="ajax-detail-link">
+                <a href="#"
+                data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly_revision.id %}"
+                data-node-id="{{ assembly.id }}"
+                data-node-type="detail"><b>NEW VERSION</b></a> of this {{ label_assemblies_app_singular }} instead.
+            </span>
+        </div>
+    {% endif %}
 
+    <div id="inventory-filter">
+        <form class="form-horizontal" method="post" action="" id="parttype-filter-form" data-url="{% url 'assemblies:ajax_load_part_templates' %}" novalidate>
+            <div class="form-group">
+            <label for="id_part_type" class="form-control-label  requiredField">Select Part Type<span class="asteriskField">*</span></label>
+                <select name="part_type" class="select form-control" id="id_part_type">
+                    <option value="">---------</option>
+                    <option value="All">All Parts</option>
+                    {% for type in part_types %}
+                        <option value="{{ type.id }}">-- {{ type.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
 
-                <div id="inventory-filter">
-                    <form class="form-horizontal" method="post" action="" id="parttype-filter-form" data-url="{% url 'assemblies:ajax_load_part_templates' %}" novalidate>
-                        <div class="form-group">
-                        <label for="id_part_type" class="form-control-label  requiredField">Select Part Type<span class="asteriskField">*</span></label>
-                            <select name="part_type" class="select form-control" id="id_part_type">
-                                <option value="">---------</option>
-                                <option value="All">All Parts</option>
-                                {% for type in part_types %}
-                                    <option value="{{ type.id }}">-- {{ type.name }}</option>
-                                {% endfor %}
-                            </select>
+    <div class="mb-3"><h4><span class="badge badge-secondary">OR</span></h4></div>
+
+    <div id="inventory-filter">
+        <form method="post" action="" id="inventory-filter-form-part-number" data-url="{% url 'inventory:ajax_load_part_templates_by_partnumber' %}" novalidate>
+            <div class="form-row">
+                <div class="form-group col-md-8 col-lg-6">
+                    <label for="part_number" class="sr-only">Scan Part Number<span class="asteriskField">*</span></label>
+                    <div class="input-group mb-2 mr-sm-2">
+
+                        <div class="input-group-prepend">
+                          <div class="input-group-text">#</div>
                         </div>
-                    </form>
+                        <input type="text" name="part_number_search" class="textinput form-control" placeholder="Scan Part Number" id="part_number_search">
+                    </div>
                 </div>
-
-                <div class="mb-3"><h4><span class="badge badge-secondary">OR</span></h4></div>
-
-                <div id="inventory-filter">
-                    <form method="post" action="" id="inventory-filter-form-part-number" data-url="{% url 'inventory:ajax_load_part_templates_by_partnumber' %}" novalidate>
-                        <div class="form-row">
-                            <div class="form-group col-md-8 col-lg-6">
-                                <label for="part_number" class="sr-only">Scan Part Number<span class="asteriskField">*</span></label>
-                                <div class="input-group mb-2 mr-sm-2">
-
-                                    <div class="input-group-prepend">
-                                      <div class="input-group-text">#</div>
-                                    </div>
-                                    <input type="text" name="part_number_search" class="textinput form-control" placeholder="Scan Part Number" id="part_number_search">
-                                </div>
-                            </div>
-                            <div class="form-group col-md-4 col-lg-6">
-                                <button type="submit" class="btn btn-primary mb-2">Search</button>
-                            </div>
-                        </div>
-                    </form>
+                <div class="form-group col-md-4 col-lg-6">
+                    <button type="submit" class="btn btn-primary mb-2">Search</button>
                 </div>
+            </div>
+        </form>
+    </div>
 
-                <hr>
-
-
-              <form class="form-horizontal ajax-form" method="post" action="" id="assembly-part-form"
-                  data-url='{{ request.build_absolute_uri|safe }}'
-                  data-assembly-parts-url="{% url 'assemblies:ajax_load_assembly_parts' %}">
-                {% csrf_token %}
-                {{ form.media }}
-                {{ form|crispy }}
-
-                <div class="row">
-                    {% if form.errors %}
-                        {% for field in form %}
-                            {% for error in field.errors %}
-                                <div class="alert alert-danger">
-                                    <strong>{{ error|escape }}</strong>
-                                </div>
-                            {% endfor %}
-                        {% endfor %}
-                        {% for error in form.non_field_errors %}
-                            <div class="alert alert-danger">
-                                <strong>{{ error|escape }}</strong>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
+    <hr>
 
 
+  <form class="form-horizontal ajax-form" method="post" action="" id="assembly-part-form"
+      data-url='{{ request.build_absolute_uri|safe }}'
+      data-assembly-parts-url="{% url 'assemblies:ajax_load_assembly_parts' %}">
+    {% csrf_token %}
+    {{ form.media }}
+    {{ form|crispy }}
+
+    <div class="row">
+        {% if form.errors %}
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <div class="alert alert-danger">
+                    <strong>{{ error|escape }}</strong>
                 </div>
+            {% endfor %}
+        {% endif %}
 
-                <div class="control-group">
-                  <div class="controls">
-                    {% if assembly_part.id %}
-                    <button type="submit" class="btn btn-primary">Update Assembly Part</button>
-                    {% else %}
-                    <button type="submit" class="btn btn-primary">Add Assembly Part</button>
-                    {% endif %}
-                  </div>
-                </div>
-              </form>
 
-          </div>
+    </div>
+
+    <div class="control-group">
+      <div class="controls">
+        {% if assembly_part.id %}
+            <button type="submit" class="btn btn-primary">Update Sub-{{ label_assemblies_app_singular }} Part</button>
+        {% else %}
+            <button type="submit" class="btn btn-primary">Add Sub-{{ label_assemblies_app_singular }} Part</button>
+        {% endif %}
+
+        {% if assembly_part.id %}
+            <input class="btn btn-light cancel-btn"
+               type="button" value="Cancel"
+               data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' assembly_part.id %}"
+               data-node-id="{{ assembly_part.id }}" />
+        {% elif parent.id %}
+            <input class="btn btn-light cancel-btn"
+               type="button" value="Cancel"
+               data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' parent.id %}"
+               data-node-id="{{ parent.id }}" />
+        {% else %}
+            <input class="btn btn-light cancel-btn"
+               type="button" value="Cancel"
+               data-detail-url="{% url 'assemblies:ajax_assemblyrevision_detail' assembly_revision.id %}"
+               data-node-id="{{ assembly.id }}" />
+        {% endif %}
+
+      </div>
+    </div>
+  </form>
+
+</div>
 
 
 

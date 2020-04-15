@@ -1,5 +1,28 @@
+"""
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+"""
+
 from django.db import models
+from django.utils import timezone
 from mptt.models import MPTTModel, TreeForeignKey
+from model_utils import FieldTracker
 
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part
@@ -13,6 +36,7 @@ class AssemblyType(models.Model):
 
     def __str__(self):
         return self.name
+
 
 # Assembly base model
 class Assembly(models.Model):
@@ -31,6 +55,25 @@ class Assembly(models.Model):
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
         return 'assemblies'
+
+
+class AssemblyRevision(models.Model):
+    revision_code = models.CharField(max_length=255, unique=False, db_index=True, default='A')
+    revision_note = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Release Date')
+    assembly = models.ForeignKey(Assembly, related_name='assembly_revisions',
+                          on_delete=models.CASCADE, null=False, blank=False, db_index=True)
+
+    class Meta:
+        ordering = ['-id', '-revision_code']
+        get_latest_by = 'created_at'
+
+    def __str__(self):
+        return '%s - %s' % (self.revision_code, self.assembly.name)
+
+    # method to set the object_type variable to send to Javascript AJAX functions
+    def get_object_type(self):
+        return 'assemblyrevisions'
 
     def get_assembly_total_cost(self):
         tree = self.assembly_parts.all()
@@ -53,7 +96,7 @@ class AssemblyDocument(models.Model):
     name = models.CharField(max_length=255, unique=False)
     doc_type = models.CharField(max_length=20, choices=DOC_TYPES)
     doc_link = models.CharField(max_length=1000)
-    assembly = models.ForeignKey(Assembly, related_name='assembly_documents',
+    assembly_revision = models.ForeignKey(AssemblyRevision, related_name='assembly_documents',
                              on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
@@ -66,13 +109,17 @@ class AssemblyDocument(models.Model):
 # Assembly parts model
 class AssemblyPart(MPTTModel):
     assembly = models.ForeignKey(Assembly, related_name='assembly_parts',
-                          on_delete=models.CASCADE, null=False, blank=False, db_index=True)
+                          on_delete=models.CASCADE, null=True, blank=True, db_index=True)
+    assembly_revision = models.ForeignKey(AssemblyRevision, related_name='assembly_parts',
+                          on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     part = models.ForeignKey(Part, related_name='assembly_parts',
                           on_delete=models.CASCADE, null=False, blank=False, db_index=True)
     parent = TreeForeignKey('self', related_name='children',
                             on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     note = models.TextField(blank=True)
     order = models.CharField(max_length=255, null=False, blank=True, db_index=True)
+
+    tracker = FieldTracker(fields=['part',])
 
     class MPTTMeta:
         order_insertion_by = ['order']
@@ -82,7 +129,7 @@ class AssemblyPart(MPTTModel):
 
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
-        return 'assembly_parts'
+        return 'assemblyparts'
 
     def get_subassembly_total_cost(self):
         tree = self.get_descendants(include_self=True)

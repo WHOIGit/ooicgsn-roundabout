@@ -1,15 +1,36 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
 {% extends "base.html" %}
 {% load static i18n %}
 {% load mptt_tags %}
 
 
-{% block title %}Builds{% endblock %}
+{% block title %}{{ label_builds_app_plural }}{% endblock %}
 
 {% block content %}
 
     <div class="row">
         <div class="col-md-5 navtree-container">
-            <h2>Builds</h2>
+            <h2>{{ label_builds_app_plural }}</h2>
 
             <div id="jstree-navtree" data-navtree-url="{% url 'builds:ajax_load_builds_navtree' %}"
                                      data-node-type="{{ node_type }}">
@@ -23,9 +44,14 @@
             <div class="row mb-3">
                 <div class="col-md-12">
                     <div class="parts-add-btn">
-                        <a href="#" data-create-url="{% url 'builds:ajax_builds_add' %}" role="button" class="btn btn-primary">Create New Build</a>
+                        <a href="#" data-create-url="{% url 'builds:ajax_builds_add' %}" role="button" class="btn btn-primary">Create New {{ label_builds_app_singular }}</a>
                     </div>
                 </div>
+            </div>
+
+            <!-- Spinner icon loader -->
+            <div id="spinner-loader" class="fa-3x" style='display: none;'>
+                    <i class="fas fa-spinner fa-spin"></i>
             </div>
 
             <div class="card" id="detail-view">

@@ -1,3 +1,23 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
 
 {% load static i18n %}
 {% load mptt_tags %}
@@ -40,7 +60,7 @@
                         <div id="inventory-filter">
                             <form method="post" action="" id="inventory-filter-form-part-number"
                                 data-url="{% url 'inventory:ajax_load_part_templates_by_partnumber' %}"
-                                data-serialnumber-url="{% url 'inventory:ajax_load_partnumber_create_serialnumber' %}"
+                                data-serialnumber-url="{% url 'inventory:ajax_load_new_serialnumber' %}"
                                 novalidate>
                                 <div class="form-row">
                                     <div class="form-group col-md-8 col-lg-6">
@@ -63,19 +83,15 @@
                     {% endif %}
 
                     {% if action_type == 'subchange' %}
-                        <p>Select a new Location for this item. Item will be removed from Parent assembly.</p>
-                    <!--
-                        <p>You may move this subassembly to another Parent or Location by using the form below.  To delete this Inventory Item from the system, click the Delete button.</p>
-                        <p><a href="{% url 'inventory:inventory_delete' inventory_item.id %}" role="button" class="btn btn-danger">Delete</a></p>
-                        <hr>
-                    -->
+                        <p>Select a new Location for this item. Item will be removed from Parent assembly and Build.</p>
+                    
                     {% endif %}
 
                     {% if latest_flag.detail %}<p><strong>Why Flagged:</strong> {{ latest_flag.detail }}</p>{% endif %}
                     <form class="form-horizontal ajax-form" method="post" action="" id="inventory-action-form" enctype="multipart/form-data"
                           data-parents-url="{% url 'inventory:ajax_load_parents' %}"
                           data-deployments-url="{% url 'inventory:ajax_load_deployments' %}"
-                          data-serialnumber-url="{% url 'inventory:ajax_load_parttemplate_create_serialnumber' %}"
+                          data-serialnumber-url="{% url 'inventory:ajax_load_new_serialnumber' %}"
                           data-revisions-url="{% url 'inventory:ajax_load_revisions_by_partnumber' %}"
                           data-url='{{ request.build_absolute_uri|safe }}'>
                       {% csrf_token %}

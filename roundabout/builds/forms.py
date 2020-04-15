@@ -1,3 +1,24 @@
+"""
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+"""
+
 from django import forms
 from django.forms.models import inlineformset_factory
 from django.utils import timezone
@@ -10,16 +31,34 @@ from django_summernote.widgets import SummernoteInplaceWidget, SummernoteWidget
 from .models import Build, BuildAction, BuildSnapshot, PhotoNote
 from roundabout.inventory.models import Deployment, DeploymentAction
 from roundabout.locations.models import Location
-
+# Get the app label names from the core utility functions
+from roundabout.core.utils import set_app_labels
+labels = set_app_labels()
 
 class BuildForm(forms.ModelForm):
+    build_number = forms.CharField(strip=True,
+        help_text='%s Number auto-generated. Click here to override.' % (labels['label_builds_app_singular']),
+        widget=forms.TextInput(attrs={'readonly':'readonly'}),
+        label='%s Number' % (labels['label_builds_app_singular']),
+    )
 
     class Meta:
         model = Build
-        fields = ['build_number', 'assembly', 'location', 'build_notes', ]
+        fields = ['assembly', 'assembly_revision', 'build_number', 'location', 'build_notes', ]
         labels = {
-            'build_number': 'Build ID Number',
+            'assembly': labels['label_assemblies_app_singular'],
+            'assembly_revision': '%s Revision' % labels['label_assemblies_app_singular'],
+            'build_notes': '%s Notes' % (labels['label_builds_app_singular']),
         }
+
+    class Media:
+        js = ('js/form-builds.js',)
+
+    def __init__(self, *args, **kwargs):
+        super(BuildForm, self).__init__(*args, **kwargs)
+        if self.instance.pk:
+            del self.fields['assembly']
+            del self.fields['assembly_revision']
 
 
 class BuildActionLocationChangeForm(forms.ModelForm):
@@ -136,7 +175,8 @@ class DeploymentForm(forms.ModelForm):
 
         labels = {
             'location': 'Current Location',
-            'deployed_location': 'Final Deploy Location',
+            'deployment_number': '%s Number' % (labels['label_deployments_app_singular']),
+            'deployed_location': 'Final %s Location' % (labels['label_deployments_app_singular']),
         }
 
         widgets = {
@@ -149,24 +189,12 @@ class DeploymentForm(forms.ModelForm):
                 #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
                 "showClose": True,
                 "showClear": True,
-                "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
-                "useCurrent": True,
+                "showTodayButton": False,
             }
         ),
-        initial=timezone.now
+        initial=timezone.now,
+        help_text='Set all date/times to UTC time zone.',
     )
-
-    def __init__(self, *args, **kwargs):
-        super(DeploymentForm, self).__init__(*args, **kwargs)
-        # Check what Site we're on, change form label if obs-rdb.whoi.edu
-        current_site = Site.objects.get_current()
-        if current_site.domain == 'obs-rdb.whoi.edu':
-            deployment_number_label = 'Experiment Number'
-        else:
-            deployment_number_label = 'Deployment Number'
-
-        self.fields['deployment_number'].label = deployment_number_label
 
 
 class DeploymentActionBurninForm(forms.ModelForm):
@@ -176,7 +204,7 @@ class DeploymentActionBurninForm(forms.ModelForm):
         fields = ['location', 'deployed_location']
         labels = {
             'location': 'Select Location for Burn In',
-            'deployed_location': 'Final Deploy Location',
+            'deployed_location': 'Final %s Location' % (labels['label_deployments_app_singular']),
         }
 
     # Add custom date field to allow user to pick date for the Action
@@ -185,18 +213,12 @@ class DeploymentActionBurninForm(forms.ModelForm):
                 #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
                 "showClose": True,
                 "showClear": True,
-                "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
+                "showTodayButton": False,
             }
         ),
-        initial=timezone.now
+        initial=timezone.now,
+        help_text='Set all date/times to UTC time zone.',
     )
-
-    def __init__(self, *args, **kwargs):
-        super(DeploymentActionBurninForm, self).__init__(*args, **kwargs)
-        root_node = Location.objects.get(root_type='Land')
-        location_list = root_node.get_descendants()
-        self.fields['location'].queryset = location_list
 
 
 class DeploymentActionDeployForm(forms.ModelForm):
@@ -205,7 +227,7 @@ class DeploymentActionDeployForm(forms.ModelForm):
         model = Deployment
         fields = ['location',]
         labels = {
-            'location': 'Deployment Location',
+            'location': '%s Location' % (labels['label_deployments_app_singular']),
         }
 
     # Add custom date field to allow user to pick date for the Action record
@@ -214,11 +236,12 @@ class DeploymentActionDeployForm(forms.ModelForm):
                 #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
                 "showClose": True,
                 "showClear": True,
-                "showTodayButton": True,
+                "showTodayButton": False,
                 #"maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
             }
         ),
-        initial=timezone.now
+        initial=timezone.now,
+        help_text='Set all date/times to UTC time zone.',
     )
     # Add lat/long, depth fields for the Action record
     latitude = forms.DecimalField(required=False)
@@ -252,7 +275,7 @@ class DeploymentActionDetailsForm(forms.ModelForm):
         model = Deployment
         fields = ['location',]
         labels = {
-            'location': 'Deployment Location',
+            'location': '%s Location' % (labels['label_deployments_app_singular']),
         }
 
     # Add custom date field to allow user to pick date for the Action record
@@ -261,11 +284,11 @@ class DeploymentActionDetailsForm(forms.ModelForm):
                 #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
                 "showClose": True,
                 "showClear": True,
-                "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
+                "showTodayButton": False,
             }
         ),
-        initial=timezone.now
+        initial=timezone.now,
+        help_text='Set all date/times to UTC time zone.',
     )
     # Add lat/long, depth fields for the Action record
     latitude = forms.DecimalField(required=False)
@@ -299,27 +322,24 @@ class DeploymentActionRecoverForm(forms.ModelForm):
         model = Deployment
         fields = ['location',]
         labels = {
-            'location': 'Select location to recover Deployment to:',
+            'location': 'Select Location to recover %s to:' % (labels['label_deployments_app_singular']),
         }
 
-    # Add custom date field to allow user to pick date for the Action
+    # Add custom date field to allow user to pick date for the Action record
     date = forms.DateTimeField( widget=DateTimePickerInput(
             options={
-                #"format": "MM/DD/YYYY, HH:mm:ss", # moment date-time format
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
                 "showClose": True,
                 "showClear": True,
-                "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
+                "showTodayButton": False,
             }
         ),
-        initial=timezone.now()
+        initial=timezone.now,
+        help_text='Set all date/times to UTC time zone.',
     )
 
     def __init__(self, *args, **kwargs):
         super(DeploymentActionRecoverForm, self).__init__(*args, **kwargs)
-        root_node = Location.objects.get(root_type='Land')
-        location_list = root_node.get_descendants()
-        self.fields['location'].queryset = location_list
         self.fields['location'].required = True
 
 
@@ -338,13 +358,9 @@ class DeploymentActionRetireForm(forms.ModelForm):
                 #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
                 "showClose": True,
                 "showClear": True,
-                "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%m/%d/%Y %H:%M'),
+                "showTodayButton": False,
             }
         ),
-        initial=timezone.now
+        initial=timezone.now,
+        help_text='Set all date/times to UTC time zone.',
     )
-
-    def __init__(self, *args, **kwargs):
-        super(DeploymentActionRetireForm, self).__init__(*args, **kwargs)
-        self.initial['location'] = Location.objects.get(root_type='Retired')

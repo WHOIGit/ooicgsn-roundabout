@@ -1,12 +1,35 @@
+"""
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+"""
+
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
-from django.views.generic import DetailView, CreateView, ListView, RedirectView, UpdateView, DeleteView, TemplateView
+from django.views.generic import DetailView, CreateView, ListView, RedirectView, \
+                                 UpdateView, DeleteView, TemplateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
-from .forms import LocationForm
+from .forms import LocationForm, LocationDeleteForm
 from .models import Location
-from roundabout.inventory.models import Deployment
+from roundabout.inventory.models import Deployment, Action
+from roundabout.builds.models import BuildAction
 
 from common.util.mixins import AjaxFormMixin
 
@@ -99,27 +122,75 @@ class LocationsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxF
         return reverse('locations:ajax_location_detail', args=(self.object.id,))
 
 
-class LocationsAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
-    model = Location
+class LocationsAjaxDeleteFormView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, FormView):
+    form_class = LocationDeleteForm
+    context_object_name='location'
     template_name = 'locations/ajax_location_confirm_delete.html'
-    #success_url = reverse_lazy('locations:locations_list')
     permission_required = 'locations.add_location'
     redirect_field_name = 'home'
 
-    def delete(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        data = {
-            'message': "Successfully submitted form data.",
-            'parent_id': self.object.parent_id,
-            'parent_type': self.object.get_object_type(),
-            'object_type': self.object.get_object_type(),
-        }
-        self.object.delete()
+    def get_context_data(self, **kwargs):
+        context = super(LocationsAjaxDeleteFormView, self).get_context_data(**kwargs)
+        location = Location.objects.get(id=self.kwargs['pk'])
 
+        context.update({
+            'location': location
+        })
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super(LocationsAjaxDeleteFormView, self).get_form_kwargs()
+        if 'pk' in self.kwargs:
+            kwargs['pk'] = self.kwargs['pk']
+        return kwargs
+
+    def form_valid(self, form):
+        new_location = form.cleaned_data['new_location']
+        location_to_delete = Location.objects.get(id=self.kwargs['pk'])
+
+        # Need to check if there's Inventory at this Location. If so, need move them to new Location
+        if location_to_delete.inventory.exists():
+            for item in location_to_delete.inventory.all():
+                item.location = new_location
+                item.detail = 'Moved to %s from %s' % (new_location, location_to_delete)
+                action_record = Action.objects.create(action_type='locationchange',
+                                                      detail=item.detail,
+                                                      location=new_location,
+                                                      user=self.request.user,
+                                                      inventory=item)
+                item.save()
+
+        # Need to check if there's Builds at this Location. If so, need move them to new Location
+        if location_to_delete.builds.exists():
+            for build in location_to_delete.builds.all():
+                build.location = new_location
+                build.detail = 'Moved to %s from %s' % (new_location, location_to_delete)
+                build_action_record = BuildAction.objects.create(action_type='locationchange',
+                                                                 detail=build.detail,
+                                                                 location=new_location,
+                                                                 user=self.request.user,
+                                                                 build=build)
+                build.save()
+
+        if self.request.is_ajax():
+            data = {
+                'message': "Successfully submitted form data.",
+                'parent_id': location_to_delete.parent_id,
+                'parent_type': location_to_delete.get_object_type(),
+                'object_type': location_to_delete.get_object_type(),
+            }
+            response = JsonResponse(data)
+        else:
+            response = HttpResponseRedirect(self.get_success_url())
+
+        # Delete the Location object
+        location_to_delete.delete()
         # Rebuild the Location MPTT tree
         Location._tree_manager.rebuild()
+        return response
 
-        return JsonResponse(data)
+    def get_success_url(self):
+        return reverse('locations:locations_home')
 
 
 # Location Base Views

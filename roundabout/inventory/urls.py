@@ -1,3 +1,24 @@
+"""
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+"""
+
 from django.urls import path
 from django.urls import path
 
@@ -8,17 +29,6 @@ urlpatterns = [
     path('', view=views.InventoryHomeView.as_view(), name='inventory_home'),
     path('test/', view=views.InventoryHomeTestView.as_view(), name='inventory_home_test'),
     path('<int:pk>/', view=views.InventoryDetailView.as_view(), name='inventory_detail'),
-    path('add/', view=views.InventoryCreateView.as_view(), name='inventory_add'),
-    path('add/<int:current_location>/', view=views.InventoryCreateView.as_view(), name='inventory_add'),
-    path('add/<int:parent_pk>/<int:current_location>/', view=views.InventoryCreateView.as_view(), name='inventory_add'),
-    path('edit/<int:pk>/', view=views.InventoryUpdateView.as_view(), name='inventory_update'),
-    path('edit/<int:pk>/<int:current_location>/', view=views.InventoryUpdateView.as_view(), name='inventory_update'),
-    path('action/<action_type>/<int:pk>/<int:current_location>/', view=views.InventoryActionView.as_view(), name='inventory_action'),
-    path('subassembly_ex/<int:pk>/<int:current_location>/', view=views.InventorySubassemblyListView.as_view(), name='inventory_subassembly_existing'),
-    path('subassembly_ex/add/<int:pk>/<int:parent_pk>/<int:current_location>/', view=views.InventorySubassemblyActionView.as_view(), name='inventory_subassembly_existing_add'),
-    path('delete/<int:pk>/', view=views.InventoryDeleteView.as_view(), name='inventory_delete'),
-    path('search_serial/', view=views.InventorySearchSerialList.as_view(), name='inventory_search_serial'),
-    path('deployment/<int:pk>/<int:current_location>/', view=views.InventoryDeploymentDetailView.as_view(), name='inventory_deployment_detail'),
     # AJAX paths
     path('ajax/load-navtree/', views.load_inventory_navtree, name='ajax_load_inventory_navtree'),
     path('ajax/detail/<int:pk>/', view=views.InventoryAjaxDetailView.as_view(), name='ajax_inventory_detail'),
@@ -57,10 +67,10 @@ urlpatterns = [
     path('ajax/load-part-templates/', views.load_part_templates, name='ajax_load_part_templates'),
     path('ajax/load-part-templates-by-partnumber/', views.load_part_templates_by_partnumber, name='ajax_load_part_templates_by_partnumber'),
     path('ajax/load-revisions-by-partnumber/', views.load_revisions_by_partnumber, name='ajax_load_revisions_by_partnumber'),
-    path('ajax/load-part-number-for-serialnumber/', views.load_partnumber_create_serialnumber, name='ajax_load_partnumber_create_serialnumber'),
-    path('ajax/load-part-templates-for-serialnumber/', views.load_parttemplate_create_serialnumber, name='ajax_load_parttemplate_create_serialnumber'),
+    path('ajax/load-new-serialnumber/', views.load_new_serialnumber, name='ajax_load_new_serialnumber'),
     path('ajax/load-subassemblies-by-serialnumber/', views.load_subassemblies_by_serialnumber, name='ajax_load_subassemblies_by_serialnumber'),
     path('ajax/load-destination-subassemblies-by-serialnumber/', views.load_destination_subassemblies_by_serialnumber, name='ajax_load_destination_subassemblies_by_serialnumber'),
+    path('ajax/load-build-subassemblies-by-serialnumber/', views.load_build_subassemblies_by_serialnumber, name='ajax_load_build_subassemblies_by_serialnumber'),
     path('ajax/load-parents/', views.load_parents, name='ajax_load_parents'),
     path('ajax/load-deployments/', views.load_deployments, name='ajax_load_deployments'),
     path('ajax/filter-navtree/', views.filter_inventory_navtree, name='ajax_filter_inventory_navtree'),

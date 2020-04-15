@@ -1,0 +1,52 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or 
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<ul class="list-group list-group-flush">
+
+{% if inventory_items %}
+
+      {% for inventory in inventory_items %}
+
+      <li class="list-group-item">
+          <div class="ajax-add-subassembly-link">
+          {% if inventory.part.friendly_name %} {{ inventory.part.friendly_name}} {% else %} {{ inventory.part.name }} {% endif %}
+          - {{ inventory.serial_number }} <br>Current Location: {{ inventory.location.name }}
+
+          <a href="#"
+              {% if parent %}
+                  data-detail-url="{% url 'inventory:ajax_inventory_assembly_part_add_subassembly_action' inventory.id build.id assembly_part.id parent.id %}"
+              {% else %}
+                  data-detail-url="{% url 'inventory:ajax_inventory_assembly_part_add_subassembly_action' inventory.id build.id assembly_part.id %}"
+              {% endif %}
+              data-node-id="{{ inventory.id }}"
+              class="btn btn-primary btn-sm float-right"
+              role="button">Add</a>
+
+
+          </div>
+      </li>
+
+      {% endfor %}
+{% else %}
+    <p>NONE</p>
+{% endif %}
+
+</ul>

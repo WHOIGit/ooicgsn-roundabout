@@ -1,7 +1,28 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
 <ul>
 {% for assembly_type in assembly_types %}
 
-    <li data-jstree='{"icon":"fa fa-rocket"}' id="assemblytype_{{ assembly_type.id }}">
+    <li data-jstree='{"icon":"fa fa-cubes"}' id="assemblytype_{{ assembly_type.id }}">
             <a href="#"
                     data-detail-url="{% url 'assemblies:ajax_assembly_type_detail' assembly_type.id %}"
                     data-node-id='{{ assembly_type.id }}'
@@ -10,11 +31,25 @@
             <ul>
             {% for assembly in assembly_type.assemblies.all %}
 
-                <li data-jstree='{"icon":"fa fa-rocket"}' id="assemblies_{{ assembly.id }}" class="jstree-closed">
+                <li data-jstree='{"icon":"fa fa-rocket"}' id="assemblies_{{ assembly.id }}">
                         <a href="#"
                                 data-detail-url="{% url 'assemblies:ajax_assemblies_detail' assembly.id %}"
                                 data-node-id='{{ assembly.id }}'
                                 data-node-type="assemblies">{{ assembly.name }}</a>
+
+                        <ul>
+                        {% for revision in assembly.assembly_revisions.all %}
+
+                            <li data-jstree='{"icon":"far fa-dot-circle"}' id="assemblyrevisions_{{ revision.id }}" class="jstree-closed">
+                                    <a href="#"
+                                            data-detail-url="{% url 'assemblies:ajax_assemblyrevision_detail' revision.id %}"
+                                            data-node-id='{{ revision.id }}'
+                                            data-node-type="assemblyrevisions">Revision {{ revision.revision_code }}</a>
+                             </li>
+
+                        {% endfor %}
+                        </ul>
+
                  </li>
 
             {% endfor %}

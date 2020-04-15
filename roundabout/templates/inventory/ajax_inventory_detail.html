@@ -1,3 +1,24 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
 {% load static i18n %}
 {% load humanize %}
 {% load common_tags %}
@@ -35,7 +56,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_add_subassembly' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id }}"
-                data-node-type="detail">Add Subassembly</a>
+                data-node-type="detail">Add Sub-{{ label_assemblies_app_singular }}</a>
         {% endif %}
 
         {% if not inventory_item.build and not inventory_item.parent and not inventory_item.assembly_part %}
@@ -43,7 +64,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_add_to_parent' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Add to Parent Assembly</a>
+                data-node-type="detail">Add to Parent {{ label_assemblies_app_singular }}</a>
         {% endif %}
 
         {% if not inventory_item.build and inventory_item.parent %}
@@ -51,7 +72,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'subchange' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Remove from Parent Assembly</a>
+                data-node-type="detail">Remove from Parent {{ label_assemblies_app_singular }}</a>
         {% endif %}
 
         {% if not inventory_item.build and not inventory_item.parent %}
@@ -59,7 +80,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_add_to_build' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Add to Build</a>
+                data-node-type="detail">Add to {{ label_builds_app_singular }}</a>
         {% endif %}
 
         {% if inventory_item.build %}
@@ -67,7 +88,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'removefrombuild' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Remove from Build</a>
+                data-node-type="detail">Remove from {{ label_builds_app_singular }}</a>
         {% endif %}
 
         {% if inventory_item.assembly_part and not inventory_item.build and not inventory_item.parent %}
@@ -202,19 +223,22 @@
     <p>Revision: {{ inventory_item.revision.revision_code }}</p>
     <p>Current Location: {{ inventory_item.location.name }}</p>
     {% if inventory_item.build %}
-        <p>Current Build: {{ inventory_item.build }}</p>
+        <p>Current {{ label_builds_app_singular }}: {{ inventory_item.build }}</p>
     {% endif %}
-    <p>Time at Sea: {{ inventory_item.total_time_at_sea|time_at_sea_display }}</p>
+    <p>Total Time in Field: {{ inventory_item.total_time_at_sea|time_at_sea_display }}</p>
     {% if inventory_item.current_deployment_time_at_sea %}
-        <p>Current Deployment Time at Sea: {{ inventory_item.current_deployment_time_at_sea|time_at_sea_display }}
+        <p>Current {{ label_deployments_app_singular }} Time in Field: {{ inventory_item.current_deployment_time_at_sea|time_at_sea_display }}
     {% endif %}
 
     {% if inventory_item.parent %}
     <p class="ajax-detail-link">Parent Assembly:
         {% recursetree inventory_item.get_ancestors %}
+
                 {% if node.is_child_node %}&#187;{% endif %}
                 <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' node.id %}"
-                            data-node-id="{{ node.id }}">{{ node.part.name }} - {{ node.serial_number }}</a>
+                            data-node-id="{{ node.id }}"
+                            data-node-type="{{ node.get_object_type }}">
+                            {{ node.part.name }} - {{ node.serial_number }}</a>
                 {% if not node.is_leaf_node %}
                     {{ children }}
                 {% endif %}
@@ -247,7 +271,7 @@
 
         {% if inventory_item.get_descendants %}
             <li class="nav-item">
-              <a class="nav-link" id="subassemblies-tab" data-toggle="tab" href="#subassemblies" role="tab" aria-controls="subassemblies" aria-selected="false">Subassemblies</a>
+              <a class="nav-link" id="subassemblies-tab" data-toggle="tab" href="#subassemblies" role="tab" aria-controls="subassemblies" aria-selected="false">Sub-{{ label_assemblies_app_plural }}</a>
             </li>
         {% endif %}
 
@@ -320,21 +344,29 @@
                   {% recursetree inventory_item.get_descendants %}
                       <li class="list-group-item">
                           <div class="ajax-detail-link">
+
                               <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' node.id %}"
                                  data-node-id="{{ node.id }}"
                                  data-location-id="{{ node.location.id }}"
-                                 data-node-type="detail" class="subassembly-name">{{ node.part.name }} - {{ node.serial_number }}</a>
+                                 data-node-type="{{ node.get_object_type }}"
+                                 class="subassembly-name">{{ node.part.name }} - {{ node.serial_number }}</a>
 
-                          <a href="{% url 'inventory:inventory_action' 'subchange' node.id node.location.id %}"
+
+
+                              <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_action' 'subchange' node.id %}"
+                              data-node-id="{{ node.id }}"
                               class="btn btn-danger btn-sm float-right"
                               role="button">Remove</a>
 
+
+
                               <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' node.id %}"
                                  data-node-id="{{ node.id }}"
                                  data-location-id="{{ node.location.id }}"
-                                 data-node-type="detail"
+                                 data-node-type="{{ node.get_object_type }}"
                                   class="btn btn-primary btn-sm float-right mr-2"
                                   role="button">Edit</a>
+
 
                           {% if not node.is_leaf_node %}
                               <ul class="list-group list-group-flush">
@@ -451,14 +483,6 @@
            data-detail-url="{% url 'inventory:ajax_inventory_action' 'movetotrash' inventory_item.id %}"
            data-node-id="{{ inventory_item.id }}"
            role="button" class="btn btn-danger parts-delete">Move to Trash</a>
-<!---
-    {% if perms.inventory.delete %}
-         <a href="#"
-            data-detail-url="{% url 'inventory:ajax_inventory_delete' inventory_item.id %}"
-            data-node-id="{{ inventory_item.id }}"
-            role="button" class="btn btn-danger parts-delete">Delete Permanently</a>
-    {% endif %}
---->
     </div>
 
 
@@ -470,7 +494,7 @@
 {% block javascript %}
 <script>
 
-    /* Need to set a global JS variable is this item is on a Build to reference build_id */
+    /* Need to set a global JS variable is this item is on a Build to reference build_id for navtree functions */
     {% if inventory_item.build %}
         var buildID = 'builds_' + {{ inventory_item.build.id }};
     {% endif %}
