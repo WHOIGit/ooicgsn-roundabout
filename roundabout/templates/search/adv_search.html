@@ -61,7 +61,15 @@
                                BOOL_LOOKUPS: ['exact'] }
     {% endif %}
 
-    window.addEventListener("load", function(){reset_cards(prev_cards,avail_fields)})
+    window.addEventListener("load", function(){
+      // load previous search results
+      reset_cards(prev_cards,avail_fields)
+
+      // fixes loss of pagination formatting due somehow to django_tables2_column_shifter
+      $('.table-container nav ul').addClass('justify-content-center')
+      $('.table-container nav ul li').addClass('page-item')
+      $('.table-container nav ul li a').addClass('page-link')
+    })
 
   </script>
 {% endblock javascript %}
