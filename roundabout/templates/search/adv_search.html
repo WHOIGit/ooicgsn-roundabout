@@ -69,6 +69,10 @@
       $('.table-container nav ul').addClass('justify-content-center')
       $('.table-container nav ul li').addClass('page-item')
       $('.table-container nav ul li a').addClass('page-link')
+
+      // Add reset-shown-columns button to show/hide drowdown interface
+      const new_li = '<li><a href="javascript:reset_column_shifter_defaults()">Reset Defaults</a></li>'
+      $('.table-container .btn-group ul').prepend(new_li)
     })
 
   </script>
