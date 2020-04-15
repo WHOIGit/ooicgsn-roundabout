@@ -165,7 +165,7 @@ class BuildDetailView(LoginRequiredMixin, DetailView):
         # Get Printers to display in print dropdown
         printers = Printer.objects.all()
         # Get assembly part data and inventory data to calculate completeness
-        total_parts = AssemblyPart.objects.filter(assembly=self.object.assembly).count()
+        total_parts = AssemblyPart.objects.filter(assembly_revision=self.object.assembly_revision).count()
         total_inventory = self.object.inventory.count()
 
         if total_parts > 0:
@@ -208,7 +208,7 @@ class BuildAjaxDetailView(LoginRequiredMixin, DetailView):
         # Get Printers to display in print dropdown
         printers = Printer.objects.all()
         # Get assembly part data and inventory data to calculate completeness
-        total_parts = AssemblyPart.objects.filter(assembly=self.object.assembly).count()
+        total_parts = AssemblyPart.objects.filter(assembly_revision=self.object.assembly_revision).count()
         total_inventory = self.object.inventory.count()
 
         if total_parts > 0:
