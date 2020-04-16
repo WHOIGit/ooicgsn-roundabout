@@ -523,24 +523,50 @@
                                         <table class="table table-tight">
                                             <thead>
                                                 <th>Name</th>
-                                                <th>Value</th>
-                                                <th>Notes</th>
                                             </thead>
                                             <tbody>
                                                 {% regroup event.coefficient_values.all by coefficient_name as values_list %}
                                                 {% for coeff in values_list %}
                                                     <tr>
-                                                        <td>{{ coeff.grouper }}</td>
+                                                        <td> 
+                                                            <li class = 'list-group-item'>
+                                                                <a  class="collapsed" 
+                                                                data-toggle="collapse" 
+                                                                href="#coeff-{{ coeff.grouper }}" 
+                                                                aria-expanded="false" 
+                                                                aria-controls="coeff-{{ coeff.grouper }}"
+                                                                >
+                                                                    {{ coeff.grouper }}
+                                                                </a>
+                                                                <a  data-toggle="collapse" 
+                                                                    class="collapsed text-right" 
+                                                                    href="#coeff-{{ coeff.grouper }}" 
+                                                                    aria-controls="coeff-{{ coeff.grouper }}" 
+                                                                    aria-expanded="false" 
+                                                                    role="button"
+                                                                >
+                                                                    <i class="fa" aria-hidden="true"></i>
+                                                                    <span class="sr-only">Expand/Collapse Calibration {{ coeff.grouper }}</span>
+                                                                </a>
+                                                                <div class="collapse mt-1" id="coeff-{{ coeff.grouper }}">
+                                                                    <table class="table table-tight">
+                                                                        <thead>
+                                                                            <th>Value</th>
+                                                                            <th>Notes</th>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {% for val in coeff.list %}
+                                                                                <tr>
+                                                                                    <td>{{val.value}}</td>
+                                                                                    <td>{{val.notes}}</td>
+                                                                                </tr>
+                                                                            {% endfor %}
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </li>
+                                                        </td>
                                                     </tr>
-                                                    {% for val in coeff.list %}
-                                                        <div class="collapse mt-3" id="coeff-{{ coeff.grouper }}">
-                                                            <tr>
-                                                                <td></td>
-                                                                <td>{{ val.value }}</td>
-                                                                <td>{{ val.notes }}</td>
-                                                            </tr>
-                                                        </div>
-                                                    {% endfor %}
                                                 {% endfor %}
                                             </tbody>
                                         </table>
