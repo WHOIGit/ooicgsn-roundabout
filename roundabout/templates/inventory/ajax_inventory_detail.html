@@ -527,12 +527,20 @@
                                                 <th>Notes</th>
                                             </thead>
                                             <tbody>
-                                                {% for val in event.coefficient_values.all %}
+                                                {% regroup event.coefficient_values.all by coefficient_name as values_list %}
+                                                {% for coeff in values_list %}
                                                     <tr>
-                                                        <td>{{ val.coefficient_name }}</td>
-                                                        <td>{{ val.value }}</td>
-                                                        <td>{{ val.notes }}</td>
+                                                        <td>{{ coeff.grouper }}</td>
                                                     </tr>
+                                                    {% for val in coeff.list %}
+                                                        <div class="collapse mt-3" id="coeff-{{ coeff.grouper }}">
+                                                            <tr>
+                                                                <td></td>
+                                                                <td>{{ val.value }}</td>
+                                                                <td>{{ val.notes }}</td>
+                                                            </tr>
+                                                        </div>
+                                                    {% endfor %}
                                                 {% endfor %}
                                             </tbody>
                                         </table>
@@ -611,6 +619,7 @@
 
     });
 
+    // Toggle display of Calibration History sections
     var inv_part_type = '{{inventory_item.part.part_type}}';
     if (inv_part_type == 'Instrument') {
         $('#add_coefficient_action').show();

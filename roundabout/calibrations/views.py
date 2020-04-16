@@ -12,7 +12,7 @@ from roundabout.inventory.models import Inventory
 from django.core import validators
 from sigfig import round
 
-# Calibrations landing page
+# Handles creation of Calibration Events, Names,and Coefficients
 class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
     model = CalibrationEvent
     form_class = CalibrationAddForm
@@ -50,6 +50,7 @@ class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
                 part_dec_places = inv_inst.part.cal_dec_places
                 sigfig_formatted_value = round(form_coeff_val, decimals = part_dec_places, notation = form_notation_format)
             except:
+                print('coeff_val_formV__create_error')
                 raise validators.ValidationError(
                     ('Invalid value')
                 )
@@ -69,6 +70,8 @@ class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
     def form_invalid(self, form, coefficient_form):
         form_errors = coefficient_form.errors
+        print('coeff_form_create_errors')
+        print(form_errors)
         if self.request.is_ajax():
             data = form.errors
             return JsonResponse(data, status=400)
@@ -78,7 +81,7 @@ class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
     def get_success_url(self):
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ))
 
-
+# Handles updating of Calibration Events, Names, and Coefficients
 class CalibrationsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, UpdateView):
     model = CalibrationEvent
     form_class = CalibrationAddForm
@@ -112,10 +115,16 @@ class CalibrationsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         self.object = form.save()
         coefficient_form.instance = self.object
         for form in coefficient_form:
-            form_coeff_val = form.cleaned_data.get('value')
-            form_notation_format = form.cleaned_data.get('notation_format')
-            part_dec_places = inv_inst.part.cal_dec_places
-            sigfig_formatted_value = round(form_coeff_val, decimals = part_dec_places, notation = form_notation_format)
+            try:
+                form_coeff_val = form.cleaned_data.get('value')
+                form_notation_format = form.cleaned_data.get('notation_format')
+                part_dec_places = inv_inst.part.cal_dec_places
+                sigfig_formatted_value = round(form_coeff_val, decimals = part_dec_places, notation = form_notation_format)
+            except:
+                print('coeff_val_formV__update_error')
+                raise validators.ValidationError(
+                    ('Invalid value')
+                )
             form.instance.value = sigfig_formatted_value
         coefficient_form.save()
         response = HttpResponseRedirect(self.get_success_url())
@@ -132,6 +141,8 @@ class CalibrationsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
 
     def form_invalid(self, form, coefficient_form):
         form_errors = coefficient_form.errors
+        print('coeff_form_update_errors')
+        print(form_errors)
         if self.request.is_ajax():
             data = form.errors
             return JsonResponse(data, status=400)

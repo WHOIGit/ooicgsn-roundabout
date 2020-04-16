@@ -58,7 +58,6 @@
                             {% for error in dict.values %}
                               {{ error|escape }}
                             {% endfor %}
-
                           {% endfor %}
                         </div>
                     </tr>
@@ -122,6 +121,8 @@
 <script type="text/javascript">
 
     $(document).ready(function() {
+        
+        // Handles Coefficient form instance generation
         $('.calibration-form tbody tr').formset({
             prefix: 'coefficient_values',
             addText: 'Add Coefficient',

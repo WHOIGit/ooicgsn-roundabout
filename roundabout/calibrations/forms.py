@@ -5,6 +5,8 @@ from roundabout.parts.models import Part
 from django.forms.models import inlineformset_factory, BaseInlineFormSet
 from bootstrap_datepicker_plus import DatePickerInput
 
+# Event form 
+# Inputs: Effective Date and Approval
 class CalibrationAddForm(forms.ModelForm):
     class Meta:
         model = CalibrationEvent 
@@ -24,7 +26,8 @@ class CalibrationAddForm(forms.ModelForm):
             )
         }
 
-
+# Coefficient form
+# Inputs: Coefficient values and notes per Part Calibration 
 class CoefficientValueForm(forms.ModelForm):
     class Meta:
         model = CoefficientValue
@@ -43,7 +46,7 @@ class CoefficientValueForm(forms.ModelForm):
             inv_inst = Inventory.objects.get(id=self.inv_id)
             self.fields['coefficient_name'].queryset = CoefficientName.objects.filter(part=inv_inst.part)
 
-
+# Coefficient form instance generator
 CoefficientFormset = inlineformset_factory(
     CalibrationEvent, 
     CoefficientValue, 

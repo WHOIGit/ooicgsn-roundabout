@@ -5,8 +5,11 @@ from roundabout.parts.models import Part
 from roundabout.inventory.models import Inventory, Deployment
 from roundabout.users.models import User
 from decimal import Decimal
+from sigfig import round
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
-
+# Tracks Calibrations across Parts
 class CoefficientName(models.Model):
     calibration_name = models.CharField(max_length=255, unique=False, db_index=True)
     part = models.ForeignKey(Part, related_name='coefficient_names', on_delete=models.CASCADE, null=True)
@@ -17,7 +20,7 @@ class CoefficientName(models.Model):
     class Meta:
         ordering = ['calibration_name']
 
-
+# Tracks Calibration Coefficient event history across Inventory items
 class CalibrationEvent(models.Model):
     APPROVAL_STATUS = (
         (True, "Approved"),
@@ -37,14 +40,25 @@ class CalibrationEvent(models.Model):
     class Meta:
         ordering = ['-calibration_date']
 
+# Coefficient Value validator
+# Throws error if string input cannot be cooerced into decimal
+def validate_coeff_val(value):
+    try:
+        round(value)
+    except:
+        raise ValidationError(
+            _('%(value)s is an invalid Decimal. Please enter a valid Decimal'),
+            params={'value': value},
+        )
 
+# Tracks Coefficients across Calibrations
 class CoefficientValue(models.Model):
     NOTATION_FORMAT = (
         ("sci", "Scientific"),
         ("eng", "Engineering"),
         ("std", "Standard"),
     )
-    value = models.CharField(max_length = 20, unique = False, db_index = False)
+    value = models.CharField(max_length = 20, unique = False, db_index = False, validators = [validate_coeff_val])
     notes = models.TextField(blank=True)
     notation_format = models.CharField(max_length=3, choices=NOTATION_FORMAT, null=False, blank=False, default="std")
     created_at = models.DateTimeField(default=timezone.now)
