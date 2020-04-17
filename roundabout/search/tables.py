@@ -34,8 +34,6 @@ from roundabout.assemblies.models import Assembly
 from roundabout.userdefinedfields.models import Field
 
 
-UDF_FIELDS = list(Field.objects.all().order_by('id'))
-
 class UDF_Column(tables.ManyToManyColumn):
 
     prefix = 'udf-'

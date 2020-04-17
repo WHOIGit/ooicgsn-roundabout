@@ -391,7 +391,10 @@ function saveData(blob, fileName)
 }
 
 
-// MESSING WITH STORED COLUMN CLICKS
+// MESSING WITH STORED COLUMN CLICKS, see:
+// https://github.com/djk2/django-tables2-column-shifter/blob/master/django_tables2_column_shifter/
+// static/django_tables2_column_shifter/js/django_tables2_column_shifter.js
+
 const COLUMN_SHIFTER_STORAGE_ACCESOR = 'django_tables2_column_shifter'
 
 // Get columns manually shown/hidden (clicked) by user
