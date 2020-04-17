@@ -38,12 +38,13 @@ import django_tables2 as tables
 from django_tables2 import SingleTableView
 from django_tables2.export.views import ExportMixin
 
-from roundabout.inventory.models import Inventory
 from roundabout.parts.models import Part
-from roundabout.assemblies.models import Assembly
 from roundabout.builds.models import Build
+from roundabout.inventory.models import Inventory
+from roundabout.assemblies.models import Assembly
+from roundabout.userdefinedfields.models import Field
 
-from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, UDF_FIELDS, UDF_Column
+from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, UDF_Column
 
 
 def searchbar_redirect(request):
@@ -265,7 +266,7 @@ class InventoryTableView(GenericSearchTableView):
         # UDF Cols: these have to be added before the table is made
         # since we don't yet know which UDF columns will have data
         # see table_class.set_column_default_show for logics
-        for udf in UDF_FIELDS:
+        for udf in Field.objects.all().order_by('id'):
             safename =  UDF_Column.prefix+'{:03}'.format(udf.id)
             if any([qry.lower() in udf.field_name.lower() for qry in udfname_queries]):
                 safename = 'searchcol-'+safename
@@ -343,7 +344,7 @@ class PartTableView(GenericSearchTableView):
         # UDF Cols: these have to be added before the table is made
         # since we don't yet know which UDF columns will have data
         # see table_class.set_column_default_show for logics
-        for udf in UDF_FIELDS:
+        for udf in Field.objects.all().order_by('id'):
             safename =  UDF_Column.prefix+'{:03}'.format(udf.id)
             if any([qry.lower() in udf.field_name.lower() for qry in udfname_queries]):
                 safename = 'searchcol-'+safename
