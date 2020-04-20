@@ -67,6 +67,10 @@ class Deployment(models.Model):
         else:
             return '%s - %s' % (self.deployment_number, self.location.name)
 
+    #@property  # handy, but does not work with prefetching
+    def get_latest_action(self):
+        return self.deployment_actions.all().first()
+
     def get_deployment_label(self):
         return self.deployment_number
 
@@ -218,6 +222,10 @@ class Inventory(MPTTModel):
 
     def __str__(self):
         return self.serial_number
+
+    #@property  # handy, but does not work with prefetching
+    def get_latest_action(self):
+        return self.action.all().first()
 
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):

@@ -29,6 +29,8 @@ urlpatterns = [
     path('part',view=views.PartTableView.as_view(),name='part'),
     path('build', view=views.BuildTableView.as_view(), name='build'),
     path('assembly', view=views.AssemblyTableView.as_view(), name='assembly'),
-    path('searchbar', view=views.searchbar_redirect, name='searchbar')
+    path('searchbar', view=views.searchbar_redirect, name='searchbar'),
 
+    # testing
+    path('action', view=views.InvActionTableView.as_view(), name='action')
 ]

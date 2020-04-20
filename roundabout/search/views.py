@@ -32,6 +32,7 @@ from urllib.parse import unquote
 #from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
 from django.db.models import Q
 from django.shortcuts import redirect
+from django.utils.html import format_html, mark_safe
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 import django_tables2 as tables
@@ -44,7 +45,7 @@ from roundabout.inventory.models import Inventory
 from roundabout.assemblies.models import Assembly
 from roundabout.userdefinedfields.models import Field
 
-from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, UDF_Column
+from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, UDF_Column, OneOfManyColumn, InvActionTable
 
 
 def searchbar_redirect(request):
@@ -225,7 +226,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
 
         for field in self.get_avail_fields():
             if field['value'] is not None \
-               and not field['text'].startswith('UDF') \
+               and field['value'] not in field_exceptions \
                and field['value'] not in self.table_class.Meta.fields:
                 if field['value'] in queried_fields:
                     safename = 'searchcol-{}'.format(field['value'])
@@ -246,14 +247,58 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
         except AttributeError: self.exclude_columns = []
         return {'extra_columns':extra_cols}
 
+class InvActionTableView(GenericSearchTableView):
+    model = Inventory
+    table_class = InvActionTable
+
+    def get_avail_fields(self):
+        avail_fields = [dict(value="part__name",              text="Name", legal_lookups='STR_LOOKUPS'),
+                        dict(value="serial_number",  text="Serial Number", legal_lookups='STR_LOOKUPS'),
+                        dict(value="updated_at",     text="Date Modified", legal_lookups='DATE_LOOKUPS'),
+                        dict(value="location__name", text="Location",      legal_lookups='STR_LOOKUPS'),
+
+                        dict(value=None, text="--Latest Action--", disabled=True),
+                        dict(value="latest_action__action_type",   text="Latest Action", legal_lookups='STR_LOOKUPS'),
+                        dict(value="latest_action__user__name",  text="Latest Action: User", legal_lookups='STR_LOOKUPS'),
+                        dict(value="latest_action__created_at", text="Latest Action: Time", legal_lookups='DATE_LOOKUPS'),
+                        dict(value="latest_action__detail",  text="Latest Action: Detail", legal_lookups='STR_LOOKUPS'),
+                        ]
+        return avail_fields
+
+    def get_table_kwargs(self):
+        kwargs = super().get_table_kwargs(self.table_class.Meta.action_accessors)
+
+        return kwargs
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs = qs.exclude(location__root_type='Trash')
+        fetch_me = ['part','action','action__user']
+        qs = qs.prefetch_related(*fetch_me)
+        return qs
+
 
 class InventoryTableView(GenericSearchTableView):
     model = Inventory
     table_class = InventoryTable
 
     def get_table_kwargs(self):
-        kwargs = super().get_table_kwargs(field_exceptions=['fieldvalues__field__field_name','fieldvalues__field_value'])
+        kwargs = super().get_table_kwargs(field_exceptions=self.table_class.Meta.udf_accessors +
+                                                           self.table_class.Meta.action_accessors)
 
+        ## Actions ##
+        action_cols = [('latest_action__action_type', OneOfManyColumn(accessor='action',
+                            verbose_name='Latest Action', accessor_field='action_type', wrapper=mark_safe)),
+                       ('latest_action__user__name', OneOfManyColumn(accessor='action',
+                            verbose_name='Latest Action: User', accessor_field='user__name')),
+                       ('latest_action__created_at', OneOfManyColumn(accessor='action',
+                            verbose_name='Latest Action: Time', accessor_field='created_at')),
+                       ('latest_action__detail', OneOfManyColumn(accessor='action',
+                            verbose_name='Latest Action: Details', accessor_field='detail', wrapper=mark_safe))]
+
+        kwargs['extra_columns'].extend(action_cols)
+
+        ## UDF ##
         udfname_queries = []
         udfvalue_queries = []
         for card in self.get_search_cards():
@@ -315,12 +360,13 @@ class PartTableView(GenericSearchTableView):
     table_class = PartTable
 
     def get_avail_fields(self):
-        avail_fields = [dict(value="name",                      text="Name", legal_lookups='STR_LOOKUPS'),
-                        dict(value="part_number",        text="Part Number", legal_lookups='STR_LOOKUPS'),
-                        dict(value="part_type__name",      text="Part Type", legal_lookups='STR_LOOKUPS'),
-                        dict(value="unit_cost",            text="Unit Cost", legal_lookups='NUM_LOOKUPS'),
-                        dict(value="refurbishment_cost", text="Refurb Cost", legal_lookups='NUM_LOOKUPS'),
-                        dict(value="note",                      text="Note", legal_lookups='STR_LOOKUPS'),
+        avail_fields = [dict(value="name",                        text="Name", legal_lookups='STR_LOOKUPS'),
+                        dict(value="part_number",          text="Part Number", legal_lookups='STR_LOOKUPS'),
+                        dict(value="part_type__name",        text="Part Type", legal_lookups='STR_LOOKUPS'),
+                        dict(value="unit_cost",              text="Unit Cost", legal_lookups='NUM_LOOKUPS'),
+                        dict(value="refurbishment_cost",   text="Refurb Cost", legal_lookups='NUM_LOOKUPS'),
+                        dict(value="inventory__count", text="Inventory Count", legal_lookups='NUM_LOOKUPS'),
+                        dict(value="note",                        text="Note", legal_lookups='STR_LOOKUPS'),
 
                         dict(value=None, text="--User-Defined-Fields--", disabled=True),
                         dict(value="user_defined_fields__field_name", text="UDF Name", legal_lookups='STR_LOOKUPS'),]
