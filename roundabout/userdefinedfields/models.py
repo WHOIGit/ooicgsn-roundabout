@@ -37,7 +37,7 @@ class Field(models.Model):
     field_description = models.CharField(max_length=255, null=False, blank=True)
     field_type = models.CharField(max_length=100, choices=FIELD_TYPES)
     field_default_value = models.CharField(max_length=255, null=False, blank=True)
-    choice_field_options = JSONField(blank=True)
+    choice_field_options = JSONField(null=True, blank=True)
     global_for_part_types = models.ManyToManyField('parts.PartType', blank=True, related_name='custom_fields')
 
     class Meta:
