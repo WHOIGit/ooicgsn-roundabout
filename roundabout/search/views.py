@@ -45,7 +45,7 @@ from roundabout.inventory.models import Inventory
 from roundabout.assemblies.models import Assembly
 from roundabout.userdefinedfields.models import Field
 
-from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, UDF_Column, OneOfManyColumn, InvActionTable
+from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, UDF_Column, InvActionTable
 
 
 def searchbar_redirect(request):
@@ -243,9 +243,11 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
                 extra_cols.append( (safename,col) )
 
         # exclude cols from download
-        try: self.exclude_columns = self.request.GET.get('excluded_columns').split(',')
+        try: self.exclude_columns = self.request.GET.get('excluded_columns').strip('"').split(',')
         except AttributeError: self.exclude_columns = []
+
         return {'extra_columns':extra_cols}
+
 
 class InvActionTableView(GenericSearchTableView):
     model = Inventory
@@ -281,21 +283,19 @@ class InvActionTableView(GenericSearchTableView):
 class InventoryTableView(GenericSearchTableView):
     model = Inventory
     table_class = InventoryTable
+    avail_udf = set()
 
     def get_table_kwargs(self):
         kwargs = super().get_table_kwargs(field_exceptions=self.table_class.Meta.udf_accessors +
                                                            self.table_class.Meta.action_accessors)
 
         ## Actions ##
-        action_cols = [('latest_action__action_type', OneOfManyColumn(accessor='action',
-                            verbose_name='Latest Action', accessor_field='action_type', wrapper=mark_safe)),
-                       ('latest_action__user__name', OneOfManyColumn(accessor='action',
-                            verbose_name='Latest Action: User', accessor_field='user__name')),
-                       ('latest_action__created_at', OneOfManyColumn(accessor='action',
-                            verbose_name='Latest Action: Time', accessor_field='created_at')),
-                       ('latest_action__detail', OneOfManyColumn(accessor='action',
-                            verbose_name='Latest Action: Details', accessor_field='detail', wrapper=mark_safe))]
-
+        action_cols = [('action__latest__action_type',      'Latest Action'),
+                       ('action__latest__user__name', 'Latest Action: User'),
+                       ('action__latest__created_at', 'Latest Action: Time'),
+                       ('action__latest__location__name',  'Latest Action: Location'),
+                       ('action__latest__detail',  'Latest Action: Details')]
+        action_cols = [(acc,tables.Column(text,acc,'',True,True)) for acc,text in action_cols]
         kwargs['extra_columns'].extend(action_cols)
 
         ## UDF ##
@@ -309,12 +309,16 @@ class InventoryTableView(GenericSearchTableView):
                 #    udfvalue_queries.append(row['query']) # TODO show all UDF that match this ?? How??
 
         # UDF Cols: these have to be added before the table is made
-        # since we don't yet know which UDF columns will have data
-        # see table_class.set_column_default_show for logics
+        # see table_class.set_column_default_show for more
         for udf in Field.objects.all().order_by('id'):
+
+            # don't make a column if no data available for this udf
+            if udf.id not in self.avail_udf: continue
+
             safename =  UDF_Column.prefix+'{:03}'.format(udf.id)
             if any([qry.lower() in udf.field_name.lower() for qry in udfname_queries]):
                 safename = 'searchcol-'+safename
+
             kwargs['extra_columns'].append( (safename, UDF_Column(udf)) )
 
         return kwargs
@@ -322,8 +326,9 @@ class InventoryTableView(GenericSearchTableView):
     def get_queryset(self):
         qs = super().get_queryset()
         qs = qs.exclude(location__root_type='Trash')
-        fetch_me = ['fieldvalues','fieldvalues__field','part','location','revision']
+        fetch_me = ['fieldvalues','fieldvalues__field','part','location','revision','action']
         qs = qs.prefetch_related(*fetch_me)
+        [[self.avail_udf.add(fv.field.id) for fv in q.fieldvalues.all()] for q in qs]
         return qs
 
     def get_avail_fields(self):
@@ -350,14 +355,11 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="fieldvalues__field_value",       text="UDF Value", legal_lookups='STR_LOOKUPS'),]
         return avail_fields
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
 
 class PartTableView(GenericSearchTableView):
     model = Part
     table_class = PartTable
+    avail_udf = set()
 
     def get_avail_fields(self):
         avail_fields = [dict(value="name",                        text="Name", legal_lookups='STR_LOOKUPS'),
@@ -376,6 +378,7 @@ class PartTableView(GenericSearchTableView):
         qs = super().get_queryset()
         fetch_me = ['user_defined_fields','part_type']
         qs = qs.prefetch_related(*fetch_me)
+        [[self.avail_udf.add(udf.id) for udf in q.user_defined_fields.all()] for q in qs]
         return qs
 
     def get_table_kwargs(self):
@@ -388,12 +391,16 @@ class PartTableView(GenericSearchTableView):
                     udfname_queries.append(row['query'])  # capture this row's query
 
         # UDF Cols: these have to be added before the table is made
-        # since we don't yet know which UDF columns will have data
-        # see table_class.set_column_default_show for logics
+        # see table_class.set_column_default_show for more
         for udf in Field.objects.all().order_by('id'):
+
+            # don't make a column if no data available for this udf
+            if udf.id not in self.avail_udf: continue
+
             safename =  UDF_Column.prefix+'{:03}'.format(udf.id)
             if any([qry.lower() in udf.field_name.lower() for qry in udfname_queries]):
                 safename = 'searchcol-'+safename
+
             kwargs['extra_columns'].append( (safename, UDF_Column(udf)) )
 
         return kwargs
@@ -429,7 +436,7 @@ class BuildTableView(GenericSearchTableView):
     def get_queryset(self):
         qs = super().get_queryset()
         qs = qs.exclude(location__root_type='Trash')
-        fetch_me = ['assembly','assembly__assembly_type','location']
+        fetch_me = ['assembly','assembly__assembly_type','location','actions']
         qs = qs.prefetch_related(*fetch_me)
         return qs
 
