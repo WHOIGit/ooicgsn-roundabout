@@ -24,15 +24,14 @@ import operator
 from functools import reduce
 from urllib.parse import unquote
 
-#from django.shortcuts import render, get_object_or_404
-#from django.template.defaultfilters import register
 #from django.urls import reverse, reverse_lazy
-#from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, QueryDict
-#from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
-#from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
-from django.db.models import Q, F
-from django.shortcuts import redirect
 from django.utils.html import format_html, mark_safe
+#from django.template.defaultfilters import register
+#from django.shortcuts import render, get_object_or_404
+#from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
+#from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, QueryDict
+from django.db.models import Q, F, Max, Min, Count
+from django.shortcuts import redirect
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 import django_tables2 as tables
@@ -45,7 +44,7 @@ from roundabout.inventory.models import Inventory
 from roundabout.assemblies.models import Assembly
 from roundabout.userdefinedfields.models import Field
 
-from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, UDF_Column, InvActionTable
+from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, UDF_Column
 
 
 def searchbar_redirect(request):
@@ -121,6 +120,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
         cards = self.get_search_cards()
 
         final_Qs = []
+        model_objects = self.model.objects
         for card in cards:
             print('CARD:', card)
             card_Qs = []
@@ -130,40 +130,38 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
                     # TODO: field x lookup VALIDATION HERE?
                     # eg: Q(<field>__<lookup>=<query>) where eg: field = "part__part_number" and lookup = "icontains"
 
-                    select_ones = ['latest','last','earliest','first']
-                    select_one = [s1 for s1 in select_ones if '__{}__'.format(s1) in field]
+                    select_ones = ['__latest__','__last__','__earliest__','__first__']
+                    select_one = [s1 for s1 in select_ones if s1 in field]
                     if not select_one:
                         # default
                         Q_kwarg = {'{field}__{lookup}'.format(field=field, lookup=row['lookup']): row['query']}
                         Q_kwargs.append(Q_kwarg)
 
+                        if field.endswith('__count'):
+                            accessor = field.rsplit('__count',1)[0]
+                            annote_obj = {field:Count(accessor)}
+                            model_objects = model_objects.annotate(**annote_obj)
+
                     else:
                         # sometimes we want to query on the latest or first or last value of a list of values.
                         # eg. get inventory where inventory.latest_action.user == 'bob'. This is how we do that.
                         select_one = select_one[0]
-                        matched_model_IDs = []
+                        if select_one in ['__latest__','__last__']:
+                            annote_func = Max
+                        else:
+                            annote_func = Min
 
-                        accessor,subfields = field.split('__{}__'.format(select_one))
-                        pseudosubfield = '{}__{}'.format(accessor,subfields).split('__')
-                        fetch_me = ['__'.join(pseudosubfield[:i]) for i in range(1,len(pseudosubfield))]
-                        prefilter = {'{}__{}__{lookup}'.format(accessor,subfields, lookup=row['lookup']): row['query']}
+                        accessor,subfields = field.split(select_one)
+                        Accessor = getattr(self.model,accessor).field.model
+                        reverse_accessor = getattr(self.model,accessor).field.name
+                        fetch_me = ['__'.join(subfields.split('__')[:i]) for i in range(1,len(subfields.split('__')))]
+                        fetch_me += [reverse_accessor]
 
-                        for q in self.model.objects.all().prefetch_related(*fetch_me).filter(**prefilter):
-                            one_accessee = getattr(getattr(q,accessor).all(),select_one)()
-                            breadcrumbs = subfields.split('__')
-                            one_accessee_value = getattr(one_accessee,breadcrumbs[0])
-                            if one_accessee_value is None: continue
-
-                            # must go deeper, perhaps
-                            if len(breadcrumbs)>1:
-                                for bc in breadcrumbs[1:]:
-                                    one_accessee_value = getattr(one_accessee_value,bc)
-                                    if one_accessee_value is None: break
-                            if one_accessee_value is None: continue
-
-                            # contains for strings
-                            if row['query'] in one_accessee_value:
-                                matched_model_IDs.append(q.id)
+                        all_model_objs = self.model.objects.all().prefetch_related(accessor)
+                        all_latest_action_IDs = all_model_objs.annotate(latest_action=annote_func(accessor+'__pk')).values_list('latest_action',flat=True)
+                        all_latest_actions = Accessor.objects.filter(pk__in=all_latest_action_IDs).prefetch_related(*fetch_me)
+                        matching_latest_actions = all_latest_actions.filter(**{'{}__{}'.format(subfields,row['lookup']):row['query']})
+                        matched_model_IDs = matching_latest_actions.values_list(reverse_accessor+'__pk',flat=True)
 
                         Q_kwarg = {'id__in':matched_model_IDs}
                         Q_kwargs.append(Q_kwarg)
@@ -197,10 +195,10 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
             final_Q = None
 
         if final_Q:
-            return self.model.objects.filter(final_Q).distinct()
+            return model_objects.filter(final_Q).distinct()
         else:
-            #return self.model.objects.none()
-            return self.model.objects.all()
+            #if there are no search terms
+            return model_objects.all()
 
 
     def get_context_data(self, **kwargs):
@@ -238,7 +236,8 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
 
         return context
 
-    def get_avail_fields(self):
+    @staticmethod
+    def get_avail_fields():
         # default, this should be overwritten by non-generic search class views
         avail_fields = [dict(value="id", text="Database ID", legal_lookups=['exact'])]
         return avail_fields
@@ -285,38 +284,6 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
         return {'extra_columns':extra_cols}
 
 
-class InvActionTableView(GenericSearchTableView):
-    model = Inventory
-    table_class = InvActionTable
-
-    def get_avail_fields(self):
-        avail_fields = [dict(value="part__name",              text="Name", legal_lookups='STR_LOOKUPS'),
-                        dict(value="serial_number",  text="Serial Number", legal_lookups='STR_LOOKUPS'),
-                        dict(value="updated_at",     text="Date Modified", legal_lookups='DATE_LOOKUPS'),
-                        dict(value="location__name", text="Location",      legal_lookups='STR_LOOKUPS'),
-
-                        dict(value=None, text="--Latest Action--", disabled=True),
-                        dict(value="action__latest__action_type",   text="Latest Action", legal_lookups='STR_LOOKUPS'),
-                        dict(value="action__latest__user__name",  text="Latest Action: User", legal_lookups='STR_LOOKUPS'),
-                        dict(value="action__latest__created_at", text="Latest Action: Time", legal_lookups='DATE_LOOKUPS'),
-                        dict(value="action__latest__location__name", text="Latest Action: Location", legal_lookups='STR_LOOKUPS'),
-                        dict(value="action__latest__detail",  text="Latest Action: Detail", legal_lookups='STR_LOOKUPS'),
-                        ]
-        return avail_fields
-
-    def get_table_kwargs(self):
-        kwargs = super().get_table_kwargs()#self.table_class.Meta.action_accessors)
-
-        return kwargs
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        qs = qs.exclude(location__root_type='Trash')
-        fetch_me = ['part','action','action__user']
-        qs = qs.prefetch_related(*fetch_me)
-        return qs
-
-
 class InventoryTableView(GenericSearchTableView):
     model = Inventory
     table_class = InventoryTable
@@ -324,17 +291,6 @@ class InventoryTableView(GenericSearchTableView):
 
     def get_table_kwargs(self):
         kwargs = super().get_table_kwargs(field_exceptions=self.table_class.Meta.udf_accessors)
-
-        ## Actions ##
-        '''
-        action_cols = [('action__latest__action_type',      'Latest Action'),
-                       ('action__latest__user__name', 'Latest Action: User'),
-                       ('action__latest__created_at', 'Latest Action: Time'),
-                       ('action__latest__location__name',  'Latest Action: Location'),
-                       ('action__latest__detail',  'Latest Action: Details')]
-        action_cols = [(acc,tables.Column(text,acc,'',True,True)) for acc,text in action_cols]
-        kwargs['extra_columns'].extend(action_cols)
-        '''
 
         ## UDF ##
         udfname_queries = []
@@ -358,18 +314,18 @@ class InventoryTableView(GenericSearchTableView):
                 safename = 'searchcol-'+safename
 
             kwargs['extra_columns'].append( (safename, UDF_Column(udf)) )
-
         return kwargs
 
     def get_queryset(self):
         qs = super().get_queryset()
         qs = qs.exclude(location__root_type='Trash')
-        fetch_me = ['fieldvalues','fieldvalues__field','part','location','revision','action']
+        fetch_me = ['fieldvalues','fieldvalues__field','part','location','revision','action','action__user','action__location']
         qs = qs.prefetch_related(*fetch_me)
         [[self.avail_udf.add(fv.field.id) for fv in q.fieldvalues.all()] for q in qs]
         return qs
 
-    def get_avail_fields(self):
+    @staticmethod
+    def get_avail_fields():
         avail_fields = [dict(value="part__name",              text="Name", legal_lookups='STR_LOOKUPS'),
                         dict(value="serial_number",  text="Serial Number", legal_lookups='STR_LOOKUPS'),
                         dict(value="build__assembly__name",  text="Build", legal_lookups='STR_LOOKUPS'),
@@ -393,11 +349,12 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="fieldvalues__field_value",       text="UDF Value", legal_lookups='STR_LOOKUPS'),
 
                         dict(value=None, text="--Actions--", disabled=True),
-                        dict(value="action__latest__action_type", text="Latest Action", legal_lookups='STR_LOOKUPS'),
-                        dict(value="action__latest__user__name", text="Latest Action: User", legal_lookups='STR_LOOKUPS'),
-                        dict(value="action__latest__created_at", text="Latest Action: Time", legal_lookups='DATE_LOOKUPS'),
+                        dict(value="action__latest__action_type",    text="Latest Action",           legal_lookups='STR_LOOKUPS'),
+                        dict(value="action__latest__user__name",     text="Latest Action: User",     legal_lookups='STR_LOOKUPS'),
+                        dict(value="action__latest__created_at",     text="Latest Action: Time",     legal_lookups='DATE_LOOKUPS'),
                         dict(value="action__latest__location__name", text="Latest Action: Location", legal_lookups='STR_LOOKUPS'),
-                        dict(value="action__latest__detail", text="Latest Action: Details", legal_lookups='STR_LOOKUPS'),
+                        dict(value="action__latest__detail",         text="Latest Action: Details",  legal_lookups='STR_LOOKUPS'),
+                        dict(value="action__count",                  text="Total Action Count",      legal_lookups='NUM_LOOKUPS'),
                         ]
         return avail_fields
 
@@ -407,7 +364,8 @@ class PartTableView(GenericSearchTableView):
     table_class = PartTable
     avail_udf = set()
 
-    def get_avail_fields(self):
+    @staticmethod
+    def get_avail_fields():
         avail_fields = [dict(value="name",                        text="Name", legal_lookups='STR_LOOKUPS'),
                         dict(value="part_number",          text="Part Number", legal_lookups='STR_LOOKUPS'),
                         dict(value="part_type__name",        text="Part Type", legal_lookups='STR_LOOKUPS'),
@@ -448,7 +406,6 @@ class PartTableView(GenericSearchTableView):
                 safename = 'searchcol-'+safename
 
             kwargs['extra_columns'].append( (safename, UDF_Column(udf)) )
-
         return kwargs
 
     def get_context_data(self, **kwargs):
@@ -460,7 +417,8 @@ class BuildTableView(GenericSearchTableView):
     model = Build
     table_class = BuildTable
 
-    def get_avail_fields(self):
+    @staticmethod
+    def get_avail_fields():
         avail_fields = [dict(value="assembly__name",                text="Name", legal_lookups='STR_LOOKUPS'),
                         dict(value="build_number",          text="Build Number", legal_lookups='STR_LOOKUPS'),
                         dict(value="assembly__assembly_type__name", text="Type", legal_lookups='STR_LOOKUPS'),
@@ -476,7 +434,17 @@ class BuildTableView(GenericSearchTableView):
                         dict(value=None, text="--Location--", disabled=True),
                         dict(value="location__name",          text="Name", legal_lookups='STR_LOOKUPS'),
                         dict(value="location__location_type", text="Type", legal_lookups='STR_LOOKUPS'),
-                        dict(value="location__root_type",     text="Root", legal_lookups='STR_LOOKUPS'),]
+                        dict(value="location__root_type",     text="Root", legal_lookups='STR_LOOKUPS'),
+
+                        dict(value=None, text="--Actions--", disabled=True),
+                        dict(value="actions__latest__action_type",    text="Latest Action",           legal_lookups='STR_LOOKUPS'),
+                        dict(value="actions__latest__user__name",     text="Latest Action: User",     legal_lookups='STR_LOOKUPS'),
+                        dict(value="actions__latest__created_at",     text="Latest Action: Time",     legal_lookups='DATE_LOOKUPS'),
+                        dict(value="actions__latest__location__name", text="Latest Action: Location", legal_lookups='STR_LOOKUPS'),
+                        dict(value="actions__latest__detail",         text="Latest Action: Details",  legal_lookups='STR_LOOKUPS'),
+                        dict(value="actions__count",                  text="Total Action Count",      legal_lookups='NUM_LOOKUPS'),
+                        ]
+
         return avail_fields
 
     def get_queryset(self):
@@ -495,7 +463,8 @@ class AssemblyTableView(GenericSearchTableView):
     model = Assembly
     table_class = AssemblyTable
 
-    def get_avail_fields(self):
+    @staticmethod
+    def get_avail_fields():
         avail_fields = [dict(value="name",                text="Name", legal_lookups='STR_LOOKUPS'),
                         dict(value="assembly_number",   text="Number", legal_lookups='STR_LOOKUPS'),
                         dict(value="assembly_type__name", text="Type", legal_lookups='STR_LOOKUPS'),

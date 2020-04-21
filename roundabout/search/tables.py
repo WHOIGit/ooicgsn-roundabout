@@ -28,7 +28,7 @@ from django_tables2.columns import Column, DateTimeColumn, BooleanColumn, ManyTo
 from django_tables2_column_shifter.tables import ColumnShiftTable
 
 from roundabout.parts.models import Part
-from roundabout.builds.models import Build
+from roundabout.builds.models import Build, BuildAction
 from roundabout.inventory.models import Inventory, Action, DeploymentAction
 from roundabout.assemblies.models import Assembly
 from roundabout.userdefinedfields.models import Field
@@ -54,40 +54,6 @@ class SearchTable(ColumnShiftTable):
             search_cols = [col for col in self.sequence if col.startswith('searchcol-')]
             extra_cols = [col for col in self.sequence if col.startswith('extracol-')]
             self.column_default_show = self.Meta.base_shown_cols + search_cols
-
-
-class InvActionTable(SearchTable): # test for searching
-    class Meta(SearchTable.Meta):
-        model = Inventory
-        action_accessors = ['latest_action__action_type', 'latest_action__user__name', 'latest_action__created_at', 'latest_action__detail']
-        fields = ['serial_number', 'part__name', 'location__name'] + action_accessors
-        base_shown_cols = fields
-
-    serial_number = Column(verbose_name='Serial Number',
-              linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('pk')]))
-    location__name = Column(verbose_name='Location')
-
-    def render_serial_number(self, value, record):
-        item_url = reverse("inventory:inventory_detail", args=[record.pk])
-        html_string = '<a href={}>{}</a>'
-        return format_html(html_string, item_url, value)
-    def value_serial_number(self,record):
-        return record.serial_number
-    def render_part(self,record):
-        item_url = reverse("parts:parts_detail", args=[record.part.pk])
-        name = record.part.name
-        html_string = '{} <a href={}>➤</a>'
-        return format_html(html_string,name, item_url)
-    def value_part(self,record):
-        return record.part.name
-
-    def render_action__latest__action_type(self,value,record):
-        try: disp_value = [y for x,y in Action.ACT_TYPES if x==value][0]
-        except IndexError: disp_value = value
-        return disp_value
-
-    def render_action__latest__detail(self,value):
-        return mark_safe(value)
 
 
 class InventoryTable(SearchTable):
@@ -125,8 +91,8 @@ class InventoryTable(SearchTable):
     def value_revision__note(self,record):
         return record.revision.note
 
-    def render_action__latest__action_type(self,value,record):
-        try: disp_value = [y for x,y in Action.ACT_TYPES if x==value][0]
+    def render_action__latest__action_type(self,value):
+        try: disp_value = [text for val,text in Action.ACT_TYPES if val==value][0]
         except IndexError: disp_value = value
         return disp_value
 
@@ -136,23 +102,15 @@ class InventoryTable(SearchTable):
 class PartTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Part
-        fields = ["part_number", 'name', 'part_type__name','inventory__count']
+        fields = ["part_number", 'name', 'part_type__name']
         base_shown_cols = fields
 
     part_number = tables.Column(verbose_name='Part Number',
                    linkify=dict(viewname='parts:parts_detail',args=[tables.A('pk')]))
     part_type__name = tables.Column(verbose_name='Type')
-    inventory__count = tables.Column(empty_values=())
 
     def render_name(self,record):
         return record.friendly_name_display()
-
-    #def render_inventory_count(self,record):
-    #    return record.get_part_inventory_count()
-    #def order_inventory_count(self, queryset, is_ascending):
-    #    queryset = queryset.annotate(count=Count('inventory'))\
-    #                       .order_by(("" if is_ascending else "-")+'count')
-    #    return queryset, True
 
     def set_column_default_show(self,table_data):
         search_cols = [col for col in self.sequence if col.startswith('searchcol-')]
@@ -177,10 +135,10 @@ class BuildTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Build
         action_accessors = ['actions__latest__action_type', 'actions__latest__user__name', 'actions__latest__created_at','actions__latest__location__name','actions__latest__detail']
-        fields = ['build','assembly__name','build_number','assembly__assembly_type__name','location__name','is_deployed','time_at_sea'] + action_accessors
-        base_shown_cols = ['build','assembly__assembly_type__name','location__name','is_deployed','time_at_sea']
+        fields = ['build','assembly__name','build_number','assembly__assembly_type__name','location__name','is_deployed','time_at_sea']
+        base_shown_cols = ['build','assembly__assembly_type__name','location__name','is_deployed','time_at_sea', 'actions__latest__action_type']
 
-    build=tables.Column(empty_values=(), attrs={"th": {"style": "white-space:nowrap;"}})
+    build=tables.Column(empty_values=(), attrs={"th": {"style": "white-space:nowrap;"}}, order_by=('assembly__assembly_number','build_number'))
     location__name = tables.Column(verbose_name='Location', accessor='location__name')
     assembly__assembly_type__name = tables.Column(verbose_name='Type')
 
@@ -191,6 +149,13 @@ class BuildTable(SearchTable):
     def value_build(self,record):
         return '{}-{}'.format(record.assembly.assembly_number, record.build_number.replace('Build ',''))
 
+    def render_actions__latest__action_type(self,value,record):
+        try: disp_value = [text for val,text in BuildAction.ACT_TYPES if val==value][0]
+        except IndexError: disp_value = value
+        return disp_value
+
+    def render_actions__latest__detail(self,value):
+        return mark_safe(value)
 
 class AssemblyTable(SearchTable):
     class Meta(SearchTable.Meta):
