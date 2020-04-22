@@ -36,10 +36,40 @@ from roundabout.userdefinedfields.models import Field
 
 class UDF_Column(ManyToManyColumn):
     prefix = 'udf-'
-    def __init__(self,udf,**kwargs):
+    def __init__(self, udf, accessor, accessor_type=['Field','FieldValue'][0], footer_count=False, **kwargs):
         self.udf = udf
-        super().__init__(accessor='fieldvalues', verbose_name=udf.field_name, orderable=True, default='',
-                         filter=lambda qs: qs.filter(field__id=udf.id, is_current=True), **kwargs)
+
+        self.accessor = accessor
+        if accessor_type == 'Field':
+            self.field = 'id'
+            col_name = '{} (Default)'.format(udf.field_name)
+            udf_filter = self.field_filter
+        else: # FieldValue
+            self.field = 'field__id'
+            col_name = udf.field_name
+            udf_filter = self.fieldvalues_filter
+
+        if footer_count:
+            footer = self.footer_filter
+        else:
+            footer=None
+
+        super().__init__(accessor=accessor, verbose_name=col_name, orderable=True, default='',
+                         filter=udf_filter, footer=footer, **kwargs)
+
+    def field_filter(self,qs):
+        x = qs.filter(**{self.field: self.udf.id})
+        if x:
+            return x.last().field_default_value
+        return Field.objects.none()
+
+    def fieldvalues_filter(self, qs):
+        return qs.filter(**{self.field: self.udf.id, 'is_current': True})
+
+    def footer_filter(self,table):
+        # quite expensive to run
+        udf_vals = [getattr(row, self.accessor).filter(**{self.field:self.udf.id}) for row in table.data]
+        return len([val for val in udf_vals if val])
 
 
 class SearchTable(ColumnShiftTable):
@@ -118,18 +148,6 @@ class PartTable(SearchTable):
         udf_cols = [col for col in self.sequence if col.startswith(UDF_Column.prefix) \
                                                  or col.startswith('searchcol-'+UDF_Column.prefix)]
         self.column_default_show = self.Meta.base_shown_cols + search_cols
-
-        # Uncomment to (a) show all UDF's with data, (b) remove UDF cols with no data
-        # get a list of unique UDF id's present in query-results
-        # if an ID is not present, then that UDF column will have zero entries.
-        actual_udf_IDs = set(table_data.values_list('fieldvalues__field__id', flat=True))
-        udf_boundcols = [bc for bc in self.columns if bc.name.startswith(UDF_Column.prefix)]
-        for bound_col in udf_boundcols:                          # for all the table's UDF columns
-            if bound_col.column.udf.id in actual_udf_IDs:        # if the id is present, then it has has data
-                pass #self.column_default_show.append(bound_col.name)  # and the column should be shown by default
-            else:                                                # ELSE
-                bound_col.column.visible = False                 # Remove column from the interface, but will exist in export.
-                bound_col.column.exclude_from_export = True      # Removes column from the export list!
 
 class BuildTable(SearchTable):
     class Meta(SearchTable.Meta):
