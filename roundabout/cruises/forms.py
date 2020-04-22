@@ -20,6 +20,8 @@
 """
 
 from django import forms
+from django.utils import timezone
+from bootstrap_datepicker_plus import DateTimePickerInput
 
 from .models import *
 
@@ -34,3 +36,35 @@ class VesselForm(forms.ModelForm):
             'max_speed': 'Max speed (m/s)',
             'max_draft': 'Max draft (m)',
         }
+
+
+class CruiseForm(forms.ModelForm):
+    # Add custom date fields
+    cruise_start_date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": False,
+            }
+        ),
+        initial=timezone.now,
+        help_text='Set all date/times to UTC time zone.',
+    )
+
+    cruise_stop_date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": False,
+            }
+        ),
+        initial=timezone.now,
+        help_text='Set all date/times to UTC time zone.',
+    )
+
+    class Meta:
+        model = Cruise
+        fields = '__all__'
+        

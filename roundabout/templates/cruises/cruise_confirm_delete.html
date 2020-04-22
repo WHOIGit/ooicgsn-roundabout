@@ -1,4 +1,4 @@
-"""
+<!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
 # This file is part of the Roundabout Database project ("RDB" or
@@ -17,22 +17,23 @@
 # You should have received a copy of the GNU General Public License
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
-"""
+-->
 
-from django.urls import path
+{% extends 'base.html' %}
+{% block title %}{{object_name}} Confirm delete?{% endblock %}
 
-from . import views
-
-app_name = 'cruises'
-urlpatterns = [
-    # Cruises
-    path('', view=views.CruiseListView.as_view(), name='cruises_home'),
-    path('add/', view=views.CruiseCreateView.as_view(), name='cruises_add'),
-    path('edit/<int:pk>/', view=views.CruiseUpdateView.as_view(), name='cruises_update'),
-    path('delete/<int:pk>/', view=views.CruiseDeleteView.as_view(), name='cruises_delete'),
-    # Vessels
-    path('vessels/', view=views.VesselListView.as_view(), name='vessels_home'),
-    path('vessels/add/', view=views.VesselCreateView.as_view(), name='vessels_add'),
-    path('vessels/edit/<int:pk>/', view=views.VesselUpdateView.as_view(), name='vessels_update'),
-    path('vessels/delete/<int:pk>/', view=views.VesselDeleteView.as_view(), name='vessels_delete'),
-]
+{% block content %}
+    <div id="content-container" class="container p-none">
+        <div class="side-p">
+            <h3>Are you sure?</h3>
+            <p>You're about to delete {{ object }}. Please confirm.</p>
+            <form action="" method="post">
+                {% csrf_token %}
+                <input class="btn btn-link"
+                       type="button" value="Cancel"
+                       onclick="window.history.go(-1);"/>
+                <input class="btn btn-danger" type="submit" value="Confirm"/>
+            </form>
+        </div>
+    </div>
+{% endblock %}

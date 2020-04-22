@@ -25,9 +25,9 @@ from django.views.generic import View, DetailView, ListView, UpdateView, CreateV
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 from .models import *
-from .forms import VesselForm
+from .forms import VesselForm, CruiseForm
 
-# Printer functionality
+# Vessel CBV views
 # ----------------------
 
 class VesselListView(LoginRequiredMixin, ListView):
@@ -61,4 +61,41 @@ class VesselDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Vessel
     success_url = reverse_lazy('cruises:vessels_home')
     permission_required = 'cruises.delete_vessel'
+    redirect_field_name = 'home'
+
+
+# Cruise CBV views
+# ----------------------
+
+class CruiseListView(LoginRequiredMixin, ListView):
+    model = Cruise
+    template_name = 'cruises/cruise_list.html'
+    context_object_name = 'cruises'
+
+
+class CruiseCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    model = Cruise
+    form_class = CruiseForm
+    context_object_name = 'cruise'
+    permission_required = 'cruises.add_cruise'
+    redirect_field_name = 'home'
+
+    def get_success_url(self):
+        return reverse('cruises:cruises_home', )
+
+class CruiseUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = Cruise
+    form_class = CruiseForm
+    context_object_name = 'cruise'
+    permission_required = 'cruises.change_cruise'
+    redirect_field_name = 'home'
+
+    def get_success_url(self):
+        return reverse('cruises:cruises_home', )
+
+
+class CruiseDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = Cruise
+    success_url = reverse_lazy('cruises:cruises_home')
+    permission_required = 'cruises.delete_cruise'
     redirect_field_name = 'home'

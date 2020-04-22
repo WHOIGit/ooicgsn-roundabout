@@ -1,4 +1,7 @@
 from django.db import models
+from mptt.models import TreeForeignKey
+
+from roundabout.locations.models import Location
 
 # Cruises app models
 
@@ -30,13 +33,16 @@ class Vessel(models.Model):
 
 class Cruise(models.Model):
     CUID = models.CharField(max_length=20)
-    vessel = models.ForeignKey(Vessel, related_name='cruises', on_delete=models.SET_NULL, null=True)
+    vessel = models.ForeignKey(Vessel, related_name='cruises',
+                               on_delete=models.SET_NULL, null=True)
     cruise_start_date = models.DateTimeField()
     cruise_stop_date = models.DateTimeField()
     note = models.TextField(null=False, blank=True)
+    location = TreeForeignKey(Location, related_name='cruises',
+                              on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
-        ordering = ('cruise_start_date',)
+        ordering = ('-cruise_start_date',)
 
     def __str__(self):
         return self.CUID
