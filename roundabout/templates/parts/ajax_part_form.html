@@ -147,6 +147,7 @@
                   <table class="table table-tight calibration-form">
                     <thead>
                         <th>Name</th>
+                        <th>Notes</th>
                     </thead>
                     <tbody>
                         {{ calibration_form.management_form }}
@@ -169,6 +170,7 @@
 
                         <tr>
                             <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.calibration_name }}</td>
+                            <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.notes }}</td>
                         </tr>
                       {% endfor %}
                     </tbody>

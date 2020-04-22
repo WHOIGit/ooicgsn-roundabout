@@ -492,20 +492,33 @@
             <ul class="list-group">
                 {% for event in inventory_item.calibration_events.all %}
                     <li class="list-group-item">
-                        <a class="collapsed" data-toggle="collapse" href="#event-{{ event.id }}" aria-expanded="false" aria-controls="event-{{ event.id }}">
+                        <a  class="collapsed" 
+                            data-toggle="collapse" 
+                            href="#event-{{ event.id }}" 
+                            aria-expanded="false" 
+                            aria-controls="event-{{ event.id }}"
+                        >
                             {{ event.calibration_date|date:"n/j/y" }}
                         </a>
-                        <a data-toggle="collapse" class="collapsed text-right" href="#event-{{ event.id }}" aria-controls="event-{{ event.id }}" aria-expanded="false" role="button">
+                        <a  data-toggle="collapse" 
+                            class="collapsed text-right" 
+                            href="#event-{{ event.id }}" 
+                            aria-controls="event-{{ event.id }}" 
+                            aria-expanded="false" 
+                            role="button"
+                        >
                             <i class="fa" aria-hidden="true"></i>
                             <span class="sr-only">Expand/Collapse Calibration {{ event.calibration_date }}</span>
                         </a>
                         <div class = 'ajax-detail-link pull-right'>
                             <a  href="#"
-                            class="btn btn-primary btn-sm float-left mr-2"
-                            role="button"
-                            data-detail-url="{% url 'calibrations:event_form' event.id %}"
-                            data-node-id="{{ event.id }}"
-                            data-node-type="detail">Edit Coefficients</a>
+                                class="btn btn-primary btn-sm float-left mr-2"
+                                role="button"
+                                data-detail-url="{% url 'calibrations:event_form' event.id %}"
+                                data-node-id="{{ event.id }}"
+                                data-node-type="detail">
+                                    Edit Coefficients
+                            </a>
                         </div>
                         <div class="collapse mt-3" id="event-{{ event.id }}">
                             <hr>
@@ -514,7 +527,15 @@
                             <p>Last Updated by: {{ event.user_draft.username }}</p>
                             <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
                                 <li class="nav-item">
-                                <a class="nav-link active" id="documentation-tab" data-toggle="tab" href="#coefficients" role="tab" aria-controls="coefficients" aria-selected="false">Coefficients</a>
+                                    <a  class="nav-link active" 
+                                        id="documentation-tab" 
+                                        data-toggle="tab" 
+                                        href="#coefficients" 
+                                        role="tab" 
+                                        aria-controls="coefficients" 
+                                        aria-selected="false">
+                                            Coefficients
+                                    </a>
                                 </li>
                             </ul>
                             <div class="tab-content" id="inventory-tabs">
@@ -531,12 +552,12 @@
                                                         <td> 
                                                             <li class = 'list-group-item'>
                                                                 <a  class="collapsed" 
-                                                                data-toggle="collapse" 
-                                                                href="#coeff-{{ coeff.grouper }}" 
-                                                                aria-expanded="false" 
-                                                                aria-controls="coeff-{{ coeff.grouper }}"
+                                                                    data-toggle="collapse" 
+                                                                    href="#coeff-{{ coeff.grouper }}" 
+                                                                    aria-expanded="false" 
+                                                                    aria-controls="coeff-{{ coeff.grouper }}"
                                                                 >
-                                                                    {{ coeff.grouper }}
+                                                                    <b>{{ coeff.grouper }}</b>
                                                                 </a>
                                                                 <a  data-toggle="collapse" 
                                                                     class="collapsed text-right" 
@@ -549,16 +570,15 @@
                                                                     <span class="sr-only">Expand/Collapse Calibration {{ coeff.grouper }}</span>
                                                                 </a>
                                                                 <div class="collapse mt-1" id="coeff-{{ coeff.grouper }}">
+                                                                    <p class='font-weight-light'><b>Notes:</b> {{ coeff.grouper.notes }}</p>
                                                                     <table class="table table-tight">
                                                                         <thead>
-                                                                            <th>Value</th>
-                                                                            <th>Notes</th>
+                                                                            <th>Value(s)</th>
                                                                         </thead>
                                                                         <tbody>
                                                                             {% for val in coeff.list %}
                                                                                 <tr>
                                                                                     <td>{{val.value}}</td>
-                                                                                    <td>{{val.notes}}</td>
                                                                                 </tr>
                                                                             {% endfor %}
                                                                         </tbody>

@@ -54,7 +54,7 @@ class Part(models.Model):
     note = models.TextField(blank=True)
     custom_fields = JSONField(blank=True, null=True)
     user_defined_fields = models.ManyToManyField(Field, blank=True, related_name='parts')
-    cal_dec_places = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(20)], null=False, blank=True, default=0)
+    cal_dec_places = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(20)], null=False, blank=True, default=8)
 
     class Meta:
         ordering = ['name']

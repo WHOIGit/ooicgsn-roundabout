@@ -48,7 +48,6 @@
                   <th>Calibration Name</th>
                   <th>Calibration Coefficient</th>
                   <th>Coeffcient Notation Format</th>
-                  <th>Addtl. Notes</th>
               </thead>
               <tbody>
                   {% if coefficient_form.errors %}
@@ -68,7 +67,6 @@
                         <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.coefficient_name }}</td>
                         <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.value }}</td>
                         <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.notation_format }}</td>
-                        <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.notes }}</td>
                     </tr>
                 {% endfor %}
               </tbody>
@@ -126,8 +124,16 @@
         $('.calibration-form tbody tr').formset({
             prefix: 'coefficient_values',
             addText: 'Add Coefficient',
-            deleteText: 'remove',
+            deleteText: 'Remove',
+            added: function(row) {
+                let remove_button = row.find('.delete-row');
+
+                // Right-justify generated formset row remover 
+                remove_button.addClass('pull-right');
+            }
         });
+
+        $('.delete-row').addClass('pull-right');
     })
 
 </script>

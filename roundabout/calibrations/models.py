@@ -12,6 +12,7 @@ from django.utils.translation import gettext_lazy as _
 # Tracks Calibrations across Parts
 class CoefficientName(models.Model):
     calibration_name = models.CharField(max_length=255, unique=False, db_index=True)
+    notes = models.TextField(blank=True)
     part = models.ForeignKey(Part, related_name='coefficient_names', on_delete=models.CASCADE, null=True)
     def __str__(self):
         return self.calibration_name
@@ -59,7 +60,6 @@ class CoefficientValue(models.Model):
         ("std", "Standard"),
     )
     value = models.CharField(max_length = 20, unique = False, db_index = False, validators = [validate_coeff_val])
-    notes = models.TextField(blank=True)
     notation_format = models.CharField(max_length=3, choices=NOTATION_FORMAT, null=False, blank=False, default="std")
     created_at = models.DateTimeField(default=timezone.now)
     coefficient_name = models.ForeignKey(CoefficientName, related_name='coefficient_values', on_delete=models.CASCADE, null=True)
