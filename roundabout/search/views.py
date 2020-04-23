@@ -283,6 +283,7 @@ class InventoryTableView(GenericSearchTableView):
     def get_avail_fields(self):
         avail_fields = [dict(value="part__name",              text="Name", legal_lookups='STR_LOOKUPS'),
                         dict(value="serial_number",  text="Serial Number", legal_lookups='STR_LOOKUPS'),
+                        dict(value="location__name",      text="Location", legal_lookups='STR_LOOKUPS'),
                         dict(value="build__assembly__name",  text="Build", legal_lookups='STR_LOOKUPS'),
                         dict(value="revision__note",          text="Note", legal_lookups='STR_LOOKUPS'),
                         dict(value="created_at",      text="Date Created", legal_lookups='DATE_LOOKUPS'),
@@ -293,11 +294,6 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="part__part_type__name",    text="Part Type",   legal_lookups='STR_LOOKUPS'),
                         dict(value="part__unit_cost",          text="Unit Cost",   legal_lookups='NUM_LOOKUPS'),
                         dict(value="part__refurbishment_cost", text="Refurb Cost", legal_lookups='NUM_LOOKUPS'),
-
-                        dict(value=None, text="--Location--", disabled=True),
-                        dict(value="location__name",          text="Name",          legal_lookups='STR_LOOKUPS'),
-                        dict(value="location__location_type", text="Location Type", legal_lookups='STR_LOOKUPS'),
-                        dict(value="location__root_type",     text="Location Root", legal_lookups='STR_LOOKUPS'),
 
                         dict(value=None, text="--User-Defined-Fields--", disabled=True),
                         dict(value="fieldvalues__field__field_name", text="UDF Name",  legal_lookups='STR_LOOKUPS'),
@@ -364,6 +360,7 @@ class BuildTableView(GenericSearchTableView):
         avail_fields = [dict(value="assembly__name",                text="Name", legal_lookups='STR_LOOKUPS'),
                         dict(value="build_number",          text="Build Number", legal_lookups='STR_LOOKUPS'),
                         dict(value="assembly__assembly_type__name", text="Type", legal_lookups='STR_LOOKUPS'),
+                        dict(value="location__name",            text="Location", legal_lookups='STR_LOOKUPS'),
                         dict(value="assembly__description",  text="Description", legal_lookups='STR_LOOKUPS'),
                         dict(value="build_notes",                  text="Notes", legal_lookups='STR_LOOKUPS'),
                         dict(value="detail",                      text="Detail", legal_lookups='STR_LOOKUPS'),
@@ -372,11 +369,7 @@ class BuildTableView(GenericSearchTableView):
                         dict(value="flag",                   text="is-flagged?", legal_lookups='BOOL_LOOKUPS'),
                         dict(value="created_at",            text="Date Created", legal_lookups='DATE_LOOKUPS'),
                         dict(value="updated_at",           text="Date Modified", legal_lookups='DATE_LOOKUPS'),
-
-                        dict(value=None, text="--Location--", disabled=True),
-                        dict(value="location__name",          text="Name", legal_lookups='STR_LOOKUPS'),
-                        dict(value="location__location_type", text="Type", legal_lookups='STR_LOOKUPS'),
-                        dict(value="location__root_type",     text="Root", legal_lookups='STR_LOOKUPS'),]
+                        ]
         return avail_fields
 
     def get_queryset(self):
