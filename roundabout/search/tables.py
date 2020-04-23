@@ -38,14 +38,12 @@ class UDF_Column(ManyToManyColumn):
     prefix = 'udf-'
     def __init__(self, udf, accessor, accessor_type=['Field','FieldValue'][0], footer_count=False, **kwargs):
         self.udf = udf
-
         self.accessor = accessor
+        self.accessor_type = accessor_type
         if accessor_type == 'Field':
-            self.field = 'id'
             col_name = '{} (Default)'.format(udf.field_name)
             udf_filter = self.field_filter
         else: # FieldValue
-            self.field = 'field__id'
             col_name = udf.field_name
             udf_filter = self.fieldvalues_filter
 
@@ -58,17 +56,17 @@ class UDF_Column(ManyToManyColumn):
                          filter=udf_filter, footer=footer, **kwargs)
 
     def field_filter(self,qs):
-        x = qs.filter(**{self.field: self.udf.id})
-        if x:
-            return x.last().field_default_value
-        return Field.objects.none()
+        qs = qs.filter(id=self.udf.id)
+        if qs: return qs[0].field_default_value
+        return qs
 
     def fieldvalues_filter(self, qs):
-        return qs.filter(**{self.field: self.udf.id, 'is_current': True})
+        return qs.filter(field__id=self.udf.id, is_current=True)
 
     def footer_filter(self,table):
-        # quite expensive to run
-        udf_vals = [getattr(row, self.accessor).filter(**{self.field:self.udf.id}) for row in table.data]
+        # quite expensive to run. Activated with GET flag "show-udf-footer-count"
+        field = 'id' if self.accessor_type=='Field' else 'field__id'  # for 'FieldValue'
+        udf_vals = [getattr(row, self.accessor).filter(**{field:self.udf.id}) for row in table.data]
         return len([val for val in udf_vals if val])
 
 
@@ -76,6 +74,8 @@ class SearchTable(ColumnShiftTable):
     class Meta:
         template_name = "django_tables2/bootstrap4.html"
         base_shown_cols = []
+        attrs = {'style':'display: block; overflow-x: auto;'}
+        #attrs = {'style':'display: block; overflow-x: auto; white-space: nowrap;'}
 
     def set_column_default_show(self, table_data):
         if not self.Meta.base_shown_cols:
@@ -95,7 +95,7 @@ class InventoryTable(SearchTable):
         base_shown_cols = ['serial_number', 'part__name', 'location__name']
 
     # default columns
-    serial_number = Column(verbose_name='Serial Number',
+    serial_number = Column(verbose_name='Serial Number', attrs={'style':'white-space: nowrap;'},
               linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('pk')]))
     part__name = Column(verbose_name='Name')
     location__name = Column(verbose_name='Location')
@@ -135,9 +135,9 @@ class PartTable(SearchTable):
         fields = ["part_number", 'name', 'part_type__name']
         base_shown_cols = fields
 
-    part_number = tables.Column(verbose_name='Part Number',
+    part_number = Column(verbose_name='Part Number', attrs={'style':'white-space: nowrap;'},
                    linkify=dict(viewname='parts:parts_detail',args=[tables.A('pk')]))
-    part_type__name = tables.Column(verbose_name='Type')
+    part_type__name = Column(verbose_name='Type')
 
     def render_name(self,record):
         return record.friendly_name_display()
@@ -153,16 +153,17 @@ class BuildTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Build
         action_accessors = ['actions__latest__action_type', 'actions__latest__user__name', 'actions__latest__created_at','actions__latest__location__name','actions__latest__detail']
-        fields = ['build','assembly__name','build_number','assembly__assembly_type__name','location__name','is_deployed','time_at_sea']
-        base_shown_cols = ['build','assembly__assembly_type__name','location__name','is_deployed','time_at_sea', 'actions__latest__action_type']
+        fields = ['build','assembly__name','build_number','assembly__assembly_type__name','location__name','time_at_sea','is_deployed']
+        base_shown_cols = ['build','assembly__assembly_type__name','location__name','time_at_sea','is_deployed']
 
-    build=tables.Column(empty_values=(), attrs={"th": {"style": "white-space:nowrap;"}}, order_by=('assembly__assembly_number','build_number'))
-    location__name = tables.Column(verbose_name='Location', accessor='location__name')
-    assembly__assembly_type__name = tables.Column(verbose_name='Type')
+    build=Column(empty_values=(), order_by=('assembly__assembly_number','build_number'), attrs={'style':'white-space: nowrap;'})
+    location__name = Column(verbose_name='Location', accessor='location__name')
+    assembly__assembly_type__name = Column(verbose_name='Type')
 
     def render_build(self, record):
         item_url = reverse("builds:builds_detail", args=[record.pk])
-        html_string = '<a href={}>{}-{}</a>'.format(item_url, record.assembly.assembly_number, record.build_number.replace('Build ',''))
+        ass_num = record.assembly.assembly_number or record.assembly.name
+        html_string = '<a href={}>{}-{}</a>'.format(item_url, ass_num, record.build_number.replace('Build ',''))
         return format_html(html_string)
     def value_build(self,record):
         return '{}-{}'.format(record.assembly.assembly_number, record.build_number.replace('Build ',''))
@@ -181,6 +182,7 @@ class AssemblyTable(SearchTable):
         fields = ['assembly_number', 'name', 'assembly_type__name', 'description']
         base_shown_cols = ['assembly_number', 'name', 'assembly_type__name']
 
-    assembly_number = tables.Column(linkify=dict(viewname='assemblies:assembly_detail',args=[tables.A('pk')]))
-
+    assembly_number = Column(verbose_name='Assembly Number', attrs={'style':'white-space: nowrap;'},
+        linkify=dict(viewname='assemblies:assembly_detail',args=[tables.A('pk')]))
+    assembly_type__name = Column(verbose_name='Type')
 
