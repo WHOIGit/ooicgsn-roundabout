@@ -19,6 +19,7 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import View, DetailView, ListView, UpdateView, CreateView, DeleteView, TemplateView, FormView
@@ -26,6 +27,138 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 
 from .models import *
 from .forms import VesselForm, CruiseForm
+from common.util.mixins import AjaxFormMixin
+
+# AJAX functions for Forms and Navtree
+# ------------------------------------------------------------------------------
+
+# Main Navtree function
+def load_cruises_navtree(request):
+    cruises = Cruise.objects.all()
+    return render(request, 'cruises/ajax_cruise_navtree.html', {'cruises': cruises})
+
+
+# Cruise Base Views
+
+class CruiseHomeView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+    template_name = 'cruises/cruise_list.html'
+    context_object_name = 'cruises'
+    permission_required = 'cruises.view_cruise'
+    redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super(CruiseHomeView, self).get_context_data(**kwargs)
+        context.update({
+            'node_type': 'cruises'
+        })
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+
+class CruiseDetailView(LoginRequiredMixin, DetailView):
+    model = Cruise
+    context_object_name = 'cruise'
+    template_name='cruises/cruise_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(CruiseDetailView, self).get_context_data(**kwargs)
+        context.update({
+            'node_type': 'cruises'
+        })
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+
+# Cruise CBV Views for CRUD operations and menu Actions
+# ------------------------------------------------------------------------------
+# AJAX Views
+
+class CruiseAjaxDetailView(LoginRequiredMixin, DetailView):
+    model = Cruise
+    context_object_name = 'cruise'
+    template_name='cruises/ajax_cruise_detail.html'
+
+
+# Create view for assemblies
+class CruiseAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
+    model = Cruise
+    form_class = CruiseForm
+    context_object_name = 'cruise'
+    template_name='cruises/ajax_cruise_form.html'
+
+    def form_valid(self, form):
+        self.object = form.save()
+        response = HttpResponseRedirect(self.get_success_url())
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def get_success_url(self):
+        return reverse('cruises:ajax_cruises_detail', args=(self.object.id,))
+
+
+# Update view for builds
+class CruiseAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
+    model = Cruise
+    form_class = CruiseForm
+    context_object_name = 'cruise'
+    template_name='cruises/ajax_cruise_form.html'
+
+    def form_valid(self, form):
+        self.object = form.save()
+        response = HttpResponseRedirect(self.get_success_url())
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def get_success_url(self):
+        return reverse('cruises:ajax_cruises_detail', args=(self.object.id,))
+
+
+class CruiseAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = Cruise
+    template_name = 'cruises/ajax_cruise_confirm_delete.html'
+    permission_required = 'cruises.delete_cruise'
+    redirect_field_name = 'home'
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        data = {
+            'message': "Successfully submitted form data.",
+            'parent_id': self.object.cruise_start_date.year,
+            'parent_type': 'year_group',
+            'object_type': self.object.get_object_type(),
+        }
+        self.object.delete()
+
+        return JsonResponse(data)
+
 
 # Vessel CBV views
 # ----------------------

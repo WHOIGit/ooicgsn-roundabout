@@ -42,7 +42,7 @@ def load_locations_navtree(request):
     return render(request, 'locations/ajax_location_navtree.html', {'locations': locations})
 
 
-# Mooring CBV Views for CRUD operations and menu Actions
+# Location CBV Views for CRUD operations and menu Actions
 # ------------------------------------------------------------------------------
 # AJAX Views
 

@@ -26,7 +26,14 @@ from . import views
 app_name = 'cruises'
 urlpatterns = [
     # Cruises
-    path('', view=views.CruiseListView.as_view(), name='cruises_home'),
+    path('', view=views.CruiseHomeView.as_view(), name='cruises_home'),
+    path('<int:pk>/', view=views.CruiseDetailView.as_view(), name='cruises_detail'),
+    # AJAX paths
+    path('ajax/load-navtree/', views.load_cruises_navtree, name='ajax_load_cruises_navtree'),
+    path('ajax/detail/<int:pk>/', view=views.CruiseAjaxDetailView.as_view(), name='ajax_cruises_detail'),
+    path('ajax/add/', view=views.CruiseAjaxCreateView.as_view(), name='ajax_cruises_add'),
+    path('ajax/edit/<int:pk>/', view=views.CruiseAjaxUpdateView.as_view(), name='ajax_cruises_update'),
+    path('ajax/delete/<int:pk>/', view=views.CruiseAjaxDeleteView.as_view(), name='ajax_cruises_delete'),
     path('add/', view=views.CruiseCreateView.as_view(), name='cruises_add'),
     path('edit/<int:pk>/', view=views.CruiseUpdateView.as_view(), name='cruises_update'),
     path('delete/<int:pk>/', view=views.CruiseDeleteView.as_view(), name='cruises_delete'),

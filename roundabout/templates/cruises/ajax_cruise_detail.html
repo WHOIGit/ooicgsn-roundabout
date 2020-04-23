@@ -1,0 +1,75 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+{% load common_tags %}
+
+<div class="card-header">
+    <h3>Cruise ID: {{ cruise.CUID }}</h3>
+    <h5>Destination: {{ cruise.location }} </h5>
+</div>
+
+<div class="card-body">
+
+
+    <p>Cruise Start Date: {{ cruise.cruise_start_date }}</p>
+    <p>Cruise Stop Date: {{ cruise.cruise_stop_date }}</p>
+    <p>Vessel: {{ cruise.vessel }}
+    <p>Notes: {{ cruise.note }}
+
+    {% if deployments.exists %}
+        <h5>Deployment History for this Cruise</h5>
+
+        {% regroup deployments by build.assembly as build_list %}
+
+
+        {% for build in build_list %}
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">Assembly: {{ build.grouper }}
+
+        <ul class="list-group list-group-flush">
+            {% for deployment in build.list %}
+                <li class="list-group-item">
+
+                    {% include "builds/deployment_detail.html" with deployment=deployment %}
+
+                </li>
+            {% endfor %}
+            </ul>
+         </li></ul>
+        {% endfor %}
+
+    {% endif %}
+
+
+
+
+
+<div class="mt-3 ajax-btn">
+    <a href="#" data-update-url="{% url 'cruises:ajax_cruises_update' cruise.id %}" role="button" class="btn btn-primary">Edit Cruise</a>
+
+    <a href="#" data-update-url="{% url 'cruises:ajax_cruises_delete' cruise.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
+
+</div>
+
+
+{% block javascript %}
+
+{% endblock javascript %}

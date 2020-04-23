@@ -28,7 +28,7 @@ class Vessel(models.Model):
         ordering = ('vessel_name',)
 
     def __str__(self):
-        return self.vessel_name
+        return '%s %s' % (self.vessel_designation, self.vessel_name)
 
 
 class Cruise(models.Model):
@@ -46,3 +46,7 @@ class Cruise(models.Model):
 
     def __str__(self):
         return self.CUID
+
+    # method to set the object_type variable to send to Javascript AJAX functions
+    def get_object_type(self):
+        return 'cruises'
