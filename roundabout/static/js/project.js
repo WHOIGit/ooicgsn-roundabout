@@ -126,6 +126,8 @@ $(document).ready(function() {
                   var bookmarkURL = '/assemblies/assemblyrevision/' + itemID;
               } else if (nodeType == 'part_type') {
                   var bookmarkURL = '/parts/part_type/' + itemID;
+              } else if (nodeType == 'cruises_by_year') {
+                  var bookmarkURL = '/cruises/cruises-by-year/' + itemID;
               } else {
                  var bookmarkURL = '/' + nodeType + '/' + itemID
               }

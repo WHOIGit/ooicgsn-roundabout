@@ -39,35 +39,34 @@ def load_cruises_navtree(request):
 
 
 # Cruise Base Views
-
+# Landing page template view to contain AJAX templates and handle direct links
 class CruiseHomeView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
-    template_name = 'cruises/cruise_list.html'
+    template_name = 'cruises/cruise_home.html'
     context_object_name = 'cruises'
     permission_required = 'cruises.view_cruise'
     redirect_field_name = 'home'
 
     def get_context_data(self, **kwargs):
         context = super(CruiseHomeView, self).get_context_data(**kwargs)
+        cruise_pk = kwargs.pop('pk', '')
+        cruise_year = kwargs.pop('cruise_year', '')
+
+        cruise = None
+        if cruise_pk:
+            try:
+                cruise = Cruise.objects.get(id=cruise_pk)
+            except Cruise.DoesNotExist:
+                pass
+
+        cruises = None
+        if cruise_year:
+            cruises = Cruise.objects.filter(cruise_start_date__year=cruise_year)
+
         context.update({
-            'node_type': 'cruises'
-        })
-        return context
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        context = self.get_context_data(object=self.object)
-        return self.render_to_response(context)
-
-
-class CruiseDetailView(LoginRequiredMixin, DetailView):
-    model = Cruise
-    context_object_name = 'cruise'
-    template_name='cruises/cruise_detail.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(CruiseDetailView, self).get_context_data(**kwargs)
-        context.update({
-            'node_type': 'cruises'
+            'cruise': cruise,
+            'cruises': cruises,
+            'node_type': 'cruises',
+            'cruise_year': cruise_year,
         })
         return context
 
@@ -87,7 +86,23 @@ class CruiseAjaxDetailView(LoginRequiredMixin, DetailView):
     template_name='cruises/ajax_cruise_detail.html'
 
 
-# Create view for assemblies
+class CruiseAjaxCruisesByYearView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+    template_name = 'cruises/ajax_cruise_by_year.html'
+    context_object_name = 'cruises'
+    permission_required = 'cruises.view_cruise'
+    redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super(CruiseAjaxCruisesByYearView, self).get_context_data(**kwargs)
+        cruise_year = self.kwargs['cruise_year']
+        cruises = Cruise.objects.filter(cruise_start_date__year=cruise_year)
+        context.update({
+            'cruises': cruises
+        })
+        return context
+
+
+# Create view for Cruises
 class CruiseAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
     model = Cruise
     form_class = CruiseForm
@@ -194,41 +209,4 @@ class VesselDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Vessel
     success_url = reverse_lazy('cruises:vessels_home')
     permission_required = 'cruises.delete_vessel'
-    redirect_field_name = 'home'
-
-
-# Cruise CBV views
-# ----------------------
-
-class CruiseListView(LoginRequiredMixin, ListView):
-    model = Cruise
-    template_name = 'cruises/cruise_list.html'
-    context_object_name = 'cruises'
-
-
-class CruiseCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
-    model = Cruise
-    form_class = CruiseForm
-    context_object_name = 'cruise'
-    permission_required = 'cruises.add_cruise'
-    redirect_field_name = 'home'
-
-    def get_success_url(self):
-        return reverse('cruises:cruises_home', )
-
-class CruiseUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
-    model = Cruise
-    form_class = CruiseForm
-    context_object_name = 'cruise'
-    permission_required = 'cruises.change_cruise'
-    redirect_field_name = 'home'
-
-    def get_success_url(self):
-        return reverse('cruises:cruises_home', )
-
-
-class CruiseDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
-    model = Cruise
-    success_url = reverse_lazy('cruises:cruises_home')
-    permission_required = 'cruises.delete_cruise'
     redirect_field_name = 'home'

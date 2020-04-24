@@ -748,6 +748,7 @@ class AssemblyTypeDeleteView(LoginRequiredMixin, PermissionRequiredMixin, Delete
     permission_required = 'assemblies.delete_assembly'
     redirect_field_name = 'home'
 
+
 # Direct Detail view for Assembly Types
 class AssemblyTypeDetailView(LoginRequiredMixin, DetailView):
     model = AssemblyType
@@ -765,6 +766,7 @@ class AssemblyTypeDetailView(LoginRequiredMixin, DetailView):
         self.object = self.get_object()
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
+
 
 # AJAX Views
 class AssemblyTypeAjaxDetailView(LoginRequiredMixin, DetailView):

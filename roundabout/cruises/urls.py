@@ -27,16 +27,15 @@ app_name = 'cruises'
 urlpatterns = [
     # Cruises
     path('', view=views.CruiseHomeView.as_view(), name='cruises_home'),
-    path('<int:pk>/', view=views.CruiseDetailView.as_view(), name='cruises_detail'),
+    path('<int:pk>/', view=views.CruiseHomeView.as_view(), name='cruises_home'),
+    path('cruises-by-year/<int:cruise_year>/', view=views.CruiseHomeView.as_view(), name='cruises_home'),
     # AJAX paths
     path('ajax/load-navtree/', views.load_cruises_navtree, name='ajax_load_cruises_navtree'),
     path('ajax/detail/<int:pk>/', view=views.CruiseAjaxDetailView.as_view(), name='ajax_cruises_detail'),
+    path('ajax/cruise-by-year/<int:cruise_year>/', view=views.CruiseAjaxCruisesByYearView.as_view(), name='ajax_cruises_by_year'),
     path('ajax/add/', view=views.CruiseAjaxCreateView.as_view(), name='ajax_cruises_add'),
     path('ajax/edit/<int:pk>/', view=views.CruiseAjaxUpdateView.as_view(), name='ajax_cruises_update'),
     path('ajax/delete/<int:pk>/', view=views.CruiseAjaxDeleteView.as_view(), name='ajax_cruises_delete'),
-    path('add/', view=views.CruiseCreateView.as_view(), name='cruises_add'),
-    path('edit/<int:pk>/', view=views.CruiseUpdateView.as_view(), name='cruises_update'),
-    path('delete/<int:pk>/', view=views.CruiseDeleteView.as_view(), name='cruises_delete'),
     # Vessels
     path('vessels/', view=views.VesselListView.as_view(), name='vessels_home'),
     path('vessels/add/', view=views.VesselCreateView.as_view(), name='vessels_add'),
