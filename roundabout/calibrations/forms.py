@@ -31,7 +31,7 @@ class CalibrationAddForm(forms.ModelForm):
 class CoefficientValueForm(forms.ModelForm):
     class Meta:
         model = CoefficientValue
-        fields = ['coefficient_name','value','notation_format']
+        fields = ['coefficient_name', 'value', 'notation_format']
         labels = {
             'coefficient_name': 'Calibration Name',
             'value': 'Calibration Coefficient',
@@ -41,16 +41,16 @@ class CoefficientValueForm(forms.ModelForm):
         if 'inv_id' in kwargs:
             self.inv_id = kwargs.pop('inv_id')
         super(CoefficientValueForm, self).__init__(*args, **kwargs)
-        if hasattr(self,'inv_id'):
-            inv_inst = Inventory.objects.get(id=self.inv_id)
-            self.fields['coefficient_name'].queryset = CoefficientName.objects.filter(part=inv_inst.part)
+        if hasattr(self, 'inv_id'):
+            inv_inst = Inventory.objects.get(id = self.inv_id)
+            self.fields['coefficient_name'].queryset = CoefficientName.objects.filter(part = inv_inst.part)
 
 # Coefficient form instance generator
 CoefficientFormset = inlineformset_factory(
     CalibrationEvent, 
     CoefficientValue, 
     form=CoefficientValueForm,
-    fields=('coefficient_name','value','notation_format'), 
+    fields=('coefficient_name', 'value', 'notation_format'), 
     extra=1, 
     can_delete=True
     )

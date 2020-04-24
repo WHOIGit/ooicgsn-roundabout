@@ -44,16 +44,14 @@ class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         self.object = form.save()
         coefficient_form.instance = self.object
         for form in coefficient_form:
-            try:
-                form_coeff_val = form.cleaned_data.get('value')
-                form_notation_format = form.cleaned_data.get('notation_format')
-                part_dec_places = inv_inst.part.cal_dec_places
-                sigfig_formatted_value = round(form_coeff_val, decimals = part_dec_places, notation = form_notation_format)
-            except:
-                print('coeff_val_formV__create_error')
-                raise validators.ValidationError(
-                    ('Invalid value')
-                )
+            form_coeff_val = form.cleaned_data.get('value')
+            form_notation_format = form.cleaned_data.get('notation_format')
+            part_dec_places = inv_inst.part.cal_dec_places
+            calibration_name = form.cleaned_data.get('coefficient_name')
+            if calibration_name:    
+                sigfig_formatted_value = round(form_coeff_val, sigfigs = calibration_name.sigfig, decimals = part_dec_places, notation = form_notation_format)
+            else:
+                sigfig_formatted_value = 0
             form.instance.value = sigfig_formatted_value
         coefficient_form.save()
         response = HttpResponseRedirect(self.get_success_url())
@@ -115,16 +113,14 @@ class CalibrationsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         self.object = form.save()
         coefficient_form.instance = self.object
         for form in coefficient_form:
-            try:
-                form_coeff_val = form.cleaned_data.get('value')
-                form_notation_format = form.cleaned_data.get('notation_format')
-                part_dec_places = inv_inst.part.cal_dec_places
-                sigfig_formatted_value = round(form_coeff_val, decimals = part_dec_places, notation = form_notation_format)
-            except:
-                print('coeff_val_formV__update_error')
-                raise validators.ValidationError(
-                    ('Invalid value')
-                )
+            form_coeff_val = form.cleaned_data.get('value')
+            form_notation_format = form.cleaned_data.get('notation_format')
+            part_dec_places = inv_inst.part.cal_dec_places
+            calibration_name = form.cleaned_data.get('coefficient_name')
+            if calibration_name:    
+                sigfig_formatted_value = round(form_coeff_val, sigfigs = calibration_name.sigfig, decimals = part_dec_places, notation = form_notation_format)
+            else:
+                sigfig_formatted_value = 0
             form.instance.value = sigfig_formatted_value
         coefficient_form.save()
         response = HttpResponseRedirect(self.get_success_url())
