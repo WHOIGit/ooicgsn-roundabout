@@ -179,7 +179,7 @@ $(document).ready(function() {
     });
 
     // AJAX call for Cancel Button to go back to object detail
-    $('#content-block').on('click','input.cancel-btn',function(){
+    $('#content-block').on('click','input.cancel-btn', function(){
         var url = $(this).attr("data-detail-url");
         var nodeID = $(this).attr("data-node-id");
         console.log(url);
@@ -192,7 +192,8 @@ $(document).ready(function() {
     });
 
     // AJAX functions for Detail template
-    $('#content-block').on('click','.ajax-detail-link a',function(){
+    $('#content-block').on('click','.ajax-detail-link a', function(event){
+        event.preventDefault();
         var nodeType = $(this).attr("data-node-type");
         console.log(nodeType);
         if (!nodeType) {
@@ -373,7 +374,7 @@ $(document).ready(function(){
             },
             success: handleFormSuccess,
             error: handleFormError,
-            complete:function(data){
+            complete: function(data){
                 // Hide spinner container
                 $("#spinner-loader").hide();
             }
@@ -425,7 +426,8 @@ $(document).ready(function(){
         });
 
         var nodeID = objectTypePrefix + '_' + data.object_id ;
-        console.log(nodeID)
+        console.log(nodeID);
+        
         $(navTree).jstree(true).settings.core.data.url = navURL;
         $(navTree).jstree(true).refresh();
         $(navTree).on('refresh.jstree', function (event, data) {
