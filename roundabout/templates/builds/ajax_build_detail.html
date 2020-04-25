@@ -251,9 +251,7 @@
         <p>Final {{ label_deployments_app_singular }} Location: {{ current_deployment.deployed_location }}</p>
         {% if current_deployment.cruise_deployed %}
             <p>Cruise Deployed On:
-                <a href="#" data-detail-url="{% url 'cruises:ajax_cruises_detail' current_deployment.cruise_deployed.id %}"
-                            data-node-id="{{ cruise.id }}"
-                            data-node-type="cruises">{{ current_deployment.cruise_deployed }}</a>
+                <a href="{% url 'cruises:cruises_detail' current_deployment.cruise_deployed.id %}">{{ current_deployment.cruise_deployed }}</a>
             </p>
         {% endif %}
         {% if current_deployment.cruise_recovered %}
