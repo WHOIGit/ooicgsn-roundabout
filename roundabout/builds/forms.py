@@ -171,12 +171,13 @@ class DeploymentForm(forms.ModelForm):
 
     class Meta:
         model = Deployment
-        fields = ['location', 'deployment_number', 'build', 'deployed_location']
+        fields = ['location', 'deployment_number', 'build', 'deployed_location', 'cruise_deployed']
 
         labels = {
             'location': 'Current Location',
             'deployment_number': '%s Number' % (labels['label_deployments_app_singular']),
             'deployed_location': 'Final %s Location' % (labels['label_deployments_app_singular']),
+            'cruise_deployed': 'Cruise Deployed On',
         }
 
         widgets = {
@@ -201,10 +202,11 @@ class DeploymentActionBurninForm(forms.ModelForm):
 
     class Meta:
         model = Deployment
-        fields = ['location', 'deployed_location']
+        fields = ['location', 'deployed_location', 'cruise_deployed']
         labels = {
             'location': 'Select Location for Burn In',
             'deployed_location': 'Final %s Location' % (labels['label_deployments_app_singular']),
+            'cruise_deployed': 'Cruise Deployed On',
         }
 
     # Add custom date field to allow user to pick date for the Action
@@ -225,9 +227,10 @@ class DeploymentActionDeployForm(forms.ModelForm):
 
     class Meta:
         model = Deployment
-        fields = ['location',]
+        fields = ['location', 'cruise_deployed']
         labels = {
             'location': '%s Location' % (labels['label_deployments_app_singular']),
+            'cruise_deployed': 'Cruise Deployed On',
         }
 
     # Add custom date field to allow user to pick date for the Action record
@@ -273,9 +276,10 @@ class DeploymentActionDetailsForm(forms.ModelForm):
 
     class Meta:
         model = Deployment
-        fields = ['location',]
+        fields = ['location', 'cruise_deployed']
         labels = {
             'location': '%s Location' % (labels['label_deployments_app_singular']),
+            'cruise_deployed': 'Cruise Deployed On',
         }
 
     # Add custom date field to allow user to pick date for the Action record
@@ -320,9 +324,10 @@ class DeploymentActionRecoverForm(forms.ModelForm):
 
     class Meta:
         model = Deployment
-        fields = ['location',]
+        fields = ['location', 'cruise_recovered']
         labels = {
             'location': 'Select Location to recover %s to:' % (labels['label_deployments_app_singular']),
+            'cruise_recovered': 'Cruise Recovered On'
         }
 
     # Add custom date field to allow user to pick date for the Action record

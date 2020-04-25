@@ -38,7 +38,7 @@
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'builds:ajax_builds_action' 'locationchange' build.id %}"
                     data-node-id="{{ build.id }}"
-                    data-node-type="detail">Location Change</a>
+                    data-node-type="{{ node_type }}">Location Change</a>
                 <!--
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'builds:ajax_builds_action' 'test' build.id %}"
@@ -50,29 +50,29 @@
                     data-detail-url="{% url 'builds:ajax_builds_action' 'flag' build.id %}"
                     data-node-id="{{ build.id }}"
                     data-location-id="{{ build.location.id }}"
-                    data-node-type="detail">Flag</a>
+                    data-node-type="{{ node_type }}">Flag</a>
 
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'builds:ajax_note_action' build.id %}"
                     data-node-id="{{ build.id }}"
                     data-location-id="{{ build.location.id }}"
-                    data-node-type="detail">Photo/Note</a>
+                    data-node-type="{{ node_type }}">Photo/Note</a>
 
                 <a class="dropdown-item" href="{% url 'reports:build_report' build.id %}"
                    data-node-id="{{ build.id }}"
-                   data-node-type="detail">Generate Report</a>
+                   data-node-type="{{ node_type }}">Generate Report</a>
 
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'builds:ajax_builds_update' build.id %}"
                     data-node-id="{{ build.id }}"
                     data-location-id="{{ build.location.id }}"
-                    data-node-type="detail">Edit {{ label_builds_app_singular }} Details</a>
+                    data-node-type="{{ node_type }}">Edit {{ label_builds_app_singular }} Details</a>
 
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'builds:ajax_builds_snapshot' build.id %}"
                     data-node-id="{{ build.id }}"
                     data-location-id="{{ build.location.id }}"
-                    data-node-type="detail">Take Snapshot</a>
+                    data-node-type="{{ node_type }}">Take Snapshot</a>
 
                 <hr>
 
@@ -81,7 +81,7 @@
                         data-detail-url="{% url 'builds:ajax_deployment_add' build.id %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
-                        data-node-type="detail">Start {{ label_deployments_app_singular }}</a>
+                        data-node-type="{{ node_type }}">Start {{ label_deployments_app_singular }}</a>
                 {% endif %}
 
                 {% if build.current_deployment.current_deployment_status == 'create' %}
@@ -89,7 +89,7 @@
                         data-detail-url="{% url 'builds:ajax_deployment_action' 'burnin' build.current_deployment.id build.id  %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
-                        data-node-type="detail">Initiate Burn In</a>
+                        data-node-type="{{ node_type }}">Initiate Burn In</a>
                 {% endif %}
 
                 {% if build.current_deployment.current_deployment_status == 'burnin' %}
@@ -97,7 +97,7 @@
                         data-detail-url="{% url 'builds:ajax_deployment_action' 'deploy' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
-                        data-node-type="detail">Deploy to Field</a>
+                        data-node-type="{{ node_type }}">Deploy to Field</a>
                 {% endif %}
 
                 {% if build.current_deployment.current_deployment_status == 'deploy' %}
@@ -106,13 +106,13 @@
                         data-detail-url="{% url 'builds:ajax_deployment_action' 'details' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
-                        data-node-type="detail">Update {{ label_deployments_app_singular }} Details</a>
+                        data-node-type="{{ node_type }}">Update {{ label_deployments_app_singular }} Details</a>
 
                     <a class="dropdown-item" href="#"
                         data-detail-url="{% url 'builds:ajax_deployment_action' 'recover' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
-                        data-node-type="detail">Recover from Field</a>
+                        data-node-type="{{ node_type }}">Recover from Field</a>
                 {% endif %}
 
                 {% if build.current_deployment.current_deployment_status == 'recover' %}
@@ -120,7 +120,7 @@
                         data-detail-url="{% url 'builds:ajax_deployment_action' 'retire' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
-                        data-node-type="detail">End {{ label_deployments_app_singular }}</a>
+                        data-node-type="{{ node_type }}">End {{ label_deployments_app_singular }}</a>
                 {% endif %}
 
 
@@ -249,9 +249,21 @@
         <h5>Current {{ label_deployments_app_singular }} Data</h5>
         <p>{{ label_deployments_app_singular }} Number: {{ current_deployment.deployment_number }}</p>
         <p>Final {{ label_deployments_app_singular }} Location: {{ current_deployment.deployed_location }}</p>
+        {% if current_deployment.cruise_deployed %}
+            <p>Cruise Deployed On:
+                <a href="#" data-detail-url="{% url 'cruises:ajax_cruises_detail' current_deployment.cruise_deployed.id %}"
+                            data-node-id="{{ cruise.id }}"
+                            data-node-type="cruises">{{ current_deployment.cruise_deployed }}</a>
+            </p>
+        {% endif %}
+        {% if current_deployment.cruise_recovered %}
+            <p>Cruise Recovered On:
+                <a href="{% url 'cruises:cruises_detail' current_deployment.cruise_recovered.id %}">{{ current_deployment.cruise_recovered }}</a>
+            </p>
+        {% endif %}
 
         {% if build.current_deployment_time_at_sea %}
-            <p>Current {{ label_deployments_app_singular }} Time in Field: {{ build.current_deployment_time_at_sea|time_at_sea_display }}
+            <p class="ajax-detail-link">Current {{ label_deployments_app_singular }} Time in Field: {{ build.current_deployment_time_at_sea|time_at_sea_display }}
         {% endif %}
 
         <h6>{{ label_deployments_app_singular }} Status</h6>

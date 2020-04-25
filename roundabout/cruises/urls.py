@@ -27,8 +27,8 @@ app_name = 'cruises'
 urlpatterns = [
     # Cruises
     path('', view=views.CruiseHomeView.as_view(), name='cruises_home'),
-    path('<int:pk>/', view=views.CruiseHomeView.as_view(), name='cruises_home'),
-    path('cruises-by-year/<int:cruise_year>/', view=views.CruiseHomeView.as_view(), name='cruises_home'),
+    path('<int:pk>/', view=views.CruiseHomeView.as_view(), name='cruises_detail'),
+    path('cruises-by-year/<int:cruise_year>/', view=views.CruiseHomeView.as_view(), name='cruises_by_year'),
     # AJAX paths
     path('ajax/load-navtree/', views.load_cruises_navtree, name='ajax_load_cruises_navtree'),
     path('ajax/detail/<int:pk>/', view=views.CruiseAjaxDetailView.as_view(), name='ajax_cruises_detail'),

@@ -35,6 +35,7 @@ from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
 from roundabout.assemblies.models import Assembly, AssemblyPart
 from roundabout.builds.models import Build
+from roundabout.cruises.models import Cruise
 from roundabout.users.models import User
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
@@ -56,6 +57,10 @@ class Deployment(models.Model):
                              on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     build = models.ForeignKey(Build, related_name='deployments',
                              on_delete=models.CASCADE, null=True, blank=True, db_index=True)
+    cruise_deployed = models.ForeignKey(Cruise, related_name='deployments',
+                             on_delete=models.SET_NULL, null=True, blank=True)
+    cruise_recovered = models.ForeignKey(Cruise, related_name='recovered_deployments',
+                                 on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
