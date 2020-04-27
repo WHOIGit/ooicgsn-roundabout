@@ -104,7 +104,7 @@ class InventoryForm(forms.ModelForm):
                     elif field.field_type == 'ChoiceField':
                         # Get the field options for this
                         options_dict = field.choice_field_options
-                        options_list = []
+                        options_list = [('', '- select one -')]
 
                         for option in options_dict['options']:
                             value = option['value']
