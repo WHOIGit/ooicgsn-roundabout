@@ -42,7 +42,7 @@
     {% if avail_fields %}
     const avail_fields = jQuery.parseJSON("{{ avail_fields|escapejs }}")
     {% else %}
-    const avail_fields = [{value:'id',text:'Database ID',disabled:false, legal_lookups:['exact']}]
+    const avail_fields = [{value:'id',text:'Database ID',disabled:false, legal_lookups:'BOOL_LOOKUP'}]
     {% endif %}
 
     {% if avail_lookups %}
@@ -55,19 +55,28 @@
     {% if lookup_categories %}
     const lookup_categories = jQuery.parseJSON("{{ lookup_categories|escapejs }}")
     {% else %}
-    const lookup_categories = {STR_LOOKUPS : ['icontains', 'exact'],
-                               NUM_LOOKUPS : ['exact','gte','lte'],
-                               DATE_LOOKUPS: ['exact','gte','lte'],
-                               BOOL_LOOKUPS: ['exact'] }
+    const lookup_categories = {STR_LOOKUP : ['icontains', 'exact'],
+                               NUM_LOOKUP : ['exact','gte','lte'],
+                               DATE_LOOKUP: ['exact','gte','lte'],
+                               BOOL_LOOKUP: ['exact'] }
     {% endif %}
 
     window.addEventListener("load", function(){
+      // load previous search results
       reset_cards(prev_cards,avail_fields)
+
+      // fixes loss of pagination formatting due somehow to django_tables2_column_shifter
+      $('.table-container nav ul').addClass('justify-content-center')
+      $('.table-container nav ul li').addClass('page-item')
+      $('.table-container nav ul li a').addClass('page-link')
+
+      // Add reset-shown-columns button to show/hide drowdown interface
+      const new_li = '<li><a href="javascript:reset_column_shifter_defaults()">Reset Defaults</a></li>'
+      $('.table-container .btn-group ul').prepend(new_li)
 
       // Activate floating horizontal scrollbar
       // see: https://github.com/Amphiluke/floating-scroll
       $('.table').floatingScroll('init')
-
     })
 
   </script>

@@ -280,7 +280,7 @@ function DoSubmit(e){
             }
 
             //Assert that date input is valid
-            if (avail_fields[idx].legal_lookups === 'DATE_LOOKUPS') {
+            if (avail_fields[idx].legal_lookups === 'DATE_LOOKUP') {
                 if ( !( query_value.match(/^\d{4}-\d{2}-\d{2}$/) ||
                         query_value.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)) ){
                     validation_alerts.push(`Date query "${query_value}" is invalid. Must use "YYYY-MM-DD" or "YYYY-MM-DD HH:MM" format`)
@@ -296,7 +296,7 @@ function DoSubmit(e){
             }
 
             //Assert that boolean field recieves only legal boolean input/query
-            if (avail_fields[idx].legal_lookups === 'BOOL_LOOKUPS'){
+            if (avail_fields[idx].legal_lookups === 'BOOL_LOOKUP'){
                 if (['True','False'].includes(query_value)) {  }
                 else if(['TRUE','true','T','t','1','yes','Yes','YES','y','Y'].includes(query_value))
                     { query_input.val('True') }
@@ -388,4 +388,34 @@ function saveData(blob, fileName)
     a.download = fileName
     a.click()
     window.URL.revokeObjectURL(url)
+}
+
+
+// MESSING WITH STORED COLUMN CLICKS, see:
+// https://github.com/djk2/django-tables2-column-shifter/blob/master/django_tables2_column_shifter/
+// static/django_tables2_column_shifter/js/django_tables2_column_shifter.js
+
+const COLUMN_SHIFTER_STORAGE_ACCESOR = 'django_tables2_column_shifter'
+
+// Get columns manually shown/hidden (clicked) by user
+function get_column_shifter_storage(){
+    let storage = localStorage.getItem(COLUMN_SHIFTER_STORAGE_ACCESOR)
+    if (storage === null) {
+        storage = {}
+    } else {
+        storage = JSON.parse(storage)
+    }
+    return storage
+}
+
+// Save structure in web storage
+function set_column_shifter_storage(storage){
+    const json_storage = JSON.stringify(storage)
+    localStorage.setItem(COLUMN_SHIFTER_STORAGE_ACCESOR, json_storage)
+}
+
+// Reset Reload defaults
+function reset_column_shifter_defaults(){
+    set_column_shifter_storage({})
+    window.location.reload(false)
 }

@@ -186,6 +186,7 @@ class BuildAction(models.Model):
 
     class Meta:
         ordering = ['-created_at', 'action_type']
+        get_latest_by = 'created_at'
 
     def __str__(self):
         return self.get_action_type_display()
