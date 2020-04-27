@@ -41,14 +41,14 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'invchange' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Inventory Change</a>
+                data-node-type="{{ node_type }}">Inventory Change</a>
             --->
         {% if not inventory_item.build and not inventory_item.parent %}
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'locationchange' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Location Change</a>
+                data-node-type="{{ node_type }}">Location Change</a>
         {% endif %}
 
         {% if not inventory_item.build and not inventory_item.assembly_part %}
@@ -56,7 +56,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_add_subassembly' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id }}"
-                data-node-type="detail">Add Sub-{{ label_assemblies_app_singular }}</a>
+                data-node-type="{{ node_type }}">Add Sub-{{ label_assemblies_app_singular }}</a>
         {% endif %}
 
         {% if not inventory_item.build and not inventory_item.parent and not inventory_item.assembly_part %}
@@ -64,7 +64,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_add_to_parent' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Add to Parent {{ label_assemblies_app_singular }}</a>
+                data-node-type="{{ node_type }}">Add to Parent {{ label_assemblies_app_singular }}</a>
         {% endif %}
 
         {% if not inventory_item.build and inventory_item.parent %}
@@ -72,7 +72,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'subchange' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Remove from Parent {{ label_assemblies_app_singular }}</a>
+                data-node-type="{{ node_type }}">Remove from Parent {{ label_assemblies_app_singular }}</a>
         {% endif %}
 
         {% if not inventory_item.build and not inventory_item.parent %}
@@ -80,7 +80,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_add_to_build' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Add to {{ label_builds_app_singular }}</a>
+                data-node-type="{{ node_type }}">Add to {{ label_builds_app_singular }}</a>
         {% endif %}
 
         {% if inventory_item.build %}
@@ -88,7 +88,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'removefrombuild' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Remove from {{ label_builds_app_singular }}</a>
+                data-node-type="{{ node_type }}">Remove from {{ label_builds_app_singular }}</a>
         {% endif %}
 
         {% if inventory_item.assembly_part and not inventory_item.build and not inventory_item.parent %}
@@ -96,7 +96,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'removedest' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id }}"
-                data-node-type="detail">Remove Destination</a>
+                data-node-type="{{ node_type }}">Remove Destination</a>
         {% endif %}
 
         {% if not inventory_item.assembly_part and not inventory_item.parent %}
@@ -104,43 +104,44 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_assign_destination' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id }}"
-                data-node-type="detail">Assign Destination</a>
+                data-node-type="{{ node_type }}">Assign Destination</a>
         {% endif %}
 
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'test' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Test</a>
+                data-node-type="{{ node_type }}">Test</a>
+
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'flag' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Flag</a>
+                data-node-type="{{ node_type }}">Flag</a>
                 <!---
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'note' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Note</a>
+                data-node-type="{{ node_type }}">Note</a>
                 --->
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_note_action' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Photo/Note</a>
+                data-node-type="{{ node_type }}">Photo/Note</a>
 
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_history_action' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Historical Note</a>
+                data-node-type="{{ node_type }}">Historical Note</a>
 
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_update' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Edit Inventory Details</a>
+                data-node-type="{{ node_type }}">Edit Inventory Details</a>
 
       </div>
     </div>
@@ -456,7 +457,7 @@
                     {% for custom_field in custom_fields %}
 
                         <li class="list-group-item">
-                            {{ custom_field.field }}: {{ custom_field.field_value }}
+                            {{ custom_field.field }}: {{ custom_field.get_field_value }}
                             <!-- link trigger modal -->
                             <button type="button" class="btn btn-sm btn-link float-right" data-toggle="modal" data-target="#modal-{{ custom_field.field_id }}">
                               View Field History

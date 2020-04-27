@@ -391,15 +391,6 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         # Get this item's custom fields with most recent Values
         if self.object.fieldvalues.exists():
             custom_fields = self.object.fieldvalues.filter(is_current=True)
-
-            for cf in custom_fields:
-                #Check if UDF field is a DateField, if so format date for display
-                if cf.field.field_type == 'DateField':
-                    try:
-                        dt = parser.parse(cf.field_value)
-                        cf.field_value = dt.strftime("%m-%d-%Y %H:%M:%S")
-                    except:
-                        pass
         else:
             custom_fields = None
 
