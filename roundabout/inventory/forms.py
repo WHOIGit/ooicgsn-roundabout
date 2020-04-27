@@ -101,6 +101,23 @@ class InventoryForm(forms.ModelForm):
                     elif field.field_type == 'BooleanField':
                         self.fields['udffield_' + str(field.id)] = forms.BooleanField(label=str(field.field_name), required=False,
                                                             help_text=str(field.field_description))
+                    elif field.field_type == 'ChoiceField':
+                        # Get the field options for this
+                        options_dict = field.choice_field_options
+                        options_list = []
+
+                        for option in options_dict['options']:
+                            value = option['value']
+                            label = value
+                            if option['label']:
+                                label = option['label']
+                            form_option = (value, label)
+                            options_list.append(form_option)
+
+                        FIELD_CHOICES = (options_list)
+                        self.fields['udffield_' + str(field.id)] = forms.ChoiceField(label=str(field.field_name), required=False,
+                                                            help_text=str(field.field_description),
+                                                            choices = FIELD_CHOICES)
                     else:
                         self.fields['udffield_' + str(field.id)] = forms.CharField(label=str(field.field_name), required=False,
                                                             help_text=str(field.field_description))
