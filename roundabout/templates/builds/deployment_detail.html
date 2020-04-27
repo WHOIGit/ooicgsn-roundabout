@@ -18,14 +18,13 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 -->
-
 {% load common_tags %}
 
-<a class="collapsed" data-toggle="collapse" href="#deployment-{{ deployment.id }}" aria-expanded="false" aria-controls="deployment-{{ deployment.id }}">
-    {{ deployment.build.build_number }} - {{ label_deployments_app_singular }}: {{ deployment }}
+<a class="collapsed" data-toggle="collapse" href="#deployment-{{ deployment.id }}-{{ deployment_type }}" aria-expanded="false" aria-controls="deployment-{{ deployment.id }}-{{ deployment_type }}">
+    {{random_id}} - {{ deployment.build.build_number }} - {{ label_deployments_app_singular }}: {{ deployment }}
 </a>
 
-<a data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ deployment.id }}" aria-controls="deployment-{{ deployment.id }}" aria-expanded="false" role="button">
+<a data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ deployment.id }}-{{ deployment_type }}" aria-controls="deployment-{{ deployment.id }}-{{ deployment_type }}" aria-expanded="false" role="button">
     <i class="fa" aria-hidden="true"></i>
     <span class="sr-only">Expand/Collapse Revision {{ deployment }}</span>
 </a>
@@ -35,11 +34,13 @@
     </div>
 </div>
 
-<div class="collapse mt-3" id="deployment-{{ deployment.id }}">
+<div class="collapse mt-3" id="deployment-{{ deployment.id }}-{{ deployment_type }}">
+
+    <p>Build:
+        <a href="{% url 'builds:builds_detail' deployment.build.id %}">{{ deployment.build }}</a>
+    </p>
 
     <p>{{ label_deployments_app_singular }} Location: {{ deployment.deployed_location }}</p>
-
-
 
     {% if deployment.get_deploytosea_details %}
         <p>{{ label_deployments_app_singular }} Date: {{ deployment.get_deploytosea_details|get_item:'deploy_date' }}</p>
