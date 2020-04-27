@@ -49,6 +49,7 @@ class UDF_Column(tables.ManyToManyColumn):
 class SearchTable(ColumnShiftTable):
     class Meta:
         template_name = "django_tables2/bootstrap4.html"
+        attrs = {'style':'display: block; overflow-x: auto;'}
         base_shown_cols = []
 
     def set_column_default_show(self, table_data):
@@ -180,5 +181,6 @@ class AssemblyTable(SearchTable):
         base_shown_cols = ['assembly_number', 'name', 'assembly_type__name']
 
     assembly_number = tables.Column(linkify=dict(viewname='assemblies:assembly_detail',args=[tables.A('pk')]))
+    assembly_type__name = tables.Column(verbose_name='Type')
 
 

@@ -61,7 +61,14 @@
                                BOOL_LOOKUPS: ['exact'] }
     {% endif %}
 
-    window.addEventListener("load", function(){reset_cards(prev_cards,avail_fields)})
+    window.addEventListener("load", function(){
+      reset_cards(prev_cards,avail_fields)
+
+      // Activate floating horizontal scrollbar
+      // see: https://github.com/Amphiluke/floating-scroll
+      $('.table').floatingScroll('init')
+
+    })
 
   </script>
 {% endblock javascript %}
