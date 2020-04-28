@@ -73,7 +73,6 @@ class UDF_Column(ManyToManyColumn):
 class SearchTable(ColumnShiftTable):
     class Meta:
         template_name = "django_tables2/bootstrap4.html"
-        attrs = {'style':'display: block; overflow-x: auto;'}
         base_shown_cols = []
         attrs = {'style':'display: block; overflow-x: auto;'}
         #attrs = {'style':'display: block; overflow-x: auto; white-space: nowrap;'}
