@@ -21,7 +21,7 @@
 {% load common_tags %}
 
 <a class="collapsed" data-toggle="collapse" href="#deployment-{{ deployment.id }}-{{ deployment_type }}" aria-expanded="false" aria-controls="deployment-{{ deployment.id }}-{{ deployment_type }}">
-    {{random_id}} - {{ deployment.build.build_number }} - {{ label_deployments_app_singular }}: {{ deployment }}
+    {{ deployment.build.build_number }} - {{ label_deployments_app_singular }}: {{ deployment }}
 </a>
 
 <a data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ deployment.id }}-{{ deployment_type }}" aria-controls="deployment-{{ deployment.id }}-{{ deployment_type }}" aria-expanded="false" role="button">
