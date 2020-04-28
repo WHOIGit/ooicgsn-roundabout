@@ -550,7 +550,7 @@
                                                     <tr>
                                                         <td> 
                                                             <li class = 'list-group-item'>
-                                                                <a  class="collapsed" 
+                                                                <a  class="collapse show" 
                                                                     data-toggle="collapse" 
                                                                     href="#coeff-{{ cal }}{{ event.id }}" 
                                                                     aria-expanded="false" 
@@ -559,7 +559,7 @@
                                                                     <b>{{ cal }}</b>
                                                                 </a>
                                                                 <a  data-toggle="collapse" 
-                                                                    class="collapsed text-right" 
+                                                                    class="collapse show text-right" 
                                                                     href="#coeff-{{ cal }}{{ event.id }}" 
                                                                     aria-controls="coeff-{{ cal }}{{ event.id }}" 
                                                                     aria-expanded="false" 
@@ -568,16 +568,16 @@
                                                                     <i class="fa" aria-hidden="true"></i>
                                                                     <span class="sr-only">Expand/Collapse Calibration {{ cal }}</span>
                                                                 </a>
-                                                                <div class="collapse mt-1" id="coeff-{{ cal }}{{ event.id }}">
+                                                                <div class="collapse show mt-1" id="coeff-{{ cal }}{{ event.id }}">
                                                                     <p class='font-weight-light'><b>Notes:</b> {{ cal.notes }}</p>
                                                                     <table class="table table-tight">
                                                                         <thead>
                                                                             <th>Value(s)</th>
                                                                         </thead>
-                                                                        <tbody>
+                                                                        <tbody style = 'display:block; overflow: auto; max-height: 200px'>
                                                                             {% for val in cal.coefficient_values.all %}
                                                                                 {% if val in event.coefficient_values.all %}
-                                                                                    <tr>
+                                                                                    <tr style = 'display: block;'>
                                                                                         <td>{{val}}</td>
                                                                                     </tr>
                                                                                 {% endif %}

@@ -259,7 +259,7 @@ $(document).ready(function() {
     }
 
     $('#id_part_type').change(function() {
-        const part_id = $(this).val();
+        let part_id = $(this).val();
         if (part_id == 3) {
             $('#calibrations-section').show();
             $('#div_id_cal_dec_places').show();
