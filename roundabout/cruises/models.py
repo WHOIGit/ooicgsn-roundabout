@@ -37,7 +37,7 @@ class Cruise(models.Model):
                                on_delete=models.SET_NULL, null=True)
     cruise_start_date = models.DateTimeField()
     cruise_stop_date = models.DateTimeField()
-    note = models.TextField(null=False, blank=True)
+    notes = models.TextField(null=False, blank=True)
     location = TreeForeignKey(Location, related_name='cruises', verbose_name='Destination',
                               on_delete=models.SET_NULL, null=True, blank=True)
 

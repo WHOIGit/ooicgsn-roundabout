@@ -95,6 +95,7 @@ THIRD_PARTY_APPS = [
     'mptt', # Tree structures in database
     'django_summernote', #WYSIWYG
     'bootstrap_datepicker_plus', # Date Picker
+    'import_export', # simple model import/export using admin interface
 ]
 LOCAL_APPS = [
     'roundabout.users.apps.UsersAppConfig',
@@ -360,3 +361,6 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
+
+# import-export settings
+IMPORT_EXPORT_USE_TRANSACTIONS = True
