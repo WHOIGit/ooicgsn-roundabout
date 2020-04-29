@@ -32,11 +32,14 @@
     <p>Cruise Start Date: {{ cruise.cruise_start_date }}</p>
     <p>Cruise Stop Date: {{ cruise.cruise_stop_date }}</p>
     <p>Vessel: {{ cruise.vessel }}
-    <p>Notes: {{ cruise.note }}
+    <p>Notes: {{ cruise.notes }}
 
 
-    <h5>Deployment History for this Cruise</h5>
-    <hr>
+    {% if cruise.deployments.exists or cruise.recovered_deployments.exists %}
+        <h5>Deployment History for this Cruise</h5>
+        <hr>
+    {% endif %}
+    
     {% if cruise.deployments.exists %}
         <h6>{{ label_builds_app_plural }} Deployed</h6>
         <ul class="list-group list-group-flush">

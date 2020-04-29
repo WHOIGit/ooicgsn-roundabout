@@ -63,14 +63,14 @@
               <td>{{ vessel.ICES_code }}</td>
               <td>{{ vessel.operator }}</td>
               <td>{{ vessel.call_sign }}</td>
-              <td>{{ vessel.MMSI_number }}</td>
-              <td>{{ vessel.IMO_number }}</td>
-              <td>{{ vessel.length }}</td>
-              <td>{{ vessel.max_speed }}</td>
-              <td>{{ vessel.max_draft }}</td>
+              <td>{% if vessel.MMSI_number %}{{ vessel.MMSI_number }}{% endif %}</td>
+              <td>{% if vessel.IMO_number %}{{ vessel.IMO_number }}{% endif %}</td>
+              <td>{% if vessel.length %}{{ vessel.length }}{% endif %}</td>
+              <td>{% if vessel.max_speed %}{{ vessel.max_speed }}{% endif %}</td>
+              <td>{% if vessel.max_draft %}{{ vessel.max_draft }}{% endif %}</td>
               <td>{{ vessel.designation }}</td>
-              <td>{{ vessel.active }}</td>
-              <td>{{ vessel.R2R }}</td>
+              <td>{{ vessel.get_active_display }}</td>
+              <td>{{ vessel.get_R2R_display  }}</td>
 
               <td class="text-right action-col">
                   <a href="{% url 'cruises:vessels_update' vessel.id %}" role="button" class="btn btn-primary btn-sm">Edit</a>

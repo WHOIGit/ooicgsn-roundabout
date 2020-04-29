@@ -18,7 +18,8 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 """
-from random import randint
+from datetime import datetime
+
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
@@ -49,7 +50,7 @@ class CruiseHomeView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super(CruiseHomeView, self).get_context_data(**kwargs)
         cruise_pk = kwargs.pop('pk', '')
-        cruise_year = kwargs.pop('cruise_year', '')
+        cruise_year = kwargs.pop('cruise_year', datetime.now().year)
 
         cruise = None
         if cruise_pk:
