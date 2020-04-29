@@ -32,12 +32,23 @@
   <h2>Vessels</h2>
 
 
-  <table class="table table-striped table-hover">
+  <table class="table table-striped table-hover" id="vessel-table">
       <thead>
 
         <th>Prefix</th>
         <th>Vessel Designation</th>
         <th>Vessel Name</th>
+        <th>ICES Code</th>
+        <th>Operator</th>
+        <th>Call Sign</th>
+        <th>MMSI Number</th>
+        <th>IMO Number</th>
+        <th>Length</th>
+        <th>Max Speed</th>
+        <th>Max Draft</th>
+        <th>Designation</th>
+        <th>Active</th>
+        <th>R2R</th>
 
         <th>&nbsp;</th>
 
@@ -49,8 +60,19 @@
               <td>{{ vessel.prefix }}</td>
               <td>{{ vessel.vessel_designation }}</td>
               <td>{{ vessel.vessel_name }}</td>
-              
-              <td class="text-right">
+              <td>{{ vessel.ICES_code }}</td>
+              <td>{{ vessel.operator }}</td>
+              <td>{{ vessel.call_sign }}</td>
+              <td>{{ vessel.MMSI_number }}</td>
+              <td>{{ vessel.IMO_number }}</td>
+              <td>{{ vessel.length }}</td>
+              <td>{{ vessel.max_speed }}</td>
+              <td>{{ vessel.max_draft }}</td>
+              <td>{{ vessel.designation }}</td>
+              <td>{{ vessel.active }}</td>
+              <td>{{ vessel.R2R }}</td>
+
+              <td class="text-right action-col">
                   <a href="{% url 'cruises:vessels_update' vessel.id %}" role="button" class="btn btn-primary btn-sm">Edit</a>
                   <a href="{% url 'cruises:vessels_delete' vessel.id %}" role="button" class="btn btn-danger btn-sm">Delete</a>
               </td>

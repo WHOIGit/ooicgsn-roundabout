@@ -263,10 +263,22 @@ a.wh {
     border: none;
 }
 
+/* Tables */
+
+.action-col {
+    white-space: nowrap;
+}
+
 /* Template Mode styling for apps that are considered Templates */
 .template #detail-view {
     border-color: #28a745;
     background-color: #28a7450d;
+}
+
+/* Cruise/Vessel app styling */
+
+#vessel-table {
+    font-size: .8em;
 }
 
 /* Custom Fields styling */

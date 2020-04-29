@@ -21,7 +21,7 @@
 
 {% load common_tags %}
 
-<div class="card-header">
+<div class="card-header" data-object-id="{{ cruise.id }}">
     <h3>Cruise ID: {{ cruise.CUID }}</h3>
     <h5>Destination: {{ cruise.location }} </h5>
 </div>

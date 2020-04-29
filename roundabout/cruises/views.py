@@ -97,7 +97,8 @@ class CruiseAjaxCruisesByYearView(LoginRequiredMixin, PermissionRequiredMixin, T
         cruise_year = self.kwargs['cruise_year']
         cruises = Cruise.objects.filter(cruise_start_date__year=cruise_year)
         context.update({
-            'cruises': cruises
+            'cruises': cruises,
+            'cruise_year': cruise_year,
         })
         return context
 
