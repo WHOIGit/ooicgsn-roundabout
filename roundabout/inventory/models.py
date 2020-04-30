@@ -324,6 +324,7 @@ class Action(models.Model):
     SUBCHANGE = 'subchange'
     ADDTOBUILD = 'addtobuild'
     REMOVEFROMBUILD = 'removefrombuild'
+    ADDTODEPLOYMENT = 'addtodeployment'
     DEPLOYMENTBURNIN = 'deploymentburnin'
     DEPLOYMENTTOSEA = 'deploymenttosea'
     DEPLOYMENTUPDATE = 'deploymentupdate'
@@ -344,6 +345,7 @@ class Action(models.Model):
         (SUBCHANGE, 'Sub-%s Change' % (labels['label_assemblies_app_singular'])),
         (ADDTOBUILD, 'Add to %s' % (labels['label_builds_app_singular'])),
         (REMOVEFROMBUILD, 'Remove from %s' % (labels['label_builds_app_singular'])),
+        (ADDTODEPLOYMENT, 'Add to %s' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTTOSEA, '%s to Field' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTUPDATE, '%s Update' % (labels['label_deployments_app_singular'])),

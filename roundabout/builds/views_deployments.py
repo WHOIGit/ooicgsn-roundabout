@@ -84,6 +84,22 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         build_record = BuildAction.objects.create(action_type='startdeploy', detail=build_detail, location=self.object.location,
                                                    user=self.request.user, build=build, created_at=action_date)
 
+        # Get all Inventory items on Build, match location and add Action
+        inventory_items = build.inventory.all()
+        for item in inventory_items:
+            item.location = build.location
+            item.save()
+
+            item_action_detail = 'Added to %s %s. ' % (labels['label_deployments_app_singular'], self.object.deployment_number)
+            item_action_record = Action.objects.create(action_type='addtodeployment',
+                                                       detail=item_action_detail,
+                                                       location=item.location,
+                                                       user=self.request.user,
+                                                       inventory=item,
+                                                       build=build,
+                                                       deployment=self.object,
+                                                       created_at=action_date, )
+
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
@@ -249,7 +265,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         """
 
         # Get all Inventory items on Build, match location and add Action
-        inventory_items = Inventory.objects.filter(build=build)
+        inventory_items = build.inventory.all()
         for item in inventory_items:
             item.location = build.location
             item.save()
