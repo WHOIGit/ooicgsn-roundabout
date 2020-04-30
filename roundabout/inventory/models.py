@@ -364,11 +364,11 @@ class Action(models.Model):
     action_type = models.CharField(max_length=20, choices=ACT_TYPES)
     created_at = models.DateTimeField(default=timezone.now)
     detail = models.TextField(blank=True)
-    user = models.ForeignKey(User, related_name='action',
+    user = models.ForeignKey(User, related_name='inventory_actions',
                              on_delete=models.SET_NULL, null=True, blank=False)
-    location = TreeForeignKey(Location, related_name='action',
+    location = TreeForeignKey(Location, related_name='inventory_actions',
                               on_delete=models.SET_NULL, null=True, blank=False)
-    inventory = models.ForeignKey(Inventory, related_name='action',
+    inventory = models.ForeignKey(Inventory, related_name='inventory_actions',
                                  on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
