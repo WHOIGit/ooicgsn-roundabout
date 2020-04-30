@@ -31,7 +31,7 @@
 
     <p>Cruise Start Date: {{ cruise.cruise_start_date }}</p>
     <p>Cruise Stop Date: {{ cruise.cruise_stop_date }}</p>
-    <p>Vessel: {{ cruise.vessel }}
+    <p>Vessel: <a href="{% url 'cruises:vessels_home' %}">{{ cruise.vessel }}</a>
     <p>Notes: {{ cruise.notes }}
 
 
@@ -39,7 +39,7 @@
         <h5>Deployment History for this Cruise</h5>
         <hr>
     {% endif %}
-    
+
     {% if cruise.deployments.exists %}
         <h6>{{ label_builds_app_plural }} Deployed</h6>
         <ul class="list-group list-group-flush">
