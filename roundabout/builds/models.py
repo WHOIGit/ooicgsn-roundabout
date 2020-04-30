@@ -177,11 +177,11 @@ class BuildAction(models.Model):
     action_type = models.CharField(max_length=20, choices=ACT_TYPES)
     created_at = models.DateTimeField(default=timezone.now)
     detail = models.TextField(blank=True)
-    user = models.ForeignKey(User, related_name='actions',
+    user = models.ForeignKey(User, related_name='build_actions',
                              on_delete=models.SET_NULL, null=True, blank=False)
-    location = TreeForeignKey(Location, related_name='actions',
+    location = TreeForeignKey(Location, related_name='build_actions',
                               on_delete=models.SET_NULL, null=True, blank=False)
-    build = models.ForeignKey(Build, related_name='actions',
+    build = models.ForeignKey(Build, related_name='build_actions',
                                  on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
