@@ -49,6 +49,8 @@ labels = set_app_labels()
 # Import environment variables from .env files
 import environ
 env = environ.Env()
+# Global variables for views.py functions
+node_type = 'inventory'
 
 # Mixins
 # ------------------------------------------------------------------------------
@@ -397,6 +399,7 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         context.update({
             'printers': printers,
             'custom_fields': custom_fields,
+            'node_type': node_type,
         })
         return context
 
@@ -1553,7 +1556,7 @@ class InventoryDetailView(LoginRequiredMixin, DetailView):
             'part_types': part_types,
             'printers': printers,
             'custom_fields': custom_fields,
-            'node_type': 'inventory',
+            'node_type': node_type,
         })
         return context
 
@@ -1574,7 +1577,7 @@ class InventoryHomeView(LoginRequiredMixin, TemplateView):
         part_types = PartType.objects.all()
         context.update({
             'part_types': part_types,
-            'node_type': 'inventory',
+            'node_type': node_type,
         })
         return context
 
