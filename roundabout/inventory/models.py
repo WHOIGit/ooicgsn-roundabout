@@ -368,7 +368,7 @@ class Action(models.Model):
         (FLAG, 'Flag'),
         (MOVETOTRASH, 'Move to Trash'),
     )
-    inventory = models.ForeignKey(Inventory, related_name='action',
+    inventory = models.ForeignKey(Inventory, related_name='inventory_actions',
                                   on_delete=models.CASCADE, null=True, blank=True)
     action_type = models.CharField(max_length=20, choices=ACT_TYPES)
     created_at = models.DateTimeField(default=timezone.now)
@@ -377,9 +377,9 @@ class Action(models.Model):
                              on_delete=models.SET_NULL, null=True, blank=False)
     location = TreeForeignKey(Location, related_name='inventory_actions',
                               on_delete=models.SET_NULL, null=True, blank=False)
-    deployment = models.ForeignKey(Deployment, related_name='action',
+    deployment = models.ForeignKey(Deployment, related_name='inventory_actions',
                                    on_delete=models.SET_NULL, null=True, blank=True)
-    build = models.ForeignKey(Build, related_name='action',
+    build = models.ForeignKey(Build, related_name='inventory_actions',
                               on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
