@@ -44,7 +44,7 @@
                     data-detail-url="{% url 'builds:ajax_builds_action' 'test' build.id %}"
                     data-node-id="{{ build.id }}"
                     data-location-id="{{ build.location.id}}"
-                    data-node-type="detail">Test</a>
+                    data-node-type="{{ node_type }}">Test</a>
                 -->
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'builds:ajax_builds_action' 'flag' build.id %}"
@@ -286,25 +286,25 @@
 
     <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
 
-        {% if build.actions.all %}
+        {% if build.build_actions.exists %}
             <li class="nav-item">
               <a class="nav-link active" id="history-tab" data-toggle="tab" href="#history" role="tab" aria-controls="history" aria-selected="true">History</a>
             </li>
         {% endif %}
 
-        {% if build.deployments.all %}
+        {% if build.deployments.exists %}
             <li class="nav-item">
               <a class="nav-link" id="deployments-tab" data-toggle="tab" href="#deployments" role="tab" aria-controls="deployments" aria-selected="true">{{ label_deployments_app_plural }}</a>
             </li>
         {% endif %}
 
-        {% if build.build_snapshots.all %}
+        {% if build.build_snapshots.exists %}
             <li class="nav-item">
               <a class="nav-link" id="snapshots-tab" data-toggle="tab" href="#snapshots" role="tab" aria-controls="snapshots" aria-selected="true">Snapshots</a>
             </li>
         {% endif %}
 
-        {% if build.revision.documentation.all %}
+        {% if build.revision.documentation.exists %}
           <li class="nav-item">
             <a class="nav-link" id="documentation-tab" data-toggle="tab" href="#documentation" role="tab" aria-controls="documentation" aria-selected="false">Documentation</a>
           </li>
@@ -314,7 +314,7 @@
 
     <div class="tab-content" id="inventory-tabs">
 
-        {% if build.actions.all %}
+        {% if build.build_actions.exists %}
           <div class="tab-pane fade show active" id="history" role="tabpanel" aria-labelledby="history-tab">
 
               <table class="table table-striped action-table">
@@ -327,7 +327,7 @@
 
                   </thead>
                   <tbody>
-                    {% for action in build.actions.all %}
+                    {% for action in build.build_actions.all %}
                       <tr>
                           <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
                           <td>{{ action.get_action_type_display }}</td>
@@ -355,7 +355,7 @@
           </div>
         {% endif %}
 
-        {% if build.deployments.all %}
+        {% if build.deployments.exists %}
         <div class="tab-pane fade" id="deployments" role="tabpanel" aria-labelledby="deployments-tab">
 
             <ul class="list-group list-group-flush">
@@ -371,7 +371,7 @@
         </div>
         {% endif %}
 
-        {% if build.build_snapshots.all %}
+        {% if build.build_snapshots.exists %}
         <div class="tab-pane fade" id="snapshots" role="tabpanel" aria-labelledby="snapshots-tab">
 
             <ul class="list-group list-group-flush">
@@ -438,7 +438,7 @@
         </div>
         {% endif %}
 
-        {% if build.revision.documentation.all %}
+        {% if build.revision.documentation.exists %}
           <div class="tab-pane fade" id="documentation" role="tabpanel" aria-labelledby="documentation-tab">
 
                   <table class="table documentation-table">

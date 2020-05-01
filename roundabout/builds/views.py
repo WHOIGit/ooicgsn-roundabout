@@ -41,6 +41,8 @@ labels = set_app_labels()
 # Import environment variables from .env files
 import environ
 env = environ.Env()
+# Global variables for views.py functions
+node_type = 'builds'
 
 # Load the javascript navtree
 def load_builds_navtree(request):
@@ -144,7 +146,7 @@ class BuildHomeView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super(BuildHomeView, self).get_context_data(**kwargs)
         context.update({
-            'node_type': 'builds',
+            'node_type': node_type,
         })
         return context
 
@@ -184,7 +186,7 @@ class BuildDetailView(LoginRequiredMixin, DetailView):
 
         context.update({
             'printers': printers,
-            'node_type': 'builds',
+            'node_type': node_type,
             'current_deployment': self.object.current_deployment(),
             'percent_complete': percent_complete,
             'action_record': action_record,
@@ -227,6 +229,7 @@ class BuildAjaxDetailView(LoginRequiredMixin, DetailView):
 
         context.update({
             'printers': printers,
+            'node_type': node_type,
             'current_deployment': self.object.current_deployment(),
             'percent_complete': percent_complete,
             'action_record': action_record,

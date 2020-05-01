@@ -89,7 +89,7 @@ class SearchTable(ColumnShiftTable):
 class InventoryTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Inventory
-        action_accessors = ['action__latest__action_type', 'action__latest__user__name', 'action__latest__created_at', 'action__latest__location__name', 'action__latest__detail']
+        action_accessors = ['inventory_actions__latest__action_type', 'inventory_actions__latest__user__name', 'inventory_actions__latest__created_at', 'inventory_actions__latest__location__name', 'inventory_actions__latest__detail']
         udf_accessors = ['fieldvalues__field__field_name','fieldvalues__field_value']
         fields = ['serial_number','part__name','location__name','revision__note']
         base_shown_cols = ['serial_number', 'part__name', 'location__name']
@@ -121,12 +121,12 @@ class InventoryTable(SearchTable):
     def value_revision__note(self,record):
         return record.revision.note
 
-    def render_action__latest__action_type(self,value):
+    def render_inventory_actions__latest__action_type(self,value):
         try: disp_value = [text for val,text in Action.ACT_TYPES if val==value][0]
         except IndexError: disp_value = value
         return disp_value
 
-    def render_action__latest__detail(self,value):
+    def render_inventory_actions__latest__detail(self,value):
         return mark_safe(value)
 
 class PartTable(SearchTable):
@@ -152,7 +152,7 @@ class PartTable(SearchTable):
 class BuildTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Build
-        action_accessors = ['actions__latest__action_type', 'actions__latest__user__name', 'actions__latest__created_at','actions__latest__location__name','actions__latest__detail']
+        action_accessors = ['build_actions__latest__action_type', 'build_actions__latest__user__name', 'build_actions__latest__created_at','build_actions__latest__location__name','build_actions__latest__detail']
         fields = ['build','assembly__name','build_number','assembly__assembly_type__name','location__name','time_at_sea','is_deployed']
         base_shown_cols = ['build','assembly__assembly_type__name','location__name','time_at_sea','is_deployed']
 
@@ -168,12 +168,12 @@ class BuildTable(SearchTable):
     def value_build(self,record):
         return '{}-{}'.format(record.assembly.assembly_number, record.build_number.replace('Build ',''))
 
-    def render_actions__latest__action_type(self,value,record):
+    def render_build_actions__latest__action_type(self,value,record):
         try: disp_value = [text for val,text in BuildAction.ACT_TYPES if val==value][0]
         except IndexError: disp_value = value
         return disp_value
 
-    def render_actions__latest__detail(self,value):
+    def render_build_actions__latest__detail(self,value):
         return mark_safe(value)
 
 class AssemblyTable(SearchTable):
@@ -185,4 +185,3 @@ class AssemblyTable(SearchTable):
     assembly_number = Column(verbose_name='Assembly Number', attrs={'style':'white-space: nowrap;'},
         linkify=dict(viewname='assemblies:assembly_detail',args=[tables.A('pk')]))
     assembly_type__name = Column(verbose_name='Type')
-

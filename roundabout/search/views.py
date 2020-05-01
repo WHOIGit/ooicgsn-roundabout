@@ -290,7 +290,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
 class InventoryTableView(GenericSearchTableView):
     model = Inventory
     table_class = InventoryTable
-    query_prefetch = ['fieldvalues', 'fieldvalues__field', 'part', 'location', 'revision', 'action', 'action__user', 'action__location']
+    query_prefetch = ['fieldvalues', 'fieldvalues__field', 'part', 'location', 'revision', 'inventory_actions', 'inventory_actions__user', 'inventory_actions__location']
     avail_udf = set()
 
     @staticmethod
@@ -319,12 +319,12 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="fieldvalues__field_value",       text="UDF Value", legal_lookups='STR_LOOKUP'),
 
                         dict(value=None, text="--Actions--", disabled=True),
-                        dict(value="action__latest__action_type",    text="Latest Action",           legal_lookups='STR_LOOKUP'),
-                        dict(value="action__latest__user__name",     text="Latest Action: User",     legal_lookups='STR_LOOKUP'),
-                        dict(value="action__latest__created_at",     text="Latest Action: Time",     legal_lookups='DATE_LOOKUP'),
-                        dict(value="action__latest__location__name", text="Latest Action: Location", legal_lookups='STR_LOOKUP'),
-                        dict(value="action__latest__detail",         text="Latest Action: Details",  legal_lookups='STR_LOOKUP'),
-                        dict(value="action__count",                  text="Total Action Count",      legal_lookups='NUM_LOOKUP'),
+                        dict(value="inventory_actions__latest__action_type",    text="Latest Action",           legal_lookups='STR_LOOKUP'),
+                        dict(value="inventory_actions__latest__user__name",     text="Latest Action: User",     legal_lookups='STR_LOOKUP'),
+                        dict(value="inventory_actions__latest__created_at",     text="Latest Action: Time",     legal_lookups='DATE_LOOKUP'),
+                        dict(value="inventory_actions__latest__location__name", text="Latest Action: Location", legal_lookups='STR_LOOKUP'),
+                        dict(value="inventory_actions__latest__detail",         text="Latest Action: Details",  legal_lookups='STR_LOOKUP'),
+                        dict(value="inventory_actions__count",                  text="Total Action Count",      legal_lookups='NUM_LOOKUP'),
                         ]
         return avail_fields
 
@@ -434,7 +434,7 @@ class PartTableView(GenericSearchTableView):
 class BuildTableView(GenericSearchTableView):
     model = Build
     table_class = BuildTable
-    query_prefetch = ['assembly','assembly__assembly_type','location','actions']
+    query_prefetch = ['assembly','assembly__assembly_type','location','build_actions']
 
     @staticmethod
     def get_avail_fields():
@@ -457,12 +457,12 @@ class BuildTableView(GenericSearchTableView):
                         #dict(value="location__root_type",     text="Root", legal_lookups='STR_LOOKUP'),
 
                         dict(value=None, text="--Actions--", disabled=True),
-                        dict(value="actions__latest__action_type",    text="Latest Action",           legal_lookups='STR_LOOKUP'),
-                        dict(value="actions__latest__user__name",     text="Latest Action: User",     legal_lookups='STR_LOOKUP'),
-                        dict(value="actions__latest__created_at",     text="Latest Action: Time",     legal_lookups='DATE_LOOKUP'),
-                        dict(value="actions__latest__location__name", text="Latest Action: Location", legal_lookups='STR_LOOKUP'),
-                        dict(value="actions__latest__detail",         text="Latest Action: Details",  legal_lookups='STR_LOOKUP'),
-                        dict(value="actions__count",                  text="Total Action Count",      legal_lookups='NUM_LOOKUP'),
+                        dict(value="build_actions__latest__action_type",    text="Latest Action",           legal_lookups='STR_LOOKUP'),
+                        dict(value="build_actions__latest__user__name",     text="Latest Action: User",     legal_lookups='STR_LOOKUP'),
+                        dict(value="build_actions__latest__created_at",     text="Latest Action: Time",     legal_lookups='DATE_LOOKUP'),
+                        dict(value="build_actions__latest__location__name", text="Latest Action: Location", legal_lookups='STR_LOOKUP'),
+                        dict(value="build_actions__latest__detail",         text="Latest Action: Details",  legal_lookups='STR_LOOKUP'),
+                        dict(value="build_actions__count",                  text="Total Action Count",      legal_lookups='NUM_LOOKUP'),
                         ]
 
         return avail_fields
