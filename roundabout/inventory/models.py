@@ -285,6 +285,14 @@ class Inventory(MPTTModel):
     def total_time_at_sea(self):
         return self.time_at_sea + self.current_deployment_time_at_sea()
 
+    # get queryset of all Deployments for this Item
+    def get_deployment_history(self):
+        actions = self.inventory_actions.filter(action_type='addtodeployment')
+        deployments = []
+        for action in actions:
+            deployments.append(action.deployment)
+        return deployments
+
 
 class DeploymentSnapshot(models.Model):
     deployment = models.ForeignKey(Deployment, related_name='deployment_snapshot',
@@ -368,18 +376,18 @@ class Action(models.Model):
         (FLAG, 'Flag'),
         (MOVETOTRASH, 'Move to Trash'),
     )
-    inventory = models.ForeignKey(Inventory, related_name='inventory_actions',
+    inventory = models.ForeignKey(Inventory, related_name='actions',
                                   on_delete=models.CASCADE, null=True, blank=True)
     action_type = models.CharField(max_length=20, choices=ACT_TYPES)
     created_at = models.DateTimeField(default=timezone.now)
     detail = models.TextField(blank=True)
-    user = models.ForeignKey(User, related_name='inventory_actions',
+    user = models.ForeignKey(User, related_name='actions',
                              on_delete=models.SET_NULL, null=True, blank=False)
-    location = TreeForeignKey(Location, related_name='inventory_actions',
+    location = TreeForeignKey(Location, related_name='actions',
                               on_delete=models.SET_NULL, null=True, blank=False)
-    deployment = models.ForeignKey(Deployment, related_name='inventory_actions',
+    deployment = models.ForeignKey(Deployment, related_name='actions',
                                    on_delete=models.SET_NULL, null=True, blank=True)
-    build = models.ForeignKey(Build, related_name='inventory_actions',
+    build = models.ForeignKey(Build, related_name='actions',
                               on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:

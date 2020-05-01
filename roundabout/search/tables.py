@@ -89,7 +89,7 @@ class SearchTable(ColumnShiftTable):
 class InventoryTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Inventory
-        action_accessors = ['inventory_actions__latest__action_type', 'inventory_actions__latest__user__name', 'inventory_actions__latest__created_at', 'inventory_actions__latest__location__name', 'inventory_actions__latest__detail']
+        action_accessors = ['actions__latest__action_type', 'actions__latest__user__name', 'actions__latest__created_at', 'actions__latest__location__name', 'actions__latest__detail']
         udf_accessors = ['fieldvalues__field__field_name','fieldvalues__field_value']
         fields = ['serial_number','part__name','location__name','revision__note']
         base_shown_cols = ['serial_number', 'part__name', 'location__name']
@@ -121,12 +121,12 @@ class InventoryTable(SearchTable):
     def value_revision__note(self,record):
         return record.revision.note
 
-    def render_inventory_actions__latest__action_type(self,value):
+    def render_actions__latest__action_type(self,value):
         try: disp_value = [text for val,text in Action.ACT_TYPES if val==value][0]
         except IndexError: disp_value = value
         return disp_value
 
-    def render_inventory_actions__latest__detail(self,value):
+    def render_actions__latest__detail(self,value):
         return mark_safe(value)
 
 class PartTable(SearchTable):

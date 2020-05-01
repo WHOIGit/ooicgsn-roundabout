@@ -395,11 +395,13 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
             custom_fields = self.object.fieldvalues.filter(is_current=True)
         else:
             custom_fields = None
+        # Get Deployment history from Actions
 
         context.update({
             'printers': printers,
             'custom_fields': custom_fields,
             'node_type': node_type,
+            'deployments': self.object.get_deployment_history(),
         })
         return context
 
