@@ -206,9 +206,15 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             self.object.save()
 
             details = 'Details set. <br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
-            detail_record = DeploymentAction.objects.create(action_type='details', detail=details, location=self.object.location,
-                                                  user=self.request.user, deployment=self.object, created_at=action_date,
-                                                  latitude=latitude, longitude=longitude, depth=depth)
+            detail_record = DeploymentAction.objects.create(action_type='details',
+                                                            detail=details,
+                                                            location=self.object.location,
+                                                            user=self.request.user,
+                                                            deployment=self.object,
+                                                            created_at=action_date,
+                                                            latitude=latitude,
+                                                            longitude=longitude,
+                                                            depth=depth)
 
         # If Updating deployment, update Location and add Depth, Lat/Long to Action Record
         if action_type == 'details':
@@ -216,9 +222,15 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             self.object.deployed_location = self.object.location
             self.object.save()
 
-        action_record = DeploymentAction.objects.create(action_type=action_type, detail=self.object.detail, location=self.object.location,
-                                              user=self.request.user, deployment=self.object, created_at=action_date,
-                                              latitude=latitude, longitude=longitude, depth=depth)
+        action_record = DeploymentAction.objects.create(action_type=action_type,
+                                                        detail=self.object.detail,
+                                                        location=self.object.location,
+                                                        user=self.request.user,
+                                                        deployment=self.object,
+                                                        created_at=action_date,
+                                                        latitude=latitude,
+                                                        longitude=longitude,
+                                                        depth=depth)
 
         # Update Build location, create Action Record
         build = self.object.build
@@ -237,8 +249,12 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         if action_type == 'deploy':
             self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
 
-        build_record = BuildAction.objects.create(action_type=action_type_inventory, detail=self.object.detail, location=build.location,
-                                                   user=self.request.user, build=build, created_at=action_date)
+        build_record = BuildAction.objects.create(action_type=action_type_inventory,
+                                                  detail=self.object.detail,
+                                                  location=build.location,
+                                                  user=self.request.user,
+                                                  build=build,
+                                                  created_at=action_date)
 
         #update Time at Sea if Recovered from Sea with Build model method
         if action_type == 'recover':
@@ -270,8 +286,14 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             item.location = build.location
             item.save()
 
-            action_record = Action.objects.create(action_type=action_type_inventory, detail='', location=build.location,
-                                                  user=self.request.user, inventory=item, created_at=action_date)
+            action_record = Action.objects.create(action_type=action_type_inventory,
+                                                  detail='',
+                                                  location=build.location,
+                                                  build=build,
+                                                  deployment=self.object,
+                                                  user=self.request.user,
+                                                  inventory=item,
+                                                  created_at=action_date)
             action_detail = '%s, moved to %s. ' % (action_record.get_action_type_display(), build.location)
             action_record.detail = action_detail
             action_record.save()

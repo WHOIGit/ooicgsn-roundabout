@@ -261,7 +261,7 @@
 
 
     {% for deployment in deployments %}
-        <p>{{ deployment }}</p>
+        <p>{{ deployment }} - {{ deployment.current_deployment_status }}</p>
     {% endfor %}
 
     <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">

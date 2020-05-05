@@ -658,14 +658,24 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                         item.detail = 'Removed from %s. ' % (item.build) + item.detail
                         # Create Build Action record
                         build_detail = '%s removed from %s' % (item, labels['label_builds_app_singular'])
-                        build_record = BuildAction.objects.create(action_type='subassemblychange', detail=build_detail, location=item.build.location,
-                                                                   user=self.request.user, build=item.build)
+                        build_record = BuildAction.objects.create(
+                                                            action_type='subassemblychange',
+                                                            detail=build_detail,
+                                                            location=item.build.location,
+                                                            user=self.request.user,
+                                                            build=item.build,
+                                                            )
                     item.build = None
                     item.assembly_part = None
                     item.assigned_destination_root = None
                 item.save()
-                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location_id=item.location_id,
-                                                      user_id=self.request.user.id, inventory_id=item.id)
+                action_record = Action.objects.create(
+                                                action_type=self.kwargs['action_type'],
+                                                detail=item.detail,
+                                                location=item.location,
+                                                user=self.request.user,
+                                                inventory=item,
+                                                )
 
             # If "movetotrash", need to remove all Build/AssemblyPart/Destination data
             if self.kwargs['action_type'] =='movetotrash':
@@ -677,8 +687,13 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
 
                     # Create Build Action record
                     build_detail = '%s removed from %s' % (self.object, labels['label_builds_app_singular'])
-                    build_record = BuildAction.objects.create(action_type='subassemblychange', detail=build_detail, location=old_build.location,
-                                                               user=self.request.user, build=old_build)
+                    build_record = BuildAction.objects.create(
+                                                        action_type='subassemblychange',
+                                                        detail=build_detail,
+                                                        location=old_build.location,
+                                                        user=self.request.user,
+                                                        build=old_build,
+                                                        )
                 self.object.build = None
                 self.object.assembly_part = None
                 self.object.assigned_destination_root = None
@@ -691,25 +706,69 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 old_build = Build.objects.get(pk=old_build_pk)
                 self.object.detail = ' Removed from %s. ' % (old_build) + self.object.detail
 
+                # If Build is Deployed, need to create separate Recover from Deployment record,
+                # also need to run item.update_time_at_sea() method after creating Action record
+                if old_build.is_deployed:
+                    action_record_deployment = Action.objects.create(
+                                                          action_type='deploymentrecover',
+                                                          detail='Recovered from %s.' % (old_build.current_deployment()),
+                                                          location=self.object.location,
+                                                          user=self.request.user,
+                                                          build=old_build,
+                                                          deployment=old_build.current_deployment(),
+                                                          inventory=self.object,
+                                                          )
+                    self.object.update_time_at_sea()
+
                 # Create Build Action record
                 build_detail = '%s removed from %s' % (self.object, labels['label_builds_app_singular'])
-                build_record = BuildAction.objects.create(action_type='subassemblychange', detail=build_detail, location=old_build.location,
-                                                           user=self.request.user, build=old_build)
+                build_record = BuildAction.objects.create(
+                                                    action_type='subassemblychange',
+                                                    detail=build_detail,
+                                                    location=old_build.location,
+                                                    user=self.request.user,
+                                                    build=old_build,
+                                                    )
 
             # Get any subassembly children items, add Action to history
             subassemblies = self.object.get_descendants()
             for item in subassemblies:
                 # Create Build Action record
                 build_detail = '%s removed from %s' % (item, labels['label_builds_app_singular'])
-                build_record = BuildAction.objects.create(action_type='subassemblychange', detail=build_detail, location=item.build.location,
-                                                           user=self.request.user, build=item.build)
+                build_record = BuildAction.objects.create(
+                                                    action_type='subassemblychange',
+                                                    detail=build_detail,
+                                                    location=item.build.location,
+                                                    user=self.request.user,
+                                                    build=item.build,
+                                                    )
                 item.assembly_part = None
                 item.build = None
                 item.location = self.object.location
                 item.detail = ' Removed from %s.' % (old_build)
                 item.save()
-                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location=item.location,
-                                                      user=self.request.user, inventory=item)
+                # Need to create Action record for removal from Build
+                action_record_build = Action.objects.create(
+                                                      action_type=self.kwargs['action_type'],
+                                                      detail=item.detail,
+                                                      location=item.location,
+                                                      user=self.request.user,
+                                                      build=old_build,
+                                                      inventory=item
+                                                      )
+                # If Build is Deployed, need to create separate Recover from Deployment record,
+                # also need to run item.update_time_at_sea() method
+                if old_build.is_deployed:
+                    action_record_deployment = Action.objects.create(
+                                                          action_type='deploymentrecover',
+                                                          detail='Recovered from %s.' % (old_build.current_deployment()),
+                                                          location=item.location,
+                                                          user=self.request.user,
+                                                          build=old_build,
+                                                          deployment=old_build.current_deployment(),
+                                                          inventory=item
+                                                          )
+                    item.update_time_at_sea()
 
         if self.kwargs['action_type'] == 'removedest':
             self.object.detail = 'Destination Assignment removed.'
@@ -1004,8 +1063,32 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
             detail = detail + ' Added to %s' % (inventory_item.parent)
             parent_record = Action.objects.create(action_type='subchange', detail='Sub-%s %s added.' % (labels['label_assemblies_app_singular'], inventory_item), location=inventory_item.location,
                                                   user=self.request.user, inventory=inventory_item.parent)
-        action_record = Action.objects.create(action_type='addtobuild', detail=detail, location=inventory_item.location,
-                                              user=self.request.user, inventory=inventory_item)
+
+        action_record = Action.objects.create(action_type='addtobuild',
+                                              detail=detail,
+                                              location=inventory_item.location,
+                                              user=self.request.user,
+                                              build=build,
+                                              inventory=inventory_item)
+        # If Build is deployed, need to add extra Action record to add to Deployment
+        if build.is_deployed:
+            current_deployment = build.current_deployment()
+            action_record_deployment = Action.objects.create(action_type='addtodeployment',
+                                                  detail='Added to %s' % (current_deployment),
+                                                  location=inventory_item.location,
+                                                  user=self.request.user,
+                                                  build=build,
+                                                  deployment=current_deployment,
+                                                  inventory=inventory_item)
+            # If Build is already at sea, need to add Action item for deploying to field
+            if current_deployment.current_deployment_status()== 'deploy':
+                action_record_deployment = Action.objects.create(action_type='deploymenttosea',
+                                                      detail='Deployed to field on ' % (current_deployment),
+                                                      location=inventory_item.location,
+                                                      user=self.request.user,
+                                                      build=build,
+                                                      deployment=current_deployment,
+                                                      inventory=inventory_item)
 
         # Check if any subassembly orphan children items already exist.  If so, make this item the parent
         children = inventory_item.assembly_part.get_children()
@@ -1039,13 +1122,48 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
                 item.detail = 'Parent Inventory Change'
 
             item.save()
-            action_record = Action.objects.create(action_type='invchange', detail=item.detail, location=item.location,
-                                                  user=self.request.user, inventory=item)
+
+            action_record = Action.objects.create(
+                                                action_type='addtobuild',
+                                                detail=item.detail,
+                                                location=item.location,
+                                                build=build,
+                                                user=self.request.user,
+                                                inventory=item,
+                                                )
+            # If Build is deployed, need to add extra Action record to add to Deployment
+            if build.is_deployed:
+                current_deployment = build.current_deployment()
+                action_record_deployment = Action.objects.create(
+                                                      action_type='addtodeployment',
+                                                      detail='Added to %s' % (current_deployment),
+                                                      location=item.location,
+                                                      user=self.request.user,
+                                                      build=build,
+                                                      deployment=current_deployment,
+                                                      inventory=item,
+                                                      )
+                # If Build is already at sea, need to add Action item for deploying to field
+                if current_deployment.current_deployment_status()== 'deploy':
+                    action_record_deployment = Action.objects.create(
+                                                          action_type='deploymenttosea',
+                                                          detail='Deployed to field on ' % (current_deployment),
+                                                          location=item.location,
+                                                          user=self.request.user,
+                                                          build=build,
+                                                          deployment=current_deployment,
+                                                          inventory=item,
+                                                          )
 
         # Create Build Action record for adding inventory item
         detail = '%s added to %s' % (inventory_item, labels['label_builds_app_singular'])
-        build_record = BuildAction.objects.create(action_type='subassemblychange', detail=detail, location=build.location,
-                                                   user=self.request.user, build=build)
+        build_record = BuildAction.objects.create(
+                                            action_type='subassemblychange',
+                                            detail=detail,
+                                            location=build.location,
+                                            user=self.request.user,
+                                            build=build
+                                            )
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ) )
 
@@ -1361,10 +1479,20 @@ class InventoryAjaxSubassemblyActionView(RedirectView):
         if subassembly.build:
             detail = detail + ' Moved to %s' % (subassembly.build)
         parent_detail = 'Sub-%s %s added.' % (labels['label_assemblies_app_singular'], subassembly)
-        action_record = Action.objects.create(action_type='subchange', detail=detail, location=parent.location,
-                                              user=self.request.user, inventory=subassembly)
-        parent_action_record = Action.objects.create(action_type='subchange', detail=parent_detail, location=parent.location,
-                                              user=self.request.user, inventory=parent)
+        action_record = Action.objects.create(
+                                        action_type='subchange',
+                                        detail=detail,
+                                        location=parent.location,
+                                        user=self.request.user,
+                                        inventory=subassembly,
+                                        )
+        parent_action_record = Action.objects.create(
+                                                action_type='subchange',
+                                                detail=parent_detail,
+                                                location=parent.location,
+                                                user=self.request.user,
+                                                inventory=parent,
+                                                )
 
         # Get any subassembly children items, move their location to match parent and add Action to history
         subassemblies = Inventory.objects.get(id=subassembly.id).get_descendants()
@@ -1388,8 +1516,13 @@ class InventoryAjaxSubassemblyActionView(RedirectView):
                 item.detail = 'Parent Inventory Change'
 
             item.save()
-            action_record = Action.objects.create(action_type='invchange', detail=item.detail, location=item.location,
-                                                  user=self.request.user, inventory=item)
+            action_record = Action.objects.create(
+                                            action_type='invchange',
+                                            detail=item.detail,
+                                            location=item.location,
+                                            user=self.request.user,
+                                            inventory=item,
+                                            )
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['parent_pk'], ) )
 
@@ -1431,7 +1564,7 @@ class InventoryAjaxByAssemblyPartListView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class InventoryAjaxByAssemblyPartyActionView(LoginRequiredMixin, RedirectView):
+class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
     permanent = False
     query_string = True
 
@@ -1462,8 +1595,37 @@ class InventoryAjaxByAssemblyPartyActionView(LoginRequiredMixin, RedirectView):
         else:
             action_type = 'invchange'
 
-        action_record = Action.objects.create(action_type=action_type, detail=detail, location=subassembly.location,
-                                              user=self.request.user, inventory=subassembly)
+        action_record = Action.objects.create(
+                                            action_type=action_type,
+                                            detail=detail,
+                                            location=subassembly.location,
+                                            build=build,
+                                            user=self.request.user,
+                                            inventory=subassembly
+                                            )
+        # If Build is deployed, need to add extra Action record to add to Deployment
+        if build.is_deployed:
+            current_deployment = build.current_deployment()
+            action_record_deployment = Action.objects.create(
+                                                  action_type='addtodeployment',
+                                                  detail='Added to %s' % (current_deployment),
+                                                  location=subassembly.location,
+                                                  user=self.request.user,
+                                                  build=build,
+                                                  deployment=current_deployment,
+                                                  inventory=subassembly,
+                                                  )
+            # If Build is already at sea, need to add Action item for deploying to field
+            if current_deployment.current_deployment_status() == 'deploy':
+                action_record_deployment = Action.objects.create(
+                                                      action_type='deploymenttosea',
+                                                      detail='Deployed to field on %s' % (current_deployment),
+                                                      location=subassembly.location,
+                                                      user=self.request.user,
+                                                      build=build,
+                                                      deployment=current_deployment,
+                                                      inventory=subassembly,
+                                                      )
 
         # Check if any subassembly orphan children items already exist.  If so, make this item the parent
         children = subassembly.assembly_part.get_children()
@@ -1498,13 +1660,47 @@ class InventoryAjaxByAssemblyPartyActionView(LoginRequiredMixin, RedirectView):
                 item.detail = 'Parent Inventory Change'
 
             item.save()
-            action_record = Action.objects.create(action_type=action_type, detail=item.detail, location_id=item.location_id,
-                                                  user_id=self.request.user.id, inventory_id=item.id)
+            action_record = Action.objects.create(
+                                            action_type=action_type,
+                                            detail=item.detail,
+                                            location=item.location,
+                                            build=build,
+                                            user=self.request.user,
+                                            inventory=item,
+                                            )
+            # If Build is deployed, need to add extra Action record to add to Deployment
+            if build.is_deployed:
+                current_deployment = build.current_deployment()
+                action_record_deployment = Action.objects.create(
+                                                              action_type='addtodeployment',
+                                                              detail='Added to %s' % (current_deployment),
+                                                              location=inventory_item.location,
+                                                              user=self.request.user,
+                                                              build=build,
+                                                              deployment=current_deployment,
+                                                              inventory=item,
+                                                              )
+                # If Build is already at sea, need to add Action item for deploying to field
+                if current_deployment.current_deployment_status() == 'deploy':
+                    action_record_deployment = Action.objects.create(
+                                                          action_type='deploymenttosea',
+                                                          detail='Deployed to field on %s' % (current_deployment),
+                                                          location=item.location,
+                                                          user=self.request.user,
+                                                          build=build,
+                                                          deployment=current_deployment,
+                                                          inventory=item,
+                                                          )
 
         # Create Build Action record for adding inventory item
         detail = '%s added to %s' % (subassembly, labels['label_builds_app_singular'])
-        build_record = BuildAction.objects.create(action_type='subassemblychange', detail=detail, location=build.location,
-                                                   user=self.request.user, build=build)
+        build_record = BuildAction.objects.create(
+                                            action_type='subassemblychange',
+                                            detail=detail,
+                                            location=build.location,
+                                            user=self.request.user,
+                                            build=build,
+                                            )
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ) )
 

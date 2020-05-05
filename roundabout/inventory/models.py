@@ -74,13 +74,13 @@ class Deployment(models.Model):
 
     #@property  # handy, but does not work with prefetching
     def get_latest_action(self):
-        return self.deployment_actions.all().first()
+        return self.deployment_actions.all().latest()
 
     def get_deployment_label(self):
         return self.deployment_number
 
     def current_deployment_status(self):
-        deployment_action = self.deployment_actions.first()
+        deployment_action = self.deployment_actions.latest()
         if deployment_action:
             if deployment_action.action_type == 'details':
                 deployment_status = 'deploy'
@@ -246,16 +246,18 @@ class Inventory(MPTTModel):
     # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
     def update_time_at_sea(self):
         try:
-            action_deploy_to_sea = Action.objects.filter(inventory=self).filter(action_type='deploymenttosea').latest('created_at')
+            action_deploy_to_sea = self.actions.filter(action_type='deploymenttosea').latest()
         except Action.DoesNotExist:
             action_deploy_to_sea = None
 
         try:
-            action_recover = Action.objects.filter(inventory=self).filter(action_type='deploymentrecover').latest('created_at')
+            action_recover = self.actions.filter(action_type='deploymentrecover').latest()
         except Action.DoesNotExist:
             action_recover = None
 
         if action_deploy_to_sea and action_recover:
+            print(action_recover.created_at)
+            print(action_deploy_to_sea.created_at)
             latest_time_at_sea =  action_recover.created_at - action_deploy_to_sea.created_at
         else:
             latest_time_at_sea = timedelta(minutes=0)
@@ -268,7 +270,7 @@ class Inventory(MPTTModel):
     def current_deployment_time_at_sea(self):
         if self.build and self.build.current_deployment() and self.build.current_deployment().current_deployment_status() == 'deploy':
             try:
-                action_deploy_to_sea = Action.objects.filter(inventory=self).filter(action_type='deploymenttosea').latest('created_at')
+                action_deploy_to_sea = self.actions.filter(action_type='deploymenttosea').latest()
             except Action.DoesNotExist:
                 action_deploy_to_sea = None
 
@@ -283,11 +285,13 @@ class Inventory(MPTTModel):
 
     # get the Total Time at Sea by adding historical sea time and current deployment sea time
     def total_time_at_sea(self):
-        return self.time_at_sea + self.current_deployment_time_at_sea()
+        if self.time_at_sea:
+            return self.time_at_sea + self.current_deployment_time_at_sea()
+        return timedelta(minutes=0)
 
     # get queryset of all Deployments for this Item
     def get_deployment_history(self):
-        actions = self.inventory_actions.filter(action_type='addtodeployment')
+        actions = self.actions.filter(action_type='addtodeployment')
         deployments = []
         for action in actions:
             deployments.append(action.deployment)
@@ -365,7 +369,7 @@ class Action(models.Model):
         (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTTOSEA, '%s to Field' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTUPDATE, '%s Update' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTRECOVER, '%s Recovered' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTRECOVER, '%s Recovery' % (labels['label_deployments_app_singular'])),
         (ASSIGNDEST, 'Assign Destination'),
         (REMOVEDEST, 'Remove Destination'),
         (TEST, 'Test'),
