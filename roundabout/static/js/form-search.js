@@ -334,24 +334,25 @@ function DoSubmit(e){
 
 // CSV DOWNLOADING STUFF //
 
-function csvdownload_spinner(on_or_off =null){
-    const csv_button = $('#search--download-csv-button')
+function buttonload_spinner(on_or_off =null, button_id='#search--download-csv-button', fa_replace=null){
+    const csv_button = $(button_id)
     const button_icon = csv_button.find('span')
     if (on_or_off === 'on'){
         csv_button.prop('disabled',true)
         button_icon.addClass('fa-spinner fa-spin')
-        button_icon.removeClass('fa-download')
+        if (fa_replace) { button_icon.removeClass(fa_replace) }
     }
     else if (on_or_off === 'off'){
         csv_button.prop('disabled',false)
         button_icon.removeClass('fa-spinner fa-spin')
-        button_icon.addClass('fa-download')
+        if (fa_replace) { button_icon.addClass(fa_replace) }
     }
     else{ // straight up toggle
         if (csv_button.prop('disabled'))
            {csv_button.prop('disabled',false)}
         else{ csv_button.prop('disabled',true) }
-        button_icon.toggleClass('fa-download fa-spinner fa-spin')
+        button_icon.toggleClass('fa-spinner fa-spin')
+        if (fa_replace) { button_icon.toggleClass(fa_replace) }
     }
 }
 
@@ -370,10 +371,10 @@ function DownloadCSV(href_base, vis_only=null){
     oReq.onload = function(oEvent) {
         var resp = oReq.response
         console.log('ONLOAD',resp)
-        csvdownload_spinner('off')
+        buttonload_spinner('off', '#search--download-csv-button', 'fa-download')
         saveData(resp,`RDB_${page_model}.csv`)
     }
-    csvdownload_spinner('on')
+    buttonload_spinner('on','#search--download-csv-button', 'fa-download')
     oReq.send()
 }
 

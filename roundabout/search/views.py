@@ -297,9 +297,10 @@ class InventoryTableView(GenericSearchTableView):
     def get_avail_fields():
         avail_fields = [dict(value="part__name",              text="Name", legal_lookups='STR_LOOKUP'),
                         dict(value="serial_number",  text="Serial Number", legal_lookups='STR_LOOKUP'),
+                        dict(value="old_serial_number", text="Old Serial Number", legal_lookups='STR_LOOKUP'),
                         dict(value="location__name",      text="Location", legal_lookups='STR_LOOKUP'),
                         dict(value="build__assembly__name",  text="Build", legal_lookups='STR_LOOKUP'),
-                        dict(value="revision__note",          text="Note", legal_lookups='STR_LOOKUP'),
+                        dict(value="detail",                text="Detail", legal_lookups='STR_LOOKUP'),
                         dict(value="created_at",      text="Date Created", legal_lookups='DATE_LOOKUP'),
                         dict(value="updated_at",     text="Date Modified", legal_lookups='DATE_LOOKUP'),
 
