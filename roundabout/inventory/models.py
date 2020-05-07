@@ -72,10 +72,6 @@ class Deployment(models.Model):
         else:
             return '%s - %s' % (self.deployment_number, self.location.name)
 
-    #@property  # handy, but does not work with prefetching
-    def get_latest_action(self):
-        return self.deployment_actions.all().latest()
-
     def get_deployment_label(self):
         return self.deployment_number
 
@@ -228,10 +224,6 @@ class Inventory(MPTTModel):
     def __str__(self):
         return self.serial_number
 
-    #@property  # handy, but does not work with prefetching
-    def get_latest_action(self):
-        return self.action.all().first()
-
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
         return 'inventory'
@@ -242,6 +234,39 @@ class Inventory(MPTTModel):
     def get_descendants_with_self(self):
         tree = self.get_descendants(include_self=True)
         return tree
+
+    # method to create new Action model records to track Inventory/User
+    def create_action_record(self, user, action_type):
+        build = self.build
+        deployment = None
+        if build:
+            deployment = self.build.current_deployment()
+
+        last_action = self.actions.latest()
+
+        if action_type == 'invadd':
+            detail = 'Item first added to Inventory'
+        elif action_type == 'locationchange' or action_type == 'movetotrash':
+            detail = 'Moved to %s from %s. ' % (self.location, last_action.location)
+        elif action_type == 'removefrombuild':
+            last_build_action = self.actions.filter(build__isnull=False).latest()
+            build = last_build_action.build
+            detail = 'Removed from %s' % (last_build_action.build)
+        elif action_type == 'deploymentrecover':
+            last_deployment_action = self.actions.filter(deployment__isnull=False).latest()
+            deployment = last_deployment_action.deployment
+            detail = 'Recovered from %s.' % (last_deployment_action.deployment)
+
+        action_record = Action.objects.create(
+                            action_type=action_type,
+                            detail=detail,
+                            location=self.location,
+                            build=build,
+                            deployment=deployment,
+                            user=user,
+                            inventory=self,
+                        )
+        print('Action saved')
 
     # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
     def update_time_at_sea(self):

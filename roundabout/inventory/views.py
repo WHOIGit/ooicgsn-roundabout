@@ -458,9 +458,17 @@ class InventoryAjaxCreateBasicView(LoginRequiredMixin, AjaxFormMixin, CreateView
 
     def form_valid(self, form):
         self.object = form.save()
-        action_record = Action.objects.create(action_type='invadd', detail='Item first added to Inventory', location_id=self.object.location_id,
-                                              user_id=self.request.user.id, inventory_id=self.object.id)
-
+        # Create Action record
+        self.object.create_action_record(self.request.user, 'invadd')
+        """
+        action_record = Action.objects.create(
+                                        action_type='invadd',
+                                        detail='Item first added to Inventory',
+                                        location=self.object.location,
+                                        user=self.request.user,
+                                        inventory=self.object,
+                                        )
+        """
         # Check if this Part has Custom fields with global default values, create fields if needed
         try:
             # Exclude any fields with Global Part Values
@@ -623,16 +631,13 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
         return context
 
     def form_valid(self, form):
-        if self.kwargs['action_type'] == 'locationchange' or self.kwargs['action_type'] =='movetotrash':
-            # Find previous location to add to Detail field text
-            old_location_pk = self.object.tracker.previous('location')
-            if old_location_pk:
-                old_location = Location.objects.get(pk=old_location_pk)
-                if old_location.name != self.object.location.name:
-                    self.object.detail = 'Moved to %s from %s. ' % (self.object.location.name, old_location) + self.object.detail
+        action_type = self.kwargs['action_type']
+        # create initial Action record for self.object
+        self.object.create_action_record(self.request.user, action_type)
 
+        if action_type == 'locationchange' or action_type =='movetotrash':
             # Get any subassembly children items, move their location sto match parent and add Action to history
-            subassemblies = Inventory.objects.get(id=self.object.id).get_descendants()
+            subassemblies = self.object.get_descendants()
             assembly_parts_added = []
             for item in subassemblies:
                 if self.object.assembly_part:
@@ -646,16 +651,10 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 else:
                     item.assembly_part = None
 
-                item.location_id = self.object.location_id
-                if old_location.name != self.object.location.name:
-                    item.detail = 'Moved to %s from %s' % (self.object.location.name, old_location.name)
-                else:
-                    item.detail = 'Parent Inventory Change'
-
                 # If "movetotrash", need to remove all Build/AssemblyPart/Destination data for children
-                if self.kwargs['action_type'] =='movetotrash':
+                if action_type =='movetotrash':
                     if item.build:
-                        item.detail = 'Removed from %s. ' % (item.build) + item.detail
+                        item.create_action_record(self.request.user, 'removefrombuild')
                         # Create Build Action record
                         build_detail = '%s removed from %s' % (item, labels['label_builds_app_singular'])
                         build_record = BuildAction.objects.create(
@@ -668,23 +667,17 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                     item.build = None
                     item.assembly_part = None
                     item.assigned_destination_root = None
+                item.location = self.object.location
                 item.save()
-                action_record = Action.objects.create(
-                                                action_type=self.kwargs['action_type'],
-                                                detail=item.detail,
-                                                location=item.location,
-                                                user=self.request.user,
-                                                inventory=item,
-                                                )
+                item.create_action_record(self.request.user, action_type)
 
             # If "movetotrash", need to remove all Build/AssemblyPart/Destination data
-            if self.kwargs['action_type'] =='movetotrash':
+            if action_type =='movetotrash':
                 # Find Build it was removed from
                 old_build_pk = self.object.tracker.previous('build')
                 if old_build_pk:
+                    self.object.create_action_record(self.request.user, 'removefrombuild')
                     old_build = Build.objects.get(pk=old_build_pk)
-                    self.object.detail = ' Removed from %s. ' % (old_build) + self.object.detail
-
                     # Create Build Action record
                     build_detail = '%s removed from %s' % (self.object, labels['label_builds_app_singular'])
                     build_record = BuildAction.objects.create(
@@ -699,25 +692,15 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 self.object.assigned_destination_root = None
                 self.object.save()
 
-        if self.kwargs['action_type'] == 'removefrombuild':
+        if action_type == 'removefrombuild':
             # Find Build it was removed from
             old_build_pk = self.object.tracker.previous('build')
             if old_build_pk:
                 old_build = Build.objects.get(pk=old_build_pk)
-                self.object.detail = ' Removed from %s. ' % (old_build) + self.object.detail
-
                 # If Build is Deployed, need to create separate Recover from Deployment record,
                 # also need to run item.update_time_at_sea() method after creating Action record
                 if old_build.is_deployed:
-                    action_record_deployment = Action.objects.create(
-                                                          action_type='deploymentrecover',
-                                                          detail='Recovered from %s.' % (old_build.current_deployment()),
-                                                          location=self.object.location,
-                                                          user=self.request.user,
-                                                          build=old_build,
-                                                          deployment=old_build.current_deployment(),
-                                                          inventory=self.object,
-                                                          )
+                    self.object.create_action_record(self.request.user, 'deploymentrecover')
                     self.object.update_time_at_sea()
 
                 # Create Build Action record
@@ -747,30 +730,14 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 item.location = self.object.location
                 item.detail = ' Removed from %s.' % (old_build)
                 item.save()
-                # Need to create Action record for removal from Build
-                action_record_build = Action.objects.create(
-                                                      action_type=self.kwargs['action_type'],
-                                                      detail=item.detail,
-                                                      location=item.location,
-                                                      user=self.request.user,
-                                                      build=old_build,
-                                                      inventory=item
-                                                      )
+                item.create_action_record(self.request.user, action_type)
                 # If Build is Deployed, need to create separate Recover from Deployment record,
                 # also need to run item.update_time_at_sea() method
                 if old_build.is_deployed:
-                    action_record_deployment = Action.objects.create(
-                                                          action_type='deploymentrecover',
-                                                          detail='Recovered from %s.' % (old_build.current_deployment()),
-                                                          location=item.location,
-                                                          user=self.request.user,
-                                                          build=old_build,
-                                                          deployment=old_build.current_deployment(),
-                                                          inventory=item
-                                                          )
+                    item.create_action_record(self.request.user, 'deploymentrecover')
                     item.update_time_at_sea()
 
-        if self.kwargs['action_type'] == 'removedest':
+        if action_type == 'removedest':
             self.object.detail = 'Destination Assignment removed.'
             # Get any subassembly children items, add Action to history
             subassemblies = Inventory.objects.get(id=self.object.id).get_descendants()
@@ -782,13 +749,13 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location_id=item.location_id,
                                                       user_id=self.request.user.id, inventory_id=item.id)
 
-        if self.kwargs['action_type'] == 'test':
+        if action_type == 'test':
             self.object.detail = '%s: %s. ' % (self.object.get_test_type_display(), self.object.get_test_result_display()) + self.object.detail
 
         #if self.kwargs['action_type'] == 'flag':
             #self.kwargs['action_type'] = self.object.get_flag_display()
 
-        if self.kwargs['action_type'] == 'subchange':
+        if action_type == 'subchange':
             # Find if it was removed from Build as well
             old_build_pk = self.object.tracker.previous('build')
             if old_build_pk:
@@ -849,9 +816,6 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                                                       user=self.request.user, inventory=item)
 
         action_form = form.save()
-        action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=self.object.detail, location=self.object.location,
-                                              user=self.request.user, inventory=self.object)
-
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
@@ -1083,7 +1047,7 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
             # If Build is already at sea, need to add Action item for deploying to field
             if current_deployment.current_deployment_status()== 'deploy':
                 action_record_deployment = Action.objects.create(action_type='deploymenttosea',
-                                                      detail='Deployed to field on ' % (current_deployment),
+                                                      detail='Deployed to field on %s' % (current_deployment),
                                                       location=inventory_item.location,
                                                       user=self.request.user,
                                                       build=build,
@@ -1147,7 +1111,7 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
                 if current_deployment.current_deployment_status()== 'deploy':
                     action_record_deployment = Action.objects.create(
                                                           action_type='deploymenttosea',
-                                                          detail='Deployed to field on ' % (current_deployment),
+                                                          detail='Deployed to field on %s' % (current_deployment),
                                                           location=item.location,
                                                           user=self.request.user,
                                                           build=build,
@@ -1674,7 +1638,7 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
                 action_record_deployment = Action.objects.create(
                                                               action_type='addtodeployment',
                                                               detail='Added to %s' % (current_deployment),
-                                                              location=inventory_item.location,
+                                                              location=item.location,
                                                               user=self.request.user,
                                                               build=build,
                                                               deployment=current_deployment,
