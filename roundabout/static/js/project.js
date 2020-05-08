@@ -334,6 +334,18 @@ $.ajaxSetup({
 });
 
 // AJAX functions to display Django error messages
+function apply_form_field_error_array(index, value, error) {
+    var input = $("input[name$=" + index + '-' + value + "]")
+
+    $('#error-' + index + '-' + value).remove()
+
+    var error_msg = $("<div id = error-" + index + '-' + value + " />").addClass("ajax-error alert alert-danger").text(error[0])
+
+    // container.addClass("error");
+    error_msg.insertAfter(input);
+}
+
+// AJAX functions to display Django error messages
 function apply_form_field_error(fieldname, error) {
     var input = $("#id_" + fieldname),
         container = $("#div_id_" + fieldname),
@@ -482,13 +494,21 @@ $(document).ready(function(){
         console.log(errorThrown)
         var errors = $.parseJSON(data.responseText);
         console.log(errors)
-        $.each(errors, function(index, value) {
-            if (index === "__all__") {
-                django_message(value[0], "error");
-            } else {
-                apply_form_field_error(index, value);
-            }
-        });
+        if (Array.isArray(errors)) {
+            errors.map((error, rowNum) => {
+                $.each(error, function(columnName, value) {
+                    apply_form_field_error_array(rowNum, columnName, value);
+                });
+            });
+        } else {
+            $.each(errors, function(index, value) {
+                if (index === "__all__") {
+                    django_message(value[0], "error");
+                } else {
+                    apply_form_field_error(index, value);
+                }
+            });
+        }
     }
 })
 

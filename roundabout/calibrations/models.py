@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.validators import MinValueValidator, DecimalValidator, MaxValueValidator, RegexValidator
+from django.core.validators import MinValueValidator, DecimalValidator, MaxValueValidator, RegexValidator, MaxLengthValidator
 from django.utils import timezone
 from roundabout.parts.models import Part
 from roundabout.inventory.models import Inventory, Deployment
@@ -53,6 +53,18 @@ def validate_coeff_val(value):
             params={'value': value},
         )
 
+# Coefficient Value validator
+# Throws error if string input cannot be cooerced into decimal
+def validate_coeff_len(value):
+    try:
+        processed = round(value)
+        assert len(processed) <= 21
+    except:
+        raise ValidationError(
+            _('Number can contain a maximum of 20 digits'),
+            params={'value': value},
+        )
+
 # Tracks Coefficients across Calibrations
 class CoefficientValue(models.Model):
     NOTATION_FORMAT = (
@@ -60,7 +72,7 @@ class CoefficientValue(models.Model):
         ("eng", "Engineering"),
         ("std", "Standard"),
     )
-    value = models.CharField(max_length = 21, unique = False, db_index = False, validators = [validate_coeff_val])
+    value = models.CharField(max_length = 255, unique = False, db_index = False, validators = [validate_coeff_val, validate_coeff_len])
     notation_format = models.CharField(max_length=3, choices=NOTATION_FORMAT, null=False, blank=False, default="std")
     created_at = models.DateTimeField(default=timezone.now)
     coefficient_name = models.ForeignKey(CoefficientName, related_name='coefficient_values', on_delete=models.CASCADE, null=True)
@@ -69,3 +81,5 @@ class CoefficientValue(models.Model):
         return self.value
     def get_object_type(self):
         return 'coefficient_value'
+    class Meta:
+        ordering = ['created_at']

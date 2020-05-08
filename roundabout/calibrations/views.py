@@ -67,12 +67,15 @@ class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
             return response
 
     def form_invalid(self, form, coefficient_form):
-        form_errors = coefficient_form.errors
         print('coeff_form_create_errors')
         print(form_errors)
         if self.request.is_ajax():
-            data = form.errors
-            return JsonResponse(data, status=400)
+            if form.errors:
+                data = form.errors
+                return JsonResponse(data, status=400)
+            if coefficient_form.errors:
+                data = form.errors
+                return JsonResponse(data, status=400, safe=False)
         else:
             return self.render_to_response(self.get_context_data(form=form, coefficient_form=coefficient_form, form_errors=form_errors))
 
@@ -136,14 +139,29 @@ class CalibrationsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
             return response
 
     def form_invalid(self, form, coefficient_form):
-        form_errors = coefficient_form.errors
         print('coeff_form_update_errors')
-        print(form_errors)
         if self.request.is_ajax():
-            data = form.errors
-            return JsonResponse(data, status=400)
+            if form.errors:
+                data = form.errors
+                return JsonResponse(
+                    data, 
+                    status=400
+                )
+            if coefficient_form.errors:
+                data = coefficient_form.errors
+                return JsonResponse(
+                    data, 
+                    status=400,
+                    safe=False
+                )
         else:
-            return self.render_to_response(self.get_context_data(form=form, coefficient_form=coefficient_form, form_errors=form_errors))
+            return self.render_to_response(
+                self.get_context_data(
+                    form=form, 
+                    coefficient_form=coefficient_form, 
+                    form_errors=form_errors
+                )
+            )
 
     def get_success_url(self):
         return reverse('inventory:ajax_inventory_detail', args=(self.object.inventory.id, ))

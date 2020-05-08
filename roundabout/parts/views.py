@@ -205,8 +205,18 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         form_errors = documentation_form.errors
 
         if self.request.is_ajax():
-            data = form.errors
-            return JsonResponse(data, status=400)
+            if form.errors:
+                data = form.errors
+                return JsonResponse(data, status=400)
+            if revision_form.errors:
+                data = revision_form.errors
+                return JsonResponse(data, status=400, safe=False)
+            if documentation_form.errors:
+                data = documentation_form.errors
+                return JsonResponse(data, status=400, safe=False)
+            if calibration_form.errors:
+                data = calibration_form.errors
+                return JsonResponse(data, status=400, safe=False)
         else:
             return self.render_to_response(self.get_context_data(form=form, revision_form=revision_form, documentation_form=documentation_form, calibration_form=calibration_form, form_errors=form_errors))
 
@@ -258,12 +268,16 @@ class PartsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         else:
             return response
 
-    def form_invalid(self, form):
+    def form_invalid(self, form, calibration_form):
         if self.request.is_ajax():
-            data = form.errors
-            return JsonResponse(data, status=400)
+            if form.errors:
+                data = form.errors
+                return JsonResponse(data, status=400)
+            elif calibration_form.errors:
+                data = calibration_form.errors
+                return JsonResponse(data, status=400, safe=False)
         else:
-            return self.render_to_response(self.get_context_data(form=form, form_errors=form_errors))
+            return self.render_to_response(self.get_context_data(form=form, calibration_form=calibration_form, form_errors=form_errors))
 
     def get_success_url(self):
         return reverse('parts:ajax_parts_detail', args=(self.object.id, ))
