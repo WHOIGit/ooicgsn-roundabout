@@ -260,6 +260,10 @@ class Inventory(MPTTModel):
             detail = 'Destination Assignment removed. %s' % (detail)
         elif action_type == 'test':
             detail = '%s: %s. %s' % (self.get_test_type_display(), self.get_test_result_display(), detail)
+        elif action_type == 'addtodeployment':
+             detail = 'Added to %s' % (deployment)
+        elif action_type == 'deploymenttosea':
+             detail = 'Deployed to field on %s' % (deployment)
 
         action_record = Action.objects.create(
                             action_type=action_type,
@@ -270,7 +274,6 @@ class Inventory(MPTTModel):
                             user=user,
                             inventory=self,
                         )
-        print('Action saved')
 
     # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
     def update_time_at_sea(self):
