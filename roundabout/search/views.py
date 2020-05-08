@@ -300,7 +300,7 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="old_serial_number", text="Old Serial Number", legal_lookups='STR_LOOKUP'),
                         dict(value="location__name",      text="Location", legal_lookups='STR_LOOKUP'),
                         dict(value="build__assembly__name",  text="Build", legal_lookups='STR_LOOKUP'),
-                        dict(value="detail",                text="Detail", legal_lookups='STR_LOOKUP'),
+                        dict(value="detail",       text="Notes & Details", legal_lookups='STR_LOOKUP'),
                         dict(value="created_at",      text="Date Created", legal_lookups='DATE_LOOKUP'),
                         dict(value="updated_at",     text="Date Modified", legal_lookups='DATE_LOOKUP'),
 
