@@ -460,15 +460,6 @@ class InventoryAjaxCreateBasicView(LoginRequiredMixin, AjaxFormMixin, CreateView
         self.object = form.save()
         # Create Action record
         self.object.create_action_record(self.request.user, 'invadd')
-        """
-        action_record = Action.objects.create(
-                                        action_type='invadd',
-                                        detail='Item first added to Inventory',
-                                        location=self.object.location,
-                                        user=self.request.user,
-                                        inventory=self.object,
-                                        )
-        """
         # Check if this Part has Custom fields with global default values, create fields if needed
         try:
             # Exclude any fields with Global Part Values
@@ -632,8 +623,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
 
     def form_valid(self, form):
         action_type = self.kwargs['action_type']
-        # create initial Action record for self.object
-        self.object.create_action_record(self.request.user, action_type)
+        detail = self.object.detail
 
         if action_type == 'locationchange' or action_type =='movetotrash':
             # Get any subassembly children items, move their location sto match parent and add Action to history
@@ -669,14 +659,14 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                     item.assigned_destination_root = None
                 item.location = self.object.location
                 item.save()
-                item.create_action_record(self.request.user, action_type)
+                item.create_action_record(self.request.user, action_type, detail)
 
             # If "movetotrash", need to remove all Build/AssemblyPart/Destination data
             if action_type =='movetotrash':
                 # Find Build it was removed from
                 old_build_pk = self.object.tracker.previous('build')
                 if old_build_pk:
-                    self.object.create_action_record(self.request.user, 'removefrombuild')
+                    self.object.create_action_record(self.request.user, 'removefrombuild', detail)
                     old_build = Build.objects.get(pk=old_build_pk)
                     # Create Build Action record
                     build_detail = '%s removed from %s' % (self.object, labels['label_builds_app_singular'])
@@ -700,7 +690,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 # If Build is Deployed, need to create separate Recover from Deployment record,
                 # also need to run item.update_time_at_sea() method after creating Action record
                 if old_build.is_deployed:
-                    self.object.create_action_record(self.request.user, 'deploymentrecover')
+                    self.object.create_action_record(self.request.user, 'deploymentrecover', detail)
                     self.object.update_time_at_sea()
 
                 # Create Build Action record
@@ -730,7 +720,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 item.location = self.object.location
                 item.detail = ' Removed from %s.' % (old_build)
                 item.save()
-                item.create_action_record(self.request.user, action_type)
+                item.create_action_record(self.request.user, action_type, detail)
                 # If Build is Deployed, need to create separate Recover from Deployment record,
                 # also need to run item.update_time_at_sea() method
                 if old_build.is_deployed:
@@ -738,53 +728,31 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                     item.update_time_at_sea()
 
         if action_type == 'removedest':
-            self.object.detail = 'Destination Assignment removed.'
             # Get any subassembly children items, add Action to history
             subassemblies = Inventory.objects.get(id=self.object.id).get_descendants()
             for item in subassemblies:
                 item.assembly_part = None
                 item.assigned_destination_root = None
-                item.detail = 'Destination Assignment removed.'
                 item.save()
-                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location_id=item.location_id,
-                                                      user_id=self.request.user.id, inventory_id=item.id)
-
-        if action_type == 'test':
-            self.object.detail = '%s: %s. ' % (self.object.get_test_type_display(), self.object.get_test_result_display()) + self.object.detail
-
-        #if self.kwargs['action_type'] == 'flag':
-            #self.kwargs['action_type'] = self.object.get_flag_display()
+                item.create_action_record(self.request.user, action_type, detail)
 
         if action_type == 'subchange':
-            # Find if it was removed from Build as well
-            old_build_pk = self.object.tracker.previous('build')
-            if old_build_pk:
-                old_build = Build.objects.get(pk=old_build_pk)
-                self.object.detail = ' Removed from %s. ' % (old_build) + self.object.detail
-
-                # Create Build Action record for adding inventory item
-                build_detail = '%s removed from %s' % (self.object, labels['label_builds_app_singular'])
-                build_record = BuildAction.objects.create(action_type='subassemblychange', detail=build_detail, location=old_build.location,
-                                                           user=self.request.user, build=old_build)
             # Find previous parent to add to Detail field text
             old_parent_pk = self.object.tracker.previous('parent')
             if old_parent_pk:
                 old_parent = Inventory.objects.get(pk=old_parent_pk)
-                parent_detail = 'Sub-%s %s removed. ' % (labels['label_assemblies_app_singular'], self.object) + self.object.detail
-                self.object.detail = 'Removed from %s. ' % (old_parent) + self.object.detail
+                parent_detail = 'Sub-%s %s removed. ' % (labels['label_assemblies_app_singular'], self.object)
+                detail = 'Removed from %s. %s' % (old_parent, detail)
 
                 # Add Action Record for Parent Assembly
-                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=parent_detail, location=self.object.location,
-                                                      user=self.request.user, inventory=old_parent)
+                old_parent.create_action_record(self.request.user, action_type, parent_detail)
 
-            # Find previous location to add to Detail field text
+            # Find previous location to check if item was moved, add Action record
             old_location_pk = self.object.tracker.previous('location')
             if old_location_pk:
                 old_location = Location.objects.get(pk=old_location_pk)
-                if self.object.build:
-                    self.object.detail = 'Moved to %s from %s' % (self.object.build, old_location.name) + self.object.detail
-                elif old_location.name != self.object.location.name:
-                    self.object.detail = 'Moved to %s from %s. ' % (self.object.location.name, old_location) + self.object.detail
+                if self.object.location != old_location:
+                    self.object.create_action_record(self.request.user, 'locationchange')
 
             # Get any subassembly children items, move their location to match parent and add Action to history
             subassemblies = self.object.get_descendants()
@@ -804,17 +772,17 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 item.location = self.object.location
                 item.build = self.object.build
                 item.assigned_destination_root = self.object.assigned_destination_root
-
-                if self.object.build:
-                    item.detail = 'Moved to %s from %s' % (self.object.build, old_location.name)
-                elif old_location.name != self.object.location.name:
-                    item.detail = 'Moved to %s from %s' % (self.object.location.name, old_location.name)
-                else:
-                    item.detail = 'Parent Inventory Change'
+                item.detail = 'Parent Inventory Change'
                 item.save()
-                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location=item.location,
-                                                      user=self.request.user, inventory=item)
+                item.create_action_record(self.request.user, action_type)
+                # Find previous location to check if item was moved, add Action record
+                if old_location_pk:
+                    if item.location != old_location:
+                        item.create_action_record(self.request.user, 'locationchange')
 
+        # create initial Action record for self.object
+        self.object.create_action_record(self.request.user, action_type, detail)
+        # commit form
         action_form = form.save()
         response = HttpResponseRedirect(self.get_success_url())
 

@@ -236,7 +236,7 @@ class Inventory(MPTTModel):
         return tree
 
     # method to create new Action model records to track Inventory/User
-    def create_action_record(self, user, action_type):
+    def create_action_record(self, user, action_type, detail=''):
         build = self.build
         deployment = None
         if build:
@@ -245,17 +245,21 @@ class Inventory(MPTTModel):
         last_action = self.actions.latest()
 
         if action_type == 'invadd':
-            detail = 'Item first added to Inventory'
+            detail = 'Item first added to Inventory. %s' % (detail)
         elif action_type == 'locationchange' or action_type == 'movetotrash':
-            detail = 'Moved to %s from %s. ' % (self.location, last_action.location)
+            detail = 'Moved to %s from %s. %s' % (self.location, last_action.location, detail)
         elif action_type == 'removefrombuild':
             last_build_action = self.actions.filter(build__isnull=False).latest()
             build = last_build_action.build
-            detail = 'Removed from %s' % (last_build_action.build)
+            detail = 'Removed from %s. %s' % (last_build_action.build, detail)
         elif action_type == 'deploymentrecover':
             last_deployment_action = self.actions.filter(deployment__isnull=False).latest()
             deployment = last_deployment_action.deployment
-            detail = 'Recovered from %s.' % (last_deployment_action.deployment)
+            detail = 'Recovered from %s. %s' % (last_deployment_action.deployment, detail)
+        elif action_type == 'removedest':
+            detail = 'Destination Assignment removed. %s' % (detail)
+        elif action_type == 'test':
+            detail = '%s: %s. %s' % (self.get_test_type_display(), self.get_test_result_display(), detail)
 
         action_record = Action.objects.create(
                             action_type=action_type,
