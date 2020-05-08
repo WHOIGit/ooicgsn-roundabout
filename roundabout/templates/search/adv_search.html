@@ -95,13 +95,18 @@
         <div class="dropdown ml-3">
           <button class="btn btn-secondary dropdown-toggle" type="button" id="search-model-dropdown"
                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <span class="fa"></span>{{ model }}
+            <span class="fa"></span>
+            {% if model == 'Inventory' %}  {{ label_inventory_app_plural }}
+            {% elif model == 'Build' %}    {{ label_builds_app_plural }}
+            {% elif model == 'Part' %}     Part Templates
+            {% elif model == 'Assembly' %} {{ label_assemblies_app_singular }} Templates
+            {% endif %}
           </button>
           <div class="dropdown-menu" aria-labelledby="search-model-dropdown">
-            <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:inventory' %}>Inventory</a>
-            <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:build' %}>Builds</a>
+            <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:inventory' %}>{{ label_inventory_app_plural }}</a>
+            <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:build' %}>{{ label_builds_app_plural }}</a>
             <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:part' %}>Part Templates</a>
-            <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:assembly' %}>Assembly Templates</a>
+            <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:assembly' %}>{{ label_assemblies_app_singular }} Templates</a>
           </div>
         </div>
         <div class="p-2 ml-auto">
