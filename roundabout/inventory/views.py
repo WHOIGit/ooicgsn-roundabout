@@ -1004,7 +1004,7 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
 
         # If Build is deployed, need to add extra Action record to add to Deployment
         if build.is_deployed:
-            inventory_item.create_action_record(self.request.user, 'addtodeployment')
+            inventory_item.create_action_record(self.request.user, 'startdeployment')
             # If Build is already at sea, need to add Action item for deploying to field
             current_deployment = build.current_deployment()
             if current_deployment.current_deployment_status()== 'deploy':
@@ -1042,7 +1042,7 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
                 item.create_action_record(self.request.user, 'locationchange')
             # If Build is deployed, need to add extra Action record to add to Deployment
             if build.is_deployed:
-                item.create_action_record(self.request.user, 'addtodeployment')
+                item.create_action_record(self.request.user, 'startdeployment')
                 # If Build is already at sea, need to add Action item for deploying to field
                 current_deployment = build.current_deployment()
                 if current_deployment.current_deployment_status()== 'deploy':
@@ -1490,7 +1490,7 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
 
         # If Build is deployed, need to add extra Action record to add to Deployment
         if build.is_deployed:
-            subassembly.create_action_record(self.request.user, 'addtodeployment')
+            subassembly.create_action_record(self.request.user, 'startdeployment')
             # If Build is already at sea, need to add Action item for deploying to field
             current_deployment = build.current_deployment()
             if current_deployment.current_deployment_status() == 'deploy':
@@ -1528,7 +1528,7 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
 
             # If Build is deployed, need to add extra Action record to add to Deployment
             if build.is_deployed:
-                item.create_action_record(self.request.user, 'addtodeployment')
+                item.create_action_record(self.request.user, 'startdeployment')
                 current_deployment = build.current_deployment()
                 # If Build is already at sea, need to add Action item for deploying to field
                 if current_deployment.current_deployment_status() == 'deploy':

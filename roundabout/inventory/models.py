@@ -254,28 +254,26 @@ class Inventory(MPTTModel):
             last_build_action = self.actions.filter(build__isnull=False).latest()
             build = last_build_action.build
             detail = 'Removed from %s. %s' % (last_build_action.build, detail)
-        elif action_type == 'deploymentrecover':
-            last_deployment_action = self.actions.filter(deployment__isnull=False).latest()
-            deployment = last_deployment_action.deployment
-            detail = 'Recovered from %s. %s' % (last_deployment_action.deployment, detail)
         elif action_type == 'removedest':
             detail = 'Destination Assignment removed. %s' % (detail)
         elif action_type == 'test':
             detail = '%s: %s. %s' % (self.get_test_type_display(), self.get_test_result_display(), detail)
-        elif action_type == 'addtodeployment':
-             detail = 'Added to %s' % (deployment)
+        elif action_type == 'startdeployment':
+             detail = '%s %s started' % (labels['label_deployments_app_singular'], deployment)
         elif action_type == 'deploymenttosea':
              detail = 'Deployed to field on %s' % (deployment)
+        elif action_type == 'deploymentrecover':
+            last_deployment_action = self.actions.filter(deployment__isnull=False).latest()
+            deployment = last_deployment_action.deployment
+            detail = 'Recovered from %s. %s' % (last_deployment_action.deployment, detail)
 
-        action_record = Action.objects.create(
-                            action_type=action_type,
-                            detail=detail,
-                            location=self.location,
-                            build=build,
-                            deployment=deployment,
-                            user=user,
-                            inventory=self,
-                        )
+        action_record = Action.objects.create(action_type=action_type,
+                                              detail=detail,
+                                              location=self.location,
+                                              build=build,
+                                              deployment=deployment,
+                                              user=user,
+                                              inventory=self,)
 
     # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
     def update_time_at_sea(self):
@@ -312,20 +310,21 @@ class Inventory(MPTTModel):
                 now = timezone.now()
                 current_time_at_sea = now - action_deploy_to_sea.created_at
                 return current_time_at_sea
-            else:
-                return timedelta(minutes=0)
-        else:
             return timedelta(minutes=0)
+        return timedelta(minutes=0)
 
     # get the Total Time at Sea by adding historical sea time and current deployment sea time
     def total_time_at_sea(self):
-        if self.time_at_sea:
-            return self.time_at_sea + self.current_deployment_time_at_sea()
-        return timedelta(minutes=0)
+        try:
+            total_time_at_sea = self.time_at_sea + self.current_deployment_time_at_sea()
+            return total_time_at_sea
+        except:
+            return timedelta(minutes=0)
+
 
     # get queryset of all Deployments for this Item
     def get_deployment_history(self):
-        actions = self.actions.filter(action_type='addtodeployment')
+        actions = self.actions.filter(action_type='startdeployment')
         deployments = []
         for action in actions:
             deployments.append(action.deployment)
@@ -378,7 +377,7 @@ class Action(models.Model):
     SUBCHANGE = 'subchange'
     ADDTOBUILD = 'addtobuild'
     REMOVEFROMBUILD = 'removefrombuild'
-    ADDTODEPLOYMENT = 'addtodeployment'
+    STARTDEPLOYMENT = 'startdeployment'
     DEPLOYMENTBURNIN = 'deploymentburnin'
     DEPLOYMENTTOSEA = 'deploymenttosea'
     DEPLOYMENTUPDATE = 'deploymentupdate'
@@ -399,7 +398,7 @@ class Action(models.Model):
         (SUBCHANGE, 'Sub-%s Change' % (labels['label_assemblies_app_singular'])),
         (ADDTOBUILD, 'Add to %s' % (labels['label_builds_app_singular'])),
         (REMOVEFROMBUILD, 'Remove from %s' % (labels['label_builds_app_singular'])),
-        (ADDTODEPLOYMENT, 'Add to %s' % (labels['label_deployments_app_singular'])),
+        (STARTDEPLOYMENT, 'Start %s' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTTOSEA, '%s to Field' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTUPDATE, '%s Update' % (labels['label_deployments_app_singular'])),
