@@ -89,16 +89,7 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         for item in inventory_items:
             item.location = build.location
             item.save()
-
-            item_action_detail = 'Added to %s %s. ' % (labels['label_deployments_app_singular'], self.object.deployment_number)
-            item_action_record = Action.objects.create(action_type='addtodeployment',
-                                                       detail=item_action_detail,
-                                                       location=item.location,
-                                                       user=self.request.user,
-                                                       inventory=item,
-                                                       build=build,
-                                                       deployment=self.object,
-                                                       created_at=action_date, )
+            item.create_action_record(self.request.user, 'addtodeployment')
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -139,7 +130,6 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(DeploymentAjaxActionView, self).get_context_data(**kwargs)
-
         latest_action_record = DeploymentAction.objects.filter(deployment=self.object).first()
 
         context.update({
@@ -280,23 +270,19 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
                     make_tree_copy(item, base_location, snapshot, item.parent)
         """
 
-        # Get all Inventory items on Build, match location and add Action
+        # Get all Inventory items on Build, match location and add Actions
         inventory_items = build.inventory.all()
+        detail = action_record.get_action_type_display()
         for item in inventory_items:
             item.location = build.location
+            # Find previous location to add Action if Location change
+            old_location_pk = inventory_item.tracker.previous('location')
+            if old_location_pk:
+                old_location = Location.objects.get(id=old_location_pk)
+                if inventory_item.location != old_location:
+                    item.create_action_record(self.request.user, 'locationchange')
             item.save()
-
-            action_record = Action.objects.create(action_type=action_type_inventory,
-                                                  detail='',
-                                                  location=build.location,
-                                                  build=build,
-                                                  deployment=self.object,
-                                                  user=self.request.user,
-                                                  inventory=item,
-                                                  created_at=action_date)
-            action_detail = '%s, moved to %s. ' % (action_record.get_action_type_display(), build.location)
-            action_record.detail = action_detail
-            action_record.save()
+            item.create_action_record(self.request.user, action_type_inventory, detail)
 
             #update Time at Sea if Recovered from Sea with Inventory model method
             if action_type == 'recover':

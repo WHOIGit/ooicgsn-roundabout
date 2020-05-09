@@ -248,6 +248,8 @@ class Inventory(MPTTModel):
             detail = 'Item first added to Inventory. %s' % (detail)
         elif action_type == 'locationchange' or action_type == 'movetotrash':
             detail = 'Moved to %s from %s. %s' % (self.location, last_action.location, detail)
+        elif action_type == 'addtobuild':
+            detail = 'Moved to %s.' % (build)
         elif action_type == 'removefrombuild':
             last_build_action = self.actions.filter(build__isnull=False).latest()
             build = last_build_action.build
