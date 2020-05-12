@@ -69,8 +69,7 @@ class Deployment(models.Model):
     def __str__(self):
         if self.deployed_location:
             return '%s - %s' % (self.deployment_number, self.deployed_location)
-        else:
-            return '%s - %s' % (self.deployment_number, self.location.name)
+        return '%s - %s' % (self.deployment_number, self.location.name)
 
     def get_deployment_label(self):
         return self.deployment_number
@@ -242,7 +241,8 @@ class Inventory(MPTTModel):
         if build:
             deployment = self.build.current_deployment()
 
-        last_action = self.actions.latest()
+        if action_type != 'invadd':
+            last_action = self.actions.latest()
 
         if action_type == 'invadd':
             detail = 'Item first added to Inventory. %s' % (detail)
@@ -426,6 +426,9 @@ class Action(models.Model):
                                    on_delete=models.SET_NULL, null=True, blank=True)
     build = models.ForeignKey(Build, related_name='actions',
                               on_delete=models.SET_NULL, null=True, blank=True)
+    cruise = models.ForeignKey(Cruise, related_name='actions',
+                              on_delete=models.SET_NULL, null=True, blank=True)
+
 
     class Meta:
         ordering = ['-created_at', 'action_type']

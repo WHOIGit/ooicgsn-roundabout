@@ -75,13 +75,24 @@ class Build(models.Model):
         return 'builds'
 
     def current_deployment(self):
-        # set default to None
-        current_deployment = None
-
         if self.is_deployed:
             # get the latest deployment if available
-            current_deployment = self.deployments.first()
-        return current_deployment
+            current_deployment = self.deployments.latest()
+            return current_deployment
+        return None
+
+    def last_deployment(self):
+        last_deployment = self.deployments.latest()
+        if last_deployment:
+            return last_deployment
+        return None
+
+    def is_deployed_to_field(self):
+        if self.current_deployment():
+            if self.current_deployment().current_deployment_status() == 'deploy':
+                return True
+        return False
+
     """
     def current_deployment_status(self):
         # set default deployment_status to None

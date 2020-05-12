@@ -1543,8 +1543,10 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
                                             user=self.request.user,
                                             build=build,
                                             )
+        if build.is_deployed_to_field():
+            return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ))
 
-        return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ) )
+        return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ))
 
 
 class InventoryAjaxLocationDetailView(LoginRequiredMixin, DetailView):
