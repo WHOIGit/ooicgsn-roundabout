@@ -42,37 +42,14 @@ class CalibrationEvent(models.Model):
     class Meta:
         ordering = ['-calibration_date']
 
-# Coefficient Value validator
-# Throws error if string input cannot be cooerced into decimal
-def validate_coeff_val(value):
-    try:
-        round(value)
-    except:
-        raise ValidationError(
-            _('%(value)s is an invalid Decimal. Please enter a valid Decimal'),
-            params={'value': value},
-        )
-
-# Coefficient Value validator
-# Throws error if string input cannot be cooerced into decimal
-def validate_coeff_len(value):
-    try:
-        processed = round(value)
-        assert len(processed) <= 21
-    except:
-        raise ValidationError(
-            _('Number can contain a maximum of 20 digits'),
-            params={'value': value},
-        )
-
-# Tracks Coefficients across Calibrations
+# Tracks Coefficients across Calibrations 
 class CoefficientValue(models.Model):
     NOTATION_FORMAT = (
         ("sci", "Scientific"),
         ("eng", "Engineering"),
         ("std", "Standard"),
     )
-    value = models.CharField(max_length = 255, unique = False, db_index = False, validators = [validate_coeff_val, validate_coeff_len])
+    value = models.CharField(max_length = 21, unique = False, db_index = False)
     notation_format = models.CharField(max_length=3, choices=NOTATION_FORMAT, null=False, blank=False, default="std")
     created_at = models.DateTimeField(default=timezone.now)
     coefficient_name = models.ForeignKey(CoefficientName, related_name='coefficient_values', on_delete=models.CASCADE, null=True)
