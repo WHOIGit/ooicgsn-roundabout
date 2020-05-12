@@ -81,10 +81,10 @@ class Build(models.Model):
             return current_deployment
         return None
 
-    def last_deployment(self):
-        last_deployment = self.deployments.latest()
-        if last_deployment:
-            return last_deployment
+    def latest_deployment(self):
+        latest_deployment = self.deployments.latest()
+        if latest_deployment:
+            return latest_deployment
         return None
 
     def is_deployed_to_field(self):

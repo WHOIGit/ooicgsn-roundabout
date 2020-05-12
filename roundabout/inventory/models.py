@@ -65,6 +65,7 @@ class Deployment(models.Model):
 
     class Meta:
         ordering = ['build', '-created_at']
+        get_latest_by = 'created_at'
 
     def __str__(self):
         if self.deployed_location:
@@ -235,11 +236,11 @@ class Inventory(MPTTModel):
         return tree
 
     # method to create new Action model records to track Inventory/User
-    def create_action_record(self, user, action_type, detail=''):
+    def create_action_record(self, user, action_type, detail='', cruise=None):
         build = self.build
         deployment = None
         if build:
-            deployment = self.build.current_deployment()
+            deployment = self.build.latest_deployment()
 
         if action_type != 'invadd':
             last_action = self.actions.latest()
@@ -251,27 +252,31 @@ class Inventory(MPTTModel):
         elif action_type == 'addtobuild':
             detail = 'Moved to %s.' % (build)
         elif action_type == 'removefrombuild':
-            last_build_action = self.actions.filter(build__isnull=False).latest()
-            build = last_build_action.build
-            detail = 'Removed from %s. %s' % (last_build_action.build, detail)
+            try:
+                last_build_action = self.actions.filter(build__isnull=False).latest()
+                build = last_build_action.build
+                detail = 'Removed from %s. %s' % (build, detail)
+            except:
+                pass
         elif action_type == 'removedest':
             detail = 'Destination Assignment removed. %s' % (detail)
         elif action_type == 'test':
             detail = '%s: %s. %s' % (self.get_test_type_display(), self.get_test_result_display(), detail)
         elif action_type == 'startdeployment':
-             detail = '%s %s started' % (labels['label_deployments_app_singular'], deployment)
+            detail = '%s %s started' % (labels['label_deployments_app_singular'], deployment)
         elif action_type == 'deploymenttosea':
-             detail = 'Deployed to field on %s' % (deployment)
+            detail = 'Deployed to field on %s.' % (deployment)
+            if cruise:
+                detail = '%s. Cruise: %s' % (detail, cruise)
         elif action_type == 'deploymentrecover':
-            last_deployment_action = self.actions.filter(deployment__isnull=False).latest()
-            deployment = last_deployment_action.deployment
-            detail = 'Recovered from %s. %s' % (last_deployment_action.deployment, detail)
+            detail = 'Recovered from %s. %s' % (deployment, detail)
 
         action_record = Action.objects.create(action_type=action_type,
                                               detail=detail,
                                               location=self.location,
                                               build=build,
                                               deployment=deployment,
+                                              cruise=cruise,
                                               user=user,
                                               inventory=self,)
 

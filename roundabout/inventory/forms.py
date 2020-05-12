@@ -37,6 +37,7 @@ from .validators import validate_udffield_decimal
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
 from roundabout.userdefinedfields.models import FieldValue
+from roundabout.cruises.models import Cruise
 # Import environment variables from .env files
 import environ
 env = environ.Env()
@@ -325,6 +326,24 @@ class ActionPhotoUploadForm(forms.ModelForm):
             'inventory': forms.HiddenInput(),
             'detail': SummernoteWidget(),
         }
+
+
+class ActionDeployInventoryForm(forms.Form):
+    # Add custom date field to allow user to pick date for the Action
+    date = forms.DateTimeField( widget=DateTimePickerInput(
+                                options={
+                                    #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                                    "showClose": True,
+                                    "showClear": True,
+                                    "showTodayButton": False,
+                                    }
+                                ),
+                                initial=timezone.now,
+                                label='Date Deployed',
+                                help_text='Set all date/times to UTC time zone.',
+    )
+    cruise = forms.ModelChoiceField(queryset=Cruise.objects.all(),
+                                    label='Cruise Deployed On')
 
 
 class ActionHistoryNoteForm(forms.ModelForm):

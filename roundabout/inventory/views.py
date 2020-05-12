@@ -1061,6 +1061,55 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ) )
 
 
+class ActionDeployInventoryAjaxFormView(LoginRequiredMixin, AjaxFormMixin, FormView):
+    form_class = ActionDeployInventoryForm
+    context_object_name = 'action'
+    template_name='inventory/ajax_inventory_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(ActionDeployInventoryAjaxFormView, self).get_context_data(**kwargs)
+        inventory_item = Inventory.objects.get(id=self.kwargs['pk'])
+        context.update({
+            'inventory_item': inventory_item
+        })
+        return context
+
+    def get_initial(self):
+        return {'inventory': self.kwargs['pk']}
+
+    def form_valid(self, form):
+        inventory_item = Inventory.objects.get(id=self.kwargs['pk'])
+        cruise = form.cleaned_data['cruise']
+        date = form.cleaned_data['date']
+
+        # Add Actions for all Inventory item and children
+        inventory_tree = inventory_item.get_descendants(include_self=True)
+        for item in inventory_tree:
+            # Need to update last two previous Action dates to match Deployment date
+            actions = item.actions.order_by('-id')[:2]
+            for action in actions:
+                action.created_at = date
+                action.save()
+            item.create_action_record(self.request.user, 'deploymenttosea', '', cruise)
+
+        response = HttpResponseRedirect(self.get_success_url())
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': inventory_item.id,
+                'object_type': inventory_item.get_object_type(),
+                'detail_path': self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def get_success_url(self):
+        return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ))
+
+
 class InventoryAjaxAssignDestinationView(LoginRequiredMixin, TemplateView):
     template_name = 'inventory/ajax_inventory_assign_destination.html'
 
@@ -1491,10 +1540,6 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
         # If Build is deployed, need to add extra Action record to add to Deployment
         if build.is_deployed:
             subassembly.create_action_record(self.request.user, 'startdeployment')
-            # If Build is already at sea, need to add Action item for deploying to field
-            current_deployment = build.current_deployment()
-            if current_deployment.current_deployment_status() == 'deploy':
-                subassembly.create_action_record(self.request.user, 'deploymenttosea')
 
         # Check if any subassembly orphan children items already exist.  If so, make this item the parent
         children = subassembly.assembly_part.get_children()
@@ -1529,10 +1574,6 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
             # If Build is deployed, need to add extra Action record to add to Deployment
             if build.is_deployed:
                 item.create_action_record(self.request.user, 'startdeployment')
-                current_deployment = build.current_deployment()
-                # If Build is already at sea, need to add Action item for deploying to field
-                if current_deployment.current_deployment_status() == 'deploy':
-                    item.create_action_record(self.request.user, 'deploymenttosea')
 
         # Create Build Action record for adding inventory item
         detail = '%s added to %s' % (subassembly, labels['label_builds_app_singular'])
@@ -1543,8 +1584,9 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
                                             user=self.request.user,
                                             build=build,
                                             )
+        # If Build is already at sea, need to add Action item for deploying to field with Cruise data
         if build.is_deployed_to_field():
-            return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ))
+            return reverse('inventory:ajax_deploy_action', args=(self.kwargs['pk'], ))
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ))
 
