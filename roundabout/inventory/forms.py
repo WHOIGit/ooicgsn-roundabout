@@ -243,6 +243,43 @@ class ActionRemoveFromBuildForm(forms.ModelForm):
         self.initial['detail'] = ''
 
 
+class ActionRecoverFromDeploymentForm(forms.ModelForm):
+    # Add custom date field to allow user to pick date for the Action
+    date = forms.DateTimeField( widget=DateTimePickerInput(
+                                options={
+                                    #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                                    "showClose": True,
+                                    "showClear": True,
+                                    "showTodayButton": False,
+                                    }
+                                ),
+                                initial=timezone.now,
+                                label='Date Recovered',
+                                help_text='Set all date/times to UTC time zone.',
+    )
+    cruise = forms.ModelChoiceField(queryset=Cruise.objects.all(),
+                                    label='Cruise Recovered On')
+    class Meta:
+        model = Inventory
+        fields = ['location', 'date', 'cruise', 'detail', 'parent', 'build', 'assembly_part']
+        widgets = {
+            'parent': forms.HiddenInput(),
+            'build': forms.HiddenInput(),
+            'assembly_part': forms.HiddenInput(),
+        }
+        labels = {
+            'location': 'Select new Location for item',
+            'detail': 'Notes on recovery',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(ActionRecoverFromDeploymentForm, self).__init__(*args, **kwargs)
+        self.initial['parent'] = ''
+        self.initial['build'] = ''
+        self.initial['assembly_part'] = ''
+        self.initial['detail'] = ''
+
+
 class ActionRemoveDestinationForm(forms.ModelForm):
 
     class Meta:

@@ -236,7 +236,7 @@ class Inventory(MPTTModel):
         return tree
 
     # method to create new Action model records to track Inventory/User
-    def create_action_record(self, user, action_type, detail='', cruise=None):
+    def create_action_record(self, user, action_type, detail='', created_at=timezone.now(), cruise=None):
         build = self.build
         deployment = None
         if build:
@@ -267,9 +267,11 @@ class Inventory(MPTTModel):
         elif action_type == 'deploymenttosea':
             detail = 'Deployed to field on %s.' % (deployment)
             if cruise:
-                detail = '%s. Cruise: %s' % (detail, cruise)
+                detail = '%s Cruise: %s' % (detail, cruise)
         elif action_type == 'deploymentrecover':
-            detail = 'Recovered from %s. %s' % (deployment, detail)
+            detail = 'Recovered from %s. %s.' % (deployment, detail)
+            if cruise:
+                detail = '%s Cruise: %s' % (detail, cruise)
 
         action_record = Action.objects.create(action_type=action_type,
                                               detail=detail,
@@ -278,7 +280,8 @@ class Inventory(MPTTModel):
                                               deployment=deployment,
                                               cruise=cruise,
                                               user=user,
-                                              inventory=self,)
+                                              inventory=self,
+                                              created_at=created_at)
 
     # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
     def update_time_at_sea(self):
@@ -293,8 +296,6 @@ class Inventory(MPTTModel):
             action_recover = None
 
         if action_deploy_to_sea and action_recover:
-            print(action_recover.created_at)
-            print(action_deploy_to_sea.created_at)
             latest_time_at_sea =  action_recover.created_at - action_deploy_to_sea.created_at
         else:
             latest_time_at_sea = timedelta(minutes=0)
@@ -325,7 +326,6 @@ class Inventory(MPTTModel):
             return total_time_at_sea
         except:
             return timedelta(minutes=0)
-
 
     # get queryset of all Deployments for this Item
     def get_deployment_history(self):

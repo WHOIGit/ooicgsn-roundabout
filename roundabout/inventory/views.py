@@ -596,6 +596,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
             "locationchange" : ActionLocationChangeForm,
             "subchange" : ActionSubassemblyChangeForm,
             "removefrombuild" : ActionRemoveFromBuildForm,
+            "deploymentrecover" : ActionRecoverFromDeploymentForm,
             "removedest" : ActionRemoveDestinationForm,
             "test" : ActionTestForm,
             "note" : ActionNoteForm,
@@ -624,6 +625,8 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
     def form_valid(self, form):
         action_type = self.kwargs['action_type']
         detail = self.object.detail
+        created_at = timezone.now()
+        cruise = None
 
         if action_type == 'locationchange' or action_type =='movetotrash':
             # Get any subassembly children items, move their location sto match parent and add Action to history
@@ -688,10 +691,8 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
             if old_build_pk:
                 old_build = Build.objects.get(pk=old_build_pk)
                 # If Build is Deployed, need to create separate Recover from Deployment record,
-                # also need to run item.update_time_at_sea() method after creating Action record
                 if old_build.is_deployed:
                     self.object.create_action_record(self.request.user, 'deploymentrecover', detail)
-                    self.object.update_time_at_sea()
 
                 # Create Build Action record
                 build_detail = '%s removed from %s' % (self.object, labels['label_builds_app_singular'])
@@ -726,6 +727,47 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 if old_build.is_deployed:
                     item.create_action_record(self.request.user, 'deploymentrecover')
                     item.update_time_at_sea()
+
+        if action_type == 'deploymentrecover':
+            cruise = form.cleaned_data['cruise']
+            created_at = form.cleaned_data['date']
+
+            self.object.update_time_at_sea()
+            # Find Build it was removed from
+            old_build_pk = self.object.tracker.previous('build')
+            if old_build_pk:
+                old_build = Build.objects.get(pk=old_build_pk)
+                # Add Action Record for removing from Build
+                self.object.create_action_record(self.request.user, 'removefrombuild')
+                # Create Build Action record
+                build_detail = '%s removed from %s' % (self.object, labels['label_builds_app_singular'])
+                build_record = BuildAction.objects.create(
+                                                    action_type='subassemblychange',
+                                                    detail=build_detail,
+                                                    location=old_build.location,
+                                                    user=self.request.user,
+                                                    build=old_build,
+                                                    )
+
+            # Get any subassembly children items, add Action to history
+            subassemblies = self.object.get_descendants()
+            for item in subassemblies:
+                # Create Build Action record
+                build_detail = '%s removed from %s' % (item, labels['label_builds_app_singular'])
+                build_record = BuildAction.objects.create(
+                                                    action_type='subassemblychange',
+                                                    detail=build_detail,
+                                                    location=item.build.location,
+                                                    user=self.request.user,
+                                                    build=item.build,
+                                                    )
+                item.assembly_part = None
+                item.build = None
+                item.location = self.object.location
+                item.save()
+                # Add Action Record for removing from Build
+                item.create_action_record(self.request.user, 'removefrombuild')
+                item.create_action_record(self.request.user, action_type, detail, created_at, cruise)
 
         if action_type == 'removedest':
             # Get any subassembly children items, add Action to history
@@ -781,7 +823,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                         item.create_action_record(self.request.user, 'locationchange')
 
         # create initial Action record for self.object
-        self.object.create_action_record(self.request.user, action_type, detail)
+        self.object.create_action_record(self.request.user, action_type, detail, created_at, cruise)
         # commit form
         action_form = form.save()
         response = HttpResponseRedirect(self.get_success_url())
@@ -1080,7 +1122,7 @@ class ActionDeployInventoryAjaxFormView(LoginRequiredMixin, AjaxFormMixin, FormV
     def form_valid(self, form):
         inventory_item = Inventory.objects.get(id=self.kwargs['pk'])
         cruise = form.cleaned_data['cruise']
-        date = form.cleaned_data['date']
+        created_at = form.cleaned_data['date']
 
         # Add Actions for all Inventory item and children
         inventory_tree = inventory_item.get_descendants(include_self=True)
@@ -1088,9 +1130,9 @@ class ActionDeployInventoryAjaxFormView(LoginRequiredMixin, AjaxFormMixin, FormV
             # Need to update last two previous Action dates to match Deployment date
             actions = item.actions.order_by('-id')[:2]
             for action in actions:
-                action.created_at = date
+                action.created_at = created_at
                 action.save()
-            item.create_action_record(self.request.user, 'deploymenttosea', '', cruise)
+            item.create_action_record(self.request.user, 'deploymenttosea', '', created_at, cruise)
 
         response = HttpResponseRedirect(self.get_success_url())
 

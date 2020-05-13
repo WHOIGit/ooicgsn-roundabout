@@ -84,11 +84,19 @@
         {% endif %}
 
         {% if inventory_item.build %}
-            <a class="dropdown-item" href="#"
-                data-detail-url="{% url 'inventory:ajax_inventory_action' 'removefrombuild' inventory_item.id %}"
-                data-node-id="{{ inventory_item.id }}"
-                data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="{{ node_type }}">Remove from {{ label_builds_app_singular }}</a>
+            {% if inventory_item.build.is_deployed_to_field %}
+                <a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'inventory:ajax_inventory_action' 'deploymentrecover' inventory_item.id %}"
+                    data-node-id="{{ inventory_item.id }}"
+                    data-location-id="{{ inventory_item.location.id}}"
+                    data-node-type="{{ node_type }}">Recover from {{ label_deployments_app_singular }}</a>
+            {% else %}
+                <a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'inventory:ajax_inventory_action' 'removefrombuild' inventory_item.id %}"
+                    data-node-id="{{ inventory_item.id }}"
+                    data-location-id="{{ inventory_item.location.id}}"
+                    data-node-type="{{ node_type }}">Remove from {{ label_builds_app_singular }}</a>
+            {% endif %}
         {% endif %}
 
         {% if inventory_item.assembly_part and not inventory_item.build and not inventory_item.parent %}
