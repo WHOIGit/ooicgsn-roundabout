@@ -732,10 +732,12 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
             cruise = form.cleaned_data['cruise']
             created_at = form.cleaned_data['date']
 
-            self.object.update_time_at_sea()
+            # Add Location Change record if moved
+            if self.object.location_changed():
+                self.object.create_action_record(self.request.user, 'locationchange', '', created_at)
+
             # Find Build it was removed from
             old_build = self.object.get_latest_build()
-            print(old_build)
             if old_build:
                 # Add Action Record for removing from Build
                 self.object.create_action_record(self.request.user, 'removefrombuild', detail, created_at)
@@ -765,9 +767,14 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 item.build = None
                 item.location = self.object.location
                 item.save()
+                # Add Location Change record if moved
+                if item.location_changed():
+                    item.create_action_record(self.request.user, 'locationchange', '', created_at)
                 # Add Action Record for removing from Build
                 item.create_action_record(self.request.user, 'removefrombuild', detail, created_at)
+                # Add last record
                 item.create_action_record(self.request.user, action_type, detail, created_at, cruise)
+                item.update_time_at_sea()
 
         if action_type == 'removedest':
             # Get any subassembly children items, add Action to history
@@ -824,6 +831,9 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
 
         # create Action record for self.object
         action_record = self.object.create_action_record(self.request.user, action_type, detail, created_at, cruise)
+        # update the Time At Sea field
+        if action_type == 'deploymentrecover':
+            self.object.update_time_at_sea()
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -1160,7 +1170,11 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
             parent_detail = 'Sub-%s %s added.' % (labels['label_assemblies_app_singular'], subassembly)
             subassembly.parent.create_action_record(self.request.user, 'subchange', parent_detail)
 
-        # create initial Action record for Inventory
+        # Add Action Record if Location change
+        if subassembly.location_changed():
+            subassembly.create_action_record(self.request.user, 'locationchange')
+
+        # create default Action record for Inventory
         subassembly.create_action_record(self.request.user, action_type, detail)
 
         # If Build is deployed, need to add extra Action record to add to Deployment
@@ -1195,6 +1209,9 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
             item.build = subassembly.build
             item.detail = 'Moved to %s' % (item.build)
             item.save()
+            # Add Action Record if Location change
+            if item.location_changed():
+                item.create_action_record(self.request.user, 'locationchange')
             item.create_action_record(self.request.user, action_type, item.detail)
 
             # If Build is deployed, need to add extra Action record to add to Deployment
