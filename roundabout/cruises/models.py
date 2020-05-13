@@ -23,6 +23,8 @@ class Vessel(models.Model):
     designation = models.CharField(max_length=10, null=False, blank=True)
     active = models.BooleanField(choices=BOOLEAN_CHOICES, null=True, default=True)
     R2R = models.BooleanField(choices=BOOLEAN_CHOICES, null=True, default=True, blank=True)
+    notes = models.TextField(null=False, blank=True)
+
 
     class Meta:
         ordering = ('vessel_name',)
@@ -33,6 +35,7 @@ class Vessel(models.Model):
 
 class Cruise(models.Model):
     CUID = models.CharField(max_length=20)
+    friendly_name = models.CharField(max_length=100, null=False, blank=True)
     vessel = models.ForeignKey(Vessel, related_name='cruises',
                                on_delete=models.SET_NULL, null=True)
     cruise_start_date = models.DateTimeField()
