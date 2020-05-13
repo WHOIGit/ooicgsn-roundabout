@@ -56,7 +56,7 @@ def searchbar_redirect(request):
     if query:
         if model=='inventory':      getstr = '?f=.0.part__name&f=.0.serial_number&f=.0.revision__note&f=.0.location__name&l=.0.icontains&q=.0.{query}'
         elif model=='part':         getstr = '?f=.0.part_number&f=.0.name&l=.0.icontains&q=.0.{query}'
-        elif model == 'build':      getstr = '?f=.0.build_number&f=.0.assembly__name&f=.0.assembly__assembly_type__name&f=.0.assembly__description&f=.0.build_notes&f=.0.detail&f=.0.location__name&l=.0.icontains&q=.0.{query}'
+        elif model == 'build':      getstr = '?f=.0.build_number&f=.0.assembly__name&f=.0.assembly__assembly_type__name&f=.0.assembly__description&f=.0.build_notes&f=.0.location__name&l=.0.icontains&q=.0.{query}'
         elif model == 'assembly':   getstr = '?f=.0.assembly_number&f=.0.name&f=.0.assembly_type__name&f=.0.description&l=.0.icontains&q=.0.{query}'
         getstr = getstr.format(query=query)
         resp['Location'] += getstr
@@ -300,7 +300,6 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="old_serial_number", text="Old Serial Number", legal_lookups='STR_LOOKUP'),
                         dict(value="location__name",      text="Location", legal_lookups='STR_LOOKUP'),
                         dict(value="build__assembly__name",  text="Build", legal_lookups='STR_LOOKUP'),
-                        dict(value="detail",       text="Notes & Details", legal_lookups='STR_LOOKUP'),
                         dict(value="created_at",      text="Date Created", legal_lookups='DATE_LOOKUP'),
                         dict(value="updated_at",     text="Date Modified", legal_lookups='DATE_LOOKUP'),
 
@@ -324,7 +323,7 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="inventory_actions__latest__user__name",     text="Latest Action: User",     legal_lookups='STR_LOOKUP'),
                         dict(value="inventory_actions__latest__created_at",     text="Latest Action: Time",     legal_lookups='DATE_LOOKUP'),
                         dict(value="inventory_actions__latest__location__name", text="Latest Action: Location", legal_lookups='STR_LOOKUP'),
-                        dict(value="inventory_actions__latest__detail",         text="Latest Action: Details",  legal_lookups='STR_LOOKUP'),
+                        dict(value="inventory_actions__latest__detail",         text="Latest Action: Notes",    legal_lookups='STR_LOOKUP'),
                         dict(value="inventory_actions__count",                  text="Total Action Count",      legal_lookups='NUM_LOOKUP'),
                         ]
         return avail_fields
@@ -387,7 +386,7 @@ class PartTableView(GenericSearchTableView):
                         dict(value="unit_cost",              text="Unit Cost", legal_lookups='NUM_LOOKUP'),
                         dict(value="refurbishment_cost",   text="Refurb Cost", legal_lookups='NUM_LOOKUP'),
                         dict(value="inventory__count", text="Inventory Count", legal_lookups='NUM_LOOKUP'),
-                        dict(value="note",                        text="Note", legal_lookups='STR_LOOKUP'),
+                        dict(value="note",                       text="Notes", legal_lookups='STR_LOOKUP'),
 
                         dict(value=None, text="--User-Defined-Fields--", disabled=True),
                         dict(value="user_defined_fields__field_name", text="UDF Name", legal_lookups='STR_LOOKUP'),]
@@ -445,7 +444,6 @@ class BuildTableView(GenericSearchTableView):
                         dict(value="location__name",            text="Location", legal_lookups='STR_LOOKUP'),
                         dict(value="assembly__description",  text="Description", legal_lookups='STR_LOOKUP'),
                         dict(value="build_notes",                  text="Notes", legal_lookups='STR_LOOKUP'),
-                        dict(value="detail",                      text="Detail", legal_lookups='STR_LOOKUP'),
                         dict(value="time_at_sea",            text="Time at Sea", legal_lookups='NUM_LOOKUP'),
                         dict(value="is_deployed",           text="is-deployed?", legal_lookups='BOOL_LOOKUP'),
                         dict(value="flag",                   text="is-flagged?", legal_lookups='BOOL_LOOKUP'),
@@ -462,7 +460,7 @@ class BuildTableView(GenericSearchTableView):
                         dict(value="build_actions__latest__user__name",     text="Latest Action: User",     legal_lookups='STR_LOOKUP'),
                         dict(value="build_actions__latest__created_at",     text="Latest Action: Time",     legal_lookups='DATE_LOOKUP'),
                         dict(value="build_actions__latest__location__name", text="Latest Action: Location", legal_lookups='STR_LOOKUP'),
-                        dict(value="build_actions__latest__detail",         text="Latest Action: Details",  legal_lookups='STR_LOOKUP'),
+                        dict(value="build_actions__latest__detail",         text="Latest Action: Notes",    legal_lookups='STR_LOOKUP'),
                         dict(value="build_actions__count",                  text="Total Action Count",      legal_lookups='NUM_LOOKUP'),
                         ]
 
