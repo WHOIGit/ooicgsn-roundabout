@@ -81,7 +81,7 @@ class Build(models.Model):
             return current_deployment
         return None
 
-    def latest_deployment(self):
+    def get_latest_deployment(self):
         latest_deployment = self.deployments.latest()
         if latest_deployment:
             return latest_deployment

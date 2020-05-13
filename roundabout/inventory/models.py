@@ -235,29 +235,43 @@ class Inventory(MPTTModel):
         tree = self.get_descendants(include_self=True)
         return tree
 
+    def get_latest_build(self):
+        try:
+            action = self.actions.filter(build__isnull=False).latest()
+            return action.build
+        except:
+            return None
+
+    def get_latest_location(self):
+        try:
+            action = self.actions.latest()
+            return action.location
+        except:
+            return None
+
+    def location_changed(self):
+        current_location = self.location
+        last_location = self.get_latest_location
+        if current_location != last_location:
+            return True
+        return False
+
     # method to create new Action model records to track Inventory/User
     def create_action_record(self, user, action_type, detail='', created_at=timezone.now(), cruise=None):
         build = self.build
         deployment = None
         if build:
-            deployment = self.build.latest_deployment()
-
-        if action_type != 'invadd':
-            last_action = self.actions.latest()
+            deployment = self.build.get_latest_deployment()
 
         if action_type == 'invadd':
             detail = 'Item first added to Inventory. %s' % (detail)
         elif action_type == 'locationchange' or action_type == 'movetotrash':
-            detail = 'Moved to %s from %s. %s' % (self.location, last_action.location, detail)
+            detail = 'Moved to %s from %s. %s' % (self.location, self.get_latest_location(), detail)
         elif action_type == 'addtobuild':
             detail = 'Moved to %s.' % (build)
         elif action_type == 'removefrombuild':
-            try:
-                last_build_action = self.actions.filter(build__isnull=False).latest()
-                build = last_build_action.build
-                detail = 'Removed from %s. %s' % (build, detail)
-            except:
-                pass
+            last_build = self.get_latest_build()
+            detail = 'Removed from %s. %s' % (last_build, detail)
         elif action_type == 'removedest':
             detail = 'Destination Assignment removed. %s' % (detail)
         elif action_type == 'test':
@@ -269,7 +283,9 @@ class Inventory(MPTTModel):
             if cruise:
                 detail = '%s Cruise: %s' % (detail, cruise)
         elif action_type == 'deploymentrecover':
-            detail = 'Recovered from %s. %s.' % (deployment, detail)
+            last_build = self.get_latest_build()
+            last_deployment = last_build.get_latest_deployment()
+            detail = 'Recovered from %s. %s.' % (last_deployment, detail)
             if cruise:
                 detail = '%s Cruise: %s' % (detail, cruise)
 
@@ -282,6 +298,7 @@ class Inventory(MPTTModel):
                                               user=user,
                                               inventory=self,
                                               created_at=created_at)
+        return action_record
 
     # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
     def update_time_at_sea(self):
@@ -431,12 +448,14 @@ class Action(models.Model):
                                    on_delete=models.SET_NULL, null=True, blank=True)
     build = models.ForeignKey(Build, related_name='actions',
                               on_delete=models.SET_NULL, null=True, blank=True)
+    parent = models.ForeignKey(Inventory, related_name='parent_actions',
+                              on_delete=models.SET_NULL, null=True, blank=True)
     cruise = models.ForeignKey(Cruise, related_name='actions',
                               on_delete=models.SET_NULL, null=True, blank=True)
 
 
     class Meta:
-        ordering = ['-created_at', 'action_type']
+        ordering = ['-created_at', '-id']
         get_latest_by = 'created_at'
 
     def __str__(self):

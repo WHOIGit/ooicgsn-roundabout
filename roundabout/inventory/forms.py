@@ -258,7 +258,8 @@ class ActionRecoverFromDeploymentForm(forms.ModelForm):
                                 help_text='Set all date/times to UTC time zone.',
     )
     cruise = forms.ModelChoiceField(queryset=Cruise.objects.all(),
-                                    label='Cruise Recovered On')
+                                    label='Cruise Recovered On',
+                                    required=False)
     class Meta:
         model = Inventory
         fields = ['location', 'date', 'cruise', 'detail', 'parent', 'build', 'assembly_part']
@@ -380,7 +381,8 @@ class ActionDeployInventoryForm(forms.Form):
                                 help_text='Set all date/times to UTC time zone.',
     )
     cruise = forms.ModelChoiceField(queryset=Cruise.objects.all(),
-                                    label='Cruise Deployed On')
+                                    label='Cruise Deployed On',
+                                    required=False,)
 
 
 class ActionHistoryNoteForm(forms.ModelForm):
