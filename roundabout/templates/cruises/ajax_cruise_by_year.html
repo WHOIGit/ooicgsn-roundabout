@@ -32,6 +32,7 @@
         <thead>
 
           <th>CUID</th>
+          <th>Friendly Name</th>
           <th>Vessel</th>
           <th>Cruise Start Date</th>
           <th>Cruise Stop Date</th>
@@ -49,6 +50,7 @@
                        data-node-id="{{ cruise.id }}"
                        data-node-type="cruises">{{ cruise.CUID }}</a>
                 </td>
+                <td>{{ cruise.friendly_name }}</td>
                 <td>{{ cruise.vessel.vessel_name }}</td>
                 <td>{{ cruise.cruise_start_date }}</td>
                 <td>{{ cruise.cruise_stop_date }}</td>

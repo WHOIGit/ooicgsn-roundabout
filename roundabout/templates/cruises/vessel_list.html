@@ -49,6 +49,7 @@
         <th>Designation</th>
         <th>Active</th>
         <th>R2R</th>
+        <th>Notes</th>
 
         <th>&nbsp;</th>
 
@@ -71,6 +72,7 @@
               <td>{{ vessel.designation }}</td>
               <td>{{ vessel.get_active_display }}</td>
               <td>{{ vessel.get_R2R_display  }}</td>
+              <td>{{ vessel.notes  }}</td>
 
               <td class="text-right action-col">
                   <a href="{% url 'cruises:vessels_update' vessel.id %}" role="button" class="btn btn-primary btn-sm">Edit</a>
