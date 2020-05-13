@@ -90,18 +90,29 @@
   <!-- SEARCH CONTROLS -->
   <div class="col-md-5 search-control">
     <div class="row">
-      <div class="col-sm-10 d-flex">
+      <div class="col-sm-12 d-flex flex-row">
         <h2>Search: </h2>
         <div class="dropdown ml-3">
-          <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            {{ model }}
+          <button class="btn btn-secondary dropdown-toggle" type="button" id="search-model-dropdown"
+                  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="fa"></span>
+            {% if model == 'Inventory' %}  {{ label_inventory_app_plural }}
+            {% elif model == 'Build' %}    {{ label_builds_app_plural }}
+            {% elif model == 'Part' %}     Part Templates
+            {% elif model == 'Assembly' %} {{ label_assemblies_app_singular }} Templates
+            {% endif %}
           </button>
-          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            <a class="dropdown-item" href={% url 'search:inventory' %}>Inventory</a>
-            <a class="dropdown-item" href={% url 'search:part' %}>Parts</a>
-            <a class="dropdown-item" href={% url 'search:build' %}>Builds</a>
-            <a class="dropdown-item" href={% url 'search:assembly' %}>Assemblies</a>
+          <div class="dropdown-menu" aria-labelledby="search-model-dropdown">
+            <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:inventory' %}>{{ label_inventory_app_plural }}</a>
+            <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:build' %}>{{ label_builds_app_plural }}</a>
+            <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:part' %}>Part Templates</a>
+            <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:assembly' %}>{{ label_assemblies_app_singular }} Templates</a>
           </div>
+        </div>
+        <div class="p-2 ml-auto">
+          <button class="btn btn-primary btn-sm" type="button" id="query-all-button"
+             onclick="buttonload_spinner('on','#query-all-button');window.location.href='{{ request.path }}';">
+            <span class="fa"></span>Get All</button>
         </div>
       </div>
     </div>
@@ -109,7 +120,8 @@
     <form id='adv-search-form' method="get" accept-charset="utf-8" class="form" onsubmit="DoSubmit(event)">
       <div id='adv-search-cards'>  </div>
       <div class="row ml-1">
-        <button class="btn btn-primary" type="button" onclick="insert_card('{{ model }}',null,'globalhack')" data-toggle="tooltip" title="Results from different cards are compounded">
+        <button class="btn btn-primary" type="button" onclick="insert_card('{{ model }}',null,'globalhack')"
+                data-toggle="tooltip" title="Results from different cards are compounded">
           <i class="fa fa-plus"></i> New Card</button>
         <div class="ml-auto mr-3">
           <button class="btn btn-primary" type="button" onclick="reset_cards(prev_cards,'globalhack')">RESET</button>
