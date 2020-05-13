@@ -95,6 +95,8 @@ THIRD_PARTY_APPS = [
     'mptt', # Tree structures in database
     'django_summernote', #WYSIWYG
     'bootstrap_datepicker_plus', # Date Picker
+    'django_tables2', # interactive tables views
+    'django_tables2_column_shifter', # show/hide tables2 columns
 ]
 LOCAL_APPS = [
     'roundabout.users.apps.UsersAppConfig',

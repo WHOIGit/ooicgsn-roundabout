@@ -18,6 +18,7 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 """
+from dateutil import parser
 
 from django.db import models
 from django.contrib.postgres.fields import JSONField
@@ -66,4 +67,26 @@ class FieldValue(models.Model):
         get_latest_by = 'created_at'
 
     def __str__(self):
+        return self.field_value
+
+    @property
+    def get_field_value(self):
+        #Check if UDF field is a DateField, if so format date for display
+        if self.field.field_type == 'DateField':
+            try:
+                field_value = parser.parse(self.field_value)
+                field_value = field_value.strftime("%m-%d-%Y %H:%M:%S")
+                return field_value
+            except:
+                pass
+
+        # Check if field is ChoiceField, set the value to the label if available
+        if self.field.field_type == 'ChoiceField':
+            options_list= self.field.choice_field_options['options']
+
+            for option in options_list:
+                if option['value'] == self.field_value and option['label']:
+                    print(option['label'])
+                    return option['label']
+
         return self.field_value
