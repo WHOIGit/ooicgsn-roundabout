@@ -67,6 +67,10 @@ class Deployment(models.Model):
         else:
             return '%s - %s' % (self.deployment_number, self.location.name)
 
+    #@property  # handy, but does not work with prefetching
+    def get_latest_action(self):
+        return self.deployment_actions.all().first()
+
     def get_deployment_label(self):
         return self.deployment_number
 
@@ -219,6 +223,10 @@ class Inventory(MPTTModel):
     def __str__(self):
         return self.serial_number
 
+    #@property  # handy, but does not work with prefetching
+    def get_latest_action(self):
+        return self.action.all().first()
+
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
         return 'inventory'
@@ -356,15 +364,16 @@ class Action(models.Model):
     action_type = models.CharField(max_length=20, choices=ACT_TYPES)
     created_at = models.DateTimeField(default=timezone.now)
     detail = models.TextField(blank=True)
-    user = models.ForeignKey(User, related_name='action',
+    user = models.ForeignKey(User, related_name='inventory_actions',
                              on_delete=models.SET_NULL, null=True, blank=False)
-    location = TreeForeignKey(Location, related_name='action',
+    location = TreeForeignKey(Location, related_name='inventory_actions',
                               on_delete=models.SET_NULL, null=True, blank=False)
-    inventory = models.ForeignKey(Inventory, related_name='action',
+    inventory = models.ForeignKey(Inventory, related_name='inventory_actions',
                                  on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at', 'action_type']
+        get_latest_by = 'created_at'
 
     def __str__(self):
         return self.get_action_type_display()
@@ -432,6 +441,7 @@ class DeploymentAction(models.Model):
 
     class Meta:
         ordering = ['-created_at', 'action_type']
+        get_latest_by = 'created_at'
 
     def __str__(self):
         return self.get_action_type_display()
