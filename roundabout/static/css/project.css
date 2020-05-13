@@ -283,3 +283,7 @@ footer {
     background-color: white;
     color: white;
 }
+
+/* Table Header Ordering */
+table.table thead th.asc { background: url('/static/images/up-arrow.png') no-repeat bottom right; font-style: italic; }
+table.table thead th.desc { background: url('/static/images/down-arrow.png') no-repeat bottom right; font-style: italic; }

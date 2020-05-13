@@ -49,6 +49,8 @@ labels = set_app_labels()
 # Import environment variables from .env files
 import environ
 env = environ.Env()
+# Global variables for views.py functions
+node_type = 'inventory'
 
 # Mixins
 # ------------------------------------------------------------------------------
@@ -391,21 +393,13 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         # Get this item's custom fields with most recent Values
         if self.object.fieldvalues.exists():
             custom_fields = self.object.fieldvalues.filter(is_current=True)
-
-            for cf in custom_fields:
-                #Check if UDF field is a DateField, if so format date for display
-                if cf.field.field_type == 'DateField':
-                    try:
-                        dt = parser.parse(cf.field_value)
-                        cf.field_value = dt.strftime("%m-%d-%Y %H:%M:%S")
-                    except:
-                        pass
         else:
             custom_fields = None
 
         context.update({
             'printers': printers,
             'custom_fields': custom_fields,
+            'node_type': node_type,
         })
         return context
 
@@ -1562,7 +1556,7 @@ class InventoryDetailView(LoginRequiredMixin, DetailView):
             'part_types': part_types,
             'printers': printers,
             'custom_fields': custom_fields,
-            'node_type': 'inventory',
+            'node_type': node_type,
         })
         return context
 
@@ -1583,7 +1577,7 @@ class InventoryHomeView(LoginRequiredMixin, TemplateView):
         part_types = PartType.objects.all()
         context.update({
             'part_types': part_types,
-            'node_type': 'inventory',
+            'node_type': node_type,
         })
         return context
 

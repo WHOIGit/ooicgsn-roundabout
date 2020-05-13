@@ -1,4 +1,4 @@
-"""
+/*
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
 # This file is part of the Roundabout Database project ("RDB" or
@@ -17,18 +17,27 @@
 # You should have received a copy of the GNU General Public License
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
-"""
+*/
 
-from django.urls import path
+$(document).ready(function() {
+    // AJAX functions for UDF form
 
-from . import views
+    // Only show the ChoiceField option field if ChoiceField is selected
+    $("#div_id_choice_field_options").hide();
 
-app_name = 'search'
-urlpatterns = [
-    path('inventory', view=views.InventoryTableView.as_view(), name='inventory'),
-    path('part',view=views.PartTableView.as_view(),name='part'),
-    path('build', view=views.BuildTableView.as_view(), name='build'),
-    path('assembly', view=views.AssemblyTableView.as_view(), name='assembly'),
-    path('searchbar', view=views.searchbar_redirect, name='searchbar'),
+    if ($("#id_field_type").val() == "ChoiceField") {
+        $("#div_id_choice_field_options").show();
+    }
 
-]
+    $("#id_field_type").change(function () {
+        var fieldType = $(this).val();
+        console.log(fieldType)
+        if (fieldType == "ChoiceField") {
+            // textarea is empty or contains only white-space
+            $("#div_id_choice_field_options").show();
+        } else {
+            $("#div_id_choice_field_options").hide();
+        }
+    });
+
+});
