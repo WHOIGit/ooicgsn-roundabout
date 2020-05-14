@@ -290,6 +290,7 @@ class Inventory(MPTTModel):
                 detail = '%s Cruise: %s' % (detail, cruise)
 
         action_record = Action.objects.create(action_type=action_type,
+                                              object_type=self.get_object_type(),
                                               detail=detail,
                                               location=self.location,
                                               build=build,
@@ -413,7 +414,7 @@ class Action(models.Model):
     FIELDCHANGE = 'fieldchange'
     FLAG = 'flag'
     MOVETOTRASH = 'movetotrash'
-    ACT_TYPES = (
+    ACTION_TYPES = (
         (INVADD, 'Add Inventory'),
         (INVCHANGE, 'Inventory Change'),
         (LOCATIONCHANGE, 'Location Change'),
@@ -437,7 +438,8 @@ class Action(models.Model):
     )
     inventory = models.ForeignKey(Inventory, related_name='actions',
                                   on_delete=models.CASCADE, null=True, blank=True)
-    action_type = models.CharField(max_length=20, choices=ACT_TYPES)
+    action_type = models.CharField(max_length=20, choices=ACTION_TYPES)
+    object_type =  models.CharField(max_length=20, null=False, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     detail = models.TextField(blank=True)
     user = models.ForeignKey(User, related_name='actions',
