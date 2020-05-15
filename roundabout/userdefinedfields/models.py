@@ -67,7 +67,7 @@ class FieldValue(models.Model):
         get_latest_by = 'created_at'
 
     def __str__(self):
-        return self.field_value
+        return str(self.field_value)
 
     @property
     def get_field_value(self):
