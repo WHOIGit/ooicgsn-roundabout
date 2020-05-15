@@ -280,6 +280,12 @@
             </li>
         {% endif %}
 
+        {% if deployment_events %}
+            <li class="nav-item">
+              <a class="nav-link" id="deployments-tab" data-toggle="tab" href="#deployments" role="tab" aria-controls="deployments" aria-selected="false">Deployments</a>
+            </li>
+        {% endif %}
+
         {% if inventory_item.get_descendants %}
             <li class="nav-item">
               <a class="nav-link" id="subassemblies-tab" data-toggle="tab" href="#subassemblies" role="tab" aria-controls="subassemblies" aria-selected="false">Sub-{{ label_assemblies_app_plural }}</a>
@@ -345,6 +351,22 @@
             </table>
 
           </div>
+        {% endif %}
+
+        {% if deployment_events %}
+        <div class="tab-pane fade" id="deployments" role="tabpanel" aria-labelledby="deployments-tab">
+
+            <ul class="list-group list-group-flush">
+                {% for deployment_event in deployment_events %}
+                    <li class="list-group-item">
+
+                        {% include "inventory/inventory_deployment_detail.html" with inventory_item=inventory_item deployment_event=deployment_event %}
+
+                    </li>
+                {% endfor %}
+            </ul>
+
+        </div>
         {% endif %}
 
         {% if inventory_item.get_descendants %}

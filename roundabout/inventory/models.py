@@ -251,10 +251,17 @@ class Inventory(MPTTModel):
 
     def location_changed(self):
         current_location = self.location
-        last_location = self.get_latest_location
+        last_location = self.get_latest_location()
         if current_location != last_location:
             return True
         return False
+
+    def get_latest_deployment(self):
+        try:
+            action = self.actions.filter(deployment__isnull=False).latest()
+            return action.deployment
+        except:
+            return None
 
     # method to create new Action model records to track Inventory/User
     def create_action_record(self, user, action_type, detail='', created_at=timezone.now(), cruise=None):
@@ -270,8 +277,8 @@ class Inventory(MPTTModel):
         elif action_type == 'addtobuild':
             detail = 'Moved to %s.' % (build)
         elif action_type == 'removefrombuild':
-            last_build = self.get_latest_build()
-            detail = 'Removed from %s. %s' % (last_build, detail)
+            build = self.get_latest_build()
+            detail = 'Removed from %s. %s' % (build, detail)
         elif action_type == 'removedest':
             detail = 'Destination Assignment removed. %s' % (detail)
         elif action_type == 'test':
@@ -283,9 +290,9 @@ class Inventory(MPTTModel):
             if cruise:
                 detail = '%s Cruise: %s' % (detail, cruise)
         elif action_type == 'deploymentrecover':
-            last_build = self.get_latest_build()
-            last_deployment = last_build.get_latest_deployment()
-            detail = 'Recovered from %s. %s.' % (last_deployment, detail)
+            build = self.get_latest_build()
+            deployment = self.get_latest_deployment()
+            detail = 'Recovered from %s. %s.' % (deployment, detail)
             if cruise:
                 detail = '%s Cruise: %s' % (detail, cruise)
 
@@ -322,7 +329,7 @@ class Inventory(MPTTModel):
         self.time_at_sea = self.time_at_sea + latest_time_at_sea
         self.save()
 
-    # get the time at sea for the current deployment only (if item is at sea)
+    # get the time at sea for the current Deployment only (if item is at sea)
     def current_deployment_time_at_sea(self):
         if self.build and self.build.current_deployment() and self.build.current_deployment().current_deployment_status() == 'deploy':
             try:
@@ -337,6 +344,38 @@ class Inventory(MPTTModel):
             return timedelta(minutes=0)
         return timedelta(minutes=0)
 
+    # get the time at sea for any Deployment
+    def get_deployment_to_sea_event(self, deployment_event):
+        try:
+            action_deploy_to_sea = self.actions.filter(action_type='deploymenttosea') \
+                                               .filter(created_at__gte=deployment_event.created_at) \
+                                               .filter(deployment=deployment_event.deployment).first()
+            return action_deploy_to_sea
+        except Action.DoesNotExist:
+            return None
+
+    # get the time at sea for any Deployment event
+    def deployment_time_at_sea(self, deployment_event):
+        action_deploy_to_sea = self.get_deployment_to_sea_event(deployment_event)
+
+        try:
+            action_recover = self.actions.filter(action_type='deploymentrecover') \
+                                         .filter(created_at__gte=deployment_event.created_at) \
+                                         .filter(deployment=deployment_event.deployment).first()
+        except Action.DoesNotExist:
+            action_recover = None
+
+        if action_deploy_to_sea:
+            if action_recover:
+                print(action_recover.id, action_deploy_to_sea.id)
+                time_on_deployment = action_recover.created_at - action_deploy_to_sea.created_at
+                return time_on_deployment
+            # If no recovery, item is still at sea
+            now = timezone.now()
+            time_on_deployment = now - action_deploy_to_sea.created_at
+            return time_on_deployment
+        return timedelta(minutes=0)
+
     # get the Total Time at Sea by adding historical sea time and current deployment sea time
     def total_time_at_sea(self):
         try:
@@ -347,11 +386,19 @@ class Inventory(MPTTModel):
 
     # get queryset of all Deployments for this Item
     def get_deployment_history(self):
-        actions = self.actions.filter(action_type='startdeployment')
-        deployments = []
-        for action in actions:
-            deployments.append(action.deployment)
-        return deployments
+        deployment_events = self.actions.filter(action_type='startdeployment')
+        return deployment_events
+
+    # get a Dict of data points for a Deployment event
+    def get_deployment_data(self, deployment_event):
+        if deployment_event:
+            # create dictionary of location details
+            deployment_data = {
+                'time_at_sea':  self.deployment_time_at_sea(deployment_event),
+                'deploy_to_sea_date': self.get_deployment_to_sea_event(deployment_event).created_at,
+                'deployment_cruise': self.get_deployment_to_sea_event(deployment_event).cruise,
+            }
+        return deployment_data
 
 
 class DeploymentSnapshot(models.Model):

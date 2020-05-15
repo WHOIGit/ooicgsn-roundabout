@@ -401,7 +401,7 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
             'printers': printers,
             'custom_fields': custom_fields,
             'node_type': node_type,
-            'deployments': self.object.get_deployment_history(),
+            'deployment_events': self.object.get_deployment_history(),
         })
         return context
 
@@ -631,6 +631,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
         inventory_form = form.save()
 
         if action_type == 'locationchange' or action_type =='movetotrash':
+            print(self.object.location_changed())
             # Get any subassembly children items, move their location sto match parent and add Action to history
             subassemblies = self.object.get_descendants()
             assembly_parts_added = []
@@ -768,6 +769,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 item.location = self.object.location
                 item.save()
                 # Add Location Change record if moved
+                print(item.location_changed())
                 if item.location_changed():
                     item.create_action_record(self.request.user, 'locationchange', '', created_at)
                 # Add Action Record for removing from Build
@@ -1692,6 +1694,7 @@ class InventoryDetailView(LoginRequiredMixin, DetailView):
             'printers': printers,
             'custom_fields': custom_fields,
             'node_type': node_type,
+            'deployment_events': self.object.get_deployment_history(),
         })
         return context
 

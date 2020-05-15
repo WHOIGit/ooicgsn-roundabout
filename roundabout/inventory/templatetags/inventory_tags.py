@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -28,6 +28,12 @@ from roundabout.parts.models import Part
 from roundabout.userdefinedfields.models import Field, FieldValue
 
 register = template.Library()
+
+# Get individual Deployment details for an Inventory Item
+@register.simple_tag
+def get_deployment_data(inventory_item, deployment):
+    deployment_time_at_sea = inventory_item.deployment_time_at_sea(deployment)
+    return deployment_time_at_sea
 
 # Get the historical list of custom field values, return as queryset
 @register.simple_tag
