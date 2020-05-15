@@ -81,12 +81,15 @@ class FieldValue(models.Model):
                 pass
 
         # Check if field is ChoiceField, set the value to the label if available
-        if self.field.field_type == 'ChoiceField':
-            options_list= self.field.choice_field_options['options']
+        if self.field.field_type == 'ChoiceField' and self.field.choice_field_options:
+            try:
+                options_list= self.field.choice_field_options['options']
 
-            for option in options_list:
-                if option['value'] == self.field_value and option['label']:
-                    print(option['label'])
-                    return option['label']
+                for option in options_list:
+                    if option['value'] == self.field_value and option['label']:
+                        print(option['label'])
+                        return option['label']
+            except:
+                pass
 
         return self.field_value
