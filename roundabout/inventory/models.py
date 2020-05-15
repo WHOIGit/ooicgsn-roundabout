@@ -292,7 +292,7 @@ class Inventory(MPTTModel):
         elif action_type == 'deploymentrecover':
             build = self.get_latest_build()
             deployment = self.get_latest_deployment()
-            detail = 'Recovered from %s. %s.' % (deployment, detail)
+            detail = 'Recovered from %s. %s' % (deployment, detail)
             if cruise:
                 detail = '%s Cruise: %s' % (detail, cruise)
 
@@ -329,6 +329,14 @@ class Inventory(MPTTModel):
         self.time_at_sea = self.time_at_sea + latest_time_at_sea
         self.save()
 
+    # get the Total Time at Sea by adding historical sea time and current deployment sea time
+    def total_time_at_sea(self):
+        try:
+            total_time_at_sea = self.time_at_sea + self.current_deployment_time_at_sea()
+            return total_time_at_sea
+        except:
+            return timedelta(minutes=0)
+
     # get the time at sea for the current Deployment only (if item is at sea)
     def current_deployment_time_at_sea(self):
         if self.build and self.build.current_deployment() and self.build.current_deployment().current_deployment_status() == 'deploy':
@@ -349,7 +357,7 @@ class Inventory(MPTTModel):
         try:
             action_deploy_to_sea = self.actions.filter(action_type='deploymenttosea') \
                                                .filter(created_at__gte=deployment_event.created_at) \
-                                               .filter(deployment=deployment_event.deployment).first()
+                                               .filter(deployment=deployment_event.deployment).last()
             return action_deploy_to_sea
         except Action.DoesNotExist:
             return None
@@ -361,7 +369,7 @@ class Inventory(MPTTModel):
         try:
             action_recover = self.actions.filter(action_type='deploymentrecover') \
                                          .filter(created_at__gte=deployment_event.created_at) \
-                                         .filter(deployment=deployment_event.deployment).first()
+                                         .filter(deployment=deployment_event.deployment).last()
         except Action.DoesNotExist:
             action_recover = None
 
@@ -375,14 +383,6 @@ class Inventory(MPTTModel):
             time_on_deployment = now - action_deploy_to_sea.created_at
             return time_on_deployment
         return timedelta(minutes=0)
-
-    # get the Total Time at Sea by adding historical sea time and current deployment sea time
-    def total_time_at_sea(self):
-        try:
-            total_time_at_sea = self.time_at_sea + self.current_deployment_time_at_sea()
-            return total_time_at_sea
-        except:
-            return timedelta(minutes=0)
 
     # get queryset of all Deployments for this Item
     def get_deployment_history(self):
@@ -398,8 +398,8 @@ class Inventory(MPTTModel):
                 'deploy_to_sea_date': self.get_deployment_to_sea_event(deployment_event).created_at,
                 'deployment_cruise': self.get_deployment_to_sea_event(deployment_event).cruise,
             }
-        return deployment_data
-
+            return deployment_data
+        return None
 
 class DeploymentSnapshot(models.Model):
     deployment = models.ForeignKey(Deployment, related_name='deployment_snapshot',

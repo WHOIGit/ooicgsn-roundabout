@@ -32,8 +32,8 @@ register = template.Library()
 # Get individual Deployment details for an Inventory Item
 @register.simple_tag
 def get_deployment_data(inventory_item, deployment):
-    deployment_time_at_sea = inventory_item.deployment_time_at_sea(deployment)
-    return deployment_time_at_sea
+    deployment_data = inventory_item.get_deployment_data(deployment)
+    return deployment_data
 
 # Get the historical list of custom field values, return as queryset
 @register.simple_tag

@@ -20,9 +20,10 @@
 -->
 {% load common_tags %}
 {% load inventory_tags %}
+{% get_deployment_data inventory_item deployment_event as deployment_data %}
 
 <a class="collapsed" data-toggle="collapse" href="#deployment-{{ deployment_event.id }}" aria-expanded="false" aria-controls="deployment-{{ deployment_event.id }}">
-    {{ deployment_event.build.build_number }} - {{ label_deployments_app_singular }}: {{ deployment_event.deployment }}
+    {{ deployment_event.build.build_number }} - {{ label_deployments_app_singular }}: {{ deployment_event.deployment }} - {{ deployment_event.id }}
 </a>
 
 <a data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ deployment_event.id }}" aria-controls="deployment-{{ deployment_event.id }}" aria-expanded="false" role="button">
@@ -43,7 +44,9 @@
 
     <p>{{ label_deployments_app_singular }} Location: {{ deployment_event.location }}</p>
 
-    <p>Time on Deployment: {% get_deployment_data inventory_item deployment_event %}
+    <p>Total Time on Deployment: {{ deployment_data|get_item:'time_at_sea'|time_at_sea_display }}
+
+    <p>Time in Field: {{ deployment_data|get_item:'time_at_sea'|time_at_sea_display }}
 
     {% if deployment_event.deployment.get_deploytosea_details %}
         <p>{{ label_deployments_app_singular }} Date: {{ deployment_event.deployment.get_deploytosea_details|get_item:'deploy_date' }}</p>

@@ -1261,10 +1261,12 @@ class ActionDeployInventoryAjaxFormView(LoginRequiredMixin, AjaxFormMixin, FormV
         inventory_tree = inventory_item.get_descendants(include_self=True)
         for item in inventory_tree:
             # Need to update last two previous Action dates to match Deployment date
-            actions = item.actions.order_by('-id')[:2]
+            actions = item.actions.order_by('-id')[:3]
+            actions_to_update = ['locationchange', 'addtobuild', 'startdeployment']
             for action in actions:
-                action.created_at = created_at
-                action.save()
+                if action.action_type in actions_to_update:
+                    action.created_at = created_at
+                    action.save()
             item.create_action_record(self.request.user, 'deploymenttosea', '', created_at, cruise)
 
         response = HttpResponseRedirect(self.get_success_url())

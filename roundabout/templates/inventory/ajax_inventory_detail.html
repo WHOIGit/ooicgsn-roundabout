@@ -267,11 +267,6 @@
         </p>
     {% endif %}
 
-
-    {% for deployment in deployments %}
-        <p>{{ deployment }} - {{ deployment.current_deployment_status }}</p>
-    {% endfor %}
-
     <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
 
         {% if inventory_item.actions.exists %}
