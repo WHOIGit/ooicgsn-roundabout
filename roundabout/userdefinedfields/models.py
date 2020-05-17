@@ -49,7 +49,7 @@ class Field(models.Model):
 
 
 class FieldValue(models.Model):
-    field_value = models.TextField(null=True, blank=True)
+    field_value = models.TextField(null=False, blank=True)
     field = models.ForeignKey(Field, related_name='fieldvalues',
                           on_delete=models.CASCADE, null=False, blank=False)
     inventory = models.ForeignKey('inventory.Inventory', related_name='fieldvalues',
