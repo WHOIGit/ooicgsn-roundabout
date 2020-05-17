@@ -81,7 +81,7 @@ class FieldValue(models.Model):
                 pass
 
         # Check if field is ChoiceField, set the value to the label if available
-        if self.field.field_type == 'ChoiceField' and self.field.choice_field_options:
+        if self.field.field_type == 'ChoiceField':
             try:
                 options_list= self.field.choice_field_options['options']
 
