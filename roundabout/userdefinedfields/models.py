@@ -49,7 +49,7 @@ class Field(models.Model):
 
 
 class FieldValue(models.Model):
-    field_value = models.TextField(null=True, blank=True)
+    field_value = models.TextField(null=False, blank=True)
     field = models.ForeignKey(Field, related_name='fieldvalues',
                           on_delete=models.CASCADE, null=False, blank=False)
     inventory = models.ForeignKey('inventory.Inventory', related_name='fieldvalues',
@@ -82,11 +82,14 @@ class FieldValue(models.Model):
 
         # Check if field is ChoiceField, set the value to the label if available
         if self.field.field_type == 'ChoiceField':
-            options_list= self.field.choice_field_options['options']
+            try:
+                options_list= self.field.choice_field_options['options']
 
-            for option in options_list:
-                if option['value'] == self.field_value and option['label']:
-                    print(option['label'])
-                    return option['label']
+                for option in options_list:
+                    if option['value'] == self.field_value and option['label']:
+                        print(option['label'])
+                        return option['label']
+            except:
+                pass
 
         return self.field_value
