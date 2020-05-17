@@ -67,7 +67,7 @@ class FieldValue(models.Model):
         get_latest_by = 'created_at'
 
     def __str__(self):
-        return self.field_value
+        return self.field_value if self.field_value is not None else ''
 
     @property
     def get_field_value(self):
