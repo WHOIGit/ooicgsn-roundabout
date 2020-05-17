@@ -49,7 +49,7 @@ class Field(models.Model):
 
 
 class FieldValue(models.Model):
-    field_value = models.TextField(null=True, blank=True)
+    field_value = models.TextField(null=False, blank=True)
     field = models.ForeignKey(Field, related_name='fieldvalues',
                           on_delete=models.CASCADE, null=False, blank=False)
     inventory = models.ForeignKey('inventory.Inventory', related_name='fieldvalues',
@@ -67,7 +67,7 @@ class FieldValue(models.Model):
         get_latest_by = 'created_at'
 
     def __str__(self):
-        return self.field_value
+        return self.field_value if self.field_value is not None else ''
 
     @property
     def get_field_value(self):
@@ -81,7 +81,7 @@ class FieldValue(models.Model):
                 pass
 
         # Check if field is ChoiceField, set the value to the label if available
-        if self.field.field_type == 'ChoiceField' and self.field.choice_field_options:
+        if self.field.field_type == 'ChoiceField':
             try:
                 options_list= self.field.choice_field_options['options']
 
