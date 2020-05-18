@@ -539,7 +539,7 @@
                                 </li>
                             </ul>
                             <div class="tab-content" id="inventory-tabs">
-                                {% if event.coefficient_values.all %}
+                                {% if event.coefficient_value_sets.all %}
                                     <div class="tab-pane fade show active" id="coefficients" role="tabpanel" aria-labelledby="coefficients-tab">
                                         <table class="table table-tight">
                                             <thead>
@@ -575,8 +575,8 @@
                                                                             <th>Value(s)</th>
                                                                         </thead>
                                                                         <tbody style = 'display:block; overflow: auto; max-height: 200px'>
-                                                                            {% for val in cal.coefficient_values.all %}
-                                                                                {% if val in event.coefficient_values.all %}
+                                                                            {% for val in cal.coefficient_value_sets.all %}
+                                                                                {% if val in event.coefficient_value_sets.all %}
                                                                                     <tr style = 'display: block;'>
                                                                                         <td>{{val}}</td>
                                                                                     </tr>

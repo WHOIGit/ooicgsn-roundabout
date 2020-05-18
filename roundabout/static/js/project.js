@@ -333,16 +333,24 @@ $.ajaxSetup({
     }
 });
 
-// AJAX functions to display Django error messages
+// Append a formset row's field error messages below the respective field
 function apply_form_field_error_array(index, value, error) {
-    var input = $("input[name$=" + index + '-' + value + "]")
-
+    let inputField = $("input[id$=" + index + '-' + value + "]");
+    let selectField = $("select[id$=" + index + '-' + value + "]");
+    let textArea = $("textarea[id$=" + index + '-' + value + "]");
+    let fieldType = '';
+    if (inputField.length) {
+        fieldType = inputField;
+    } else if (selectField.length) {
+        fieldType = selectField;
+    } else if (textArea.length) {
+        fieldType = textArea;
+    }
     $('#error-' + index + '-' + value).remove()
-
-    var error_msg = $("<div id = error-" + index + '-' + value + " />").addClass("ajax-error alert alert-danger").text(error[0])
-
-    // container.addClass("error");
-    error_msg.insertAfter(input);
+    let error_msg = $("<div style = 'max-width: " + fieldType.width() + "px; padding: .5rem .5rem;' id = error-" + index + '-' + value + " />")
+        .addClass("ajax-error alert-danger")
+        .text(error[0]);
+    error_msg.insertAfter(fieldType);
 }
 
 // AJAX functions to display Django error messages

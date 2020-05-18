@@ -57,21 +57,6 @@ class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         form.instance.user_draft = self.request.user
         self.object = form.save()
         coefficient_form.instance = self.object
-        for form in coefficient_form:
-            form_coeff_val = form.cleaned_data.get('value')
-            form_notation_format = form.cleaned_data.get('notation_format')
-            part_dec_places = inv_inst.part.cal_dec_places
-            calibration_name = form.cleaned_data.get('coefficient_name')
-            if calibration_name:    
-                sigfig_formatted_value = round(
-                    form_coeff_val, 
-                    sigfigs = calibration_name.sigfig, 
-                    decimals = part_dec_places, 
-                    notation = form_notation_format
-                )
-            else:
-                sigfig_formatted_value = 0
-            form.instance.value = sigfig_formatted_value
         coefficient_form.save()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
@@ -86,12 +71,12 @@ class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
             return response
 
     def form_invalid(self, form, coefficient_form):
-        print('coeff_form_create_errors')
         if self.request.is_ajax():
             if form.errors:
                 data = form.errors
                 return JsonResponse(data, status=400)
-            if coefficient_form.errors:
+            elif coefficient_form.errors:
+                print('coeffcreateform errors')
                 data = coefficient_form.errors
                 return JsonResponse(data, status=400, safe=False)
         else:
@@ -151,21 +136,6 @@ class CalibrationsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         form.instance.user_draft = self.request.user
         self.object = form.save()
         coefficient_form.instance = self.object
-        for form in coefficient_form:
-            form_coeff_val = form.cleaned_data.get('value')
-            form_notation_format = form.cleaned_data.get('notation_format')
-            part_dec_places = inv_inst.part.cal_dec_places
-            calibration_name = form.cleaned_data.get('coefficient_name')
-            if calibration_name:    
-                sigfig_formatted_value = round(
-                    form_coeff_val, 
-                    sigfigs = calibration_name.sigfig, 
-                    decimals = part_dec_places, 
-                    notation = form_notation_format
-                )
-            else:
-                sigfig_formatted_value = 0
-            form.instance.value = sigfig_formatted_value
         coefficient_form.save()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
@@ -180,7 +150,6 @@ class CalibrationsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
             return response
 
     def form_invalid(self, form, coefficient_form):
-        print('coeff_form_update_errors')
         if self.request.is_ajax():
             if form.errors:
                 data = form.errors
@@ -189,6 +158,7 @@ class CalibrationsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
                     status=400
                 )
             if coefficient_form.errors:
+                print('coeffupdateform errors')
                 data = coefficient_form.errors
                 return JsonResponse(
                     data, 

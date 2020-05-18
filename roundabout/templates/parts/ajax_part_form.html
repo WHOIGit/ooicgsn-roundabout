@@ -147,8 +147,8 @@
                   <table class="table table-tight calibration-form">
                     <thead>
                         <th>Name</th>
+                        <th>Type</th>
                         <th>Significant Figures</th>
-                        <th>Notes</th>
                     </thead>
                     <tbody>
                         {{ calibration_form.management_form }}
@@ -171,8 +171,8 @@
 
                         <tr>
                             <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.calibration_name }}</td>
-                            <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.sigfig }}</td>
-                            <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.notes }}</td>
+                            <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.value_set_type }}</td>
+                            <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.sigfig_override }}</td>
                         </tr>
                       {% endfor %}
                     </tbody>

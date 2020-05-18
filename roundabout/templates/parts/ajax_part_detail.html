@@ -215,15 +215,15 @@
                         <table class="table table-striped action-table">
                             <thead>
                                 <th>Name</th>
+                                <th>Type</th>
                                 <th>Significant Figures</th>
-                                <th>Notes</th>
                             </thead>
                             <tbody>
                                 {% for cal in part_template.coefficient_names.all %}
                                     <tr>
                                         <td>{{ cal.calibration_name }}</td>
-                                        <td>{{ cal.sigfig }}</td>
-                                        <td>{{ cal.notes }}</td>
+                                        <td>{{ cal.value_set_type }}</td>
+                                        <td>{{ cal.sigfig_override }}</td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
