@@ -106,13 +106,14 @@ class InventoryForm(forms.ModelForm):
                         options_dict = field.choice_field_options
                         options_list = [('', '- select one -')]
 
-                        for option in options_dict['options']:
-                            value = option['value']
-                            label = value
-                            if option['label']:
-                                label = option['label']
-                            form_option = (value, label)
-                            options_list.append(form_option)
+                        if options_dict:
+                            for option in options_dict['options']:
+                                value = option['value']
+                                label = value
+                                if option['label']:
+                                    label = option['label']
+                                form_option = (value, label)
+                                options_list.append(form_option)
 
                         FIELD_CHOICES = (options_list)
                         self.fields['udffield_' + str(field.id)] = forms.ChoiceField(label=str(field.field_name), required=False,
