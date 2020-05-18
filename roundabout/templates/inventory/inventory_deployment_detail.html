@@ -64,7 +64,7 @@
         </p>
     {% endif %}
 
-    {% if deployment_event.eployment.get_deployment_time_at_sea %}
+    {% if deployment_event.deployment.get_deployment_time_at_sea %}
         <p>Total Time at Sea: {{ deployment_event.deployment.get_deployment_time_at_sea|time_at_sea_display }}
     {% endif %}
 

@@ -273,16 +273,12 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         # Get all Inventory items on Build, match location and add Actions
         inventory_items = build.inventory.all()
         detail = action_record.get_action_type_display()
-        # check if Location changed
-        old_location_pk = build.tracker.previous('location')
-        if old_location_pk:
-            old_location = Location.objects.get(id=old_location_pk)
 
         for item in inventory_items:
             item.location = build.location
-            if item.location != old_location:
-                item.create_action_record(self.request.user, 'locationchange')
             item.save()
+            if item.location_changed():
+                item.create_action_record(self.request.user, 'locationchange')
             item.create_action_record(self.request.user, action_type_inventory, detail)
 
             #update Time at Sea if Recovered from Sea with Inventory model method

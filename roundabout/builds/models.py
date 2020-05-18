@@ -133,7 +133,6 @@ class Build(models.Model):
     def current_deployment_time_at_sea(self):
         current_deployment_time = timedelta(minutes=0)
 
-
         if self.current_deployment() and self.current_deployment().current_deployment_status() == 'deploy':
             try:
                 action_deploy_to_sea = BuildAction.objects.filter(build=self).filter(action_type='deploymenttosea').latest('created_at')

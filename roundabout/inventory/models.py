@@ -106,9 +106,29 @@ class Deployment(models.Model):
         return deploytosea_details
 
     # get the most recent Deploy to Sea and Recover from Sea action timestamps, find time delta for Total Time at sea
-    def get_deployment_time_at_sea(self):
-        deployment_time_at_sea = None
+    def get_deployment_time_total(self):
+        try:
+            action_deploy_start = DeploymentAction.objects.filter(deployment=self).filter(action_type='create').latest('created_at')
+        except DeploymentAction.DoesNotExist:
+            action_deploy_to_sea = None
 
+        try:
+            action_deploy_retire = DeploymentAction.objects.filter(deployment=self).filter(action_type='retire').latest('created_at')
+        except DeploymentAction.DoesNotExist:
+            action_deploy_retire = None
+
+        if action_deploy_start:
+            if action_deploy_retire:
+                deployment_time_total = action_deploy_retire.created_at - action_deploy_start.created_at
+                return deployment_time_total
+            # If no recovery, item is still at sea
+            now = timezone.now()
+            time_on_deployment = now - action_deploy_start.created_at
+            return deployment_time_total
+        return timedelta(minutes=0)
+
+    # get the most recent Deploy to Sea and Recover from Sea action timestamps, find time delta for Total Time at sea
+    def get_deployment_time_at_sea(self):
         try:
             action_deploy_to_sea = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploy').latest('created_at')
         except DeploymentAction.DoesNotExist:
@@ -119,10 +139,15 @@ class Deployment(models.Model):
         except DeploymentAction.DoesNotExist:
             action_recover = None
 
-        if action_deploy_to_sea and action_recover:
-            deployment_time_at_sea =  action_recover.created_at - action_deploy_to_sea.created_at
-
-        return deployment_time_at_sea
+        if action_deploy_to_sea:
+            if action_recover:
+                deployment_time_at_sea = action_recover.created_at - action_deploy_to_sea.created_at
+                return deployment_time_at_sea
+            # If no recovery, item is still at sea
+            now = timezone.now()
+            deployment_time_at_sea = now - action_deploy_to_sea.created_at
+            return deployment_time_at_sea
+        return timedelta(minutes=0)
 
     def get_deployment_status_label(self):
         deployment_status_label = None
@@ -375,7 +400,6 @@ class Inventory(MPTTModel):
 
         if action_deploy_to_sea:
             if action_recover:
-                print(action_recover.id, action_deploy_to_sea.id)
                 time_on_deployment = action_recover.created_at - action_deploy_to_sea.created_at
                 return time_on_deployment
             # If no recovery, item is still at sea
@@ -392,11 +416,20 @@ class Inventory(MPTTModel):
     # get a Dict of data points for a Deployment event
     def get_deployment_data(self, deployment_event):
         if deployment_event:
+            time_at_sea = self.deployment_time_at_sea(deployment_event)
+            deployment_to_sea_event = self.get_deployment_to_sea_event(deployment_event)
+            # Populate data variable is the deployment_to_sea_event exists
+            if deployment_to_sea_event:
+                deploy_to_sea_date = deployment_to_sea_event.created_at
+                deployment_cruise = deployment_to_sea_event.cruise
+            else:
+                deploy_to_sea_date = None
+                deployment_cruise = None
             # create dictionary of location details
             deployment_data = {
-                'time_at_sea':  self.deployment_time_at_sea(deployment_event),
-                'deploy_to_sea_date': self.get_deployment_to_sea_event(deployment_event).created_at,
-                'deployment_cruise': self.get_deployment_to_sea_event(deployment_event).cruise,
+                'time_at_sea':  time_at_sea,
+                'deploy_to_sea_date': deploy_to_sea_date,
+                'deployment_cruise': deployment_cruise,
             }
             return deployment_data
         return None
