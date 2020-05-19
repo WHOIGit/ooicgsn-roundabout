@@ -1,5 +1,5 @@
 from django import forms
-from .models import CoefficientName, CoefficientValue, CalibrationEvent
+from .models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientValue
 from roundabout.inventory.models import Inventory
 from roundabout.parts.models import Part
 from django.forms.models import inlineformset_factory, BaseInlineFormSet
@@ -29,6 +29,8 @@ class CalibrationAddForm(forms.ModelForm):
             )
         }
 
+# Validates Single-value Coefficients
+# Checks for single-length, numeric-type, part-based decimal places, number of digits
 def clean_single_coeff(val, part_dec_places):
     try:
         split_set = val.split(',')
@@ -64,9 +66,14 @@ def clean_single_coeff(val, part_dec_places):
                 else:
                     return val
 
+
+# Validates 1-Dimensional, comma-separated arrays of Coefficients
+# Checks for numeric-type, part-based decimal place limit, number of digits limit
+# Displays array index/value of invalid input
 def clean_1d_coeffs(vals, part_dec_places):
     split_set = vals.split(',')
     for idx, val in enumerate(split_set):
+        
         val = val.strip()
         try:
             rounded_coeff_val = round(val)
@@ -93,6 +100,8 @@ def clean_1d_coeffs(vals, part_dec_places):
                         params={'index': idx},
                     )
                 else:
+                    # get_or_create
+                    # coeffModel.objects.create()
                     continue
     return vals
 
@@ -102,11 +111,10 @@ def clean_1d_coeffs(vals, part_dec_places):
 # Inputs: Coefficient values and notes per Part Calibration 
 class CoefficientValueForm(forms.ModelForm):
     class Meta:
-        model = CoefficientValue
-        fields = ['coefficient_name', 'value_set_type', 'value_set', 'notes']
+        model = CoefficientValueSet
+        fields = ['coefficient_name','value_set', 'notes']
         labels = {
             'coefficient_name': 'Calibration Name',
-            'value_set_type': 'Coefficient Input Type',
             'value_set': 'Calibration Coefficient(s)',
             'notes': 'Additional Notes'
         }
@@ -140,14 +148,14 @@ class CoefficientValueForm(forms.ModelForm):
         super(CoefficientValueForm, self).__init__(*args, **kwargs)
         if hasattr(self, 'inv_id'):
             inv_inst = Inventory.objects.get(id = self.inv_id)
-            self.fields['coefficient_name'].queryset = CoefficientName.objects.filter(part = inv_inst.part)
+            self.fields['coefficient_name'].queryset = CoefficientName.objects.filter(part = inv_inst.part).order_by('created_at')
             self.instance.cal_dec_places = inv_inst.part.cal_dec_places
             self.instance.part = inv_inst.part
 
 # Coefficient form instance generator
 CoefficientFormset = inlineformset_factory(
     CalibrationEvent, 
-    CoefficientValue, 
+    CoefficientValueSet, 
     form=CoefficientValueForm,
     fields=('coefficient_name', 'value_set', 'notes'), 
     extra=1, 

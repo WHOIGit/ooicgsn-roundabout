@@ -546,42 +546,38 @@
                                                 <th>Name</th>
                                             </thead>
                                             <tbody>
-                                                {% for cal in event.inventory.part.coefficient_names.all %}
+                                                {% for cal in event.coefficient_value_sets.all %}
                                                     <tr>
                                                         <td> 
                                                             <li class = 'list-group-item'>
                                                                 <a  class="collapse show" 
                                                                     data-toggle="collapse" 
-                                                                    href="#coeff-{{ cal }}{{ event.id }}" 
+                                                                    href="#coeff-{{ cal.coefficient_name }}{{ event.id }}" 
                                                                     aria-expanded="false" 
-                                                                    aria-controls="coeff-{{ cal }}{{ event.id }}"
+                                                                    aria-controls="coeff-{{ cal.coefficient_name }}{{ event.id }}"
                                                                 >
-                                                                    <b>{{ cal }}</b>
+                                                                    <b>{{ cal.coefficient_name }}</b>
                                                                 </a>
                                                                 <a  data-toggle="collapse" 
                                                                     class="collapse show text-right" 
-                                                                    href="#coeff-{{ cal }}{{ event.id }}" 
-                                                                    aria-controls="coeff-{{ cal }}{{ event.id }}" 
+                                                                    href="#coeff-{{ cal.coefficient_name }}{{ event.id }}" 
+                                                                    aria-controls="coeff-{{ cal.coefficient_name }}{{ event.id }}" 
                                                                     aria-expanded="false" 
                                                                     role="button"
                                                                 >
                                                                     <i class="fa" aria-hidden="true"></i>
-                                                                    <span class="sr-only">Expand/Collapse Calibration {{ cal }}</span>
+                                                                    <span class="sr-only">Expand/Collapse Calibration {{ cal.coefficient_name }}</span>
                                                                 </a>
-                                                                <div class="collapse show mt-1" id="coeff-{{ cal }}{{ event.id }}">
+                                                                <div class="collapse show mt-1" id="coeff-{{ cal.coefficient_name }}{{ event.id }}">
                                                                     <p class='font-weight-light'><b>Notes:</b> {{ cal.notes }}</p>
                                                                     <table class="table table-tight">
                                                                         <thead>
                                                                             <th>Value(s)</th>
                                                                         </thead>
                                                                         <tbody style = 'display:block; overflow: auto; max-height: 200px'>
-                                                                            {% for val in cal.coefficient_value_sets.all %}
-                                                                                {% if val in event.coefficient_value_sets.all %}
-                                                                                    <tr style = 'display: block;'>
-                                                                                        <td>{{val}}</td>
-                                                                                    </tr>
-                                                                                {% endif %}
-                                                                            {% endfor %}
+                                                                            <tr style = 'display: block;'>
+                                                                                <td>{{cal.value_set}}</td>
+                                                                            </tr>
                                                                         </tbody>
                                                                     </table>
                                                                 </div>

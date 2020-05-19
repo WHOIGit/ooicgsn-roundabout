@@ -338,6 +338,7 @@ function apply_form_field_error_array(index, value, error) {
     let inputField = $("input[id$=" + index + '-' + value + "]");
     let selectField = $("select[id$=" + index + '-' + value + "]");
     let textArea = $("textarea[id$=" + index + '-' + value + "]");
+    let coeff_row = $("tr[id$=" + index + '-' + value + "]");
     let fieldType = '';
     if (inputField.length) {
         fieldType = inputField;
@@ -345,9 +346,10 @@ function apply_form_field_error_array(index, value, error) {
         fieldType = selectField;
     } else if (textArea.length) {
         fieldType = textArea;
+    } else if (coeff_row.length) {
+        fieldType = coeff_row;
     }
-    $('#error-' + index + '-' + value).remove()
-    let error_msg = $("<div style = 'max-width: " + fieldType.width() + "px; padding: .5rem .5rem;' id = error-" + index + '-' + value + " />")
+    let error_msg = $("<div style = 'width: " + fieldType.width() + "px; padding: 1rem 1rem' id = error-" + index + '-' + value + " />")
         .addClass("ajax-error alert-danger")
         .text(error[0]);
     error_msg.insertAfter(fieldType);
@@ -502,6 +504,9 @@ $(document).ready(function(){
         console.log(errorThrown)
         var errors = $.parseJSON(data.responseText);
         console.log(errors)
+        $('[id^=error-]').each(function() {
+            $(this).remove();
+        });
         if (Array.isArray(errors)) {
             errors.map((error, rowNum) => {
                 $.each(error, function(columnName, value) {

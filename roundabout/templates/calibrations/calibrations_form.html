@@ -59,9 +59,8 @@
               </thead>
               <tbody>
                 {{ coefficient_form.management_form }}
-
                 {% for coeff in coefficient_form %}
-                    <tr>
+                    <tr id = '{{forloop.counter0}}-__all__'>
                         <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.coefficient_name }}</td>
                         <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.value_set }}</td>
                         <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.notes }}</td>
@@ -104,7 +103,7 @@
             
             // Handles Coefficient form instance generation
             $('.calibration-form tbody tr').formset({
-                prefix: 'coefficient_values',
+                prefix: 'coefficient_value_sets',
                 addText: 'Add Coefficient',
                 deleteText: 'Remove',
                 added: function(row) {
