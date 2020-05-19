@@ -46,6 +46,7 @@ def has_group(user, group_name):
 def get_item(dictionary, key):
     return dictionary.get(key)
 
+
 # filter Time at Sea duration field to show Hours/Minutes
 @register.filter
 def time_at_sea_display(duration):

@@ -18,9 +18,15 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 -->
+{% load static i18n %}
 {% load common_tags %}
 {% load inventory_tags %}
+
 {% get_deployment_data inventory_item deployment_event as deployment_data %}
+{% define deployment_data|get_item:'deployment_burnin_event' as deployment_burnin_event %}
+{% define deployment_data|get_item:'deployment_to_sea_event' as deployment_to_sea_event %}
+{% define deployment_data|get_item:'deployment_recovery_event' as deployment_recovery_event %}
+{% define deployment_data|get_item:'deployment_retire_event' as deployment_retire_event %}
 
 <a class="collapsed" data-toggle="collapse" href="#deployment-{{ deployment_event.id }}" aria-expanded="false" aria-controls="deployment-{{ deployment_event.id }}">
     {{ deployment_event.build.build_number }} - {{ label_deployments_app_singular }}: {{ deployment_event.deployment }} - {{ deployment_event.id }}
@@ -44,28 +50,34 @@
 
     <p>{{ label_deployments_app_singular }} Location: {{ deployment_event.location }}</p>
 
-    <p>Total Time on Deployment: {{ deployment_data|get_item:'time_at_sea'|time_at_sea_display }}
-
-    <p>Time in Field: {{ deployment_data|get_item:'time_at_sea'|time_at_sea_display }}
-
     {% if deployment_event.deployment.get_deploytosea_details %}
         <p>{{ label_deployments_app_singular }} Date: {{ deployment_event.deployment.get_deploytosea_details|get_item:'deploy_date' }}</p>
     {% endif %}
 
-    {% if deployment_event.cruise %}
+    {% if deployment_to_sea_event.cruise %}
         <p>Cruise Deployed On:
-            <a href="{% url 'cruises:cruises_detail' deployment_event.cruise.id %}">{{ deployment_event.cruise}}</a>
+            <a href="{% url 'cruises:cruises_detail' deployment_to_sea_event.cruise.id %}">{{ deployment_to_sea_event.cruise }}</a>
         </p>
     {% endif %}
 
-    {% if deployment_event.deployment.cruise_recovered %}
+    {% if deployment_recovery_event.cruise %}
         <p>Cruise Recovered On:
-            <a href="{% url 'cruises:cruises_detail' deployment_event.deployment.cruise_recovered.id %}">{{ deployment_event.deployment.cruise_recovered }}</a>
+            <a href="{% url 'cruises:cruises_detail' deployment_recovery_event.cruise.id %}">{{ deployment_recovery_event.cruise }}</a>
         </p>
     {% endif %}
 
-    {% if deployment_event.deployment.get_deployment_time_at_sea %}
-        <p>Total Time at Sea: {{ deployment_event.deployment.get_deployment_time_at_sea|time_at_sea_display }}
+
+
+    {% if deployment_to_sea_event %}
+    <h5>Item's Time on Deployment vs. Total Build Deployment</h5>
+
+	    <div id="deployment-percent-{{ deployment_event.id }}"></div>
+
+        <p>Time in Field: {{ deployment_data|get_item:'time_at_sea'|time_at_sea_display }}
+        {% if deployment_event.deployment.get_deployment_time_at_sea %}
+            <p>Total Deployment Time at Sea: {{ deployment_event.deployment.get_deployment_time_at_sea|time_at_sea_display }}
+        {% endif %}
+        
     {% endif %}
 
     <table class="table table-striped action-table">
@@ -78,17 +90,125 @@
 
         </thead>
         <tbody>
-          {% for action in deployment_event.deployment.deployment_actions.all %}
-            <tr>
-                <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
-                <td>{{ action.get_action_type_display }}</td>
-                <td>
-                    {{ action.detail|safe }}
-                </td>
-                <td>{{ action.user.username }}</td>
-                <td>{{ action.location.name }}</td>
-            </tr>
-          {% endfor %}
+            {% if deployment_to_sea_event %}
+                <tr>
+                    <td>{{ deployment_to_sea_event.created_at|date:"n/j/y H:i" }}</td>
+                    <td>{{ deployment_to_sea_event.get_action_type_display }}</td>
+                    <td>
+                        {{ deployment_to_sea_event.detail|safe }}
+                    </td>
+                    <td>{{ deployment_to_sea_event.user.username }}</td>
+                    <td>{{ deployment_to_sea_event.location.name }}</td>
+                </tr>
+            {% endif %}
         </tbody>
   </table>
 </div>
+
+{% block javascript %}
+
+<script>
+    var containerID = 'deployment-percent-' + {{ deployment_event.id }};
+
+    Highcharts.chart(containerID, {
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: 0,
+            plotShadow: false
+        },
+        title: {
+            text: {{ deployment_data|get_item:'deployment_percentage' }} + '%',
+            align: 'center',
+            verticalAlign: 'middle',
+            y: 60
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        accessibility: {
+            point: {
+                valueSuffix: '%'
+            }
+        },
+        plotOptions: {
+            pie: {
+                dataLabels: {
+                    enabled: true,
+                    distance: -50,
+                    style: {
+                        fontWeight: 'bold',
+                        color: 'white'
+                    }
+                },
+                startAngle: -90,
+                endAngle: 90,
+                center: ['50%', '75%'],
+                size: '110%'
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Deployment Percentage',
+            innerSize: '50%',
+            data: [
+                ['Item\'s Time On Deployment', {{ deployment_data|get_item:'deployment_percentage' }}],
+                ['Total Build Deployment', 100 - {{ deployment_data|get_item:'deployment_percentage' }}],
+            ]
+        }]
+    });
+    /*
+    Highcharts.chart(containerID, {
+        'chart': {
+            'type': 'solidgauge'
+        },
+
+        'title': null,
+
+        'tooltip': {
+            'enabled': false
+        },
+
+        'pane': {
+          'center': ['50%', '50%'],
+          'size': '200px',
+          'startAngle': 0,
+          'endAngle': 360,
+          'background': {
+            'backgroundColor': '#EEE',
+            'innerRadius': '80%',
+            'outerRadius': '100%',
+            'borderWidth': 0
+          }
+        },
+
+        'yAxis': {
+          'min': 0,
+          'max': 100,
+          'labels': {
+            'enabled': false
+          },
+
+          'lineWidth': 0,
+          'minorTickInterval': null,
+          'tickPixelInterval': 400,
+          'tickWidth': 0
+        },
+
+        'plotOptions': {
+            'solidgauge': {
+                'innerRadius': '80%'
+            }
+        },
+
+        'series': [{
+            'name': 'Speed',
+            'data': [80],
+            'dataLabels': {
+                'enabled': false
+            }
+        }]
+    });
+    */
+
+</script>
+{% endblock javascript %}

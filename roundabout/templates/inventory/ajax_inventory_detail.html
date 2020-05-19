@@ -25,6 +25,8 @@
 {% load inventory_tags %}
 {% load mptt_tags %}
 
+<script src="{% static 'js/vendor/highcharts.js' %}"></script>
+
 {% if inventory_item %}
 <div class="card-header" data-object-id="{{ inventory_item.id }}"><h3>{{ inventory_item.part.name }}</h3></div>
 

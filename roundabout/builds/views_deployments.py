@@ -279,7 +279,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             item.save()
             if item.location_changed():
                 item.create_action_record(self.request.user, 'locationchange')
-            item.create_action_record(self.request.user, action_type_inventory, detail)
+            item.create_action_record(self.request.user, action_type_inventory, detail, action_date)
 
             #update Time at Sea if Recovered from Sea with Inventory model method
             if action_type == 'recover':

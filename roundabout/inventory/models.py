@@ -105,7 +105,7 @@ class Deployment(models.Model):
 
         return deploytosea_details
 
-    # get the most recent Deploy to Sea and Recover from Sea action timestamps, find time delta for Total Time at sea
+    # get the time delta from Deployment start to retire
     def get_deployment_time_total(self):
         try:
             action_deploy_start = DeploymentAction.objects.filter(deployment=self).filter(action_type='create').latest('created_at')
@@ -377,26 +377,50 @@ class Inventory(MPTTModel):
             return timedelta(minutes=0)
         return timedelta(minutes=0)
 
-    # get the time at sea for any Deployment
-    def get_deployment_to_sea_event(self, deployment_event):
+    # get the Deployment burnin action for deployment_event
+    def get_deployment_burnin_event(self, deployment_event):
         try:
-            action_deploy_to_sea = self.actions.filter(action_type='deploymenttosea') \
+            action = self.actions.filter(action_type='deploymentburnin') \
                                                .filter(created_at__gte=deployment_event.created_at) \
                                                .filter(deployment=deployment_event.deployment).last()
-            return action_deploy_to_sea
+            return action
+        except Action.DoesNotExist:
+            return None
+
+    # get the Deployment deploymenttosea action for deployment_event
+    def get_deployment_to_sea_event(self, deployment_event):
+        try:
+            action = self.actions.filter(action_type='deploymenttosea') \
+                                               .filter(created_at__gte=deployment_event.created_at) \
+                                               .filter(deployment=deployment_event.deployment).last()
+            return action
+        except Action.DoesNotExist:
+            return None
+
+    # get the Deployment recovery action for deployment_event
+    def get_deployment_recovery_event(self, deployment_event):
+        try:
+            action = self.actions.filter(action_type='deploymentrecover') \
+                                               .filter(created_at__gte=deployment_event.created_at) \
+                                               .filter(deployment=deployment_event.deployment).last()
+            return action
+        except Action.DoesNotExist:
+            return None
+
+    # get the Deployment retire action for deployment_event
+    def get_deployment_retire_event(self, deployment_event):
+        try:
+            action = self.actions.filter(action_type='deploymentretire') \
+                                               .filter(created_at__gte=deployment_event.created_at) \
+                                               .filter(deployment=deployment_event.deployment).last()
+            return action
         except Action.DoesNotExist:
             return None
 
     # get the time at sea for any Deployment event
     def deployment_time_at_sea(self, deployment_event):
         action_deploy_to_sea = self.get_deployment_to_sea_event(deployment_event)
-
-        try:
-            action_recover = self.actions.filter(action_type='deploymentrecover') \
-                                         .filter(created_at__gte=deployment_event.created_at) \
-                                         .filter(deployment=deployment_event.deployment).last()
-        except Action.DoesNotExist:
-            action_recover = None
+        action_recover = self.get_deployment_recovery_event(deployment_event)
 
         if action_deploy_to_sea:
             if action_recover:
@@ -416,20 +440,32 @@ class Inventory(MPTTModel):
     # get a Dict of data points for a Deployment event
     def get_deployment_data(self, deployment_event):
         if deployment_event:
-            time_at_sea = self.deployment_time_at_sea(deployment_event)
+            # get deployment cycle events
+            deployment_burnin_event = self.get_deployment_burnin_event(deployment_event)
             deployment_to_sea_event = self.get_deployment_to_sea_event(deployment_event)
-            # Populate data variable is the deployment_to_sea_event exists
+            deployment_recovery_event = self.get_deployment_recovery_event(deployment_event)
+            deployment_retire_event = self.get_deployment_recovery_event(deployment_event)
+            # get time in field/sea
+            time_at_sea = self.deployment_time_at_sea(deployment_event)
+            # Populate percentage variable is the deployment_to_sea_event exists
+            deployment_percentage = None
             if deployment_to_sea_event:
-                deploy_to_sea_date = deployment_to_sea_event.created_at
-                deployment_cruise = deployment_to_sea_event.cruise
-            else:
-                deploy_to_sea_date = None
-                deployment_cruise = None
+                # calculate percentage of total build deployment item was deployed
+                try:
+                    deployment_percentage = int(time_at_sea / deployment_event.deployment.get_deployment_time_at_sea() * 100)
+                    if deployment_percentage > 100:
+                        deployment_percentage = 100
+                except:
+                    pass
+
             # create dictionary of location details
             deployment_data = {
                 'time_at_sea':  time_at_sea,
-                'deploy_to_sea_date': deploy_to_sea_date,
-                'deployment_cruise': deployment_cruise,
+                'deployment_percentage': deployment_percentage,
+                'deployment_burnin_event': deployment_burnin_event,
+                'deployment_to_sea_event': deployment_to_sea_event,
+                'deployment_recovery_event': deployment_recovery_event,
+                'deployment_retire_event': deployment_retire_event,
             }
             return deployment_data
         return None
@@ -485,6 +521,7 @@ class Action(models.Model):
     DEPLOYMENTTOSEA = 'deploymenttosea'
     DEPLOYMENTUPDATE = 'deploymentupdate'
     DEPLOYMENTRECOVER = 'deploymentrecover'
+    DEPLOYMENTRETIRE = 'deploymentretire'
     ASSIGNDEST = 'assigndest'
     REMOVEDEST = 'removedest'
     TEST = 'test'
@@ -506,6 +543,7 @@ class Action(models.Model):
         (DEPLOYMENTTOSEA, '%s to Field' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTUPDATE, '%s Update' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTRECOVER, '%s Recovery' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTRETIRE, '%s Retired' % (labels['label_deployments_app_singular'])),
         (ASSIGNDEST, 'Assign Destination'),
         (REMOVEDEST, 'Remove Destination'),
         (TEST, 'Test'),
