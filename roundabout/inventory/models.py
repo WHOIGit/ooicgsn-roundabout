@@ -228,11 +228,11 @@ class Inventory(MPTTModel):
     deployment = models.ForeignKey(Deployment, related_name='inventory',
                                    on_delete=models.SET_NULL, null=True, blank=True)
     build = models.ForeignKey(Build, related_name='inventory',
-                                   on_delete=models.SET_NULL, null=True, blank=True)
+                              on_delete=models.SET_NULL, null=True, blank=True)
     assembly_part = TreeForeignKey(AssemblyPart, related_name='inventory',
-                                  on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
+                                   on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
     assigned_destination_root = TreeForeignKey('self', related_name='assigned_children',
-                                on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
+                                               on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     detail = models.TextField(blank=True)
@@ -274,10 +274,25 @@ class Inventory(MPTTModel):
         except:
             return None
 
+    def get_latest_parent(self):
+        try:
+            action = self.actions.filter(parent__isnull=False).latest()
+            return action.parent
+        except:
+            return None
+
     def location_changed(self):
         current_location = self.location
         last_location = self.get_latest_location()
         if current_location != last_location:
+            return True
+        return False
+
+    # Return True item removed from Parent
+    def parent_changed(self):
+        current_parent = self.parent
+        last_parent = self.get_latest_parent()
+        if current_parent != last_parent:
             return True
         return False
 
@@ -299,6 +314,12 @@ class Inventory(MPTTModel):
             detail = 'Item first added to Inventory. %s' % (detail)
         elif action_type == 'locationchange' or action_type == 'movetotrash':
             detail = 'Moved to %s from %s. %s' % (self.location, self.get_latest_location(), detail)
+        elif action_type == 'subchange':
+            if not detail:
+                if self.parent:
+                    detail = 'Added to %s.' % (self.parent)
+                else:
+                    detail = 'Removed from %s.' % (self.get_latest_parent())
         elif action_type == 'addtobuild':
             detail = 'Moved to %s.' % (build)
         elif action_type == 'removefrombuild':
@@ -325,6 +346,7 @@ class Inventory(MPTTModel):
                                               object_type=self.get_object_type(),
                                               detail=detail,
                                               location=self.location,
+                                              parent=self.parent,
                                               build=build,
                                               deployment=deployment,
                                               cruise=cruise,

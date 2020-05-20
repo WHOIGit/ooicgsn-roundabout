@@ -689,6 +689,15 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 self.object.save()
 
         if action_type == 'removefrombuild':
+            # Add Location Change record if moved
+            if self.object.location_changed():
+                self.object.create_action_record(self.request.user, 'locationchange')
+            # Add Subassembly change record if removed from Parent item
+            if self.object.parent_changed():
+                self.object.create_action_record(self.request.user, 'subchange')
+                old_parent = self.object.get_latest_parent()
+                parent_detail = 'Sub-%s %s removed.' % (labels['label_assemblies_app_singular'], self.object)
+                old_parent.create_action_record(self.request.user, 'subchange', parent_detail)
             # Find Build it was removed from
             old_build = self.object.get_latest_build()
             if old_build:
@@ -723,6 +732,8 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 item.location = self.object.location
                 item.detail = ' Removed from %s.' % (old_build)
                 item.save()
+                if item.location_changed():
+                    item.create_action_record(self.request.user, 'locationchange')
                 item.create_action_record(self.request.user, action_type, detail)
                 # If Build is Deployed, need to create separate Recover from Deployment record,
                 # also need to run item.update_time_at_sea() method
@@ -1166,15 +1177,15 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
         subassembly.assembly_part = assembly_part
         subassembly.save()
 
-        detail = 'Moved to %s.' % (subassembly.build)
-        if subassembly.parent:
-            detail = detail + ' Added to %s' % (subassembly.parent)
-            parent_detail = 'Sub-%s %s added.' % (labels['label_assemblies_app_singular'], subassembly)
-            subassembly.parent.create_action_record(self.request.user, 'subchange', parent_detail)
-
         # Add Action Record if Location change
         if subassembly.location_changed():
             subassembly.create_action_record(self.request.user, 'locationchange')
+
+        detail = 'Moved to %s.' % (subassembly.build)
+        if subassembly.parent:
+            parent_detail = 'Sub-%s %s added.' % (labels['label_assemblies_app_singular'], subassembly)
+            subassembly.create_action_record(self.request.user, 'subchange')
+            subassembly.parent.create_action_record(self.request.user, 'subchange', parent_detail)
 
         # create default Action record for Inventory
         subassembly.create_action_record(self.request.user, action_type, detail)
