@@ -70,14 +70,16 @@
 
     {% if deployment_to_sea_event %}
     <h5>Item's Time on Deployment vs. Total Build Deployment</h5>
+    <hr>
+    <p>Time in Field: {{ deployment_data|get_item:'time_at_sea'|time_at_sea_display }}</p>
+    {% if deployment_event.deployment.get_deployment_time_at_sea %}
+        <p>Total Deployment Time in Field: {{ deployment_event.deployment.get_deployment_time_at_sea|time_at_sea_display }}</p>
+    {% endif %}
 
 	    <div id="deployment-percent-{{ deployment_event.id }}"></div>
 
-        <p>Time in Field: {{ deployment_data|get_item:'time_at_sea'|time_at_sea_display }}
-        {% if deployment_event.deployment.get_deployment_time_at_sea %}
-            <p>Total Deployment Time at Sea: {{ deployment_event.deployment.get_deployment_time_at_sea|time_at_sea_display }}
-        {% endif %}
-        
+
+
     {% endif %}
 
     <table class="table table-striped action-table">
@@ -109,21 +111,31 @@
 
 <script>
     var containerID = 'deployment-percent-' + {{ deployment_event.id }};
+    var deploymentPecentage = {{ deployment_data|get_item:'deployment_percentage' }};
+    var timeInField = '{{ deployment_data|get_item:'time_at_sea'|time_at_sea_display }}';
+    var deploymentTotalTime = '{{ deployment_event.deployment.get_deployment_time_at_sea|time_at_sea_display }}'
 
     Highcharts.chart(containerID, {
         chart: {
             plotBackgroundColor: null,
             plotBorderWidth: 0,
-            plotShadow: false
+            plotShadow: false,
+            spacingBottom: 0,
+            spacingTop: 0,
+            marginTop: 0,
+            marginBottom: 0
         },
         title: {
-            text: {{ deployment_data|get_item:'deployment_percentage' }} + '%',
+            text: {{ deployment_data|get_item:'deployment_percentage' }} + '% of <br>Total Deployment',
             align: 'center',
             verticalAlign: 'middle',
             y: 60
         },
         tooltip: {
-            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+            formatter: function() { return ' ' +
+                this.point.name + '<br />' +
+                'Time in Field: ' + this.point.time
+            }
         },
         accessibility: {
             point: {
@@ -151,8 +163,16 @@
             name: 'Deployment Percentage',
             innerSize: '50%',
             data: [
-                ['Item\'s Time On Deployment', {{ deployment_data|get_item:'deployment_percentage' }}],
-                ['Total Build Deployment', 100 - {{ deployment_data|get_item:'deployment_percentage' }}],
+                {
+                    name: 'Item\'s Time On Deployment',
+                    y: deploymentPecentage,
+                    time: timeInField,
+                },
+                {
+                    name: 'Total Build Deployment',
+                    y: 100 - deploymentPecentage,
+                    time: deploymentTotalTime,
+                },
             ]
         }]
     });
