@@ -69,7 +69,7 @@
 
 
     {% if deployment_to_sea_event %}
-    <h5>Item's Time on Deployment vs. Total Build Deployment</h5>
+    <h5>Item's Time on Deployment vs. Total {{ label_builds_app_singular }} Deployment</h5>
     <hr>
     <p>Time in Field: {{ deployment_data|get_item:'time_at_sea'|time_at_sea_display }}</p>
     {% if deployment_event.deployment.get_deployment_time_at_sea %}
@@ -92,6 +92,26 @@
 
         </thead>
         <tbody>
+            <tr>
+                <td>{{ deployment_event.created_at|date:"n/j/y H:i" }}</td>
+                <td>{{ deployment_event.get_action_type_display }}</td>
+                <td>
+                    {{ deployment_event.detail|safe }}
+                </td>
+                <td>{{ deployment_event.user.username }}</td>
+                <td>{{ deployment_event.location.name }}</td>
+            </tr>
+            {% if deployment_burnin_event %}
+                <tr>
+                    <td>{{ deployment_burnin_event.created_at|date:"n/j/y H:i" }}</td>
+                    <td>{{ deployment_burnin_event.get_action_type_display }}</td>
+                    <td>
+                        {{ deployment_burnin_event.detail|safe }}
+                    </td>
+                    <td>{{ deployment_burnin_event.user.username }}</td>
+                    <td>{{ deployment_burnin_event.location.name }}</td>
+                </tr>
+            {% endif %}
             {% if deployment_to_sea_event %}
                 <tr>
                     <td>{{ deployment_to_sea_event.created_at|date:"n/j/y H:i" }}</td>
@@ -101,6 +121,28 @@
                     </td>
                     <td>{{ deployment_to_sea_event.user.username }}</td>
                     <td>{{ deployment_to_sea_event.location.name }}</td>
+                </tr>
+            {% endif %}
+            {% if deployment_recovery_event %}
+                <tr>
+                    <td>{{ deployment_recovery_event.created_at|date:"n/j/y H:i" }}</td>
+                    <td>{{ deployment_recovery_event.get_action_type_display }}</td>
+                    <td>
+                        {{ deployment_recovery_event.detail|safe }}
+                    </td>
+                    <td>{{ deployment_recovery_event.user.username }}</td>
+                    <td>{{ deployment_recovery_event.location.name }}</td>
+                </tr>
+            {% endif %}
+            {% if deployment_retire_event %}
+                <tr>
+                    <td>{{ deployment_retire_event.created_at|date:"n/j/y H:i" }}</td>
+                    <td>{{ deployment_retire_event.get_action_type_display }}</td>
+                    <td>
+                        {{ deployment_retire_event.detail|safe }}
+                    </td>
+                    <td>{{ deployment_retire_event.user.username }}</td>
+                    <td>{{ deployment_retire_event.location.name }}</td>
                 </tr>
             {% endif %}
         </tbody>
@@ -231,4 +273,5 @@
     */
 
 </script>
+
 {% endblock javascript %}

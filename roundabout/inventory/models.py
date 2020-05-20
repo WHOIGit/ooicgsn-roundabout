@@ -444,7 +444,7 @@ class Inventory(MPTTModel):
             deployment_burnin_event = self.get_deployment_burnin_event(deployment_event)
             deployment_to_sea_event = self.get_deployment_to_sea_event(deployment_event)
             deployment_recovery_event = self.get_deployment_recovery_event(deployment_event)
-            deployment_retire_event = self.get_deployment_recovery_event(deployment_event)
+            deployment_retire_event = self.get_deployment_retire_event(deployment_event)
             # get time in field/sea
             time_at_sea = self.deployment_time_at_sea(deployment_event)
             # Populate percentage variable is the deployment_to_sea_event exists
