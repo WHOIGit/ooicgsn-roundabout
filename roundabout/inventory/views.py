@@ -872,9 +872,14 @@ class ActionNoteAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         return { 'inventory': inventory_item.id, 'location': inventory_item.location_id }
 
     def form_valid(self, form):
+        inventory_item = Inventory.objects.get(id=self.kwargs['pk'])
         self.object = form.save()
         self.object.user_id = self.request.user.id
         self.object.action_type = 'note'
+        self.object.object_type = 'inventory'
+        self.object.parent = inventory_item.parent
+        self.object.build = inventory_item.build
+        self.object.deployment = inventory_item.get_latest_action().deployment
         self.object.save()
 
         photo_ids = form.cleaned_data['photo_ids']
