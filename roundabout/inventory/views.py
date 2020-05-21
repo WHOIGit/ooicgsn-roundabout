@@ -780,7 +780,6 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 item.location = self.object.location
                 item.save()
                 # Add Location Change record if moved
-                print(item.location_changed())
                 if item.location_changed():
                     item.create_action_record(self.request.user, 'locationchange', '', created_at)
                 # Add Action Record for removing from Build
@@ -799,22 +798,13 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 item.create_action_record(self.request.user, action_type, detail)
 
         if action_type == 'subchange':
+            # Add Location Change record if moved
+            if self.object.location_changed():
+                self.object.create_action_record(self.request.user, 'locationchange')
             # Find previous parent to add to Detail field text
-            old_parent_pk = self.object.tracker.previous('parent')
-            if old_parent_pk:
-                old_parent = Inventory.objects.get(pk=old_parent_pk)
-                parent_detail = 'Sub-%s %s removed. ' % (labels['label_assemblies_app_singular'], self.object)
-                detail = 'Removed from %s. %s' % (old_parent, detail)
-
-                # Add Action Record for Parent Assembly
-                old_parent.create_action_record(self.request.user, action_type, parent_detail)
-
-            # Find previous location to check if item was moved, add Action record
-            old_location_pk = self.object.tracker.previous('location')
-            if old_location_pk:
-                old_location = Location.objects.get(pk=old_location_pk)
-                if self.object.location != old_location:
-                    self.object.create_action_record(self.request.user, 'locationchange')
+            old_parent = self.object.get_latest_parent()
+            parent_detail = 'Sub-%s %s removed.' % (labels['label_assemblies_app_singular'], self.object)
+            old_parent.create_action_record(self.request.user, 'subchange', parent_detail)
 
             # Get any subassembly children items, move their location to match parent and add Action to history
             subassemblies = self.object.get_descendants()
@@ -836,11 +826,10 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 item.assigned_destination_root = self.object.assigned_destination_root
                 item.detail = 'Parent Inventory Change'
                 item.save()
+                # Add Location Change record if moved
+                if item.location_changed():
+                    item.create_action_record(self.request.user, 'locationchange')
                 item.create_action_record(self.request.user, action_type, item.detail)
-                # Find previous location to check if item was moved, add Action record
-                if old_location_pk:
-                    if item.location != old_location:
-                        item.create_action_record(self.request.user, 'locationchange')
 
         # create Action record for self.object
         action_record = self.object.create_action_record(self.request.user, action_type, detail, created_at, cruise)
@@ -1520,14 +1509,13 @@ class InventoryAjaxParentActionView(RedirectView):
         subassembly.assigned_destination_root = parent.assigned_destination_root
         subassembly.save()
 
-        detail = 'Added to %s.' % (parent)
-        if subassembly.build:
-            detail = detail + ' Moved to %s' % (subassembly.build)
+        # Add Action Record if Location change
+        if subassembly.location_changed():
+            subassembly.create_action_record(self.request.user, 'locationchange')
+
         parent_detail = 'Sub-%s %s added.' % (labels['label_assemblies_app_singular'], subassembly)
-        action_record = Action.objects.create(action_type='subchange', detail=detail, location=parent.location,
-                                              user=self.request.user, inventory=subassembly)
-        parent_action_record = Action.objects.create(action_type='subchange', detail=parent_detail, location=parent.location,
-                                              user=self.request.user, inventory=parent)
+        subassembly.create_action_record(self.request.user, 'subchange')
+        parent.create_action_record(self.request.user, 'subchange', parent_detail)
 
         # Get any subassembly children items, move their location to match parent and add Action to history
         subassemblies = subassembly.get_descendants()
@@ -1545,15 +1533,12 @@ class InventoryAjaxParentActionView(RedirectView):
             item.location = subassembly.location
             item.build = subassembly.build
             item.assigned_destination_root = subassembly.assigned_destination_root
-
-            if item.build:
-                item.detail = 'Moved to %s' % (item.build)
-            else:
-                item.detail = 'Parent Inventory Change'
-
+            item.detail = "Parent added to new sub-assembly"
             item.save()
-            action_record = Action.objects.create(action_type='invchange', detail=item.detail, location=item.location,
-                                                  user=self.request.user, inventory=item)
+            # Add Action Record if Location change
+            if item.location_changed():
+                item.create_action_record(self.request.user, 'locationchange')
+            item.create_action_record(self.request.user, 'subchange', item.detail)
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ) )
 
@@ -1605,24 +1590,14 @@ class InventoryAjaxSubassemblyActionView(RedirectView):
         subassembly.assembly_part = assembly_part
         subassembly.save()
 
-        detail = 'Added to %s.' % (parent)
-        if subassembly.build:
-            detail = detail + ' Moved to %s' % (subassembly.build)
-        parent_detail = 'Sub-%s %s added.' % (labels['label_assemblies_app_singular'], subassembly)
-        action_record = Action.objects.create(
-                                        action_type='subchange',
-                                        detail=detail,
-                                        location=parent.location,
-                                        user=self.request.user,
-                                        inventory=subassembly,
-                                        )
-        parent_action_record = Action.objects.create(
-                                                action_type='subchange',
-                                                detail=parent_detail,
-                                                location=parent.location,
-                                                user=self.request.user,
-                                                inventory=parent,
-                                                )
+        # Add Action Record if Location change
+        if subassembly.location_changed():
+            subassembly.create_action_record(self.request.user, 'locationchange')
+
+        if subassembly.parent:
+            parent_detail = 'Sub-%s %s added.' % (labels['label_assemblies_app_singular'], subassembly)
+            subassembly.create_action_record(self.request.user, 'subchange')
+            subassembly.parent.create_action_record(self.request.user, 'subchange', parent_detail)
 
         # Get any subassembly children items, move their location to match parent and add Action to history
         subassemblies = Inventory.objects.get(id=subassembly.id).get_descendants()
@@ -1639,20 +1614,12 @@ class InventoryAjaxSubassemblyActionView(RedirectView):
 
             item.location = subassembly.location
             item.build = subassembly.build
-
-            if item.build:
-                item.detail = 'Moved to %s' % (item.build)
-            else:
-                item.detail = 'Parent Inventory Change'
-
+            item.detail = "Parent added to new sub-assembly"
             item.save()
-            action_record = Action.objects.create(
-                                            action_type='invchange',
-                                            detail=item.detail,
-                                            location=item.location,
-                                            user=self.request.user,
-                                            inventory=item,
-                                            )
+            # Add Action Record if Location change
+            if item.location_changed():
+                item.create_action_record(self.request.user, 'locationchange')
+            item.create_action_record(self.request.user, 'subchange', item.detail)
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['parent_pk'], ) )
 

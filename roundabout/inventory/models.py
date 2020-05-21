@@ -304,11 +304,13 @@ class Inventory(MPTTModel):
             return None
 
     # method to create new Action model records to track Inventory/User
-    def create_action_record(self, user, action_type, detail='', created_at=timezone.now(), cruise=None):
+    def create_action_record(self, user, action_type, detail='', created_at=None, cruise=None):
         build = self.build
         deployment = None
         if build:
             deployment = self.build.get_latest_deployment()
+        if not created_at:
+            created_at = timezone.now()
 
         if action_type == 'invadd':
             detail = 'Item first added to Inventory. %s' % (detail)
