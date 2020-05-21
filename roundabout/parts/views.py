@@ -202,15 +202,11 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
             return response
 
     def form_invalid(self, form, revision_form, documentation_form, calibration_form):
-        print('triggered')
         if self.request.is_ajax():
-            print('is ajax')
             if form.errors:
-                print('form errors')
                 data = form.errors
                 return JsonResponse(data, status=400)
             elif calibration_form.errors:
-                print('calform errors')
                 data = calibration_form.errors
                 return JsonResponse(data, status=400, safe=False)
         else:

@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.views.generic import CreateView, UpdateView
+from django.views.generic import CreateView, UpdateView, DeleteView
 from .models import CoefficientName, CalibrationEvent
-from .forms import CalibrationAddForm, CoefficientFormset, CoefficientValueForm
+from .forms import CalibrationAddForm, CoefficientFormset
 from common.util.mixins import AjaxFormMixin
 from django.urls import reverse, reverse_lazy
 from roundabout.parts.models import Part
@@ -176,3 +176,25 @@ class CalibrationsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
 
     def get_success_url(self):
         return reverse('inventory:ajax_inventory_detail', args=(self.object.inventory.id, ))
+
+
+class CalibrationsDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = CalibrationEvent
+    context_object_name='event_template'
+    template_name = 'calibrations/calibrations_confirm_delete.html'
+    permission_required = 'calibrations.add_calibration'
+    redirect_field_name = 'home'
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        data = {
+            'message': "Successfully submitted form data.",
+            'parent_id': self.object.inventory.id,
+            'parent_type': 'part_type',
+            'object_type': self.object.get_object_type(),
+        }
+        self.object.delete()
+        return JsonResponse(data)
+
+    def get_success_url(self):
+        return reverse_lazy('inventory:ajax_inventory_detail', args=(self.object.inventory.id, ))

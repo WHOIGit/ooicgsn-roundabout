@@ -338,7 +338,7 @@ function apply_form_field_error_array(index, value, error) {
     let inputField = $("input[id$=" + index + '-' + value + "]");
     let selectField = $("select[id$=" + index + '-' + value + "]");
     let textArea = $("textarea[id$=" + index + '-' + value + "]");
-    let coeff_row = $("tr[id$=" + index + '-' + value + "]");
+    let allRow = $("#__all__")
     let fieldType = '';
     if (inputField.length) {
         fieldType = inputField;
@@ -346,8 +346,8 @@ function apply_form_field_error_array(index, value, error) {
         fieldType = selectField;
     } else if (textArea.length) {
         fieldType = textArea;
-    } else if (coeff_row.length) {
-        fieldType = coeff_row;
+    } else if (allRow.length) {
+        fieldType = allRow;
     }
     let error_msg = $("<div style = 'width: " + fieldType.width() + "px; padding: 1rem 1rem' id = error-" + index + '-' + value + " />")
         .addClass("ajax-error alert-danger")

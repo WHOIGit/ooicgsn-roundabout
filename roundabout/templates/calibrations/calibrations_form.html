@@ -50,7 +50,7 @@
         {{ form|crispy }}
 
         <div class="col-md-12">
-            <h5>Calibrations</h5>
+            <h5 id = '__all__'>Calibrations</h5>
             <table class="table table-tight calibration-form">
               <thead>
                   <th>Calibration Name</th>
@@ -60,7 +60,7 @@
               <tbody>
                 {{ coefficient_form.management_form }}
                 {% for coeff in coefficient_form %}
-                    <tr id = '{{forloop.counter0}}-__all__'>
+                    <tr>
                         <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.coefficient_name }}</td>
                         <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.value_set }}</td>
                         <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.notes }}</td>
@@ -107,9 +107,8 @@
                 addText: 'Add Coefficient',
                 deleteText: 'Remove',
                 added: function(row) {
-                    let remove_button = row.find('.delete-row');
 
-                    // Right-justify generated formset row remover 
+                    let remove_button = row.find('.delete-row');
                     remove_button.addClass('pull-right');
                 }
             });

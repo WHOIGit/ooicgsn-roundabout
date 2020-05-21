@@ -29,87 +29,117 @@ class CalibrationAddForm(forms.ModelForm):
             )
         }
 
-# Validates Single-value Coefficients
-# Checks for single-length, numeric-type, part-based decimal places, number of digits
-def clean_single_coeff(val, part_dec_places):
-    try:
-        split_set = val.split(',')
-        assert len(split_set) == 1
-    except:
-        raise ValidationError(
-            _('More than 1 value associated with element')
-        )
-    else:   
-        try:
-            rounded_coeff_val = round(split_set[0])
-        except:
-            raise ValidationError(
-                _('%(value)s is an invalid Number. Please enter a valid Number (Digits + 1 optional decimal point).'),
-                params={'value': split_set[0]},
-            )
-        else:
-            coeff_dec_places = rounded_coeff_val[::-1].find('.')
-            try:
-                assert coeff_dec_places <= part_dec_places
-            except:
-                raise ValidationError(
-                    _('Exceeded Instrument %(dec_places)s-digit decimal place maximum.'),
-                    params={'dec_places': part_dec_places},
-                )
-            else:
-                try:
-                    assert len(rounded_coeff_val) <= 21
-                except:
-                    raise ValidationError(
-                        _('Exceeded 20-digit max length')
-                    )
-                else:
-                    return val
-
-
-# Validates 1-Dimensional, comma-separated arrays of Coefficients
-# Checks for numeric-type, part-based decimal place limit, number of digits limit
-# Displays array index/value of invalid input
-def clean_1d_coeffs(vals, part_dec_places):
-    split_set = vals.split(',')
-    for idx, val in enumerate(split_set):
-        
+# 
+def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
+    for idx, val in enumerate(coeff_1d_array):
         val = val.strip()
         try:
             rounded_coeff_val = round(val)
         except:
             raise ValidationError(
-                _('Index %(index)s: %(value)s is an invalid Number. Please enter a valid Number (Digits + 1 optional decimal point).'),
-                params={'value': val, 'index': idx},
+                _('Row: %(row)s, Column: %(column)s, %(value)s is an invalid Number. Please enter a valid Number (Digits + 1 optional decimal point).'),
+                params={'row': val_set_index, 'value': val, 'column': idx},
             )
         else:
             coeff_dec_places = rounded_coeff_val[::-1].find('.')
             try:
-                assert coeff_dec_places <= part_dec_places
+                assert coeff_dec_places <= valset_inst.cal_dec_places
             except:
                 raise ValidationError(
-                    _('Index %(index)s: Exceeded Instrument %(dec_places)s-digit decimal place maximum.'),
-                    params={'dec_places': part_dec_places, 'index': idx},
+                    _('Row: %(row)s, Column: %(column)s, %(value)s Exceeded Instrument %(dec_places)s-digit decimal place maximum.'),
+                    params={'row': val_set_index, 'dec_places': valset_inst.cal_dec_places, 'value': val, 'index': idx},
                 )
             else:
                 try:
                     assert len(rounded_coeff_val) <= 21
                 except:
                     raise ValidationError(
-                        _('Index %(index)s: Exceeded 20-digit max length'),
-                        params={'index': idx},
+                        _('Row: %(row)s, Column: %(column)s, %(value)s Exceeded 20-digit max length'),
+                        params={'row': val_set_index, 'index': idx},
                     )
                 else:
-                    # get_or_create
-                    # coeffModel.objects.create()
                     continue
-    return vals
 
+
+# Validator for Coefficient values within a CoefficientValueSet
+# Checks for numeric-type, part-based decimal place limit, number of digits limit
+# Displays array index/value of invalid input
+def validate_coeff_vals(valset_inst, set_type, coeff_val_set):  
+    if set_type == 'sl':
+        try:
+            coeff_batch = coeff_val_set.split(',')
+            assert len(coeff_batch) == 1
+        except:
+            raise ValidationError(
+                _('More than 1 value associated with Single input type')
+            )
+        else:
+            validate_coeff_array(coeff_batch, valset_inst)
+            return coeff_val_set
+
+    elif set_type == '1d':
+        try:
+            coeff_batch = coeff_val_set.split(',')
+        except:
+            raise ValidationError(
+                _('Unable to parse 1D array')
+            )
+        else:
+            validate_coeff_array(coeff_batch, valset_inst)
+            return coeff_val_set
+
+    elif set_type == '2d':
+        try:
+            coeff_2d_array = coeff_val_set.splitlines()
+        except:
+            raise ValidationError(
+                _('Unable to parse 2D array')
+            )
+        else:
+            for row_index, row_set in enumerate(coeff_2d_array):
+                coeff_1d_array = row_set.split(',')
+                validate_coeff_array(coeff_1d_array, valset_inst, row_index)
+    return coeff_val_set
+
+
+def parse_coeff_1d_array(coeff_1d_array, value_set_instance):
+    coeff_batch = []
+    for idx, val in enumerate(coeff_1d_array):
+        val = val.strip()
+        coeff_val_obj = CoefficientValue(
+            coeff_value_set = value_set_instance, 
+            value = val
+        )
+        coeff_batch.append(coeff_val_obj)
+
+    return coeff_batch
+
+
+# Creates Coefficient value model instances for a valid CoefficientValueSet
+def parse_valid_coeff_vals(value_set_instance):
+    set_type = value_set_instance.coefficient_name.value_set_type
+    coeff_vals = CoefficientValue.objects.filter(coeff_value_set = value_set_instance)
+    coeff_batch = []
+    if coeff_vals:
+        coeff_vals.delete()
+    if set_type  == 'sl' or set_type  == '1d':
+        coeff_1d_array = value_set_instance.value_set.split(',')
+        coeff_batch = parse_coeff_1d_array(coeff_1d_array, value_set_instance)
+    elif set_type == '2d':
+        val_array = []
+        coeff_2d_array = value_set_instance.value_set.splitlines()
+        for val_set_index, val_set in enumerate(coeff_2d_array):
+            coeff_1d_array = val_set.split(',')
+            for val_index, val in enumerate(coeff_1d_array):
+                val_array.append(val)
+        coeff_batch = parse_coeff_1d_array(val_array, value_set_instance)
+    CoefficientValue.objects.bulk_create(coeff_batch)
+    return value_set_instance
 
 
 # Coefficient form
 # Inputs: Coefficient values and notes per Part Calibration 
-class CoefficientValueForm(forms.ModelForm):
+class CoefficientValueSetForm(forms.ModelForm):
     class Meta:
         model = CoefficientValueSet
         fields = ['coefficient_name','value_set', 'notes']
@@ -119,44 +149,41 @@ class CoefficientValueForm(forms.ModelForm):
             'notes': 'Additional Notes'
         }
 
-    def clean_value_set(self):
-        raw_set = self.cleaned_data.get('value_set')
-        coefficient_name = self.cleaned_data.get('coefficient_name')
-        try:
-            cal_obj = CoefficientName.objects.get(part = self.instance.part, calibration_name = coefficient_name)
-        except:
-            raise ValidationError(
-                _('Unable to query selected Calibration instance'),
-            )
-        if cal_obj:
-            set_type =  cal_obj.value_set_type
-        else:
-            set_type = 'None'
-        part_dec_places = self.instance.cal_dec_places
-        if set_type == 'sl':
-            return clean_single_coeff(raw_set, part_dec_places)
-        elif set_type == '1d':
-            return clean_1d_coeffs(raw_set, part_dec_places)
-        else:
-            raise ValidationError(
-                _('Undefined set type'),
-            )
-
     def __init__(self, *args, **kwargs):
         if 'inv_id' in kwargs:
             self.inv_id = kwargs.pop('inv_id')
-        super(CoefficientValueForm, self).__init__(*args, **kwargs)
+        super(CoefficientValueSetForm, self).__init__(*args, **kwargs)
         if hasattr(self, 'inv_id'):
             inv_inst = Inventory.objects.get(id = self.inv_id)
             self.fields['coefficient_name'].queryset = CoefficientName.objects.filter(part = inv_inst.part).order_by('created_at')
             self.instance.cal_dec_places = inv_inst.part.cal_dec_places
             self.instance.part = inv_inst.part
 
+    def clean_value_set(self):
+        raw_set = self.cleaned_data.get('value_set')
+        coefficient_name = self.cleaned_data.get('coefficient_name')
+        try:
+            cal_obj = CoefficientName.objects.get(part = self.instance.part, calibration_name = coefficient_name)
+            set_type =  cal_obj.value_set_type
+        except:
+            raise ValidationError(
+                _('Unable to query selected Calibration instance'),
+            )
+        else:
+            return validate_coeff_vals(self.instance, set_type, raw_set)
+
+    def save(self, commit = True): 
+        value_set = super(CoefficientValueSetForm, self).save(commit = False)
+        if commit:
+            value_set.save()
+            parse_valid_coeff_vals(value_set)
+        return value_set
+
 # Coefficient form instance generator
 CoefficientFormset = inlineformset_factory(
     CalibrationEvent, 
     CoefficientValueSet, 
-    form=CoefficientValueForm,
+    form=CoefficientValueSetForm,
     fields=('coefficient_name', 'value_set', 'notes'), 
     extra=1, 
     can_delete=True

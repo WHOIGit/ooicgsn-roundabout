@@ -34,6 +34,7 @@ class CalibrationEvent(models.Model):
 class CoefficientName(models.Model):
     class Meta:
         ordering = ['calibration_name']
+        unique_together = ['part','calibration_name']
     def __str__(self):
         return self.calibration_name
     def get_object_type(self):

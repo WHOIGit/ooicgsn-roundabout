@@ -522,6 +522,15 @@
                         </div>
                         <div class="collapse mt-3" id="event-{{ event.id }}">
                             <hr>
+                            <div class="ajax-detail-link pull-right">
+                                <a  href="#" 
+                                    class="btn btn-danger btn-sm float-left mr-2"
+                                    data-detail-url="{% url 'calibrations:calibrations_delete' event.id %}" 
+                                    role="button" 
+                                >
+                                        Delete
+                                </a>
+                            </div>
                             <p>Approved: {{ event.approved }}</p>
                             <p>Approved by: {{ event.user_approver.username }}</p>
                             <p>Last Updated by: {{ event.user_draft.username }}</p>
@@ -575,9 +584,11 @@
                                                                             <th>Value(s)</th>
                                                                         </thead>
                                                                         <tbody style = 'display:block; overflow: auto; max-height: 200px'>
-                                                                            <tr style = 'display: block;'>
-                                                                                <td>{{cal.value_set}}</td>
-                                                                            </tr>
+                                                                            {% for val in cal.coefficient_values.all %}
+                                                                                <tr style = 'display: block;'>
+                                                                                    <td>{{ val }}</td>
+                                                                                </tr>
+                                                                            {% endfor %}
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
