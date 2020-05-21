@@ -1320,6 +1320,7 @@ class InventoryAjaxAssignDestinationActionView(RedirectView):
         inventory_item.assembly_part = assembly_part
         inventory_item.assigned_destination_root = inventory_item
         inventory_item.save()
+        inventory_item.create_action_record(self.request.user, 'assigndest')
 
         # Get any subassembly children items, move their Assembly Part assignment to match parent
         subassemblies = inventory_item.get_descendants()
@@ -1334,10 +1335,7 @@ class InventoryAjaxAssignDestinationActionView(RedirectView):
                     assembly_parts_added.append(sub.id)
                     break
             item.save()
-
-        detail = 'Destination assigned - %s.' % (inventory_item.assembly_part.assembly)
-        action_record = Action.objects.create(action_type='assigndest', detail=detail, location=inventory_item.location,
-                                              user=self.request.user, inventory=inventory_item)
+            item.create_action_record(self.request.user, 'assigndest')    
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ) )
 

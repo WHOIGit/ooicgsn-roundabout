@@ -305,6 +305,7 @@ class Inventory(MPTTModel):
 
     # method to create new Action model records to track Inventory/User
     def create_action_record(self, user, action_type, detail='', created_at=None, cruise=None):
+        # Add Try block here when done
         build = self.build
         deployment = None
         if build:
@@ -315,7 +316,7 @@ class Inventory(MPTTModel):
         if action_type == 'invadd':
             detail = 'Item first added to Inventory. %s' % (detail)
         elif action_type == 'locationchange' or action_type == 'movetotrash':
-            detail = 'Moved to %s from %s. %s' % (self.location, self.get_latest_location(), detail)
+            detail = 'Moved to %s from %s. %s' % (self.location, self.get_latest_action().location, detail)
         elif action_type == 'subchange':
             if not detail:
                 if self.parent:
@@ -327,6 +328,8 @@ class Inventory(MPTTModel):
         elif action_type == 'removefrombuild':
             build = self.get_latest_build()
             detail = 'Removed from %s. %s' % (build, detail)
+        elif action_type == 'assigndest':
+            detail = 'Destination assigned - %s.' % (self.assembly_part.assembly_revision)
         elif action_type == 'removedest':
             detail = 'Destination Assignment removed. %s' % (detail)
         elif action_type == 'test':
