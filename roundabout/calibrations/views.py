@@ -97,7 +97,7 @@ class CalibrationsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
     form_class = CalibrationAddForm
     context_object_name = 'event_template'
     template_name='calibrations/calibrations_form.html'
-    permission_required = 'calibrations.add_calibration'
+    permission_required = 'calibrations.add_calibration_event'
     redirect_field_name = 'home'
 
     def get(self, request, *args, **kwargs):
@@ -182,7 +182,7 @@ class CalibrationsDeleteView(LoginRequiredMixin, PermissionRequiredMixin, Delete
     model = CalibrationEvent
     context_object_name='event_template'
     template_name = 'calibrations/calibrations_confirm_delete.html'
-    permission_required = 'calibrations.add_calibration'
+    permission_required = 'calibrations.add_calibration_event'
     redirect_field_name = 'home'
 
     def delete(self, request, *args, **kwargs):

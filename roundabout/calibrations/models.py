@@ -59,7 +59,7 @@ class CoefficientValueSet(models.Model):
         return self.value_set
     def get_object_type(self):
         return 'coefficient_value_set'
-    value_set = models.TextField(blank=True)
+    value_set = models.TextField(blank=True, help_text='Enter value(s) in either Standard or Scientific Notation (#.##e10, #.##E-12)')
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     coefficient_name = models.ForeignKey(CoefficientName, related_name='coefficient_value_sets', on_delete=models.CASCADE, null=True)

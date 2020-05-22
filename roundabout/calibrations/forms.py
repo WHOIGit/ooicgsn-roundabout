@@ -148,6 +148,13 @@ class CoefficientValueSetForm(forms.ModelForm):
             'value_set': 'Calibration Coefficient(s)',
             'notes': 'Additional Notes'
         }
+        widgets = {
+            'value_set': forms.Textarea(
+                attrs = {
+                    'white-space': 'nowrap'
+                }
+            )
+        }
 
     def __init__(self, *args, **kwargs):
         if 'inv_id' in kwargs:
