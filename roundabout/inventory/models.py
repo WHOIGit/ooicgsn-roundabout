@@ -652,6 +652,17 @@ class Action(models.Model):
                               on_delete=models.SET_NULL, null=True, blank=True)
     cruise = models.ForeignKey(Cruise, related_name='actions',
                               on_delete=models.SET_NULL, null=True, blank=True)
+    latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
+                                    validators=[
+                                        MaxValueValidator(90),
+                                        MinValueValidator(0)
+                                    ])
+    longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
+                                    validators=[
+                                        MaxValueValidator(180),
+                                        MinValueValidator(0)
+                                    ])
+    depth = models.PositiveIntegerField(null=True, blank=True)
 
 
     class Meta:
@@ -687,19 +698,21 @@ class PhotoNote(models.Model):
 
 
 class DeploymentAction(models.Model):
-    DEPLOY = 'deploy'
-    RECOVER = 'recover'
-    RETIRE = 'retire'
-    CREATE = 'create'
-    BURNIN = 'burnin'
-    DETAILS = 'details'
+    STARTDEPLOYMENT = 'startdeployment'
+    DEPLOYMENTBURNIN = 'deploymentburnin'
+    DEPLOYMENTTOSEA = 'deploymenttosea'
+    DEPLOYMENTUPDATE = 'deploymentupdate'
+    DEPLOYMENTRECOVER = 'deploymentrecover'
+    DEPLOYMENTRETIRE = 'deploymentretire'
+    DEPLOYMENTDETAILS = 'deploymentdetails'
     ACT_TYPES = (
-        (DEPLOY, 'Deployed to Field'),
-        (RECOVER, 'Recovered from Field'),
-        (RETIRE, 'Retired'),
-        (CREATE, 'Created'),
-        (BURNIN, 'Burn In'),
-        (DETAILS, '%s Details' % (labels['label_deployments_app_singular'])),
+        (STARTDEPLOYMENT, 'Start %s' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTTOSEA, '%s to Field' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTUPDATE, '%s Update' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTRECOVER, '%s Recovery' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTRETIRE, '%s Retired' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTDETAILS, '%s Details' % (labels['label_deployments_app_singular'])),
     )
     action_type = models.CharField(max_length=20, choices=ACT_TYPES)
     created_at = models.DateTimeField(default=timezone.now)
