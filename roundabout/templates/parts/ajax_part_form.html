@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -62,7 +62,7 @@
         </div>
 
         {% if not part_template %}
-              <h4>Revision Information</h4>
+             <h4>Revision Information</h4>
               <table class="table table-tight">
                 <thead>
                   <th>Revision Code</th>
@@ -84,7 +84,7 @@
                       {% endfor %}
                       </div>
                     </tr>
-                    {% endif %}
+                   {% endif %}
 
                     {% for rev in revision_form %}
 
@@ -105,7 +105,7 @@
 
 
                 <div class="col-md-12">
-                  <h5>Revision Documentation</h5>
+                 <h5>Revision Documentation</h5>
                   <table class="table table-tight documentation-form">
                     <thead>
                       <th>Document</th>
@@ -127,7 +127,7 @@
                         {% endfor %}
                         </div>
                       </tr>
-                      {% endif %}
+                     {% endif %}
 
                       {% for doc in documentation_form %}
 
@@ -213,7 +213,7 @@
 $(document).ready(function() {
 
     $('.documentation-form tbody tr').formset({
-        prefix: 'documentation',
+        prefix: 'documentation', // <-- Needs to match the Django related_name for the models
         addText: 'add document',
         deleteText: 'remove',
     });
@@ -222,6 +222,7 @@ $(document).ready(function() {
         addText: 'add calibration',
         deleteText: 'remove',
     });
+
     // AJAX functions for form
 
     $("#id_part_number").on("blur", function(){
