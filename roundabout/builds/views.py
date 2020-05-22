@@ -182,7 +182,7 @@ class BuildDetailView(LoginRequiredMixin, DetailView):
         # Get Lat/Long, Depth if Deployed
         if self.object.is_deployed:
             current_deployment = self.object.current_deployment()
-            action_record = DeploymentAction.objects.filter(deployment=current_deployment).filter(action_type='deploy').first()
+            action_record = DeploymentAction.objects.filter(deployment=current_deployment).filter(action_type='deploymenttosea').first()
 
         context.update({
             'printers': printers,
@@ -225,7 +225,7 @@ class BuildAjaxDetailView(LoginRequiredMixin, DetailView):
         # Get Lat/Long, Depth if Deployed
         if self.object.is_deployed:
             current_deployment = self.object.current_deployment()
-            action_record = DeploymentAction.objects.filter(deployment=current_deployment).filter(action_type='deploy').first()
+            action_record = DeploymentAction.objects.filter(deployment=current_deployment).filter(action_type='deploymenttosea').first()
 
         context.update({
             'printers': printers,

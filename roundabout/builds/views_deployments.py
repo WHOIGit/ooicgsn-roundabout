@@ -154,7 +154,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
 
         action_type = self.kwargs['action_type']
 
-        # Set Detail and action_type_inventory variables
+        # Set Detail and action_type variables
         if action_type == 'deploymentburnin':
             self.object.detail = '%s Burn In initiated at %s. ' % (self.object.deployment_number, self.object.location)
 
@@ -170,7 +170,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         if action_type == 'deploymentdetails':
             self.object.detail = '%s Details set.' % (self.object.deployment_number)
 
-        action_form = form.save()
+        self.object = form.save()
 
         # Get the date for the Action Record from the custom form field
         action_date = form.cleaned_data['date']
@@ -191,7 +191,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             self.object.save()
 
             details = 'Details set. <br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
-            detail_record = DeploymentAction.objects.create(action_type='details',
+            detail_record = DeploymentAction.objects.create(action_type='deploymentdetails',
                                                             detail=details,
                                                             location=self.object.location,
                                                             user=self.request.user,
@@ -234,7 +234,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         if action_type == 'deploymenttosea':
             self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
 
-        build_record = BuildAction.objects.create(action_type=action_type_inventory,
+        build_record = BuildAction.objects.create(action_type=action_type,
                                                   detail=self.object.detail,
                                                   location=build.location,
                                                   user=self.request.user,
@@ -270,9 +270,9 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         detail = action_record.get_action_type_display()
         cruise = None
         if action_type == 'deploymenttosea':
-            cruise = build.cruise_deployed
+            cruise = self.object.cruise_deployed
         elif action_type == 'deploymentrecover':
-            cruise = build.cruise_recovered
+            cruise = self.object.cruise_recovered
 
         for item in inventory_items:
             item.location = build.location
