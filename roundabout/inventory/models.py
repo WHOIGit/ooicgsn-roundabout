@@ -336,6 +336,8 @@ class Inventory(MPTTModel):
             detail = '%s: %s. %s' % (self.get_test_type_display(), self.get_test_result_display(), detail)
         elif action_type == 'startdeployment':
             detail = '%s %s started' % (labels['label_deployments_app_singular'], deployment)
+        elif action_type == 'deploymentburnin':
+            detail = '%s %s burn in' % (labels['label_deployments_app_singular'], deployment)
         elif action_type == 'deploymenttosea':
             detail = 'Deployed to field on %s.' % (deployment)
             if cruise:
@@ -346,6 +348,10 @@ class Inventory(MPTTModel):
             detail = 'Recovered from %s. %s' % (deployment, detail)
             if cruise:
                 detail = '%s Cruise: %s' % (detail, cruise)
+        elif action_type == 'deploymentretire':
+            build = self.get_latest_build()
+            deployment = self.get_latest_deployment()
+            detail = '%s %s ended for this item.' % (labels['label_deployments_app_singular'], deployment)
 
         action_record = Action.objects.create(action_type=action_type,
                                               object_type=self.get_object_type(),
@@ -464,6 +470,17 @@ class Inventory(MPTTModel):
         deployment_events = self.actions.filter(action_type='startdeployment')
         return deployment_events
 
+    # find last deployment action to get current status
+    def current_deployment_status(self):
+        try:
+            deployment_action = self.actions.filter(deployment__isnull=False).latest()
+            if deployment_action:
+                deployment_status = deployment_action.action_type
+                return deployment_status
+        except:
+            pass
+        return None
+
     # get a Dict of data points for a Deployment event
     def get_deployment_data(self, deployment_event):
         if deployment_event:
@@ -485,9 +502,44 @@ class Inventory(MPTTModel):
                 except:
                     pass
 
+            # Set variables for Deployment Status bar in Bootstrap
+            if deployment_retire_event:
+                deployment_progress_bar = {
+                    'bar_class': 'bg-info',
+                    'bar_width': 100,
+                    'status_label': 'Deployment Ended',
+                }
+            elif deployment_recovery_event:
+                deployment_progress_bar = {
+                    'bar_class': 'bg-warning',
+                    'bar_width': 80,
+                    'status_label': 'Recovered',
+                }
+            elif deployment_to_sea_event:
+                deployment_progress_bar = {
+                    'bar_class': None,
+                    'bar_width': 60,
+                    'status_label': 'Deploy to Sea',
+                }
+            elif deployment_burnin_event:
+                deployment_progress_bar = {
+                    'bar_class': 'bg-danger',
+                    'bar_width': 40,
+                    'status_label': 'Burn In',
+                }
+            else:
+                deployment_progress_bar = {
+                    'bar_class': 'bg-success',
+                    'bar_width': 20,
+                    'status_label': 'Deployment Started',
+                }
+
             # create dictionary of location details
             deployment_data = {
                 'time_at_sea':  time_at_sea,
+                'bar_class': deployment_progress_bar['bar_class'],
+                'bar_width': deployment_progress_bar['bar_width'],
+                'status_label': deployment_progress_bar['status_label'],
                 'deployment_percentage': deployment_percentage,
                 'deployment_burnin_event': deployment_burnin_event,
                 'deployment_to_sea_event': deployment_to_sea_event,
@@ -496,6 +548,7 @@ class Inventory(MPTTModel):
             }
             return deployment_data
         return None
+
 
 class DeploymentSnapshot(models.Model):
     deployment = models.ForeignKey(Deployment, related_name='deployment_snapshot',

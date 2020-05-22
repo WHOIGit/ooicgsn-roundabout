@@ -551,8 +551,7 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
 
                             self.object.detail = 'Change field value for "%s" to %s' % (currentvalue.field, value)
                             self.object.save()
-                            action_record = Action.objects.create(action_type='fieldchange', detail=self.object.detail, location=self.object.location,
-                                                                  user=self.request.user, inventory=self.object)
+                            self.object.create_action_record(self.request.user, 'fieldchange', self.object.detail)
                     else:
                         if value:
                             # Create new value object
@@ -568,8 +567,7 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
 
                             self.object.detail = 'Add initial field value for "%s" to %s' % (fieldvalue.field, value)
                             self.object.save()
-                            action_record = Action.objects.create(action_type='fieldchange', detail=self.object.detail, location=self.object.location,
-                                                                  user=self.request.user, inventory=self.object)
+                            self.object.create_action_record(self.request.user, 'fieldchange', self.object.detail)
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -704,6 +702,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 # If Build is Deployed, need to create separate Recover from Deployment record,
                 if old_build.is_deployed:
                     self.object.create_action_record(self.request.user, 'deploymentrecover', detail)
+                    self.object.create_action_record(self.request.user, 'deploymentretire')
 
                 # Create Build Action record
                 build_detail = '%s removed from %s' % (self.object, labels['label_builds_app_singular'])
@@ -739,6 +738,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 # also need to run item.update_time_at_sea() method
                 if old_build.is_deployed:
                     item.create_action_record(self.request.user, 'deploymentrecover')
+                    item.create_action_record(self.request.user, 'deploymentretire')
 
         if action_type == 'deploymentrecover':
             cruise = form.cleaned_data['cruise']
@@ -786,6 +786,8 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 item.create_action_record(self.request.user, 'removefrombuild', detail, created_at)
                 # Add last record
                 item.create_action_record(self.request.user, action_type, detail, created_at, cruise)
+                # End deployment
+                item.create_action_record(self.request.user, 'deploymentretire')
                 item.update_time_at_sea()
 
         if action_type == 'removedest':
@@ -833,9 +835,10 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
 
         # create Action record for self.object
         action_record = self.object.create_action_record(self.request.user, action_type, detail, created_at, cruise)
-        # update the Time At Sea field
+        # update the Time At Sea field, end the deployment cycle
         if action_type == 'deploymentrecover':
             self.object.update_time_at_sea()
+            self.object.create_action_record(self.request.user, 'deploymentretire')
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -953,6 +956,7 @@ class ActionHistoryNoteAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateV
         self.object = form.save()
         self.object.user_id = self.request.user.id
         self.object.action_type = 'historynote'
+        self.object.object_type = 'inventory'
         self.object.save()
 
         response = HttpResponseRedirect(self.get_success_url())
@@ -1050,7 +1054,7 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
         # Add subassembly change Action Record if Parent
         if inventory_item.parent:
             # add item subchange record
-            detail = 'Added to %s.'
+            detail = 'Added to %s.' % (inventory_item.parent)
             inventory_item.create_action_record(self.request.user, 'subchange', detail)
             # parent record
             parent_detail = 'Sub-%s %s added.' % (labels['label_assemblies_app_singular'], inventory_item)
@@ -1187,6 +1191,8 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
         # If Build is deployed, need to add extra Action record to add to Deployment
         if build.is_deployed:
             subassembly.create_action_record(self.request.user, 'startdeployment')
+            if build.current_deployment().current_deployment_status() == 'burnin':
+                subassembly.create_action_record(self.request.user, 'deploymentburnin')
 
         # Check if any subassembly orphan children items already exist.  If so, make this item the parent
         children = subassembly.assembly_part.get_children()
@@ -1224,6 +1230,8 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
             # If Build is deployed, need to add extra Action record to add to Deployment
             if build.is_deployed:
                 item.create_action_record(self.request.user, 'startdeployment')
+                if build.current_deployment().current_deployment_status() == 'burnin':
+                    subassembly.create_action_record(self.request.user, 'deploymentburnin')
 
         # Create Build Action record for adding inventory item
         detail = '%s added to %s' % (subassembly, labels['label_builds_app_singular'])
@@ -1335,7 +1343,7 @@ class InventoryAjaxAssignDestinationActionView(RedirectView):
                     assembly_parts_added.append(sub.id)
                     break
             item.save()
-            item.create_action_record(self.request.user, 'assigndest')    
+            item.create_action_record(self.request.user, 'assigndest')
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ) )
 

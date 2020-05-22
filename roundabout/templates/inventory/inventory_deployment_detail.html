@@ -29,16 +29,17 @@
 {% define deployment_data|get_item:'deployment_retire_event' as deployment_retire_event %}
 
 <a class="collapsed" data-toggle="collapse" href="#deployment-{{ deployment_event.id }}" aria-expanded="false" aria-controls="deployment-{{ deployment_event.id }}">
-    {{ deployment_event.build.build_number }} - {{ label_deployments_app_singular }}: {{ deployment_event.deployment }} - {{ deployment_event.id }}
+    {{ deployment_event.build.build_number }} - {{ label_deployments_app_singular }}: {{ deployment_event.deployment }}
 </a>
 
 <a data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ deployment_event.id }}" aria-controls="deployment-{{ deployment_event.id }}" aria-expanded="false" role="button">
     <i class="fa" aria-hidden="true"></i>
     <span class="sr-only">Expand/Collapse Revision {{ deployment }}</span>
 </a>
+
 <div class="progress" style="height: 20px;">
-    <div class="progress-bar {{ deployment_event.deployment.get_deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ deployment_event.deployment.get_deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ deployment_event.deployment.get_deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
-        <span>{{ deployment.get_deployment_status_label }}</span>
+    <div class="progress-bar {{ deployment_data|get_item:'bar_class' }}" role="progressbar" style="width: {{ deployment_data|get_item:'bar_width' }}%;" aria-valuenow="{{ deployment_data|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
+        <span>{{ deployment_data|get_item:'status_label' }}</span>
     </div>
 </div>
 
@@ -49,6 +50,14 @@
     </p>
 
     <p>{{ label_deployments_app_singular }} Location: {{ deployment_event.location }}</p>
+
+    <p>Current Build Deployment Status<br>
+        <div class="progress" style="height: 20px;">
+            <div class="progress-bar {{ deployment_event.deployment.get_deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ deployment_event.deployment.get_deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ deployment_event.deployment.get_deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
+                <span>{{ deployment_event.deployment.get_deployment_status_label }}</span>
+            </div>
+        </div>
+    </p>
 
     {% if deployment_event.deployment.get_deploytosea_details %}
         <p>{{ label_deployments_app_singular }} Date: {{ deployment_event.deployment.get_deploytosea_details|get_item:'deploy_date' }}</p>
