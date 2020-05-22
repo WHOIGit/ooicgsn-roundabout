@@ -1065,6 +1065,8 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
         # If Build is deployed, need to add extra Action record to add to Deployment
         if build.is_deployed:
             inventory_item.create_action_record(self.request.user, 'startdeployment')
+            if build.current_deployment().current_deployment_status() == 'deploymentburnin':
+                inventory_item.create_action_record(self.request.user, 'deploymentburnin')
 
         # Check if any subassembly orphan children items already exist.  If so, make this item the parent
         children = inventory_item.assembly_part.get_children()
@@ -1098,6 +1100,8 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
             # If Build is deployed, need to add extra Action record to add to Deployment
             if build.is_deployed:
                 item.create_action_record(self.request.user, 'startdeployment')
+                if build.current_deployment().current_deployment_status() == 'deploymentburnin':
+                    item.create_action_record(self.request.user, 'deploymentburnin')
             item.create_action_record(self.request.user, action_type)
 
 
@@ -1191,7 +1195,7 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
         # If Build is deployed, need to add extra Action record to add to Deployment
         if build.is_deployed:
             subassembly.create_action_record(self.request.user, 'startdeployment')
-            if build.current_deployment().current_deployment_status() == 'burnin':
+            if build.current_deployment().current_deployment_status() == 'deploymentburnin':
                 subassembly.create_action_record(self.request.user, 'deploymentburnin')
 
         # Check if any subassembly orphan children items already exist.  If so, make this item the parent
@@ -1230,8 +1234,8 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
             # If Build is deployed, need to add extra Action record to add to Deployment
             if build.is_deployed:
                 item.create_action_record(self.request.user, 'startdeployment')
-                if build.current_deployment().current_deployment_status() == 'burnin':
-                    subassembly.create_action_record(self.request.user, 'deploymentburnin')
+                if build.current_deployment().current_deployment_status() == 'deploymentburnin':
+                    item.create_action_record(self.request.user, 'deploymentburnin')
 
         # Create Build Action record for adding inventory item
         detail = '%s added to %s' % (subassembly, labels['label_builds_app_singular'])
