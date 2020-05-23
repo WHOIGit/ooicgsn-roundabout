@@ -59,7 +59,7 @@
     {% endif %}
 
     {% if deployment.get_deployment_time_at_sea %}
-        <p>Total Time at Sea: {{ deployment.get_deployment_time_at_sea|time_at_sea_display }}
+        <p>Deployment Time in Field: {{ deployment.get_deployment_time_at_sea|time_at_sea_display }}
     {% endif %}
 
     <table class="table table-striped action-table">

@@ -701,7 +701,6 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
             if old_build:
                 # If Build is Deployed, need to create separate Recover from Deployment record,
                 if old_build.is_deployed:
-                    self.object.create_action_record(self.request.user, 'deploymentrecover', detail)
                     self.object.create_action_record(self.request.user, 'deploymentretire')
 
                 # Create Build Action record
@@ -737,7 +736,6 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 # If Build is Deployed, need to create separate Recover from Deployment record,
                 # also need to run item.update_time_at_sea() method
                 if old_build.is_deployed:
-                    item.create_action_record(self.request.user, 'deploymentrecover')
                     item.create_action_record(self.request.user, 'deploymentretire')
 
         if action_type == 'deploymentrecover':
@@ -1701,7 +1699,7 @@ class InventoryDetailView(LoginRequiredMixin, DetailView):
 
 # View to get main Inventory landing page
 class InventoryHomeView(LoginRequiredMixin, TemplateView):
-    template_name ='inventory/inventory_list.html'
+    template_name ='inventory/inventory_home.html'
     context_object_name = 'inventory_item'
 
     def get_context_data(self, **kwargs):
