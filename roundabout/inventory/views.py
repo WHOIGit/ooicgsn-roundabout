@@ -650,7 +650,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                     if item.build:
                         item.create_action_record(self.request.user, 'removefrombuild')
                         # If Build is Deployed, need to create separate Deployment Retirement record,
-                        if old_build.is_deployed:
+                        if item.build.is_deployed:
                             item.create_action_record(self.request.user, 'deploymentretire')
                         # Create Build Action record
                         build_detail = '%s removed from %s' % (item, labels['label_builds_app_singular'])
@@ -671,20 +671,19 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
             # If "movetotrash", need to remove all Build/AssemblyPart/Destination data
             if action_type =='movetotrash':
                 # Find Build it was removed from
-                old_build = self.object.get_latest_build()
-                if old_build:
+                if self.object.build:
                     self.object.create_action_record(self.request.user, 'removefrombuild')
                     # If Build is Deployed, need to create separate Deployment Retirement record,
-                    if old_build.is_deployed:
+                    if self.object.build.is_deployed:
                         self.object.create_action_record(self.request.user, 'deploymentretire')
                     # Create Build Action record
                     build_detail = '%s removed from %s' % (self.object, labels['label_builds_app_singular'])
                     build_record = BuildAction.objects.create(
                                                         action_type='subassemblychange',
                                                         detail=build_detail,
-                                                        location=old_build.location,
+                                                        location=self.object.build.location,
                                                         user=self.request.user,
-                                                        build=old_build,
+                                                        build=self.object.build,
                                                         )
                 self.object.build = None
                 self.object.assembly_part = None

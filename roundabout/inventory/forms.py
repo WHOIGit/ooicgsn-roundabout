@@ -428,7 +428,6 @@ class ActionMoveToTrashForm(forms.ModelForm):
             'deployment': forms.HiddenInput(),
             'assembly_part': forms.HiddenInput(),
             'assigned_destination_root': forms.HiddenInput(),
-            'build': forms.HiddenInput(),
         }
         labels = {
             'detail': 'Reasons for moving to Trash Bin',
@@ -441,7 +440,6 @@ class ActionMoveToTrashForm(forms.ModelForm):
         self.initial['deployment'] = ''
         self.initial['assembly_part'] = ''
         self.initial['assigned_destination_root'] = ''
-        self.initial['build'] = ''
         self.initial['detail'] = ''
 
 
