@@ -649,6 +649,9 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 if action_type =='movetotrash':
                     if item.build:
                         item.create_action_record(self.request.user, 'removefrombuild')
+                        # If Build is Deployed, need to create separate Deployment Retirement record,
+                        if old_build.is_deployed:
+                            item.create_action_record(self.request.user, 'deploymentretire')
                         # Create Build Action record
                         build_detail = '%s removed from %s' % (item, labels['label_builds_app_singular'])
                         build_record = BuildAction.objects.create(
@@ -668,10 +671,12 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
             # If "movetotrash", need to remove all Build/AssemblyPart/Destination data
             if action_type =='movetotrash':
                 # Find Build it was removed from
-                old_build_pk = self.object.tracker.previous('build')
-                if old_build_pk:
-                    self.object.create_action_record(self.request.user, 'removefrombuild', detail)
-                    old_build = Build.objects.get(pk=old_build_pk)
+                old_build = self.object.get_latest_build()
+                if old_build:
+                    self.object.create_action_record(self.request.user, 'removefrombuild')
+                    # If Build is Deployed, need to create separate Deployment Retirement record,
+                    if old_build.is_deployed:
+                        self.object.create_action_record(self.request.user, 'deploymentretire')
                     # Create Build Action record
                     build_detail = '%s removed from %s' % (self.object, labels['label_builds_app_singular'])
                     build_record = BuildAction.objects.create(

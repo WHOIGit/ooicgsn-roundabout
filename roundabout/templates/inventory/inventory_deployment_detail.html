@@ -49,7 +49,7 @@
         <a href="{% url 'builds:builds_detail' deployment_event.build.id %}">{{ deployment_event.build }}</a>
     </p>
 
-    <p>{{ label_deployments_app_singular }} Location: {{ deployment_event.location }}</p>
+    <p>{{ label_deployments_app_singular }} Location: {{ deployment_to_sea_event.location }}</p>
 
     {% if deployment_to_sea_event %}
         <p>{{ label_deployments_app_singular }} Date: {{ deployment_to_sea_event.created_at }}</p>
