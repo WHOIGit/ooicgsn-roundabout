@@ -163,6 +163,7 @@ class BuildAction(models.Model):
     DEPLOYMENTTOSEA = 'deploymenttosea'
     DEPLOYMENTUPDATE = 'deploymentupdate'
     DEPLOYMENTRECOVER = 'deploymentrecover'
+    DEPLOYMENTDETAILS = 'deploymentdetails'
     TEST = 'test'
     NOTE = 'note'
     HISTORYNOTE = 'historynote'
@@ -179,6 +180,7 @@ class BuildAction(models.Model):
         (DEPLOYMENTTOSEA, '%s to Field' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTUPDATE, '%s Update' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTRECOVER, '%s Recovered' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTDETAILS, '%s Details Updated' % (labels['label_deployments_app_singular'])),
         (TEST, 'Test'),
         (NOTE, 'Note'),
         (HISTORYNOTE, 'Historical Note'),

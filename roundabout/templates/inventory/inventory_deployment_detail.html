@@ -51,16 +51,8 @@
 
     <p>{{ label_deployments_app_singular }} Location: {{ deployment_event.location }}</p>
 
-    <p>Current Build Deployment Status<br>
-        <div class="progress" style="height: 20px;">
-            <div class="progress-bar {{ deployment_event.deployment.get_deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ deployment_event.deployment.get_deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ deployment_event.deployment.get_deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
-                <span>{{ deployment_event.deployment.get_deployment_status_label }}</span>
-            </div>
-        </div>
-    </p>
-
-    {% if deployment_event.deployment.get_deploytosea_details %}
-        <p>{{ label_deployments_app_singular }} Date: {{ deployment_event.deployment.get_deploytosea_details|get_item:'deploy_date' }}</p>
+    {% if deployment_to_sea_event %}
+        <p>{{ label_deployments_app_singular }} Date: {{ deployment_to_sea_event.created_at }}</p>
     {% endif %}
 
     {% if deployment_to_sea_event.cruise %}
@@ -75,10 +67,16 @@
         </p>
     {% endif %}
 
-
+    <p>Current Build Deployment Status<br>
+        <div class="progress" style="height: 20px;">
+            <div class="progress-bar {{ deployment_event.deployment.get_deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ deployment_event.deployment.get_deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ deployment_event.deployment.get_deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
+                <span>{{ deployment_event.deployment.get_deployment_status_label }}</span>
+            </div>
+        </div>
+    </p>
 
     {% if deployment_to_sea_event %}
-    <h5>Item's Time on Deployment vs. Total {{ label_builds_app_singular }} Deployment</h5>
+    <p><strong>Item's Time on Deployment vs. Total {{ label_builds_app_singular }} Deployment</strong></p>
     <hr>
     <p>Time in Field: {{ deployment_data|get_item:'time_at_sea'|time_at_sea_display }}</p>
     {% if deployment_event.deployment.get_deployment_time_at_sea %}

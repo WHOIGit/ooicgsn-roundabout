@@ -397,7 +397,7 @@ class Inventory(MPTTModel):
 
     # get the time at sea for the current Deployment only (if item is at sea)
     def current_deployment_time_at_sea(self):
-        if self.build and self.build.current_deployment() and self.build.current_deployment().current_deployment_status() == 'deploy':
+        if self.build and self.build.current_deployment() and self.build.current_deployment().current_deployment_status() == 'deploymenttosea':
             try:
                 action_deploy_to_sea = self.actions.filter(action_type='deploymenttosea').latest()
             except Action.DoesNotExist:
@@ -489,6 +489,16 @@ class Inventory(MPTTModel):
             deployment_to_sea_event = self.get_deployment_to_sea_event(deployment_event)
             deployment_recovery_event = self.get_deployment_recovery_event(deployment_event)
             deployment_retire_event = self.get_deployment_retire_event(deployment_event)
+            # sanity check event dates to make sure they they're in correct order
+            # If there's a retire event, Deployment is not active
+            if deployment_retire_event:
+                if deployment_burnin_event and deployment_retire_event.created_at < deployment_burnin_event.created_at:
+                    deployment_burnin_event = None
+                if deployment_to_sea_event and deployment_retire_event.created_at < deployment_to_sea_event.created_at:
+                    deployment_to_sea_event = None
+                if deployment_recovery_event and deployment_retire_event.created_at < deployment_recovery_event.created_at:
+                    deployment_recovery_event = None
+
             # get time in field/sea
             time_at_sea = self.deployment_time_at_sea(deployment_event)
             # Populate percentage variable is the deployment_to_sea_event exists
@@ -519,7 +529,7 @@ class Inventory(MPTTModel):
                 deployment_progress_bar = {
                     'bar_class': None,
                     'bar_width': 60,
-                    'status_label': 'Deploy to Sea',
+                    'status_label': 'Deployed to Field',
                 }
             elif deployment_burnin_event:
                 deployment_progress_bar = {
@@ -602,6 +612,7 @@ class Action(models.Model):
     DEPLOYMENTUPDATE = 'deploymentupdate'
     DEPLOYMENTRECOVER = 'deploymentrecover'
     DEPLOYMENTRETIRE = 'deploymentretire'
+    DEPLOYMENTDETAILS = 'deploymentdetails'
     ASSIGNDEST = 'assigndest'
     REMOVEDEST = 'removedest'
     TEST = 'test'
@@ -624,6 +635,7 @@ class Action(models.Model):
         (DEPLOYMENTUPDATE, '%s Update' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTRECOVER, '%s Recovery' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTRETIRE, '%s Retired' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTDETAILS, '%s Details Updated' % (labels['label_deployments_app_singular'])),
         (ASSIGNDEST, 'Assign Destination'),
         (REMOVEDEST, 'Remove Destination'),
         (TEST, 'Test'),
