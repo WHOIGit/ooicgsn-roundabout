@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -31,13 +31,18 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from common.util.mixins import AjaxFormMixin
 from .models import Build, BuildAction, BuildSnapshot, InventorySnapshot, PhotoNote
 from .forms import *
-from roundabout.assemblies.models import Assembly, AssemblyPart
+from roundabout.assemblies.models import Assembly, AssemblyPart, AssemblyRevision
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory, Action
 from roundabout.admintools.models import Printer
+# Get the app label names from the core utility functions
+from roundabout.core.utils import set_app_labels
+labels = set_app_labels()
 # Import environment variables from .env files
 import environ
 env = environ.Env()
+# Global variables for views.py functions
+node_type = 'builds'
 
 # Load the javascript navtree
 def load_builds_navtree(request):
@@ -49,14 +54,15 @@ def load_builds_navtree(request):
         return render(request, 'builds/ajax_build_navtree.html', {'locations': locations})
     else:
         build_pk = node_id.split('_')[1]
-        build = Build.objects.prefetch_related('assembly__assembly_parts').prefetch_related('inventory').get(id=build_pk)
-        return render(request, 'builds/build_tree_assembly.html', {'assembly_parts': build.assembly.assembly_parts,
+        build = Build.objects.prefetch_related('assembly_revision__assembly_parts').prefetch_related('inventory').get(id=build_pk)
+        return render(request, 'builds/build_tree_assembly.html', {'assembly_parts': build.assembly_revision.assembly_parts,
                                                                    'inventory_qs': build.inventory,
                                                                    'location_pk': build.location_id,
                                                                    'build_pk': build_pk, })
 
-# Function to copy Inventory items for Build Snapshots
-def make_tree_copy(root_part, new_location, build_snapshot, parent=None ):
+
+# Internal function to copy Inventory items for Build Snapshots
+def _make_tree_copy(root_part, new_location, build_snapshot, parent=None ):
     # Makes a copy of the tree starting at "root_part", move to new Location, reparenting it to "parent"
     if root_part.part.friendly_name:
         part_name = root_part.part.friendly_name
@@ -66,7 +72,7 @@ def make_tree_copy(root_part, new_location, build_snapshot, parent=None ):
     new_item = InventorySnapshot.objects.create(location=new_location, inventory=root_part, parent=parent, build=build_snapshot, order=part_name)
 
     for child in root_part.get_children():
-        make_tree_copy(child, new_location, build_snapshot, new_item)
+        _make_tree_copy(child, new_location, build_snapshot, new_item)
 
 
 # Function to create Serial Number from Assembly Number selection, load result into form to preview
@@ -121,6 +127,15 @@ def load_new_build_id_number(request):
     return JsonResponse(data)
 
 
+# Function to load Assembly Revisions based on Assembly
+def load_assembly_revisions(request):
+    assembly_id = request.GET.get('assembly_id')
+    revisions = AssemblyRevision.objects.none()
+    if assembly_id:
+        revisions = AssemblyRevision.objects.filter(assembly_id=assembly_id)
+    return render(request, 'builds/revisions_dropdown_list_options.html', {'revisions': revisions,})
+
+
 ## CBV views for Builds app ##
 # ----------------------------
 # Landing page for Builds
@@ -131,7 +146,7 @@ class BuildHomeView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super(BuildHomeView, self).get_context_data(**kwargs)
         context.update({
-            'node_type': 'builds',
+            'node_type': node_type,
         })
         return context
 
@@ -152,7 +167,7 @@ class BuildDetailView(LoginRequiredMixin, DetailView):
         # Get Printers to display in print dropdown
         printers = Printer.objects.all()
         # Get assembly part data and inventory data to calculate completeness
-        total_parts = AssemblyPart.objects.filter(assembly=self.object.assembly).count()
+        total_parts = AssemblyPart.objects.filter(assembly_revision=self.object.assembly_revision).count()
         total_inventory = self.object.inventory.count()
 
         if total_parts > 0:
@@ -171,7 +186,7 @@ class BuildDetailView(LoginRequiredMixin, DetailView):
 
         context.update({
             'printers': printers,
-            'node_type': 'builds',
+            'node_type': node_type,
             'current_deployment': self.object.current_deployment(),
             'percent_complete': percent_complete,
             'action_record': action_record,
@@ -195,7 +210,7 @@ class BuildAjaxDetailView(LoginRequiredMixin, DetailView):
         # Get Printers to display in print dropdown
         printers = Printer.objects.all()
         # Get assembly part data and inventory data to calculate completeness
-        total_parts = AssemblyPart.objects.filter(assembly=self.object.assembly).count()
+        total_parts = AssemblyPart.objects.filter(assembly_revision=self.object.assembly_revision).count()
         total_inventory = self.object.inventory.count()
 
         if total_parts > 0:
@@ -214,6 +229,7 @@ class BuildAjaxDetailView(LoginRequiredMixin, DetailView):
 
         context.update({
             'printers': printers,
+            'node_type': node_type,
             'current_deployment': self.object.current_deployment(),
             'percent_complete': percent_complete,
             'action_record': action_record,
@@ -230,8 +246,8 @@ class BuildAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
     def form_valid(self, form):
         self.object = form.save()
-
-        action_record = BuildAction.objects.create(action_type='buildadd', detail='Build created.', location=self.object.location,
+        action_detail = '%s created.' % (labels['label_builds_app_singular'])
+        action_record = BuildAction.objects.create(action_type='buildadd', detail=action_detail, location=self.object.location,
                                                    user=self.request.user, build=self.object)
 
         response = HttpResponseRedirect(self.get_success_url())
@@ -343,8 +359,11 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
             #self.kwargs['action_type'] = self.object.get_flag_display()
 
         action_form = form.save()
-        action_record = BuildAction.objects.create(action_type=self.kwargs['action_type'], detail=self.object.detail, location=self.object.location,
-                                              user=self.request.user, build=self.object)
+        action_record = BuildAction.objects.create(action_type=self.kwargs['action_type'],
+                                                   detail=self.object.detail,
+                                                   location=self.object.location,
+                                                   user=self.request.user,
+                                                   build=self.object)
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -420,6 +439,7 @@ class BuildPhotoUploadAjaxCreateView(View):
 
     def post(self, request, **kwargs):
         form = BuildActionPhotoUploadForm(self.request.POST, self.request.FILES)
+
         if form.is_valid():
             photo_note = form.save()
             photo_note.build_id = self.kwargs['pk']
@@ -431,7 +451,8 @@ class BuildPhotoUploadAjaxCreateView(View):
                     'photo_id': photo_note.id,
                     'file_type': photo_note.file_type() }
         else:
-            data = {'is_valid': False}
+            data = {'is_valid': False,
+                    'errors': form.errors,}
         return JsonResponse(data)
 
 
@@ -494,7 +515,7 @@ class BuildAjaxSnapshotCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView)
 
         for item in inventory_items:
             if item.is_root_node():
-                make_tree_copy(item, build.location, build_snapshot, item.parent)
+                _make_tree_copy(item, build.location, build_snapshot, item.parent)
 
         response = HttpResponseRedirect(self.get_success_url())
 

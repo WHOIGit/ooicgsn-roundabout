@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -95,11 +95,14 @@ THIRD_PARTY_APPS = [
     'mptt', # Tree structures in database
     'django_summernote', #WYSIWYG
     'bootstrap_datepicker_plus', # Date Picker
+    'django_tables2', # interactive tables views
+    'django_tables2_column_shifter', # show/hide tables2 columns
 ]
 LOCAL_APPS = [
     'roundabout.users.apps.UsersAppConfig',
     # Your stuff: custom apps go here
     'common',
+    'roundabout.core',
     'roundabout.locations',
     'roundabout.parts',
     'roundabout.inventory',
@@ -227,7 +230,7 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
-                'roundabout.context_processors.template_app_labels',
+                'roundabout.context_processors.template_set_app_labels',
                 'roundabout.context_processors.template_resolver_names',
             ],
         },

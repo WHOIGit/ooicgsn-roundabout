@@ -1,11 +1,9 @@
 Roundabout DB - OOI Parts and Inventory Web Application
 =========================================================
 
-Current Version: 1.1.0
-
 Django application to manage Part, Location, and Assembly Templates, and Inventory tracking for OOI-CGSN arrays. Uses PostgreSQL database.
 
-
+:Current Version: 1.3.0
 :License: GPL v2.0 or later
 
 
@@ -97,18 +95,6 @@ Not that your site is up and running, you can login by clicking the "Sign In" li
 - Password: admin
 
 You should update these immediately after logging in the first time by clicking the "My Profile" link.
-
-Alfresco
----------
-
-The standard Roundabout production deployment also includes a standalone Alfresco document management application running in separate Docker containers. You can access Alfresco at https://YOURDOMAIN.com/share/
-
-Initial login info is:
-
-- Username: admin
-- Password: admin
-
-If you don't have the need for a document management system running alongside your RDB site, you can simply remove the four Alfresco container Services in the ``production.yml`` Docker Compose file - ``alfresco``, ``alfresco-share``, ``alfresco-postgres``, and ``alfresco-solr6`` - and the three Volumes defined in the ``volumes`` section - ``alfresco-repo-data``, ``alfresco-postgres-data``, ``alfresco-solr-data``.
 
 Local Docker Development
 ^^^^^^^^^^^^^^^^^^^^^^^^

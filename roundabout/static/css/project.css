@@ -1,7 +1,7 @@
 /*
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -151,8 +151,9 @@ svg#home-logo {
     margin-top:15px;
 }
 .add-row:before{
-    font-family: FontAwesome;
+    font-family: 'Font Awesome 5 Free';
     content: "\f055";
+    font-weight: 900;
     margin-right: 0.3em;
 
 }
@@ -162,8 +163,9 @@ svg#home-logo {
 }
 
 .delete-row:before{
-    font-family: FontAwesome;
+    font-family: 'Font Awesome 5 Free';
     content: "\f056";
+    font-weight: 900;
     margin-right: 0.3em;
     color: red;
 }
@@ -237,7 +239,12 @@ a.wh {
     max-width: 200px;
 }
 
-/* Inventory forms */
+/* Forms */
+
+#spinner-loader {
+    text-align: center;
+    margin: 50px 0;
+}
 
 #div_id_flag {
     color: #dc3545;
@@ -276,3 +283,7 @@ footer {
     background-color: white;
     color: white;
 }
+
+/* Table Header Ordering */
+table.table thead th.asc { background: url('/static/images/up-arrow.png') no-repeat bottom right; font-style: italic; }
+table.table thead th.desc { background: url('/static/images/down-arrow.png') no-repeat bottom right; font-style: italic; }

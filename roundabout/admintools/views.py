@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -39,7 +39,11 @@ from roundabout.inventory.models import Inventory, Action
 from roundabout.parts.models import Part, Revision
 from roundabout.locations.models import Location
 from roundabout.assemblies.models import AssemblyType, Assembly, AssemblyPart
-from roundabout.assemblies.views import make_tree_copy
+from roundabout.assemblies.views import _make_tree_copy
+
+# Test URL for Sentry.io logging
+def trigger_error(request):
+    division_by_zero = 1 / 0
 
 # Bulk Inventory Import Functions
 # ------------------------------------------
@@ -148,7 +152,7 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                         error_msg = "No matching Custom Field. Check if Field exists."
 
                     if custom_field:
-                        if value:
+                        if value and not value.isspace():
                             if custom_field.field_type == 'IntegerField':
                                 try:
                                     value = int(value.strip())
@@ -273,11 +277,15 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
 
                 # Create notes history record for item
                 if note_detail:
-                    note_record = Action.objects.create(action_type='note',
-                                                          detail=note_detail,
-                                                          location=location,
-                                                          user=self.request.user,
-                                                          inventory=inventory_obj)
+                    # Split the field on "|" delimiter to add multiple Notes
+                    note_list = note_detail.split('|')
+                    for note in note_list:
+                        if note:
+                            note_record = Action.objects.create(action_type='note',
+                                                                  detail=note,
+                                                                  location=location,
+                                                                  user=self.request.user,
+                                                                  inventory=inventory_obj)
 
                 # Add the Custom Fields
                 for col in item_obj.data:
@@ -321,7 +329,7 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
 
     def get(self, request, *args, **kwargs):
         # Get the Assembly data from RDB API
-        request_url = 'https://rdb-demo.whoi.edu/api/v1/assemblies/16/'
+        request_url = 'https://rdb-demo.whoi.edu/api/v1/assemblies/13/'
         assembly_request = requests.get(request_url, verify=False)
         new_assembly = assembly_request.json()
         # Get or create new parent Temp Assembly
@@ -329,6 +337,8 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
                                                                               assembly_number=new_assembly['assembly_number'],
                                                                               description=new_assembly['description'],)
         # If already exists, reset all the related items
+        error_count = 0
+        error_parts = []
         if not created:
             temp_assembly_obj.temp_assembly_parts.all().delete()
 
@@ -353,6 +363,8 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
                 except Part.DoesNotExist:
                     part = None
                     import_error = True
+                    error_count += 1
+                    error_parts.append(assembly_part['part']['part_number'])
                     import_error_msg = 'Part Number does not exist in this RDB. Please add Part Template, and try again.'
 
                 if not import_error:
@@ -385,9 +397,9 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
 
             for ap in temp_assembly_obj.temp_assembly_parts.all():
                 if ap.is_root_node():
-                    make_tree_copy(ap, assembly_obj, ap.parent)
+                    _make_tree_copy(ap, assembly_obj, ap.parent)
 
-        return HttpResponse('<h1>New Assembly Template Imported! - %s</h1>' % (import_error))
+        return HttpResponse('<h1>New Assembly Template Imported! - %s</h1><p>Errors count: %s</p><p>%s</p>' % (import_error, error_count, error_parts))
 
 
 # Printer functionality

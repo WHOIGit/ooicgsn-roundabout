@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -30,8 +30,11 @@ from django.core.validators import FileExtensionValidator
 from model_utils import FieldTracker
 
 from roundabout.locations.models import Location
-from roundabout.assemblies.models import Assembly
+from roundabout.assemblies.models import Assembly, AssemblyRevision
 from roundabout.users.models import User
+# Get the app label names from the core utility functions
+from roundabout.core.utils import set_app_labels
+labels = set_app_labels()
 
 # Build model
 
@@ -44,7 +47,9 @@ class Build(models.Model):
     location = TreeForeignKey(Location, related_name='builds',
                               on_delete=models.SET_NULL, null=True, blank=False)
     assembly = models.ForeignKey(Assembly, related_name='builds',
-                             on_delete=models.CASCADE, null=True, blank=True, db_index=True)
+                             on_delete=models.CASCADE, null=False, db_index=True)
+    assembly_revision = models.ForeignKey(AssemblyRevision, related_name='builds',
+                             on_delete=models.CASCADE, null=True, db_index=True)
     build_notes = models.TextField(blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
@@ -56,14 +61,14 @@ class Build(models.Model):
     tracker = FieldTracker(fields=['location',])
 
     class Meta:
-        ordering = ['assembly', 'build_number']
+        ordering = ['assembly_revision', 'build_number']
 
     def __str__(self):
-        return '%s - %s' % (self.build_number, self.assembly.name)
+        return '%s - %s' % (self.build_number, self.assembly_revision.assembly.name)
 
     @property
     def name(self):
-        return self.assembly.name
+        return self.assembly_revision.assembly.name
 
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
@@ -153,15 +158,15 @@ class BuildAction(models.Model):
     FLAG = 'flag'
     RETIREBUILD = 'retirebuild'
     ACT_TYPES = (
-        (BUILDADD, 'Add Build'),
+        (BUILDADD, 'Add %s' % (labels['label_builds_app_singular'])),
         (LOCATIONCHANGE, 'Location Change'),
         (SUBASSEMBLYCHANGE, 'Subassembly Change'),
-        (STARTDEPLOY, 'Start Deployment'),
-        (REMOVEFROMDEPLOYMENT, 'Deployment Ended'),
-        (DEPLOYMENTBURNIN, 'Deployment Burnin'),
-        (DEPLOYMENTTOSEA, 'Deployment to Sea'),
-        (DEPLOYMENTUPDATE, 'Deployment Update'),
-        (DEPLOYMENTRECOVER, 'Deployment Recovered'),
+        (STARTDEPLOY, 'Start %s' % (labels['label_deployments_app_singular'])),
+        (REMOVEFROMDEPLOYMENT, '%s Ended' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTTOSEA, '%s to Field' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTUPDATE, '%s Update' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTRECOVER, '%s Recovered' % (labels['label_deployments_app_singular'])),
         (TEST, 'Test'),
         (NOTE, 'Note'),
         (HISTORYNOTE, 'Historical Note'),
@@ -172,15 +177,16 @@ class BuildAction(models.Model):
     action_type = models.CharField(max_length=20, choices=ACT_TYPES)
     created_at = models.DateTimeField(default=timezone.now)
     detail = models.TextField(blank=True)
-    user = models.ForeignKey(User, related_name='actions',
+    user = models.ForeignKey(User, related_name='build_actions',
                              on_delete=models.SET_NULL, null=True, blank=False)
-    location = TreeForeignKey(Location, related_name='actions',
+    location = TreeForeignKey(Location, related_name='build_actions',
                               on_delete=models.SET_NULL, null=True, blank=False)
-    build = models.ForeignKey(Build, related_name='actions',
+    build = models.ForeignKey(Build, related_name='build_actions',
                                  on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at', 'action_type']
+        get_latest_by = 'created_at'
 
     def __str__(self):
         return self.get_action_type_display()

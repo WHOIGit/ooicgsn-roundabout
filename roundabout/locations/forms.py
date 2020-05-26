@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -22,6 +22,7 @@
 from django import forms
 from django.forms.models import inlineformset_factory
 from django.contrib.sites.models import Site
+from mptt.forms import TreeNodeChoiceField
 
 from .models import Location
 
@@ -36,25 +37,19 @@ class LocationForm(forms.ModelForm):
         'location_id': 'Location ID'
     }
 
+"""
+Custom Deletion form for Locations
+User needs to be able to choose a new Location for Inventory/Builds
+"""
+class LocationDeleteForm(forms.Form):
+    new_location = TreeNodeChoiceField(label='Select new Location', queryset=Location.objects.all())
+
     def __init__(self, *args, **kwargs):
-        super(LocationForm, self).__init__(*args, **kwargs)
+        location_pk= kwargs.pop('pk')
+        location_to_delete = Location.objects.get(id=location_pk)
 
-        # Default Location Types
-        LOC_TYPES = (
-            ('', ''),
-            ('Array', 'Array'),
-            ('Mooring', 'Mooring'),
-        )
-
-        # Custom Location Types for OBS
-        LOC_TYPES_OBS = (
-            ('', ''),
-            ('Instrument', 'Instrument'),
-        )
-
-        current_site = Site.objects.get_current()
-
-        if current_site.domain == 'obs-rdb.whoi.edu':
-            self.fields['location_type'].choices = LOC_TYPES_OBS
-        else:
-            self.fields['location_type'].choices = LOC_TYPES
+        super(LocationDeleteForm, self).__init__(*args, **kwargs)
+        # Check if this Location has Inventory or Builds, remove new Location field if false
+        if not location_to_delete.inventory.exists() and not location_to_delete.builds.exists():
+            self.fields['new_location'].required = False
+            self.fields['new_location'].widget = forms.HiddenInput()

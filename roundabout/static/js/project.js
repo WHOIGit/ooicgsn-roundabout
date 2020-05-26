@@ -1,7 +1,7 @@
 /*
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -68,7 +68,7 @@ $(document).ready(function() {
     var nodeID = navtreePrefix + '_' + $('.card-header').attr('data-object-id');
     console.log(nodeID);
     $(navTree).on('ready.jstree', function (event, data) {
-        /* Need to check if the loading item is on a Build or Assembly template,
+        /* Need to check if the loading item is on a Build or Assembly Revision template,
            if so need to open the parent tree first */
         /* buildID variable is set by Django in ajax_inventory_detail or ajax_build_detail template */
         /* assemblyID variable is set by Django in ajax_assembly_detail or ajax_assemblypart_detail template */
@@ -122,6 +122,8 @@ $(document).ready(function() {
                   var bookmarkURL = '/assemblies/assemblypart/' + itemID;
               } else if (nodeType == 'assemblytype') {
                   var bookmarkURL = '/assemblies/assemblytype/' + itemID;
+              } else if (nodeType == 'assemblyrevisions') {
+                  var bookmarkURL = '/assemblies/assemblyrevision/' + itemID;
               } else if (nodeType == 'part_type') {
                   var bookmarkURL = '/parts/part_type/' + itemID;
               } else {
@@ -214,6 +216,8 @@ $(document).ready(function() {
                   var bookmarkURL = '/assemblies/assemblypart/' + itemID;
               } else if (nodeType == 'assemblytype') {
                   var bookmarkURL = '/assemblies/assemblytype/' + itemID;
+              } else if (nodeType == 'assemblyrevisions') {
+                  var bookmarkURL = '/assemblies/assemblyrevision/' + itemID;
               } else if (nodeType == 'part_type') {
                   var bookmarkURL = '/parts/part_type/' + itemID;
               } else {
@@ -383,8 +387,16 @@ $(document).ready(function(){
             method: "POST",
             url: thisURL,
             data: formData,
+            beforeSend: function() {
+                // Show spinner container
+                $("#spinner-loader").show();
+            },
             success: handleFormSuccess,
             error: handleFormError,
+            complete:function(data){
+                // Hide spinner container
+                $("#spinner-loader").hide();
+            }
         })
     })
 

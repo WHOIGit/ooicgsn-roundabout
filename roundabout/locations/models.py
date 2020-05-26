@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -57,6 +57,10 @@ class Location(MPTTModel):
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
         return 'locations'
+
+    @property
+    def root_location(self):
+        return self.get_ancestors()[0].get_root_type_display()
 
     def get_mooring_total_cost(self):
         tree = self.mooring_parts.all()

@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -35,13 +35,13 @@
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="action">
             <div class="ajax-detail-link">
                 <a class="dropdown-item" href="#"
-                    data-detail-url="{% url 'assemblies:ajax_assemblyparts_add' assembly_part.assembly.id assembly_part.id %}"
+                    data-detail-url="{% url 'assemblies:ajax_assemblyparts_add' assembly_part.assembly_revision.id assembly_part.id %}"
                     data-node-id="{{ assembly_part.id }}"
-                    data-node-type="detail">Add New Subassembly</a>
+                    data-node-type="{{ node_type }}">Add New Sub-{{ label_assemblies_app_singular }}</a>
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'assemblies:ajax_assemblyparts_update' assembly_part.id %}"
                     data-node-id="{{ assembly_part.id }}"
-                    data-node-type="detail">Edit Subassembly Template</a>
+                    data-node-type="{{ node_type }}">Edit Sub-{{ label_assemblies_app_singular }} Part Template</a>
             </div>
 
       </div>
@@ -54,14 +54,14 @@
         <p></p>
     <hr>
         {% if assembly_part.parent.id %}
-            <p class="ajax-detail-link">Parent Assembly:
+            <p class="ajax-detail-link">Parent {{ label_assemblies_app_singular }} Part:
                 <a href="#" data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' assembly_part.parent.id %}"
                             data-node-id="{{ assembly_part.parent.id }}"
                             data-node-type="{{ assembly_part.get_object_type }}">{{ assembly_part.parent.part.name }}</a></p>
         {% endif %}
 
         {% if assembly_part.children.exists %}
-            <p>Total Subassembly Cost: ${{ assembly_part.get_subassembly_total_cost|intcomma }}
+            <p>Total Sub-{{ label_assemblies_app_singular }} Cost: ${{ assembly_part.get_subassembly_total_cost|intcomma }}
         {% endif %}
 
 
@@ -70,7 +70,7 @@
         {% if assembly_part.children.exists %}
             <li class="nav-item">
 
-                <a class="nav-link active show" id="subassemblies-tab" data-toggle="tab" href="#subassemblies" role="tab" aria-controls="subassemblies" aria-selected="false">Subassemblies</a>
+                <a class="nav-link active show" id="subassemblies-tab" data-toggle="tab" href="#subassemblies" role="tab" aria-controls="subassemblies" aria-selected="false">Sub-{{ label_assemblies_app_plural }}</a>
 
             </li>
         {% endif %}
@@ -146,6 +146,6 @@
 {% block javascript %}
 <script>
     /* Need to set a global JS variable to reference assembly_id for navtree functions */
-    var assemblyID = 'assemblies_' + {{ assembly_part.assembly.id }};
+    var assemblyID = 'assemblies_' + {{ assembly_part.assembly_revision.assembly.id }};
 </script>
 {% endblock javascript %}

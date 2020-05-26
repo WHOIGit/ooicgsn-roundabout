@@ -23,7 +23,7 @@
 
 <ul>
     {% recursetree locations %}
-        <li data-jstree='{"icon":"fa fa-map-marker"}' id="locations_{{ node.id }}">
+        <li data-jstree='{"icon":"fa fa-map-marker-alt"}' id="locations_{{ node.id }}">
             <a href="#" data-detail-url="{% url 'locations:ajax_location_detail' node.id %}" data-node-id="{{ node.id }}">
                 {{ node.name }} {% if node.location_id %} ({{ node.location_id }}) {% endif %}
             </a>

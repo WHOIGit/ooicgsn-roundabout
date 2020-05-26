@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -25,5 +25,10 @@ from . import views
 
 app_name = 'search'
 urlpatterns = [
-    path('', view=views.BasicSearch.as_view(), name='basic'),
+    path('inventory', view=views.InventoryTableView.as_view(), name='inventory'),
+    path('part',view=views.PartTableView.as_view(),name='part'),
+    path('build', view=views.BuildTableView.as_view(), name='build'),
+    path('assembly', view=views.AssemblyTableView.as_view(), name='assembly'),
+    path('searchbar', view=views.searchbar_redirect, name='searchbar'),
+
 ]

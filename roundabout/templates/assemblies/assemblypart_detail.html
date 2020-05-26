@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -23,13 +23,13 @@
 {% load static i18n %}
 {% load mptt_tags %}
 
-{% block title %}Assemblies{% endblock %}
+{% block title %}{{ label_assemblies_app_plural }}{% endblock %}
 
 {% block content %}
 
 <div class="row">
     <div class="col-md-5 navtree-container">
-        <h2>Assemblies</h2>
+        <h2>{{ label_assemblies_app_plural }}</h2>
 
         <div id="jstree-navtree" data-navtree-url="{% url 'assemblies:ajax_load_assemblies_navtree' %}"
                                  data-node-type="{{ node_type }}">
@@ -43,7 +43,7 @@
         <div class="row mb-3">
             <div class="col-md-12">
                 <div class="parts-add-btn">
-                    <a href="#" data-create-url="{% url 'assemblies:ajax_assemblies_add' %}" role="button" class="btn btn-primary">Create New Assembly</a>
+                    <a href="#" data-create-url="{% url 'assemblies:ajax_assemblies_add' %}" role="button" class="btn btn-primary">Create New {{ label_assemblies_app_singular }}</a>
                 </div>
             </div>
         </div>

@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -20,10 +20,12 @@
 """
 
 import datetime
+from decimal import Decimal
 
 from django import forms
 from django.forms.models import inlineformset_factory
 from django.utils import timezone
+
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, Div, Field
 from django_summernote.widgets import SummernoteInplaceWidget, SummernoteWidget
@@ -31,6 +33,7 @@ from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
 from django.contrib.sites.models import Site
 
 from .models import Inventory, Deployment, Action, DeploymentSnapshot, PhotoNote
+from .validators import validate_udffield_decimal
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
 from roundabout.userdefinedfields.models import FieldValue
@@ -82,8 +85,8 @@ class InventoryForm(forms.ModelForm):
                         self.fields['udffield_' + str(field.id)] = forms.IntegerField(label=str(field.field_name), required=False,
                                                             help_text=str(field.field_description))
                     elif field.field_type == 'DecimalField':
-                        self.fields['udffield_' + str(field.id)] = forms.DecimalField(label=str(field.field_name), required=False,
-                                                            help_text=str(field.field_description))
+                        self.fields['udffield_' + str(field.id)] = forms.CharField(label=str(field.field_name), required=False,
+                                                            help_text=str(field.field_description), validators=[validate_udffield_decimal])
                     elif field.field_type == 'DateField':
                         self.fields['udffield_' + str(field.id)] = forms.DateTimeField(label=str(field.field_name), required=False,
                                                             help_text=str(field.field_description),
@@ -98,6 +101,24 @@ class InventoryForm(forms.ModelForm):
                     elif field.field_type == 'BooleanField':
                         self.fields['udffield_' + str(field.id)] = forms.BooleanField(label=str(field.field_name), required=False,
                                                             help_text=str(field.field_description))
+                    elif field.field_type == 'ChoiceField':
+                        # Get the field options for this
+                        options_dict = field.choice_field_options
+                        options_list = [('', '- select one -')]
+
+                        if options_dict:
+                            for option in options_dict['options']:
+                                value = option['value']
+                                label = value
+                                if option['label']:
+                                    label = option['label']
+                                form_option = (value, label)
+                                options_list.append(form_option)
+
+                        FIELD_CHOICES = (options_list)
+                        self.fields['udffield_' + str(field.id)] = forms.ChoiceField(label=str(field.field_name), required=False,
+                                                            help_text=str(field.field_description),
+                                                            choices = FIELD_CHOICES)
                     else:
                         self.fields['udffield_' + str(field.id)] = forms.CharField(label=str(field.field_name), required=False,
                                                             help_text=str(field.field_description))

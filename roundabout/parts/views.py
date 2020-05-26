@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -98,6 +98,57 @@ def load_parts_navtree(request):
     return render(request, 'parts/ajax_part_navtree.html', {'part_types': part_types})
 
 
+# Base views
+class PartsHomeView(LoginRequiredMixin, TemplateView):
+    template_name = 'parts/part_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(PartsHomeView, self).get_context_data(**kwargs)
+        context.update({
+            'node_type': 'parts'
+        })
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+
+class PartsDetailView(LoginRequiredMixin, DetailView):
+    model = Part
+    template_name = 'parts/part_detail.html'
+    context_object_name = 'part_template'
+
+    def get_context_data(self, **kwargs):
+        context = super(PartsDetailView, self).get_context_data(**kwargs)
+        revision_count = Revision.objects.filter(part=self.object).count()
+
+        if revision_count > 1:
+            multiple_revision = True
+        else:
+            multiple_revision = False
+
+        # Get custom fields with most recent Values
+        if self.object.fieldvalues.exists():
+            custom_fields = self.object.fieldvalues.filter(is_current=True)
+        else:
+            custom_fields = None
+
+        context.update({
+            'node_type': 'parts',
+            'multiple_revision': multiple_revision,
+            'custom_fields': custom_fields,
+        })
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+
+# AJAX views
 class PartsAjaxDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     model = Part
     context_object_name = 'part_template'
@@ -640,39 +691,6 @@ class PartsAjaxRemoveActionUdfFieldView(RedirectView):
 
 
 # Base Views
-
-class PartsDetailView(LoginRequiredMixin, DetailView):
-    model = Part
-    template_name = 'parts/part_detail.html'
-    context_object_name = 'part_template'
-
-    def get_context_data(self, **kwargs):
-        context = super(PartsDetailView, self).get_context_data(**kwargs)
-        context.update({
-            'node_type': 'parts'
-        })
-        return context
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        context = self.get_context_data(object=self.object)
-        return self.render_to_response(context)
-
-
-class PartsHomeView(LoginRequiredMixin, TemplateView):
-    template_name = 'parts/part_list.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(PartsHomeView, self).get_context_data(**kwargs)
-        context.update({
-            'node_type': 'parts'
-        })
-        return context
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        context = self.get_context_data(object=self.object)
-        return self.render_to_response(context)
 
 
 class PartsCreateView(PartsNavTreeMixin, CreateView):

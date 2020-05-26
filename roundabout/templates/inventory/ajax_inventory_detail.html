@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -41,14 +41,14 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'invchange' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Inventory Change</a>
+                data-node-type="{{ node_type }}">Inventory Change</a>
             --->
         {% if not inventory_item.build and not inventory_item.parent %}
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'locationchange' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Location Change</a>
+                data-node-type="{{ node_type }}">Location Change</a>
         {% endif %}
 
         {% if not inventory_item.build and not inventory_item.assembly_part %}
@@ -56,7 +56,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_add_subassembly' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id }}"
-                data-node-type="detail">Add Subassembly</a>
+                data-node-type="{{ node_type }}">Add Sub-{{ label_assemblies_app_singular }}</a>
         {% endif %}
 
         {% if not inventory_item.build and not inventory_item.parent and not inventory_item.assembly_part %}
@@ -64,7 +64,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_add_to_parent' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Add to Parent Assembly</a>
+                data-node-type="{{ node_type }}">Add to Parent {{ label_assemblies_app_singular }}</a>
         {% endif %}
 
         {% if not inventory_item.build and inventory_item.parent %}
@@ -72,7 +72,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'subchange' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Remove from Parent Assembly</a>
+                data-node-type="{{ node_type }}">Remove from Parent {{ label_assemblies_app_singular }}</a>
         {% endif %}
 
         {% if not inventory_item.build and not inventory_item.parent %}
@@ -80,7 +80,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_add_to_build' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Add to Build</a>
+                data-node-type="{{ node_type }}">Add to {{ label_builds_app_singular }}</a>
         {% endif %}
 
         {% if inventory_item.build %}
@@ -88,7 +88,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'removefrombuild' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Remove from Build</a>
+                data-node-type="{{ node_type }}">Remove from {{ label_builds_app_singular }}</a>
         {% endif %}
 
         {% if inventory_item.assembly_part and not inventory_item.build and not inventory_item.parent %}
@@ -96,7 +96,7 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'removedest' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id }}"
-                data-node-type="detail">Remove Destination</a>
+                data-node-type="{{ node_type }}">Remove Destination</a>
         {% endif %}
 
         {% if not inventory_item.assembly_part and not inventory_item.parent %}
@@ -104,43 +104,44 @@
                 data-detail-url="{% url 'inventory:ajax_inventory_assign_destination' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id }}"
-                data-node-type="detail">Assign Destination</a>
+                data-node-type="{{ node_type }}">Assign Destination</a>
         {% endif %}
 
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'test' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Test</a>
+                data-node-type="{{ node_type }}">Test</a>
+
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'flag' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Flag</a>
+                data-node-type="{{ node_type }}">Flag</a>
                 <!---
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'note' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Note</a>
+                data-node-type="{{ node_type }}">Note</a>
                 --->
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_note_action' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Photo/Note</a>
+                data-node-type="{{ node_type }}">Photo/Note</a>
 
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_history_action' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Historical Note</a>
+                data-node-type="{{ node_type }}">Historical Note</a>
 
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_update' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Edit Inventory Details</a>
+                data-node-type="{{ node_type }}">Edit Inventory Details</a>
 
 
             <a  id="add_coefficient_action"
@@ -233,16 +234,17 @@
     <p>Revision: {{ inventory_item.revision.revision_code }}</p>
     <p>Current Location: {{ inventory_item.location.name }}</p>
     {% if inventory_item.build %}
-        <p>Current Build: {{ inventory_item.build }}</p>
+        <p>Current {{ label_builds_app_singular }}: {{ inventory_item.build }}</p>
     {% endif %}
-    <p>Time at Sea: {{ inventory_item.total_time_at_sea|time_at_sea_display }}</p>
+    <p>Total Time in Field: {{ inventory_item.total_time_at_sea|time_at_sea_display }}</p>
     {% if inventory_item.current_deployment_time_at_sea %}
-        <p>Current Deployment Time at Sea: {{ inventory_item.current_deployment_time_at_sea|time_at_sea_display }}
+        <p>Current {{ label_deployments_app_singular }} Time in Field: {{ inventory_item.current_deployment_time_at_sea|time_at_sea_display }}
     {% endif %}
 
     {% if inventory_item.parent %}
     <p class="ajax-detail-link">Parent Assembly:
         {% recursetree inventory_item.get_ancestors %}
+
                 {% if node.is_child_node %}&#187;{% endif %}
                 <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' node.id %}"
                             data-node-id="{{ node.id }}"
@@ -272,7 +274,7 @@
 
     <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
 
-        {% if inventory_item.action.all %}
+        {% if inventory_item.inventory_actions.exists %}
             <li class="nav-item">
               <a class="nav-link active" id="history-tab" data-toggle="tab" href="#history" role="tab" aria-controls="history" aria-selected="true">History</a>
             </li>
@@ -280,7 +282,7 @@
 
         {% if inventory_item.get_descendants %}
             <li class="nav-item">
-              <a class="nav-link" id="subassemblies-tab" data-toggle="tab" href="#subassemblies" role="tab" aria-controls="subassemblies" aria-selected="false">Subassemblies</a>
+              <a class="nav-link" id="subassemblies-tab" data-toggle="tab" href="#subassemblies" role="tab" aria-controls="subassemblies" aria-selected="false">Sub-{{ label_assemblies_app_plural }}</a>
             </li>
         {% endif %}
 
@@ -290,7 +292,7 @@
             </li>
         {% endif %}
 
-        {% if inventory_item.revision.documentation.all %}
+        {% if inventory_item.revision.documentation.exists %}
           <li class="nav-item">
             <a class="nav-link" id="documentation-tab" data-toggle="tab" href="#documentation" role="tab" aria-controls="documentation" aria-selected="false">Documentation</a>
           </li>
@@ -310,7 +312,7 @@
 
     <div class="tab-content" id="inventory-tabs">
 
-        {% if inventory_item.action.all %}
+        {% if inventory_item.inventory_actions.exists %}
           <div class="tab-pane fade show active" id="history" role="tabpanel" aria-labelledby="history-tab">
 
               <table class="table table-striped action-table">
@@ -323,7 +325,7 @@
 
                   </thead>
                   <tbody>
-                    {% for action in  inventory_item.action.all %}
+                    {% for action in  inventory_item.inventory_actions.all %}
                       <tr>
                           <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
                           <td>{{ action.get_action_type_display }}</td>
@@ -432,7 +434,7 @@
             </div>
         {% endif %}
 
-        {% if inventory_item.revision.documentation.all %}
+        {% if inventory_item.revision.documentation.exists %}
           <div class="tab-pane fade" id="documentation" role="tabpanel" aria-labelledby="documentation-tab">
 
                   <table class="table documentation-table">
@@ -471,7 +473,7 @@
                     {% for custom_field in custom_fields %}
 
                         <li class="list-group-item">
-                            {{ custom_field.field }}: {{ custom_field.field_value }}
+                            {{ custom_field.field }}: {{ custom_field.get_field_value }}
                             <!-- link trigger modal -->
                             <button type="button" class="btn btn-sm btn-link float-right" data-toggle="modal" data-target="#modal-{{ custom_field.field_id }}">
                               View Field History
@@ -615,14 +617,6 @@
            data-detail-url="{% url 'inventory:ajax_inventory_action' 'movetotrash' inventory_item.id %}"
            data-node-id="{{ inventory_item.id }}"
            role="button" class="btn btn-danger parts-delete">Move to Trash</a>
-<!---
-    {% if perms.inventory.delete %}
-         <a href="#"
-            data-detail-url="{% url 'inventory:ajax_inventory_delete' inventory_item.id %}"
-            data-node-id="{{ inventory_item.id }}"
-            role="button" class="btn btn-danger parts-delete">Delete Permanently</a>
-    {% endif %}
---->
     </div>
 
 
