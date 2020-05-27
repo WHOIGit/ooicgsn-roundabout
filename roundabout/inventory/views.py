@@ -787,7 +787,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 # Add Action Record for removing from Build
                 item.create_action_record(self.request.user, 'removefrombuild', detail, created_at)
                 # Add last record
-                item.create_action_record(self.request.user, action_type, detail, created_at, cruise)
+                item.create_action_record(self.request.user, action_type, detail, created_at, cruise, 'inventory_deployment')
                 # End deployment
                 item.create_action_record(self.request.user, 'deploymentretire')
                 item.update_time_at_sea()
@@ -836,7 +836,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 item.create_action_record(self.request.user, action_type, item.detail)
 
         # create Action record for self.object
-        action_record = self.object.create_action_record(self.request.user, action_type, detail, created_at, cruise)
+        action_record = self.object.create_action_record(self.request.user, action_type, detail, created_at, cruise, 'inventory_deployment')
         # update the Time At Sea field, end the deployment cycle
         if action_type == 'deploymentrecover':
             self.object.update_time_at_sea()
@@ -1066,7 +1066,7 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
 
         # If Build is deployed, need to add extra Action record to add to Deployment
         if build.is_deployed:
-            inventory_item.create_action_record(self.request.user, 'startdeployment')
+            inventory_item.create_action_record(self.request.user, 'startdeployment', '', None, None, 'inventory_deployment')
             if build.current_deployment().current_deployment_status() == 'deploymentburnin':
                 inventory_item.create_action_record(self.request.user, 'deploymentburnin')
 
@@ -1101,7 +1101,7 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
                 item.create_action_record(self.request.user, 'locationchange')
             # If Build is deployed, need to add extra Action record to add to Deployment
             if build.is_deployed:
-                item.create_action_record(self.request.user, 'startdeployment')
+                item.create_action_record(self.request.user, 'startdeployment', '', None, None, 'inventory_deployment')
                 if build.current_deployment().current_deployment_status() == 'deploymentburnin':
                     item.create_action_record(self.request.user, 'deploymentburnin')
             item.create_action_record(self.request.user, action_type)
@@ -1196,7 +1196,7 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
 
         # If Build is deployed, need to add extra Action record to add to Deployment
         if build.is_deployed:
-            subassembly.create_action_record(self.request.user, 'startdeployment')
+            subassembly.create_action_record(self.request.user, 'startdeployment', '', None, None, 'inventory_deployment')
             if build.current_deployment().current_deployment_status() == 'deploymentburnin':
                 subassembly.create_action_record(self.request.user, 'deploymentburnin')
 
@@ -1235,7 +1235,7 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
 
             # If Build is deployed, need to add extra Action record to add to Deployment
             if build.is_deployed:
-                item.create_action_record(self.request.user, 'startdeployment')
+                item.create_action_record(self.request.user, 'startdeployment', '', None, None, 'inventory_deployment')
                 if build.current_deployment().current_deployment_status() == 'deploymentburnin':
                     item.create_action_record(self.request.user, 'deploymentburnin')
 
@@ -1279,14 +1279,21 @@ class ActionDeployInventoryAjaxFormView(LoginRequiredMixin, AjaxFormMixin, FormV
         # Add Actions for all Inventory item and children
         inventory_tree = inventory_item.get_descendants(include_self=True)
         for item in inventory_tree:
-            # Need to update last two previous Action dates to match Deployment date
-            actions = item.actions.order_by('-id')[:3]
-            actions_to_update = ['locationchange', 'addtobuild', 'startdeployment']
+            # Need to update last Action dates to match Deployment date
+            actions = item.actions.filter(deployment__isnull=False).order_by('-id')[:4]
+            actions_to_update = ['locationchange', 'addtobuild', 'startdeployment', 'subchange']
             for action in actions:
                 if action.action_type in actions_to_update:
                     action.created_at = created_at
                     action.save()
-            item.create_action_record(self.request.user, 'deploymenttosea', '', created_at, cruise)
+            item.create_action_record(
+                self.request.user,
+                'deploymenttosea',
+                '',
+                created_at,
+                cruise,
+                'inventory_deployment',
+            )
 
         response = HttpResponseRedirect(self.get_success_url())
 

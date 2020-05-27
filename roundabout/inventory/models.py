@@ -304,7 +304,7 @@ class Inventory(MPTTModel):
             return None
 
     # method to create new Action model records to track Inventory/User
-    def create_action_record(self, user, action_type, detail='', created_at=None, cruise=None):
+    def create_action_record(self, user, action_type, detail='', created_at=None, cruise=None, deployment_type=''):
         # Add Try block here when done
         build = self.build
         deployment = None
@@ -360,6 +360,7 @@ class Inventory(MPTTModel):
                                               parent=self.parent,
                                               build=build,
                                               deployment=deployment,
+                                              deployment_type=deployment_type,
                                               cruise=cruise,
                                               user=user,
                                               inventory=self,
@@ -600,6 +601,7 @@ class InventorySnapshot(MPTTModel):
 
 
 class Action(models.Model):
+    # action_type choices
     INVADD = 'invadd'
     INVCHANGE = 'invchange'
     LOCATIONCHANGE = 'locationchange'
@@ -646,6 +648,14 @@ class Action(models.Model):
         (FLAG, 'Flag'),
         (MOVETOTRASH, 'Move to Trash'),
     )
+    # deployment_type choices
+    BUILD_DEPLOYMENT = 'build_deployment'
+    INVENTORY_DEPLOYMENT = 'inventory_deployment'
+    DEPLOYMENT_TYPES = (
+        (BUILD_DEPLOYMENT, 'Build Deployment'),
+        (INVENTORY_DEPLOYMENT, 'Inventory Deployment'),
+    )
+
     inventory = models.ForeignKey(Inventory, related_name='actions',
                                   on_delete=models.CASCADE, null=True, blank=True)
     action_type = models.CharField(max_length=20, choices=ACTION_TYPES)
@@ -661,9 +671,9 @@ class Action(models.Model):
     build = models.ForeignKey(Build, related_name='actions',
                               on_delete=models.SET_NULL, null=True, blank=True)
     parent = models.ForeignKey(Inventory, related_name='parent_actions',
-                              on_delete=models.SET_NULL, null=True, blank=True)
+                               on_delete=models.SET_NULL, null=True, blank=True)
     cruise = models.ForeignKey(Cruise, related_name='actions',
-                              on_delete=models.SET_NULL, null=True, blank=True)
+                               on_delete=models.SET_NULL, null=True, blank=True)
     latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
                                     validators=[
                                         MaxValueValidator(90),
@@ -675,6 +685,7 @@ class Action(models.Model):
                                         MinValueValidator(0)
                                     ])
     depth = models.PositiveIntegerField(null=True, blank=True)
+    deployment_type = models.CharField(max_length=20, choices=DEPLOYMENT_TYPES, null=False, blank=True, default='')
 
 
     class Meta:

@@ -89,7 +89,7 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         for item in inventory_items:
             item.location = build.location
             item.save()
-            item.create_action_record(self.request.user, 'startdeployment')
+            item.create_action_record(self.request.user, 'startdeployment', '', None, None, 'build_deployment')
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -269,6 +269,8 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         inventory_items = build.inventory.all()
         detail = action_record.get_action_type_display()
         cruise = None
+        deployment_type = 'build_deployment'
+
         if action_type == 'deploymenttosea':
             cruise = self.object.cruise_deployed
         elif action_type == 'deploymentrecover':
@@ -279,7 +281,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             item.save()
             if item.location_changed():
                 item.create_action_record(self.request.user, 'locationchange')
-            item.create_action_record(self.request.user, action_type, detail, action_date,  cruise)
+            item.create_action_record(self.request.user, action_type, detail, action_date,  cruise, deployment_type)
 
             #update Time at Sea if Recovered from Sea with Inventory model method
             if action_type == 'deploymentrecover':
