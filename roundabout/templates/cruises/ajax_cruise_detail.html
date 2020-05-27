@@ -34,11 +34,8 @@
     <p>Vessel: <a href="{% url 'cruises:vessels_home' %}">{{ cruise.vessel }}</a>
     <p>Notes: {{ cruise.notes }}
 
-
-    {% if cruise.deployments.exists or cruise.recovered_deployments.exists %}
-        <h5>Deployment History for this Cruise</h5>
-        <hr>
-    {% endif %}
+    <h5>Deployment History for this Cruise</h5>
+    <hr>
 
     {% if cruise.deployments.exists %}
         <h6>{{ label_builds_app_plural }} Deployed</h6>
@@ -61,6 +58,30 @@
 
                     {% include "builds/deployment_detail.html" with deployment=deployment deployment_type="recovered" %}
 
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if inventory_deployed %}
+        <h6 class="mt-3">Individual {{ label_inventory_app_plural }} Deployed</h6>
+        <ul class="list-group list-group-flush">
+            {% for inv in inventory_deployed %}
+                <li class="list-group-item">
+                    <a href="{% url 'inventory:inventory_detail' inv.id %}">{% if inv.part.friendly_name %} {{ inv.part.friendly_name}} {% else %} {{ inv.part.name }} {% endif %}
+                     - {{ inv.serial_number }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if inventory_recovered %}
+        <h6 class="mt-3">Individual {{ label_inventory_app_plural }} Deployed</h6>
+        <ul class="list-group list-group-flush">
+            {% for inv in inventory_recovered %}
+                <li class="list-group-item">
+                    <a href="{% url 'inventory:inventory_detail' inv.id %}">{% if inv.part.friendly_name %} {{ inv.part.friendly_name}} {% else %} {{ inv.part.name }} {% endif %}
+                     - {{ inv.serial_number }}</a>
                 </li>
             {% endfor %}
         </ul>

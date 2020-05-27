@@ -425,6 +425,7 @@ class ActionMoveToTrashForm(forms.ModelForm):
         widgets = {
             'location': forms.HiddenInput(),
             'parent': forms.HiddenInput(),
+            'build': forms.HiddenInput(),
             'deployment': forms.HiddenInput(),
             'assembly_part': forms.HiddenInput(),
             'assigned_destination_root': forms.HiddenInput(),

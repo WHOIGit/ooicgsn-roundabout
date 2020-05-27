@@ -86,6 +86,20 @@ class CruiseAjaxDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'cruise'
     template_name='cruises/ajax_cruise_detail.html'
 
+    def get_context_data(self, **kwargs):
+        context = super(CruiseAjaxDetailView, self).get_context_data(**kwargs)
+        inventory_deployments = self.object.actions.filter(deployment_type='inventory_deployment').filter(action_type='deploymenttosea')
+        inventory_deployed = [action.inventory for action in inventory_deployments]
+
+        inventory_recoveries = self.object.actions.filter(deployment_type='inventory_deployment').filter(action_type='deploymentrecover')
+        inventory_recovered = [action.inventory for action in inventory_recoveries]
+
+        context.update({
+            'inventory_deployed': inventory_deployed,
+            'inventory_recovered': inventory_recovered,
+        })
+        return context
+
 
 class CruiseAjaxCruisesByYearView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
     template_name = 'cruises/ajax_cruise_by_year.html'

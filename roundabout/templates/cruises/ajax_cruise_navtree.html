@@ -31,7 +31,7 @@
                 <li data-jstree='{"icon":"fas fa-ship"}' id="cruises_{{ cruise.id }}">
                     <a href="#" data-detail-url="{% url 'cruises:ajax_cruises_detail' cruise.id %}"
                        data-node-id="{{ cruise.id }}"
-                       data-node-type="{{ node_type }}">{{ cruise.CUID }} {% if cruise.location  %}- {{ cruise.location }} {% endif %} - {{ cruise.cruise_start_date|date:"n/j/Y" }}</a>
+                       data-node-type="{{ node_type }}">{{ cruise.CUID }} {% if cruise.friendly_name  %}- {{ cruise.friendly_name }} {% endif %}</a>
                    </li>
             {% endfor %}
         </ul>
