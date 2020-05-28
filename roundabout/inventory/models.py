@@ -225,8 +225,6 @@ class Inventory(MPTTModel):
                               on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
     parent = TreeForeignKey('self', related_name='children',
                             on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
-    deployment = models.ForeignKey(Deployment, related_name='inventory',
-                                   on_delete=models.SET_NULL, null=True, blank=True)
     build = models.ForeignKey(Build, related_name='inventory',
                               on_delete=models.SET_NULL, null=True, blank=True)
     assembly_part = TreeForeignKey(AssemblyPart, related_name='inventory',
@@ -561,6 +559,32 @@ class Inventory(MPTTModel):
         return None
 
 
+class InventoryDeployment(models.Model):
+    deployment = models.ForeignKey(Deployment, related_name='inventory_deployments',
+                                   on_delete=models.CASCADE, null=False)
+    inventory = models.ForeignKey(Inventory, related_name='inventory_deployments',
+                                  on_delete=models.CASCADE, null=False)
+    cruise_deployed = models.ForeignKey(Cruise, related_name='inventory_deployments',
+                             on_delete=models.SET_NULL, null=True, blank=True)
+    cruise_recovered = models.ForeignKey(Cruise, related_name='recovered_inventory_deployments',
+                                 on_delete=models.SET_NULL, null=True, blank=True)
+    deployment_start_date = models.DateTimeField(default=timezone.now)
+    deployment_burnin_date = models.DateTimeField(null=True, blank=True)
+    deployment_to_field_date = models.DateTimeField(null=True, blank=True)
+    deployment_recovery_date = models.DateTimeField(null=True, blank=True)
+    deployment_retire_date = models.DateTimeField(null=True, blank=True)
+    time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
+
+    class Meta:
+        ordering = ['-deployment_start_date']
+        get_latest_by = 'deployment_start_date'
+
+    def __str__(self):
+        if self.deployment.deployed_location:
+            return '%s - %s - %s' % (self.deployment.deployment_number, self.deployed_location, self.inventory)
+        return '%s - %s - %s' % (self.deployment_number, self.deployment.location, self.inventory)
+
+
 class DeploymentSnapshot(models.Model):
     deployment = models.ForeignKey(Deployment, related_name='deployment_snapshot',
                                    on_delete=models.CASCADE, null=True, blank=True)
@@ -658,7 +682,7 @@ class Action(models.Model):
 
     inventory = models.ForeignKey(Inventory, related_name='actions',
                                   on_delete=models.CASCADE, null=True, blank=True)
-    action_type = models.CharField(max_length=20, choices=ACTION_TYPES)
+    action_type = models.CharField(max_length=20, choices=ACTION_TYPES, db_index=True)
     object_type =  models.CharField(max_length=20, null=False, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     detail = models.TextField(blank=True)

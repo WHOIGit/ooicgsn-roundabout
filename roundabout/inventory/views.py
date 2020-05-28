@@ -385,6 +385,11 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
     model = Inventory
     context_object_name = 'inventory_item'
     template_name='inventory/ajax_inventory_detail.html'
+    queryset = Inventory.objects.prefetch_related('actions__user') \
+                                .prefetch_related('actions__location') \
+                                .prefetch_related('actions__photos') \
+                                .prefetch_related('photos') \
+                                .select_related('location', 'parent', 'revision__part', 'build', 'part', 'assembly_part')
 
     def get_context_data(self, **kwargs):
         context = super(InventoryAjaxDetailView, self).get_context_data(**kwargs)
@@ -1679,6 +1684,11 @@ class InventoryDetailView(LoginRequiredMixin, DetailView):
     model = Inventory
     template_name='inventory/inventory_detail.html'
     context_object_name='inventory_item'
+    queryset = Inventory.objects.prefetch_related('actions__user') \
+                                .prefetch_related('actions__location') \
+                                .prefetch_related('actions__photos') \
+                                .prefetch_related('photos') \
+                                .select_related('location', 'parent', 'revision__part', 'build', 'part', 'assembly_part')
 
     def get_context_data(self, **kwargs):
         context = super(InventoryDetailView, self).get_context_data(**kwargs)
