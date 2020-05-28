@@ -34,6 +34,7 @@ from roundabout.locations.models import Location
 from roundabout.parts.widgets import PartParentWidget, PartLocationWidget
 from roundabout.userdefinedfields.models import Field, FieldValue
 from roundabout.calibrations.models import CoefficientName
+from roundabout.calibrations.forms import CoefficientNameForm
 from roundabout.inventory.models import Inventory
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -60,29 +61,6 @@ class PartForm(forms.ModelForm):
             raise ValidationError('Part Number in wrong format. Must be ####-#####-#####')
         return part_number
 """
-
-# Calibration form
-# Inputs: Name, Input Type, Significant Figures
-class CoefficientNameForm(forms.ModelForm):
-    class Meta:
-        model = CoefficientName
-        fields = ['calibration_name', 'value_set_type', 'sigfig_override']
-        labels = {
-            'calibration_name': 'Name',
-            'value_set_type': 'Type',
-            'sigfig_override': 'Significant Figures'
-        }
-
-    def clean_sigfig_override(self):
-        raw_sigfig = self.cleaned_data.get('sigfig_override')
-        try:
-            assert 0 <= raw_sigfig <= 20
-        except:
-            raise ValidationError(
-                    _('Input must be between 0 and 20.')
-                )
-        else:
-            return raw_sigfig
 
 RevisionFormset = inlineformset_factory(Part, Revision, fields=('revision_code', 'unit_cost', 'refurbishment_cost', 'note'), widgets={
         'note': SummernoteWidget(),

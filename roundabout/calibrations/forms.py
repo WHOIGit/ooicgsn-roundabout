@@ -29,6 +29,90 @@ class CalibrationEventForm(forms.ModelForm):
             )
         }
 
+
+# Coefficient form
+# Inputs: Coefficient values and notes per Part Calibration 
+class CoefficientValueSetForm(forms.ModelForm):
+    class Meta:
+        model = CoefficientValueSet
+        fields = ['coefficient_name','value_set', 'notes']
+        labels = {
+            'coefficient_name': 'Calibration Name',
+            'value_set': 'Calibration Coefficient(s)',
+            'notes': 'Additional Notes'
+        }
+        widgets = {
+            'value_set': forms.Textarea(
+                attrs = {
+                    'style': 'white-space: nowrap'
+                }
+            )
+        }
+
+    def __init__(self, *args, **kwargs):
+        if 'inv_id' in kwargs:
+            self.inv_id = kwargs.pop('inv_id')
+        super(CoefficientValueSetForm, self).__init__(*args, **kwargs)
+        if hasattr(self, 'inv_id'):
+            inv_inst = Inventory.objects.get(id = self.inv_id)
+            self.fields['coefficient_name'].queryset = CoefficientName.objects.filter(part = inv_inst.part).order_by('created_at')
+            self.instance.cal_dec_places = inv_inst.part.cal_dec_places
+            self.instance.part = inv_inst.part
+
+    def clean_value_set(self):
+        raw_set = self.cleaned_data.get('value_set')
+        coefficient_name = self.cleaned_data.get('coefficient_name')
+        try:
+            cal_obj = CoefficientName.objects.get(part = self.instance.part, calibration_name = coefficient_name)
+            set_type =  cal_obj.value_set_type
+        except:
+            raise ValidationError(
+                _('Unable to query selected Calibration instance'),
+            )
+        else:
+            return validate_coeff_vals(self.instance, set_type, raw_set)
+
+    def save(self, commit = True): 
+        value_set = super(CoefficientValueSetForm, self).save(commit = False)
+        if commit:
+            value_set.save()
+            parse_valid_coeff_vals(value_set)
+        return value_set
+
+
+# CalibrationName Form
+# Inputs: Name, Input Type, Significant Figures
+class CoefficientNameForm(forms.ModelForm):
+    class Meta:
+        model = CoefficientName
+        fields = ['calibration_name', 'value_set_type', 'sigfig_override']
+        labels = {
+            'calibration_name': 'Name',
+            'value_set_type': 'Type',
+            'sigfig_override': 'Significant Figures'
+        }
+
+    def clean_sigfig_override(self):
+        raw_sigfig = self.cleaned_data.get('sigfig_override')
+        try:
+            assert 0 <= raw_sigfig <= 20
+        except:
+            raise ValidationError(
+                    _('Input must be between 0 and 20.')
+                )
+        else:
+            return raw_sigfig
+
+# Coefficient ValueSet form instance generator for CalibrationEvents
+EventValueSetFormset = inlineformset_factory(
+    CalibrationEvent, 
+    CoefficientValueSet, 
+    form=CoefficientValueSetForm,
+    fields=('coefficient_name', 'value_set', 'notes'), 
+    extra=1, 
+    can_delete=True
+)
+
 # Validator for 1-D, comma-separated Coefficient value arrays
 def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
     for idx, val in enumerate(coeff_1d_array):
@@ -159,62 +243,3 @@ def parse_valid_coeff_vals(value_set_instance):
     CoefficientValue.objects.bulk_create(coeff_batch)
     return value_set_instance
 
-
-# Coefficient form
-# Inputs: Coefficient values and notes per Part Calibration 
-class CoefficientValueSetForm(forms.ModelForm):
-    class Meta:
-        model = CoefficientValueSet
-        fields = ['coefficient_name','value_set', 'notes']
-        labels = {
-            'coefficient_name': 'Calibration Name',
-            'value_set': 'Calibration Coefficient(s)',
-            'notes': 'Additional Notes'
-        }
-        widgets = {
-            'value_set': forms.Textarea(
-                attrs = {
-                    'style': 'white-space: nowrap'
-                }
-            )
-        }
-
-    def __init__(self, *args, **kwargs):
-        if 'inv_id' in kwargs:
-            self.inv_id = kwargs.pop('inv_id')
-        super(CoefficientValueSetForm, self).__init__(*args, **kwargs)
-        if hasattr(self, 'inv_id'):
-            inv_inst = Inventory.objects.get(id = self.inv_id)
-            self.fields['coefficient_name'].queryset = CoefficientName.objects.filter(part = inv_inst.part).order_by('created_at')
-            self.instance.cal_dec_places = inv_inst.part.cal_dec_places
-            self.instance.part = inv_inst.part
-
-    def clean_value_set(self):
-        raw_set = self.cleaned_data.get('value_set')
-        coefficient_name = self.cleaned_data.get('coefficient_name')
-        try:
-            cal_obj = CoefficientName.objects.get(part = self.instance.part, calibration_name = coefficient_name)
-            set_type =  cal_obj.value_set_type
-        except:
-            raise ValidationError(
-                _('Unable to query selected Calibration instance'),
-            )
-        else:
-            return validate_coeff_vals(self.instance, set_type, raw_set)
-
-    def save(self, commit = True): 
-        value_set = super(CoefficientValueSetForm, self).save(commit = False)
-        if commit:
-            value_set.save()
-            parse_valid_coeff_vals(value_set)
-        return value_set
-
-# Coefficient form instance generator
-EventValueSetFormset = inlineformset_factory(
-    CalibrationEvent, 
-    CoefficientValueSet, 
-    form=CoefficientValueSetForm,
-    fields=('coefficient_name', 'value_set', 'notes'), 
-    extra=1, 
-    can_delete=True
-)

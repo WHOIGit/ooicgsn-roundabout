@@ -19,7 +19,7 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
     model = CalibrationEvent
     form_class = CalibrationEventForm
     context_object_name = 'event_template'
-    template_name='calibrations/calibrations_form.html'
+    template_name='calibrations/event_valueset_form.html'
 
     def get(self, request, *args, **kwargs):
         self.object = None
@@ -96,7 +96,7 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
     model = CalibrationEvent
     form_class = CalibrationEventForm
     context_object_name = 'event_template'
-    template_name='calibrations/calibrations_form.html'
+    template_name='calibrations/event_valueset_form.html'
     permission_required = 'calibrations.add_calibration_event'
     redirect_field_name = 'home'
 
@@ -181,7 +181,7 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
 class EventValueSetDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = CalibrationEvent
     context_object_name='event_template'
-    template_name = 'calibrations/calibrations_confirm_delete.html'
+    template_name = 'calibrations/event_delete.html'
     permission_required = 'calibrations.add_calibration_event'
     redirect_field_name = 'home'
 
