@@ -147,7 +147,7 @@
             <a  id="add_coefficient_action"
                 class="dropdown-item" 
                 href="#"
-                data-detail-url="{% url 'calibrations:calibrations_form' inventory_item.id %}"
+                data-detail-url="{% url 'calibrations:event_valueset_add' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
                 data-node-type="detail">Add Calibration Coefficients</a>
@@ -516,10 +516,10 @@
                             <a  href="#"
                                 class="btn btn-primary btn-sm mr-2"
                                 role="button"
-                                data-detail-url="{% url 'calibrations:event_form' event.id %}"
+                                data-detail-url="{% url 'calibrations:event_valueset_update' event.id %}"
                                 data-node-id="{{ event.id }}"
                                 data-node-type="detail">
-                                    Edit Coefficients
+                                    Edit Event
                             </a>
                         </div>
                         <div class="collapse mt-3" id="event-{{ event.id }}">
@@ -527,7 +527,7 @@
                             <div class="ajax-detail-link float-right">
                                 <a  href="#" 
                                     class="btn btn-danger btn-sm mr-2"
-                                    data-detail-url="{% url 'calibrations:calibrations_delete' event.id %}" 
+                                    data-detail-url="{% url 'calibrations:event_valueset_delete' event.id %}" 
                                     role="button" 
                                 >
                                         Delete
@@ -579,6 +579,16 @@
                                                                     <i class="fa" aria-hidden="true"></i>
                                                                     <span class="sr-only">Expand/Collapse Calibration {{ cal.coefficient_name }}</span>
                                                                 </a>
+                                                                <div class = 'ajax-detail-link float-right'>
+                                                                    <a  href="#"
+                                                                        class="btn btn-primary btn-sm mr-2"
+                                                                        role="button"
+                                                                        data-detail-url="{% url 'calibrations:event_valueset_update' event.id %}"
+                                                                        data-node-id="{{ event.id }}"
+                                                                        data-node-type="detail">
+                                                                            Edit Coefficients
+                                                                    </a>
+                                                                </div>
                                                                 <div class="collapse show mt-1" id="coeff-{{ cal.coefficient_name }}{{ event.id }}">
                                                                     <p class='font-weight-light'><b>Notes:</b> {{ cal.notes }}</p>
                                                                     <table class="table table-tight">

@@ -79,7 +79,7 @@ class CoefficientNameForm(forms.ModelForm):
             assert 0 <= raw_sigfig <= 20
         except:
             raise ValidationError(
-                    _('Input must be between 0 and 20 digits.')
+                    _('Input must be between 0 and 20.')
                 )
         else:
             return raw_sigfig

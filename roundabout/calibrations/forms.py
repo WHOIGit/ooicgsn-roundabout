@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 
 # Event form 
 # Inputs: Effective Date and Approval
-class CalibrationAddForm(forms.ModelForm):
+class CalibrationEventForm(forms.ModelForm):
     class Meta:
         model = CalibrationEvent 
         fields = ['calibration_date', 'approved']
@@ -29,7 +29,7 @@ class CalibrationAddForm(forms.ModelForm):
             )
         }
 
-# 
+# Validator for 1-D, comma-separated Coefficient value arrays
 def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
     for idx, val in enumerate(coeff_1d_array):
         val = val.strip()
@@ -47,7 +47,7 @@ def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
             except:
                 raise ValidationError(
                     _('Row: %(row)s, Column: %(column)s, %(value)s Exceeded Instrument %(dec_places)s-digit decimal place maximum.'),
-                    params={'row': val_set_index, 'dec_places': valset_inst.cal_dec_places, 'value': val, 'index': idx},
+                    params={'row': val_set_index, 'dec_places': valset_inst.cal_dec_places, 'value': val, 'column': idx},
                 )
             else:
                 try:
@@ -55,7 +55,7 @@ def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
                 except:
                     raise ValidationError(
                         _('Row: %(row)s, Column: %(column)s, %(value)s Exceeded 20-digit max length'),
-                        params={'row': val_set_index, 'index': idx},
+                        params={'row': val_set_index, 'column': idx, 'value': val},
                     )
                 else:
                     continue
@@ -102,13 +102,36 @@ def validate_coeff_vals(valset_inst, set_type, coeff_val_set):
     return coeff_val_set
 
 
+# Parses Coefficient Value notation
+def find_notation(val):
+    notation = 'std'
+    val = val.lower()
+    if ( 'e' in val ):
+        notation = 'sci'
+    return notation
+   
+
+# Parses Coefficient Value significant digits
+def find_sigfigs(val):
+    stripped_val = val.lower().replace('.','').replace('-','').strip('0')
+    val_e_split = stripped_val.split('e')[0]
+    sig_count = len(val_e_split)
+    return sig_count
+
+
+
+# Generate array of Coefficient Value instances to bulk upload into the DB
 def parse_coeff_1d_array(coeff_1d_array, value_set_instance):
     coeff_batch = []
     for idx, val in enumerate(coeff_1d_array):
         val = val.strip()
+        notation = find_notation(val)
+        sigfig = find_sigfigs(val)
         coeff_val_obj = CoefficientValue(
             coeff_value_set = value_set_instance, 
-            value = val
+            value = val,
+            notation_format = notation,
+            sigfig = sigfig
         )
         coeff_batch.append(coeff_val_obj)
 
@@ -151,7 +174,7 @@ class CoefficientValueSetForm(forms.ModelForm):
         widgets = {
             'value_set': forms.Textarea(
                 attrs = {
-                    'white-space': 'nowrap'
+                    'style': 'white-space: nowrap'
                 }
             )
         }
@@ -187,11 +210,11 @@ class CoefficientValueSetForm(forms.ModelForm):
         return value_set
 
 # Coefficient form instance generator
-CoefficientFormset = inlineformset_factory(
+EventValueSetFormset = inlineformset_factory(
     CalibrationEvent, 
     CoefficientValueSet, 
     form=CoefficientValueSetForm,
     fields=('coefficient_name', 'value_set', 'notes'), 
     extra=1, 
     can_delete=True
-    )
+)

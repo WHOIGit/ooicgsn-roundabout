@@ -3,7 +3,7 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import CreateView, UpdateView, DeleteView
 from .models import CoefficientName, CalibrationEvent
-from .forms import CalibrationAddForm, CoefficientFormset
+from .forms import CalibrationEventForm, EventValueSetFormset
 from common.util.mixins import AjaxFormMixin
 from django.urls import reverse, reverse_lazy
 from roundabout.parts.models import Part
@@ -15,9 +15,9 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 # Handles creation of Calibration Events, Names,and Coefficients
-class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
+class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
     model = CalibrationEvent
-    form_class = CalibrationAddForm
+    form_class = CalibrationEventForm
     context_object_name = 'event_template'
     template_name='calibrations/calibrations_form.html'
 
@@ -25,14 +25,14 @@ class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        coefficient_form = CoefficientFormset(
+        event_valueset_form = EventValueSetFormset(
             instance=self.object, 
             form_kwargs={'inv_id': self.kwargs['pk']}
         )
         return self.render_to_response(
             self.get_context_data(
                 form=form, 
-                coefficient_form=coefficient_form
+                event_valueset_form=event_valueset_form
             )
         )
 
@@ -40,24 +40,24 @@ class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        coefficient_form = CoefficientFormset(
+        event_valueset_form = EventValueSetFormset(
             self.request.POST, 
             instance=self.object,
             form_kwargs={'inv_id': self.kwargs['pk']}
         )
-        if (form.is_valid() and coefficient_form.is_valid()):
-            return self.form_valid(form, coefficient_form)
-        return self.form_invalid(form, coefficient_form)
+        if (form.is_valid() and event_valueset_form.is_valid()):
+            return self.form_valid(form, event_valueset_form)
+        return self.form_invalid(form, event_valueset_form)
 
-    def form_valid(self, form, coefficient_form):
+    def form_valid(self, form, event_valueset_form):
         inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
         form.instance.inventory = inv_inst
         if form.cleaned_data['approved']:
             form.instance.user_approver = self.request.user
         form.instance.user_draft = self.request.user
         self.object = form.save()
-        coefficient_form.instance = self.object
-        coefficient_form.save()
+        event_valueset_form.instance = self.object
+        event_valueset_form.save()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -70,20 +70,20 @@ class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         else:
             return response
 
-    def form_invalid(self, form, coefficient_form):
+    def form_invalid(self, form, event_valueset_form):
         if self.request.is_ajax():
             if form.errors:
                 data = form.errors
                 return JsonResponse(data, status=400)
-            elif coefficient_form.errors:
+            elif event_valueset_form.errors:
                 print('coeffcreateform errors')
-                data = coefficient_form.errors
+                data = event_valueset_form.errors
                 return JsonResponse(data, status=400, safe=False)
         else:
             return self.render_to_response(
                 self.get_context_data(
                     form=form, 
-                    coefficient_form=coefficient_form, 
+                    event_valueset_form=event_valueset_form, 
                     form_errors=form_errors
                 )
             )
@@ -92,9 +92,9 @@ class CalibrationsAddView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ))
 
 # Handles updating of Calibration Events, Names, and Coefficients
-class CalibrationsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, UpdateView):
+class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, UpdateView):
     model = CalibrationEvent
-    form_class = CalibrationAddForm
+    form_class = CalibrationEventForm
     context_object_name = 'event_template'
     template_name='calibrations/calibrations_form.html'
     permission_required = 'calibrations.add_calibration_event'
@@ -104,14 +104,14 @@ class CalibrationsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         self.object = self.get_object()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        coefficient_form = CoefficientFormset(
+        event_valueset_form = EventValueSetFormset(
             instance=self.object, 
             form_kwargs={'inv_id': self.object.inventory.id}
         )
         return self.render_to_response(
             self.get_context_data(
                 form=form, 
-                coefficient_form=coefficient_form
+                event_valueset_form=event_valueset_form
             )
         )
 
@@ -119,24 +119,24 @@ class CalibrationsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         self.object = self.get_object()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        coefficient_form = CoefficientFormset(
+        event_valueset_form = EventValueSetFormset(
             self.request.POST, 
             instance=self.object, 
             form_kwargs={'inv_id': self.object.inventory.id}
         )
-        if (form.is_valid() and coefficient_form.is_valid()):
-            return self.form_valid(form, coefficient_form)
-        return self.form_invalid(form, coefficient_form)
+        if (form.is_valid() and event_valueset_form.is_valid()):
+            return self.form_valid(form, event_valueset_form)
+        return self.form_invalid(form, event_valueset_form)
 
-    def form_valid(self, form, coefficient_form):
+    def form_valid(self, form, event_valueset_form):
         inv_inst = Inventory.objects.get(id=self.object.inventory.id)
         form.instance.inventory = inv_inst
         if form.cleaned_data['approved']:
             form.instance.user_approver = self.request.user
         form.instance.user_draft = self.request.user
         self.object = form.save()
-        coefficient_form.instance = self.object
-        coefficient_form.save()
+        event_valueset_form.instance = self.object
+        event_valueset_form.save()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -149,7 +149,7 @@ class CalibrationsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         else:
             return response
 
-    def form_invalid(self, form, coefficient_form):
+    def form_invalid(self, form, event_valueset_form):
         if self.request.is_ajax():
             if form.errors:
                 data = form.errors
@@ -157,9 +157,9 @@ class CalibrationsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
                     data, 
                     status=400
                 )
-            if coefficient_form.errors:
+            if event_valueset_form.errors:
                 print('coeffupdateform errors')
-                data = coefficient_form.errors
+                data = event_valueset_form.errors
                 return JsonResponse(
                     data, 
                     status=400,
@@ -169,7 +169,7 @@ class CalibrationsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
             return self.render_to_response(
                 self.get_context_data(
                     form=form, 
-                    coefficient_form=coefficient_form, 
+                    event_valueset_form=event_valueset_form, 
                     form_errors=form_errors
                 )
             )
@@ -178,7 +178,7 @@ class CalibrationsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         return reverse('inventory:ajax_inventory_detail', args=(self.object.inventory.id, ))
 
 
-class CalibrationsDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+class EventValueSetDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = CalibrationEvent
     context_object_name='event_template'
     template_name = 'calibrations/calibrations_confirm_delete.html'

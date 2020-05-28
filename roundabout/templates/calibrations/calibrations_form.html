@@ -58,12 +58,12 @@
                   <th>Additional Notes</th>
               </thead>
               <tbody>
-                {{ coefficient_form.management_form }}
-                {% for coeff in coefficient_form %}
+                {{ event_valueset_form.management_form }}
+                {% for value_set in event_valueset_form %}
                     <tr>
-                        <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.coefficient_name }}</td>
-                        <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.value_set }}</td>
-                        <td>{% if coeff.id  %}{{ coeff.DELETE }}{% endif %} {{ coeff.id }} {{ coeff.notes }}</td>
+                        <td>{% if value_set.id  %}{{ value_set.DELETE }}{% endif %} {{ value_set.id }} {{ value_set.coefficient_name }}</td>
+                        <td>{% if value_set.id  %}{{ value_set.DELETE }}{% endif %} {{ value_set.id }} {{ value_set.value_set }}</td>
+                        <td>{% if value_set.id  %}{{ value_set.DELETE }}{% endif %} {{ value_set.id }} {{ value_set.notes }}</td>
                     </tr>
                 {% endfor %}
               </tbody>
