@@ -30,7 +30,7 @@ class CalibrationEventForm(forms.ModelForm):
         }
 
 
-# Coefficient form
+# CoefficientValueSet form
 # Inputs: Coefficient values and notes per Part Calibration 
 class CoefficientValueSetForm(forms.ModelForm):
     class Meta:
@@ -103,12 +103,65 @@ class CoefficientNameForm(forms.ModelForm):
         else:
             return raw_sigfig
 
+
+# CoefficientValue form
+# Inputs: Coefficient values, significant figures, and notation format per CoefficientValueSet
+class CoefficientValueForm(forms.ModelForm):
+    class Meta:
+        model = CoefficientValue
+        fields = ['value','sigfig', 'notation_format']
+        labels = {
+            'value': 'Coefficient Value',
+            'sigfig': 'Significant Digits',
+            'notation_format': 'Notation Format'
+        }
+
+    # def __init__(self, *args, **kwargs):
+    #     if 'inv_id' in kwargs:
+    #         self.inv_id = kwargs.pop('inv_id')
+    #     super(CoefficientValueSetForm, self).__init__(*args, **kwargs)
+    #     if hasattr(self, 'inv_id'):
+    #         inv_inst = Inventory.objects.get(id = self.inv_id)
+    #         self.fields['coefficient_name'].queryset = CoefficientName.objects.filter(part = inv_inst.part).order_by('created_at')
+    #         self.instance.cal_dec_places = inv_inst.part.cal_dec_places
+    #         self.instance.part = inv_inst.part
+
+    # def clean_value_set(self):
+    #     raw_set = self.cleaned_data.get('value_set')
+    #     coefficient_name = self.cleaned_data.get('coefficient_name')
+    #     try:
+    #         cal_obj = CoefficientName.objects.get(part = self.instance.part, calibration_name = coefficient_name)
+    #         set_type =  cal_obj.value_set_type
+    #     except:
+    #         raise ValidationError(
+    #             _('Unable to query selected Calibration instance'),
+    #         )
+    #     else:
+    #         return validate_coeff_vals(self.instance, set_type, raw_set)
+
+    # def save(self, commit = True): 
+    #     value_set = super(CoefficientValueSetForm, self).save(commit = False)
+    #     if commit:
+    #         value_set.save()
+    #         parse_valid_coeff_vals(value_set)
+    #     return value_set
+
 # Coefficient ValueSet form instance generator for CalibrationEvents
 EventValueSetFormset = inlineformset_factory(
     CalibrationEvent, 
     CoefficientValueSet, 
     form=CoefficientValueSetForm,
     fields=('coefficient_name', 'value_set', 'notes'), 
+    extra=1, 
+    can_delete=True
+)
+
+# Coefficient Value form instance generator for CoefficientValueSets
+ValueSetValueFormset = inlineformset_factory(
+    CoefficientValueSet, 
+    CoefficientValue, 
+    form=CoefficientValueForm,
+    fields=('value', 'sigfig', 'notation_format'), 
     extra=1, 
     can_delete=True
 )

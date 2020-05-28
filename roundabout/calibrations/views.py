@@ -2,8 +2,8 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import CreateView, UpdateView, DeleteView
-from .models import CoefficientName, CalibrationEvent
-from .forms import CalibrationEventForm, EventValueSetFormset
+from .models import CoefficientName, CalibrationEvent, CoefficientValueSet
+from .forms import CalibrationEventForm, EventValueSetFormset, CoefficientValueForm, CoefficientValueSetForm, ValueSetValueFormset
 from common.util.mixins import AjaxFormMixin
 from django.urls import reverse, reverse_lazy
 from roundabout.parts.models import Part
@@ -198,3 +198,89 @@ class EventValueSetDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteVie
 
     def get_success_url(self):
         return reverse_lazy('inventory:ajax_inventory_detail', args=(self.object.inventory.id, ))
+
+
+
+# Handles updating of CoefficientValueSet Values
+class ValueSetValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, UpdateView):
+    model = CoefficientValueSet
+    form_class = CoefficientValueSetForm
+    context_object_name = 'valueset_template'
+    template_name='calibrations/valueset_value_form.html'
+    permission_required = 'calibrations.add_coefficient_value'
+    redirect_field_name = 'home'
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        valueset_value_form = ValueSetValueFormset(
+            instance=self.object
+        )
+        return self.render_to_response(
+            self.get_context_data(
+                form=form, 
+                valueset_value_form=valueset_value_form
+            )
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        valueset_value_form = ValueSetValueFormset(
+            self.request.POST, 
+            instance=self.object
+        )
+        if (form.is_valid() and valueset_value_form.is_valid()):
+            return self.form_valid(form, valueset_value_form)
+        return self.form_invalid(form, valueset_value_form)
+
+    def form_valid(self, form, valueset_value_form):
+        inv_inst = Inventory.objects.get(id=self.object.inventory.id)
+        form.instance.inventory = inv_inst
+        if form.cleaned_data['approved']:
+            form.instance.user_approver = self.request.user
+        form.instance.user_draft = self.request.user
+        self.object = form.save()
+        valueset_value_form.instance = self.object
+        valueset_value_form.save()
+        response = HttpResponseRedirect(self.get_success_url())
+        if self.request.is_ajax():
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def form_invalid(self, form, valueset_value_form):
+        if self.request.is_ajax():
+            if form.errors:
+                data = form.errors
+                return JsonResponse(
+                    data, 
+                    status=400
+                )
+            if valueset_value_form.errors:
+                print('coeffupdateform errors')
+                data = valueset_value_form.errors
+                return JsonResponse(
+                    data, 
+                    status=400,
+                    safe=False
+                )
+        else:
+            return self.render_to_response(
+                self.get_context_data(
+                    form=form, 
+                    valueset_value_form=valueset_value_form, 
+                    form_errors=form_errors
+                )
+            )
+
+    def get_success_url(self):
+        return reverse('inventory:ajax_inventory_detail', args=(self.object.inventory.id, ))
