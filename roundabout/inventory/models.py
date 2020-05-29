@@ -287,7 +287,7 @@ class Inventory(MPTTModel):
             return True
         return False
 
-    # Return True item removed from Parent
+    # Return True if item removed from Parent
     def parent_changed(self):
         current_parent = self.parent
         last_parent = self.get_latest_parent()
@@ -424,7 +424,7 @@ class Inventory(MPTTModel):
     def current_deployment_time_at_sea(self):
         if self.build and self.build.current_deployment() and self.build.current_deployment().current_deployment_status() == 'deploymenttosea':
             try:
-                action_deploy_to_sea = self.actions.filter(action_type=Action.DEPLOYMENTTOSEA).latest()
+                action_deploy_to_sea = self.actions.filter(action_type=Action.DEPLOYMENTTOFIELD).latest()
             except Action.DoesNotExist:
                 action_deploy_to_sea = None
 
@@ -434,155 +434,6 @@ class Inventory(MPTTModel):
                 return current_time_at_sea
             return timedelta(minutes=0)
         return timedelta(minutes=0)
-
-    # get the Deployment burnin action for deployment_event
-    def get_deployment_burnin_event(self, deployment_event):
-        try:
-            action = self.actions.filter(action_type='deploymentburnin') \
-                                               .filter(created_at__gte=deployment_event.created_at) \
-                                               .filter(deployment=deployment_event.deployment).last()
-            return action
-        except Action.DoesNotExist:
-            return None
-
-    # get the Deployment deploymenttosea action for deployment_event
-    def get_deployment_to_sea_event(self, deployment_event):
-        try:
-            action = self.actions.filter(action_type='deploymenttosea') \
-                                               .filter(created_at__gte=deployment_event.created_at) \
-                                               .filter(deployment=deployment_event.deployment).last()
-            return action
-        except Action.DoesNotExist:
-            return None
-
-    # get the Deployment recovery action for deployment_event
-    def get_deployment_recovery_event(self, deployment_event):
-        try:
-            action = self.actions.filter(action_type='deploymentrecover') \
-                                               .filter(created_at__gte=deployment_event.created_at) \
-                                               .filter(deployment=deployment_event.deployment).last()
-            return action
-        except Action.DoesNotExist:
-            return None
-
-    # get the Deployment retire action for deployment_event
-    def get_deployment_retire_event(self, deployment_event):
-        try:
-            action = self.actions.filter(action_type='deploymentretire') \
-                                               .filter(created_at__gte=deployment_event.created_at) \
-                                               .filter(deployment=deployment_event.deployment).last()
-            return action
-        except Action.DoesNotExist:
-            return None
-
-    # get the time at sea for any Deployment event
-    def deployment_time_at_sea(self, deployment_event):
-        action_deploy_to_sea = self.get_deployment_to_sea_event(deployment_event)
-        action_recover = self.get_deployment_recovery_event(deployment_event)
-
-        if action_deploy_to_sea:
-            if action_recover:
-                time_on_deployment = action_recover.created_at - action_deploy_to_sea.created_at
-                return time_on_deployment
-            # If no recovery, item is still at sea
-            now = timezone.now()
-            time_on_deployment = now - action_deploy_to_sea.created_at
-            return time_on_deployment
-        return timedelta(minutes=0)
-
-    # get queryset of all Deployments for this Item
-    def get_deployment_history(self):
-        deployment_events = self.actions.filter(action_type='startdeployment')
-        return deployment_events
-
-    # find last deployment action to get current status
-    def current_deployment_status(self):
-        try:
-            deployment_action = self.actions.filter(deployment__isnull=False).latest()
-            if deployment_action:
-                deployment_status = deployment_action.action_type
-                return deployment_status
-        except:
-            pass
-        return None
-
-    # get a Dict of data points for a Deployment event
-    def get_deployment_data(self, deployment_event):
-        if deployment_event:
-            # get deployment cycle events
-            deployment_burnin_event = self.get_deployment_burnin_event(deployment_event)
-            deployment_to_sea_event = self.get_deployment_to_sea_event(deployment_event)
-            deployment_recovery_event = self.get_deployment_recovery_event(deployment_event)
-            deployment_retire_event = self.get_deployment_retire_event(deployment_event)
-            # sanity check event dates to make sure they they're in correct order
-            # If there's a retire event, Deployment is not active
-            if deployment_retire_event:
-                if deployment_burnin_event and deployment_retire_event.created_at < deployment_burnin_event.created_at:
-                    deployment_burnin_event = None
-                if deployment_to_sea_event and deployment_retire_event.created_at < deployment_to_sea_event.created_at:
-                    deployment_to_sea_event = None
-                if deployment_recovery_event and deployment_retire_event.created_at < deployment_recovery_event.created_at:
-                    deployment_recovery_event = None
-
-            # get time in field/sea
-            time_at_sea = self.deployment_time_at_sea(deployment_event)
-            # Populate percentage variable is the deployment_to_sea_event exists
-            deployment_percentage = None
-            if deployment_to_sea_event:
-                # calculate percentage of total build deployment item was deployed
-                try:
-                    deployment_percentage = int(time_at_sea / deployment_event.deployment.get_deployment_time_at_sea() * 100)
-                    if deployment_percentage > 100:
-                        deployment_percentage = 100
-                except:
-                    pass
-
-            # Set variables for Deployment Status bar in Bootstrap
-            if deployment_retire_event:
-                deployment_progress_bar = {
-                    'bar_class': 'bg-info',
-                    'bar_width': 100,
-                    'status_label': 'Deployment Ended',
-                }
-            elif deployment_recovery_event:
-                deployment_progress_bar = {
-                    'bar_class': 'bg-warning',
-                    'bar_width': 80,
-                    'status_label': 'Recovered',
-                }
-            elif deployment_to_sea_event:
-                deployment_progress_bar = {
-                    'bar_class': None,
-                    'bar_width': 60,
-                    'status_label': 'Deployed to Field',
-                }
-            elif deployment_burnin_event:
-                deployment_progress_bar = {
-                    'bar_class': 'bg-danger',
-                    'bar_width': 40,
-                    'status_label': 'Burn In',
-                }
-            else:
-                deployment_progress_bar = {
-                    'bar_class': 'bg-success',
-                    'bar_width': 20,
-                    'status_label': 'Deployment Started',
-                }
-
-            # create dictionary of location details
-            deployment_data = {
-                'time_at_sea':  time_at_sea,
-                'bar_class': deployment_progress_bar['bar_class'],
-                'bar_width': deployment_progress_bar['bar_width'],
-                'status_label': deployment_progress_bar['status_label'],
-                'deployment_percentage': deployment_percentage,
-                'deployment_burnin_event': deployment_burnin_event,
-                'deployment_to_sea_event': deployment_to_sea_event,
-                'deployment_recovery_event': deployment_recovery_event,
-                'deployment_retire_event': deployment_retire_event,
-            }
-            return deployment_data
-        return None
 
 
 class InventoryDeployment(models.Model):
@@ -762,7 +613,7 @@ class Action(models.Model):
     REMOVEFROMBUILD = 'removefrombuild'
     STARTDEPLOYMENT = 'startdeployment'
     DEPLOYMENTBURNIN = 'deploymentburnin'
-    DEPLOYMENTTOSEA = 'deploymenttosea'
+    DEPLOYMENTTOFIELD = 'deploymenttosea'
     DEPLOYMENTUPDATE = 'deploymentupdate'
     DEPLOYMENTRECOVER = 'deploymentrecover'
     DEPLOYMENTRETIRE = 'deploymentretire'
@@ -785,7 +636,7 @@ class Action(models.Model):
         (REMOVEFROMBUILD, 'Remove from %s' % (labels['label_builds_app_singular'])),
         (STARTDEPLOYMENT, 'Start %s' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTTOSEA, '%s to Field' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTTOFIELD, '%s to Field' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTUPDATE, '%s Update' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTRECOVER, '%s Recovery' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTRETIRE, '%s Retired' % (labels['label_deployments_app_singular'])),

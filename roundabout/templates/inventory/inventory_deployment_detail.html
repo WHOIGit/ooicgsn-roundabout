@@ -20,7 +20,6 @@
 -->
 {% load static i18n %}
 {% load common_tags %}
-{% load inventory_tags %}
 
 <a class="collapsed" data-toggle="collapse" href="#deployment-{{ inventory_deployment.id }}" aria-expanded="false" aria-controls="deployment-{{ inventory_deployment.id }}">
     {{ inventory_deployment.deployment.build.build_number }} - {{ label_deployments_app_singular }}: {{ inventory_deployment.deployment }}

@@ -29,12 +29,6 @@ from roundabout.userdefinedfields.models import Field, FieldValue
 
 register = template.Library()
 
-# Get individual Deployment details for an Inventory Item
-@register.simple_tag
-def get_deployment_data(inventory_item, deployment):
-    deployment_data = inventory_item.get_deployment_data(deployment)
-    return deployment_data
-
 # Get the historical list of custom field values, return as queryset
 @register.simple_tag
 def get_udf_field_value_history(field, item):

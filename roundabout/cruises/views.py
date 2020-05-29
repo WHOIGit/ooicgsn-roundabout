@@ -28,7 +28,19 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 
 from .models import *
 from .forms import VesselForm, CruiseForm
+from roundabout.inventory.models import Action
 from common.util.mixins import AjaxFormMixin
+
+# Private functions for use in other Views
+# ------------------------------------------------------------------------------
+def _get_inventory_only_deployments(cruise):
+    inventory_deployments = cruise.actions.filter(deployment_type='inventory_deployment').filter(action_type=Action.DEPLOYMENTTOFIELD)
+    inventory_deployed = [action.inventory for action in inventory_deployments]
+
+    inventory_recoveries = cruise.actions.filter(deployment_type='inventory_deployment').filter(action_type=Action.DEPLOYMENTRECOVER)
+    inventory_recovered = [action.inventory for action in inventory_recoveries]
+    return {'inventory_deployed': inventory_deployed, 'inventory_recovered': inventory_recovered}
+
 
 # AJAX functions for Forms and Navtree
 # ------------------------------------------------------------------------------
@@ -59,6 +71,13 @@ class CruiseHomeView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
             except Cruise.DoesNotExist:
                 pass
 
+        inventory_deployed = None
+        inventory_recovered = None
+        if cruise:
+            inventory_deployments = _get_inventory_only_deployments(cruise)
+            inventory_deployed = inventory_deployments['inventory_deployed']
+            inventory_recovered = inventory_deployments['inventory_recovered']
+
         cruises = None
         if cruise_year:
             cruises = Cruise.objects.filter(cruise_start_date__year=cruise_year)
@@ -68,6 +87,8 @@ class CruiseHomeView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
             'cruises': cruises,
             'node_type': 'cruises',
             'cruise_year': cruise_year,
+            'inventory_deployed': inventory_deployed,
+            'inventory_recovered': inventory_recovered,
         })
         return context
 
@@ -88,11 +109,9 @@ class CruiseAjaxDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(CruiseAjaxDetailView, self).get_context_data(**kwargs)
-        inventory_deployments = self.object.actions.filter(deployment_type='inventory_deployment').filter(action_type='deploymenttosea')
-        inventory_deployed = [action.inventory for action in inventory_deployments]
-
-        inventory_recoveries = self.object.actions.filter(deployment_type='inventory_deployment').filter(action_type='deploymentrecover')
-        inventory_recovered = [action.inventory for action in inventory_recoveries]
+        inventory_deployments = _get_inventory_only_deployments(self.object)
+        inventory_deployed = inventory_deployments['inventory_deployed']
+        inventory_recovered = inventory_deployments['inventory_recovered']
 
         context.update({
             'inventory_deployed': inventory_deployed,
