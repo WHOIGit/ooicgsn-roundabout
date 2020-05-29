@@ -277,7 +277,7 @@
             </li>
         {% endif %}
 
-        {% if deployment_events %}
+        {% if inventory_item.inventory_deployments.exists %}
             <li class="nav-item">
               <a class="nav-link" id="deployments-tab" data-toggle="tab" href="#deployments" role="tab" aria-controls="deployments" aria-selected="false">Deployments</a>
             </li>
@@ -350,14 +350,14 @@
           </div>
         {% endif %}
 
-        {% if deployment_events %}
+        {% if inventory_item.inventory_deployments %}
         <div class="tab-pane fade" id="deployments" role="tabpanel" aria-labelledby="deployments-tab">
 
             <ul class="list-group list-group-flush">
-                {% for deployment_event in deployment_events %}
+                {% for inventory_deployment in inventory_item.inventory_deployments.all %}
                     <li class="list-group-item">
 
-                        {% include "inventory/inventory_deployment_detail.html" with inventory_item=inventory_item deployment_event=deployment_event %}
+                        {% include "inventory/inventory_deployment_detail.html" with inventory_deployment=inventory_deployment %}
 
                     </li>
                 {% endfor %}

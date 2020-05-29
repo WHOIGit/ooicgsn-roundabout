@@ -1688,6 +1688,7 @@ class InventoryDetailView(LoginRequiredMixin, DetailView):
                                 .prefetch_related('actions__location') \
                                 .prefetch_related('actions__photos') \
                                 .prefetch_related('photos') \
+                                .prefetch_related('inventory_deployments') \
                                 .select_related('location', 'parent', 'revision__part', 'build', 'part', 'assembly_part')
 
     def get_context_data(self, **kwargs):

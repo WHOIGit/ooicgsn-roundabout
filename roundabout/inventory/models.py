@@ -424,7 +424,7 @@ class Inventory(MPTTModel):
     def current_deployment_time_at_sea(self):
         if self.build and self.build.current_deployment() and self.build.current_deployment().current_deployment_status() == 'deploymenttosea':
             try:
-                action_deploy_to_sea = self.actions.filter(action_type='deploymenttosea').latest()
+                action_deploy_to_sea = self.actions.filter(action_type=Action.DEPLOYMENTTOSEA).latest()
             except Action.DoesNotExist:
                 action_deploy_to_sea = None
 
@@ -642,7 +642,7 @@ class InventoryDeployment(models.Model):
 
     # get the time at sea for any Inventory Deployment
     @property
-    def deployment_time_at_sea(self):
+    def deployment_time_in_field(self):
         if self.deployment_to_field_date:
             if self.deployment_recovery_date:
                 time_on_deployment = self.deployment_recovery_date - self.deployment_to_field_date
@@ -653,7 +653,18 @@ class InventoryDeployment(models.Model):
             return time_on_deployment
         return timedelta(minutes=0)
 
-    # get the time at sea for any Inventory Deployment
+    @property
+    def deployment_percentage_vs_build(self):
+        # Populate percentage variable is the deployment_to_sea_event exists
+        deployment_percentage = 0
+        if self.deployment_to_field_date:
+            # calculate percentage of total build deployment item was deployed
+            deployment_percentage = int(self.deployment_time_in_field / self.deployment.get_deployment_time_at_sea() * 100)
+            if deployment_percentage > 100:
+                deployment_percentage = 100
+            return deployment_percentage
+
+    # get the total time for any Inventory Deployment from Start to Retire
     @property
     def deployment_total_time(self):
         if self.deployment_start_date:
@@ -665,6 +676,41 @@ class InventoryDeployment(models.Model):
             time_on_deployment = now - self.deployment_start_date
             return time_on_deployment
         return timedelta(minutes=0)
+
+    def deployment_progress_bar(self):
+        deployment_progress_bar = None
+        # Set variables for Deployment Status bar in Bootstrap
+        if self.current_status == InventoryDeployment.STARTDEPLOYMENT:
+            deployment_progress_bar = {
+                'bar_class': 'bg-success',
+                'bar_width': 20,
+                'status_label': 'Deployment Started'
+            }
+        elif self.current_status == InventoryDeployment.DEPLOYMENTBURNIN:
+            deployment_progress_bar = {
+                'bar_class': 'bg-danger',
+                'bar_width': 40,
+                'status_label': 'Deployment Burn In'
+            }
+        elif self.current_status == InventoryDeployment.DEPLOYMENTTOFIELD:
+            deployment_progress_bar = {
+                'bar_class': None,
+                'bar_width': 60,
+                'status_label': 'Deployed to Field'
+            }
+        elif self.current_status == InventoryDeployment.DEPLOYMENTRECOVER:
+            deployment_progress_bar = {
+                'bar_class': 'bg-warning',
+                'bar_width': 80,
+                'status_label': 'Deployment Recovered'
+            }
+        elif self.current_status == InventoryDeployment.DEPLOYMENTRETIRE:
+            deployment_progress_bar = {
+                'bar_class': 'bg-info',
+                'bar_width': 100,
+                'status_label': 'Deployment Retired'
+            }
+        return deployment_progress_bar
 
 
 class DeploymentSnapshot(models.Model):

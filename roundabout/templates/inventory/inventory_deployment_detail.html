@@ -22,68 +22,62 @@
 {% load common_tags %}
 {% load inventory_tags %}
 
-{% get_deployment_data inventory_item deployment_event as deployment_data %}
-{% define deployment_data|get_item:'deployment_burnin_event' as deployment_burnin_event %}
-{% define deployment_data|get_item:'deployment_to_sea_event' as deployment_to_sea_event %}
-{% define deployment_data|get_item:'deployment_recovery_event' as deployment_recovery_event %}
-{% define deployment_data|get_item:'deployment_retire_event' as deployment_retire_event %}
-
-<a class="collapsed" data-toggle="collapse" href="#deployment-{{ deployment_event.id }}" aria-expanded="false" aria-controls="deployment-{{ deployment_event.id }}">
-    {{ deployment_event.build.build_number }} - {{ label_deployments_app_singular }}: {{ deployment_event.deployment }}
+<a class="collapsed" data-toggle="collapse" href="#deployment-{{ inventory_deployment.id }}" aria-expanded="false" aria-controls="deployment-{{ inventory_deployment.id }}">
+    {{ inventory_deployment.deployment.build.build_number }} - {{ label_deployments_app_singular }}: {{ inventory_deployment.deployment }}
 </a>
 
-<a data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ deployment_event.id }}" aria-controls="deployment-{{ deployment_event.id }}" aria-expanded="false" role="button">
+<a data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ inventory_deployment.id }}" aria-controls="deployment-{{ inventory_deployment.id }}" aria-expanded="false" role="button">
     <i class="fa" aria-hidden="true"></i>
-    <span class="sr-only">Expand/Collapse Revision {{ deployment }}</span>
+    <span class="sr-only">Expand/Collapse Revision {{ inventory_deployment.deployment }}</span>
 </a>
 
 <div class="progress" style="height: 20px;">
-    <div class="progress-bar {{ deployment_data|get_item:'bar_class' }}" role="progressbar" style="width: {{ deployment_data|get_item:'bar_width' }}%;" aria-valuenow="{{ deployment_data|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
-        <span>{{ deployment_data|get_item:'status_label' }}</span>
+    <div class="progress-bar {{ inventory_deployment.deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ inventory_deployment.deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ inventory_deployment.deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
+        <span>{{ inventory_deployment.deployment_progress_bar|get_item:'status_label' }}</span>
     </div>
 </div>
 
-<div class="collapse mt-3" id="deployment-{{ deployment_event.id }}">
+<div class="collapse mt-3" id="deployment-{{ inventory_deployment.id }}">
 
     <p>Build:
-        <a href="{% url 'builds:builds_detail' deployment_event.build.id %}">{{ deployment_event.build }}</a>
+        <a href="{% url 'builds:builds_detail' inventory_deployment.deployment.build.id %}">{{ inventory_deployment.deployment.build }}</a>
     </p>
 
-    <p>{{ label_deployments_app_singular }} Location: {{ deployment_to_sea_event.location }}</p>
+    <p>{{ label_deployments_app_singular }} Location: {{ inventory_deployment.deployment.deployed_location }}</p>
 
     {% if deployment_to_sea_event %}
         <p>{{ label_deployments_app_singular }} Date: {{ deployment_to_sea_event.created_at }}</p>
     {% endif %}
 
-    {% if deployment_to_sea_event.cruise %}
+    {% if inventory_deployment.cruise_deployed %}
         <p>Cruise Deployed On:
-            <a href="{% url 'cruises:cruises_detail' deployment_to_sea_event.cruise.id %}">{{ deployment_to_sea_event.cruise }}</a>
+            <a href="{% url 'cruises:cruises_detail' inventory_deployment.cruise_deployed.id %}">{{ inventory_deployment.cruise_deployed}}</a>
         </p>
     {% endif %}
 
-    {% if deployment_recovery_event.cruise %}
+    {% if inventory_deployment.cruise_recovered %}
         <p>Cruise Recovered On:
-            <a href="{% url 'cruises:cruises_detail' deployment_recovery_event.cruise.id %}">{{ deployment_recovery_event.cruise }}</a>
+            <a href="{% url 'cruises:cruises_detail' inventory_deployment.cruise_recovered.id %}">{{ inventory_deployment.cruise_recovered }}</a>
         </p>
     {% endif %}
 
     <p>Current Build Deployment Status<br>
         <div class="progress" style="height: 20px;">
-            <div class="progress-bar {{ deployment_event.deployment.get_deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ deployment_event.deployment.get_deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ deployment_event.deployment.get_deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
-                <span>{{ deployment_event.deployment.get_deployment_status_label }}</span>
+            <div class="progress-bar {{ inventory_deployment.deployment.get_deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ inventory_deployment.deployment.get_deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ inventory_deployment.deployment.get_deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
+                <span>{{ inventory_deployment.deployment.get_deployment_status_label }}</span>
             </div>
         </div>
     </p>
 
-    {% if deployment_to_sea_event %}
+    {% if inventory_deployment.deployment_to_field_date %}
     <p><strong>Item's Time on Deployment vs. Total {{ label_builds_app_singular }} Deployment</strong></p>
     <hr>
-    <p>Time in Field: {{ deployment_data|get_item:'time_at_sea'|time_at_sea_display }}</p>
-    {% if deployment_event.deployment.get_deployment_time_at_sea %}
-        <p>Total Deployment Time in Field: {{ deployment_event.deployment.get_deployment_time_at_sea|time_at_sea_display }}</p>
+    <p>Time in Field: {{ inventory_deployment.deployment_time_in_field|time_at_sea_display }}</p>
+    {% if inventory_deployment.deployment.get_deployment_time_at_sea %}
+        <p>Total Build Deployment Time in Field: {{ inventory_deployment.deployment.get_deployment_time_at_sea|time_at_sea_display }}</p>
     {% endif %}
 
-	    <div id="deployment-percent-{{ deployment_event.id }}"></div>
+	    <div id="deployment-percent-{{ inventory_deployment.id }}"></div>
 
 
 
@@ -99,59 +93,17 @@
 
         </thead>
         <tbody>
-            {% if deployment_retire_event %}
-                <tr>
-                    <td>{{ deployment_retire_event.created_at|date:"n/j/y H:i" }}</td>
-                    <td>{{ deployment_retire_event.get_action_type_display }}</td>
-                    <td>
-                        {{ deployment_retire_event.detail|safe }}
-                    </td>
-                    <td>{{ deployment_retire_event.user.username }}</td>
-                    <td>{{ deployment_retire_event.location.name }}</td>
-                </tr>
-            {% endif %}
-            {% if deployment_recovery_event %}
-                <tr>
-                    <td>{{ deployment_recovery_event.created_at|date:"n/j/y H:i" }}</td>
-                    <td>{{ deployment_recovery_event.get_action_type_display }}</td>
-                    <td>
-                        {{ deployment_recovery_event.detail|safe }}
-                    </td>
-                    <td>{{ deployment_recovery_event.user.username }}</td>
-                    <td>{{ deployment_recovery_event.location.name }}</td>
-                </tr>
-            {% endif %}
-            {% if deployment_to_sea_event %}
-                <tr>
-                    <td>{{ deployment_to_sea_event.created_at|date:"n/j/y H:i" }}</td>
-                    <td>{{ deployment_to_sea_event.get_action_type_display }}</td>
-                    <td>
-                        {{ deployment_to_sea_event.detail|safe }}
-                    </td>
-                    <td>{{ deployment_to_sea_event.user.username }}</td>
-                    <td>{{ deployment_to_sea_event.location.name }}</td>
-                </tr>
-            {% endif %}
-            {% if deployment_burnin_event %}
-                <tr>
-                    <td>{{ deployment_burnin_event.created_at|date:"n/j/y H:i" }}</td>
-                    <td>{{ deployment_burnin_event.get_action_type_display }}</td>
-                    <td>
-                        {{ deployment_burnin_event.detail|safe }}
-                    </td>
-                    <td>{{ deployment_burnin_event.user.username }}</td>
-                    <td>{{ deployment_burnin_event.location.name }}</td>
-                </tr>
-            {% endif %}
+          {% for action in inventory_deployment.actions.all %}
             <tr>
-                <td>{{ deployment_event.created_at|date:"n/j/y H:i" }}</td>
-                <td>{{ deployment_event.get_action_type_display }}</td>
+                <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
+                <td>{{ action.get_action_type_display }}</td>
                 <td>
-                    {{ deployment_event.detail|safe }}
+                    {{ action.detail|safe }}
                 </td>
-                <td>{{ deployment_event.user.username }}</td>
-                <td>{{ deployment_event.location.name }}</td>
+                <td>{{ action.user.username }}</td>
+                <td>{{ action.location.name }}</td>
             </tr>
+          {% endfor %}
         </tbody>
   </table>
 </div>
@@ -159,10 +111,10 @@
 {% block javascript %}
 
 <script>
-    var containerID = 'deployment-percent-' + {{ deployment_event.id }};
-    var deploymentPecentage = {{ deployment_data|get_item:'deployment_percentage' }};
-    var timeInField = '{{ deployment_data|get_item:'time_at_sea'|time_at_sea_display }}';
-    var deploymentTotalTime = '{{ deployment_event.deployment.get_deployment_time_at_sea|time_at_sea_display }}'
+    var containerID = 'deployment-percent-' + {{ inventory_deployment.id }};
+    var deploymentPecentage = {{ inventory_deployment.deployment_percentage_vs_build }};
+    var timeInField = '{{ inventory_deployment.deployment_time_in_field|time_at_sea_display }}';
+    var deploymentTotalTime = '{{ inventory_deployment.deployment.get_deployment_time_at_sea|time_at_sea_display }}'
 
     Highcharts.chart(containerID, {
         chart: {
@@ -175,7 +127,7 @@
             marginBottom: 0
         },
         title: {
-            text: {{ deployment_data|get_item:'deployment_percentage' }} + '% of <br>Total Deployment',
+            text: {{ inventory_deployment.deployment_percentage_vs_build }} + '% of <br>Total Deployment',
             align: 'center',
             verticalAlign: 'middle',
             y: 60
