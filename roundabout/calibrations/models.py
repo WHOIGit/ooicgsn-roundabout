@@ -75,11 +75,11 @@ class CoefficientValue(models.Model):
         return 'coefficient_value'
     NOTATION_FORMAT = (
         ("sci", "Scientific"),
-        ("eng", "Engineering"),
         ("std", "Standard"),
     )
     value = models.CharField(max_length = 21, unique = False, db_index = False)
+    original_value = models.CharField(max_length = 21, unique = False, db_index = False, null=True)
     notation_format = models.CharField(max_length=3, choices=NOTATION_FORMAT, null=False, blank=False, default="std")
-    sigfig = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(20)], null=False, blank=True, default=3)
+    sigfig = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(20)], null=False, blank=True, default=3)
     created_at = models.DateTimeField(default=timezone.now)
     coeff_value_set = models.ForeignKey(CoefficientValueSet, related_name='coefficient_values', on_delete=models.CASCADE, null=True)

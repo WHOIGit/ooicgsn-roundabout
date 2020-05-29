@@ -49,7 +49,7 @@
 
         <div class="col-md-12">
             <h5 id = '__all__'>Coefficient Values</h5>
-            <table class="table table-tight calibration-form">
+            <table class="table table-tight calibration-form" style = 'display:block; overflow: auto; max-height: 100vh'>
               <thead>
                   <th>Value</th>
                   <th>Significant Figures</th>
@@ -84,7 +84,7 @@
                     <input  class="btn btn-light cancel-btn" 
                             type="button" 
                             value="Cancel"
-                            data-detail-url="{% url 'inventory:ajax_inventory_detail' valueset_template.id %}"
+                            data-detail-url="{% url 'inventory:ajax_inventory_detail' valueset_template.calibration_event.inventory.id %}"
                             data-node-id="{{ valueset_template.id }}" 
                     />
                 {% endif %}

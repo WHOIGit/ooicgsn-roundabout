@@ -115,36 +115,24 @@ class CoefficientValueForm(forms.ModelForm):
             'sigfig': 'Significant Digits',
             'notation_format': 'Notation Format'
         }
+        widgets = {
+            'value': forms.TextInput(
+                attrs = {
+                    'readonly': True
+                }
+            )
+        }
 
-    # def __init__(self, *args, **kwargs):
-    #     if 'inv_id' in kwargs:
-    #         self.inv_id = kwargs.pop('inv_id')
-    #     super(CoefficientValueSetForm, self).__init__(*args, **kwargs)
-    #     if hasattr(self, 'inv_id'):
-    #         inv_inst = Inventory.objects.get(id = self.inv_id)
-    #         self.fields['coefficient_name'].queryset = CoefficientName.objects.filter(part = inv_inst.part).order_by('created_at')
-    #         self.instance.cal_dec_places = inv_inst.part.cal_dec_places
-    #         self.instance.part = inv_inst.part
-
-    # def clean_value_set(self):
-    #     raw_set = self.cleaned_data.get('value_set')
-    #     coefficient_name = self.cleaned_data.get('coefficient_name')
-    #     try:
-    #         cal_obj = CoefficientName.objects.get(part = self.instance.part, calibration_name = coefficient_name)
-    #         set_type =  cal_obj.value_set_type
-    #     except:
-    #         raise ValidationError(
-    #             _('Unable to query selected Calibration instance'),
-    #         )
-    #     else:
-    #         return validate_coeff_vals(self.instance, set_type, raw_set)
-
-    # def save(self, commit = True): 
-    #     value_set = super(CoefficientValueSetForm, self).save(commit = False)
-    #     if commit:
-    #         value_set.save()
-    #         parse_valid_coeff_vals(value_set)
-    #     return value_set
+    def save(self, commit = True): 
+        coeff_val_inst = super(CoefficientValueForm, self).save(commit = False)
+        if commit:
+            coeff_val_inst.value = round(
+                coeff_val_inst.original_value, 
+                sigfigs = coeff_val_inst.sigfig, 
+                notation = coeff_val_inst.notation_format
+            )
+            coeff_val_inst.save()
+        return coeff_val_inst
 
 # Coefficient ValueSet form instance generator for CalibrationEvents
 EventValueSetFormset = inlineformset_factory(
@@ -162,7 +150,7 @@ ValueSetValueFormset = inlineformset_factory(
     CoefficientValue, 
     form=CoefficientValueForm,
     fields=('value', 'sigfig', 'notation_format'), 
-    extra=1, 
+    extra=0, 
     can_delete=True
 )
 
@@ -267,6 +255,7 @@ def parse_coeff_1d_array(coeff_1d_array, value_set_instance):
         coeff_val_obj = CoefficientValue(
             coeff_value_set = value_set_instance, 
             value = val,
+            original_value = val,
             notation_format = notation,
             sigfig = sigfig
         )

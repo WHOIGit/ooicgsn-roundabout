@@ -178,6 +178,7 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         return reverse('inventory:ajax_inventory_detail', args=(self.object.inventory.id, ))
 
 
+# Handles deletion of Events
 class EventValueSetDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = CalibrationEvent
     context_object_name='event_template'
@@ -219,7 +220,6 @@ class ValueSetValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         )
         return self.render_to_response(
             self.get_context_data(
-                form=form, 
                 valueset_value_form=valueset_value_form
             )
         )
@@ -232,17 +232,11 @@ class ValueSetValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
             self.request.POST, 
             instance=self.object
         )
-        if (form.is_valid() and valueset_value_form.is_valid()):
-            return self.form_valid(form, valueset_value_form)
-        return self.form_invalid(form, valueset_value_form)
+        if (valueset_value_form.is_valid()):
+            return self.form_valid(valueset_value_form)
+        return self.form_invalid(valueset_value_form)
 
-    def form_valid(self, form, valueset_value_form):
-        inv_inst = Inventory.objects.get(id=self.object.inventory.id)
-        form.instance.inventory = inv_inst
-        if form.cleaned_data['approved']:
-            form.instance.user_approver = self.request.user
-        form.instance.user_draft = self.request.user
-        self.object = form.save()
+    def form_valid(self, valueset_value_form):
         valueset_value_form.instance = self.object
         valueset_value_form.save()
         response = HttpResponseRedirect(self.get_success_url())
@@ -257,14 +251,8 @@ class ValueSetValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         else:
             return response
 
-    def form_invalid(self, form, valueset_value_form):
+    def form_invalid(self, valueset_value_form):
         if self.request.is_ajax():
-            if form.errors:
-                data = form.errors
-                return JsonResponse(
-                    data, 
-                    status=400
-                )
             if valueset_value_form.errors:
                 print('coeffupdateform errors')
                 data = valueset_value_form.errors
@@ -276,11 +264,10 @@ class ValueSetValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         else:
             return self.render_to_response(
                 self.get_context_data(
-                    form=form, 
                     valueset_value_form=valueset_value_form, 
                     form_errors=form_errors
                 )
             )
 
     def get_success_url(self):
-        return reverse('inventory:ajax_inventory_detail', args=(self.object.inventory.id, ))
+        return reverse('inventory:ajax_inventory_detail', args=(self.object.calibration_event.inventory.id, ))
