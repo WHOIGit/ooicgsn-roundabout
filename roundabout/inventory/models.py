@@ -41,12 +41,60 @@ from roundabout.users.models import User
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
 labels = set_app_labels()
-# Model Managers
+
+# Private functions for use in Models
+#------------------------------------------------------------------------------
+def _setup_deployment_progress_bar(deployment):
+    deployment_progress_bar = None
+    # Set variables for Deployment/Inventory Deployment Status bar in Bootstrap
+    if deployment.current_status == InventoryDeployment.STARTDEPLOYMENT:
+        deployment_progress_bar = {
+            'bar_class': 'bg-success',
+            'bar_width': 20,
+            'status_label': 'Deployment Started'
+        }
+    elif deployment.current_status == InventoryDeployment.DEPLOYMENTBURNIN:
+        deployment_progress_bar = {
+            'bar_class': 'bg-danger',
+            'bar_width': 40,
+            'status_label': 'Deployment Burn In'
+        }
+    elif deployment.current_status == InventoryDeployment.DEPLOYMENTTOFIELD:
+        deployment_progress_bar = {
+            'bar_class': None,
+            'bar_width': 60,
+            'status_label': 'Deployed to Field'
+        }
+    elif deployment.current_status == InventoryDeployment.DEPLOYMENTRECOVER:
+        deployment_progress_bar = {
+            'bar_class': 'bg-warning',
+            'bar_width': 80,
+            'status_label': 'Deployment Recovered'
+        }
+    elif deployment.current_status == InventoryDeployment.DEPLOYMENTRETIRE:
+        deployment_progress_bar = {
+            'bar_class': 'bg-info',
+            'bar_width': 100,
+            'status_label': 'Deployment Retired'
+        }
+    return deployment_progress_bar
 
 
 # Inventory/Deployment models
-
+#------------------------------------------------------------------------------
 class Deployment(models.Model):
+    STARTDEPLOYMENT = 'startdeployment'
+    DEPLOYMENTBURNIN = 'deploymentburnin'
+    DEPLOYMENTTOFIELD = 'deploymenttofield'
+    DEPLOYMENTRECOVER = 'deploymentrecover'
+    DEPLOYMENTRETIRE = 'deploymentretire'
+    DEPLOYMENT_STATUS = (
+        (STARTDEPLOYMENT, 'Start %s' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTTOFIELD, '%s to Field' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTRECOVER, '%s Recovery' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTRETIRE, '%s Retired' % (labels['label_deployments_app_singular'])),
+    )
     deployment_number = models.CharField(max_length=255, unique=False)
     location = TreeForeignKey(Location, related_name='deployments',
                               on_delete=models.SET_NULL, null=True, blank=True)
@@ -62,19 +110,32 @@ class Deployment(models.Model):
                              on_delete=models.SET_NULL, null=True, blank=True)
     cruise_recovered = models.ForeignKey(Cruise, related_name='recovered_deployments',
                                  on_delete=models.SET_NULL, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    deployment_start_date = models.DateTimeField(default=timezone.now)
+    deployment_burnin_date = models.DateTimeField(null=True, blank=True)
+    deployment_to_field_date = models.DateTimeField(null=True, blank=True)
+    deployment_recovery_date = models.DateTimeField(null=True, blank=True)
+    deployment_retire_date = models.DateTimeField(null=True, blank=True)
+    current_status = models.CharField(max_length=20, choices=DEPLOYMENT_STATUS, db_index=True, default=STARTDEPLOYMENT)
+    latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
+                                    validators=[
+                                        MaxValueValidator(90),
+                                        MinValueValidator(0)
+                                    ])
+    longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
+                                    validators=[
+                                        MaxValueValidator(180),
+                                        MinValueValidator(0)
+                                    ])
+    depth = models.PositiveIntegerField(null=True, blank=True)
 
     class Meta:
-        ordering = ['build', '-created_at']
-        get_latest_by = 'created_at'
+        ordering = ['build', '-deployment_start_date']
+        get_latest_by = 'deployment_start_date'
 
     def __str__(self):
         if self.deployed_location:
             return '%s - %s' % (self.deployment_number, self.deployed_location)
         return '%s - %s' % (self.deployment_number, self.location.name)
-
-    def get_deployment_label(self):
-        return self.deployment_number
 
     def current_deployment_status(self):
         deployment_action = self.deployment_actions.latest()
@@ -529,38 +590,7 @@ class InventoryDeployment(models.Model):
         return timedelta(minutes=0)
 
     def deployment_progress_bar(self):
-        deployment_progress_bar = None
-        # Set variables for Deployment Status bar in Bootstrap
-        if self.current_status == InventoryDeployment.STARTDEPLOYMENT:
-            deployment_progress_bar = {
-                'bar_class': 'bg-success',
-                'bar_width': 20,
-                'status_label': 'Deployment Started'
-            }
-        elif self.current_status == InventoryDeployment.DEPLOYMENTBURNIN:
-            deployment_progress_bar = {
-                'bar_class': 'bg-danger',
-                'bar_width': 40,
-                'status_label': 'Deployment Burn In'
-            }
-        elif self.current_status == InventoryDeployment.DEPLOYMENTTOFIELD:
-            deployment_progress_bar = {
-                'bar_class': None,
-                'bar_width': 60,
-                'status_label': 'Deployed to Field'
-            }
-        elif self.current_status == InventoryDeployment.DEPLOYMENTRECOVER:
-            deployment_progress_bar = {
-                'bar_class': 'bg-warning',
-                'bar_width': 80,
-                'status_label': 'Deployment Recovered'
-            }
-        elif self.current_status == InventoryDeployment.DEPLOYMENTRETIRE:
-            deployment_progress_bar = {
-                'bar_class': 'bg-info',
-                'bar_width': 100,
-                'status_label': 'Deployment Retired'
-            }
+        deployment_progress_bar = _setup_deployment_progress_bar(self)
         return deployment_progress_bar
 
 
