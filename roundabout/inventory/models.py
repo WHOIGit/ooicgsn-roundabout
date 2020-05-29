@@ -31,6 +31,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator, FileExt
 from model_utils import FieldTracker
 from mptt.models import MPTTModel, TreeForeignKey
 
+from .managers import InventoryDeploymentQuerySet
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
 from roundabout.assemblies.models import Assembly, AssemblyPart
@@ -239,7 +240,7 @@ class Inventory(MPTTModel):
     flag = models.BooleanField(choices=FLAG_TYPES, blank=False, default=False)
     time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
 
-    tracker = FieldTracker(fields=['location', 'deployment', 'parent', 'build'])
+    tracker = FieldTracker(fields=['location', 'parent', 'build'])
 
     class MPTTMeta:
         order_insertion_by = ['serial_number']
@@ -302,10 +303,11 @@ class Inventory(MPTTModel):
             return None
 
     # method to create new Action model records to track Inventory/User
+    # also creates/updates InventoryDeployment objects to track Deployment histories
     def create_action_record(self, user, action_type, detail='', created_at=None, cruise=None, deployment_type=''):
-        # Add Try block here when done
         build = self.build
         deployment = None
+        inventory_deployment = None
         if build:
             deployment = self.build.get_latest_deployment()
         if not created_at:
@@ -334,22 +336,45 @@ class Inventory(MPTTModel):
             detail = '%s: %s. %s' % (self.get_test_type_display(), self.get_test_result_display(), detail)
         elif action_type == 'startdeployment':
             detail = '%s %s started' % (labels['label_deployments_app_singular'], deployment)
+            # Create InventoryDeployment record
+            inventory_deployment = InventoryDeployment.objects.create(
+                deployment=build.current_deployment(),
+                inventory=self,
+            )
         elif action_type == 'deploymentburnin':
             detail = '%s %s burn in' % (labels['label_deployments_app_singular'], deployment)
+            # Update InventoryDeployment record
+            inventory_deployment = self.inventory_deployments.get_active_deployment()
+            inventory_deployment.deployment_burnin_date = created_at
+            inventory_deployment.save()
         elif action_type == 'deploymenttosea':
             detail = 'Deployed to field on %s.' % (deployment)
             if cruise:
                 detail = '%s Cruise: %s' % (detail, cruise)
+            # Update InventoryDeployment record
+            inventory_deployment = self.inventory_deployments.get_active_deployment()
+            inventory_deployment.deployment_to_field_date = created_at
+            inventory_deployment.cruise_deployed = cruise
+            inventory_deployment.save()
         elif action_type == 'deploymentrecover':
             build = self.get_latest_build()
             deployment = self.get_latest_deployment()
             detail = 'Recovered from %s. %s' % (deployment, detail)
             if cruise:
                 detail = '%s Cruise: %s' % (detail, cruise)
+            # update InventoryDeployment record
+            inventory_deployment = self.inventory_deployments.get_active_deployment()
+            inventory_deployment.deployment_recovery_date = created_at
+            inventory_deployment.cruise_recovered = cruise
+            inventory_deployment.save()
         elif action_type == 'deploymentretire':
             build = self.get_latest_build()
             deployment = self.get_latest_deployment()
             detail = '%s %s ended for this item.' % (labels['label_deployments_app_singular'], deployment)
+            # update InventoryDeployment record
+            inventory_deployment = self.inventory_deployments.get_active_deployment()
+            inventory_deployment.deployment_retire_date = created_at
+            inventory_deployment.save()
 
         action_record = Action.objects.create(action_type=action_type,
                                               object_type=self.get_object_type(),
@@ -358,6 +383,7 @@ class Inventory(MPTTModel):
                                               parent=self.parent,
                                               build=build,
                                               deployment=deployment,
+                                              inventory_deployment=inventory_deployment,
                                               deployment_type=deployment_type,
                                               cruise=cruise,
                                               user=user,
@@ -560,6 +586,19 @@ class Inventory(MPTTModel):
 
 
 class InventoryDeployment(models.Model):
+    STARTDEPLOYMENT = 'startdeployment'
+    DEPLOYMENTBURNIN = 'deploymentburnin'
+    DEPLOYMENTTOFIELD = 'deploymenttofield'
+    DEPLOYMENTRECOVER = 'deploymentrecover'
+    DEPLOYMENTRETIRE = 'deploymentretire'
+    DEPLOYMENT_STATUS = (
+        (STARTDEPLOYMENT, 'Start %s' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTTOFIELD, '%s to Field' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTRECOVER, '%s Recovery' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTRETIRE, '%s Retired' % (labels['label_deployments_app_singular'])),
+    )
+
     deployment = models.ForeignKey(Deployment, related_name='inventory_deployments',
                                    on_delete=models.CASCADE, null=False)
     inventory = models.ForeignKey(Inventory, related_name='inventory_deployments',
@@ -573,7 +612,9 @@ class InventoryDeployment(models.Model):
     deployment_to_field_date = models.DateTimeField(null=True, blank=True)
     deployment_recovery_date = models.DateTimeField(null=True, blank=True)
     deployment_retire_date = models.DateTimeField(null=True, blank=True)
-    time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
+    current_status = models.CharField(max_length=20, choices=DEPLOYMENT_STATUS, db_index=True, default=STARTDEPLOYMENT)
+
+    objects = InventoryDeploymentQuerySet.as_manager()
 
     class Meta:
         ordering = ['-deployment_start_date']
@@ -581,8 +622,49 @@ class InventoryDeployment(models.Model):
 
     def __str__(self):
         if self.deployment.deployed_location:
-            return '%s - %s - %s' % (self.deployment.deployment_number, self.deployed_location, self.inventory)
-        return '%s - %s - %s' % (self.deployment_number, self.deployment.location, self.inventory)
+            return '%s - %s - %s' % (self.deployment.deployment_number, self.deployment.deployed_location, self.inventory)
+        return '%s - %s - %s' % (self.deployment.deployment_number, self.deployment.location, self.inventory)
+
+    def save(self, *args, **kwargs):
+        # set the current_status by date actions
+        if self.deployment_retire_date:
+            self.current_status = InventoryDeployment.DEPLOYMENTRETIRE
+        elif self.deployment_recovery_date:
+            self.current_status = InventoryDeployment.DEPLOYMENTRECOVER
+        elif self.deployment_to_field_date:
+            self.current_status = InventoryDeployment.DEPLOYMENTTOFIELD
+        elif self.deployment_burnin_date:
+            self.current_status = InventoryDeployment.DEPLOYMENTBURNIN
+        else:
+            self.current_status = InventoryDeployment.STARTDEPLOYMENT
+
+        super().save(*args, **kwargs)
+
+    # get the time at sea for any Inventory Deployment
+    @property
+    def deployment_time_at_sea(self):
+        if self.deployment_to_field_date:
+            if self.deployment_recovery_date:
+                time_on_deployment = self.deployment_recovery_date - self.deployment_to_field_date
+                return time_on_deployment
+            # If no recovery, item is still at sea
+            now = timezone.now()
+            time_on_deployment = now - self.deployment_to_field_date
+            return time_on_deployment
+        return timedelta(minutes=0)
+
+    # get the time at sea for any Inventory Deployment
+    @property
+    def deployment_total_time(self):
+        if self.deployment_start_date:
+            if self.deployment_retire_date:
+                time_on_deployment = self.deployment_retire_date - self.deployment_start_date
+                return time_on_deployment
+            # If no retirement, deployment still active
+            now = timezone.now()
+            time_on_deployment = now - self.deployment_start_date
+            return time_on_deployment
+        return timedelta(minutes=0)
 
 
 class DeploymentSnapshot(models.Model):
@@ -691,6 +773,8 @@ class Action(models.Model):
     location = TreeForeignKey(Location, related_name='actions',
                               on_delete=models.SET_NULL, null=True, blank=False)
     deployment = models.ForeignKey(Deployment, related_name='actions',
+                                   on_delete=models.SET_NULL, null=True, blank=True)
+    inventory_deployment = models.ForeignKey(InventoryDeployment, related_name='actions',
                                    on_delete=models.SET_NULL, null=True, blank=True)
     build = models.ForeignKey(Build, related_name='actions',
                               on_delete=models.SET_NULL, null=True, blank=True)

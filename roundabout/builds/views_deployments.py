@@ -29,7 +29,7 @@ from common.util.mixins import AjaxFormMixin
 from .models import Build, BuildAction
 from .forms import *
 from roundabout.locations.models import Location
-from roundabout.inventory.models import Inventory, Action, Deployment, DeploymentAction
+from roundabout.inventory.models import Inventory, Action, Deployment, DeploymentAction, InventoryDeployment
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
 labels = set_app_labels()
@@ -90,7 +90,7 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
             item.location = build.location
             item.save()
             item.create_action_record(self.request.user, 'startdeployment', '', None, None, 'build_deployment')
-
+            
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
@@ -282,7 +282,6 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             if item.location_changed():
                 item.create_action_record(self.request.user, 'locationchange')
             item.create_action_record(self.request.user, action_type, detail, action_date,  cruise, deployment_type)
-
             #update Time at Sea if Recovered from Sea with Inventory model method
             if action_type == 'deploymentrecover':
                 item.update_time_at_sea()
