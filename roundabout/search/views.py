@@ -54,8 +54,8 @@ def searchbar_redirect(request):
 
     query = request.GET.get('query')
     if query:
-        if model=='inventory':      getstr = '?f=.0.part__name&f=.0.serial_number&f=.0.revision__note&f=.0.location__name&l=.0.icontains&q=.0.{query}'
-        elif model=='part':         getstr = '?f=.0.part_number&f=.0.name&l=.0.icontains&q=.0.{query}'
+        if model=='inventory':      getstr = '?f=.0.part__name&f=.0.part__friendly_name&f=.0.serial_number&f=.0.old_serial_number&f=.0.location__name&l=.0.icontains&q=.0.{query}'
+        elif model=='part':         getstr = '?f=.0.part_number&f=.0.name&f=.0.friendly_name&l=.0.icontains&q=.0.{query}'
         elif model == 'build':      getstr = '?f=.0.build_number&f=.0.assembly__name&f=.0.assembly__assembly_type__name&f=.0.assembly__description&f=.0.build_notes&f=.0.location__name&l=.0.icontains&q=.0.{query}'
         elif model == 'assembly':   getstr = '?f=.0.assembly_number&f=.0.name&f=.0.assembly_type__name&f=.0.description&l=.0.icontains&q=.0.{query}'
         getstr = getstr.format(query=query)
@@ -290,22 +290,24 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
 class InventoryTableView(GenericSearchTableView):
     model = Inventory
     table_class = InventoryTable
-    query_prefetch = ['fieldvalues', 'fieldvalues__field', 'part', 'location', 'revision', 'inventory_actions', 'inventory_actions__user', 'inventory_actions__location']
+    query_prefetch = ['fieldvalues', 'fieldvalues__field', 'part', 'location', 'inventory_actions', 'inventory_actions__user', 'inventory_actions__location']
     avail_udf = set()
 
     @staticmethod
     def get_avail_fields():
-        avail_fields = [dict(value="part__name",              text="Name", legal_lookups='STR_LOOKUP'),
-                        dict(value="serial_number",  text="Serial Number", legal_lookups='STR_LOOKUP'),
+        avail_fields = [dict(value="part__name",                     text="Name", legal_lookups='STR_LOOKUP'),
+                        dict(value="part__friendly_name",   text="Friendly Name", legal_lookups='STR_LOOKUP'),
+                        dict(value="serial_number",         text="Serial Number", legal_lookups='STR_LOOKUP'),
                         dict(value="old_serial_number", text="Old Serial Number", legal_lookups='STR_LOOKUP'),
-                        dict(value="location__name",      text="Location", legal_lookups='STR_LOOKUP'),
-                        dict(value="build__assembly__name",  text="Build", legal_lookups='STR_LOOKUP'),
-                        dict(value="created_at",      text="Date Created", legal_lookups='DATE_LOOKUP'),
-                        dict(value="updated_at",     text="Date Modified", legal_lookups='DATE_LOOKUP'),
+                        dict(value="location__name",             text="Location", legal_lookups='STR_LOOKUP'),
+                        dict(value="build__assembly__name",         text="Build", legal_lookups='STR_LOOKUP'),
+                        dict(value="created_at",             text="Date Created", legal_lookups='DATE_LOOKUP'),
+                        dict(value="updated_at",            text="Date Modified", legal_lookups='DATE_LOOKUP'),
 
                         dict(value=None, text="--Part--", disabled=True),
                         dict(value="part__part_number",        text="Part Number", legal_lookups='STR_LOOKUP'),
                         dict(value="part__part_type__name",    text="Part Type",   legal_lookups='STR_LOOKUP'),
+                        dict(value="part__revision",         text="Part Revision", legal_lookups='STR_LOOKUP'),
                         dict(value="part__unit_cost",          text="Unit Cost",   legal_lookups='NUM_LOOKUP'),
                         dict(value="part__refurbishment_cost", text="Refurb Cost", legal_lookups='NUM_LOOKUP'),
 
@@ -381,8 +383,10 @@ class PartTableView(GenericSearchTableView):
     @staticmethod
     def get_avail_fields():
         avail_fields = [dict(value="name",                        text="Name", legal_lookups='STR_LOOKUP'),
+                        dict(value="friendly_name",      text="Friendly Name", legal_lookups='STR_LOOKUP'),
                         dict(value="part_number",          text="Part Number", legal_lookups='STR_LOOKUP'),
                         dict(value="part_type__name",        text="Part Type", legal_lookups='STR_LOOKUP'),
+                        dict(value="revision",           text="Part Revision", legal_lookups='STR_LOOKUP'),
                         dict(value="unit_cost",              text="Unit Cost", legal_lookups='NUM_LOOKUP'),
                         dict(value="refurbishment_cost",   text="Refurb Cost", legal_lookups='NUM_LOOKUP'),
                         dict(value="inventory__count", text="Inventory Count", legal_lookups='NUM_LOOKUP'),
