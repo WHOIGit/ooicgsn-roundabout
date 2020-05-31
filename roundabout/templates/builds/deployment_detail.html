@@ -29,8 +29,8 @@
     <span class="sr-only">Expand/Collapse Revision {{ deployment }}</span>
 </a>
 <div class="progress" style="height: 20px;">
-    <div class="progress-bar {{ deployment.get_deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ deployment.get_deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ deployment.get_deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
-        <span>{{ deployment.get_deployment_status_label }}</span>
+    <div class="progress-bar {{ deployment.deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ deployment.deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ deployment.deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
+        <span>{{ deployment.deployment_progress_bar|get_item:'status_label' }}</span>
     </div>
 </div>
 

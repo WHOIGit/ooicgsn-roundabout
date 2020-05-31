@@ -44,221 +44,10 @@ labels = set_app_labels()
 
 # Private functions for use in Models
 #------------------------------------------------------------------------------
-def _setup_deployment_progress_bar(deployment):
-    deployment_progress_bar = None
-    # Set variables for Deployment/Inventory Deployment Status bar in Bootstrap
-    if deployment.current_status == InventoryDeployment.STARTDEPLOYMENT:
-        deployment_progress_bar = {
-            'bar_class': 'bg-success',
-            'bar_width': 20,
-            'status_label': 'Deployment Started'
-        }
-    elif deployment.current_status == InventoryDeployment.DEPLOYMENTBURNIN:
-        deployment_progress_bar = {
-            'bar_class': 'bg-danger',
-            'bar_width': 40,
-            'status_label': 'Deployment Burn In'
-        }
-    elif deployment.current_status == InventoryDeployment.DEPLOYMENTTOFIELD:
-        deployment_progress_bar = {
-            'bar_class': None,
-            'bar_width': 60,
-            'status_label': 'Deployed to Field'
-        }
-    elif deployment.current_status == InventoryDeployment.DEPLOYMENTRECOVER:
-        deployment_progress_bar = {
-            'bar_class': 'bg-warning',
-            'bar_width': 80,
-            'status_label': 'Deployment Recovered'
-        }
-    elif deployment.current_status == InventoryDeployment.DEPLOYMENTRETIRE:
-        deployment_progress_bar = {
-            'bar_class': 'bg-info',
-            'bar_width': 100,
-            'status_label': 'Deployment Retired'
-        }
-    return deployment_progress_bar
 
 
 # Inventory/Deployment models
 #------------------------------------------------------------------------------
-class Deployment(models.Model):
-    STARTDEPLOYMENT = 'startdeployment'
-    DEPLOYMENTBURNIN = 'deploymentburnin'
-    DEPLOYMENTTOFIELD = 'deploymenttofield'
-    DEPLOYMENTRECOVER = 'deploymentrecover'
-    DEPLOYMENTRETIRE = 'deploymentretire'
-    DEPLOYMENT_STATUS = (
-        (STARTDEPLOYMENT, 'Start %s' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTTOFIELD, '%s to Field' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTRECOVER, '%s Recovery' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTRETIRE, '%s Retired' % (labels['label_deployments_app_singular'])),
-    )
-    deployment_number = models.CharField(max_length=255, unique=False)
-    location = TreeForeignKey(Location, related_name='deployments',
-                              on_delete=models.SET_NULL, null=True, blank=True)
-    final_location = TreeForeignKey(Location, related_name='final_deployments',
-                              on_delete=models.SET_NULL, null=True, blank=True)
-    deployed_location = TreeForeignKey(Location, related_name='deployed_deployments',
-                              on_delete=models.SET_NULL, null=True, blank=True)
-    assembly = models.ForeignKey(Assembly, related_name='deployments',
-                             on_delete=models.CASCADE, null=True, blank=True, db_index=True)
-    build = models.ForeignKey(Build, related_name='deployments',
-                             on_delete=models.CASCADE, null=True, blank=True, db_index=True)
-    cruise_deployed = models.ForeignKey(Cruise, related_name='deployments',
-                             on_delete=models.SET_NULL, null=True, blank=True)
-    cruise_recovered = models.ForeignKey(Cruise, related_name='recovered_deployments',
-                                 on_delete=models.SET_NULL, null=True, blank=True)
-    deployment_start_date = models.DateTimeField(default=timezone.now)
-    deployment_burnin_date = models.DateTimeField(null=True, blank=True)
-    deployment_to_field_date = models.DateTimeField(null=True, blank=True)
-    deployment_recovery_date = models.DateTimeField(null=True, blank=True)
-    deployment_retire_date = models.DateTimeField(null=True, blank=True)
-    current_status = models.CharField(max_length=20, choices=DEPLOYMENT_STATUS, db_index=True, default=STARTDEPLOYMENT)
-    latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
-                                    validators=[
-                                        MaxValueValidator(90),
-                                        MinValueValidator(0)
-                                    ])
-    longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
-                                    validators=[
-                                        MaxValueValidator(180),
-                                        MinValueValidator(0)
-                                    ])
-    depth = models.PositiveIntegerField(null=True, blank=True)
-
-    class Meta:
-        ordering = ['build', '-deployment_start_date']
-        get_latest_by = 'deployment_start_date'
-
-    def __str__(self):
-        if self.deployed_location:
-            return '%s - %s' % (self.deployment_number, self.deployed_location)
-        return '%s - %s' % (self.deployment_number, self.location.name)
-
-    def current_deployment_status(self):
-        deployment_action = self.deployment_actions.latest()
-        if deployment_action:
-            if deployment_action.action_type == 'deploymentdetails':
-                deployment_status = 'deploymenttosea'
-            else:
-                deployment_status = deployment_action.action_type
-        else:
-            deployment_status = 'startdeployment'
-
-        return deployment_status
-
-    def get_deploytosea_details(self):
-        deploytosea_details = None
-        # get the latest 'Deploy' action record to initial
-        deploy_record = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploymenttosea').first()
-        # get the latest 'Detail' action record to find last lat/long/depth data
-        action_record = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploymentdetails').first()
-
-        if action_record:
-            # create dictionary of location details
-            deploytosea_details = {
-                'latitude':  action_record.latitude,
-                'longitude': action_record.longitude,
-                'depth': action_record.depth,
-                'deploy_date': deploy_record.created_at,
-            }
-
-        return deploytosea_details
-
-    # get the time delta from Deployment start to retire
-    def get_deployment_time_total(self):
-        try:
-            action_deploy_start = DeploymentAction.objects.filter(deployment=self).filter(action_type='startdeployment').latest('created_at')
-        except DeploymentAction.DoesNotExist:
-            action_deploy_to_sea = None
-
-        try:
-            action_deploy_retire = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploymentretire').latest('created_at')
-        except DeploymentAction.DoesNotExist:
-            action_deploy_retire = None
-
-        if action_deploy_start:
-            if action_deploy_retire:
-                deployment_time_total = action_deploy_retire.created_at - action_deploy_start.created_at
-                return deployment_time_total
-            # If no recovery, item is still at sea
-            now = timezone.now()
-            time_on_deployment = now - action_deploy_start.created_at
-            return deployment_time_total
-        return timedelta(minutes=0)
-
-    # get the most recent Deploy to Sea and Recover from Sea action timestamps, find time delta for Total Time at sea
-    def get_deployment_time_at_sea(self):
-        try:
-            action_deploy_to_sea = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploymenttosea').latest('created_at')
-        except DeploymentAction.DoesNotExist:
-            action_deploy_to_sea = None
-
-        try:
-            action_recover = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploymentrecover').latest('created_at')
-        except DeploymentAction.DoesNotExist:
-            action_recover = None
-
-        if action_deploy_to_sea:
-            if action_recover:
-                deployment_time_at_sea = action_recover.created_at - action_deploy_to_sea.created_at
-                return deployment_time_at_sea
-            # If no recovery, item is still at sea
-            now = timezone.now()
-            deployment_time_at_sea = now - action_deploy_to_sea.created_at
-            return deployment_time_at_sea
-        return timedelta(minutes=0)
-
-    def get_deployment_status_label(self):
-        deployment_status_label = None
-        # get short label text for Deployment status
-        if self.current_deployment_status() == 'startdeployment':
-            deployment_status_label = 'Initial %s' % (labels['label_deployments_app_singular'])
-        elif self.current_deployment_status() == 'deploymentburnin':
-            deployment_status_label = 'Burn In'
-        elif self.current_deployment_status() == 'deploymenttosea':
-            deployment_status_label = 'Deployed'
-        elif self.current_deployment_status() == 'deploymentrecover':
-            deployment_status_label = 'Recovered'
-        elif self.current_deployment_status() == 'deploymentretire':
-            deployment_status_label = 'Retired'
-
-        return deployment_status_label
-
-    def get_deployment_progress_bar(self):
-        deployment_progress_bar = None
-        # Set variables for Deployment Status bar in Bootstrap
-        if self.current_deployment_status() == 'startdeployment':
-            deployment_progress_bar = {
-                'bar_class': 'bg-success',
-                'bar_width': 20,
-            }
-        elif self.current_deployment_status() == 'deploymentburnin':
-            deployment_progress_bar = {
-                'bar_class': 'bg-danger',
-                'bar_width': 40,
-            }
-        elif self.current_deployment_status() == 'deploymenttosea':
-            deployment_progress_bar = {
-                'bar_class': None,
-                'bar_width': 60,
-            }
-        elif self.current_deployment_status() == 'deploymentrecover':
-            deployment_progress_bar = {
-                'bar_class': 'bg-warning',
-                'bar_width': 80,
-            }
-        elif self.current_deployment_status() == 'deploymentretire':
-            deployment_progress_bar = {
-                'bar_class': 'bg-info',
-                'bar_width': 100,
-            }
-
-        return deployment_progress_bar
-
-
 class Inventory(MPTTModel):
     INCOMING = 'incoming'
     OUTGOING = 'outgoing'
@@ -497,7 +286,7 @@ class Inventory(MPTTModel):
         return timedelta(minutes=0)
 
 
-class InventoryDeployment(models.Model):
+class DeploymentBase(models.Model):
     STARTDEPLOYMENT = 'startdeployment'
     DEPLOYMENTBURNIN = 'deploymentburnin'
     DEPLOYMENTTOFIELD = 'deploymenttofield'
@@ -510,14 +299,9 @@ class InventoryDeployment(models.Model):
         (DEPLOYMENTRECOVER, '%s Recovery' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTRETIRE, '%s Retired' % (labels['label_deployments_app_singular'])),
     )
-
-    deployment = models.ForeignKey(Deployment, related_name='inventory_deployments',
-                                   on_delete=models.CASCADE, null=False)
-    inventory = models.ForeignKey(Inventory, related_name='inventory_deployments',
-                                  on_delete=models.CASCADE, null=False)
-    cruise_deployed = models.ForeignKey(Cruise, related_name='inventory_deployments',
+    cruise_deployed = models.ForeignKey(Cruise, related_name='%(class)s',
                              on_delete=models.SET_NULL, null=True, blank=True)
-    cruise_recovered = models.ForeignKey(Cruise, related_name='recovered_inventory_deployments',
+    cruise_recovered = models.ForeignKey(Cruise, related_name='recovered_%(class)s',
                                  on_delete=models.SET_NULL, null=True, blank=True)
     deployment_start_date = models.DateTimeField(default=timezone.now)
     deployment_burnin_date = models.DateTimeField(null=True, blank=True)
@@ -526,33 +310,27 @@ class InventoryDeployment(models.Model):
     deployment_retire_date = models.DateTimeField(null=True, blank=True)
     current_status = models.CharField(max_length=20, choices=DEPLOYMENT_STATUS, db_index=True, default=STARTDEPLOYMENT)
 
-    objects = InventoryDeploymentQuerySet.as_manager()
-
     class Meta:
+        abstract = True
         ordering = ['-deployment_start_date']
         get_latest_by = 'deployment_start_date'
-
-    def __str__(self):
-        if self.deployment.deployed_location:
-            return '%s - %s - %s' % (self.deployment.deployment_number, self.deployment.deployed_location, self.inventory)
-        return '%s - %s - %s' % (self.deployment.deployment_number, self.deployment.location, self.inventory)
 
     def save(self, *args, **kwargs):
         # set the current_status by date actions
         if self.deployment_retire_date:
-            self.current_status = InventoryDeployment.DEPLOYMENTRETIRE
+            self.current_status = DeploymentBase.DEPLOYMENTRETIRE
         elif self.deployment_recovery_date:
-            self.current_status = InventoryDeployment.DEPLOYMENTRECOVER
+            self.current_status = DeploymentBase.DEPLOYMENTRECOVER
         elif self.deployment_to_field_date:
-            self.current_status = InventoryDeployment.DEPLOYMENTTOFIELD
+            self.current_status = DeploymentBase.DEPLOYMENTTOFIELD
         elif self.deployment_burnin_date:
-            self.current_status = InventoryDeployment.DEPLOYMENTBURNIN
+            self.current_status = DeploymentBase.DEPLOYMENTBURNIN
         else:
-            self.current_status = InventoryDeployment.STARTDEPLOYMENT
+            self.current_status = DeploymentBase.STARTDEPLOYMENT
 
         super().save(*args, **kwargs)
 
-    # get the time at sea for any Inventory Deployment
+    # get the time at sea for any Deployment
     @property
     def deployment_time_in_field(self):
         if self.deployment_to_field_date:
@@ -564,17 +342,6 @@ class InventoryDeployment(models.Model):
             time_on_deployment = now - self.deployment_to_field_date
             return time_on_deployment
         return timedelta(minutes=0)
-
-    @property
-    def deployment_percentage_vs_build(self):
-        # Populate percentage variable is the deployment_to_sea_event exists
-        deployment_percentage = 0
-        if self.deployment_to_field_date:
-            # calculate percentage of total build deployment item was deployed
-            deployment_percentage = int(self.deployment_time_in_field / self.deployment.get_deployment_time_at_sea() * 100)
-            if deployment_percentage > 100:
-                deployment_percentage = 100
-            return deployment_percentage
 
     # get the total time for any Inventory Deployment from Start to Retire
     @property
@@ -590,8 +357,166 @@ class InventoryDeployment(models.Model):
         return timedelta(minutes=0)
 
     def deployment_progress_bar(self):
-        deployment_progress_bar = _setup_deployment_progress_bar(self)
+        deployment_progress_bar = None
+        # Set variables for Deployment/Inventory Deployment Status bar in Bootstrap
+        if self.current_status == DeploymentBase.STARTDEPLOYMENT:
+            deployment_progress_bar = {
+                'bar_class': 'bg-success',
+                'bar_width': 20,
+                'status_label': 'Deployment Started'
+            }
+        elif self.current_status == DeploymentBase.DEPLOYMENTBURNIN:
+            deployment_progress_bar = {
+                'bar_class': 'bg-danger',
+                'bar_width': 40,
+                'status_label': 'Deployment Burn In'
+            }
+        elif self.current_status == DeploymentBase.DEPLOYMENTTOFIELD:
+            deployment_progress_bar = {
+                'bar_class': None,
+                'bar_width': 60,
+                'status_label': 'Deployed to Field'
+            }
+        elif self.current_status == DeploymentBase.DEPLOYMENTRECOVER:
+            deployment_progress_bar = {
+                'bar_class': 'bg-warning',
+                'bar_width': 80,
+                'status_label': 'Deployment Recovered'
+            }
+        elif self.current_status == DeploymentBase.DEPLOYMENTRETIRE:
+            deployment_progress_bar = {
+                'bar_class': 'bg-info',
+                'bar_width': 100,
+                'status_label': 'Deployment Retired'
+            }
         return deployment_progress_bar
+
+
+class Deployment(DeploymentBase):
+    deployment_number = models.CharField(max_length=255, unique=False)
+    location = TreeForeignKey(Location, related_name='deployments',
+                              on_delete=models.SET_NULL, null=True, blank=True)
+    final_location = TreeForeignKey(Location, related_name='final_deployments',
+                              on_delete=models.SET_NULL, null=True, blank=True)
+    deployed_location = TreeForeignKey(Location, related_name='deployed_deployments',
+                              on_delete=models.SET_NULL, null=True, blank=True)
+    build = models.ForeignKey(Build, related_name='deployments', on_delete=models.CASCADE,
+                              null=True, blank=True, db_index=True)
+    latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
+                                    validators=[
+                                        MaxValueValidator(90),
+                                        MinValueValidator(0)
+                                    ])
+    longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
+                                    validators=[
+                                        MaxValueValidator(180),
+                                        MinValueValidator(0)
+                                    ])
+    depth = models.PositiveIntegerField(null=True, blank=True)
+
+    def __str__(self):
+        if self.deployed_location:
+            return '%s - %s' % (self.deployment_number, self.deployed_location)
+        return '%s - %s' % (self.deployment_number, self.location.name)
+
+    def current_deployment_status(self):
+        deployment_action = self.deployment_actions.latest()
+        if deployment_action:
+            if deployment_action.action_type == 'deploymentdetails':
+                deployment_status = 'deploymenttosea'
+            else:
+                deployment_status = deployment_action.action_type
+        else:
+            deployment_status = 'startdeployment'
+
+        return deployment_status
+
+    def get_deploytosea_details(self):
+        deploytosea_details = None
+        # get the latest 'Deploy' action record to initial
+        deploy_record = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploymenttofield').first()
+        # get the latest 'Detail' action record to find last lat/long/depth data
+        action_record = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploymentdetails').first()
+
+        if action_record:
+            # create dictionary of location details
+            deploytosea_details = {
+                'latitude':  action_record.latitude,
+                'longitude': action_record.longitude,
+                'depth': action_record.depth,
+                'deploy_date': deploy_record.created_at,
+            }
+
+        return deploytosea_details
+
+    # get the time delta from Deployment start to retire
+    def get_deployment_time_total(self):
+        try:
+            action_deploy_start = DeploymentAction.objects.filter(deployment=self).filter(action_type='startdeployment').latest('created_at')
+        except DeploymentAction.DoesNotExist:
+            action_deploy_to_sea = None
+
+        try:
+            action_deploy_retire = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploymentretire').latest('created_at')
+        except DeploymentAction.DoesNotExist:
+            action_deploy_retire = None
+
+        if action_deploy_start:
+            if action_deploy_retire:
+                deployment_time_total = action_deploy_retire.created_at - action_deploy_start.created_at
+                return deployment_time_total
+            # If no recovery, item is still at sea
+            now = timezone.now()
+            time_on_deployment = now - action_deploy_start.created_at
+            return deployment_time_total
+        return timedelta(minutes=0)
+
+    # get the most recent Deploy to Sea and Recover from Sea action timestamps, find time delta for Total Time at sea
+    def get_deployment_time_at_sea(self):
+        try:
+            action_deploy_to_sea = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploymenttosea').latest('created_at')
+        except DeploymentAction.DoesNotExist:
+            action_deploy_to_sea = None
+
+        try:
+            action_recover = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploymentrecover').latest('created_at')
+        except DeploymentAction.DoesNotExist:
+            action_recover = None
+
+        if action_deploy_to_sea:
+            if action_recover:
+                deployment_time_at_sea = action_recover.created_at - action_deploy_to_sea.created_at
+                return deployment_time_at_sea
+            # If no recovery, item is still at sea
+            now = timezone.now()
+            deployment_time_at_sea = now - action_deploy_to_sea.created_at
+            return deployment_time_at_sea
+        return timedelta(minutes=0)
+
+
+class InventoryDeployment(DeploymentBase):
+    deployment = models.ForeignKey(Deployment, related_name='inventory_deployments',
+                                   on_delete=models.CASCADE, null=False)
+    inventory = models.ForeignKey(Inventory, related_name='inventory_deployments',
+                                  on_delete=models.CASCADE, null=False)\
+
+    objects = InventoryDeploymentQuerySet.as_manager()
+
+    def __str__(self):
+        if self.deployment.deployed_location:
+            return '%s - %s - %s' % (self.deployment.deployment_number, self.deployment.deployed_location, self.inventory)
+        return '%s - %s - %s' % (self.deployment.deployment_number, self.deployment.location, self.inventory)
+
+    @property
+    def deployment_percentage_vs_build(self):
+        # Populate percentage variable is the deployment_to_sea_event exists
+        deployment_percentage = 0
+        if self.deployment_to_field_date:
+            # calculate percentage of total build deployment item was deployed
+            deployment_percentage = int(self.deployment_time_in_field / self.deployment.get_deployment_time_at_sea() * 100)
+            if deployment_percentage > 100:
+                deployment_percentage = 100
+            return deployment_percentage
 
 
 class DeploymentSnapshot(models.Model):
@@ -758,7 +683,7 @@ class PhotoNote(models.Model):
 class DeploymentAction(models.Model):
     STARTDEPLOYMENT = 'startdeployment'
     DEPLOYMENTBURNIN = 'deploymentburnin'
-    DEPLOYMENTTOSEA = 'deploymenttosea'
+    DEPLOYMENTTOFIELD = 'deploymenttofield'
     DEPLOYMENTUPDATE = 'deploymentupdate'
     DEPLOYMENTRECOVER = 'deploymentrecover'
     DEPLOYMENTRETIRE = 'deploymentretire'
@@ -766,7 +691,7 @@ class DeploymentAction(models.Model):
     ACT_TYPES = (
         (STARTDEPLOYMENT, 'Start %s' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTTOSEA, '%s to Field' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTTOFIELD, '%s to Field' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTUPDATE, '%s Update' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTRECOVER, '%s Recovery' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTRETIRE, '%s Retired' % (labels['label_deployments_app_singular'])),

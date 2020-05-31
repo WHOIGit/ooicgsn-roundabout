@@ -100,7 +100,7 @@
                         data-node-type="{{ node_type }}">Deploy to Field</a>
                 {% endif %}
 
-                {% if build.current_deployment.current_deployment_status == 'deploymenttosea' %}
+                {% if build.current_deployment.current_deployment_status == 'deploymenttofield' %}
 
                     <a class="dropdown-item" href="#"
                         data-detail-url="{% url 'builds:ajax_deployment_action' 'deploymentdetails' build.current_deployment.id build.id %}"
@@ -268,8 +268,8 @@
 
         <div class="progress mb-3" style="height: 20px;">
 
-            <div class="progress-bar {{ current_deployment.get_deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ current_deployment.get_deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ current_deployment.get_deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
-                <span>{{ current_deployment.get_deployment_status_label }}</span>
+            <div class="progress-bar {{ current_deployment.deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ current_deployment.deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ current_deployment.deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
+                <span>{{ current_deployment.deployment_progress_bar|get_item:'status_label' }}</span>
             </div>
 
         </div>
