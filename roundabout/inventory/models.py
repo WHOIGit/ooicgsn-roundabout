@@ -473,23 +473,13 @@ class Deployment(DeploymentBase):
 
     # get the most recent Deploy to Sea and Recover from Sea action timestamps, find time delta for Total Time at sea
     def get_deployment_time_at_sea(self):
-        try:
-            action_deploy_to_sea = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploymenttosea').latest('created_at')
-        except DeploymentAction.DoesNotExist:
-            action_deploy_to_sea = None
-
-        try:
-            action_recover = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploymentrecover').latest('created_at')
-        except DeploymentAction.DoesNotExist:
-            action_recover = None
-
-        if action_deploy_to_sea:
-            if action_recover:
-                deployment_time_at_sea = action_recover.created_at - action_deploy_to_sea.created_at
+        if self.deployment_to_field_date:
+            if self.deployment_recovery_date:
+                deployment_time_at_sea = self.deployment_recovery_date - self.deployment_to_field_date
                 return deployment_time_at_sea
             # If no recovery, item is still at sea
             now = timezone.now()
-            deployment_time_at_sea = now - action_deploy_to_sea.created_at
+            deployment_time_at_sea = now - self.deployment_to_field_date
             return deployment_time_at_sea
         return timedelta(minutes=0)
 

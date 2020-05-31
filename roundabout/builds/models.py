@@ -157,10 +157,10 @@ class BuildAction(models.Model):
     BUILDADD = 'buildadd'
     LOCATIONCHANGE = 'locationchange'
     SUBASSEMBLYCHANGE = 'subassemblychange'
-    STARTDEPLOY = 'startdeploy'
+    STARTDEPLOYMENT = 'startdeployment'
     REMOVEFROMDEPLOYMENT = 'removefromdeployment'
     DEPLOYMENTBURNIN = 'deploymentburnin'
-    DEPLOYMENTTOSEA = 'deploymenttosea'
+    DEPLOYMENTTOFIELD = 'deploymenttofield'
     DEPLOYMENTUPDATE = 'deploymentupdate'
     DEPLOYMENTRECOVER = 'deploymentrecover'
     DEPLOYMENTRETIRE = 'deploymentretire'
@@ -175,10 +175,10 @@ class BuildAction(models.Model):
         (BUILDADD, 'Add %s' % (labels['label_builds_app_singular'])),
         (LOCATIONCHANGE, 'Location Change'),
         (SUBASSEMBLYCHANGE, 'Subassembly Change'),
-        (STARTDEPLOY, 'Start %s' % (labels['label_deployments_app_singular'])),
+        (STARTDEPLOYMENT, 'Start %s' % (labels['label_deployments_app_singular'])),
         (REMOVEFROMDEPLOYMENT, '%s Ended' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTTOSEA, '%s to Field' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTTOFIELD, '%s to Field' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTUPDATE, '%s Update' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTRECOVER, '%s Recovered' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTRETIRE, '%s Retired' % (labels['label_deployments_app_singular'])),

@@ -73,8 +73,8 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         build.is_deployed = True
         build.save()
 
-        # Get the date for the Action Record from the custom form field
-        action_date = form.cleaned_data['date']
+        # Get the date for the Action Record from the dae field
+        action_date = form.cleaned_data['deployment_start_date']
         action_detail = '%s created' % (labels['label_deployments_app_singular'])
         action_record = DeploymentAction.objects.create(action_type='startdeployment', detail=action_detail, location=self.object.location,
                                                         user=self.request.user, deployment=self.object, created_at=action_date)
@@ -90,7 +90,7 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
             item.location = build.location
             item.save()
             item.create_action_record(self.request.user, 'startdeployment', '', None, None, 'build_deployment')
-            
+
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
@@ -140,7 +140,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
     def get_form_class(self):
         ACTION_FORMS = {
             "deploymentburnin" : DeploymentActionBurninForm,
-            "deploymenttosea" : DeploymentActionDeployForm,
+            "deploymenttofield" : DeploymentActionDeployForm,
             "deploymentrecover" : DeploymentActionRecoverForm,
             "deploymentretire" : DeploymentActionRetireForm,
             "deploymentdetails" : DeploymentActionDetailsForm,
@@ -153,30 +153,27 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
     def form_valid(self, form):
 
         action_type = self.kwargs['action_type']
-
+        action_date = form.cleaned_data['date']
         # Set Detail and action_type variables
         if action_type == 'deploymentburnin':
             self.object.detail = '%s Burn In initiated at %s. ' % (self.object.deployment_number, self.object.location)
-
-        if action_type == 'deploymenttosea':
+            self.object.deployment_burnin_date = action_date
+        if action_type == 'deploymenttofield':
             self.object.detail = '%s Deployed to Field: %s. ' % (self.object.deployment_number, self.object.location)
-
+            self.object.deployment_to_field_date = action_date
         if action_type == 'deploymentrecover':
             self.object.detail = '%s Recovered to: %s. ' % (self.object.deployment_number, self.object.location)
-
+            self.object.deployment_recovery_date = action_date
         if action_type == 'deploymentretire':
             self.object.detail = '%s Ended.' % (self.object.deployment_number)
-
+            self.object.deployment_retire_date = action_date
         if action_type == 'deploymentdetails':
             self.object.detail = '%s Details set.' % (self.object.deployment_number)
 
         self.object = form.save()
 
-        # Get the date for the Action Record from the custom form field
-        action_date = form.cleaned_data['date']
-
         # If Deploying to Sea or Updating deployment, set Depth, Lat/Long
-        if action_type == 'deploymenttosea' or action_type == 'deploymentdetails':
+        if action_type == 'deploymenttofield' or action_type == 'deploymentdetails':
             latitude = form.cleaned_data['latitude']
             longitude = form.cleaned_data['longitude']
             depth = form.cleaned_data['depth']
@@ -186,8 +183,11 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             depth = None
 
         # If Deploying to Sea, update Location and add Details Action record
-        if action_type == 'deploymenttosea':
+        if action_type == 'deploymenttofield':
             self.object.deployed_location = self.object.location
+            self.object.latitude = latitude
+            self.object.longitude = longitude
+            self.object.depth = depth
             self.object.save()
 
             details = 'Details set. <br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
@@ -205,6 +205,9 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         if action_type == 'deploymentdetails':
             self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
             self.object.deployed_location = self.object.location
+            self.object.latitude = latitude
+            self.object.longitude = longitude
+            self.object.depth = depth
             self.object.save()
 
         action_record = DeploymentAction.objects.create(action_type=action_type,
@@ -231,7 +234,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         build.save()
 
         # Create Build Action record for deployment
-        if action_type == 'deploymenttosea':
+        if action_type == 'deploymenttofield':
             self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
 
         build_record = BuildAction.objects.create(action_type=action_type,
@@ -271,7 +274,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         cruise = None
         deployment_type = 'build_deployment'
 
-        if action_type == 'deploymenttosea':
+        if action_type == 'deploymenttofield':
             cruise = self.object.cruise_deployed
         elif action_type == 'deploymentrecover':
             cruise = self.object.cruise_recovered
