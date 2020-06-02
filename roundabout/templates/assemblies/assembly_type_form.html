@@ -27,7 +27,7 @@
 {% block content %}
 <div class="container">
   <h1>{% if assembly_type.name %}Edit {{ assembly_type.name }}{% else %}Add {{ label_assemblies_app_singular}} Type {% endif %}</h1>
-  <form class="form-horizontal" method="post" action="" id="printer-form">
+  <form class="form-horizontal" method="post" action="" id="assembly-type-form" novalidate>
     {% csrf_token %}
     {{ form|crispy }}
 

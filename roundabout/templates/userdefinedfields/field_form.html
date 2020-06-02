@@ -27,7 +27,7 @@
 {% block content %}
 <div class="container">
   <h1>{% if field.field_name %}Edit {{ field.field_name }}{% else %}Add Field {% endif %}</h1>
-  <form class="form-horizontal" method="post" action="" id="udf-form">
+  <form class="form-horizontal" method="post" action="" id="udf-form" novalidate>
     {% csrf_token %}
     {{ form|crispy }}
     {{ form.media }}

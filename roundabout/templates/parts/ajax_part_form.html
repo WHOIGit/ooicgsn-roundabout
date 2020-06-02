@@ -38,7 +38,7 @@
       <form class="form-horizontal parts ajax-form" method="post" action=""
             data-url='{{ request.build_absolute_uri|safe }}'
             data-partnumber-url='{% url 'parts:ajax_validate_part_number' %}'
-            id="parts-form">
+            id="parts-form" novalidate>
         {% csrf_token %}
 
         {{ form|crispy }}

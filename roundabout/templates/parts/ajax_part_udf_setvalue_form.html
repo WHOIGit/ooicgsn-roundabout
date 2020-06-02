@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -39,7 +39,7 @@
               <form class="form-horizontal parts ajax-form" method="post" action=""
                     data-url='{{ request.build_absolute_uri|safe }}'
                     data-partnumber-url='{% url 'parts:ajax_validate_part_number' %}'
-                    id="parts-form">
+                    id="parts-form" novalidate>
                 {% csrf_token %}
 
                 {{ form|crispy }}
