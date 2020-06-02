@@ -591,16 +591,29 @@
                                                                 </div>
                                                                 <div class="collapse show mt-1" id="coeff-{{ value_set.coefficient_name }}{{ event.id }}">
                                                                     <p class='font-weight-light'><b>Notes:</b> {{ value_set.notes }}</p>
-                                                                    <table class="table table-tight">
+                                                                    <table id = 'coeff-val-table' class="table table-tight">
                                                                         <thead>
                                                                             <th>Value(s)</th>
                                                                         </thead>
-                                                                        <tbody style = 'display:block; overflow: auto; max-height: 200px'>
-                                                                            {% for val in value_set.coefficient_values.all %}
-                                                                                <tr style = 'display: block;'>
-                                                                                    <td>{{ val }}</td>
-                                                                                </tr>
-                                                                            {% endfor %}
+                                                                        <tbody class = 'coeff-tbody' id = 'coeff-val-tbody' style = 'display:block; overflow: auto; max-height: 200px'>
+                                                                            {% if value_set.coefficient_name.value_set_type == "2d" %}
+                                                                                {% regroup value_set.coefficient_values.all by row as row_sets %}
+                                                                                {% for row in row_sets %}
+                                                                                    <tr style = 'display: block;'>
+                                                                                        {% for val in value_set.coefficient_values.all %}
+                                                                                            {% if val.row == row.grouper %}
+                                                                                                <td>{{ val}}</td>
+                                                                                            {% endif %}
+                                                                                        {% endfor %}
+                                                                                    </tr>
+                                                                                {% endfor %}
+                                                                            {% else %}
+                                                                                {% for val in value_set.coefficient_values.all %}
+                                                                                    <tr style = 'display: block;'>
+                                                                                        <td>{{ val }}</td>
+                                                                                    </tr>
+                                                                                {% endfor %}
+                                                                            {% endif %}
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
@@ -675,19 +688,31 @@
 
         });
 
-    });
+        // Toggle display of Calibration History sections
+        var inv_part_type = '{{inventory_item.part.part_type}}';
+        if (inv_part_type == 'Instrument') {
+            $('#add_coefficient_action').show();
+            $('#calibration-template-tab').show();
+            $('#calibration-template').show();
+        } else {
+            $('#add_coefficient_action').hide();
+            $('#calibration-template-tab').hide();
+            $('#calibration-template').hide();
+        }
 
-    // Toggle display of Calibration History sections
-    var inv_part_type = '{{inventory_item.part.part_type}}';
-    if (inv_part_type == 'Instrument') {
-        $('#add_coefficient_action').show();
-        $('#calibration-template-tab').show();
-        $('#calibration-template').show();
-    } else {
-        $('#add_coefficient_action').hide();
-        $('#calibration-template-tab').hide();
-        $('#calibration-template').hide();
-    }
+        setCoeffTableWidth();
+        $( window ).bind( "resize", setCoeffTableWidth ); 
+
+        // Auto-resize CoefficientValue tables for horizontal scrolling
+        function setCoeffTableWidth() {
+            let invTabWidth =  $('#inventory-tabs').width()
+            let tBodyWidth = invTabWidth - (invTabWidth * .1)
+            $('.coeff-tbody').each(function() {
+                $(this).css('max-width', tBodyWidth + 'px' );
+            })
+        }
+
+    });
 
 </script>
 {% endblock javascript %}

@@ -22,7 +22,8 @@ class CalibrationEvent(models.Model):
         (True, "Approved"),
         (False, "Draft"),
     )
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     calibration_date = models.DateTimeField(default=timezone.now)
     user_draft = models.ForeignKey(User, related_name='calibration_events_drafter', on_delete=models.SET_NULL, null=True, blank=False)
     user_approver = models.ForeignKey(User, related_name='calibration_events_approver', on_delete=models.SET_NULL, null=True, blank=False)
@@ -81,5 +82,6 @@ class CoefficientValue(models.Model):
     original_value = models.CharField(max_length = 21, unique = False, db_index = False, null=True)
     notation_format = models.CharField(max_length=3, choices=NOTATION_FORMAT, null=False, blank=False, default="std")
     sigfig = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(20)], null=False, blank=True, default=3)
+    row = models.IntegerField(null=False, blank=True, default=0)
     created_at = models.DateTimeField(default=timezone.now)
     coeff_value_set = models.ForeignKey(CoefficientValueSet, related_name='coefficient_values', on_delete=models.CASCADE, null=True)

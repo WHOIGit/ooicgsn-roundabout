@@ -246,7 +246,7 @@ def find_sigfigs(val):
 
 
 # Generate array of Coefficient Value instances to bulk upload into the DB
-def parse_coeff_1d_array(coeff_1d_array, value_set_instance):
+def parse_coeff_1d_array(coeff_1d_array, value_set_instance, row_index = 0):
     coeff_batch = []
     for idx, val in enumerate(coeff_1d_array):
         val = val.strip()
@@ -257,7 +257,8 @@ def parse_coeff_1d_array(coeff_1d_array, value_set_instance):
             value = val,
             original_value = val,
             notation_format = notation,
-            sigfig = sigfig
+            sigfig = sigfig,
+            row = row_index
         )
         coeff_batch.append(coeff_val_obj)
 
@@ -274,14 +275,13 @@ def parse_valid_coeff_vals(value_set_instance):
     if set_type  == 'sl' or set_type  == '1d':
         coeff_1d_array = value_set_instance.value_set.split(',')
         coeff_batch = parse_coeff_1d_array(coeff_1d_array, value_set_instance)
+        CoefficientValue.objects.bulk_create(coeff_batch)
     elif set_type == '2d':
         val_array = []
         coeff_2d_array = value_set_instance.value_set.splitlines()
         for val_set_index, val_set in enumerate(coeff_2d_array):
             coeff_1d_array = val_set.split(',')
-            for val_index, val in enumerate(coeff_1d_array):
-                val_array.append(val)
-        coeff_batch = parse_coeff_1d_array(val_array, value_set_instance)
-    CoefficientValue.objects.bulk_create(coeff_batch)
+            parsed_batch = parse_coeff_1d_array(coeff_1d_array, value_set_instance, val_set_index)
+            CoefficientValue.objects.bulk_create(parsed_batch)
     return value_set_instance
 
