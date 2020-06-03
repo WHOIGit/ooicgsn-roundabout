@@ -602,7 +602,7 @@
                                                                                     <tr style = 'display: block;'>
                                                                                         {% for val in value_set.coefficient_values.all %}
                                                                                             {% if val.row == row.grouper %}
-                                                                                                <td>{{ val}}</td>
+                                                                                                <td style = 'white-space: nowrap'>{{ val }}</td>
                                                                                             {% endif %}
                                                                                         {% endfor %}
                                                                                     </tr>
@@ -610,7 +610,7 @@
                                                                             {% else %}
                                                                                 {% for val in value_set.coefficient_values.all %}
                                                                                     <tr style = 'display: block;'>
-                                                                                        <td>{{ val }}</td>
+                                                                                        <td style = 'white-space: nowrap'>{{ val }}</td>
                                                                                     </tr>
                                                                                 {% endfor %}
                                                                             {% endif %}

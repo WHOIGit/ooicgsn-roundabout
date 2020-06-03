@@ -74,10 +74,11 @@ class CoefficientValueSetForm(forms.ModelForm):
 
     def save(self, commit = True): 
         value_set = super(CoefficientValueSetForm, self).save(commit = False)
-        if commit:
-            value_set.save()
-            parse_valid_coeff_vals(value_set)
-        return value_set
+        if self.has_changed():
+            if commit:
+                value_set.save()
+                parse_valid_coeff_vals(value_set)
+                return value_set
 
 
 # CalibrationName Form
@@ -125,14 +126,15 @@ class CoefficientValueForm(forms.ModelForm):
 
     def save(self, commit = True): 
         coeff_val_inst = super(CoefficientValueForm, self).save(commit = False)
-        if commit:
-            coeff_val_inst.value = round(
-                coeff_val_inst.original_value, 
-                sigfigs = coeff_val_inst.sigfig, 
-                notation = coeff_val_inst.notation_format
-            )
-            coeff_val_inst.save()
-        return coeff_val_inst
+        if self.has_changed():
+            if commit:
+                coeff_val_inst.value = round(
+                    coeff_val_inst.original_value, 
+                    sigfigs = coeff_val_inst.sigfig, 
+                    notation = coeff_val_inst.notation_format
+                )
+                coeff_val_inst.save()
+                return coeff_val_inst
 
 # Coefficient ValueSet form instance generator for CalibrationEvents
 EventValueSetFormset = inlineformset_factory(
@@ -156,14 +158,16 @@ ValueSetValueFormset = inlineformset_factory(
 
 # Validator for 1-D, comma-separated Coefficient value arrays
 def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
+    error_row_index = val_set_index + 1
     for idx, val in enumerate(coeff_1d_array):
         val = val.strip()
+        error_col_index = idx + 1
         try:
             rounded_coeff_val = round(val)
         except:
             raise ValidationError(
                 _('Row: %(row)s, Column: %(column)s, %(value)s is an invalid Number. Please enter a valid Number (Digits + 1 optional decimal point).'),
-                params={'row': val_set_index, 'value': val, 'column': idx},
+                params={'row': error_row_index, 'value': val, 'column': error_col_index},
             )
         else:
             coeff_dec_places = rounded_coeff_val[::-1].find('.')
@@ -172,7 +176,7 @@ def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
             except:
                 raise ValidationError(
                     _('Row: %(row)s, Column: %(column)s, %(value)s Exceeded Instrument %(dec_places)s-digit decimal place maximum.'),
-                    params={'row': val_set_index, 'dec_places': valset_inst.cal_dec_places, 'value': val, 'column': idx},
+                    params={'row': error_row_index, 'dec_places': valset_inst.cal_dec_places, 'value': val, 'column': error_col_index},
                 )
             else:
                 try:
@@ -180,7 +184,7 @@ def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
                 except:
                     raise ValidationError(
                         _('Row: %(row)s, Column: %(column)s, %(value)s Exceeded 20-digit max length'),
-                        params={'row': val_set_index, 'column': idx, 'value': val},
+                        params={'row': error_row_index, 'column': error_col_index, 'value': val},
                     )
                 else:
                     continue

@@ -57,7 +57,10 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         form.instance.user_draft = self.request.user
         self.object = form.save()
         event_valueset_form.instance = self.object
-        event_valueset_form.save()
+        event_valueset_form.save(commit=False)
+        for val in event_valueset_form:
+            if val.has_changed():
+                val.save()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -136,7 +139,10 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         form.instance.user_draft = self.request.user
         self.object = form.save()
         event_valueset_form.instance = self.object
-        event_valueset_form.save()
+        event_valueset_form.save(commit=False)
+        for val in event_valueset_form:
+            if val.has_changed():
+                val.save()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -238,7 +244,10 @@ class ValueSetValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
 
     def form_valid(self, valueset_value_form):
         valueset_value_form.instance = self.object
-        valueset_value_form.save()
+        valueset_value_form.save(commit=False)
+        for val in valueset_value_form:
+            if val.has_changed():
+                val.save()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
