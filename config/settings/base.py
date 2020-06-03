@@ -362,3 +362,6 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
+
+# Allow for larger CoefficientValue formset handling
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
