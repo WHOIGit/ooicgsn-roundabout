@@ -32,24 +32,7 @@
     {{ form|crispy }}
     {{ form.media }}
 
-    <div class="row">
-        {% if form.errors %}
-            {% for field in form %}
-                {% for error in field.errors %}
-                    <div class="alert alert-danger">
-                        <strong>{{ error|escape }}</strong>
-                    </div>
-                {% endfor %}
-            {% endfor %}
-            {% for error in form.non_field_errors %}
-                <div class="alert alert-danger">
-                    <strong>{{ error|escape }}</strong>
-                </div>
-            {% endfor %}
-        {% endif %}
 
-
-    </div>
 
     <div class="control-group">
       <div class="controls">
@@ -59,9 +42,7 @@
         <button type="submit" class="btn btn-primary">Add Field</button>
         {% endif %}
 
-        <input class="btn btn-light"
-               type="button" value="Cancel"
-               onclick="window.history.go(-1);"/>
+        <a class="btn btn-light btn-cancel" href="{% url 'userdefinedfields:fields_home' %}"/>Cancel</a>
       </div>
     </div>
   </form>

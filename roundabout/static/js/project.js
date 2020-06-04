@@ -40,8 +40,10 @@ window.onpopstate = function (event) {
             $(navTree).jstree(true).select_node(event.state.navTreeNodeID);
           }
       });
+  } else {
+      // Not an AJAX generated event, clear the HTML in #detail-view
+      $("#detail-view").html('');
   }
-  console.log(event.state);
 };
 
 /* AJAX navtree functions - Global */
@@ -153,7 +155,6 @@ $(document).ready(function() {
     // AJAX functions for Add Button
     $('#content-block').on('click','.parts-add-btn a', function(){
         var url = $(this).attr("data-create-url");
-        console.log(url);
 
         $.ajax({
             url: url,
