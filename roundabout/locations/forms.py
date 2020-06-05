@@ -20,6 +20,7 @@
 """
 
 from django import forms
+from django.core.exceptions import ValidationError
 from django.forms.models import inlineformset_factory
 from django.contrib.sites.models import Site
 from mptt.forms import TreeNodeChoiceField
@@ -36,6 +37,16 @@ class LocationForm(forms.ModelForm):
         labels = {
         'location_id': 'Location ID'
     }
+
+    def clean_parent(self):
+        if self.instance:
+            print(self.instance)
+            parent = self.cleaned_data['parent']
+            print(parent)
+
+        if self.instance == parent:
+            raise ValidationError('Location Parent cannot be self')
+        return parent
 
 """
 Custom Deletion form for Locations
