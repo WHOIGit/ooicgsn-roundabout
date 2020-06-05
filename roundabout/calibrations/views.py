@@ -3,10 +3,11 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import CreateView, UpdateView, DeleteView
 from .models import CoefficientName, CalibrationEvent, CoefficientValueSet
-from .forms import CalibrationEventForm, EventValueSetFormset, CoefficientValueForm, CoefficientValueSetForm, ValueSetValueFormset
+from .forms import CalibrationEventForm, EventValueSetFormset, CoefficientValueForm, CoefficientValueSetForm, ValueSetValueFormset, CoefficientNameForm, PartCalNameFormset
 from common.util.mixins import AjaxFormMixin
 from django.urls import reverse, reverse_lazy
 from roundabout.parts.models import Part
+from roundabout.parts.forms import PartForm
 from roundabout.users.models import User
 from roundabout.inventory.models import Inventory
 from django.core import validators
@@ -222,7 +223,8 @@ class ValueSetValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         valueset_value_form = ValueSetValueFormset(
-            instance=self.object
+            instance=self.object,
+            form_kwargs={'valset_id': self.object.id}
         )
         return self.render_to_response(
             self.get_context_data(
@@ -236,7 +238,8 @@ class ValueSetValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         form = self.get_form(form_class)
         valueset_value_form = ValueSetValueFormset(
             self.request.POST, 
-            instance=self.object
+            instance=self.object,
+            form_kwargs={'valset_id': self.object.id}
         )
         if (valueset_value_form.is_valid()):
             return self.form_valid(valueset_value_form)
@@ -244,10 +247,7 @@ class ValueSetValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
 
     def form_valid(self, valueset_value_form):
         valueset_value_form.instance = self.object
-        valueset_value_form.save(commit=False)
-        for val in valueset_value_form:
-            if val.has_changed():
-                val.save()
+        valueset_value_form.save()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -280,3 +280,74 @@ class ValueSetValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
 
     def get_success_url(self):
         return reverse('inventory:ajax_inventory_detail', args=(self.object.calibration_event.inventory.id, ))
+
+
+# Handles creation of Calibration Names for Parts
+class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, CreateView):
+    model = Part
+    form_class = PartForm
+    context_object_name = 'part_template'
+    template_name='calibrations/part_calname_form.html'
+    permission_required = 'calibrations.add_coefficient_names'
+    redirect_field_name = 'home'
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        part_calname_form = PartCalNameFormset(
+            instance=self.object
+        )
+        return self.render_to_response(
+            self.get_context_data(
+                part_calname_form=part_calname_form
+            )
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        part_calname_form = PartCalNameFormset(
+            self.request.POST, 
+            instance=self.object
+        )
+        if (part_calname_form.is_valid()):
+            return self.form_valid(part_calname_form)
+        return self.form_invalid(part_calname_form)
+
+    def form_valid(self, part_calname_form):
+        part_calname_form.instance = self.object
+        part_calname_form.save()
+        response = HttpResponseRedirect(self.get_success_url())
+        if self.request.is_ajax():
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def form_invalid(self, part_calname_form):
+        if self.request.is_ajax():
+            if part_calname_form.errors:
+                print('partcalnameupdate errors')
+                data = part_calname_form.errors
+                return JsonResponse(
+                    data, 
+                    status=400,
+                    safe=False
+                )
+        else:
+            return self.render_to_response(
+                self.get_context_data(
+                    part_calname_form=part_calname_form, 
+                    form_errors=form_errors
+                )
+            )
+
+    def get_success_url(self):
+        return reverse('parts:ajax_parts_detail', args=(self.object.id, ))

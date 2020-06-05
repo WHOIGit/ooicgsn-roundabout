@@ -110,31 +110,45 @@ class CoefficientNameForm(forms.ModelForm):
 class CoefficientValueForm(forms.ModelForm):
     class Meta:
         model = CoefficientValue
-        fields = ['value','sigfig', 'notation_format']
+        fields = ['value','sigfig', 'notation_format', 'original_value']
         labels = {
-            'value': 'Coefficient Value',
+            'original_value': 'Coefficient Value',
             'sigfig': 'Significant Digits',
             'notation_format': 'Notation Format'
         }
         widgets = {
-            'value': forms.TextInput(
+            'original_value': forms.TextInput(
                 attrs = {
                     'readonly': True
                 }
             )
         }
 
+    def __init__(self, *args, **kwargs):
+        if 'valset_id' in kwargs:
+            self.valset_id = kwargs.pop('valset_id')
+        super(CoefficientValueForm, self).__init__(*args, **kwargs)
+        if hasattr(self, 'valset_id'):
+            valset_inst = CoefficientValueSet.objects.get(id = self.valset_id)
+            self.instance.part_dec_places = valset_inst.calibration_event.inventory.part.cal_dec_places
+
+    def clean_value(self):
+        val = self.cleaned_data.get('value')
+        return val
+
+    def clean_original_value(self):
+        orig_val = self.cleaned_data.get('original_value')
+        return orig_val
+
     def save(self, commit = True): 
         coeff_val_inst = super(CoefficientValueForm, self).save(commit = False)
-        if self.has_changed():
-            if commit:
-                coeff_val_inst.value = round(
-                    coeff_val_inst.original_value, 
-                    sigfigs = coeff_val_inst.sigfig, 
-                    notation = coeff_val_inst.notation_format
-                )
-                coeff_val_inst.save()
-                return coeff_val_inst
+        coeff_val_inst.value = round(
+            coeff_val_inst.original_value, 
+            sigfigs = coeff_val_inst.sigfig, 
+            notation = coeff_val_inst.notation_format
+        )
+        coeff_val_inst.save()
+        return coeff_val_inst
 
 # Coefficient ValueSet form instance generator for CalibrationEvents
 EventValueSetFormset = inlineformset_factory(
@@ -146,12 +160,22 @@ EventValueSetFormset = inlineformset_factory(
     can_delete=True
 )
 
+# Coefficient Name form instance generator for Parts
+PartCalNameFormset = inlineformset_factory(
+    Part, 
+    CoefficientName, 
+    form=CoefficientNameForm, 
+    fields=('calibration_name', 'value_set_type', 'sigfig_override'), 
+    extra=1, 
+    can_delete=True
+)
+
 # Coefficient Value form instance generator for CoefficientValueSets
 ValueSetValueFormset = inlineformset_factory(
     CoefficientValueSet, 
     CoefficientValue, 
     form=CoefficientValueForm,
-    fields=('value', 'sigfig', 'notation_format'), 
+    fields=('original_value', 'sigfig', 'notation_format'), 
     extra=0, 
     can_delete=True
 )

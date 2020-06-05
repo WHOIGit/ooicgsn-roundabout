@@ -66,7 +66,6 @@ RevisionFormset = inlineformset_factory(Part, Revision, fields=('revision_code',
         'note': SummernoteWidget(),
     }, extra=1, can_delete=False)
 DocumentationFormset = inlineformset_factory(Revision, Documentation, fields=('name', 'doc_type', 'doc_link'), extra=1, can_delete=True)
-CalibrationFormset = inlineformset_factory(Part, CoefficientName, form=CoefficientNameForm, fields=('calibration_name', 'value_set_type', 'sigfig_override'), extra=1, can_delete=True)
 
 
 class RevisionForm(forms.ModelForm):

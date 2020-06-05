@@ -24,10 +24,10 @@
 {% load crispy_forms_tags %}
 
 <div class="card-header">
-    {% if valueset_template.id %}
-        <h3>Update Coefficients</h3>
+    {% if part_template.id %}
+        <h3>Update Calibration(s)</h3>
     {% else %}
-        <h3>Add Coefficients</h3>
+        <h3>Add Calibration(s)</h3>
     {% endif %}
 </div>
 
@@ -41,51 +41,51 @@
     <form   class="form-horizontal ajax-form" 
             method="post" 
             action="" 
-            id="coefficient_value-action-form"
+            id="calibration_name-action-form"
             enctype="multipart/form-data" 
             data-url='{{ request.build_absolute_uri|safe }}'
     >
         {% csrf_token %}
 
         <div class="col-md-12">
-            <h5 id = '__all__'>Coefficient Values</h5>
+            <h5 id = '__all__'>Calibration(s)</h5>
             <table class="table table-tight calibration-form" style = 'display:block; overflow: auto; max-height: 100vh'>
               <thead>
-                  <th>Value</th>
-                  <th>Significant Figures</th>
-                  <th>Notation Format</th>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Significant Figures/th>
               </thead>
               <tbody>
-                {{ valueset_value_form.management_form }}
-                {% for val in valueset_value_form %}
-                    <tr>
-                        <td>{% if val.id  %}{{ val.DELETE }}{% endif %} {{ val.id }} {{ val.original_value }}</td>
-                        <td>{% if val.id  %}{{ val.DELETE }}{% endif %} {{ val.id }} {{ val.sigfig }}</td>
-                        <td>{% if val.id  %}{{ val.DELETE }}{% endif %} {{ val.id }} {{ val.notation_format }}</td>
-                    </tr>
-                {% endfor %}
+                {{ part_calname_form.management_form }}
+                {% for cal in part_calname_form %}
+                  <tr>
+                      <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.calibration_name }}</td>
+                      <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.value_set_type }}</td>
+                      <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.sigfig_override }}</td>
+                  </tr>
+              {% endfor %}
               </tbody>
             </table>
           </div>
 
         <div class="control-group">
             <div class="controls">
-                {% if valueset_template.id %}
+                {% if part_template.id %}
                     {% if action_type == 'movetotrash' %}
                         <button type="submit" class="btn btn-danger">Confirm Move to Trash</button>
                     {% else %}
-                        <button type="submit" class="btn btn-primary">Update Coefficient Values</button>
+                        <button type="submit" class="btn btn-primary">Update Calibration(s)</button>
                     {% endif %}
                 {% else %}
-                    <button type="submit" class="btn btn-primary">Add Coefficient Values</button>
+                    <button type="submit" class="btn btn-primary">Add Calibration(s)</button>
                 {% endif %}
 
-                {% if valueset_template.id %}
+                {% if part_template.id %}
                     <input  class="btn btn-light cancel-btn" 
                             type="button" 
                             value="Cancel"
-                            data-detail-url="{% url 'inventory:ajax_inventory_detail' valueset_template.calibration_event.inventory.id %}"
-                            data-node-id="{{ valueset_template.id }}" 
+                            data-detail-url="{% url 'parts:ajax_parts_detail' part_template.id %}"
+                            data-node-id="{{ part_template.id }}" 
                     />
                 {% endif %}
             </div>
@@ -101,8 +101,8 @@
             
             // Handles CoefficientValueSet form instance generation
             $('.calibration-form tbody tr').formset({
-                prefix: 'coefficient_value_sets',
-                addText: 'Add Coefficient',
+                prefix: 'coefficient_names',
+                addText: 'Add Calibration',
                 deleteText: 'Remove',
                 added: function(row) {
 

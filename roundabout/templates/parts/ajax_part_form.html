@@ -142,43 +142,6 @@
                 </div>
         {% endif %}
 
-        <div id = 'calibrations-section' class="col-md-12">
-          <h5>Calibrations</h5>
-          <table class="table table-tight calibration-form">
-            <thead>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Significant Figures</th>
-            </thead>
-            <tbody>
-                {{ calibration_form.management_form }}
-
-                {% if calibration_form.errors %}
-                  <tr>
-                      <div class="alert alert-danger">
-                        {% for dict in calibration_form.errors %}
-
-                          {% for error in dict.values %}
-                            {{ error|escape }}
-                          {% endfor %}
-
-                        {% endfor %}
-                      </div>
-                  </tr>
-                {% endif %}
-
-              {% for cal in calibration_form %}
-
-                <tr>
-                    <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.calibration_name }}</td>
-                    <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.value_set_type }}</td>
-                    <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.sigfig_override }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-
         <div class="control-group">
           <div class="controls">
             {% if part_template.id %}
@@ -216,11 +179,6 @@ $(document).ready(function() {
         addText: 'add document',
         deleteText: 'remove',
     });
-    $('.calibration-form tbody tr').formset({
-        prefix: 'coefficient_names',
-        addText: 'add calibration',
-        deleteText: 'remove',
-    });
 
     // AJAX functions for form
 
@@ -251,20 +209,16 @@ $(document).ready(function() {
 
     const part_type = '{{part_template.part_type}}'
     if (part_type == 'Instrument') {
-      $('#calibrations-section').show();
       $('#div_id_cal_dec_places').show();
     } else {
-        $('#calibrations-section').hide();
         $('#div_id_cal_dec_places').hide();
     }
 
     $('#id_part_type').change(function() {
         let part_id = $(this).val();
         if (part_id == 3) {
-            $('#calibrations-section').show();
             $('#div_id_cal_dec_places').show();
         } else {
-            $('#calibrations-section').hide();
             $('#div_id_cal_dec_places').hide();
         }
     })
