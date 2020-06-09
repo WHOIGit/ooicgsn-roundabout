@@ -119,7 +119,8 @@ class CoefficientValueForm(forms.ModelForm):
         widgets = {
             'original_value': forms.TextInput(
                 attrs = {
-                    'readonly': True
+                    'readonly': True,
+                    'style': 'cursor: not-allowed; background-color: #d5dfed;'
                 }
             )
         }

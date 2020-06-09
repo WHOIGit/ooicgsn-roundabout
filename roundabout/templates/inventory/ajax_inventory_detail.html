@@ -586,7 +586,7 @@
                                                                         data-detail-url="{% url 'calibrations:valueset_value_update' value_set.id %}"
                                                                         data-node-id="{{ event.id }}"
                                                                         data-node-type="detail">
-                                                                            Edit Coefficient Display
+                                                                            Edit Coefficient Values
                                                                     </a>
                                                                 </div>
                                                                 <div class="collapse show mt-1" id="coeff-{{ value_set.coefficient_name }}{{ event.id }}">
@@ -602,7 +602,9 @@
                                                                                     <tr style = 'display: block;'>
                                                                                         {% for val in value_set.coefficient_values.all %}
                                                                                             {% if val.row == row.grouper %}
-                                                                                                <td style = 'white-space: nowrap'>{{ val }}</td>
+                                                                                                <td style = 'white-space: nowrap'>
+                                                                                                    <div style = 'width: 100px; text-align: center;'>{{ val }}</div>
+                                                                                                </td>
                                                                                             {% endif %}
                                                                                         {% endfor %}
                                                                                     </tr>

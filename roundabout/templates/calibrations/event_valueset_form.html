@@ -62,7 +62,7 @@
                 {% for value_set in event_valueset_form %}
                     <tr>
                         <td>{% if value_set.id  %}{{ value_set.DELETE }}{% endif %} {{ value_set.id }} {{ value_set.coefficient_name }}</td>
-                        <td>{% if value_set.id  %}{{ value_set.DELETE }}{% endif %} {{ value_set.id }} {{ value_set.value_set }}</td>
+                        <td>{% if value_set.id  %}{{ value_set.DELETE }}{% endif %} {{ value_set.id }} {{ value_set.value_set }} <small class = 'form-text text-muted'>{{value_set.value_set.help_text}}</small></td>
                         <td>{% if value_set.id  %}{{ value_set.DELETE }}{% endif %} {{ value_set.id }} {{ value_set.notes }}</td>
                     </tr>
                 {% endfor %}
