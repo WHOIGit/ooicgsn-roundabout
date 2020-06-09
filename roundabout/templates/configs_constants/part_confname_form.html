@@ -25,9 +25,9 @@
 
 <div class="card-header">
     {% if part_template.id %}
-        <h3>Update Calibration(s)</h3>
+        <h3>Update Configurations/Constants</h3>
     {% else %}
-        <h3>Add Calibration(s)</h3>
+        <h3>Add Configurations/Constants</h3>
     {% endif %}
 </div>
 
@@ -41,27 +41,25 @@
     <form   class="form-horizontal ajax-form" 
             method="post" 
             action="" 
-            id="calibration_name-action-form"
+            id="conf_name-action-form"
             enctype="multipart/form-data" 
             data-url='{{ request.build_absolute_uri|safe }}'
     >
         {% csrf_token %}
 
         <div class="col-md-12">
-            <h5 id = '__all__'>Calibration(s)</h5>
-            <table class="table table-tight calibration-form" style = 'display:block; overflow: auto; max-height: 100vh'>
+            <h5 id = '__all__'>Configurations/Constants</h5>
+            <table class="table table-tight conf_name-form" style = 'display:block; overflow: auto; max-height: 100vh'>
               <thead>
                   <th>Name</th>
                   <th>Type</th>
-                  <th>Significant Figures</th>
               </thead>
               <tbody>
-                {{ part_calname_form.management_form }}
-                {% for cal in part_calname_form %}
+                {{ part_confname_form.management_form }}
+                {% for conf in part_confname_form %}
                   <tr>
-                      <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.calibration_name }}</td>
-                      <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.value_set_type }}</td>
-                      <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.sigfig_override }} <small class = 'form-text text-muted'>{{cal.sigfig_override.help_text}}</small></td>
+                      <td>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.name }}</td>
+                      <td>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.config_type }}</td>
                   </tr>
               {% endfor %}
               </tbody>
@@ -74,10 +72,10 @@
                     {% if action_type == 'movetotrash' %}
                         <button type="submit" class="btn btn-danger">Confirm Move to Trash</button>
                     {% else %}
-                        <button type="submit" class="btn btn-primary">Update Calibration(s)</button>
+                        <button type="submit" class="btn btn-primary">Update Configurations/Constant(s)</button>
                     {% endif %}
                 {% else %}
-                    <button type="submit" class="btn btn-primary">Add Calibration(s)</button>
+                    <button type="submit" class="btn btn-primary">Add Configurations/Constant(s)</button>
                 {% endif %}
 
                 {% if part_template.id %}
@@ -100,9 +98,9 @@
         $(document).ready(function() {
             
             // Handles CoefficientValueSet form instance generation
-            $('.calibration-form tbody tr').formset({
-                prefix: 'coefficient_names',
-                addText: 'Add Calibration',
+            $('.conf_name-form tbody tr').formset({
+                prefix: 'config_names',
+                addText: 'Add Configurtations/Constants',
                 deleteText: 'Remove',
                 added: function(row) {
 
