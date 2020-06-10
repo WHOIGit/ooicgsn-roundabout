@@ -163,41 +163,41 @@ class Inventory(MPTTModel):
         if not created_at:
             created_at = timezone.now()
 
-        if action_type == 'invadd':
+        if action_type == Action.INVADD:
             detail = 'Item first added to Inventory. %s' % (detail)
-        elif action_type == 'locationchange' or action_type == 'movetotrash':
+        elif action_type == Action.LOCATIONCHANGE or action_type == Action.MOVETOTRASH:
             detail = 'Moved to %s from %s. %s' % (self.location, self.get_latest_action().location, detail)
-        elif action_type == 'subchange':
+        elif action_type == Action.SUBCHANGE:
             if not detail:
                 if self.parent:
                     detail = 'Added to %s.' % (self.parent)
                 else:
                     detail = 'Removed from %s.' % (self.get_latest_parent())
-        elif action_type == 'addtobuild':
+        elif action_type == Action.ADDTOBUILD:
             detail = 'Moved to %s.' % (build)
-        elif action_type == 'removefrombuild':
+        elif action_type == Action.REMOVEFROMBUILD:
             build = self.get_latest_build()
             detail = 'Removed from %s. %s' % (build, detail)
-        elif action_type == 'assigndest':
+        elif action_type == Action.ASSIGNDEST:
             detail = 'Destination assigned - %s.' % (self.assembly_part.assembly_revision)
-        elif action_type == 'removedest':
+        elif action_type == Action.REMOVEDEST:
             detail = 'Destination Assignment removed. %s' % (detail)
-        elif action_type == 'test':
+        elif action_type == Action.TEST:
             detail = '%s: %s. %s' % (self.get_test_type_display(), self.get_test_result_display(), detail)
-        elif action_type == 'startdeployment':
+        elif action_type == Action.STARTDEPLOYMENT:
             detail = '%s %s started' % (labels['label_deployments_app_singular'], deployment)
             # Create InventoryDeployment record
             inventory_deployment = InventoryDeployment.objects.create(
                 deployment=build.current_deployment(),
                 inventory=self,
             )
-        elif action_type == 'deploymentburnin':
+        elif action_type == Action.DEPLOYMENTBURNIN:
             detail = '%s %s burn in' % (labels['label_deployments_app_singular'], deployment)
             # Update InventoryDeployment record
             inventory_deployment = self.inventory_deployments.get_active_deployment()
             inventory_deployment.deployment_burnin_date = created_at
             inventory_deployment.save()
-        elif action_type == 'deploymenttosea':
+        elif action_type == Action.DEPLOYMENTTOFIELD:
             detail = 'Deployed to field on %s.' % (deployment)
             if cruise:
                 detail = '%s Cruise: %s' % (detail, cruise)
@@ -206,7 +206,7 @@ class Inventory(MPTTModel):
             inventory_deployment.deployment_to_field_date = created_at
             inventory_deployment.cruise_deployed = cruise
             inventory_deployment.save()
-        elif action_type == 'deploymentrecover':
+        elif action_type == Action.DEPLOYMENTRECOVER:
             build = self.get_latest_build()
             deployment = self.get_latest_deployment()
             detail = 'Recovered from %s. %s' % (deployment, detail)
@@ -217,7 +217,7 @@ class Inventory(MPTTModel):
             inventory_deployment.deployment_recovery_date = created_at
             inventory_deployment.cruise_recovered = cruise
             inventory_deployment.save()
-        elif action_type == 'deploymentretire':
+        elif action_type == Action.DEPLOYMENTRETIRE:
             build = self.get_latest_build()
             deployment = self.get_latest_deployment()
             detail = '%s %s ended for this item.' % (labels['label_deployments_app_singular'], deployment)
@@ -244,12 +244,12 @@ class Inventory(MPTTModel):
     # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
     def update_time_at_sea(self):
         try:
-            action_deploy_to_sea = self.actions.filter(action_type='deploymenttosea').latest()
+            action_deploy_to_sea = self.actions.filter(action_type=Action.DEPLOYMENTTOFIELD).latest()
         except Action.DoesNotExist:
             action_deploy_to_sea = None
 
         try:
-            action_recover = self.actions.filter(action_type='deploymentrecover').latest()
+            action_recover = self.actions.filter(action_type=Action.DEPLOYMENTRECOVER).latest()
         except Action.DoesNotExist:
             action_recover = None
 
@@ -272,7 +272,7 @@ class Inventory(MPTTModel):
 
     # get the time at sea for the current Deployment only (if item is at sea)
     def current_deployment_time_at_sea(self):
-        if self.build and self.build.current_deployment() and self.build.current_deployment().current_deployment_status() == 'deploymenttosea':
+        if self.build and self.build.current_deployment() and self.build.current_deployment().current_deployment_status() == Action.DEPLOYMENTTOFIELD:
             try:
                 action_deploy_to_sea = self.actions.filter(action_type=Action.DEPLOYMENTTOFIELD).latest()
             except Action.DoesNotExist:
@@ -558,7 +558,7 @@ class Action(models.Model):
     REMOVEFROMBUILD = 'removefrombuild'
     STARTDEPLOYMENT = 'startdeployment'
     DEPLOYMENTBURNIN = 'deploymentburnin'
-    DEPLOYMENTTOFIELD = 'deploymenttosea'
+    DEPLOYMENTTOFIELD = 'deploymenttofield'
     DEPLOYMENTUPDATE = 'deploymentupdate'
     DEPLOYMENTRECOVER = 'deploymentrecover'
     DEPLOYMENTRETIRE = 'deploymentretire'

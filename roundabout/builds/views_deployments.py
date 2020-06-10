@@ -74,14 +74,14 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         build.save()
 
         # Get the date for the Action Record from the dae field
-        action_date = form.cleaned_data['deployment_start_date']
+        action_date = form.cleaned_data['date']
         action_detail = '%s created' % (labels['label_deployments_app_singular'])
         action_record = DeploymentAction.objects.create(action_type='startdeployment', detail=action_detail, location=self.object.location,
                                                         user=self.request.user, deployment=self.object, created_at=action_date)
 
         # Create Build Action record for deployment
         build_detail = '%s %s started.' % (self.object.deployment_number, labels['label_deployments_app_singular'])
-        build_record = BuildAction.objects.create(action_type='startdeploy', detail=build_detail, location=self.object.location,
+        build_record = BuildAction.objects.create(action_type='startdeployment', detail=build_detail, location=self.object.location,
                                                    user=self.request.user, build=build, created_at=action_date)
 
         # Get all Inventory items on Build, match location and add Action
