@@ -86,7 +86,7 @@
     </div>
 
     <form class="form-horizontal ajax-form" method="post" action="" id="inventory-photo-note-form" enctype="multipart/form-data"
-          data-url='{{ request.build_absolute_uri|safe }}'>
+          data-url='{{ request.build_absolute_uri|safe }}' novalidate>
       {% csrf_token %}
       {{ form|crispy }}
       {{ form.media }}

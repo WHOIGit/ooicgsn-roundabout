@@ -77,7 +77,6 @@ class LocationsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxF
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
-            print(form.cleaned_data)
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,
@@ -107,7 +106,6 @@ class LocationsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxF
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
-            print(form.cleaned_data)
             data = {
                 'message': "Successfully submitted form data.",
                 'object_id': self.object.id,

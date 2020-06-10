@@ -91,7 +91,7 @@ class InventoryTable(SearchTable):
         model = Inventory
         action_accessors = ['actions__latest__action_type', 'actions__latest__user__name', 'actions__latest__created_at', 'actions__latest__location__name', 'actions__latest__detail']
         udf_accessors = ['fieldvalues__field__field_name','fieldvalues__field_value']
-        fields = ['serial_number','part__name','location__name','revision__note']
+        fields = ['serial_number','part__name','part__part_number','location__name']
         base_shown_cols = ['serial_number', 'part__name', 'location__name']
 
     # default columns
@@ -99,7 +99,8 @@ class InventoryTable(SearchTable):
               linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('pk')]))
     part__name = Column(verbose_name='Name')
     location__name = Column(verbose_name='Location')
-    revision__note = Column(verbose_name='Notes')
+    part__part_number = Column(verbose_name='Part Number', attrs={'style':'white-space: nowrap;'},
+                   linkify=dict(viewname="parts:parts_detail", args=[tables.A('part__pk')]))
 
     def set_column_default_show(self,table_data):
         search_cols = [col for col in self.sequence if col.startswith('searchcol-')]
@@ -108,20 +109,7 @@ class InventoryTable(SearchTable):
                                                  or col.startswith('searchcol-'+UDF_Column.prefix)]
         self.column_default_show = self.Meta.base_shown_cols + search_cols
 
-    def render_part(self,record):
-        item_url = reverse("parts:parts_detail", args=[record.part.pk])
-        name = record.part.name
-        html_string = '{} <a href={}>➤</a>'
-        return format_html(html_string,name, item_url)
-    def value_part(self,record):
-        return record.part.name
-
-    def render_revision__note(self,value):
-        return mark_safe(value)
-    def value_revision__note(self,record):
-        return record.revision.note
-
-    def render_actions__latest__action_type(self,value):
+    def render_inventory_actions__latest__action_type(self,value):
         try: disp_value = [text for val,text in Action.ACT_TYPES if val==value][0]
         except IndexError: disp_value = value
         return disp_value
@@ -138,9 +126,6 @@ class PartTable(SearchTable):
     part_number = Column(verbose_name='Part Number', attrs={'style':'white-space: nowrap;'},
                    linkify=dict(viewname='parts:parts_detail',args=[tables.A('pk')]))
     part_type__name = Column(verbose_name='Type')
-
-    def render_name(self,record):
-        return record.friendly_name_display()
 
     def set_column_default_show(self,table_data):
         search_cols = [col for col in self.sequence if col.startswith('searchcol-')]

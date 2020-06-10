@@ -35,7 +35,7 @@
     <form class="form-horizontal ajax-form" method="post" action="" id="build-form"
           data-serialnumber-url="{% url 'builds:ajax_load_new_build_id_number' %}"
           data-assemblyrevision-url="{% url 'builds:ajax_load_assembly_revisions' %}"
-          data-url='{{ request.build_absolute_uri|safe }}'>
+          data-url='{{ request.build_absolute_uri|safe }}' novalidate>
       {% csrf_token %}
       {{ form|crispy }}
       {{ form.media }}
@@ -63,8 +63,16 @@
         <div class="controls">
           {% if build.id %}
               <button type="submit" class="btn btn-primary">Update {{ label_builds_app_singular }}</button>
+              <input class="btn btn-light cancel-btn"
+                 type="button" value="Cancel"
+                 data-detail-url="{% url 'builds:ajax_builds_detail' build.id %}"
+                 data-node-id="{{ build.id }}" />
           {% else %}
               <button type="submit" class="btn btn-primary">Create {{ label_builds_app_singular }}</button>
+              <input class="btn btn-light cancel-btn-noajax"
+                     type="button" value="Cancel"
+                     onclick="window.history.go(-1);"/>
+
           {% endif %}
         </div>
       </div>

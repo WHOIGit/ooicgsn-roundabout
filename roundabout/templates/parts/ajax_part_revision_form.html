@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -25,94 +25,102 @@
 {{ form.media }}
 
 
-        <div class="card-header">
-            {% if part %}
-                <h3>{{ part.name }}</h3>
-                <h4>Add New Part Revision</h4>
-            {% else %}
-                <h3>{{ revision.part.name }}</h3>
-                <h4>Edit Revision: {{ revision.revision_code }}</h4>
-            {% endif %}
-        </div>
+<div class="card-header">
+{% if part %}
+    <h3>{{ part.name }}</h3>
+    <h4>Add New Part Revision</h4>
+{% else %}
+    <h3>{{ revision.part.name }}</h3>
+    <h4>Edit Revision: {{ revision.revision_code }}</h4>
+{% endif %}
+</div>
 
-        <div class="card-body">
-            {% if part %}
-                <p><b>Current Revision Code: {{ current_revision.revision_code }}</b>
-            {% endif %}
+<div class="card-body">
+{% if part %}
+    <p><b>Current Revision Code: {{ current_revision.revision_code }}</b>
+{% endif %}
 
-              <form class="form-horizontal parts ajax-form" method="post" action=""
-                    data-url='{{ request.build_absolute_uri|safe }}'
-                    data-partnumber-url=''
-                    id="parts-form">
-                {% csrf_token %}
+  <form class="form-horizontal parts ajax-form" method="post" action=""
+        data-url='{{ request.build_absolute_uri|safe }}'
+        data-partnumber-url=''
+        id="parts-form" novalidate>
+    {% csrf_token %}
 
-                {{ form|crispy }}
+    {{ form|crispy }}
 
-                <div class="row">
-                    {% if form.errors %}
-                        {% for field in form %}
-                            {% for error in field.errors %}
-                                <div class="alert alert-danger">
-                                    <strong>{{ error|escape }}</strong>
-                                </div>
-                            {% endfor %}
-                        {% endfor %}
-                        {% for error in form.non_field_errors %}
-                            <div class="alert alert-danger">
-                                <strong>{{ error|escape }}</strong>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-
-                <div class="col-md-12">
-                  <table class="table table-tight">
-                    <thead>
-                      <th>Document</th>
-                      <th class="text-right">Document Type</th>
-                      <th class="text-right">Link</th>
-                    </thead>
-                    <tbody>
-                      {{ documentation_form.management_form }}
-
-                      {% if documentation_form.errors %}
-                      <tr>
-                        <div class="alert alert-danger">
-                        {% for dict in documentation_form.errors %}
-
-                            {% for error in dict.values %}
-                              {{ error|escape }}
-                            {% endfor %}
-
-                        {% endfor %}
-                        </div>
-                      </tr>
-                     {% endif %}
-
-                      {% for doc in documentation_form %}
-
-                        <tr>
-                            <td>{% if doc.id  %}{{ doc.DELETE }}{% endif %} {{ doc.id }} {{ doc.name }}</td>
-                            <td class="text-right">{{ doc.doc_type }}</td>
-                            <td class="text-right">{{ doc.doc_link }} </td>
-                        </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
+    <div class="row">
+        {% if form.errors %}
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <div class="alert alert-danger">
+                    <strong>{{ error|escape }}</strong>
                 </div>
-                </div>
+            {% endfor %}
+        {% endif %}
 
-                <div class="control-group">
-                  <div class="controls">
-                    {% if part %}
-                        <button type="submit" class="btn btn-primary">Add Revision</button>
-                    {% else %}
-                        <button type="submit" class="btn btn-primary">Update Revision</button>
-                    {% endif %}
-                  </div>
-                </div>
-              </form>
+    <div class="col-md-12">
+      <table class="table table-tight">
+        <thead>
+          <th>Document</th>
+          <th class="text-right">Document Type</th>
+          <th class="text-right">Link</th>
+        </thead>
+        <tbody>
+          {{ documentation_form.management_form }}
 
-          </div>
+          {% if documentation_form.errors %}
+          <tr>
+            <div class="alert alert-danger">
+            {% for dict in documentation_form.errors %}
+
+                {% for error in dict.values %}
+                  {{ error|escape }}
+                {% endfor %}
+
+            {% endfor %}
+            </div>
+          </tr>
+         {% endif %}
+
+          {% for doc in documentation_form %}
+
+            <tr>
+                <td>{% if doc.id  %}{{ doc.DELETE }}{% endif %} {{ doc.id }} {{ doc.name }}</td>
+                <td class="text-right">{{ doc.doc_type }}</td>
+                <td class="text-right">{{ doc.doc_link }} </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <div class="control-group">
+      <div class="controls">
+        {% if part %}
+            <button type="submit" class="btn btn-primary">Add Revision</button>
+            <input class="btn btn-light cancel-btn"
+               type="button" value="Cancel"
+               data-detail-url="{% url 'parts:ajax_parts_detail' part.id %}"
+               data-node-id="{{ part.id }}" />
+        {% else %}
+            <button type="submit" class="btn btn-primary">Update Revision</button>
+            <input class="btn btn-light cancel-btn"
+               type="button" value="Cancel"
+               data-detail-url="{% url 'parts:ajax_parts_detail' revision.part.id %}"
+               data-node-id="{{ revision.part.id }}" />
+        {% endif %}
+      </div>
+    </div>
+  </form>
+
+</div>
 
 
 
