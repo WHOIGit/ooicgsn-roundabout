@@ -163,7 +163,7 @@ class Inventory(MPTTModel):
         if not created_at:
             created_at = timezone.now()
 
-        if action_type == Action.INVADD:
+        if action_type == Action.ADD:
             detail = 'Item first added to Inventory. %s' % (detail)
         elif action_type == Action.LOCATIONCHANGE or action_type == Action.MOVETOTRASH:
             detail = 'Moved to %s from %s. %s' % (self.location, self.get_latest_action().location, detail)
@@ -457,7 +457,7 @@ class InventoryDeployment(DeploymentBase):
         deployment_percentage = 0
         if self.deployment_to_field_date:
             # calculate percentage of total build deployment item was deployed
-            deployment_percentage = int(self.deployment_time_in_field / self.deployment.get_deployment_time_at_sea() * 100)
+            deployment_percentage = int(self.deployment_time_in_field / self.deployment.deployment_time_in_field * 100)
             if deployment_percentage >= 99:
                 deployment_percentage = 100
             return deployment_percentage
@@ -504,13 +504,13 @@ class InventorySnapshot(MPTTModel):
 
 class Action(models.Model):
     # action_type choices
-    INVADD = 'invadd'
-    INVCHANGE = 'invchange'
+    ADD = 'add'
     LOCATIONCHANGE = 'locationchange'
     SUBCHANGE = 'subchange'
     ADDTOBUILD = 'addtobuild'
     REMOVEFROMBUILD = 'removefrombuild'
     STARTDEPLOYMENT = 'startdeployment'
+    REMOVEFROMDEPLOYMENT = 'removefromdeployment'
     DEPLOYMENTBURNIN = 'deploymentburnin'
     DEPLOYMENTTOFIELD = 'deploymenttofield'
     DEPLOYMENTUPDATE = 'deploymentupdate'
@@ -526,14 +526,15 @@ class Action(models.Model):
     FIELDCHANGE = 'fieldchange'
     FLAG = 'flag'
     MOVETOTRASH = 'movetotrash'
+    RETIREBUILD = 'retirebuild'
     ACTION_TYPES = (
-        (INVADD, 'Add Inventory'),
-        (INVCHANGE, 'Inventory Change'),
+        (ADD, 'Added to RDB'),
         (LOCATIONCHANGE, 'Location Change'),
         (SUBCHANGE, 'Sub-%s Change' % (labels['label_assemblies_app_singular'])),
         (ADDTOBUILD, 'Add to %s' % (labels['label_builds_app_singular'])),
         (REMOVEFROMBUILD, 'Remove from %s' % (labels['label_builds_app_singular'])),
         (STARTDEPLOYMENT, 'Start %s' % (labels['label_deployments_app_singular'])),
+        (REMOVEFROMDEPLOYMENT, '%s Ended' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTTOFIELD, '%s to Field' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTUPDATE, '%s Update' % (labels['label_deployments_app_singular'])),
@@ -549,6 +550,16 @@ class Action(models.Model):
         (FIELDCHANGE, 'Field Change'),
         (FLAG, 'Flag'),
         (MOVETOTRASH, 'Move to Trash'),
+        (RETIREBUILD, 'Retire Build'),
+    )
+    # object_type choices
+    BUILD = 'build'
+    INVENTORY = 'inventory'
+    DEPLOYMENT = 'deployment'
+    OBJECT_TYPES = (
+        (BUILD, 'Build'),
+        (INVENTORY, 'Inventory'),
+        (DEPLOYMENT, 'Deployment'),
     )
     # deployment_type choices
     BUILD_DEPLOYMENT = 'build_deployment'
@@ -561,7 +572,7 @@ class Action(models.Model):
     inventory = models.ForeignKey(Inventory, related_name='actions',
                                   on_delete=models.CASCADE, null=True, blank=True)
     action_type = models.CharField(max_length=20, choices=ACTION_TYPES, db_index=True)
-    object_type =  models.CharField(max_length=20, null=False, blank=True)
+    object_type =  models.CharField(max_length=20, choices=OBJECT_TYPES, null=False, blank=True, db_index=True)
     created_at = models.DateTimeField(default=timezone.now)
     detail = models.TextField(blank=True)
     user = models.ForeignKey(User, related_name='actions',

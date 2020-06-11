@@ -73,7 +73,7 @@
     <hr>
     <p>Time in Field: {{ inventory_deployment.deployment_time_in_field|time_at_sea_display }}</p>
     {% if inventory_deployment.deployment.get_deployment_time_at_sea %}
-        <p>Total Build Deployment Time in Field: {{ inventory_deployment.deployment.get_deployment_time_at_sea|time_at_sea_display }}</p>
+        <p>Total Build Deployment Time in Field: {{ inventory_deployment.deployment.deployment_time_in_field|time_at_sea_display }}</p>
     {% endif %}
 
 	    <div id="deployment-percent-{{ inventory_deployment.id }}"></div>
@@ -113,7 +113,7 @@
     var containerID = 'deployment-percent-' + {{ inventory_deployment.id }};
     var deploymentPecentage = {{ inventory_deployment.deployment_percentage_vs_build }};
     var timeInField = '{{ inventory_deployment.deployment_time_in_field|time_at_sea_display }}';
-    var deploymentTotalTime = '{{ inventory_deployment.deployment.get_deployment_time_at_sea|time_at_sea_display }}'
+    var deploymentTotalTime = '{{ inventory_deployment.deployment.deployment_time_in_field|time_at_sea_display }}'
 
     Highcharts.chart(containerID, {
         chart: {

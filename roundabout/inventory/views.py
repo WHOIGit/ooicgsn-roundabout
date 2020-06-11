@@ -464,7 +464,7 @@ class InventoryAjaxCreateBasicView(LoginRequiredMixin, AjaxFormMixin, CreateView
     def form_valid(self, form):
         self.object = form.save()
         # Create Action record
-        self.object.create_action_record(self.request.user, 'invadd')
+        self.object.create_action_record(self.request.user, Action.ADD)
         # Check if this Part has Custom fields with global default values, create fields if needed
         try:
             # Exclude any fields with Global Part Values
