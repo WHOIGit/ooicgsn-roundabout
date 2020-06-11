@@ -1293,7 +1293,7 @@ class ActionDeployInventoryAjaxFormView(LoginRequiredMixin, AjaxFormMixin, FormV
                     action.save()
             item.create_action_record(
                 self.request.user,
-                'deploymenttosea',
+                Action.DEPLOYMENTTOFIELD,
                 '',
                 created_at,
                 cruise,
@@ -1885,7 +1885,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
 
         if action_type == 'deploy':
             self.object.detail = 'Deployed to Sea: %s. ' % (self.object.final_location)
-            action_type_inventory = 'deploymenttosea'
+            action_type_inventory = Action.DEPLOYMENTTOFIELD
 
         if action_type == 'recover':
             self.object.detail = 'Recovered from Sea to %s. ' % (self.object.location)

@@ -23,12 +23,13 @@
 
 <div class="card-header" data-object-id="{{ cruise.id }}">
     <h3>Cruise ID: {{ cruise.CUID }}</h3>
-    <h5>Destination: {{ cruise.location }} </h5>
+    <h5>{{ cruise.friendly_name }} </h5>
+
 </div>
 
 <div class="card-body">
 
-
+    <p>Destination: {{ cruise.location }} </p>
     <p>Cruise Start Date: {{ cruise.cruise_start_date }}</p>
     <p>Cruise Stop Date: {{ cruise.cruise_stop_date }}</p>
     <p>Vessel: <a href="{% url 'cruises:vessels_home' %}">{{ cruise.vessel }}</a>

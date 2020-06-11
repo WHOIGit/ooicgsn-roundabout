@@ -272,7 +272,7 @@ class Inventory(MPTTModel):
 
     # get the time at sea for the current Deployment only (if item is at sea)
     def current_deployment_time_at_sea(self):
-        if self.build and self.build.current_deployment() and self.build.current_deployment().current_deployment_status() == Action.DEPLOYMENTTOFIELD:
+        if self.build and self.build.current_deployment() and self.build.current_deployment().current_status == Action.DEPLOYMENTTOFIELD:
             try:
                 action_deploy_to_sea = self.actions.filter(action_type=Action.DEPLOYMENTTOFIELD).latest()
             except Action.DoesNotExist:
@@ -299,9 +299,9 @@ class DeploymentBase(models.Model):
         (DEPLOYMENTRECOVER, '%s Recovery' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTRETIRE, '%s Retired' % (labels['label_deployments_app_singular'])),
     )
-    cruise_deployed = models.ForeignKey(Cruise, related_name='%(class)s',
+    cruise_deployed = models.ForeignKey(Cruise, related_name='%(class)ss',
                              on_delete=models.SET_NULL, null=True, blank=True)
-    cruise_recovered = models.ForeignKey(Cruise, related_name='recovered_%(class)s',
+    cruise_recovered = models.ForeignKey(Cruise, related_name='recovered_%(class)ss',
                                  on_delete=models.SET_NULL, null=True, blank=True)
     deployment_start_date = models.DateTimeField(default=timezone.now)
     deployment_burnin_date = models.DateTimeField(null=True, blank=True)
@@ -419,18 +419,6 @@ class Deployment(DeploymentBase):
             return '%s - %s' % (self.deployment_number, self.deployed_location)
         return '%s - %s' % (self.deployment_number, self.location.name)
 
-    def current_deployment_status(self):
-        deployment_action = self.deployment_actions.latest()
-        if deployment_action:
-            if deployment_action.action_type == 'deploymentdetails':
-                deployment_status = 'deploymenttosea'
-            else:
-                deployment_status = deployment_action.action_type
-        else:
-            deployment_status = 'startdeployment'
-
-        return deployment_status
-
     def get_deploytosea_details(self):
         deploytosea_details = None
         # get the latest 'Deploy' action record to initial
@@ -448,40 +436,6 @@ class Deployment(DeploymentBase):
             }
 
         return deploytosea_details
-
-    # get the time delta from Deployment start to retire
-    def get_deployment_time_total(self):
-        try:
-            action_deploy_start = DeploymentAction.objects.filter(deployment=self).filter(action_type='startdeployment').latest('created_at')
-        except DeploymentAction.DoesNotExist:
-            action_deploy_to_sea = None
-
-        try:
-            action_deploy_retire = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploymentretire').latest('created_at')
-        except DeploymentAction.DoesNotExist:
-            action_deploy_retire = None
-
-        if action_deploy_start:
-            if action_deploy_retire:
-                deployment_time_total = action_deploy_retire.created_at - action_deploy_start.created_at
-                return deployment_time_total
-            # If no recovery, item is still at sea
-            now = timezone.now()
-            time_on_deployment = now - action_deploy_start.created_at
-            return deployment_time_total
-        return timedelta(minutes=0)
-
-    # get the most recent Deploy to Sea and Recover from Sea action timestamps, find time delta for Total Time at sea
-    def get_deployment_time_at_sea(self):
-        if self.deployment_to_field_date:
-            if self.deployment_recovery_date:
-                deployment_time_at_sea = self.deployment_recovery_date - self.deployment_to_field_date
-                return deployment_time_at_sea
-            # If no recovery, item is still at sea
-            now = timezone.now()
-            deployment_time_at_sea = now - self.deployment_to_field_date
-            return deployment_time_at_sea
-        return timedelta(minutes=0)
 
 
 class InventoryDeployment(DeploymentBase):
@@ -504,7 +458,7 @@ class InventoryDeployment(DeploymentBase):
         if self.deployment_to_field_date:
             # calculate percentage of total build deployment item was deployed
             deployment_percentage = int(self.deployment_time_in_field / self.deployment.get_deployment_time_at_sea() * 100)
-            if deployment_percentage > 100:
+            if deployment_percentage >= 99:
                 deployment_percentage = 100
             return deployment_percentage
 

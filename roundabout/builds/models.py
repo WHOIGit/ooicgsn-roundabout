@@ -91,7 +91,7 @@ class Build(models.Model):
 
     def is_deployed_to_field(self):
         if self.current_deployment():
-            if self.current_deployment().current_deployment_status() == 'deploymenttosea':
+            if self.current_deployment().current_status== 'deploymenttofield':
                 return True
         return False
 
@@ -135,9 +135,9 @@ class Build(models.Model):
     def current_deployment_time_at_sea(self):
         current_deployment_time = timedelta(minutes=0)
 
-        if self.current_deployment() and self.current_deployment().current_deployment_status() == 'deploymenttosea':
+        if self.current_deployment() and self.current_deployment().current_status == 'deploymenttofield':
             try:
-                action_deploy_to_sea = BuildAction.objects.filter(build=self).filter(action_type='deploymenttosea').latest('created_at')
+                action_deploy_to_sea = BuildAction.objects.filter(build=self).filter(action_type='deploymenttofield').latest('created_at')
             except BuildAction.DoesNotExist:
                 action_deploy_to_sea = None
 
