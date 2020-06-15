@@ -15,7 +15,7 @@ from sigfig import round
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-# Handles creation of Calibration Events, Names,and Coefficients
+# Handles creation of Configuration / Constant Events, along with Name/Value formsets
 class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
     model = ConfigEvent
     form_class = ConfigEventForm
@@ -93,13 +93,13 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
     def get_success_url(self):
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ))
 
-# Handles updating of Calibration Events, Names, and Coefficients
+# Handles updating of Config / Constant forms
 class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, UpdateView):
     model = ConfigEvent
     form_class = ConfigEventForm
     context_object_name = 'event_template'
     template_name='configs_constants/config_event_value_form.html'
-    permission_required = 'configs_constants.add_config_event'
+    permission_required = 'configs_constants.add_configevent'
     redirect_field_name = 'home'
 
     def get(self, request, *args, **kwargs):
@@ -188,7 +188,7 @@ class ConfigEventValueDelete(LoginRequiredMixin, PermissionRequiredMixin, Delete
     model = ConfigEvent
     context_object_name='event_template'
     template_name = 'configs_constants/config_event_delete.html'
-    permission_required = 'configs_constants.add_config_event'
+    permission_required = 'configs_constants.add_configevent'
     redirect_field_name = 'home'
 
     def delete(self, request, *args, **kwargs):
@@ -211,7 +211,7 @@ class PartConfNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin
     form_class = PartForm
     context_object_name = 'part_template'
     template_name='configs_constants/part_confname_form.html'
-    permission_required = 'calibrations.add_coefficient_names'
+    permission_required = 'configs_constants.add_configname'
     redirect_field_name = 'home'
 
     def get(self, request, *args, **kwargs):

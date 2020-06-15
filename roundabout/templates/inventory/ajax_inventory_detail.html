@@ -655,7 +655,12 @@
                             aria-expanded="false" 
                             aria-controls="conf_event-{{ event.id }}"
                         >
-                            {{ event.configuration_date|date:"n/j/y" }} -- {{ event.deployment }} ({{ event.deployment.get_deployment_status_label }})
+                            {% if event.deployment.get_deployment_status_label == 'Deployed' %}
+                                {{ event.get_latest_deployment_date|date:"n/j/y" }}
+                            {% else %}
+                                TBD
+                            {% endif %}
+                            -- {{ event.deployment }} ({{ event.deployment.get_deployment_status_label }})
                         </a>
                         <a  data-toggle="collapse" 
                             class="collapsed text-right" 
@@ -819,20 +824,23 @@
         });
 
         // Toggle display of Calibration and Configuration Actions sections
-        var inv_part_type = '{{inventory_item.part.part_type}}';
+        var inv_part_type = '{{ inventory_item.part.part_type }}';
+        var deployment = '{{ inventory_item.build.current_deployment }}'
         if (inv_part_type == 'Instrument') {
             $('#add_coefficient_action').show();
             $('#calibration-template-tab').show().css('display', '');
             $('#calibration-template').show().css('display', '');
-
-            $('#add_conf_const_action').show();
-            $('#conf_const-template-tab').show().css('display', '');
-            $('#conf_const-template').show().css('display', '');
         } else {
             $('#add_coefficient_action').hide();
             $('#calibration-template-tab').hide();
             $('#calibration-template').hide();
+        }
 
+        if (inv_part_type == 'Instrument' && deployment != 'None' && deployment.length > 0) {
+            $('#add_conf_const_action').show();
+            $('#conf_const-template-tab').show().css('display', '');
+            $('#conf_const-template').show().css('display', '');
+        } else {
             $('#add_conf_const_action').hide();
             $('#conf_const-template-tab').hide();
             $('#conf_const-template').hide();

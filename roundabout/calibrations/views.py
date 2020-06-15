@@ -101,7 +101,7 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
     form_class = CalibrationEventForm
     context_object_name = 'event_template'
     template_name='calibrations/event_valueset_form.html'
-    permission_required = 'calibrations.add_calibration_event'
+    permission_required = 'calibrations.add_calibrationevent'
     redirect_field_name = 'home'
 
     def get(self, request, *args, **kwargs):
@@ -190,7 +190,7 @@ class EventValueSetDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteVie
     model = CalibrationEvent
     context_object_name='event_template'
     template_name = 'calibrations/event_delete.html'
-    permission_required = 'calibrations.add_calibration_event'
+    permission_required = 'calibrations.add_calibrationevent'
     redirect_field_name = 'home'
 
     def delete(self, request, *args, **kwargs):
@@ -215,7 +215,7 @@ class ValueSetValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
     form_class = CoefficientValueSetForm
     context_object_name = 'valueset_template'
     template_name='calibrations/valueset_value_form.html'
-    permission_required = 'calibrations.add_coefficient_value'
+    permission_required = 'calibrations.add_coefficientvalue'
     redirect_field_name = 'home'
 
     def get(self, request, *args, **kwargs):
@@ -288,7 +288,7 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
     form_class = PartForm
     context_object_name = 'part_template'
     template_name='calibrations/part_calname_form.html'
-    permission_required = 'calibrations.add_coefficient_names'
+    permission_required = 'calibrations.add_coefficientname'
     redirect_field_name = 'home'
 
     def get(self, request, *args, **kwargs):

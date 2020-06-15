@@ -20,21 +20,12 @@ TEST_DEPLOYMENT_DATES = (
 class ConfigEventForm(forms.ModelForm):
     class Meta:
         model = ConfigEvent 
-        fields = ['deployment','configuration_date', 'approved']
+        fields = ['deployment','approved']
         labels = {
             'deployment': 'Deployment',
-            'configuration_date': 'Deployment Date',
             'approved': 'Approved'
         }
         widgets = {
-            'configuration_date': DatePickerInput(
-                options={
-                    "format": "MM/DD/YYYY", # moment date-time format
-                    "showClose": True,
-                    "showClear": True,
-                    "showTodayButton": True,
-                }
-            ),
             'deployment': forms.Select(
                 attrs = {
                     'required': True
@@ -62,6 +53,9 @@ class ConfigValueForm(forms.ModelForm):
                 }
             )
         }
+    
+    def __init__(self, *args, **kwargs):
+        super(ConfigValueForm, self).__init__(*args, **kwargs)
 
     def clean_config_name(self):
         config_name = self.cleaned_data.get('config_name')
