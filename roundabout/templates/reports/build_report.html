@@ -121,10 +121,7 @@
           {% endfor %}
         </ul>
 
-        <input class="btn btn-light"
-               type="button" value="Cancel"
-               data-detail-url="{% url 'builds:builds_detail' build.id %}"
-               data-node-id="{{ build.id }}" />
+        <a class="btn btn-light" href="{% url 'builds:builds_detail' build.id %}"/>Cancel</a>
 
       </div>
     </div>
