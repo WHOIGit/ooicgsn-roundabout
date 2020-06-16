@@ -24,14 +24,17 @@ import datetime
 from datetime import timedelta
 
 from django.db import models
+from django.apps import apps
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils import timezone
 from django.core.validators import FileExtensionValidator
 from model_utils import FieldTracker
 
 from roundabout.locations.models import Location
+from roundabout.inventory.models import Action
 from roundabout.assemblies.models import Assembly, AssemblyRevision
 from roundabout.users.models import User
+
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
 labels = set_app_labels()
@@ -91,34 +94,20 @@ class Build(models.Model):
 
     def is_deployed_to_field(self):
         if self.current_deployment():
-            if self.current_deployment().current_status== 'deploymenttofield':
+            if self.current_deployment().current_status == Action.DEPLOYMENTTOFIELD:
                 return True
         return False
 
-    """
-    def current_deployment_status(self):
-        # set default deployment_status to None
-        deployment_status = None
 
-        # get the latest deployment if available
-        latest_deployment = self.deployments.first()
-        if latest_deployment:
-            deployment_action = latest_deployment.deployment_action.first()
-            if deployment_action.action_type != 'retire':
-                deployment_status = deployment_action.action_type
-            else:
-                deployment_status = None
-        return deployment_status
-    """
     # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
     def update_time_at_sea(self):
         try:
-            action_deploy_to_sea = BuildAction.objects.filter(build=self).filter(action_type='deploymenttosea').latest('created_at')
+            action_deploy_to_sea = self.actions.filter(object_type='build').filter(action_type=Action.DEPLOYMENTTOFIELD).latest()
         except BuildAction.DoesNotExist:
             action_deploy_to_sea = None
 
         try:
-            action_recover = BuildAction.objects.filter(build=self).filter(action_type='deploymentrecover').latest('created_at')
+            action_recover = self.actions.filter(object_type='build').filter(action_type=Action.DEPLOYMENTRECOVER.latest()
         except BuildAction.DoesNotExist:
             action_recover = None
 
@@ -131,26 +120,11 @@ class Build(models.Model):
         self.time_at_sea = self.time_at_sea + latest_time_at_sea
         self.save()
 
-    # get the time at sea for the current deployment only (if item is at sea)
-    def current_deployment_time_at_sea(self):
-        current_deployment_time = timedelta(minutes=0)
-
-        if self.current_deployment() and self.current_deployment().current_status == 'deploymenttofield':
-            try:
-                action_deploy_to_sea = BuildAction.objects.filter(build=self).filter(action_type='deploymenttofield').latest('created_at')
-            except BuildAction.DoesNotExist:
-                action_deploy_to_sea = None
-
-            if action_deploy_to_sea:
-                now = timezone.now()
-                current_time_at_sea = now - action_deploy_to_sea.created_at
-                current_deployment_time = current_time_at_sea
-
-        return current_deployment_time
-
     # get the Total Time at Sea by adding historical sea time and current deployment sea time
     def total_time_at_sea(self):
-        return self.time_at_sea + self.current_deployment_time_at_sea()
+        if self.current_deployment() and self.current_deployment().current_status == Action.DEPLOYMENTTOFIELD:
+            return self.time_at_sea + self.current_deployment().deployment_time_in_field
+        return self.time_at_sea
 
 
 class BuildAction(models.Model):

@@ -35,7 +35,6 @@ from .managers import InventoryDeploymentQuerySet
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
 from roundabout.assemblies.models import Assembly, AssemblyPart
-from roundabout.builds.models import Build
 from roundabout.cruises.models import Cruise
 from roundabout.users.models import User
 # Get the app label names from the core utility functions
@@ -76,7 +75,7 @@ class Inventory(MPTTModel):
                               on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
     parent = TreeForeignKey('self', related_name='children',
                             on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
-    build = models.ForeignKey(Build, related_name='inventory',
+    build = models.ForeignKey('builds.Build', related_name='inventory',
                               on_delete=models.SET_NULL, null=True, blank=True)
     assembly_part = TreeForeignKey(AssemblyPart, related_name='inventory',
                                    on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
@@ -400,7 +399,7 @@ class Deployment(DeploymentBase):
                               on_delete=models.SET_NULL, null=True, blank=True)
     deployed_location = TreeForeignKey(Location, related_name='deployed_deployments',
                               on_delete=models.SET_NULL, null=True, blank=True)
-    build = models.ForeignKey(Build, related_name='deployments', on_delete=models.CASCADE,
+    build = models.ForeignKey('builds.Build', related_name='deployments', on_delete=models.CASCADE,
                               null=True, blank=True, db_index=True)
     latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
                                     validators=[
@@ -583,7 +582,7 @@ class Action(models.Model):
                                    on_delete=models.SET_NULL, null=True, blank=True)
     inventory_deployment = models.ForeignKey(InventoryDeployment, related_name='actions',
                                    on_delete=models.SET_NULL, null=True, blank=True)
-    build = models.ForeignKey(Build, related_name='actions',
+    build = models.ForeignKey('builds.Build', related_name='actions',
                               on_delete=models.SET_NULL, null=True, blank=True)
     parent = models.ForeignKey(Inventory, related_name='parent_actions',
                                on_delete=models.SET_NULL, null=True, blank=True)
