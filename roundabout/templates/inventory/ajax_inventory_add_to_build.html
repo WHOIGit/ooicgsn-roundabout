@@ -41,7 +41,7 @@
     <p>The following {{ label_builds_app_singular }} destinations are available for this Part.</p>
 
 
-    <div id="available-assembly-parts">
+    <div id="available-assembly-parts" class="mb-3">
     {% if builds %}
         {% regroup builds by location as builds_by_location %}
         {% for location in builds_by_location %}
