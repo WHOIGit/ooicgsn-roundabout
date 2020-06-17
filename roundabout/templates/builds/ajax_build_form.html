@@ -19,59 +19,67 @@
 # If not, see <http://www.gnu.org/licenses/>.
 -->
 
-                {% load crispy_forms_tags %}
+{% load crispy_forms_tags %}
 
-                <div class="card-header">
-                    {% if build.id %}
-                    <h3>{{ build }}</h3>
-                    {% else %}
-                    <h3>Create New {{ label_builds_app_singular }}</h3>
-                    {% endif %}
-                </div>
+<div class="card-header">
+    {% if build.id %}
+    <h3>{{ build }}</h3>
+    {% else %}
+    <h3>Create New {{ label_builds_app_singular }}</h3>
+    {% endif %}
+</div>
 
-                <div class="card-body">
-
-
-                    <form class="form-horizontal ajax-form" method="post" action="" id="build-form"
-                          data-serialnumber-url="{% url 'builds:ajax_load_new_build_id_number' %}"
-                          data-assemblyrevision-url="{% url 'builds:ajax_load_assembly_revisions' %}"
-                          data-url='{{ request.build_absolute_uri|safe }}'>
-                      {% csrf_token %}
-                      {{ form|crispy }}
-                      {{ form.media }}
-
-                      <div class="row">
-                          {% if form.errors %}
-                              {% for field in form %}
-                                  {% for error in field.errors %}
-                                      <div class="alert alert-danger">
-                                          <strong>{{ error|escape }}</strong>
-                                      </div>
-                                  {% endfor %}
-                              {% endfor %}
-                              {% for error in form.non_field_errors %}
-                                  <div class="alert alert-danger">
-                                      <strong>{{ error|escape }}</strong>
-                                  </div>
-                              {% endfor %}
-                          {% endif %}
+<div class="card-body">
 
 
+    <form class="form-horizontal ajax-form" method="post" action="" id="build-form"
+          data-serialnumber-url="{% url 'builds:ajax_load_new_build_id_number' %}"
+          data-assemblyrevision-url="{% url 'builds:ajax_load_assembly_revisions' %}"
+          data-url='{{ request.build_absolute_uri|safe }}' novalidate>
+      {% csrf_token %}
+      {{ form|crispy }}
+      {{ form.media }}
+
+      <div class="row">
+          {% if form.errors %}
+              {% for field in form %}
+                  {% for error in field.errors %}
+                      <div class="alert alert-danger">
+                          <strong>{{ error|escape }}</strong>
                       </div>
-
-                      <div class="control-group">
-                        <div class="controls">
-                          {% if build.id %}
-                              <button type="submit" class="btn btn-primary">Update {{ label_builds_app_singular }}</button>
-                          {% else %}
-                              <button type="submit" class="btn btn-primary">Create {{ label_builds_app_singular }}</button>
-                          {% endif %}
-                        </div>
-                      </div>
-                    </form>
+                  {% endfor %}
+              {% endfor %}
+              {% for error in form.non_field_errors %}
+                  <div class="alert alert-danger">
+                      <strong>{{ error|escape }}</strong>
+                  </div>
+              {% endfor %}
+          {% endif %}
 
 
-                </div>
+      </div>
+
+      <div class="control-group">
+        <div class="controls">
+          {% if build.id %}
+              <button type="submit" class="btn btn-primary">Update {{ label_builds_app_singular }}</button>
+              <input class="btn btn-light cancel-btn"
+                 type="button" value="Cancel"
+                 data-detail-url="{% url 'builds:ajax_builds_detail' build.id %}"
+                 data-node-id="{{ build.id }}" />
+          {% else %}
+              <button type="submit" class="btn btn-primary">Create {{ label_builds_app_singular }}</button>
+              <input class="btn btn-light cancel-btn-noajax"
+                     type="button" value="Cancel"
+                     onclick="window.history.go(-1);"/>
+
+          {% endif %}
+        </div>
+      </div>
+    </form>
+
+
+</div>
 
 {% block javascript %}
 

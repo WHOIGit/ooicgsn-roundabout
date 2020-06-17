@@ -27,36 +27,20 @@
 {% block content %}
 <div class="container">
   <h1>{% if assembly_type.name %}Edit {{ assembly_type.name }}{% else %}Add {{ label_assemblies_app_singular}} Type {% endif %}</h1>
-  <form class="form-horizontal" method="post" action="" id="printer-form">
+  <form class="form-horizontal" method="post" action="" id="assembly-type-form" novalidate>
     {% csrf_token %}
     {{ form|crispy }}
-
-    <div class="row">
-        {% if form.errors %}
-            {% for field in form %}
-                {% for error in field.errors %}
-                    <div class="alert alert-danger">
-                        <strong>{{ error|escape }}</strong>
-                    </div>
-                {% endfor %}
-            {% endfor %}
-            {% for error in form.non_field_errors %}
-                <div class="alert alert-danger">
-                    <strong>{{ error|escape }}</strong>
-                </div>
-            {% endfor %}
-        {% endif %}
-
-
-    </div>
 
     <div class="control-group">
       <div class="controls">
         {% if assembly_type %}
-        <button type="submit" class="btn btn-primary">Update {{ label_assemblies_app_singular}} Type</button>
+            <button type="submit" class="btn btn-primary">Update {{ label_assemblies_app_singular}} Type</button>
         {% else %}
-        <button type="submit" class="btn btn-primary">Add {{ label_assemblies_app_singular}} Type</button>
+            <button type="submit" class="btn btn-primary">Add {{ label_assemblies_app_singular}} Type</button>
         {% endif %}
+
+        <a class="btn btn-light btn-cancel" href="{% url 'assemblies:assembly_type_home' %}">Cancel</a>
+
       </div>
     </div>
   </form>

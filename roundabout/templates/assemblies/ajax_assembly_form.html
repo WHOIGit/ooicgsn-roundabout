@@ -45,7 +45,7 @@
 
 
     <form class="form-horizontal ajax-form" method="post" action="" id="assembly-form"
-          data-url='{{ request.build_absolute_uri|safe }}'>
+          data-url='{{ request.build_absolute_uri|safe }}' novalidate>
       {% csrf_token %}
       {{ form|crispy }}
 
@@ -112,8 +112,15 @@
         <div class="controls">
           {% if assembly.id %}
               <button type="submit" class="btn btn-primary">Update {{ label_assemblies_app_singular }}</button>
+              <input class="btn btn-light cancel-btn"
+                 type="button" value="Cancel"
+                 data-detail-url="{% url 'assemblies:ajax_assemblies_detail' assembly.id %}"
+                 data-node-id="{{ assembly.id }}" />
           {% else %}
               <button type="submit" class="btn btn-primary">Add {{ label_assemblies_app_singular }}</button>
+              <input class="btn btn-light cancel-btn-noajax"
+                     type="button" value="Cancel"
+                     onclick="window.history.go(-1);"/>
           {% endif %}
         </div>
       </div>

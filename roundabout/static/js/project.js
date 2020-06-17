@@ -40,8 +40,10 @@ window.onpopstate = function (event) {
             $(navTree).jstree(true).select_node(event.state.navTreeNodeID);
           }
       });
+  } else {
+      // Not an AJAX generated event, clear the HTML in #detail-view
+      $("#detail-view").html('');
   }
-  console.log(event.state);
 };
 
 /* AJAX navtree functions - Global */
@@ -153,7 +155,6 @@ $(document).ready(function() {
     // AJAX functions for Add Button
     $('#content-block').on('click','.parts-add-btn a', function(){
         var url = $(this).attr("data-create-url");
-        console.log(url);
 
         $.ajax({
             url: url,
@@ -328,14 +329,110 @@ function csrfSafeMethod(method) {
     // these HTTP methods do not require CSRF protection
     return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
 }
-$.ajaxSetup({
-    beforeSend: function(xhr, settings) {
+
+function handleBeforeSend(xhr, settings) {
         if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
             xhr.setRequestHeader("X-CSRFToken", csrftoken);
         }
-        clear_form_field_errors( $('#content-block form.ajax-form') );
+        // Show spinner container
+        $("#spinner-loader").show();
+        // Clear error messages
+        clear_form_field_errors();
+}
+
+function handleFormSuccess(data, textStatus, jqXHR){
+    console.log(data)
+    console.log(textStatus)
+    console.log(data.detail_path)
+
+    if (data.hasOwnProperty('object_type')) {
+        var objectTypePrefix = data.object_type;
+    } else {
+        var objectTypePrefix = navtreePrefix;
     }
-});
+
+    $.ajax({
+        url: data.detail_path,
+        success: function (data) {
+          $("#detail-view").html(data);
+        }
+    });
+
+    var nodeID = objectTypePrefix + '_' + data.object_id ;
+    console.log(nodeID)
+    $(navTree).jstree(true).settings.core.data.url = navURL;
+    $(navTree).jstree(true).refresh();
+    $(navTree).on('refresh.jstree', function (event, data) {
+        data.instance.deselect_all();
+        data.instance._open_to(nodeID);
+        data.instance.select_node(nodeID);
+    });
+}
+
+function handleDeleteFormSuccess(data, textStatus, jqXHR){
+    $("#detail-view").html('');
+
+    if (data.hasOwnProperty('object_type')) {
+        var objectTypePrefix = data.object_type;
+    } else {
+        var objectTypePrefix = navtreePrefix;
+    }
+
+    if (data.hasOwnProperty('parent_type')) {
+        var parentTypePrefix = data.parent_type;
+    } else {
+        var parentTypePrefix = navtreePrefix;
+    }
+
+    var nodeID = parentTypePrefix + '_' + data.parent_id;
+
+    $(navTree).jstree(true).settings.core.data.url = navURL;
+    $(navTree).jstree(true).refresh();
+    $(navTree).on('refresh.jstree', function (event, data) {
+      data.instance._open_to(nodeID);
+    });
+}
+
+function handleCopyFormSuccess(data, textStatus, jqXHR){
+    $.ajax({
+        url: '/' + navtreePrefix + '/ajax/detail/location/' + data.object_id + '/',
+        success: function (data) {
+          $("#detail-view").html(data);
+        }
+    });
+    var nodeID = 'locations_' + data.object_id ;
+    //$("#jstree_inventory").jstree(true).refresh_node(parentID);
+
+    $.ajax({
+        url: '/' + navtreePrefix + '/ajax/load-navtree/',
+        success: function (data) {
+            $(navTree).jstree(true).destroy();
+            $(navTree).html(data);
+            $(navTree).jstree();
+            $(navTree).jstree(true).select_node(nodeID);
+            console.log(nodeID);
+        }
+    });
+}
+
+function handleFormError(data, textStatus, errorThrown){
+    console.log(data)
+    console.log(errorThrown)
+    var errors = $.parseJSON(data.responseText);
+    console.log(errors)
+    $.each(errors, function(index, value) {
+        if (index === "__all__") {
+            django_message(value[0], "error");
+        } else {
+            apply_form_field_error(index, value);
+        }
+    });
+}
+
+function handleFormComplete() {
+    // Hide spinner container
+    $("#spinner-loader").hide();
+}
 
 // AJAX functions to display Django error messages
 function apply_form_field_error(fieldname, error) {
@@ -348,8 +445,8 @@ function apply_form_field_error(fieldname, error) {
 }
 
 function clear_form_field_errors(form) {
-    $("#content-block .ajax-error", $(form)).remove();
-    $("#content-block .error", $(form)).removeClass("error");
+    $("#content-block .ajax-error").remove();
+    $("#content-block .error").removeClass("error");
 }
 
 // AJAX form submit
@@ -365,16 +462,10 @@ $(document).ready(function(){
             method: "POST",
             url: thisURL,
             data: formData,
-            beforeSend: function() {
-                // Show spinner container
-                $("#spinner-loader").show();
-            },
+            beforeSend: handleBeforeSend,
             success: handleFormSuccess,
             error: handleFormError,
-            complete:function(data){
-                // Hide spinner container
-                $("#spinner-loader").hide();
-            }
+            complete:handleFormComplete,
         })
     })
 
@@ -386,8 +477,10 @@ $(document).ready(function(){
             method: "POST",
             url: thisURL,
             data: formData,
+            beforeSend: handleBeforeSend,
             success: handleDeleteFormSuccess,
             error: handleFormError,
+            complete:handleFormComplete,
         })
     })
 
@@ -399,109 +492,13 @@ $(document).ready(function(){
             method: "POST",
             url: thisURL,
             data: formData,
+            beforeSend: handleBeforeSend,
             success: handleCopyFormSuccess,
             error: handleFormError,
+            complete:handleFormComplete,
         })
     })
 
-    function handleFormSuccess(data, textStatus, jqXHR){
-        console.log(data)
-        console.log(textStatus)
-        console.log(data.detail_path)
-
-        if (data.hasOwnProperty('object_type')) {
-            var objectTypePrefix = data.object_type;
-        } else {
-            var objectTypePrefix = navtreePrefix;
-        }
-
-        $.ajax({
-            url: data.detail_path,
-            success: function (data) {
-              $("#detail-view").html(data);
-            }
-        });
-
-        var nodeID = objectTypePrefix + '_' + data.object_id ;
-        console.log(nodeID)
-        $(navTree).jstree(true).settings.core.data.url = navURL;
-        $(navTree).jstree(true).refresh();
-        $(navTree).on('refresh.jstree', function (event, data) {
-            data.instance.deselect_all();
-            data.instance._open_to(nodeID);
-            data.instance.select_node(nodeID);
-        });
-    }
-
-    function handleDeleteFormSuccess(data, textStatus, jqXHR){
-        console.log(data)
-        console.log(textStatus)
-        console.log(jqXHR)
-        console.log(data.parent_id);
-        console.log(data.object_type);
-        console.log(navtreePrefix);
-        $("#detail-view").html('');
-
-        if (data.hasOwnProperty('object_type')) {
-            var objectTypePrefix = data.object_type;
-        } else {
-            var objectTypePrefix = navtreePrefix;
-        }
-
-        if (data.hasOwnProperty('parent_type')) {
-            var parentTypePrefix = data.parent_type;
-        } else {
-            var parentTypePrefix = navtreePrefix;
-        }
-
-        var nodeID = parentTypePrefix + '_' + data.parent_id;
-
-        $(navTree).jstree(true).settings.core.data.url = navURL;
-        $(navTree).jstree(true).refresh();
-        $(navTree).on('refresh.jstree', function (event, data) {
-          data.instance._open_to(nodeID);
-        });
-    }
-
-    function handleCopyFormSuccess(data, textStatus, jqXHR){
-        console.log(data)
-        console.log(textStatus)
-        console.log(jqXHR)
-        $.ajax({
-            url: '/' + navtreePrefix + '/ajax/detail/location/' + data.object_id + '/',
-            success: function (data) {
-              $("#detail-view").html(data);
-            }
-        });
-        var nodeID = 'locations_' + data.object_id ;
-        //$("#jstree_inventory").jstree(true).refresh_node(parentID);
-
-        $.ajax({
-            url: '/' + navtreePrefix + '/ajax/load-navtree/',
-            success: function (data) {
-                $(navTree).jstree(true).destroy();
-                $(navTree).html(data);
-                $(navTree).jstree();
-                $(navTree).jstree(true).select_node(nodeID);
-                console.log(nodeID);
-            }
-        });
-    }
-
-    function handleFormError(data, textStatus, errorThrown){
-        console.log(data)
-        console.log(textStatus)
-        console.log(errorThrown)
-        var errors = $.parseJSON(data.responseText);
-        console.log(errors)
-        $.each(errors, function(index, value) {
-            if (index === "__all__") {
-                django_message(value[0], "error");
-            } else {
-                apply_form_field_error(index, value);
-            }
-        });
-    }
 })
 
 /* Function to print specific page DIV */

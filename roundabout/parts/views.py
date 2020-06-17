@@ -245,7 +245,7 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         else:
             return response
 
-    def form_invalid(self, form, documentation_form):
+    def form_invalid(self, form, revision_form, documentation_form):
         form_errors = documentation_form.errors
 
         if self.request.is_ajax():
