@@ -247,9 +247,13 @@ class BuildAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
     def form_valid(self, form):
         self.object = form.save()
-        action_detail = '%s created.' % (labels['label_builds_app_singular'])
-        action_record = BuildAction.objects.create(action_type='buildadd', detail=action_detail, location=self.object.location,
-                                                   user=self.request.user, build=self.object)
+        action_record = Action.objects.create(
+            build = self.object,
+            action_type = Action.ADD,
+            object_type = Action.BUILD,
+            user = self.request.user,
+            detail = self.object.detail
+        )
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -314,26 +318,31 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
         return form_class_name
 
     def form_valid(self, form):
-        if self.kwargs['action_type'] == 'locationchange':
-            # Find previous location to add to Detail field text
-            old_location_pk = self.object.tracker.previous('location')
-            if old_location_pk:
-                old_location = Location.objects.get(pk=old_location_pk)
-                if old_location.name != self.object.location.name:
-                    self.object.detail = 'Moved to %s from %s. ' % (self.object.location.name, old_location) + self.object.detail
+        action_type = self.kwargs['action_type']
+        action_form = form.save()
 
+        action_record = Action.objects.create(
+            action_type=action_type,
+            object_type = Action.BUILD,
+            build=self.object,
+            detail=self.object.detail,
+            user=self.request.user,
+        )
+
+        if self.kwargs['action_type'] == Action.LOCATIONCHANGE:
             # Get any subassembly children items, move their locations to match parent and add Action to history
             subassemblies = self.object.inventory.all()
             assembly_parts_added = []
             for item in subassemblies:
                 item.location = self.object.location
-                if old_location.name != self.object.location.name:
-                    item.detail = 'Moved to %s from %s' % (self.object.location.name, old_location.name)
-                else:
-                    item.detail = 'Parent Inventory Change'
                 item.save()
-                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location=item.location,
-                                                      user=self.request.user, inventory=item)
+                item_action_record = Action.objects.create(
+                    action_type=action_type,
+                    object_type = Action.INVENTORY,
+                    inventory=item,
+                    user=self.request.user,
+                )
+                item.create_action_record(self.request.user, action_type)
 
         if self.kwargs['action_type'] == 'removefromdeployment':
             # Find Deployment it was removed from
@@ -355,16 +364,6 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
 
         if self.kwargs['action_type'] == 'test':
             self.object.detail = '%s: %s. ' % (self.object.get_test_type_display(), self.object.get_test_result_display()) + self.object.detail
-
-        #if self.kwargs['action_type'] == 'flag':
-            #self.kwargs['action_type'] = self.object.get_flag_display()
-
-        action_form = form.save()
-        action_record = BuildAction.objects.create(action_type=self.kwargs['action_type'],
-                                                   detail=self.object.detail,
-                                                   location=self.object.location,
-                                                   user=self.request.user,
-                                                   build=self.object)
 
         response = HttpResponseRedirect(self.get_success_url())
 

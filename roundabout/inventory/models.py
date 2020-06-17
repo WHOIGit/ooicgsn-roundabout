@@ -609,6 +609,28 @@ class Action(models.Model):
     def __str__(self):
         return self.get_action_type_display()
 
+    # Custom save method to handle Action record creation based on object_type/action_type
+    def save(self, *args, **kwargs):
+        # set the primary object this record refers to
+        if self.object_type == Action.BUILD:
+            obj = self.build
+            obj_label = labels['label_builds_app_singular']
+        elif self.object_type == Action.INVENTORY:
+            obj = self.inventory
+            obj_label = labels['label_inventory_app_singular']
+        elif self.object_type == Action.DEPLOYMENT:
+            obj = self.deployment
+            obj_label = labels['label_deployments_app_singular']
+        # set the Location
+        self.location = obj.location
+        
+        if self.action_type == Action.ADD:
+            self.detail = '%s first added to RDB.' % (obj_label)
+        elif self.action_type == Action.LOCATIONCHANGE:
+            self.detail = 'Moved to %s from %s. %s' % (self.location, obj.actions.latest().location, self.detail)
+
+        super().save(*args, **kwargs)
+
 
 class PhotoNote(models.Model):
     photo = models.FileField(upload_to='notes/',

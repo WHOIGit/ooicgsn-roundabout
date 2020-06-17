@@ -634,7 +634,6 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
         inventory_form = form.save()
 
         if action_type == 'locationchange' or action_type =='movetotrash':
-            print(self.object.location_changed())
             # Get any subassembly children items, move their location sto match parent and add Action to history
             subassemblies = self.object.get_descendants()
             assembly_parts_added = []

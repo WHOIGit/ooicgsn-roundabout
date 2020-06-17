@@ -107,7 +107,7 @@ class Build(models.Model):
             action_deploy_to_sea = None
 
         try:
-            action_recover = self.actions.filter(object_type='build').filter(action_type=Action.DEPLOYMENTRECOVER.latest()
+            action_recover = self.actions.filter(object_type='build').filter(action_type=Action.DEPLOYMENTRECOVER).latest()
         except BuildAction.DoesNotExist:
             action_recover = None
 
