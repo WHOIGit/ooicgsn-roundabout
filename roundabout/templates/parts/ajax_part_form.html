@@ -203,7 +203,7 @@ $(document).ready(function() {
               "initial_part_number": initialPartNumber,
           },
           beforeSend: function() {
-              $("#part-number-ajax-error").remove();
+              $("#div_id_part_number .ajax-error").remove();
             },
           success: function (data) {
               if ( data.is_error ) {

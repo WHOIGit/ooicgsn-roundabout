@@ -84,6 +84,7 @@ def load_new_build_id_number(request):
     # Set variables from JS request
     assembly_id = request.GET.get('assembly_id')
     new_build_id_number = ''
+    new_serial_number = ''
 
     if RDB_SERIALNUMBER_CREATE:
         if assembly_id:
