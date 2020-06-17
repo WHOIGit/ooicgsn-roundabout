@@ -77,6 +77,9 @@ class Build(models.Model):
     def get_object_type(self):
         return 'builds'
 
+    def get_actions(self):
+        return self.actions.filter(object_type=Action.BUILD)
+
     def current_deployment(self):
         if self.is_deployed:
             # get the latest deployment if available
@@ -97,7 +100,6 @@ class Build(models.Model):
             if self.current_deployment().current_status == Action.DEPLOYMENTTOFIELD:
                 return True
         return False
-
 
     # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
     def update_time_at_sea(self):
@@ -187,7 +189,7 @@ class PhotoNote(models.Model):
                              validators=[FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg', 'gif', 'csv'])])
     build = models.ForeignKey(Build, related_name='build_photos',
                                  on_delete=models.CASCADE, null=True, blank=True)
-    action = models.ForeignKey(BuildAction, related_name='build_photos',
+    action = models.ForeignKey(Action, related_name='build_photos',
                                  on_delete=models.CASCADE, null=True, blank=True)
     user = models.ForeignKey(User, related_name='build_photos',
                              on_delete=models.SET_NULL, null=True, blank=False)

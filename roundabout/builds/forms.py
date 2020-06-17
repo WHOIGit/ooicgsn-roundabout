@@ -29,7 +29,7 @@ from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, Div, Fie
 from django_summernote.widgets import SummernoteInplaceWidget, SummernoteWidget
 
 from .models import Build, BuildAction, BuildSnapshot, PhotoNote
-from roundabout.inventory.models import Deployment, DeploymentAction
+from roundabout.inventory.models import Deployment, DeploymentAction, Action
 from roundabout.locations.models import Location
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
@@ -108,16 +108,21 @@ class BuildActionPhotoNoteForm(forms.ModelForm):
     photo_ids = forms.CharField(required=False, widget=forms.HiddenInput())
 
     class Meta:
-        model = BuildAction
-        fields = ['detail', 'build', 'location']
+        model = Action
+        fields = ['detail', 'build', 'location', 'object_type']
         labels = {
             'detail': 'Add a Note',
         }
         widgets = {
             'build': forms.HiddenInput(),
             'location': forms.HiddenInput(),
+            'object_type': forms.HiddenInput(),
             'detail': SummernoteWidget(),
         }
+
+    def __init__(self, *args, **kwargs):
+        super(BuildActionPhotoNoteForm, self).__init__(*args, **kwargs)
+        self.initial['object_type'] = Action.BUILD
 
 
 class BuildActionPhotoUploadForm(forms.ModelForm):

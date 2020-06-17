@@ -618,12 +618,15 @@ class Action(models.Model):
         elif self.object_type == Action.INVENTORY:
             obj = self.inventory
             obj_label = labels['label_inventory_app_singular']
+            # Set extra meta data fields
+            self.build = obj.build
+            self.deployment = obj.build.current_deployment()
         elif self.object_type == Action.DEPLOYMENT:
             obj = self.deployment
             obj_label = labels['label_deployments_app_singular']
         # set the Location
         self.location = obj.location
-        
+
         if self.action_type == Action.ADD:
             self.detail = '%s first added to RDB.' % (obj_label)
         elif self.action_type == Action.LOCATIONCHANGE:

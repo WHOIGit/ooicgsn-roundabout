@@ -342,28 +342,6 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
                     inventory=item,
                     user=self.request.user,
                 )
-                item.create_action_record(self.request.user, action_type)
-
-        if self.kwargs['action_type'] == 'removefromdeployment':
-            # Find Deployment it was removed from
-            old_deployment_pk = self.object.tracker.previous('deployment')
-            if old_deployment_pk:
-                old_deployment = Deployment.objects.get(pk=old_deployment_pk)
-                self.object.detail = ' Removed from %s.' % (old_deployment.get_deployment_label()) + self.object.detail
-
-            # Get any subassembly children items, add Action to history
-            subassemblies = Inventory.objects.get(id=self.object.id).get_descendants()
-            for item in subassemblies:
-                item.mooring_part = None
-                item.deployment = None
-                item.location = self.object.location
-                item.detail = ' Removed from %s.' % (old_deployment.get_deployment_label())
-                item.save()
-                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location_id=item.location_id,
-                                                      user_id=self.request.user.id, inventory_id=item.id)
-
-        if self.kwargs['action_type'] == 'test':
-            self.object.detail = '%s: %s. ' % (self.object.get_test_type_display(), self.object.get_test_result_display()) + self.object.detail
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -382,7 +360,7 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
 
 
 class BuildNoteAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
-    model = BuildAction
+    model = Action
     form_class = BuildActionPhotoNoteForm
     context_object_name = 'action'
     template_name='builds/ajax_inventory_photo_note_form.html'
