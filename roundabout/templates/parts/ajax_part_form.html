@@ -38,7 +38,7 @@
       <form class="form-horizontal parts ajax-form" method="post" action=""
             data-url='{{ request.build_absolute_uri|safe }}'
             data-partnumber-url='{% url 'parts:ajax_validate_part_number' %}'
-            id="parts-form">
+            id="parts-form" novalidate>
         {% csrf_token %}
 
         {{ form|crispy }}
@@ -145,9 +145,16 @@
         <div class="control-group">
           <div class="controls">
             {% if part_template.id %}
-            <button type="submit" class="btn btn-primary">Update Part</button>
+                <button type="submit" class="btn btn-primary">Update Part</button>
+                <input class="btn btn-light cancel-btn"
+                   type="button" value="Cancel"
+                   data-detail-url="{% url 'parts:ajax_parts_detail' part_template.id %}"
+                   data-node-id="{{ part_template.id }}" />
             {% else %}
-            <button type="submit" class="btn btn-primary">Add Part</button>
+                <button type="submit" class="btn btn-primary">Add Part</button>
+                <input class="btn btn-light cancel-btn-noajax"
+                       type="button" value="Cancel"
+                       onclick="window.history.go(-1);"/>
             {% endif %}
           </div>
         </div>
@@ -195,7 +202,7 @@ $(document).ready(function() {
               "initial_part_number": initialPartNumber,
           },
           beforeSend: function() {
-              $("#part-number-ajax-error").remove();
+              $("#div_id_part_number .ajax-error").remove();
             },
           success: function (data) {
               if ( data.is_error ) {

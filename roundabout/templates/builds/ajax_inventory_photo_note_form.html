@@ -79,7 +79,7 @@
     </div>
 
     <form class="form-horizontal ajax-form" method="post" action="" id="inventory-photo-note-form" enctype="multipart/form-data"
-          data-url='{{ request.build_absolute_uri|safe }}'>
+          data-url='{{ request.build_absolute_uri|safe }}' novalidate>
       {% csrf_token %}
       {{ form|crispy }}
       {{ form.media }}
@@ -107,12 +107,11 @@
         <div class="controls">
               <button type="submit" class="btn btn-primary">Add Note</button>
 
-             {% if inventory_item.id %}
               <input class="btn btn-light cancel-btn"
                      type="button" value="Cancel"
                      data-detail-url="{% url 'builds:ajax_builds_detail' build.id %}"
                      data-node-id="{{ build.id }}" />
-             {% endif %}
+
         </div>
       </div>
     </form>

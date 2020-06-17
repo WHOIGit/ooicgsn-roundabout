@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -19,27 +19,27 @@
 # If not, see <http://www.gnu.org/licenses/>.
 -->
 
-    <div class="card-body">
-        <div class="side-p">
-            <h3>Are you sure?</h3>
-            <p>You're about to delete the field {{ field }} from {{ part_template }}. Please confirm.</p>
+<div class="card-body">
+    <div class="side-p">
+        <h3>Are you sure?</h3>
+        <p>You're about to delete the field {{ field }} from {{ part_template }}. Please confirm.</p>
 
-                <input class="btn btn-link cancel-btn"
-                       type="button" value="Cancel"
-                       data-detail-url="{% url 'parts:ajax_parts_detail' part_template.id %}"
-                       data-node-id="{{ part_template.id }}"/>
+            <span class="ajax-detail-link">
+                <a href="#" class="btn btn-danger" role="button"
+                   data-detail-url="{% url 'parts:ajax_parts_remove_action_udf_field' part_template.id field.id %}"
+                   data-node-id="{{ part_template.id }}">
+                    Remove field
+                </a>
+            </span>
 
-                <span class="ajax-detail-link">
-                    <a href="#" class="btn btn-danger" role="button"
-                       data-detail-url="{% url 'parts:ajax_parts_remove_action_udf_field' part_template.id field.id %}"
-                       data-node-id="{{ part_template.id }}">
-                        Remove field
-                    </a>
-                </span>
+            <input class="btn btn-light cancel-btn"
+                   type="button" value="Cancel"
+                   data-detail-url="{% url 'parts:ajax_parts_detail' part_template.id %}"
+                   data-node-id="{{ part_template.id }}"/>
 
 
-        </div>
     </div>
+</div>
 
 {% block javascript %}
 
