@@ -110,6 +110,8 @@ LOCAL_APPS = [
     'roundabout.userdefinedfields',
     'roundabout.assemblies',
     'roundabout.builds',
+    'roundabout.calibrations',
+    'roundabout.configs_constants',
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -361,3 +363,6 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
+
+# Allow for larger CoefficientValue formset handling
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000

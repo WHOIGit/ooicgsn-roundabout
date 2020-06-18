@@ -38,7 +38,7 @@
 
         <p>The following {{ label_assemblies_app_singular }} template destinations are available for this Part.</p>
 
-        <div id="available-assembly-parts">
+        <div id="available-assembly-parts" class="mb-3">
 
             {% if assembly_parts %}
 
@@ -90,6 +90,11 @@
 
 
       </div>
+
+      <input class="btn btn-light cancel-btn"
+             type="button" value="Cancel"
+             data-detail-url="{% url 'inventory:ajax_inventory_detail' inventory_item.id %}"
+             data-node-id="{{ inventory_item.id }}" />
 
     </div>
 

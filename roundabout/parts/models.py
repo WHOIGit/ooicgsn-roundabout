@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -24,7 +24,7 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 from django.urls import reverse
 from django.utils import timezone
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from mptt.models import MPTTModel, TreeForeignKey
 
 from roundabout.locations.models import Location
@@ -48,12 +48,13 @@ class Part(models.Model):
     friendly_name = models.CharField(max_length=255, unique=False, null=False, blank=True)
     part_type = TreeForeignKey(PartType, related_name='parts', on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
     revision = models.CharField(max_length=100, blank=True)
-    part_number = models.CharField(max_length=100, unique=False, db_index=True)
+    part_number = models.CharField(max_length=100, unique=True, db_index=True)
     unit_cost = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], null=False, blank=True, default='0.00')
     refurbishment_cost = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], null=False, blank=True, default='0.00')
     note = models.TextField(blank=True)
     custom_fields = JSONField(blank=True, null=True)
     user_defined_fields = models.ManyToManyField(Field, blank=True, related_name='parts')
+    cal_dec_places = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(20)], null=False, blank=True, default=8)
 
     class Meta:
         ordering = ['name']

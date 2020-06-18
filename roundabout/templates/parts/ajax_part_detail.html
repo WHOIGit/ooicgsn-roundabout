@@ -183,6 +183,7 @@
                         {% endfor %}
 
                     <hr>
+                    
 
                     <div class="ajax-detail-link">
 
@@ -206,6 +207,64 @@
             </li>
         {% endfor %}
     </ul>
+
+    <hr>
+
+    <div id = 'calibrations-section'>
+        <div class="ajax-detail-link float-right">
+            <a class="btn btn-primary btn-sm" href="#" role="button"
+                data-detail-url="{% url 'calibrations:part_calname_add' part_template.id %}"
+                data-node-id="{{ part_template.id }}"
+                data-node-type="detail"
+            >   
+                Add Calibration(s)
+            </a>
+        </div>
+        <h4>Calibrations</h4>
+        <table class="table table-striped action-table">
+            <thead>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Significant Figures</th>
+            </thead>
+            <tbody>
+                {% for cal in part_template.coefficient_names.all %}
+                    <tr>
+                        <td>{{ cal.calibration_name }}</td>
+                        <td>{{ cal.value_set_type }}</td>
+                        <td>{{ cal.sigfig_override }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table> 
+    </div>
+
+    <div id = 'configuration_constant-section'>
+        <div class="ajax-detail-link float-right">
+            <a class="btn btn-primary btn-sm" href="#" role="button"
+                data-detail-url="{% url 'configs_constants:part_confname_add' part_template.id %}"
+                data-node-id="{{ part_template.id }}"
+                data-node-type="detail"
+            >   
+                Add Configs/Constants
+            </a>
+        </div>
+        <h4>Configurations / Constants</h4>
+        <table class="table table-striped action-table">
+            <thead>
+                <th>Name</th>
+                <th>Type</th>
+            </thead>
+            <tbody>
+                {% for conf in part_template.config_names.all %}
+                    <tr>
+                        <td>{{ conf.name }}</td>
+                        <td>{{ conf.config_type }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table> 
+    </div>
 
 
     <div class="ajax-detail-link">
@@ -237,6 +296,15 @@ $(document).ready(function() {
             }
         });
     });
+
+    let partType = '{{part_template.part_type}}';
+    if (partType == 'Instrument') {
+        $('#calibrations-section').show();
+        $('#configuration_constant-section').show();
+    } else {
+        $('#calibrations-section').hide();
+        $('#configuration_constant-section').hide();
+    }
 
     /* $('a.link-to-tab').click(function (e) {
       e.preventDefault();

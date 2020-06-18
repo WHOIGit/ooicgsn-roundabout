@@ -86,3 +86,4 @@ INSTALLED_APPS += ['django_extensions']  # noqa F405
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
