@@ -103,10 +103,9 @@
       </ul>
   </div>
 
-  <input class="btn btn-light cancel-btn"
+  <input class="btn btn-light cancel-btn-noajax"
          type="button" value="Cancel"
-         data-detail-url="{% url 'inventory:ajax_inventory_detail' inventory_item.id %}"
-         data-node-id="{{ inventory_item.id }}" />
+         onclick="window.history.go(-1);"/>
 
 </div>
 
