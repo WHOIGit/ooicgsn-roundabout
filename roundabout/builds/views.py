@@ -34,6 +34,7 @@ from .forms import *
 from roundabout.assemblies.models import Assembly, AssemblyPart, AssemblyRevision
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory, Action
+from roundabout.inventory.utils import _create_action_history
 from roundabout.admintools.models import Printer
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
@@ -247,6 +248,7 @@ class BuildAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
     def form_valid(self, form):
         self.object = form.save()
+        # Create new Action record
         action_record = Action.objects.create(
             build = self.object,
             action_type = Action.ADD,
@@ -282,6 +284,13 @@ class BuildAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
 
     def form_valid(self, form):
         self.object = form.save()
+        # Create new Action record
+        action_record = Action.objects.create(
+            build = self.object,
+            action_type = Action.UPDATE,
+            object_type = Action.BUILD,
+            user = self.request.user,
+        )
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -320,14 +329,9 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
     def form_valid(self, form):
         action_type = self.kwargs['action_type']
         action_form = form.save()
-
-        action_record = Action.objects.create(
-            action_type=action_type,
-            object_type = Action.BUILD,
-            build=self.object,
-            detail=self.object.detail,
-            user=self.request.user,
-        )
+        # Create new Action record
+        # Call the function to create an Action history chain for this event
+        _create_action_history(self.object, action_type, self.request.user)
 
         if self.kwargs['action_type'] == Action.LOCATIONCHANGE:
             # Get any subassembly children items, move their locations to match parent and add Action to history
@@ -336,6 +340,7 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
             for item in subassemblies:
                 item.location = self.object.location
                 item.save()
+                # Create new Action record
                 item_action_record = Action.objects.create(
                     action_type=action_type,
                     object_type = Action.INVENTORY,
