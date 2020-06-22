@@ -248,14 +248,8 @@ class BuildAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
     def form_valid(self, form):
         self.object = form.save()
-        # Create new Action record
-        action_record = Action.objects.create(
-            build = self.object,
-            action_type = Action.ADD,
-            object_type = Action.BUILD,
-            user = self.request.user,
-            detail = self.object.detail
-        )
+        # Call the function to create an Action history chain
+        _create_action_history(self.object, Action.ADD, self.request.user)
 
         response = HttpResponseRedirect(self.get_success_url())
 

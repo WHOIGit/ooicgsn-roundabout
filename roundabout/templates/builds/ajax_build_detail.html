@@ -260,9 +260,7 @@
             </p>
         {% endif %}
 
-        {% if build.current_deployment_time_at_sea %}
-            <p class="ajax-detail-link">Current {{ label_deployments_app_singular }} Time in Field: {{ current_deployment.get_deployment_time_at_sea|time_at_sea_display }}
-        {% endif %}
+        <p class="ajax-detail-link">Current {{ label_deployments_app_singular }} Time in Field: {{ current_deployment.deployment_time_in_field|time_at_sea_display }}
 
         <h6>{{ label_deployments_app_singular }} Status</h6>
 
@@ -275,10 +273,10 @@
         </div>
 
         {% if current_deployment.get_deploytosea_details %}
-            <p>{{ label_deployments_app_singular }} Date: {{ current_deployment.get_deploytosea_details|get_item:'deploy_date'|date:"n/j/y H:i" }}</p>
-            <p>Latitude: {{ current_deployment.get_deploytosea_details|get_item:'latitude' }}</p>
-            <p>Longitude: {{ current_deployment.get_deploytosea_details|get_item:'longitude' }}</p>
-            <p>Depth: {{ current_deployment.get_deploytosea_details|get_item:'depth' }} m</p>
+            <p>{{ label_deployments_app_singular }} Date: {{ current_deployment.deployment_to_field_date|date:"n/j/y H:i" }}</p>
+            <p>Latitude: {{ current_deployment.latitude}}</p>
+            <p>Longitude: {{ current_deployment.longitude }}</p>
+            <p>Depth: {{ current_deployment.depth }} m</p>
         {% endif %}
     {% endif %}
 

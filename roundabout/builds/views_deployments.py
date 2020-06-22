@@ -69,8 +69,9 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
     def form_valid(self, form):
         action_type = Action.STARTDEPLOYMENT
         action_date = form.cleaned_data['date']
-        self.object.deployment_start_date = action_date
         self.object = form.save()
+        self.object.deployment_start_date = action_date
+        self.object.save()
 
         # Update the Build instance to match any Deployment changes
         build = self.object.build
@@ -187,22 +188,12 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
 
         # If Deploying to Sea, update Location and add Details Action record
         if action_type == 'deploymenttofield':
+            self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
             self.object.deployed_location = self.object.location
             self.object.latitude = latitude
             self.object.longitude = longitude
             self.object.depth = depth
             self.object.save()
-
-            details = 'Details set. <br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
-            detail_record = DeploymentAction.objects.create(action_type='deploymentdetails',
-                                                            detail=details,
-                                                            location=self.object.location,
-                                                            user=self.request.user,
-                                                            deployment=self.object,
-                                                            created_at=action_date,
-                                                            latitude=latitude,
-                                                            longitude=longitude,
-                                                            depth=depth)
 
         # If Updating deployment, update Location and add Depth, Lat/Long to Action Record
         if action_type == 'deploymentdetails':
@@ -213,18 +204,9 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             self.object.depth = depth
             self.object.save()
 
-        action_record = DeploymentAction.objects.create(action_type=action_type,
-                                                        detail=self.object.detail,
-                                                        location=self.object.location,
-                                                        user=self.request.user,
-                                                        deployment=self.object,
-                                                        created_at=action_date,
-                                                        latitude=latitude,
-                                                        longitude=longitude,
-                                                        depth=depth)
-
         # Update Build location, create Action Record
         build = self.object.build
+        build.detail = self.object.detail
 
         # If action_type is not "retire", update Build location
         if action_type != 'deploymentretire':
@@ -235,12 +217,8 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             build.is_deployed = False
 
         build.save()
-
         # Create Build Action record for deployment
-        if action_type == 'deploymenttofield':
-            self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
-        # Create Build Action record for deployment
-        _create_action_history(build, action_type, self.request.user)
+        build_record = _create_action_history(build, action_type, self.request.user)
 
         #update Time at Sea if Recovered from Sea with Build model method
         if action_type == 'deploymentrecover':
@@ -268,7 +246,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
 
         # Get all Inventory items on Build, match location and add Actions
         inventory_items = build.inventory.all()
-        detail = action_record.get_action_type_display()
+        detail = build_record.get_action_type_display()
         cruise = None
         deployment_type = 'build_deployment'
 
@@ -282,7 +260,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             item.save()
             _create_action_history(item, action_type, self.request.user, build)
             #update Time at Sea if Recovered from Sea with Inventory model method
-            if action_type == 'deploymentrecover':
+            if action_type == Action.DEPLOYMENTRECOVER:
                 item.update_time_at_sea()
 
         response = HttpResponseRedirect(self.get_success_url())

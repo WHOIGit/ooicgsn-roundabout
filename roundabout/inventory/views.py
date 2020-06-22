@@ -653,22 +653,6 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
 
                 # If "movetotrash", need to remove all Build/AssemblyPart/Destination data for children
                 if action_type == Action.MOVETOTRASH:
-                    """
-                    if item.build:
-                        item.create_action_record(self.request.user, 'removefrombuild')
-                        # If Build is Deployed, need to create separate Deployment Retirement record,
-                        if item.build.is_deployed:
-                            item.create_action_record(self.request.user, 'deploymentretire')
-                        # Create Build Action record
-                        build_detail = '%s removed from %s' % (item, labels['label_builds_app_singular'])
-                        build_record = BuildAction.objects.create(
-                                                            action_type='subassemblychange',
-                                                            detail=build_detail,
-                                                            location=item.build.location,
-                                                            user=self.request.user,
-                                                            build=item.build,
-                                                            )
-                    """
                     item.build = None
                     item.assembly_part = None
                     item.assigned_destination_root = None
@@ -680,37 +664,6 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
 
             # If "movetotrash", need to remove all Build/AssemblyPart/Destination data
             if action_type == Action.MOVETOTRASH:
-                # Find Build it was removed from
-                """
-                if self.object.build:
-                    # create Action record for self.object
-                    action_record = Action.objects.create(
-                        action_type = Action.REMOVEFROMBUILD,
-                        object_type = Action.INVENTORY,
-                        inventory = self.object,
-                        user = self.request.user,
-                    )
-                    # self.object.create_action_record(self.request.user, 'removefrombuild')
-                    # If Build is Deployed, need to create separate Deployment Retirement record,
-                    if self.object.build.is_deployed:
-                        # create Action record for self.object
-                        action_record = Action.objects.create(
-                            action_type = Action.DEPLOYMENTRETIRE,
-                            object_type = Action.INVENTORY,
-                            inventory = self.object,
-                            user = self.request.user,
-                        )
-                        #self.object.create_action_record(self.request.user, 'deploymentretire')
-                    # Create Build Action record
-                    build_detail = '%s removed from %s' % (self.object, labels['label_builds_app_singular'])
-                    build_record = Action.objects.create(
-                        action_type = Action.SUBCHANGE,
-                        object_type = Action.BUILD,
-                        build = self.object.build,
-                        user = self.request.user,
-                        detail = build_detail,
-                    )
-                """
                 self.object.build = None
                 self.object.assembly_part = None
                 self.object.assigned_destination_root = None
@@ -728,55 +681,33 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 # Call the function to create an Action history chain for all child items
                 _create_action_history(item, action_type, self.request.user, self.object)
 
-        if action_type == 'deploymentrecover':
+        if action_type == Action.DEPLOYMENTRECOVER:
             cruise = form.cleaned_data['cruise']
-            created_at = form.cleaned_data['date']
+            action_date = form.cleaned_data['date']
 
-            # Add Location Change record if moved
-            if self.object.location_changed():
-                self.object.create_action_record(self.request.user, 'locationchange', '', created_at)
+            inventory_deployment = self.object.inventory_deployments.get_active_deployment()
+            inventory_deployment.cruise_recovered = cruise
+            inventory_deployment.deployment_recovery_date = action_date
+            inventory_deployment.save()
 
             # Find Build it was removed from
             old_build = self.object.get_latest_build()
             if old_build:
-                # Add Action Record for removing from Build
-                self.object.create_action_record(self.request.user, 'removefrombuild', detail, created_at)
                 # Create Build Action record
-                build_detail = '%s removed from %s' % (self.object, labels['label_builds_app_singular'])
-                build_record = BuildAction.objects.create(
-                                                    action_type='subassemblychange',
-                                                    detail=build_detail,
-                                                    location=old_build.location,
-                                                    user=self.request.user,
-                                                    build=old_build,
-                                                    )
+                _create_action_history(old_build, Action.SUBCHANGE, self.request.user, self.object)
 
             # Get any subassembly children items, add Action to history
             subassemblies = self.object.get_descendants()
             for item in subassemblies:
-                # Create Build Action record
-                build_detail = '%s removed from %s' % (item, labels['label_builds_app_singular'])
-                build_record = BuildAction.objects.create(
-                                                    action_type='subassemblychange',
-                                                    detail=build_detail,
-                                                    location=item.build.location,
-                                                    user=self.request.user,
-                                                    build=item.build,
-                                                    )
                 item.assembly_part = None
                 item.build = None
                 item.location = self.object.location
                 item.save()
-                # Add Location Change record if moved
-                if item.location_changed():
-                    item.create_action_record(self.request.user, 'locationchange', '', created_at)
-                # Add Action Record for removing from Build
-                item.create_action_record(self.request.user, 'removefrombuild', detail, created_at)
-                # Add last record
-                item.create_action_record(self.request.user, action_type, detail, created_at, cruise, 'inventory_deployment')
-                # End deployment
-                item.create_action_record(self.request.user, 'deploymentretire')
                 item.update_time_at_sea()
+                # Call the function to create an Action history chain for all child items
+                _create_action_history(item, action_type, self.request.user, self.object)
+                # Create Build Action record
+                _create_action_history(old_build, Action.SUBCHANGE, self.request.user, item)
 
         if action_type == Action.REMOVEDEST:
             # Get any subassembly children items, add Action to history
@@ -809,18 +740,15 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 item.assigned_destination_root = self.object.assigned_destination_root
                 item.detail = 'Parent Inventory Change'
                 item.save()
-                # Add Location Change record if moved
-                if item.location_changed():
-                    item.create_action_record(self.request.user, 'locationchange')
-                item.create_action_record(self.request.user, action_type, item.detail)
+                # Call the function to create an Action history chain for all child items
+                _create_action_history(item, action_type, self.request.user, self.object)
 
         # Call the function to create an Action history chain for this event
         _create_action_history(self.object, action_type, self.request.user)
         #action_record = self.object.create_action_record(self.request.user, action_type, detail, created_at, cruise, 'inventory_deployment')
-        # update the Time At Sea field, end the deployment cycle
+        # update the Time At Sea field
         if action_type == 'deploymentrecover':
             self.object.update_time_at_sea()
-            self.object.create_action_record(self.request.user, 'deploymentretire')
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -1012,7 +940,7 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
     query_string = True
 
     def get_redirect_url(self, *args, **kwargs):
-        action_type = 'addtobuild'
+        action_type = Action.ADDTOBUILD
         assembly_part = AssemblyPart.objects.get(id=self.kwargs['assembly_part_pk'])
         inventory_item = Inventory.objects.get(id=self.kwargs['pk'])
         build = Build.objects.get(id=self.kwargs['build_pk'])
@@ -1030,35 +958,8 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
         inventory_item.parent = parent
         inventory_item.location = build.location
         inventory_item.save()
-        # Add Action Record if Location change
-        if inventory_item.location_changed():
-            inventory_item.create_action_record(self.request.user, 'locationchange')
-        # Add subassembly change Action Record if Parent
-        if inventory_item.parent:
-            # add item subchange record
-            detail = 'Added to %s.' % (inventory_item.parent)
-            inventory_item.create_action_record(self.request.user, 'subchange', detail)
-            # parent record
-            parent_detail = 'Sub-%s %s added.' % (labels['label_assemblies_app_singular'], inventory_item)
-            inventory_item.parent.create_action_record(self.request.user, 'subchange', parent_detail)
-        # Add default Action Record
-        inventory_item.create_action_record(self.request.user, action_type)
-
-        # If Build is deployed, need to add extra Action record to add to Deployment
-        if build.is_deployed:
-            inventory_item.create_action_record(self.request.user, 'startdeployment', '', None, None, 'inventory_deployment')
-            if build.current_deployment().current_deployment_status() == 'deploymentburnin':
-                inventory_item.create_action_record(self.request.user, 'deploymentburnin')
-
-        # Check if any subassembly orphan children items already exist.  If so, make this item the parent
-        children = inventory_item.assembly_part.get_children()
-        for child in children:
-            if child.inventory.exists():
-                child_item = Inventory.objects.filter(assembly_part=child).filter(build=inventory_item.build)
-                for c in child_item:
-                    if c.build == inventory_item.build:
-                        c.parent = inventory_item
-                        c.save()
+        # Call the function to create an Action history chain
+        _create_action_history(inventory_item, action_type, self.request.user)
 
         # Get any subassembly children items, move their location to match parent and add Action to history
         subassemblies = inventory_item.get_descendants()
@@ -1076,28 +977,22 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
             item.location = inventory_item.location
             item.build = inventory_item.build
             item.save()
-            # Find previous location to add Action if Location change
-            if item.location_changed():
-                item.create_action_record(self.request.user, 'locationchange')
-            # If Build is deployed, need to add extra Action record to add to Deployment
-            if build.is_deployed:
-                item.create_action_record(self.request.user, 'startdeployment', '', None, None, 'inventory_deployment')
-                if build.current_deployment().current_deployment_status() == 'deploymentburnin':
-                    item.create_action_record(self.request.user, 'deploymentburnin')
-            item.create_action_record(self.request.user, action_type)
+            # Call the function to create an Action history chain for child items
+            _create_action_history(item, action_type, self.request.user, inventory_item)
 
-
-        # Create Build Action record for adding inventory item
-        detail = '%s added to %s' % (inventory_item, labels['label_builds_app_singular'])
-        build_record = BuildAction.objects.create(action_type='subassemblychange',
-                                                  detail=detail,
-                                                  location=build.location,
-                                                  user=self.request.user,
-                                                  build=build
-                                                  )
         # If Build is already at sea, need to add Action item for deploying to field with Cruise data
         if build.is_deployed_to_field():
             return reverse('inventory:ajax_deploy_action', args=(self.kwargs['pk'], ))
+        else:
+            # Check if any subassembly orphan children items already exist.  If so, make this item the parent
+            children = inventory_item.assembly_part.get_children()
+            for child in children:
+                if child.inventory.exists():
+                    child_item = Inventory.objects.filter(assembly_part=child).filter(build=subassembly.build)
+                    for c in child_item:
+                        if c.build == inventory_item.build:
+                            c.parent = inventory_item
+                            c.save()
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ) )
 
@@ -1263,7 +1158,12 @@ class ActionDeployInventoryAjaxFormView(LoginRequiredMixin, AjaxFormMixin, FormV
     def form_valid(self, form):
         inventory_item = Inventory.objects.get(id=self.kwargs['pk'])
         cruise = form.cleaned_data['cruise']
-        created_at = form.cleaned_data['date']
+        action_date = form.cleaned_data['date']
+        # Update InventoryDeployment object
+        inventory_deployment = inventory_item.inventory_deployments.get_active_deployment()
+        inventory_deployment.cruise_deployed = cruise
+        inventory_deployment.deployment_to_field_date = action_date
+        inventory_deployment.save()
 
         # Add Actions for all Inventory item and children
         inventory_tree = inventory_item.get_descendants(include_self=True)
@@ -1273,16 +1173,10 @@ class ActionDeployInventoryAjaxFormView(LoginRequiredMixin, AjaxFormMixin, FormV
             actions_to_update = ['locationchange', 'addtobuild', 'startdeployment', 'subchange']
             for action in actions:
                 if action.action_type in actions_to_update:
-                    action.created_at = created_at
+                    action.created_at = action_date
                     action.save()
-            item.create_action_record(
-                self.request.user,
-                Action.DEPLOYMENTTOFIELD,
-                '',
-                created_at,
-                cruise,
-                'inventory_deployment',
-            )
+            # Call the function to create an Action history chain for this event
+            _create_action_history(item, Action.DEPLOYMENTTOFIELD, self.request.user)
 
         # Check if any subassembly orphan children items already exist.  If so, make this item the parent
         children = inventory_item.assembly_part.get_children()
@@ -1340,7 +1234,8 @@ class InventoryAjaxAssignDestinationActionView(RedirectView):
         inventory_item.assembly_part = assembly_part
         inventory_item.assigned_destination_root = inventory_item
         inventory_item.save()
-        inventory_item.create_action_record(self.request.user, 'assigndest')
+        # Call the function to create an Action history chain for this event
+        _create_action_history(inventory_item, Action.ASSIGNDEST, self.request.user)
 
         # Get any subassembly children items, move their Assembly Part assignment to match parent
         subassemblies = inventory_item.get_descendants()
@@ -1355,7 +1250,8 @@ class InventoryAjaxAssignDestinationActionView(RedirectView):
                     assembly_parts_added.append(sub.id)
                     break
             item.save()
-            item.create_action_record(self.request.user, 'assigndest')
+            # Call the function to create an Action history chain for this event
+            _create_action_history(item, Action.ASSIGNDEST, self.request.user, inventory_item)
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ) )
 
@@ -1369,8 +1265,6 @@ class InventoryAjaxDestinationSubassemblyListView(LoginRequiredMixin, TemplateVi
         assembly_part = AssemblyPart.objects.get(id=self.kwargs['pk'])
         location = Location.objects.get(id=self.kwargs['location_pk'])
         assigned_destination_root = Inventory.objects.get(id=self.kwargs['assigned_destination_root_pk'])
-
-        #navtreedata = json.loads(navtree_node_id)
 
         if assembly_part.parent:
             try:
@@ -1532,13 +1426,9 @@ class InventoryAjaxParentActionView(RedirectView):
         subassembly.assigned_destination_root = parent.assigned_destination_root
         subassembly.save()
 
-        # Add Action Record if Location change
-        if subassembly.location_changed():
-            subassembly.create_action_record(self.request.user, 'locationchange')
-
-        parent_detail = 'Sub-%s %s added.' % (labels['label_assemblies_app_singular'], subassembly)
-        subassembly.create_action_record(self.request.user, 'subchange')
-        parent.create_action_record(self.request.user, 'subchange', parent_detail)
+        # Call the function to create an Action history chain for this event
+        _create_action_history(subassembly, Action.SUBCHANGE, self.request.user)
+        _create_action_history(parent, Action.SUBCHANGE, self.request.user, subassembly)
 
         # Get any subassembly children items, move their location to match parent and add Action to history
         subassemblies = subassembly.get_descendants()
@@ -1559,9 +1449,8 @@ class InventoryAjaxParentActionView(RedirectView):
             item.detail = "Parent added to new sub-assembly"
             item.save()
             # Add Action Record if Location change
-            if item.location_changed():
-                item.create_action_record(self.request.user, 'locationchange')
-            item.create_action_record(self.request.user, 'subchange', item.detail)
+            # Call the function to create an Action history chain for this event
+            _create_action_history(item, Action.LOCATIONCHANGE, self.request.user, subassembly)
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ) )
 
@@ -1613,14 +1502,9 @@ class InventoryAjaxSubassemblyActionView(RedirectView):
         subassembly.assembly_part = assembly_part
         subassembly.save()
 
-        # Add Action Record if Location change
-        if subassembly.location_changed():
-            subassembly.create_action_record(self.request.user, 'locationchange')
-
-        if subassembly.parent:
-            parent_detail = 'Sub-%s %s added.' % (labels['label_assemblies_app_singular'], subassembly)
-            subassembly.create_action_record(self.request.user, 'subchange')
-            subassembly.parent.create_action_record(self.request.user, 'subchange', parent_detail)
+        # Call the function to create an Action history chain for this event
+        _create_action_history(subassembly, Action.SUBCHANGE, self.request.user)
+        _create_action_history(parent, Action.SUBCHANGE, self.request.user, subassembly)
 
         # Get any subassembly children items, move their location to match parent and add Action to history
         subassemblies = Inventory.objects.get(id=subassembly.id).get_descendants()
@@ -1640,9 +1524,8 @@ class InventoryAjaxSubassemblyActionView(RedirectView):
             item.detail = "Parent added to new sub-assembly"
             item.save()
             # Add Action Record if Location change
-            if item.location_changed():
-                item.create_action_record(self.request.user, 'locationchange')
-            item.create_action_record(self.request.user, 'subchange', item.detail)
+            # Call the function to create an Action history chain for this event
+            _create_action_history(item, Action.LOCATIONCHANGE, self.request.user, subassembly)
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['parent_pk'], ) )
 

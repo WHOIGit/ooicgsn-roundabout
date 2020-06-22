@@ -108,13 +108,6 @@ class Inventory(MPTTModel):
         tree = self.get_descendants(include_self=True)
         return tree
 
-    def get_latest_action(self):
-        try:
-            action = self.actions.latest()
-            return action
-        except:
-            return None
-
     def get_latest_build(self):
         try:
             action = self.actions.filter(build__isnull=False).latest()

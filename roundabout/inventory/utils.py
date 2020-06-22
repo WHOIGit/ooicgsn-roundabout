@@ -21,6 +21,7 @@
 from django.utils import timezone
 
 from .models import *
+from roundabout.inventory.models import Inventory
 from roundabout.builds.models import Build
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
@@ -29,7 +30,7 @@ labels = set_app_labels()
 # Utility functions for use with Inventory models
 # ------------------------------------------------------------------------------
 
-def _create_action_history(obj, action_type, user, referring_obj=None, referring_action='', action_date=timezone.now()):
+def _create_action_history(obj, action_type, user, referring_obj=None, referring_action='', action_date=None):
     # Set default variables
     object_type = obj._meta.model_name
     detail = ''
@@ -82,9 +83,11 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
     # Run through the discrete Actions, set up details text and extra records if needed.
     if action_type == Action.ADD:
         action_record.detail = '%s first added to RDB. %s' % (obj_label, detail)
+        action_record.save()
 
     elif action_type == Action.LOCATIONCHANGE or action_type == Action.MOVETOTRASH:
         action_record.detail = 'Moved to %s from %s. %s' % (obj.location, obj.actions.latest().location, detail)
+        action_record.save()
 
         if action_type == Action.MOVETOTRASH:
             if obj.get_latest_build():
@@ -92,11 +95,13 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
                 # If Build is Deployed, need to create separate Deployment Retirement record,
                 if obj.get_latest_build().is_deployed:
                     _create_action_history(obj, Action.DEPLOYMENTRETIRE, user)
-                # Create Build Action record
                 # Add Action record for the Build
                 _create_action_history(obj.get_latest_build(), Action.SUBCHANGE, user, obj, action_type)
 
     elif action_type == Action.SUBCHANGE:
+        if obj.location_changed():
+            _create_action_history(obj, Action.LOCATIONCHANGE, user)
+
         if referring_obj:
             if object_type == Action.INVENTORY:
                 if obj.is_leaf_node():
@@ -113,12 +118,15 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
                 action_record.detail = 'Added to %s.' % (obj.parent)
             else:
                 action_record.detail = 'Removed from %s.' % (obj.get_latest_parent())
+                _create_action_history(obj.get_latest_parent(), Action.SUBCHANGE, user, obj)
+        action_record.save()
 
     elif action_type == Action.ADDTOBUILD:
-        action_record.detail = 'Moved to %s.' % (obj.build)
-
         if obj.location_changed():
             _create_action_history(obj, Action.LOCATIONCHANGE, user)
+
+        action_record.detail = 'Moved to %s.' % (obj.build)
+        action_record.save()
 
         if not referring_obj:
             if obj.parent:
@@ -135,12 +143,13 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
         _create_action_history(obj.get_latest_build(), Action.SUBCHANGE, user, obj, action_type)
 
     elif action_type == Action.REMOVEFROMBUILD:
+        if obj.location_changed():
+            _create_action_history(obj, Action.LOCATIONCHANGE, user)
+
         action_record.build = obj.get_latest_build()
         action_record.detail = 'Removed from %s. %s' % (obj.get_latest_build(), detail)
         action_record.location = obj.get_latest_build().location
-
-        if obj.location_changed():
-            _create_action_history(obj, Action.LOCATIONCHANGE, user)
+        action_record.save()
 
         if not referring_obj and obj.parent_changed():
             _create_action_history(obj, Action.SUBCHANGE, user)
@@ -155,21 +164,24 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
 
     elif action_type == Action.ASSIGNDEST:
         action_record.detail = 'Destination assigned - %s.' % (self.assembly_part.assembly_revision)
+        action_record.save()
 
     elif action_type == Action.REMOVEDEST:
         action_record.detail = 'Destination Assignment removed. %s' % (detail)
+        action_record.save()
 
     elif action_type == Action.TEST:
         action_record.detail = '%s: %s. %s' % (obj.get_test_type_display(), obj.get_test_result_display(), detail)
+        action_record.save()
 
     elif action_type == Action.STARTDEPLOYMENT:
+        if obj.location_changed():
+            _create_action_history(obj, Action.LOCATIONCHANGE, user, '', '', action_date)
+
         action_record.detail = '%s %s started' % (labels['label_deployments_app_singular'], deployment)
         action_record.deployment_type = deployment_type
         if deployment_type == Action.BUILD_DEPLOYMENT:
             action_record.created_at = deployment.deployment_start_date
-
-        if obj.location_changed():
-            _create_action_history(obj, Action.LOCATIONCHANGE, user, '', '', action_date)
 
         if isinstance(obj, Inventory):
             # Create InventoryDeployment record
@@ -179,14 +191,15 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
                 deployment_start_date = action_date
             )
             action_record.inventory_deployment = inventory_deployment
+        action_record.save()
 
     elif action_type == Action.DEPLOYMENTBURNIN:
+        if obj.location_changed():
+            _create_action_history(obj, Action.LOCATIONCHANGE, user, '', '', action_date)
+
         action_record.detail = '%s %s burn in' % (labels['label_deployments_app_singular'], deployment)
         action_record.created_at = deployment.deployment_burnin_date
         action_record.deployment_type = deployment_type
-
-        if obj.location_changed():
-            _create_action_history(obj, Action.LOCATIONCHANGE, user, '', '', action_date)
 
         if isinstance(obj, Inventory):
             # Update InventoryDeployment record
@@ -194,10 +207,15 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
             inventory_deployment.deployment_burnin_date = action_date
             inventory_deployment.save()
             action_record.inventory_deployment = inventory_deployment
+            action_record.created_at = action_date
+        action_record.save()
 
     elif action_type == Action.DEPLOYMENTTOFIELD:
+        if obj.location_changed():
+            _create_action_history(obj, Action.LOCATIONCHANGE, user, '', '', action_date)
+
         action_record.detail = 'Deployed to field on %s.' % (deployment)
-        action_record.created_at = deployment.deployment_burnin_date
+        action_record.created_at = deployment.deployment_to_field_date
         action_record.deployment_type = deployment_type
         action_record.latitude = deployment.latitude
         action_record.longitude = deployment.longitude
@@ -206,26 +224,47 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
         if deployment.cruise_deployed:
             action_record.cruise = deployment.cruise_deployed
             action_record.detail = '%s Cruise: %s' % (action_record.detail, deployment.cruise_deployed)
+
         # Update InventoryDeployment record
         if isinstance(obj, Inventory):
             inventory_deployment = obj.inventory_deployments.get_active_deployment()
-            inventory_deployment.deployment_to_field_date = action_date
-            inventory_deployment.cruise_deployed = deployment.cruise_deployed
+            # Only update date/cruise on full Build deployment, not individual item
+            if deployment_type == Action.BUILD_DEPLOYMENT:
+                inventory_deployment.deployment_to_field_date = action_date
+                inventory_deployment.cruise_deployed = deployment.cruise_deployed
+            else:
+                inventory_deployment.deployment_start_date = action_date
+
             inventory_deployment.save()
             action_record.inventory_deployment = inventory_deployment
+            action_record.created_at = action_date
+        action_record.save()
 
     elif action_type == Action.DEPLOYMENTRECOVER:
+        if obj.location_changed():
+            _create_action_history(obj, Action.LOCATIONCHANGE, user, '', '', action_date)
+
         action_record.detail = 'Recovered from %s. %s' % (deployment, detail)
-        if deployment.cruise_recovered:
+        if deployment and deployment.cruise_recovered:
             action_record.cruise = deployment.cruise_recovered
             action_record.detail = '%s Cruise: %s' % (action_record.detail, deployment.cruise_deployed)
+
         # Update InventoryDeployment record
         if isinstance(obj, Inventory):
             inventory_deployment = obj.inventory_deployments.get_active_deployment()
-            inventory_deployment.deployment_recovery_date = action_date
-            inventory_deployment.cruise_recovered = deployment.cruise_recovered
+            # Only update date/cruise on full Build deployment, not individual item
+            if deployment_type == Action.BUILD_DEPLOYMENT:
+                inventory_deployment.deployment_recovery_date = action_date
+                inventory_deployment.cruise_recovered = deployment.cruise_recovered
             inventory_deployment.save()
             action_record.inventory_deployment = inventory_deployment
+            action_record.detail = 'Recovered from %s. %s' % (inventory_deployment.deployment, detail)
+
+        action_record.save()
+        # Run secondary Action records after completion
+        if deployment_type == Action.INVENTORY_DEPLOYMENT:
+            # Add Remove from Build record
+            _create_action_history(obj, Action.REMOVEFROMBUILD, user, '', '', action_date)
 
     elif action_type == Action.DEPLOYMENTRETIRE:
         deployment = obj.get_latest_deployment()
@@ -237,8 +276,10 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
             inventory_deployment.deployment_retire_date = action_date
             inventory_deployment.save()
             action_record.inventory_deployment = inventory_deployment
-
-    action_record.save()
+        action_record.save()
+    else:
+        action_record.save()
+    #action_record.save()
     """
     # loop through any children
     if object_type == Action.INVENTORY:
