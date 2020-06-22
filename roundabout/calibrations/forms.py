@@ -2,6 +2,8 @@ from django import forms
 from .models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientValue
 from roundabout.inventory.models import Inventory
 from roundabout.parts.models import Part
+from roundabout.users.models import User
+from decimal import Decimal
 from django.forms.models import inlineformset_factory, BaseInlineFormSet
 from bootstrap_datepicker_plus import DatePickerInput
 from sigfig import round
@@ -13,10 +15,11 @@ from django.utils.translation import gettext_lazy as _
 class CalibrationEventForm(forms.ModelForm):
     class Meta:
         model = CalibrationEvent 
-        fields = ['calibration_date', 'approved']
+        fields = ['calibration_date', 'approved', 'user_draft']
         labels = {
             'calibration_date': 'Calibration Date',
-            'approved': 'Approved'
+            'approved': 'Approved',
+            'user_draft': 'Reviewers'
         }
         widgets = {
             'calibration_date': DatePickerInput(
@@ -26,8 +29,24 @@ class CalibrationEventForm(forms.ModelForm):
                     "showClear": True,
                     "showTodayButton": True,
                 }
-            )
+            ),
+            'user_draft': forms.SelectMultiple()
         }
+
+    def __init__(self, *args, **kwargs):
+        super(CalibrationEventForm, self).__init__(*args, **kwargs)
+
+    def clean_user_draft(self):
+        user_draft = self.cleaned_data.get('user_draft')
+        return user_draft
+
+    def save(self, commit = True): 
+        event = super(CalibrationEventForm, self).save(commit = False)
+        if self.has_changed():
+            if commit:
+                event.save()
+                return event
+         
 
 
 # CoefficientValueSet form

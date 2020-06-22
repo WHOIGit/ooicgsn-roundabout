@@ -55,7 +55,8 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         form.instance.inventory = inv_inst
         if form.cleaned_data['approved']:
             form.instance.user_approver = self.request.user
-        form.instance.user_draft = self.request.user
+        if form.cleaned_data['user_draft'].exists():
+            form.instance.user_draft.set(form.cleaned_data['user_draft'])
         self.object = form.save()
         event_valueset_form.instance = self.object
         event_valueset_form.save(commit=False)
@@ -137,7 +138,8 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         form.instance.inventory = inv_inst
         if form.cleaned_data['approved']:
             form.instance.user_approver = self.request.user
-        form.instance.user_draft = self.request.user
+        if form.cleaned_data['user_draft'].exists():
+            form.instance.user_draft.set(form.cleaned_data['user_draft'])
         self.object = form.save()
         event_valueset_form.instance = self.object
         event_valueset_form.save(commit=False)
@@ -351,3 +353,13 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
 
     def get_success_url(self):
         return reverse('parts:ajax_parts_detail', args=(self.object.id, ))
+
+def test_view(request, pk, user_pk):
+    event = CalibrationEvent.objects.get(id=pk)
+    user = User.objects.get(id=user_pk)
+    reviewers = event.user_draft.all()
+    if user in reviewers:
+        reviewers_minus_user = reviewers.exclude(username=user)
+        event.user_draft.set(reviewers_minus_user)
+    data = {'data': 'success'}
+    return JsonResponse(data)

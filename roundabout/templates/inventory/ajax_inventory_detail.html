@@ -520,10 +520,13 @@
                             aria-controls="event-{{ event.id }}" 
                             aria-expanded="false" 
                             role="button"
+                            id='expander-{{event.id}}'
+                            data-reviewer-url="{% url 'calibrations:event_review_delete' event.id user.id %}"
                         >
                             <i class="fa" aria-hidden="true"></i>
                             <span class="sr-only">Expand/Collapse Calibration {{ event.calibration_date }}</span>
                         </a>
+                        {% if user in event.user_draft.all %}<span id="review-badge" class="badge badge-pill badge-success">Review Requested</span>{% endif %}
                         <div class = 'ajax-detail-link float-right'>
                             <a  href="#"
                                 class="btn btn-primary btn-sm mr-2"
@@ -547,7 +550,11 @@
                             </div>
                             <p>Approved: {{ event.approved }}</p>
                             <p>Approved by: {{ event.user_approver.username }}</p>
-                            <p>Last Updated by: {{ event.user_draft.username }}</p>
+                            <p>Reviewers: 
+                                {% for user in event.user_draft.all %}
+                                    {{ user.username }} 
+                                {% endfor %}
+                            </p> 
                             <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
                                 <li class="nav-item">
                                     <a  class="nav-link active" 
@@ -824,9 +831,10 @@
         });
 
         // Toggle display of Calibration and Configuration Actions sections
-        var inv_part_type = '{{ inventory_item.part.part_type }}';
-        var deployment = '{{ inventory_item.build.current_deployment }}'
-        if (inv_part_type == 'Instrument') {
+        let inv_part_type = '{{ inventory_item.part.part_type }}';
+        let deployment = '{{ inventory_item.build.current_deployment }}'
+        let part_has_cals = '{{ inventory_item.part.coefficient_names.exists }}'
+        if (inv_part_type == 'Instrument' && part_has_cals == 'True') {
             $('#add_coefficient_action').show();
             $('#calibration-template-tab').show().css('display', '');
             $('#calibration-template').show().css('display', '');
@@ -851,14 +859,23 @@
 
         // Auto-resize CoefficientValue tables for horizontal scrolling
         function setCoeffTableWidth() {
-            let invTabWidth =  $('#inventory-tabs').width()
-            let tBodyWidth = invTabWidth - (invTabWidth * .1)
+            let invTabWidth =  $('#inventory-tabs').width();
+            let tBodyWidth = invTabWidth - (invTabWidth * .1);
             $('.coeff-tbody').each(function() {
                 $(this).css('max-width', tBodyWidth + 'px' );
             })
         }
 
+        $('#calibration-template').on('click', 'a[id^=expander]', function() {
+            let url = $(this).attr('data-reviewer-url')
+            let badge = $(this).next('span[id=review-badge]')
+            $.ajax({
+                url: url,
+                success: function (data) {
+                  badge.remove()
+                }
+            });
+        })
     });
-
 </script>
 {% endblock javascript %}
