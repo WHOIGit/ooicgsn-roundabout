@@ -778,24 +778,17 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 item.create_action_record(self.request.user, 'deploymentretire')
                 item.update_time_at_sea()
 
-        if action_type == 'removedest':
+        if action_type == Action.REMOVEDEST:
             # Get any subassembly children items, add Action to history
-            subassemblies = Inventory.objects.get(id=self.object.id).get_descendants()
+            subassemblies = self.object.get_descendants()
             for item in subassemblies:
                 item.assembly_part = None
                 item.assigned_destination_root = None
                 item.save()
-                item.create_action_record(self.request.user, action_type, detail)
+                # Call the function to create an Action history chain for all child items
+                _create_action_history(item, action_type, self.request.user, self.object)
 
-        if action_type == 'subchange':
-            # Add Location Change record if moved
-            if self.object.location_changed():
-                self.object.create_action_record(self.request.user, 'locationchange')
-            # Find previous parent to add to Detail field text
-            old_parent = self.object.get_latest_parent()
-            parent_detail = 'Sub-%s %s removed.' % (labels['label_assemblies_app_singular'], self.object)
-            old_parent.create_action_record(self.request.user, 'subchange', parent_detail)
-
+        if action_type == Action.SUBCHANGE:
             # Get any subassembly children items, move their location to match parent and add Action to history
             subassemblies = self.object.get_descendants()
             assembly_parts_added = []
@@ -1188,19 +1181,9 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
             if build.current_deployment().current_deployment_status() == 'deploymentburnin':
                 subassembly.create_action_record(self.request.user, 'deploymentburnin')
         """
-        # Check if any subassembly orphan children items already exist.  If so, make this item the parent
-        children = subassembly.assembly_part.get_children()
-        for child in children:
-            if child.inventory.exists():
-                child_item = Inventory.objects.filter(assembly_part=child).filter(build=subassembly.build)
-                for c in child_item:
-                    if c.build == subassembly.build:
-                        c.parent = subassembly
-                        c.save()
-
 
         # Get any subassembly children items, move their location to match parent and add Action to history
-        subassemblies = Inventory.objects.get(id=subassembly.id).get_descendants()
+        subassemblies = subassembly.get_descendants()
         assembly_parts_added = []
         for item in subassemblies:
             sub_assembly_parts = subassembly.assembly_part.get_descendants()
@@ -1243,9 +1226,20 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
         """
         # Call the function to create an Action history chain for this event
         _create_action_history(subassembly, action_type, self.request.user)
+
         # If Build is already at sea, need to add Action item for deploying to field with Cruise data
         if build.is_deployed_to_field():
             return reverse('inventory:ajax_deploy_action', args=(self.kwargs['pk'], ))
+        else:
+            # Check if any subassembly orphan children items already exist.  If so, make this item the parent
+            children = subassembly.assembly_part.get_children()
+            for child in children:
+                if child.inventory.exists():
+                    child_item = Inventory.objects.filter(assembly_part=child).filter(build=subassembly.build)
+                    for c in child_item:
+                        if c.build == subassembly.build:
+                            c.parent = subassembly
+                            c.save()
 
         return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['pk'], ))
 
@@ -1289,6 +1283,16 @@ class ActionDeployInventoryAjaxFormView(LoginRequiredMixin, AjaxFormMixin, FormV
                 cruise,
                 'inventory_deployment',
             )
+
+        # Check if any subassembly orphan children items already exist.  If so, make this item the parent
+        children = inventory_item.assembly_part.get_children()
+        for child in children:
+            if child.inventory.exists():
+                child_item = Inventory.objects.filter(assembly_part=child).filter(build=inventory_item.build)
+                for c in child_item:
+                    if c.build == inventory_item.build:
+                        c.parent = inventory_item
+                        c.save()
 
         response = HttpResponseRedirect(self.get_success_url())
 

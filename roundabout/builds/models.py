@@ -101,6 +101,13 @@ class Build(models.Model):
                 return True
         return False
 
+    def location_changed(self):
+        current_location = self.location
+        last_location = self.actions.latest().location
+        if current_location != last_location:
+            return True
+        return False
+
     # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
     def update_time_at_sea(self):
         try:

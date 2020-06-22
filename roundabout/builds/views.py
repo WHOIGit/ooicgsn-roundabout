@@ -340,13 +340,8 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
             for item in subassemblies:
                 item.location = self.object.location
                 item.save()
-                # Create new Action record
-                item_action_record = Action.objects.create(
-                    action_type=action_type,
-                    object_type = Action.INVENTORY,
-                    inventory=item,
-                    user=self.request.user,
-                )
+                # Call the function to create an Action history chain for this event
+                _create_action_history(item, action_type, self.request.user, self.object)
 
         response = HttpResponseRedirect(self.get_success_url())
 

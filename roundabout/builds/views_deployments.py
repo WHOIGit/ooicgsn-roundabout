@@ -30,6 +30,7 @@ from .models import Build, BuildAction
 from .forms import *
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory, Action, Deployment, DeploymentAction, InventoryDeployment
+from roundabout.inventory.utils import _create_action_history
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
 labels = set_app_labels()
@@ -66,7 +67,11 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         return reverse('builds:ajax_builds_detail', args=(self.object.build.id,))
 
     def form_valid(self, form):
+        action_type = Action.STARTDEPLOYMENT
+        action_date = form.cleaned_data['date']
+        self.object.deployment_start_date = action_date
         self.object = form.save()
+
         # Update the Build instance to match any Deployment changes
         build = self.object.build
         build.location = self.object.location
@@ -74,22 +79,20 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         build.save()
 
         # Get the date for the Action Record from the dae field
-        action_date = form.cleaned_data['date']
-        action_detail = '%s created' % (labels['label_deployments_app_singular'])
-        action_record = DeploymentAction.objects.create(action_type='startdeployment', detail=action_detail, location=self.object.location,
-                                                        user=self.request.user, deployment=self.object, created_at=action_date)
+        # Create Deployment Action record for deployment
+        #_create_action_history(self.object, action_type, self.request.user)
 
         # Create Build Action record for deployment
-        build_detail = '%s %s started.' % (self.object.deployment_number, labels['label_deployments_app_singular'])
-        build_record = BuildAction.objects.create(action_type='startdeployment', detail=build_detail, location=self.object.location,
-                                                   user=self.request.user, build=build, created_at=action_date)
+        _create_action_history(build, action_type, self.request.user)
 
         # Get all Inventory items on Build, match location and add Action
         inventory_items = build.inventory.all()
         for item in inventory_items:
             item.location = build.location
             item.save()
-            item.create_action_record(self.request.user, 'startdeployment', '', None, None, 'build_deployment')
+            #item.create_action_record(self.request.user, 'startdeployment', '', None, None, 'build_deployment')
+            # Call the function to create an Action history chain for this event
+            _create_action_history(item, action_type, self.request.user, build)
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -236,13 +239,8 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         # Create Build Action record for deployment
         if action_type == 'deploymenttofield':
             self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
-
-        build_record = BuildAction.objects.create(action_type=action_type,
-                                                  detail=self.object.detail,
-                                                  location=build.location,
-                                                  user=self.request.user,
-                                                  build=build,
-                                                  created_at=action_date)
+        # Create Build Action record for deployment
+        _create_action_history(build, action_type, self.request.user)
 
         #update Time at Sea if Recovered from Sea with Build model method
         if action_type == 'deploymentrecover':
@@ -282,9 +280,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         for item in inventory_items:
             item.location = build.location
             item.save()
-            if item.location_changed():
-                item.create_action_record(self.request.user, 'locationchange')
-            item.create_action_record(self.request.user, action_type, detail, action_date,  cruise, deployment_type)
+            _create_action_history(item, action_type, self.request.user, build)
             #update Time at Sea if Recovered from Sea with Inventory model method
             if action_type == 'deploymentrecover':
                 item.update_time_at_sea()
