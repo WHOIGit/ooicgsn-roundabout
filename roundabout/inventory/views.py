@@ -704,6 +704,10 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 item.location = self.object.location
                 item.save()
                 item.update_time_at_sea()
+                inventory_deployment = item.inventory_deployments.get_active_deployment()
+                inventory_deployment.cruise_recovered = cruise
+                inventory_deployment.deployment_recovery_date = action_date
+                inventory_deployment.save()
                 # Call the function to create an Action history chain for all child items
                 _create_action_history(item, action_type, self.request.user, self.object)
                 # Create Build Action record
@@ -1159,15 +1163,15 @@ class ActionDeployInventoryAjaxFormView(LoginRequiredMixin, AjaxFormMixin, FormV
         inventory_item = Inventory.objects.get(id=self.kwargs['pk'])
         cruise = form.cleaned_data['cruise']
         action_date = form.cleaned_data['date']
-        # Update InventoryDeployment object
-        inventory_deployment = inventory_item.inventory_deployments.get_active_deployment()
-        inventory_deployment.cruise_deployed = cruise
-        inventory_deployment.deployment_to_field_date = action_date
-        inventory_deployment.save()
 
         # Add Actions for all Inventory item and children
         inventory_tree = inventory_item.get_descendants(include_self=True)
         for item in inventory_tree:
+            # Update InventoryDeployment object
+            inventory_deployment = item.inventory_deployments.get_active_deployment()
+            inventory_deployment.cruise_deployed = cruise
+            inventory_deployment.deployment_to_field_date = action_date
+            inventory_deployment.save()
             # Need to update last Action dates to match Deployment date
             actions = item.actions.filter(deployment__isnull=False).order_by('-id')[:4]
             actions_to_update = ['locationchange', 'addtobuild', 'startdeployment', 'subchange']

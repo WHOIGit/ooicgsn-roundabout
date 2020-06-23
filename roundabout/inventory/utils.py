@@ -85,6 +85,10 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
         action_record.detail = '%s first added to RDB. %s' % (obj_label, detail)
         action_record.save()
 
+    elif action_type == Action.UPDATE:
+        action_record.detail = '%s details updated.' % (obj_label)
+        action_record.save()
+
     elif action_type == Action.LOCATIONCHANGE or action_type == Action.MOVETOTRASH:
         action_record.detail = 'Moved to %s from %s. %s' % (obj.location, obj.actions.latest().location, detail)
         action_record.save()
@@ -92,11 +96,6 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
         if action_type == Action.MOVETOTRASH:
             if obj.get_latest_build():
                 _create_action_history(obj, Action.REMOVEFROMBUILD, user)
-                # If Build is Deployed, need to create separate Deployment Retirement record,
-                if obj.get_latest_build().is_deployed:
-                    _create_action_history(obj, Action.DEPLOYMENTRETIRE, user)
-                # Add Action record for the Build
-                _create_action_history(obj.get_latest_build(), Action.SUBCHANGE, user, obj, action_type)
 
     elif action_type == Action.SUBCHANGE:
         if obj.location_changed():
@@ -221,7 +220,7 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
         action_record.longitude = deployment.longitude
         action_record.depth = deployment.depth
 
-        if deployment.cruise_deployed:
+        if isinstance(obj, Build):
             action_record.cruise = deployment.cruise_deployed
             action_record.detail = '%s Cruise: %s' % (action_record.detail, deployment.cruise_deployed)
 
@@ -238,16 +237,22 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
             inventory_deployment.save()
             action_record.inventory_deployment = inventory_deployment
             action_record.created_at = action_date
+            action_record.cruise = inventory_deployment.cruise_deployed
+            action_record.detail = '%s Cruise: %s' % (action_record.detail, inventory_deployment.cruise_deployed)
         action_record.save()
 
     elif action_type == Action.DEPLOYMENTRECOVER:
         if obj.location_changed():
             _create_action_history(obj, Action.LOCATIONCHANGE, user, '', '', action_date)
 
+        deployment = obj.get_latest_deployment()
         action_record.detail = 'Recovered from %s. %s' % (deployment, detail)
-        if deployment and deployment.cruise_recovered:
+        action_record.deployment_type = deployment_type
+        action_record.deployment = deployment
+
+        if isinstance(obj, Build):
             action_record.cruise = deployment.cruise_recovered
-            action_record.detail = '%s Cruise: %s' % (action_record.detail, deployment.cruise_deployed)
+            action_record.detail = '%s Cruise: %s' % (action_record.detail, deployment.cruise_recovered)
 
         # Update InventoryDeployment record
         if isinstance(obj, Inventory):
@@ -258,7 +263,11 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
                 inventory_deployment.cruise_recovered = deployment.cruise_recovered
             inventory_deployment.save()
             action_record.inventory_deployment = inventory_deployment
-            action_record.detail = 'Recovered from %s. %s' % (inventory_deployment.deployment, detail)
+            action_record.build = obj.get_latest_build()
+            action_record.detail = 'Recovered from %s. %s' % (deployment, detail)
+            action_record.created_at = action_date
+            action_record.cruise = inventory_deployment.cruise_recovered
+            action_record.detail = '%s Cruise: %s' % (action_record.detail, inventory_deployment.cruise_recovered)
 
         action_record.save()
         # Run secondary Action records after completion
@@ -273,9 +282,10 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
         # update InventoryDeployment record
         if isinstance(obj, Inventory):
             inventory_deployment = obj.inventory_deployments.get_active_deployment()
-            inventory_deployment.deployment_retire_date = action_date
-            inventory_deployment.save()
-            action_record.inventory_deployment = inventory_deployment
+            if inventory_deployment:
+                inventory_deployment.deployment_retire_date = action_date
+                inventory_deployment.save()
+                action_record.inventory_deployment = inventory_deployment
         action_record.save()
     else:
         action_record.save()

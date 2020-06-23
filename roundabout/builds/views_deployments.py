@@ -250,9 +250,9 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         cruise = None
         deployment_type = 'build_deployment'
 
-        if action_type == 'deploymenttofield':
+        if action_type ==  Action.DEPLOYMENTTOFIELD:
             cruise = self.object.cruise_deployed
-        elif action_type == 'deploymentrecover':
+        elif action_type ==  Action.DEPLOYMENTRECOVER:
             cruise = self.object.cruise_recovered
 
         for item in inventory_items:

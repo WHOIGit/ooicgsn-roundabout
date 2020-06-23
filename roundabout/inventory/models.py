@@ -348,6 +348,10 @@ class DeploymentBase(models.Model):
             return time_on_deployment
         return timedelta(minutes=0)
 
+    def get_actions(self):
+        actions = self.build.actions.filter(object_type=Action.BUILD).filter(deployment=self)
+        return actions
+
     def deployment_progress_bar(self):
         deployment_progress_bar = None
         # Set variables for Deployment/Inventory Deployment Status bar in Bootstrap

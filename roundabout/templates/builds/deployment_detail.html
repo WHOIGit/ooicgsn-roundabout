@@ -72,7 +72,7 @@
 
         </thead>
         <tbody>
-          {% for action in deployment.deployment_actions.all %}
+          {% for action in deployment.get_actions.all %}
             <tr>
                 <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
                 <td>{{ action.get_action_type_display }}</td>
