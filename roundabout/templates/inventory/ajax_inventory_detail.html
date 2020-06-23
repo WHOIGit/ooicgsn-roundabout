@@ -615,26 +615,18 @@
                                                                             <th>Value(s)</th>
                                                                         </thead>
                                                                         <tbody class = 'coeff-tbody' id = 'coeff-val-tbody' style = 'display:block; overflow: auto; max-height: 200px'>
-                                                                            {% if value_set.coefficient_name.value_set_type == "2d" %}
-                                                                                {% regroup value_set.coefficient_values.all by row as row_sets %}
-                                                                                {% for row in row_sets %}
-                                                                                    <tr style = 'display: block;'>
-                                                                                        {% for val in value_set.coefficient_values.all %}
-                                                                                            {% if val.row == row.grouper %}
-                                                                                                <td style = 'white-space: nowrap'>
-                                                                                                    <div style = 'width: 100px; text-align: center;'>{{ val }}</div>
-                                                                                                </td>
-                                                                                            {% endif %}
-                                                                                        {% endfor %}
-                                                                                    </tr>
-                                                                                {% endfor %}
-                                                                            {% else %}
-                                                                                {% for val in value_set.coefficient_values.all %}
-                                                                                    <tr style = 'display: block;'>
-                                                                                        <td style = 'white-space: nowrap'>{{ val }}</td>
-                                                                                    </tr>
-                                                                                {% endfor %}
-                                                                            {% endif %}
+                                                                            {% regroup value_set.coefficient_values.all by row as row_sets %}
+                                                                            {% for row in row_sets %}
+                                                                                <tr style = 'display: block;'>
+                                                                                    {% for val in value_set.coefficient_values.all %}
+                                                                                        {% if val.row == row.grouper %}
+                                                                                            <td style = 'white-space: nowrap'>
+                                                                                                <div style = 'width: 100px; text-align: center;'>{{ val }}</div>
+                                                                                            </td>
+                                                                                        {% endif %}
+                                                                                    {% endfor %}
+                                                                                </tr>
+                                                                            {% endfor %}
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
@@ -832,8 +824,8 @@
 
         // Toggle display of Calibration and Configuration Actions sections
         let inv_part_type = '{{ inventory_item.part.part_type }}';
-        let deployment = '{{ inventory_item.build.current_deployment }}'
-        let part_has_cals = '{{ inventory_item.part.coefficient_names.exists }}'
+        let deployment = '{{ inventory_item.build.current_deployment }}';
+        let part_has_cals = '{{ inventory_item.part.coefficient_names.exists }}';
         if (inv_part_type == 'Instrument' && part_has_cals == 'True') {
             $('#add_coefficient_action').show();
             $('#calibration-template-tab').show().css('display', '');
@@ -866,16 +858,19 @@
             })
         }
 
+        // Remove User as Event Reviewer
         $('#calibration-template').on('click', 'a[id^=expander]', function() {
-            let url = $(this).attr('data-reviewer-url')
-            let badge = $(this).next('span[id=review-badge]')
-            $.ajax({
-                url: url,
-                success: function (data) {
-                  badge.remove()
-                }
-            });
-        })
+            let url = $(this).attr('data-reviewer-url');
+            let badge = $(this).next('span[id=review-badge]');
+            if (badge.length) {
+                $.ajax({
+                    url: url,
+                    success: function (data) {
+                        badge.remove();
+                    }
+                });
+            }
+        });
     });
 </script>
 {% endblock javascript %}

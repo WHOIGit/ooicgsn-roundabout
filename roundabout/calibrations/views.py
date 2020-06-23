@@ -354,7 +354,7 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
     def get_success_url(self):
         return reverse('parts:ajax_parts_detail', args=(self.object.id, ))
 
-def test_view(request, pk, user_pk):
+def remove_reviewer(request, pk, user_pk):
     event = CalibrationEvent.objects.get(id=pk)
     user = User.objects.get(id=user_pk)
     reviewers = event.user_draft.all()
