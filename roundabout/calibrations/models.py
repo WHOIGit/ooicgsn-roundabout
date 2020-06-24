@@ -14,6 +14,7 @@ from django.utils.translation import gettext_lazy as _
 class CalibrationEvent(models.Model):
     class Meta:
         ordering = ['-calibration_date']
+        get_latest_by = 'calibration_date'
     def __str__(self):
         return self.calibration_date
     def get_object_type(self):
@@ -51,7 +52,7 @@ class CoefficientName(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     part = models.ForeignKey(Part, related_name='coefficient_names', on_delete=models.CASCADE, null=True)
 
-# Tracks Coefficient Sets across Calibrations 
+# Tracks Coefficient Sets across Calibrations
 class CoefficientValueSet(models.Model):
     class Meta:
         ordering = ['created_at']

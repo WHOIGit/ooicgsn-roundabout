@@ -32,6 +32,7 @@ from roundabout.builds.models import Build, BuildAction
 from roundabout.inventory.models import Inventory, Action, DeploymentAction
 from roundabout.assemblies.models import Assembly
 from roundabout.userdefinedfields.models import Field
+from roundabout.calibrations.models import CalibrationEvent, CoefficientValueSet
 
 
 class UDF_Column(ManyToManyColumn):
@@ -170,3 +171,16 @@ class AssemblyTable(SearchTable):
     assembly_number = Column(verbose_name='Assembly Number', attrs={'style':'white-space: nowrap;'},
         linkify=dict(viewname='assemblies:assembly_detail',args=[tables.A('pk')]))
     assembly_type__name = Column(verbose_name='Type')
+
+class CalibrationTable(SearchTable):
+    class Meta(SearchTable.Meta):
+        model = CoefficientValueSet
+        fields = ['calibration_event__inventory__serial_number','calibration_event__inventory__part__name','coefficient_name__calibration_name','calibration_event__calibration_date']
+        base_shown_cols = fields[1:]
+
+    calibration_event__inventory__serial_number = Column(verbose_name='Inventory: SN', attrs={'style':'white-space: nowrap;'},
+              linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('calibration_event__inventory__pk')]))
+    calibration_event__inventory__part__name = Column(verbose_name='Inventory Item')
+    calibration_event__calibration_date = tables.DateColumn(verbose_name='Calibration Date', format='Y-m-d')
+
+#TODO move most field Column specifications to col_args section of views page.

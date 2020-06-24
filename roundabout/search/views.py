@@ -23,6 +23,7 @@ import json
 import operator
 from functools import reduce
 from urllib.parse import unquote
+from fnmatch import fnmatch
 
 #from django.urls import reverse, reverse_lazy
 from django.utils.html import format_html, mark_safe
@@ -43,8 +44,9 @@ from roundabout.builds.models import Build
 from roundabout.inventory.models import Inventory
 from roundabout.assemblies.models import Assembly
 from roundabout.userdefinedfields.models import Field
+from roundabout.calibrations.models import CalibrationEvent, CoefficientValueSet
 
-from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, UDF_Column
+from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, CalibrationTable, UDF_Column
 
 
 def searchbar_redirect(request):
@@ -55,6 +57,12 @@ def searchbar_redirect(request):
     query = request.GET.get('query')
     if query:
         if model=='inventory':      getstr = '?f=.0.part__name&f=.0.part__friendly_name&f=.0.serial_number&f=.0.old_serial_number&f=.0.location__name&l=.0.icontains&q=.0.{query}'
+        elif model=='calibrations':
+            if fnmatch(query.strip(),'????-??-??'):
+                query = query.strip()
+                getstr = '?f=.0.calibration_event__calibration_date&l=.0.exact&q=.0.{query}'
+            else:
+                getstr = '?f=.0.calibration_event__inventory__serial_number&f=.0.calibration_event__inventory__part__name&f=.0.coefficient_name__calibration_name&f=.0.calibration_event__user_approver__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
         elif model=='part':         getstr = '?f=.0.part_number&f=.0.name&f=.0.friendly_name&l=.0.icontains&q=.0.{query}'
         elif model == 'build':      getstr = '?f=.0.build_number&f=.0.assembly__name&f=.0.assembly__assembly_type__name&f=.0.assembly__description&f=.0.build_notes&f=.0.location__name&l=.0.icontains&q=.0.{query}'
         elif model == 'assembly':   getstr = '?f=.0.assembly_number&f=.0.name&f=.0.assembly_type__name&f=.0.description&l=.0.icontains&q=.0.{query}'
@@ -96,7 +104,6 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
                 lookup = [v for v,t in row_items if t=='l']
                 query = [v for v,t in row_items if t=='q']
                 nega = [v for v,t in row_items if t=='n']
-                # TODO: VALIDATION HERE?
                 try:
                     assert len(fields) >=1
                     assert len(lookup)==1
@@ -127,7 +134,6 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
             for row in card['rows']:
                 Q_kwargs = []
                 for field in row['fields']:
-                    # TODO: field x lookup VALIDATION HERE?
                     # eg: Q(<field>__<lookup>=<query>) where eg: field = "part__part_number" and lookup = "icontains"
 
                     select_ones = ['__latest__','__last__','__earliest__','__first__']
@@ -152,7 +158,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
                         else:
                             annote_func = Min
 
-                        # TODO: consider implementing "is_current" field for actions, similar to UDF.FieldValue.is_current
+                        # TODO: consider implementing "is_current" field for actions+calibrations, similar to UDF.FieldValue.is_current
                         accessor,subfields = field.split(select_one)
                         Accessor = getattr(self.model,accessor).field.model
                         reverse_accessor = getattr(self.model,accessor).field.name
@@ -225,6 +231,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
                            'week_day', 'quarter', 'time', 'hour', 'minute', 'second'] +
                            ['exact', 'gt', 'gte', 'lt', 'lte', 'range'],
             ITER_LOOKUP = ['in'],
+            EXACT_LOOKUP = ['exact'],
             BOOL_LOOKUP = ['exact','iexact'], )
         context['lookup_categories'] = json.dumps(lcats)
 
@@ -241,7 +248,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
     @staticmethod
     def get_avail_fields():
         # default, this should be overwritten by non-generic search class views
-        avail_fields = [dict(value="id", text="Database ID", legal_lookups='BOOL_LOOKUP')]
+        avail_fields = [dict(value="id", text="Database ID", legal_lookup='EXACT_LOOKUP')]
         return avail_fields
 
     def get_table_kwargs(self, field_exceptions=[]):
@@ -275,12 +282,16 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
                     #safename = 'extracol-{}'.format(field['value'])
                     safename = '{}'.format(field['value'])
 
-                if 'DATE_LOOKUP' == field['legal_lookups']:
-                    col = tables.DateTimeColumn(verbose_name=field['text'], accessor=field['value'])
-                elif 'BOOL_LOOKUP' == field['legal_lookups']:
-                    col = tables.BooleanColumn(verbose_name=field['text'], accessor=field['value'])
+                col_args = field['col_args'] if 'col_args' in field else {}
+                if 'verbose_name' not in col_args:
+                    col_args['verbose_name'] = field['text']
+
+                if 'DATE_LOOKUP' == field['legal_lookup']:
+                    col = tables.DateTimeColumn(accessor=field['value'], **col_args)
+                elif 'BOOL_LOOKUP' == field['legal_lookup']:
+                    col = tables.BooleanColumn(accessor=field['value'], **col_args)
                 else:
-                    col = tables.Column(verbose_name=field['text'], accessor=field['value'])
+                    col = tables.Column(accessor=field['value'], **col_args)
 
                 extra_cols.append( (safename,col) )
 
@@ -295,38 +306,45 @@ class InventoryTableView(GenericSearchTableView):
 
     @staticmethod
     def get_avail_fields():
-        avail_fields = [dict(value="part__name",                     text="Name", legal_lookups='STR_LOOKUP'),
-                        dict(value="part__friendly_name",   text="Friendly Name", legal_lookups='STR_LOOKUP'),
-                        dict(value="serial_number",         text="Serial Number", legal_lookups='STR_LOOKUP'),
-                        dict(value="old_serial_number", text="Old Serial Number", legal_lookups='STR_LOOKUP'),
-                        dict(value="location__name",             text="Location", legal_lookups='STR_LOOKUP'),
-                        dict(value="build__assembly__name",         text="Build", legal_lookups='STR_LOOKUP'),
-                        dict(value="created_at",             text="Date Created", legal_lookups='DATE_LOOKUP'),
-                        dict(value="updated_at",            text="Date Modified", legal_lookups='DATE_LOOKUP'),
+        avail_fields = [dict(value="part__name",                     text="Name", legal_lookup='STR_LOOKUP'),
+                        dict(value="part__friendly_name",   text="Friendly Name", legal_lookup='STR_LOOKUP'),
+                        dict(value="serial_number",         text="Serial Number", legal_lookup='STR_LOOKUP'),
+                        dict(value="old_serial_number", text="Old Serial Number", legal_lookup='STR_LOOKUP'),
+                        dict(value="location__name",             text="Location", legal_lookup='STR_LOOKUP'),
+                        dict(value="build__assembly__name",         text="Build", legal_lookup='STR_LOOKUP'),
+                        dict(value="created_at",             text="Date Created", legal_lookup='DATE_LOOKUP'),
+                        dict(value="updated_at",            text="Date Modified", legal_lookup='DATE_LOOKUP'),
 
                         dict(value=None, text="--Part--", disabled=True),
-                        dict(value="part__part_number",        text="Part Number", legal_lookups='STR_LOOKUP'),
-                        dict(value="part__part_type__name",    text="Part Type",   legal_lookups='STR_LOOKUP'),
-                        dict(value="part__revision",         text="Part Revision", legal_lookups='STR_LOOKUP'),
-                        dict(value="part__unit_cost",          text="Unit Cost",   legal_lookups='NUM_LOOKUP'),
-                        dict(value="part__refurbishment_cost", text="Refurb Cost", legal_lookups='NUM_LOOKUP'),
+                        dict(value="part__part_number",        text="Part Number", legal_lookup='STR_LOOKUP'),
+                        dict(value="part__part_type__name",    text="Part Type",   legal_lookup='STR_LOOKUP'),
+                        dict(value="part__revision",         text="Part Revision", legal_lookup='STR_LOOKUP'),
+                        dict(value="part__unit_cost",          text="Unit Cost",   legal_lookup='NUM_LOOKUP'),
+                        dict(value="part__refurbishment_cost", text="Refurb Cost", legal_lookup='NUM_LOOKUP'),
 
                         #dict(value=None, text="--Location--", disabled=True),
-                        #dict(value="location__name",          text="Name",          legal_lookups='STR_LOOKUP'),
-                        #dict(value="location__location_type", text="Location Type", legal_lookups='STR_LOOKUP'),
-                        #dict(value="location__root_location", text="Location Root", legal_lookups='STR_LOOKUP'),
+                        #dict(value="location__name",          text="Name",          legal_lookup='STR_LOOKUP'),
+                        #dict(value="location__location_type", text="Location Type", legal_lookup='STR_LOOKUP'),
+                        #dict(value="location__root_location", text="Location Root", legal_lookup='STR_LOOKUP'),
 
                         dict(value=None, text="--User-Defined-Fields--", disabled=True),
-                        dict(value="fieldvalues__field__field_name", text="UDF Name",  legal_lookups='STR_LOOKUP'),
-                        dict(value="fieldvalues__field_value",       text="UDF Value", legal_lookups='STR_LOOKUP'),
+                        dict(value="fieldvalues__field__field_name", text="UDF Name",  legal_lookup='STR_LOOKUP'),
+                        dict(value="fieldvalues__field_value",       text="UDF Value", legal_lookup='STR_LOOKUP'),
 
                         dict(value=None, text="--Actions--", disabled=True),
-                        dict(value="inventory_actions__latest__action_type",    text="Latest Action",           legal_lookups='STR_LOOKUP'),
-                        dict(value="inventory_actions__latest__user__name",     text="Latest Action: User",     legal_lookups='STR_LOOKUP'),
-                        dict(value="inventory_actions__latest__created_at",     text="Latest Action: Time",     legal_lookups='DATE_LOOKUP'),
-                        dict(value="inventory_actions__latest__location__name", text="Latest Action: Location", legal_lookups='STR_LOOKUP'),
-                        dict(value="inventory_actions__latest__detail",         text="Latest Action: Notes",    legal_lookups='STR_LOOKUP'),
-                        dict(value="inventory_actions__count",                  text="Total Action Count",      legal_lookups='NUM_LOOKUP'),
+                        dict(value="inventory_actions__latest__action_type",    text="Latest Action",           legal_lookup='STR_LOOKUP'),
+                        dict(value="inventory_actions__latest__user__name",     text="Latest Action: User",     legal_lookup='STR_LOOKUP'),
+                        dict(value="inventory_actions__latest__created_at",     text="Latest Action: Time",     legal_lookup='DATE_LOOKUP'),
+                        dict(value="inventory_actions__latest__location__name", text="Latest Action: Location", legal_lookup='STR_LOOKUP'),
+                        dict(value="inventory_actions__latest__detail",         text="Latest Action: Notes",    legal_lookup='STR_LOOKUP'),
+                        dict(value="inventory_actions__count",                  text="Total Action Count",      legal_lookup='NUM_LOOKUP'),
+
+                        dict(value=None, text="--Calibrations--", disabled=True),
+                        dict(value="calibration_events__latest__calibration_date", text="Latest Calibration Event", legal_lookup='DATE_LOOKUP',
+                             col_args=dict(format='Y-m-d', )),# linkify=dict(viewname="search:calibrataions", args=[tables.A('calibration_events__latest__pk')]))),
+                        dict(value="calibration_events__latest__user_approver", text="Latest Calibration Event: Approver", legal_lookup='STR_LOOKUP'),
+                        dict(value="calibration_events__latest__approved", text="Latest Calibration Event: Approved", legal_lookup='STR_LOOKUP'),
+
                         ]
         return avail_fields
 
@@ -382,18 +400,18 @@ class PartTableView(GenericSearchTableView):
 
     @staticmethod
     def get_avail_fields():
-        avail_fields = [dict(value="name",                        text="Name", legal_lookups='STR_LOOKUP'),
-                        dict(value="friendly_name",      text="Friendly Name", legal_lookups='STR_LOOKUP'),
-                        dict(value="part_number",          text="Part Number", legal_lookups='STR_LOOKUP'),
-                        dict(value="part_type__name",        text="Part Type", legal_lookups='STR_LOOKUP'),
-                        dict(value="revision",           text="Part Revision", legal_lookups='STR_LOOKUP'),
-                        dict(value="unit_cost",              text="Unit Cost", legal_lookups='NUM_LOOKUP'),
-                        dict(value="refurbishment_cost",   text="Refurb Cost", legal_lookups='NUM_LOOKUP'),
-                        dict(value="inventory__count", text="Inventory Count", legal_lookups='NUM_LOOKUP'),
-                        dict(value="note",                       text="Notes", legal_lookups='STR_LOOKUP'),
+        avail_fields = [dict(value="name",                        text="Name", legal_lookup='STR_LOOKUP'),
+                        dict(value="friendly_name",      text="Friendly Name", legal_lookup='STR_LOOKUP'),
+                        dict(value="part_number",          text="Part Number", legal_lookup='STR_LOOKUP'),
+                        dict(value="part_type__name",        text="Part Type", legal_lookup='STR_LOOKUP'),
+                        dict(value="revision",           text="Part Revision", legal_lookup='STR_LOOKUP'),
+                        dict(value="unit_cost",              text="Unit Cost", legal_lookup='NUM_LOOKUP'),
+                        dict(value="refurbishment_cost",   text="Refurb Cost", legal_lookup='NUM_LOOKUP'),
+                        dict(value="inventory__count", text="Inventory Count", legal_lookup='NUM_LOOKUP'),
+                        dict(value="note",                       text="Notes", legal_lookup='STR_LOOKUP'),
 
                         dict(value=None, text="--User-Defined-Fields--", disabled=True),
-                        dict(value="user_defined_fields__field_name", text="UDF Name", legal_lookups='STR_LOOKUP'),]
+                        dict(value="user_defined_fields__field_name", text="UDF Name", legal_lookup='STR_LOOKUP'),]
         return avail_fields
 
     def get_queryset(self):
@@ -442,30 +460,30 @@ class BuildTableView(GenericSearchTableView):
 
     @staticmethod
     def get_avail_fields():
-        avail_fields = [dict(value="assembly__name",                text="Name", legal_lookups='STR_LOOKUP'),
-                        dict(value="build_number",          text="Build Number", legal_lookups='STR_LOOKUP'),
-                        dict(value="assembly__assembly_type__name", text="Type", legal_lookups='STR_LOOKUP'),
-                        dict(value="location__name",            text="Location", legal_lookups='STR_LOOKUP'),
-                        dict(value="assembly__description",  text="Description", legal_lookups='STR_LOOKUP'),
-                        dict(value="build_notes",                  text="Notes", legal_lookups='STR_LOOKUP'),
-                        dict(value="time_at_sea",            text="Time at Sea", legal_lookups='NUM_LOOKUP'),
-                        dict(value="is_deployed",           text="is-deployed?", legal_lookups='BOOL_LOOKUP'),
-                        dict(value="flag",                   text="is-flagged?", legal_lookups='BOOL_LOOKUP'),
-                        dict(value="created_at",            text="Date Created", legal_lookups='DATE_LOOKUP'),
-                        dict(value="updated_at",           text="Date Modified", legal_lookups='DATE_LOOKUP'),
+        avail_fields = [dict(value="assembly__name",                text="Name", legal_lookup='STR_LOOKUP'),
+                        dict(value="build_number",          text="Build Number", legal_lookup='STR_LOOKUP'),
+                        dict(value="assembly__assembly_type__name", text="Type", legal_lookup='STR_LOOKUP'),
+                        dict(value="location__name",            text="Location", legal_lookup='STR_LOOKUP'),
+                        dict(value="assembly__description",  text="Description", legal_lookup='STR_LOOKUP'),
+                        dict(value="build_notes",                  text="Notes", legal_lookup='STR_LOOKUP'),
+                        dict(value="time_at_sea",            text="Time at Sea", legal_lookup='NUM_LOOKUP'),
+                        dict(value="is_deployed",           text="is-deployed?", legal_lookup='BOOL_LOOKUP'),
+                        dict(value="flag",                   text="is-flagged?", legal_lookup='BOOL_LOOKUP'),
+                        dict(value="created_at",            text="Date Created", legal_lookup='DATE_LOOKUP'),
+                        dict(value="updated_at",           text="Date Modified", legal_lookup='DATE_LOOKUP'),
 
                         #dict(value=None, text="--Location--", disabled=True),
-                        #dict(value="location__name",          text="Name", legal_lookups='STR_LOOKUP'),
-                        #dict(value="location__location_type", text="Location Type", legal_lookups='STR_LOOKUP'),
-                        #dict(value="location__root_type",     text="Root", legal_lookups='STR_LOOKUP'),
+                        #dict(value="location__name",          text="Name", legal_lookup='STR_LOOKUP'),
+                        #dict(value="location__location_type", text="Location Type", legal_lookup='STR_LOOKUP'),
+                        #dict(value="location__root_type",     text="Root", legal_lookup='STR_LOOKUP'),
 
                         dict(value=None, text="--Actions--", disabled=True),
-                        dict(value="build_actions__latest__action_type",    text="Latest Action",           legal_lookups='STR_LOOKUP'),
-                        dict(value="build_actions__latest__user__name",     text="Latest Action: User",     legal_lookups='STR_LOOKUP'),
-                        dict(value="build_actions__latest__created_at",     text="Latest Action: Time",     legal_lookups='DATE_LOOKUP'),
-                        dict(value="build_actions__latest__location__name", text="Latest Action: Location", legal_lookups='STR_LOOKUP'),
-                        dict(value="build_actions__latest__detail",         text="Latest Action: Notes",    legal_lookups='STR_LOOKUP'),
-                        dict(value="build_actions__count",                  text="Total Action Count",      legal_lookups='NUM_LOOKUP'),
+                        dict(value="build_actions__latest__action_type",    text="Latest Action",           legal_lookup='STR_LOOKUP'),
+                        dict(value="build_actions__latest__user__name",     text="Latest Action: User",     legal_lookup='STR_LOOKUP'),
+                        dict(value="build_actions__latest__created_at",     text="Latest Action: Time",     legal_lookup='DATE_LOOKUP'),
+                        dict(value="build_actions__latest__location__name", text="Latest Action: Location", legal_lookup='STR_LOOKUP'),
+                        dict(value="build_actions__latest__detail",         text="Latest Action: Notes",    legal_lookup='STR_LOOKUP'),
+                        dict(value="build_actions__count",                  text="Total Action Count",      legal_lookup='NUM_LOOKUP'),
                         ]
 
         return avail_fields
@@ -488,10 +506,10 @@ class AssemblyTableView(GenericSearchTableView):
 
     @staticmethod
     def get_avail_fields():
-        avail_fields = [dict(value="name",                text="Name", legal_lookups='STR_LOOKUP'),
-                        dict(value="assembly_number",   text="Number", legal_lookups='STR_LOOKUP'),
-                        dict(value="assembly_type__name", text="Type", legal_lookups='STR_LOOKUP'),
-                        dict(value="description",  text="Description", legal_lookups='STR_LOOKUP'),
+        avail_fields = [dict(value="name",                text="Name", legal_lookup='STR_LOOKUP'),
+                        dict(value="assembly_number",   text="Number", legal_lookup='STR_LOOKUP'),
+                        dict(value="assembly_type__name", text="Type", legal_lookup='STR_LOOKUP'),
+                        dict(value="description",  text="Description", legal_lookup='STR_LOOKUP'),
                         ]
         return avail_fields
 
@@ -501,4 +519,29 @@ class AssemblyTableView(GenericSearchTableView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        return context
+
+class CalibrationTableView(GenericSearchTableView):
+    model = CoefficientValueSet
+    table_class = CalibrationTable
+    query_prefetch = ['coefficient_name','calibration_event','calibration_event__inventory','calibration_event__inventory__part','calibration_event__user_approver']
+
+    @staticmethod
+    def get_avail_fields():
+        avail_fields = [dict(value="calibration_event__inventory__serial_number", text="Inventory: SN", legal_lookup='STR_LOOKUP'),
+                        dict(value="calibration_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
+                        dict(value="coefficient_name__calibration_name", text="Coefficient Name", legal_lookup='STR_LOOKUP'),
+                        dict(value="calibration_event__calibration_date", text="Calibration Event: Date", legal_lookup='DATE_LOOKUP'),
+                        dict(value="calibration_event__id", text="Calibration Event: ID", legal_lookup='EXACT_LOOKUP'),
+                        dict(value="calibration_event__user_approver__name", text="Calibration Event: Approver Name",
+                             col_args={'verbose_name':'Aprover'}, legal_lookup='STR_LOOKUP'),
+                        dict(value="created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
+                        dict(value="value_set", text="Value", legal_lookup='STR_LOOKUP'),
+                        dict(value="notes", text="Notes", legal_lookup='STR_LOOKUP'),
+                        #dict(value="calibration_event__is_current", text="Latest Only", legal_lookup='BOOL_LOOKUP'),
+                        ]
+        return avail_fields
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['model'] = 'Calibrations'
         return context
