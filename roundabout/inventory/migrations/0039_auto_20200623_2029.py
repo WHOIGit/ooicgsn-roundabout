@@ -52,7 +52,7 @@ def update_inv_actions(apps, schema_editor):
         last_action.save()
 
 # Update legacy Build Actions if they're Deployment actions
-def update_build__dep_actions(apps, schema_editor):
+def update_build_dep_actions(apps, schema_editor):
     builds = Build.objects.all()
     dep_action_list = ['startdeployment', 'deploymentburnin', 'deploymenttofield', 'deploymentdetails', 'deploymentrecover', 'deploymentretire']
     for build in builds:
@@ -71,8 +71,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(update_build_actions),
+        migrations.RunPython(update_builds_actions),
         migrations.RunPython(import_old_actions),
         migrations.RunPython(update_inv_actions),
-        migrations.RunPython(update_build__dep_actions),
+        migrations.RunPython(update_build_dep_actions),
     ]
