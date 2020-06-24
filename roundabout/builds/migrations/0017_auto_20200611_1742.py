@@ -40,6 +40,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('builds', '0016_auto_20200531_1905'),
+        ('inventory', '0019_auto_20200522_1822.py'),
     ]
 
     operations = [
