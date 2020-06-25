@@ -159,14 +159,21 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
                             annote_func = Min
 
                         # TODO: consider implementing "is_current" field for actions+calibrations, similar to UDF.FieldValue.is_current
+                        # TODO: see https://simpleisbetterthancomplex.com/tips/2016/08/16/django-tip-11-custom-manager-with-chainable-querysets.html
                         accessor,subfields = field.split(select_one)
                         Accessor = getattr(self.model,accessor).field.model
                         reverse_accessor = getattr(self.model,accessor).field.name
                         fetch_me = ['__'.join(subfields.split('__')[:i]) for i in range(1,len(subfields.split('__')))]
                         fetch_me += [reverse_accessor]
 
-                        all_model_objs = self.model.objects.all().prefetch_related(accessor)
-                        all_latest_action_IDs = all_model_objs.annotate(latest_action=annote_func(accessor+'__pk')).values_list('latest_action',flat=True)
+                        all_latest_action_IDs = []
+                        for inv in self.model.objects.values_list('pk',flat=True):
+                            inv_actions = Accessor.objects.filter(**{reverse_accessor:inv})
+                            inv_latest_action = inv_actions.latest().pk if annote_func is Max else inv_actions.earliest().pk
+                            all_latest_action_IDs.append(inv_latest_action)
+
+                        #all_model_objs = self.model.objects.all().prefetch_related(accessor)
+                        #all_latest_action_IDs = all_model_objs.annotate(latest_action=annote_func(accessor+'__pk')).values_list('latest_action',flat=True)
                         all_latest_actions = Accessor.objects.filter(pk__in=all_latest_action_IDs).prefetch_related(*fetch_me)
                         matching_latest_actions = all_latest_actions.filter(**{'{}__{}'.format(subfields,row['lookup']):row['query']})
                         matched_model_IDs = matching_latest_actions.values_list(reverse_accessor+'__pk',flat=True)
