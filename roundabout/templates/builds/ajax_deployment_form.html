@@ -47,7 +47,7 @@
             <h4 class="mt-3 mb-3">Please confirm that {{ deployment.deployment_number }} is ready to end.</h4>
         {% endif %}
 
-        <form class="form-horizontal ajax-form" method="post" action="" id="deployment-form" data-url='{{ request.build_absolute_uri|safe }}'>
+        <form class="form-horizontal ajax-form" method="post" action="" id="deployment-form" data-url='{{ request.build_absolute_uri|safe }}' novalidate>
           {% csrf_token %}
           {{ form|crispy }}
 

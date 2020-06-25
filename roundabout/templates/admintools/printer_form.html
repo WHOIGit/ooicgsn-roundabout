@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -27,28 +27,10 @@
 {% block content %}
 <div class="container">
   <h1>{% if printer.name %}Edit {{ printer.name }}{% else %}Add Printer {% endif %}</h1>
-  <form class="form-horizontal" method="post" action="" id="printer-form">
+  <form class="form-horizontal" method="post" action="" id="printer-form" novalidate>
     {% csrf_token %}
     {{ form|crispy }}
 
-    <div class="row">
-        {% if form.errors %}
-            {% for field in form %}
-                {% for error in field.errors %}
-                    <div class="alert alert-danger">
-                        <strong>{{ error|escape }}</strong>
-                    </div>
-                {% endfor %}
-            {% endfor %}
-            {% for error in form.non_field_errors %}
-                <div class="alert alert-danger">
-                    <strong>{{ error|escape }}</strong>
-                </div>
-            {% endfor %}
-        {% endif %}
-
-
-    </div>
 
     <div class="control-group">
       <div class="controls">
@@ -57,7 +39,9 @@
         {% else %}
         <button type="submit" class="btn btn-primary">Add Printer</button>
         {% endif %}
-      </div>
+
+      <a class="btn btn-light btn-cancel" href="{% url 'admintools:printers_home' %}">Cancel</a>
+    </div>
     </div>
   </form>
 </div>
