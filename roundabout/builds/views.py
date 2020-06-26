@@ -110,8 +110,11 @@ def load_new_build_id_number(request):
                 builds_qs = Build.objects.filter(assembly=assembly_obj).filter(build_number__iregex=regex)
                 if builds_qs:
                     build_last = builds_qs.latest('id')
-                    last_serial_number_fragment = int(build_last.build_number.split('-')[-1])
-                    new_serial_number_fragment = last_serial_number_fragment + 1
+                    try:
+                        last_serial_number_fragment = int(build_last.build_number.split('-')[-1])
+                        new_serial_number_fragment = last_serial_number_fragment + 1
+                    except:
+                        new_serial_number_fragment = fragment_default
                     # Fill fragment with leading zeroes if necessary
                     if fragment_length:
                         new_serial_number_fragment = str(new_serial_number_fragment).zfill(fragment_length)
