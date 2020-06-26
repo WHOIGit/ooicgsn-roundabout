@@ -31,7 +31,7 @@ from django.utils.html import format_html, mark_safe
 #from django.shortcuts import render, get_object_or_404
 #from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 #from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, QueryDict
-from django.db.models import Q, F, Max, Min, Count
+from django.db.models import Q, F, Max, Min, Count, OuterRef, Subquery
 from django.shortcuts import redirect
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
@@ -153,10 +153,6 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
                     else:
                         # sometimes we want to query on the latest or first or last value of a list of values.
                         # eg. get inventory where inventory.latest_action.user == 'bob'. This is how we do that.
-                        if select_one in ['__latest__','__last__']:
-                            annote_func = Max
-                        else:
-                            annote_func = Min
 
                         # TODO: consider implementing "is_current" field for actions+calibrations, similar to UDF.FieldValue.is_current
                         # TODO: see https://simpleisbetterthancomplex.com/tips/2016/08/16/django-tip-11-custom-manager-with-chainable-querysets.html
@@ -166,14 +162,26 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
                         fetch_me = ['__'.join(subfields.split('__')[:i]) for i in range(1,len(subfields.split('__')))]
                         fetch_me += [reverse_accessor]
 
-                        all_latest_action_IDs = []
-                        for inv in self.model.objects.values_list('pk',flat=True):
-                            inv_actions = Accessor.objects.filter(**{reverse_accessor:inv})
-                            inv_latest_action = inv_actions.latest().pk if annote_func is Max else inv_actions.earliest().pk
-                            all_latest_action_IDs.append(inv_latest_action)
+                        # the below works but is x3 slower and hammers the DB
+                        #if select_one in ['__latest__','__last__']:
+                        #    annote_func = Max
+                        #else:
+                        #    annote_func = Min
+                        #all_latest_action_IDs = []
+                        #for inv in self.model.objects.values_list('pk',flat=True):
+                        #    inv_actions = Accessor.objects.filter(**{reverse_accessor:inv})
+                        #    inv_latest_action = inv_actions.latest().pk if annote_func is Max else inv_actions.earliest().pk
+                        #    all_latest_action_IDs.append(inv_latest_action)
 
-                        #all_model_objs = self.model.objects.all().prefetch_related(accessor)
-                        #all_latest_action_IDs = all_model_objs.annotate(latest_action=annote_func(accessor+'__pk')).values_list('latest_action',flat=True)
+                        inv_actions = Accessor.objects.filter(**{reverse_accessor:OuterRef('pk')})
+                        if select_one in ['__first__','__latest__']:
+                            # latest is not actually checked against, only model.Meta.ordering order matters
+                            inv_actions_subquery = Subquery(inv_actions.values('pk')[:1])
+                        else:  # __last__ or __earliest__
+                            inv_actions_subquery = Subquery(inv_actions.reverse().values('pk')[:1])
+                        all_model_objs = self.model.objects.all().prefetch_related(accessor)
+                        all_latest_action_IDs = all_model_objs.annotate(latest_action=inv_actions_subquery).values_list('latest_action',flat=True)
+                        #all_latest_action_IDs = all_model_objs.annotate(latest_action=annote_func(accessor+'__created_at',output_field=DateTimeField())).values_list('latest_action',flat=True)
                         all_latest_actions = Accessor.objects.filter(pk__in=all_latest_action_IDs).prefetch_related(*fetch_me)
                         matching_latest_actions = all_latest_actions.filter(**{'{}__{}'.format(subfields,row['lookup']):row['query']})
                         matched_model_IDs = matching_latest_actions.values_list(reverse_accessor+'__pk',flat=True)
