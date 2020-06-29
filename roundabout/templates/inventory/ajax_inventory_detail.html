@@ -511,8 +511,6 @@
                             href="#event-{{ event.id }}" 
                             aria-expanded="false" 
                             aria-controls="event-{{ event.id }}"
-                            id='expander-date-{{event.id}}'
-                            data-reviewer-url="{% url 'calibrations:event_review_delete' event.id user.id %}"
                         >
                             {{ event.calibration_date|date:"n/j/y" }}
                         </a>
@@ -522,8 +520,6 @@
                             aria-controls="event-{{ event.id }}" 
                             aria-expanded="false" 
                             role="button"
-                            id='expander-{{event.id}}'
-                            data-reviewer-url="{% url 'calibrations:event_review_delete' event.id user.id %}"
                         >
                             <i class="fa" aria-hidden="true"></i>
                             <span class="sr-only">Expand/Collapse Calibration {{ event.calibration_date }}</span>
@@ -548,6 +544,11 @@
                         </div>
                         <div class="collapse mt-3" id="event-{{ event.id }}">
                             <hr>
+                            {% if user in event.user_draft.all %}
+                                <button class="btn btn-success btn-sm mr-2" id='expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_delete' event.id user.id %}">
+                                    Approve
+                                </button>
+                            {% endif %}
                             <div class="ajax-detail-link float-right">
                                 <a  href="#" 
                                     class="btn btn-danger btn-sm mr-2"
@@ -610,16 +611,18 @@
                                                                     <i class="fa" aria-hidden="true"></i>
                                                                     <span class="sr-only">Expand/Collapse Calibration {{ value_set.coefficient_name }}</span>
                                                                 </a>
-                                                                <div class = 'ajax-detail-link float-right'>
-                                                                    <a  href="#"
-                                                                        class="btn btn-primary btn-sm mr-2"
-                                                                        role="button"
-                                                                        data-detail-url="{% url 'calibrations:valueset_value_update' value_set.id %}"
-                                                                        data-node-id="{{ value_set.id }}"
-                                                                        data-node-type="{{ value_set.get_object_type }}">
-                                                                            Edit Coefficient Metadata
-                                                                    </a>
-                                                                </div>
+                                                                {% if value_set.coefficient_name.value_set_type != '2d' %}
+                                                                    <div class = 'ajax-detail-link float-right'>
+                                                                        <a  href="#"
+                                                                            class="btn btn-primary btn-sm mr-2"
+                                                                            role="button"
+                                                                            data-detail-url="{% url 'calibrations:valueset_value_update' value_set.id %}"
+                                                                            data-node-id="{{ value_set.id }}"
+                                                                            data-node-type="{{ value_set.get_object_type }}">
+                                                                                Edit Coefficient Metadata
+                                                                        </a>
+                                                                    </div>
+                                                                {% endif %}
                                                                 <div class="collapse show mt-1" id="coeff-{{ value_set.coefficient_name }}{{ event.id }}">
                                                                     <p class='font-weight-light'><b>Notes:</b> {{ value_set.notes }}</p>
                                                                     <table id = 'coeff-val-table' class="table table-tight">
@@ -870,23 +873,25 @@
         }
 
         // Swap Reviewers as Approvers
-        $('#calibration-template').on('click', 'a[id^=expander]', function() {
+        $('#calibration-template').on('click', 'button[id^=expander]', function(e) {
+            e.preventDefault();
             let url = $(this).attr('data-reviewer-url');
-            let review_badge = $(this).parent().find('#review-badge');
-            let progress_badge = $(this).parent().find('#progress-badge');
-            let reviewer = $(this).parent().find('#reviewer-' + user_id)
-            let approver_list = $(this).parent().find('#approvers');
+            let review_badge = $(this).parent().parent().find('#review-badge');
+            let progress_badge = $(this).parent().parent().find('#progress-badge');
+            let reviewer = $(this).parent().parent().find('#reviewer-' + user_id)
+            let approver_list = $(this).parent().parent().find('#approvers');
             if (review_badge.length) {
                 $.ajax({
                     url: url,
                     success: function (data) {
                         if (data.approved) {
-                            review_badge.after('<span id = "approve-badge" class = "badge badge-pill badge-success">Approved</span>')
-                            progress_badge.hide()
+                            review_badge.after('<span id = "approve-badge" class = "badge badge-pill badge-success">Approved</span>');
+                            progress_badge.hide();
                         }
-                        approver_list.append("<span id='approver-{{ user.id }}'>{{ user.username }}</span>")
+                        $(this).remove();
+                        approver_list.append("<span id='approver-{{ user.id }}'>{{ user.username }}</span>");
                         review_badge.remove();
-                        reviewer.hide()
+                        reviewer.hide();
                     }
                 });
             }
