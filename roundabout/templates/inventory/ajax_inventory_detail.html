@@ -150,7 +150,7 @@
                 data-detail-url="{% url 'calibrations:event_valueset_add' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Add Calibration Coefficients</a>
+                data-node-type="calibration_event">Add Calibration Coefficients</a>
 
             <a  id="add_conf_const_action"
                 class="dropdown-item" 
@@ -158,7 +158,7 @@
                 data-detail-url="{% url 'configs_constants:config_event_value_add' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Add Configuration/Constant Event</a>
+                data-node-type="config_event}">Add Configuration/Constant Event</a>
 
 
       </div>
@@ -511,6 +511,8 @@
                             href="#event-{{ event.id }}" 
                             aria-expanded="false" 
                             aria-controls="event-{{ event.id }}"
+                            id='expander-date-{{event.id}}'
+                            data-reviewer-url="{% url 'calibrations:event_review_delete' event.id user.id %}"
                         >
                             {{ event.calibration_date|date:"n/j/y" }}
                         </a>
@@ -526,14 +528,21 @@
                             <i class="fa" aria-hidden="true"></i>
                             <span class="sr-only">Expand/Collapse Calibration {{ event.calibration_date }}</span>
                         </a>
-                        {% if user in event.user_draft.all %}<span id="review-badge" class="badge badge-pill badge-success">Review Requested</span>{% endif %}
+                        {% if user in event.user_draft.all %}
+                            <span id="review-badge" class="badge badge-pill badge-secondary">Review Requested</span>
+                        {% endif %}
+                        {% if event.approved %}
+                            <span id="approve-badge" class="badge badge-pill badge-success">Approved</span> 
+                        {% else %} 
+                            <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span> 
+                        {% endif %}
                         <div class = 'ajax-detail-link float-right'>
                             <a  href="#"
                                 class="btn btn-primary btn-sm mr-2"
                                 role="button"
                                 data-detail-url="{% url 'calibrations:event_valueset_update' event.id %}"
                                 data-node-id="{{ event.id }}"
-                                data-node-type="detail">
+                                data-node-type="{{ event.get_object_type }}">
                                     Edit Coefficient Values
                             </a>
                         </div>
@@ -548,11 +557,14 @@
                                         Delete
                                 </a>
                             </div>
-                            <p>Approved: {{ event.approved }}</p>
-                            <p>Approved by: {{ event.user_approver.username }}</p>
-                            <p>Reviewers: 
+                            <p id = 'approvers'>Approvers: 
+                                {% for user in event.user_approver.all %}
+                                    <span id='approver-{{ user.id }}'>{{ user.username }}</span>
+                                {% endfor %}
+                            </p>
+                            <p id = 'reviewers'>Reviewers: 
                                 {% for user in event.user_draft.all %}
-                                    {{ user.username }} 
+                                    <span id='reviewer-{{ user.id }}'>{{ user.username }}</span>
                                 {% endfor %}
                             </p> 
                             <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
@@ -603,8 +615,8 @@
                                                                         class="btn btn-primary btn-sm mr-2"
                                                                         role="button"
                                                                         data-detail-url="{% url 'calibrations:valueset_value_update' value_set.id %}"
-                                                                        data-node-id="{{ event.id }}"
-                                                                        data-node-type="detail">
+                                                                        data-node-id="{{ value_set.id }}"
+                                                                        data-node-type="{{ value_set.get_object_type }}">
                                                                             Edit Coefficient Metadata
                                                                     </a>
                                                                 </div>
@@ -618,12 +630,10 @@
                                                                             {% regroup value_set.coefficient_values.all by row as row_sets %}
                                                                             {% for row in row_sets %}
                                                                                 <tr style = 'display: block;'>
-                                                                                    {% for val in value_set.coefficient_values.all %}
-                                                                                        {% if val.row == row.grouper %}
-                                                                                            <td style = 'white-space: nowrap'>
-                                                                                                <div style = 'width: 100px; text-align: center;'>{{ val }}</div>
-                                                                                            </td>
-                                                                                        {% endif %}
+                                                                                    {% for val in row.list %}
+                                                                                        <td style = 'white-space: nowrap'>
+                                                                                            <div style = 'width: 100px; text-align: center;'>{{ val }}</div>
+                                                                                        </td>
                                                                                     {% endfor %}
                                                                                 </tr>
                                                                             {% endfor %}
@@ -677,7 +687,7 @@
                                 role="button"
                                 data-detail-url="{% url 'configs_constants:config_event_value_update' event.id %}"
                                 data-node-id="{{ event.id }}"
-                                data-node-type="detail">
+                                data-node-type="{{ event.get_object_type }}">
                                     Edit Values
                             </a>
                         </div>
@@ -826,6 +836,7 @@
         let inv_part_type = '{{ inventory_item.part.part_type }}';
         let deployment = '{{ inventory_item.build.current_deployment }}';
         let part_has_cals = '{{ inventory_item.part.coefficient_names.exists }}';
+        let user_id = '{{ user.id }}'
         if (inv_part_type == 'Instrument' && part_has_cals == 'True') {
             $('#add_coefficient_action').show();
             $('#calibration-template-tab').show().css('display', '');
@@ -858,15 +869,24 @@
             })
         }
 
-        // Remove User as Event Reviewer
+        // Swap Reviewers as Approvers
         $('#calibration-template').on('click', 'a[id^=expander]', function() {
             let url = $(this).attr('data-reviewer-url');
-            let badge = $(this).next('span[id=review-badge]');
-            if (badge.length) {
+            let review_badge = $(this).parent().find('#review-badge');
+            let progress_badge = $(this).parent().find('#progress-badge');
+            let reviewer = $(this).parent().find('#reviewer-' + user_id)
+            let approver_list = $(this).parent().find('#approvers');
+            if (review_badge.length) {
                 $.ajax({
                     url: url,
                     success: function (data) {
-                        badge.remove();
+                        if (data.approved) {
+                            review_badge.after('<span id = "approve-badge" class = "badge badge-pill badge-success">Approved</span>')
+                            progress_badge.hide()
+                        }
+                        approver_list.append("<span id='approver-{{ user.id }}'>{{ user.username }}</span>")
+                        review_badge.remove();
+                        reviewer.hide()
                     }
                 });
             }

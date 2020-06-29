@@ -53,16 +53,14 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
     def form_valid(self, form, event_valueset_form):
         inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
         form.instance.inventory = inv_inst
-        if form.cleaned_data['approved']:
-            form.instance.user_approver = self.request.user
+        form.save()
         if form.cleaned_data['user_draft'].exists():
-            form.instance.user_draft.set(form.cleaned_data['user_draft'])
+            draft_users = form.cleaned_data['user_draft']
+            for user in draft_users:
+                form.instance.user_draft.add(user)
         self.object = form.save()
         event_valueset_form.instance = self.object
-        event_valueset_form.save(commit=False)
-        for val in event_valueset_form:
-            if val.has_changed():
-                val.save()
+        event_valueset_form.save()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -136,16 +134,16 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
     def form_valid(self, form, event_valueset_form):
         inv_inst = Inventory.objects.get(id=self.object.inventory.id)
         form.instance.inventory = inv_inst
-        if form.cleaned_data['approved']:
-            form.instance.user_approver = self.request.user
+        form.instance.approved = False
         if form.cleaned_data['user_draft'].exists():
-            form.instance.user_draft.set(form.cleaned_data['user_draft'])
+            draft_users = form.cleaned_data['user_draft']
+            form.instance.user_draft.clear()
+            for user in draft_users:
+                form.instance.user_draft.add(user)
+                form.instance.user_approver.remove(user)
         self.object = form.save()
         event_valueset_form.instance = self.object
-        event_valueset_form.save(commit=False)
-        for val in event_valueset_form:
-            if val.has_changed():
-                val.save()
+        event_valueset_form.save()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -354,12 +352,17 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
     def get_success_url(self):
         return reverse('parts:ajax_parts_detail', args=(self.object.id, ))
 
-def remove_reviewer(request, pk, user_pk):
+
+# Swap reviewers to approvers
+def event_review_approve(request, pk, user_pk):
     event = CalibrationEvent.objects.get(id=pk)
     user = User.objects.get(id=user_pk)
     reviewers = event.user_draft.all()
     if user in reviewers:
-        reviewers_minus_user = reviewers.exclude(username=user)
-        event.user_draft.set(reviewers_minus_user)
-    data = {'data': 'success'}
+        event.user_draft.remove(user)
+        event.user_approver.add(user)
+    if len(event.user_draft.all()) == 0:
+        event.approved = True
+    event.save()
+    data = {'approved':event.approved}
     return JsonResponse(data)

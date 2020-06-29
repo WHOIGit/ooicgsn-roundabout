@@ -15,10 +15,9 @@ from django.utils.translation import gettext_lazy as _
 class CalibrationEventForm(forms.ModelForm):
     class Meta:
         model = CalibrationEvent 
-        fields = ['calibration_date', 'approved', 'user_draft']
+        fields = ['calibration_date','user_draft']
         labels = {
             'calibration_date': 'Calibration Date',
-            'approved': 'Approved',
             'user_draft': 'Reviewers'
         }
         widgets = {
@@ -42,10 +41,9 @@ class CalibrationEventForm(forms.ModelForm):
 
     def save(self, commit = True): 
         event = super(CalibrationEventForm, self).save(commit = False)
-        if self.has_changed():
-            if commit:
-                event.save()
-                return event
+        if commit:
+            event.save()
+            return event
          
 
 
