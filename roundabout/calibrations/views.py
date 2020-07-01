@@ -14,6 +14,7 @@ from django.core import validators
 from sigfig import round
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.forms.models import inlineformset_factory, BaseInlineFormSet
 
 # Handles creation of Calibration Events, Names,and Coefficients
 class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
@@ -24,12 +25,24 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
     def get(self, request, *args, **kwargs):
         self.object = None
+        inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
+        cal_names = CoefficientName.objects.filter(part=inv_inst.part)
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        event_valueset_form = EventValueSetFormset(
+        EventValueSetAddFormset = inlineformset_factory(
+            CalibrationEvent, 
+            CoefficientValueSet, 
+            form=CoefficientValueSetForm,
+            fields=('coefficient_name', 'value_set', 'notes'), 
+            extra=len(cal_names), 
+            can_delete=True
+        )
+        event_valueset_form = EventValueSetAddFormset(
             instance=self.object, 
             form_kwargs={'inv_id': self.kwargs['pk']}
         )
+        for idx,name in enumerate(cal_names):
+            event_valueset_form.forms[idx].initial = {'coefficient_name': name}
         return self.render_to_response(
             self.get_context_data(
                 form=form, 
