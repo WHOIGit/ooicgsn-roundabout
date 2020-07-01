@@ -413,8 +413,10 @@ class PartTableView(GenericSearchTableView):
                         dict(value="revision",           text="Part Revision", legal_lookup='STR_LOOKUP'),
                         dict(value="unit_cost",              text="Unit Cost", legal_lookup='NUM_LOOKUP'),
                         dict(value="refurbishment_cost",   text="Refurb Cost", legal_lookup='NUM_LOOKUP'),
-                        dict(value="inventory__count", text="Inventory Count", legal_lookup='NUM_LOOKUP'),
                         dict(value="note",                       text="Notes", legal_lookup='STR_LOOKUP'),
+                        dict(value="inventory__count", text="Inventory Count", legal_lookup='NUM_LOOKUP',
+                             col_args=dict(linkify=lambda record: reverse(viewname="search:inventory")+\
+                                      '?f=.0.part__part_number&l=.0.exact&q=.0.{}'.format(record.part_number))),
 
                         dict(value=None, text="--User-Defined-Fields--", disabled=True),
                         dict(value="user_defined_fields__field_name", text="UDF Name", legal_lookup='STR_LOOKUP'),]
