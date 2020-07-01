@@ -181,6 +181,7 @@ class CalibrationTable(SearchTable):
     calibration_event__inventory__serial_number = Column(verbose_name='Inventory: SN', attrs={'style':'white-space: nowrap;'},
               linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('calibration_event__inventory__pk')]))
     calibration_event__inventory__part__name = Column(verbose_name='Inventory Item')
-    calibration_event__calibration_date = tables.DateColumn(verbose_name='Calibration Date', format='Y-m-d')
+    calibration_event__calibration_date = tables.DateColumn(verbose_name='Calibration Date', format='Y-m-d',
+              linkify=dict(viewname="calibrations:export_calibration", args=[tables.A('calibration_event__pk')]))
 
 #TODO move most field Column specifications to col_args section of views page.

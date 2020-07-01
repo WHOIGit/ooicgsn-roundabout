@@ -16,7 +16,7 @@ class CalibrationEvent(models.Model):
         ordering = ['-calibration_date']
         get_latest_by = 'calibration_date'
     def __str__(self):
-        return self.calibration_date
+        return self.calibration_date.strftime('%Y-%m-%d')
     def get_object_type(self):
         return 'calibration_event'
     APPROVAL_STATUS = (
@@ -66,6 +66,13 @@ class CoefficientValueSet(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     coefficient_name = models.ForeignKey(CoefficientName, related_name='coefficient_value_sets', on_delete=models.CASCADE, null=True)
     calibration_event = models.ForeignKey(CalibrationEvent, related_name='coefficient_value_sets', on_delete=models.CASCADE, null=True)
+    def value_set_with_export_formatting(self):
+        if self.coefficient_name.value_set_type == '1d':
+            return '"[{}]"'.format(self.value_set)
+        elif self.coefficient_name.value_set_type == '2d':
+            return 'SheetRef:{}'.format(self.coefficient_name)
+        else:  # self.coefficient_name.value_set_type == 'sl'
+            return self.value_set
 
 # Tracks Coefficeint Values across Coeficient Sets
 class CoefficientValue(models.Model):

@@ -25,7 +25,7 @@ from functools import reduce
 from urllib.parse import unquote
 from fnmatch import fnmatch
 
-#from django.urls import reverse, reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils.html import format_html, mark_safe
 #from django.template.defaultfilters import register
 #from django.shortcuts import render, get_object_or_404
@@ -162,17 +162,6 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
                         fetch_me = ['__'.join(subfields.split('__')[:i]) for i in range(1,len(subfields.split('__')))]
                         fetch_me += [reverse_accessor]
 
-                        # the below works but is x3 slower and hammers the DB
-                        #if select_one in ['__latest__','__last__']:
-                        #    annote_func = Max
-                        #else:
-                        #    annote_func = Min
-                        #all_latest_action_IDs = []
-                        #for inv in self.model.objects.values_list('pk',flat=True):
-                        #    inv_actions = Accessor.objects.filter(**{reverse_accessor:inv})
-                        #    inv_latest_action = inv_actions.latest().pk if annote_func is Max else inv_actions.earliest().pk
-                        #    all_latest_action_IDs.append(inv_latest_action)
-
                         inv_actions = Accessor.objects.filter(**{reverse_accessor:OuterRef('pk')})
                         if select_one in ['__first__','__latest__']:
                             # latest is not actually checked against, only model.Meta.ordering order matters
@@ -181,7 +170,6 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
                             inv_actions_subquery = Subquery(inv_actions.reverse().values('pk')[:1])
                         all_model_objs = self.model.objects.all().prefetch_related(accessor)
                         all_latest_action_IDs = all_model_objs.annotate(latest_action=inv_actions_subquery).values_list('latest_action',flat=True)
-                        #all_latest_action_IDs = all_model_objs.annotate(latest_action=annote_func(accessor+'__created_at',output_field=DateTimeField())).values_list('latest_action',flat=True)
                         all_latest_actions = Accessor.objects.filter(pk__in=all_latest_action_IDs).prefetch_related(*fetch_me)
                         matching_latest_actions = all_latest_actions.filter(**{'{}__{}'.format(subfields,row['lookup']):row['query']})
                         matched_model_IDs = matching_latest_actions.values_list(reverse_accessor+'__pk',flat=True)
@@ -250,7 +238,9 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
             BOOL_LOOKUP = ['exact','iexact'], )
         context['lookup_categories'] = json.dumps(lcats)
 
-        context['avail_fields'] = json.dumps(self.get_avail_fields())
+        avail_fields_sans_col_args = self.get_avail_fields()
+        [field.pop('col_args', None) for field in avail_fields_sans_col_args]
+        context['avail_fields'] = json.dumps(avail_fields_sans_col_args)
 
         # Setting default shown columns based on table_class's Meta.base_shown_cols attrib,
         # and "searchcol-" extra_columns (see get_table_kwargs())
@@ -356,7 +346,8 @@ class InventoryTableView(GenericSearchTableView):
 
                         dict(value=None, text="--Calibrations--", disabled=True),
                         dict(value="calibration_events__latest__calibration_date", text="Latest Calibration Event", legal_lookup='DATE_LOOKUP',
-                             col_args=dict(format='Y-m-d', )),# linkify=dict(viewname="search:calibrataions", args=[tables.A('calibration_events__latest__pk')]))),
+                             col_args = dict(format='Y-m-d', linkify=lambda record,value: reverse(viewname="calibrations:export_calibration",
+                                                                args=[record.calibration_events.latest().pk]) if value else None)),
                         dict(value="calibration_events__latest__user_approver", text="Latest Calibration Event: Approver", legal_lookup='STR_LOOKUP'),
                         dict(value="calibration_events__latest__approved", text="Latest Calibration Event: Approved", legal_lookup='STR_LOOKUP'),
 
@@ -547,9 +538,9 @@ class CalibrationTableView(GenericSearchTableView):
                         dict(value="calibration_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
                         dict(value="coefficient_name__calibration_name", text="Coefficient Name", legal_lookup='STR_LOOKUP'),
                         dict(value="calibration_event__calibration_date", text="Calibration Event: Date", legal_lookup='DATE_LOOKUP'),
-                        dict(value="calibration_event__id", text="Calibration Event: ID", legal_lookup='EXACT_LOOKUP'),
+                        #dict(value="calibration_event__id", text="Calibration Event: ID", legal_lookup='EXACT_LOOKUP'),
                         dict(value="calibration_event__user_approver__name", text="Calibration Event: Approver Name",
-                             col_args={'verbose_name':'Aprover'}, legal_lookup='STR_LOOKUP'),
+                             col_args={'verbose_name':'Approver'}, legal_lookup='STR_LOOKUP'),
                         dict(value="created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
                         dict(value="value_set", text="Value", legal_lookup='STR_LOOKUP'),
                         dict(value="notes", text="Notes", legal_lookup='STR_LOOKUP'),
