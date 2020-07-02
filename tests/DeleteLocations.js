@@ -6,13 +6,19 @@ console.log('Running Delete Locations Test');
 const { Builder, By, Key, until, a, WebElement, promise } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const assert = require('assert');
-const chromedriver = require('chromedriver');
 
 var driver;
+var myArgs = process.argv.slice(2);
 
 (async function deleteLocations() {
 
-    driver = new Builder().forBrowser('chrome').build();
+    // First argument specifies the Browser type, chrome is default if no argument is supplied
+    if ((myArgs[0] == 'chrome') || (myArgs.length == 0)) {        
+        driver = new Builder().forBrowser('chrome').build();
+    }
+    else {
+        driver = new Builder().forBrowser('firefox').build();
+    }
 
     // Step # | name | target | value
     // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 

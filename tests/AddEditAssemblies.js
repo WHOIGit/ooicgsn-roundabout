@@ -6,14 +6,20 @@ console.log('Running Add & Edit Assemblies Test');
 const { Builder, By, Key, until, a, WebElement, promise } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const assert = require('assert');
-const chromedriver = require('chromedriver');
 const { exception } = require('console');
 
 var driver;
+var myArgs = process.argv.slice(2);
 
 (async function addAssemblies() {
 
-    driver = new Builder().forBrowser('chrome').build();
+    // First argument specifies the Browser type, chrome is default if no argument is supplied
+    if ((myArgs[0] == 'chrome') || (myArgs.length == 0)) {        
+        driver = new Builder().forBrowser('chrome').build();
+    }
+    else {
+        driver = new Builder().forBrowser('firefox').build();
+    }
 
     // Step # | name | target | value
     // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
@@ -38,6 +44,7 @@ var driver;
         // 5 | click | linkText=Assemblies |       
         await driver.findElement(By.linkText("Assemblies")).click();
         // 10 | click | linkText=Create New Assembly | 
+        await driver.wait(until.elementLocated(By.linkText("Create New Assembly")));
         await driver.findElement(By.linkText("Create New Assembly")).click();
         // 11 | type | id=id_name | Test Assembly
         await driver.wait(until.elementLocated(By.id("id_name")));
@@ -52,6 +59,7 @@ var driver;
         await driver.findElement(By.id("id_assembly_number")).sendKeys("123-001");
 
         await driver.switchTo().frame(0);       //required for the note found
+        await driver.wait(until.elementLocated(By.css(".note-editable > p")));
         // 43 | click | css=.note-editable > p | 
         await driver.findElement(By.css(".note-editable > p")).click();
         // 44 | EditContent | css=.note-editable | This is a copy test assembly.

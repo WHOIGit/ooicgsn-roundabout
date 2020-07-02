@@ -6,14 +6,19 @@ console.log('Running Add & Edit Inventory Test');
 const { Builder, By, Key, until, a, WebElement, promise } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const assert = require('assert');
-const chromedriver = require('chromedriver');
-const { exception } = require('console');
 
 var driver;
+var myArgs = process.argv.slice(2);
 
 (async function addInventory() {
 
-    driver = new Builder().forBrowser('chrome').build();
+    // First argument specifies the Browser type, chrome is default if no argument is supplied
+    if ((myArgs[0] == 'chrome') || (myArgs.length == 0)) {        
+        driver = new Builder().forBrowser('chrome').build();
+    }
+    else {
+        driver = new Builder().forBrowser('firefox').build();
+    }
 
     // Step # | name | target | value
     // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
@@ -34,6 +39,7 @@ var driver;
         // Add Inventory with unique serial number and non null template, revision code, and location
         await driver.findElement(By.linkText("Inventory")).click();
         // 4 | click | linkText=Add Inventory | 
+        await driver.wait(until.elementLocated(By.linkText("Add Inventory")));
         await driver.findElement(By.linkText("Add Inventory")).click();
         await driver.wait(until.elementLocated(By.id("id_part_type")));
         // 5 | select | id=id_part_type | label=-- Sewing Machine
@@ -61,6 +67,7 @@ var driver;
 
         // Add Inventory with blank part type, template, revision, and location
         // 11 | click | linkText=Add Inventory | 
+        await driver.wait(until.elementLocated(By.linkText("Add Inventory")));
         await driver.findElement(By.linkText("Add Inventory")).click();
         // 12 | click | id=id_part_type | 
         await driver.wait(until.elementLocated(By.id("id_part_type")));
@@ -90,6 +97,7 @@ var driver;
         }
         // 17 | select | id=id_part | label=Sewing Template
         {
+            await driver.wait(until.elementLocated(By.id("id_part")));
             const dropdown = await driver.findElement(By.id("id_part"));
             await dropdown.findElement(By.xpath("//option[. = 'Sewing Template']")).click();
         }
@@ -117,6 +125,7 @@ var driver;
         // Add three Assemblies from DB
         await driver.findElement(By.linkText("Inventory")).click();
         // 4 | click | linkText=Add Inventory | 
+        await driver.wait(until.elementLocated(By.linkText("Add Inventory")));
         await driver.findElement(By.linkText("Add Inventory")).click();
         await driver.wait(until.elementLocated(By.id("id_part_type")));
         // 5 | select | id=id_part_type | label=-- Cable
@@ -188,8 +197,9 @@ var driver;
 
         // Update location with null location
         // 19 | click | css=.btn-outline-primary:nth-child(1) | 
-        await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
+        await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click(); // search button
         // 20 | click | id=field-select_c_r0 | 
+        await driver.wait(until.elementLocated(By.id("field-select_c_r0")));
         await driver.findElement(By.id("field-select_c_r0")).click();
         // 21 | select | id=field-select_c_r0 | label=Location
         {
@@ -234,6 +244,7 @@ var driver;
         await driver.findElement(By.css(".controls > .btn-primary")).click();
         // 32 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();  //Search button
+        await driver.wait(until.elementLocated(By.id("field-select_c_r0")));
         // 33 | select | id=field-select_c_r0 | label=Location
         {
             const dropdown = await driver.findElement(By.id("field-select_c_r0"));
@@ -283,6 +294,7 @@ var driver;
         // Add valid child to parent assembly
         await driver.findElement(By.id("searchbar-query")).clear();
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();  //Search button
+        await driver.wait(until.elementLocated(By.id("field-select_c_r0")));
         // 33 | select | id=field-select_c_r0 | label=Location
         {
             const dropdown = await driver.findElement(By.id("field-select_c_r0"));

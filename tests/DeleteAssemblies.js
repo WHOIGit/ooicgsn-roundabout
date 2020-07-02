@@ -6,14 +6,19 @@ console.log('Running Delete Assemblies Test');
 const { Builder, By, Key, until, a, WebElement, promise } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const assert = require('assert');
-const chromedriver = require('chromedriver');
-const { exception } = require('console');
 
 var driver;
+var myArgs = process.argv.slice(2);
 
 (async function deleteAssemblies() {
 
-    driver = new Builder().forBrowser('chrome').build();
+    // First argument specifies the Browser type, chrome is default if no argument is supplied
+    if ((myArgs[0] == 'chrome') || (myArgs.length == 0)) {        
+        driver = new Builder().forBrowser('chrome').build();
+    }
+    else {
+        driver = new Builder().forBrowser('firefox').build();
+    }
 
     // Step # | name | target | value
     // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
@@ -56,6 +61,7 @@ var driver;
         // 11 | click | id=searchform-submit-button | 
         await driver.findElement(By.id("searchform-submit-button")).click();
         // 12 | click | linkText=123-001 | 
+        await driver.wait(until.elementLocated(By.linkText("123-001")));
         await driver.findElement(By.linkText("123-001")).click();
         // 13 | click | linkText=Delete | 
         await driver.findElement(By.linkText("Delete")).click();
@@ -70,6 +76,7 @@ var driver;
         // 17 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 18 | click | linkText=123-002 | 
+        await driver.wait(until.elementLocated(By.linkText("123-002")));
         await driver.findElement(By.linkText("123-002")).click();
         // 22 | click | linkText=Delete | 
         await driver.findElement(By.linkText("Delete")).click();
@@ -84,6 +91,7 @@ var driver;
         // 26 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 27 | click | linkText=123-003 | 
+        await driver.wait(until.elementLocated(By.linkText("123-003")));
         await driver.findElement(By.linkText("123-003")).click();
         // 28 | click | linkText=Delete | 
         await driver.findElement(By.linkText("Delete")).click();
@@ -98,6 +106,7 @@ var driver;
         // 32 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 33 | click | linkText=000-654-987 | 
+        await driver.wait(until.elementLocated(By.linkText("000-654-987")));
         await driver.findElement(By.linkText("000-654-987")).click();
         // 34 | click | linkText=Delete | 
         await driver.findElement(By.linkText("Delete")).click();
