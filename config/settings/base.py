@@ -112,6 +112,8 @@ LOCAL_APPS = [
     'roundabout.assemblies',
     'roundabout.builds',
     'roundabout.cruises',
+    'roundabout.calibrations',
+    'roundabout.configs_constants',
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -366,3 +368,5 @@ SIMPLE_JWT = {
 
 # import-export settings
 IMPORT_EXPORT_USE_TRANSACTIONS = True
+# Allow for larger CoefficientValue formset handling
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000

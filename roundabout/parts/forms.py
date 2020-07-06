@@ -33,6 +33,11 @@ from .models import Part, PartType, Documentation, Revision
 from roundabout.locations.models import Location
 from roundabout.parts.widgets import PartParentWidget, PartLocationWidget
 from roundabout.userdefinedfields.models import Field, FieldValue
+from roundabout.calibrations.models import CoefficientName
+from roundabout.calibrations.forms import CoefficientNameForm
+from roundabout.inventory.models import Inventory
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 
 class PartForm(forms.ModelForm):
@@ -41,10 +46,11 @@ class PartForm(forms.ModelForm):
 
     class Meta:
         model = Part
-        fields = ['part_number', 'name', 'friendly_name', 'part_type']
+        fields = ['part_number', 'name', 'friendly_name', 'part_type', 'cal_dec_places']
         labels = {
             'parent': 'Parent Assembly',
-            'note': 'Part Template Notes'
+            'note': 'Part Template Notes',
+            'cal_dec_places': 'Max Calibration Coefficient decimal places'
         }
 """
     def clean_part_number(self):

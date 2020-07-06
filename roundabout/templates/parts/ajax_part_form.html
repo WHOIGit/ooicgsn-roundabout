@@ -163,7 +163,6 @@
     </div>
 
 
-
   </div>
 
 
@@ -215,7 +214,21 @@ $(document).ready(function() {
 
     })
 
+    const part_type = '{{part_template.part_type}}'
+    if (part_type == 'Instrument') {
+      $('#div_id_cal_dec_places').show();
+    } else {
+        $('#div_id_cal_dec_places').hide();
+    }
 
+    $('#id_part_type').change(function() {
+        let part_id = $(this).val();
+        if (part_id == 3) {
+            $('#div_id_cal_dec_places').show();
+        } else {
+            $('#div_id_cal_dec_places').hide();
+        }
+    })
 
 });
 
