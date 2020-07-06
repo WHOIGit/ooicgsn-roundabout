@@ -31,7 +31,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator, FileExt
 from model_utils import FieldTracker
 from mptt.models import MPTTModel, TreeForeignKey
 
-from .managers import InventoryDeploymentQuerySet
+from .managers import *
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
 from roundabout.assemblies.models import Assembly, AssemblyPart
@@ -600,6 +600,7 @@ class Action(models.Model):
     depth = models.PositiveIntegerField(null=True, blank=True)
     deployment_type = models.CharField(max_length=20, choices=DEPLOYMENT_TYPES, null=False, blank=True, default='')
 
+    objects = ActionQuerySet.as_manager()
 
     class Meta:
         ordering = ['-created_at', '-id']
