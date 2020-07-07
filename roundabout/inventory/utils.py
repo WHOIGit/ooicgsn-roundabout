@@ -30,6 +30,8 @@ labels = set_app_labels()
 # Utility functions for use with Inventory models
 # ------------------------------------------------------------------------------
 
+# Function to handle creating new Action records with meta data for different Action.OBJECT_TYPES
+# Current objects available = Inventory, Build 
 def _create_action_history(obj, action_type, user, referring_obj=None, referring_action='', action_date=None):
     # Set default variables
     object_type = obj._meta.model_name
@@ -289,7 +291,7 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
         action_record.save()
     else:
         action_record.save()
-    #action_record.save()
+
     """
     # loop through any children
     if object_type == Action.INVENTORY:
