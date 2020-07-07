@@ -27,6 +27,7 @@ sigfig==1.1.8 #https://pypi.org/project/sigfig/
 django-tables2==2.2.1  # https://github.com/jieter/django-tables2
 tablib==1.1  # https://github.com/jazzband/tablib for exporting/downloading tables2/tabular data
 django-tables2-column-shifter==0.5.2  # for showing/hiding columns for tables2
+django-import-export==2.0.2
 
 # Sentry error logging
 sentry-sdk==0.14.3

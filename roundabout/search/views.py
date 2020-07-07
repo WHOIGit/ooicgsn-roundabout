@@ -321,12 +321,12 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="fieldvalues__field_value",       text="UDF Value", legal_lookups='STR_LOOKUP'),
 
                         dict(value=None, text="--Actions--", disabled=True),
-                        dict(value="inventory_actions__latest__action_type",    text="Latest Action",           legal_lookups='STR_LOOKUP'),
-                        dict(value="inventory_actions__latest__user__name",     text="Latest Action: User",     legal_lookups='STR_LOOKUP'),
-                        dict(value="inventory_actions__latest__created_at",     text="Latest Action: Time",     legal_lookups='DATE_LOOKUP'),
-                        dict(value="inventory_actions__latest__location__name", text="Latest Action: Location", legal_lookups='STR_LOOKUP'),
-                        dict(value="inventory_actions__latest__detail",         text="Latest Action: Notes",    legal_lookups='STR_LOOKUP'),
-                        dict(value="inventory_actions__count",                  text="Total Action Count",      legal_lookups='NUM_LOOKUP'),
+                        dict(value="actions__latest__action_type",    text="Latest Action",           legal_lookups='STR_LOOKUP'),
+                        dict(value="actions__latest__user__name",     text="Latest Action: User",     legal_lookups='STR_LOOKUP'),
+                        dict(value="actions__latest__created_at",     text="Latest Action: Time",     legal_lookups='DATE_LOOKUP'),
+                        dict(value="actions__latest__location__name", text="Latest Action: Location", legal_lookups='STR_LOOKUP'),
+                        dict(value="actions__latest__detail",         text="Latest Action: Details",  legal_lookups='STR_LOOKUP'),
+                        dict(value="actions__count",                  text="Total Action Count",      legal_lookups='NUM_LOOKUP'),
                         ]
         return avail_fields
 

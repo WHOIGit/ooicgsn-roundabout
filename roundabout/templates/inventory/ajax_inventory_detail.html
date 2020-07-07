@@ -25,6 +25,8 @@
 {% load inventory_tags %}
 {% load mptt_tags %}
 
+<script src="{% static 'js/vendor/highcharts.js' %}"></script>
+
 {% if inventory_item %}
 <div class="card-header" data-object-id="{{ inventory_item.id }}"><h3>{{ inventory_item.part.name }}</h3></div>
 
@@ -84,11 +86,19 @@
         {% endif %}
 
         {% if inventory_item.build %}
-            <a class="dropdown-item" href="#"
-                data-detail-url="{% url 'inventory:ajax_inventory_action' 'removefrombuild' inventory_item.id %}"
-                data-node-id="{{ inventory_item.id }}"
-                data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="{{ node_type }}">Remove from {{ label_builds_app_singular }}</a>
+            {% if inventory_item.build.is_deployed_to_field %}
+                <a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'inventory:ajax_inventory_action' 'deploymentrecover' inventory_item.id %}"
+                    data-node-id="{{ inventory_item.id }}"
+                    data-location-id="{{ inventory_item.location.id}}"
+                    data-node-type="{{ node_type }}">Recover from {{ label_deployments_app_singular }}</a>
+            {% else %}
+                <a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'inventory:ajax_inventory_action' 'removefrombuild' inventory_item.id %}"
+                    data-node-id="{{ inventory_item.id }}"
+                    data-location-id="{{ inventory_item.location.id}}"
+                    data-node-type="{{ node_type }}">Remove from {{ label_builds_app_singular }}</a>
+            {% endif %}
         {% endif %}
 
         {% if inventory_item.assembly_part and not inventory_item.build and not inventory_item.parent %}
@@ -277,14 +287,17 @@
         </p>
     {% endif %}
 
-
-
-
     <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
 
-        {% if inventory_item.inventory_actions.exists %}
+        {% if inventory_item.actions.exists %}
             <li class="nav-item">
               <a class="nav-link active" id="history-tab" data-toggle="tab" href="#history" role="tab" aria-controls="history" aria-selected="true">History</a>
+            </li>
+        {% endif %}
+
+        {% if inventory_item.inventory_deployments.exists %}
+            <li class="nav-item">
+              <a class="nav-link" id="deployments-tab" data-toggle="tab" href="#deployments" role="tab" aria-controls="deployments" aria-selected="false">Deployments</a>
             </li>
         {% endif %}
 
@@ -324,7 +337,7 @@
 
     <div class="tab-content" id="inventory-tabs">
 
-        {% if inventory_item.inventory_actions.exists %}
+        {% if inventory_item.actions.exists %}
           <div class="tab-pane fade show active" id="history" role="tabpanel" aria-labelledby="history-tab">
 
               <table class="table table-striped action-table">
@@ -337,7 +350,7 @@
 
                   </thead>
                   <tbody>
-                    {% for action in  inventory_item.inventory_actions.all %}
+                    {% for action in  inventory_item.actions.all %}
                       <tr>
                           <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
                           <td>{{ action.get_action_type_display }}</td>
@@ -363,6 +376,22 @@
             </table>
 
           </div>
+        {% endif %}
+
+        {% if inventory_item.inventory_deployments %}
+        <div class="tab-pane fade" id="deployments" role="tabpanel" aria-labelledby="deployments-tab">
+
+            <ul class="list-group list-group-flush">
+                {% for inventory_deployment in inventory_item.inventory_deployments.all %}
+                    <li class="list-group-item">
+
+                        {% include "inventory/inventory_deployment_detail.html" with inventory_deployment=inventory_deployment %}
+
+                    </li>
+                {% endfor %}
+            </ul>
+
+        </div>
         {% endif %}
 
         {% if inventory_item.get_descendants %}
@@ -413,7 +442,7 @@
         {% if inventory_item.assembly_part %}
             <div class="tab-pane fade" id="destination" role="tabpanel" aria-labelledby="destination-tab">
 
-                <h5 class="mt-3">{{ inventory_item.assembly_part.assembly }} </h5>
+                <h5 class="mt-3">{{ inventory_item.assembly_part.assembly_revision }} </h5>
 
                 <ul>
 
@@ -783,10 +812,12 @@
 
 
     <div class="mt-3 ajax-detail-link">
-        <a href="#"
-           data-detail-url="{% url 'inventory:ajax_inventory_action' 'movetotrash' inventory_item.id %}"
-           data-node-id="{{ inventory_item.id }}"
-           role="button" class="btn btn-danger parts-delete">Move to Trash</a>
+        {% if not inventory_item.build.is_deployed_to_field %}
+            <a href="#"
+               data-detail-url="{% url 'inventory:ajax_inventory_action' 'movetotrash' inventory_item.id %}"
+               data-node-id="{{ inventory_item.id }}"
+               role="button" class="btn btn-danger parts-delete">Move to Trash</a>
+        {% endif %}
     </div>
 
 

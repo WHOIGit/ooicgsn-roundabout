@@ -84,40 +84,40 @@
                         data-node-type="{{ node_type }}">Start {{ label_deployments_app_singular }}</a>
                 {% endif %}
 
-                {% if build.current_deployment.current_deployment_status == 'create' %}
+                {% if build.current_deployment.current_status == 'startdeployment' %}
                     <a class="dropdown-item" href="#"
-                        data-detail-url="{% url 'builds:ajax_deployment_action' 'burnin' build.current_deployment.id build.id  %}"
+                        data-detail-url="{% url 'builds:ajax_deployment_action' 'deploymentburnin' build.current_deployment.id build.id  %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
                         data-node-type="{{ node_type }}">Initiate Burn In</a>
                 {% endif %}
 
-                {% if build.current_deployment.current_deployment_status == 'burnin' %}
+                {% if build.current_deployment.current_status == 'deploymentburnin' %}
                     <a class="dropdown-item" href="#"
-                        data-detail-url="{% url 'builds:ajax_deployment_action' 'deploy' build.current_deployment.id build.id %}"
+                        data-detail-url="{% url 'builds:ajax_deployment_action' 'deploymenttofield' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
                         data-node-type="{{ node_type }}">Deploy to Field</a>
                 {% endif %}
 
-                {% if build.current_deployment.current_deployment_status == 'deploy' %}
+                {% if build.current_deployment.current_status == 'deploymenttofield' %}
 
                     <a class="dropdown-item" href="#"
-                        data-detail-url="{% url 'builds:ajax_deployment_action' 'details' build.current_deployment.id build.id %}"
+                        data-detail-url="{% url 'builds:ajax_deployment_action' 'deploymentdetails' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
                         data-node-type="{{ node_type }}">Update {{ label_deployments_app_singular }} Details</a>
 
                     <a class="dropdown-item" href="#"
-                        data-detail-url="{% url 'builds:ajax_deployment_action' 'recover' build.current_deployment.id build.id %}"
+                        data-detail-url="{% url 'builds:ajax_deployment_action' 'deploymentrecover' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
                         data-node-type="{{ node_type }}">Recover from Field</a>
                 {% endif %}
 
-                {% if build.current_deployment.current_deployment_status == 'recover' %}
+                {% if build.current_deployment.current_status == 'deploymentrecover' %}
                     <a class="dropdown-item" href="#"
-                        data-detail-url="{% url 'builds:ajax_deployment_action' 'retire' build.current_deployment.id build.id %}"
+                        data-detail-url="{% url 'builds:ajax_deployment_action' 'deploymentretire' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
                         data-node-type="{{ node_type }}">End {{ label_deployments_app_singular }}</a>
@@ -213,7 +213,7 @@
             </div>
         </div>
     -->
-        <h5>Build Status</h5>
+        <h5>{{ label_builds_app_singular }} Status</h5>
 
         {% if build.flag %}
         <div class="float-right ajax-detail-link"><a href="#" data-detail-url="{% url 'builds:ajax_builds_action' 'flag' build.id %}" role="button" class="btn btn-danger">FLAGGED</a></div>
@@ -249,26 +249,34 @@
         <h5>Current {{ label_deployments_app_singular }} Data</h5>
         <p>{{ label_deployments_app_singular }} Number: {{ current_deployment.deployment_number }}</p>
         <p>Final {{ label_deployments_app_singular }} Location: {{ current_deployment.deployed_location }}</p>
-
-        {% if build.current_deployment_time_at_sea %}
-            <p>Current {{ label_deployments_app_singular }} Time in Field: {{ build.current_deployment_time_at_sea|time_at_sea_display }}
+        {% if current_deployment.cruise_deployed %}
+            <p>Cruise Deployed On:
+                <a href="{% url 'cruises:cruises_detail' current_deployment.cruise_deployed.id %}">{{ current_deployment.cruise_deployed }}</a>
+            </p>
         {% endif %}
+        {% if current_deployment.cruise_recovered %}
+            <p>Cruise Recovered On:
+                <a href="{% url 'cruises:cruises_detail' current_deployment.cruise_recovered.id %}">{{ current_deployment.cruise_recovered }}</a>
+            </p>
+        {% endif %}
+
+        <p class="ajax-detail-link">Current {{ label_deployments_app_singular }} Time in Field: {{ current_deployment.deployment_time_in_field|time_at_sea_display }}
 
         <h6>{{ label_deployments_app_singular }} Status</h6>
 
         <div class="progress mb-3" style="height: 20px;">
 
-            <div class="progress-bar {{ current_deployment.get_deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ current_deployment.get_deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ current_deployment.get_deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
-                <span>{{ current_deployment.get_deployment_status_label }}</span>
+            <div class="progress-bar {{ current_deployment.deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ current_deployment.deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ current_deployment.deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
+                <span>{{ current_deployment.deployment_progress_bar|get_item:'status_label' }}</span>
             </div>
 
         </div>
 
         {% if current_deployment.get_deploytosea_details %}
-            <p>{{ label_deployments_app_singular }} Date: {{ current_deployment.get_deploytosea_details|get_item:'deploy_date'|date:"n/j/y H:i" }}</p>
-            <p>Latitude: {{ current_deployment.get_deploytosea_details|get_item:'latitude' }}</p>
-            <p>Longitude: {{ current_deployment.get_deploytosea_details|get_item:'longitude' }}</p>
-            <p>Depth: {{ current_deployment.get_deploytosea_details|get_item:'depth' }} m</p>
+            <p>{{ label_deployments_app_singular }} Date: {{ current_deployment.deployment_to_field_date|date:"n/j/y H:i" }}</p>
+            <p>Latitude: {{ current_deployment.latitude}}</p>
+            <p>Longitude: {{ current_deployment.longitude }}</p>
+            <p>Depth: {{ current_deployment.depth }} m</p>
         {% endif %}
     {% endif %}
 
@@ -276,7 +284,7 @@
 
     <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
 
-        {% if build.build_actions.exists %}
+        {% if build.get_actions.exists %}
             <li class="nav-item">
               <a class="nav-link active" id="history-tab" data-toggle="tab" href="#history" role="tab" aria-controls="history" aria-selected="true">History</a>
             </li>
@@ -304,7 +312,7 @@
 
     <div class="tab-content" id="inventory-tabs">
 
-        {% if build.build_actions.exists %}
+        {% if build.get_actions.exists %}
           <div class="tab-pane fade show active" id="history" role="tabpanel" aria-labelledby="history-tab">
 
               <table class="table table-striped action-table">
@@ -317,7 +325,7 @@
 
                   </thead>
                   <tbody>
-                    {% for action in build.build_actions.all %}
+                    {% for action in build.get_actions.all %}
                       <tr>
                           <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
                           <td>{{ action.get_action_type_display }}</td>
