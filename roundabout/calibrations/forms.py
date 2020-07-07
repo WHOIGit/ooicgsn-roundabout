@@ -173,6 +173,37 @@ class CoefficientValueForm(forms.ModelForm):
         coeff_val_inst.save()
         return coeff_val_inst
 
+
+# Calibration Copy Form
+# Inputs: Part 
+class CalPartCopyForm(forms.Form):
+    part_select = forms.ModelChoiceField(
+        queryset = Part.objects.filter(part_type__name='Instrument'),
+        required=False,
+        label = 'Copy Calibrations from Part'
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.part_id = kwargs.pop('part_id')
+        super(CalPartCopyForm, self).__init__(*args, **kwargs)
+        self.fields['part_select'].queryset = Part.objects.filter(part_type__name='Instrument').exclude(id__in=str(self.part_id))
+
+    def clean_part_select(self):
+        part_select = self.cleaned_data.get('part_select')
+        to_part = Part.objects.get(id=self.part_id)
+        if part_select is not None:
+            validate_part_select(to_part, part_select)
+        return part_select
+
+    def save(self):
+        part_select = self.cleaned_data.get('part_select')
+        if self.has_changed():
+            copy_to_id = self.part_id
+            copy_from_id = part_select.id
+            copy_calibrations(copy_to_id, copy_from_id)
+        return part_select
+
+
 # Coefficient ValueSet form instance generator for CalibrationEvents
 EventValueSetFormset = inlineformset_factory(
     CalibrationEvent, 
@@ -336,3 +367,30 @@ def parse_valid_coeff_vals(value_set_instance):
             CoefficientValue.objects.bulk_create(parsed_batch)
     return value_set_instance
 
+
+# Copy all CoefficientNames across Parts
+def copy_calibrations(to_id, from_id):
+    to_part = Part.objects.get(id=to_id)
+    from_part = Part.objects.get(id=from_id)
+    if from_part.coefficient_names.exists():
+        for name in from_part.coefficient_names.all():
+            CoefficientName.objects.create(
+                calibration_name = name.calibration_name,
+                value_set_type = name.value_set_type,
+                sigfig_override = name.sigfig_override,
+                part = to_part
+            )
+
+# Validator for Part Calibration Copy
+# Checks for duplicate Coefficient Names between Parts
+def validate_part_select(to_part, from_part):
+    to_names = [name.calibration_name for name in to_part.coefficient_names.all()]
+    from_names = [name.calibration_name for name in from_part.coefficient_names.all()]
+    try:
+        assert not any(from_name in to_names for from_name in from_names)
+    except:
+        raise ValidationError(
+            _('Duplicate Calibration Names exist between Parts. Please select Part with unique Calibration Names.')
+        )
+    else: 
+        pass
