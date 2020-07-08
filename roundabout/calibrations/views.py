@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.views.generic import CreateView, UpdateView, DeleteView
+from django.views.generic import CreateView, UpdateView, DeleteView, DetailView
 from .models import CoefficientName, CalibrationEvent, CoefficientValueSet
 from .forms import CalibrationEventForm, EventValueSetFormset, CoefficientValueForm, CoefficientValueSetForm, ValueSetValueFormset, CoefficientNameForm, PartCalNameFormset
 from common.util.mixins import AjaxFormMixin
@@ -15,6 +15,8 @@ from sigfig import round
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.forms.models import inlineformset_factory, BaseInlineFormSet
+import csv,zipfile,io
+from os.path import splitext
 
 # Handles creation of Calibration Events, Names,and Coefficients
 class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
@@ -30,22 +32,22 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         EventValueSetAddFormset = inlineformset_factory(
-            CalibrationEvent, 
-            CoefficientValueSet, 
+            CalibrationEvent,
+            CoefficientValueSet,
             form=CoefficientValueSetForm,
-            fields=('coefficient_name', 'value_set', 'notes'), 
-            extra=len(cal_names), 
+            fields=('coefficient_name', 'value_set', 'notes'),
+            extra=len(cal_names),
             can_delete=True
         )
         event_valueset_form = EventValueSetAddFormset(
-            instance=self.object, 
+            instance=self.object,
             form_kwargs={'inv_id': self.kwargs['pk']}
         )
         for idx,name in enumerate(cal_names):
             event_valueset_form.forms[idx].initial = {'coefficient_name': name}
         return self.render_to_response(
             self.get_context_data(
-                form=form, 
+                form=form,
                 event_valueset_form=event_valueset_form
             )
         )
@@ -55,7 +57,7 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         event_valueset_form = EventValueSetFormset(
-            self.request.POST, 
+            self.request.POST,
             instance=self.object,
             form_kwargs={'inv_id': self.kwargs['pk']}
         )
@@ -98,8 +100,8 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         else:
             return self.render_to_response(
                 self.get_context_data(
-                    form=form, 
-                    event_valueset_form=event_valueset_form, 
+                    form=form,
+                    event_valueset_form=event_valueset_form,
                     form_errors=form_errors
                 )
             )
@@ -121,12 +123,12 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         event_valueset_form = EventValueSetFormset(
-            instance=self.object, 
+            instance=self.object,
             form_kwargs={'inv_id': self.object.inventory.id}
         )
         return self.render_to_response(
             self.get_context_data(
-                form=form, 
+                form=form,
                 event_valueset_form=event_valueset_form
             )
         )
@@ -136,8 +138,8 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         event_valueset_form = EventValueSetFormset(
-            self.request.POST, 
-            instance=self.object, 
+            self.request.POST,
+            instance=self.object,
             form_kwargs={'inv_id': self.object.inventory.id}
         )
         if (form.is_valid() and event_valueset_form.is_valid()):
@@ -174,22 +176,22 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
             if form.errors:
                 data = form.errors
                 return JsonResponse(
-                    data, 
+                    data,
                     status=400
                 )
             if event_valueset_form.errors:
                 print('coeffupdateform errors')
                 data = event_valueset_form.errors
                 return JsonResponse(
-                    data, 
+                    data,
                     status=400,
                     safe=False
                 )
         else:
             return self.render_to_response(
                 self.get_context_data(
-                    form=form, 
-                    event_valueset_form=event_valueset_form, 
+                    form=form,
+                    event_valueset_form=event_valueset_form,
                     form_errors=form_errors
                 )
             )
@@ -250,7 +252,7 @@ class ValueSetValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         valueset_value_form = ValueSetValueFormset(
-            self.request.POST, 
+            self.request.POST,
             instance=self.object,
             form_kwargs={'valset_id': self.object.id}
         )
@@ -279,14 +281,14 @@ class ValueSetValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
                 print('coeffupdateform errors')
                 data = valueset_value_form.errors
                 return JsonResponse(
-                    data, 
+                    data,
                     status=400,
                     safe=False
                 )
         else:
             return self.render_to_response(
                 self.get_context_data(
-                    valueset_value_form=valueset_value_form, 
+                    valueset_value_form=valueset_value_form,
                     form_errors=form_errors
                 )
             )
@@ -322,7 +324,7 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         part_calname_form = PartCalNameFormset(
-            self.request.POST, 
+            self.request.POST,
             instance=self.object
         )
         if (part_calname_form.is_valid()):
@@ -350,14 +352,14 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
                 print('partcalnameupdate errors')
                 data = part_calname_form.errors
                 return JsonResponse(
-                    data, 
+                    data,
                     status=400,
                     safe=False
                 )
         else:
             return self.render_to_response(
                 self.get_context_data(
-                    part_calname_form=part_calname_form, 
+                    part_calname_form=part_calname_form,
                     form_errors=form_errors
                 )
             )
@@ -379,3 +381,56 @@ def event_review_approve(request, pk, user_pk):
     event.save()
     data = {'approved':event.approved}
     return JsonResponse(data)
+
+
+class ExportCalibrationEvent(DetailView,LoginRequiredMixin):
+    model = CalibrationEvent
+    context_object_name = 'cal_event'
+
+    def render_to_response(self, context, **response_kwargs):
+        cal = context.get(self.context_object_name)  # getting object from context
+        fname = 'CGINS-{}-{:05}__{}.csv'.format(cal.inventory.part.name.replace('-',''),
+                                                int(cal.inventory.old_serial_number),
+                                                cal.calibration_date.strftime('%Y%m%d'))
+
+        # TODO: ACS- should come from an as-yet-defined UDF named calibration-serial-prefix
+        serial_label = cal.inventory.old_serial_number or cal.inventory.serial_number
+        if 'OPTAA' in cal.inventory.part.name:
+            serial_label = 'ACS-'+serial_label
+
+        # TODO: should this live in calibrations/models as eg an export() function?
+        zip_mode = []
+        header = ['serial','name','value','notes']
+        rows = [header]
+        for coeff in cal.coefficient_value_sets.all():
+            if coeff.coefficient_name.value_set_type == '2d':
+                extra = ('{}__{}.ext'.format(splitext(fname)[0], coeff.coefficient_name),
+                         coeff.value_set)
+                zip_mode.append(extra)
+
+            row = [serial_label,
+                   coeff.coefficient_name.calibration_name,
+                   coeff.value_set_with_export_formatting(),
+                   coeff.notes]
+            rows.append(row)
+
+        if zip_mode:
+            response = HttpResponse(content_type='application/zip')
+            fname_zip = '{}.zip'.format(splitext(fname)[0])
+            response['Content-Disposition'] = 'inline; filename="{}"'.format(fname_zip)
+            zf = zipfile.ZipFile(response, 'w')
+            csv_content = io.StringIO()
+            writer = csv.writer(csv_content)
+            writer.writerows(rows)
+            zf.writestr(fname,csv_content.getvalue())
+            for extra_fname,extra_content in zip_mode:
+                zf.writestr(extra_fname, extra_content)
+            return response
+
+        else:
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'inline; filename="{}"'.format(fname)
+            writer = csv.writer(response)
+            writer.writerows(rows)
+            return response
+

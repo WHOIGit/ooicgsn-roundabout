@@ -608,48 +608,7 @@ class Action(models.Model):
 
     def __str__(self):
         return self.get_action_type_display()
-    """
-    # Custom save method to handle Action record creation based on object_type/action_type
-    def save(self, *args, **kwargs):
-        # set the primary object this record refers to
-        if self.object_type == Action.BUILD:
-            obj = self.build
-            obj_label = labels['label_builds_app_singular']
-        elif self.object_type == Action.INVENTORY:
-            obj = self.inventory
-            obj_label = labels['label_inventory_app_singular']
-            # Set extra meta data fields
-            if self.build:
-                self.build = obj.build
-                self.deployment = obj.build.current_deployment()
-        elif self.object_type == Action.DEPLOYMENT:
-            obj = self.deployment
-            obj_label = labels['label_deployments_app_singular']
 
-        # set the Location
-        self.location = obj.location
-
-        if self.action_type == Action.ADD:
-            self.detail = '%s first added to RDB.' % (obj_label)
-        elif self.action_type == Action.UPDATE:
-            self.detail = '%s basic details updated.' % (obj_label)
-        elif self.action_type == Action.LOCATIONCHANGE:
-            self.detail = 'Moved to %s from %s. %s' % (self.location, obj.actions.latest().location, self.detail)
-        elif self.action_type == Action.SUBCHANGE:
-            if not self.detail:
-                if self.parent:
-                    self.detail = 'Added to %s.' % (obj.parent)
-                else:
-                    self.detail = 'Removed from %s.' % (obj.get_latest_parent())
-        elif self.action_type == Action.ADDTOBUILD:
-            self.detail = 'Moved to %s.' % (obj.build)
-            self.build = obj.build
-        elif self.action_type == Action.REMOVEFROMBUILD:
-            self.detail = 'Removed from %s. %s' % (obj.get_latest_build(), self.detail)
-            self.build = obj.get_latest_build()
-
-        super().save(*args, **kwargs)
-    """
 
 class PhotoNote(models.Model):
     photo = models.FileField(upload_to='notes/',
