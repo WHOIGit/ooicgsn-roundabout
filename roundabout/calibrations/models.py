@@ -16,7 +16,7 @@ class CalibrationEvent(models.Model):
         ordering = ['-calibration_date']
         get_latest_by = 'calibration_date'
     def __str__(self):
-        return self.calibration_date.strftime('%Y-%m-%d')
+        return self.calibration_date.strftime("%m/%d/%Y")
     def get_object_type(self):
         return 'calibration_event'
     APPROVAL_STATUS = (
@@ -26,8 +26,8 @@ class CalibrationEvent(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     calibration_date = models.DateTimeField(default=timezone.now)
-    user_draft = models.ForeignKey(User, related_name='calibration_events_drafter', on_delete=models.SET_NULL, null=True, blank=False)
-    user_approver = models.ForeignKey(User, related_name='calibration_events_approver', on_delete=models.SET_NULL, null=True, blank=False)
+    user_draft = models.ManyToManyField(User, related_name='calibration_events_drafter')
+    user_approver = models.ManyToManyField(User, related_name='calibration_events_approver')
     inventory = models.ForeignKey(Inventory, related_name='calibration_events', on_delete=models.CASCADE, null=False)
     deployment = models.ForeignKey(Deployment, related_name='calibration_events', on_delete=models.CASCADE, null=True)
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)

@@ -41,12 +41,12 @@ from django_tables2.export.views import ExportMixin
 
 from roundabout.parts.models import Part
 from roundabout.builds.models import Build
-from roundabout.inventory.models import Inventory
+from roundabout.inventory.models import Inventory, Action
 from roundabout.assemblies.models import Assembly
 from roundabout.userdefinedfields.models import Field
 from roundabout.calibrations.models import CalibrationEvent, CoefficientValueSet
 
-from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, CalibrationTable, UDF_Column
+from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, CalibrationTable, ActionTable, UDF_Column
 
 
 def searchbar_redirect(request):
@@ -306,7 +306,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
 class InventoryTableView(GenericSearchTableView):
     model = Inventory
     table_class = InventoryTable
-    query_prefetch = ['fieldvalues', 'fieldvalues__field', 'part', 'location', 'inventory_actions', 'inventory_actions__user', 'inventory_actions__location']
+    query_prefetch = ['fieldvalues', 'fieldvalues__field', 'part', 'location', 'actions', 'actions__user', 'actions__location']
     avail_udf = set()
 
     @staticmethod
@@ -337,12 +337,12 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="fieldvalues__field_value",       text="UDF Value", legal_lookup='STR_LOOKUP'),
 
                         dict(value=None, text="--Actions--", disabled=True),
-                        dict(value="inventory_actions__latest__action_type",    text="Latest Action",           legal_lookup='STR_LOOKUP'),
-                        dict(value="inventory_actions__latest__user__name",     text="Latest Action: User",     legal_lookup='STR_LOOKUP'),
-                        dict(value="inventory_actions__latest__created_at",     text="Latest Action: Time",     legal_lookup='DATE_LOOKUP'),
-                        dict(value="inventory_actions__latest__location__name", text="Latest Action: Location", legal_lookup='STR_LOOKUP'),
-                        dict(value="inventory_actions__latest__detail",         text="Latest Action: Notes",    legal_lookup='STR_LOOKUP'),
-                        dict(value="inventory_actions__count",                  text="Total Action Count",      legal_lookup='NUM_LOOKUP'),
+                        dict(value="actions__latest__action_type",    text="Latest Action",           legal_lookup='STR_LOOKUP'),
+                        dict(value="actions__latest__user__name",     text="Latest Action: User",     legal_lookup='STR_LOOKUP'),
+                        dict(value="actions__latest__created_at",     text="Latest Action: Time",     legal_lookup='DATE_LOOKUP'),
+                        dict(value="actions__latest__location__name", text="Latest Action: Location", legal_lookup='STR_LOOKUP'),
+                        dict(value="actions__latest__detail",         text="Latest Action: Notes",    legal_lookup='STR_LOOKUP'),
+                        dict(value="actions__count",                  text="Total Action Count",      legal_lookup='NUM_LOOKUP'),
 
                         dict(value=None, text="--Calibrations--", disabled=True),
                         dict(value="calibration_events__latest__calibration_date", text="Latest Calibration Event", legal_lookup='DATE_LOOKUP',
@@ -466,7 +466,7 @@ class PartTableView(GenericSearchTableView):
 class BuildTableView(GenericSearchTableView):
     model = Build
     table_class = BuildTable
-    query_prefetch = ['assembly','assembly__assembly_type','location','build_actions']
+    query_prefetch = ['assembly','assembly__assembly_type','location','actions','actions__user']
 
     @staticmethod
     def get_avail_fields():
@@ -488,12 +488,12 @@ class BuildTableView(GenericSearchTableView):
                         #dict(value="location__root_type",     text="Root", legal_lookup='STR_LOOKUP'),
 
                         dict(value=None, text="--Actions--", disabled=True),
-                        dict(value="build_actions__latest__action_type",    text="Latest Action",           legal_lookup='STR_LOOKUP'),
-                        dict(value="build_actions__latest__user__name",     text="Latest Action: User",     legal_lookup='STR_LOOKUP'),
-                        dict(value="build_actions__latest__created_at",     text="Latest Action: Time",     legal_lookup='DATE_LOOKUP'),
-                        dict(value="build_actions__latest__location__name", text="Latest Action: Location", legal_lookup='STR_LOOKUP'),
-                        dict(value="build_actions__latest__detail",         text="Latest Action: Notes",    legal_lookup='STR_LOOKUP'),
-                        dict(value="build_actions__count",                  text="Total Action Count",      legal_lookup='NUM_LOOKUP'),
+                        dict(value="actions__latest__action_type__output_field",    text="Latest Action",           legal_lookup='STR_LOOKUP'),
+                        dict(value="actions__latest__user__name",     text="Latest Action: User",     legal_lookup='STR_LOOKUP'),
+                        dict(value="actions__latest__created_at",     text="Latest Action: Time",     legal_lookup='DATE_LOOKUP'),
+                        dict(value="actions__latest__location__name", text="Latest Action: Location", legal_lookup='STR_LOOKUP'),
+                        dict(value="actions__latest__detail",         text="Latest Action: Notes",    legal_lookup='STR_LOOKUP'),
+                        dict(value="actions__count",                  text="Total Action Count",      legal_lookup='NUM_LOOKUP'),
                         ]
 
         return avail_fields
@@ -556,4 +556,21 @@ class CalibrationTableView(GenericSearchTableView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['model'] = 'Calibrations'
+        return context
+
+class ActionTableView(GenericSearchTableView):
+    model = Action
+    table_class = ActionTable
+    query_prefetch = []
+
+    @staticmethod
+    def get_avail_fields():
+        avail_fields = [dict(value="action_type", text="Action Type", legal_lookup='STR_LOOKUP'),
+                        dict(value="user__name", text="User", legal_lookup='STR_LOOKUP'),
+                        dict(value="created_at", text="Timestamp", legal_lookup='DATETIME_LOOKUP'),
+                        dict(value="detail", text="Detail", legal_lookup='STR_LOOKUP'),
+                        ]
+        return avail_fields
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         return context

@@ -37,6 +37,7 @@ from .validators import validate_udffield_decimal
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
 from roundabout.userdefinedfields.models import FieldValue
+from roundabout.cruises.models import Cruise
 # Import environment variables from .env files
 import environ
 env = environ.Env()
@@ -243,6 +244,44 @@ class ActionRemoveFromBuildForm(forms.ModelForm):
         self.initial['detail'] = ''
 
 
+class ActionRecoverFromDeploymentForm(forms.ModelForm):
+    # Add custom date field to allow user to pick date for the Action
+    date = forms.DateTimeField( widget=DateTimePickerInput(
+                                options={
+                                    #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                                    "showClose": True,
+                                    "showClear": True,
+                                    "showTodayButton": False,
+                                    }
+                                ),
+                                initial=timezone.now,
+                                label='Date Recovered',
+                                help_text='Set all date/times to UTC time zone.',
+    )
+    cruise = forms.ModelChoiceField(queryset=Cruise.objects.all(),
+                                    label='Cruise Recovered On',
+                                    required=False)
+    class Meta:
+        model = Inventory
+        fields = ['location', 'date', 'cruise', 'detail', 'parent', 'build', 'assembly_part']
+        widgets = {
+            'parent': forms.HiddenInput(),
+            'build': forms.HiddenInput(),
+            'assembly_part': forms.HiddenInput(),
+        }
+        labels = {
+            'location': 'Select new Location for item',
+            'detail': 'Notes on recovery',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(ActionRecoverFromDeploymentForm, self).__init__(*args, **kwargs)
+        self.initial['parent'] = ''
+        self.initial['build'] = ''
+        self.initial['assembly_part'] = ''
+        self.initial['detail'] = ''
+
+
 class ActionRemoveDestinationForm(forms.ModelForm):
 
     class Meta:
@@ -328,6 +367,25 @@ class ActionPhotoUploadForm(forms.ModelForm):
         }
 
 
+class ActionDeployInventoryForm(forms.Form):
+    # Add custom date field to allow user to pick date for the Action
+    date = forms.DateTimeField( widget=DateTimePickerInput(
+                                options={
+                                    #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                                    "showClose": True,
+                                    "showClear": True,
+                                    "showTodayButton": False,
+                                    }
+                                ),
+                                initial=timezone.now,
+                                label='Date Deployed',
+                                help_text='Set all date/times to UTC time zone.',
+    )
+    cruise = forms.ModelChoiceField(queryset=Cruise.objects.all(),
+                                    label='Cruise Deployed On',
+                                    required=False,)
+
+
 class ActionHistoryNoteForm(forms.ModelForm):
 
     class Meta:
@@ -363,14 +421,13 @@ class ActionMoveToTrashForm(forms.ModelForm):
 
     class Meta:
         model = Inventory
-        fields = ['location', 'detail', 'parent', 'deployment', 'assembly_part', 'assigned_destination_root', 'build']
+        fields = ['location', 'detail', 'parent', 'assembly_part', 'assigned_destination_root', 'build']
         widgets = {
             'location': forms.HiddenInput(),
             'parent': forms.HiddenInput(),
-            'deployment': forms.HiddenInput(),
+            'build': forms.HiddenInput(),
             'assembly_part': forms.HiddenInput(),
             'assigned_destination_root': forms.HiddenInput(),
-            'build': forms.HiddenInput(),
         }
         labels = {
             'detail': 'Reasons for moving to Trash Bin',
@@ -380,10 +437,8 @@ class ActionMoveToTrashForm(forms.ModelForm):
         super(ActionMoveToTrashForm, self).__init__(*args, **kwargs)
         self.initial['location'] = Location.objects.get(root_type='Trash')
         self.initial['parent'] = ''
-        self.initial['deployment'] = ''
         self.initial['assembly_part'] = ''
         self.initial['assigned_destination_root'] = ''
-        self.initial['build'] = ''
         self.initial['detail'] = ''
 
 

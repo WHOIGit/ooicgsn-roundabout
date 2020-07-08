@@ -90,7 +90,7 @@ class SearchTable(ColumnShiftTable):
 class InventoryTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Inventory
-        action_accessors = ['inventory_actions__latest__action_type', 'inventory_actions__latest__user__name', 'inventory_actions__latest__created_at', 'inventory_actions__latest__location__name', 'inventory_actions__latest__detail']
+        action_accessors = ['actions__latest__action_type', 'actions__latest__user__name', 'actions__latest__created_at', 'actions__latest__location__name', 'actions__latest__detail']
         udf_accessors = ['fieldvalues__field__field_name','fieldvalues__field_value']
         fields = ['serial_number','part__name','part__part_number','location__name']
         base_shown_cols = ['serial_number', 'part__name', 'location__name']
@@ -115,7 +115,7 @@ class InventoryTable(SearchTable):
         except IndexError: disp_value = value
         return disp_value
 
-    def render_inventory_actions__latest__detail(self,value):
+    def render_actions__latest__detail(self,value):
         return mark_safe(value)
 
 class PartTable(SearchTable):
@@ -183,5 +183,11 @@ class CalibrationTable(SearchTable):
     calibration_event__inventory__part__name = Column(verbose_name='Inventory Item')
     calibration_event__calibration_date = tables.DateColumn(verbose_name='Calibration Date', format='Y-m-d',
               linkify=dict(viewname="calibrations:export_calibration", args=[tables.A('calibration_event__pk')]))
+
+class ActionTable(SearchTable):
+    class Meta(SearchTable.Meta):
+        model = Action
+        fields = ['action_type','user__name','created_at','detail']
+        base_shown_cols = fields
 
 #TODO move most field Column specifications to col_args section of views page.

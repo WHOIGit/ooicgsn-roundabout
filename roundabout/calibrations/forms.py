@@ -2,6 +2,8 @@ from django import forms
 from .models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientValue
 from roundabout.inventory.models import Inventory
 from roundabout.parts.models import Part
+from roundabout.users.models import User
+from decimal import Decimal
 from django.forms.models import inlineformset_factory, BaseInlineFormSet
 from bootstrap_datepicker_plus import DatePickerInput
 from sigfig import round
@@ -13,21 +15,37 @@ from django.utils.translation import gettext_lazy as _
 class CalibrationEventForm(forms.ModelForm):
     class Meta:
         model = CalibrationEvent 
-        fields = ['calibration_date', 'approved']
+        fields = ['calibration_date','user_draft']
         labels = {
             'calibration_date': 'Calibration Date',
-            'approved': 'Approved'
+            'user_draft': 'Reviewers'
         }
         widgets = {
             'calibration_date': DatePickerInput(
                 options={
-                    "format": "MM/DD/YYYY", # moment date-time format
+                    "format": "MM/DD/YYYY", 
                     "showClose": True,
                     "showClear": True,
                     "showTodayButton": True,
                 }
-            )
+            ),
+            'user_draft': forms.SelectMultiple()
         }
+
+    def __init__(self, *args, **kwargs):
+        super(CalibrationEventForm, self).__init__(*args, **kwargs)
+        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only'])
+
+    def clean_user_draft(self):
+        user_draft = self.cleaned_data.get('user_draft')
+        return user_draft
+
+    def save(self, commit = True): 
+        event = super(CalibrationEventForm, self).save(commit = False)
+        if commit:
+            event.save()
+            return event
+         
 
 
 # CoefficientValueSet form
@@ -42,6 +60,12 @@ class CoefficientValueSetForm(forms.ModelForm):
             'notes': 'Additional Notes'
         }
         widgets = {
+            'coefficient_name': forms.Select(
+                attrs = {
+                    'readonly': True,
+                    'style': 'cursor: not-allowed; pointer-events: none; background-color: #d5dfed;'
+                }
+            ),
             'value_set': forms.Textarea(
                 attrs = {
                     'style': 'white-space: nowrap'
@@ -55,7 +79,6 @@ class CoefficientValueSetForm(forms.ModelForm):
         super(CoefficientValueSetForm, self).__init__(*args, **kwargs)
         if hasattr(self, 'inv_id'):
             inv_inst = Inventory.objects.get(id = self.inv_id)
-            self.fields['coefficient_name'].queryset = CoefficientName.objects.filter(part = inv_inst.part).order_by('created_at')
             self.instance.cal_dec_places = inv_inst.part.cal_dec_places
             self.instance.part = inv_inst.part
 
@@ -74,11 +97,10 @@ class CoefficientValueSetForm(forms.ModelForm):
 
     def save(self, commit = True): 
         value_set = super(CoefficientValueSetForm, self).save(commit = False)
-        if self.has_changed():
-            if commit:
-                value_set.save()
-                parse_valid_coeff_vals(value_set)
-                return value_set
+        if commit:
+            value_set.save()
+            parse_valid_coeff_vals(value_set)
+            return value_set
 
 
 # CalibrationName Form
@@ -157,7 +179,7 @@ EventValueSetFormset = inlineformset_factory(
     CoefficientValueSet, 
     form=CoefficientValueSetForm,
     fields=('coefficient_name', 'value_set', 'notes'), 
-    extra=1, 
+    extra=0, 
     can_delete=True
 )
 

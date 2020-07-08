@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -55,6 +55,7 @@ urlpatterns = [
     path('userdefinedfields/', include('roundabout.userdefinedfields.urls', namespace='userdefinedfields')),
     path('assemblies/', include('roundabout.assemblies.urls', namespace='assemblies')),
     path('builds/', include('roundabout.builds.urls', namespace='builds')),
+    path('cruises/', include('roundabout.cruises.urls', namespace='cruises')),
     path('reports/', include('roundabout.reports.urls', namespace='reports')),
     path('search/', include('roundabout.search.urls', namespace='search')),
     path('calibrations/', include('roundabout.calibrations.urls', namespace='calibrations')),

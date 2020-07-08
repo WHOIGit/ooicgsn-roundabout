@@ -44,16 +44,16 @@
                                       data-node-id="{{ build.id }}"
                                       data-location-id="{{ location.id }}"
                                       data-node-type="builds">{{ build }}
-                                      {% if build.current_deployment.current_deployment_status == 'deploy' %}
+                                      {% if build.current_deployment.current_status == 'deploymenttofield' %}
                                           <span class="badge badge-pill badge-primary">Deployed - {{ build.current_deployment.deployment_number }}</span>
                                       {% endif %}
-                                      {% if build.current_deployment.current_deployment_status == 'recover' %}
+                                      {% if build.current_deployment.current_status == 'deploymentrecover' %}
                                           <span class="badge badge-pill badge-warning">Recovered - {{ build.current_deployment.deployment_number }}</span>
                                       {% endif %}
-                                      {% if build.current_deployment.current_deployment_status == 'burnin' %}
+                                      {% if build.current_deployment.current_status == 'deploymentburnin' %}
                                           <span class="badge badge-pill badge-danger">Burn In - {{ build.current_deployment.deployment_number }}</span>
                                       {% endif %}
-                                      {% if build.current_deployment.current_deployment_status == 'create' %}
+                                      {% if build.current_deployment.current_status == 'startdeployment' %}
                                           <span class="badge badge-pill badge-success">Initial Deployment - {{ build.current_deployment.deployment_number }} </span>
                                       {% endif %}
                                   </a>

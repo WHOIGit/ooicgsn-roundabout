@@ -14,8 +14,8 @@ from django.core import validators
 from sigfig import round
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-import csv
-import zipfile,io
+from django.forms.models import inlineformset_factory, BaseInlineFormSet
+import csv,zipfile,io
 from os.path import splitext
 
 # Handles creation of Calibration Events, Names,and Coefficients
@@ -27,12 +27,24 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
     def get(self, request, *args, **kwargs):
         self.object = None
+        inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
+        cal_names = CoefficientName.objects.filter(part=inv_inst.part)
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        event_valueset_form = EventValueSetFormset(
+        EventValueSetAddFormset = inlineformset_factory(
+            CalibrationEvent,
+            CoefficientValueSet,
+            form=CoefficientValueSetForm,
+            fields=('coefficient_name', 'value_set', 'notes'),
+            extra=len(cal_names),
+            can_delete=True
+        )
+        event_valueset_form = EventValueSetAddFormset(
             instance=self.object,
             form_kwargs={'inv_id': self.kwargs['pk']}
         )
+        for idx,name in enumerate(cal_names):
+            event_valueset_form.forms[idx].initial = {'coefficient_name': name}
         return self.render_to_response(
             self.get_context_data(
                 form=form,
@@ -56,15 +68,14 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
     def form_valid(self, form, event_valueset_form):
         inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
         form.instance.inventory = inv_inst
-        if form.cleaned_data['approved']:
-            form.instance.user_approver = self.request.user
-        form.instance.user_draft = self.request.user
+        form.save()
+        if form.cleaned_data['user_draft'].exists():
+            draft_users = form.cleaned_data['user_draft']
+            for user in draft_users:
+                form.instance.user_draft.add(user)
         self.object = form.save()
         event_valueset_form.instance = self.object
-        event_valueset_form.save(commit=False)
-        for val in event_valueset_form:
-            if val.has_changed():
-                val.save()
+        event_valueset_form.save()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -138,15 +149,16 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
     def form_valid(self, form, event_valueset_form):
         inv_inst = Inventory.objects.get(id=self.object.inventory.id)
         form.instance.inventory = inv_inst
-        if form.cleaned_data['approved']:
-            form.instance.user_approver = self.request.user
-        form.instance.user_draft = self.request.user
+        form.instance.approved = False
+        if form.cleaned_data['user_draft'].exists():
+            draft_users = form.cleaned_data['user_draft']
+            form.instance.user_draft.clear()
+            for user in draft_users:
+                form.instance.user_draft.add(user)
+                form.instance.user_approver.remove(user)
         self.object = form.save()
         event_valueset_form.instance = self.object
-        event_valueset_form.save(commit=False)
-        for val in event_valueset_form:
-            if val.has_changed():
-                val.save()
+        event_valueset_form.save()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -354,6 +366,21 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
 
     def get_success_url(self):
         return reverse('parts:ajax_parts_detail', args=(self.object.id, ))
+
+
+# Swap reviewers to approvers
+def event_review_approve(request, pk, user_pk):
+    event = CalibrationEvent.objects.get(id=pk)
+    user = User.objects.get(id=user_pk)
+    reviewers = event.user_draft.all()
+    if user in reviewers:
+        event.user_draft.remove(user)
+        event.user_approver.add(user)
+    if len(event.user_draft.all()) == 0:
+        event.approved = True
+    event.save()
+    data = {'approved':event.approved}
+    return JsonResponse(data)
 
 
 class ExportCalibrationEvent(DetailView,LoginRequiredMixin):

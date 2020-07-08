@@ -29,7 +29,7 @@ from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, Div, Fie
 from django_summernote.widgets import SummernoteInplaceWidget, SummernoteWidget
 
 from .models import Build, BuildAction, BuildSnapshot, PhotoNote
-from roundabout.inventory.models import Deployment, DeploymentAction
+from roundabout.inventory.models import Deployment, DeploymentAction, Action
 from roundabout.locations.models import Location
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
@@ -108,16 +108,21 @@ class BuildActionPhotoNoteForm(forms.ModelForm):
     photo_ids = forms.CharField(required=False, widget=forms.HiddenInput())
 
     class Meta:
-        model = BuildAction
-        fields = ['detail', 'build', 'location']
+        model = Action
+        fields = ['detail', 'build', 'location', 'object_type']
         labels = {
             'detail': 'Add a Note',
         }
         widgets = {
             'build': forms.HiddenInput(),
             'location': forms.HiddenInput(),
+            'object_type': forms.HiddenInput(),
             'detail': SummernoteWidget(),
         }
+
+    def __init__(self, *args, **kwargs):
+        super(BuildActionPhotoNoteForm, self).__init__(*args, **kwargs)
+        self.initial['object_type'] = Action.BUILD
 
 
 class BuildActionPhotoUploadForm(forms.ModelForm):
@@ -171,12 +176,13 @@ class DeploymentForm(forms.ModelForm):
 
     class Meta:
         model = Deployment
-        fields = ['location', 'deployment_number', 'build', 'deployed_location']
+        fields = ['location', 'deployment_number', 'build', 'deployed_location', 'cruise_deployed']
 
         labels = {
             'location': 'Current Location',
             'deployment_number': '%s Number' % (labels['label_deployments_app_singular']),
             'deployed_location': 'Final %s Location' % (labels['label_deployments_app_singular']),
+            'cruise_deployed': 'Cruise Deployed On',
         }
 
         widgets = {
@@ -201,10 +207,11 @@ class DeploymentActionBurninForm(forms.ModelForm):
 
     class Meta:
         model = Deployment
-        fields = ['location', 'deployed_location']
+        fields = ['location', 'deployed_location', 'cruise_deployed']
         labels = {
             'location': 'Select Location for Burn In',
             'deployed_location': 'Final %s Location' % (labels['label_deployments_app_singular']),
+            'cruise_deployed': 'Cruise Deployed On',
         }
 
     # Add custom date field to allow user to pick date for the Action
@@ -225,9 +232,10 @@ class DeploymentActionDeployForm(forms.ModelForm):
 
     class Meta:
         model = Deployment
-        fields = ['location',]
+        fields = ['location', 'cruise_deployed']
         labels = {
             'location': '%s Location' % (labels['label_deployments_app_singular']),
+            'cruise_deployed': 'Cruise Deployed On',
         }
 
     # Add custom date field to allow user to pick date for the Action record
@@ -273,9 +281,10 @@ class DeploymentActionDetailsForm(forms.ModelForm):
 
     class Meta:
         model = Deployment
-        fields = ['location',]
+        fields = ['location', 'cruise_deployed']
         labels = {
             'location': '%s Location' % (labels['label_deployments_app_singular']),
+            'cruise_deployed': 'Cruise Deployed On',
         }
 
     # Add custom date field to allow user to pick date for the Action record
@@ -320,9 +329,10 @@ class DeploymentActionRecoverForm(forms.ModelForm):
 
     class Meta:
         model = Deployment
-        fields = ['location',]
+        fields = ['location', 'cruise_recovered']
         labels = {
             'location': 'Select Location to recover %s to:' % (labels['label_deployments_app_singular']),
+            'cruise_recovered': 'Cruise Recovered On'
         }
 
     # Add custom date field to allow user to pick date for the Action record
