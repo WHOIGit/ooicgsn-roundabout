@@ -8,6 +8,7 @@ const chrome = require('selenium-webdriver/chrome');
 const assert = require('assert');
 
 var driver;
+var dropdown;
 var myArgs = process.argv.slice(2);
 
 (async function testParts() {
@@ -80,7 +81,9 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.id("id_friendly_name")).sendKeys("sewing");
         // 19 | select | id=id_part_type | label=Sewing Machine
         {
-            await driver.findElement(By.xpath("//select[@id='id_part_type']")).sendKeys('Sewing Machine');
+            dropdown = await driver.findElement(By.id("id_part_type"));
+            await dropdown.findElement(By.xpath("//option[. = ' Sewing Machine']")).click();
+ 
         }
         // 20 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
@@ -180,7 +183,8 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.id("id_friendly_name")).clear();
         await driver.findElement(By.id("id_friendly_name")).sendKeys("sewing");
         // 52 | select | id=id_part_type | label=Sewing Machine
-        await driver.findElement(By.xpath("//select[@id='id_part_type']")).sendKeys('Sewing Machine');
+        dropdown = await driver.findElement(By.id("id_part_type"));
+        await dropdown.findElement(By.xpath("//option[. = ' Sewing Machine']")).click();
         // 53 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
         await driver.wait(until.elementLocated(By.css("#div_id_part_number .ajax-error")));
@@ -243,7 +247,8 @@ var myArgs = process.argv.slice(2);
         // 15 | click | css=.parts | 
         await driver.findElement(By.css(".parts")).click();
         // 16 | select | id=id_parent | label=Mechanical
-        await driver.findElement(By.xpath("//select[@id='id_parent']")).sendKeys('Mechanical');
+        dropdown = await driver.findElement(By.id("id_parent"));
+        await dropdown.findElement(By.xpath("//option[. = ' Mechanical']")).click();
         // 17 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
         // 18 | verifyElementPresent | xpath=//td[contains(.,'Sewing Machine')] | 
@@ -267,7 +272,7 @@ var myArgs = process.argv.slice(2);
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-primary")).click();
         // 16 | select | id=id_parent | label=
-        const dropdown = await driver.findElement(By.id("id_parent"));
+        dropdown = await driver.findElement(By.id("id_parent"));
         await dropdown.findElement(By.xpath("//option[. = '---------']")).click();
         // 17 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
@@ -289,7 +294,8 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.id("id_part_number")).clear();
         await driver.findElement(By.id("id_part_number")).sendKeys("789-456-123");
         // 26 | select | id=id_part_type | label=Cable
-        await driver.findElement(By.xpath("//select[@id='id_part_type']")).sendKeys('Cable');
+        dropdown = await driver.findElement(By.id("id_part_type"));
+        await dropdown.findElement(By.xpath("//option[. = ' Cable']")).click();
         // 27 | click | css=.controls > .btn | 
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css(".controls > .btn")).click();
@@ -301,7 +307,8 @@ var myArgs = process.argv.slice(2);
         // 29 | click | linkText=Create New Revision | 
         await driver.findElement(By.linkText("Create New Revision")).click();
         // 30 | type | id=id_revision_code | B
-        await driver.wait(until.elementLocated(By.id("id_revision_code")), 2000);
+        await new Promise(r => setTimeout(r, 2000));
+        //await driver.wait(until.elementLocated(By.id("id_revision_code")), 2000); //doesn't work
         await driver.findElement(By.id("id_revision_code")).sendKeys("B");
         // 31 | click | id=div_id_created_at | 
         await driver.findElement(By.id("div_id_created_at")).click();
@@ -322,8 +329,8 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.id("id_name")).clear();
         await driver.findElement(By.id("id_name")).sendKeys("  ");
         // 37 | select | id=id_part_type | label=---------
-        const drop = await driver.findElement(By.id("id_part_type"));
-        await drop.findElement(By.xpath("//option[. = '---------']")).click();
+        dropdown = await driver.findElement(By.id("id_part_type"));
+        await dropdown.findElement(By.xpath("//option[. = '---------']")).click();
         // 38 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
         // 39 | verifyText | css=#div_id_part_number .ajax-error | This field is required.
@@ -339,7 +346,8 @@ var myArgs = process.argv.slice(2);
         // 43 | type | id=id_name | Sewing Template
         await driver.findElement(By.id("id_name")).sendKeys("Sewing Template");
         // 46 | select | id=id_part_type | label=--- Sewing Machine
-        await driver.findElement(By.xpath("//select[@id='id_part_type']")).sendKeys('Sewing Machine');
+        dropdown = await driver.findElement(By.id("id_part_type"));
+        await dropdown.findElement(By.xpath("//option[. = ' Sewing Machine']")).click();
         // 47 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
         await new Promise(r => setTimeout(r, 2000));
@@ -389,6 +397,8 @@ var myArgs = process.argv.slice(2);
         // 60 | verifyText | css=#div_id_refurbishment_cost .ajax-error | Ensure that there are no more than 2 decimal places.
         assert(await driver.findElement(By.css("#div_id_refurbishment_cost .ajax-error")).getText() == "Ensure that there are no more than 2 decimal places.");
 
+        // Close browser window
+        driver.quit();
     }
     catch (e) {
         console.log(e.message, e.stack);

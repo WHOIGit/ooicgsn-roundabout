@@ -16,7 +16,7 @@ var myArgs = process.argv.slice(2);
 
     // First argument specifies the Browser type, chrome is default if no argument is supplied
     if ((myArgs[0] == 'chrome') || (myArgs.length == 0)) {        
-        driver = new Builder().forBrowser('chrome').build();
+        driver = new Builder().forBrowser('chrome').build(); 
     }
     else {       
         driver = new Builder().forBrowser('firefox').build();
@@ -202,7 +202,7 @@ var myArgs = process.argv.slice(2);
         }
 
         // Close browser window
-        //   driver.quit();
+           driver.quit();
 
     }
     catch (e)

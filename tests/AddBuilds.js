@@ -40,17 +40,20 @@ var myArgs = process.argv.slice(2);
 
         // Add build with non null assembly template, build number, and location
         await driver.findElement(By.linkText("Builds")).click();
+        await new Promise(r => setTimeout(r, 4000)); // Build tree takes awhile to load
         // 4 | click | linkText=Create New Build | 
         await driver.wait(until.elementLocated(By.linkText("Create New Build")));
         await driver.findElement(By.linkText("Create New Build")).click();
         await new Promise(r => setTimeout(r, 2000));  //needed for firefox build number to populate
+        await driver.wait(until.elementLocated(By.id("id_assembly")));
         // 5 | select | id=id_assembly | label=Test Glider 1
         {
             const dropdown = await driver.findElement(By.id("id_assembly"));
             await dropdown.findElement(By.xpath("//option[. = 'Test Glider 1']")).click();
         }
+   
         await new Promise(r => setTimeout(r, 2000));  //needed for firefox build number to populate
-
+      
         // 6 | select | id=id_location | label=--- Test Child
         {
             const dropdown = await driver.findElement(By.id("id_location"));
@@ -125,6 +128,9 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.css(".controls > .btn")).click();
         // 20 | verifyText | css=.ajax-error | This field is required.
         assert(await driver.findElement(By.css("#div_id_build_number .ajax-error")).getText() == "This field is required.");
+
+        // Close browser window
+        driver.quit();
 
     }
     catch (e) {

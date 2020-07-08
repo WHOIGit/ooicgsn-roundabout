@@ -120,6 +120,9 @@ var myArgs = process.argv.slice(2);
     // 26 | click | css=.btn-danger | 
     await driver.findElement(By.css(".btn-danger")).click();
 
+        // Close browser window
+        driver.quit();
+
     }
     catch (e) {
         console.log(e.message, e.stack);

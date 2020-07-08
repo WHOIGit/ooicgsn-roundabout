@@ -38,6 +38,7 @@ var myArgs = process.argv.slice(2);
 
         // Add Inventory with unique serial number and non null template, revision code, and location
         await driver.findElement(By.linkText("Inventory")).click();
+        await new Promise(r => setTimeout(r, 4000)); // Inventory tree takes awhile to load (firefox)
         // 4 | click | linkText=Add Inventory | 
         await driver.wait(until.elementLocated(By.linkText("Add Inventory")));
         await driver.findElement(By.linkText("Add Inventory")).click();
@@ -67,7 +68,7 @@ var myArgs = process.argv.slice(2);
 
         // Add Inventory with blank part type, template, revision, and location
         // 11 | click | linkText=Add Inventory | 
-        await driver.wait(until.elementLocated(By.linkText("Add Inventory")));
+        await new Promise(r => setTimeout(r, 4000)); // Inventory tree takes awhile to load
         await driver.findElement(By.linkText("Add Inventory")).click();
         // 12 | click | id=id_part_type | 
         await driver.wait(until.elementLocated(By.id("id_part_type")));
@@ -125,7 +126,7 @@ var myArgs = process.argv.slice(2);
         // Add three Assemblies from DB
         await driver.findElement(By.linkText("Inventory")).click();
         // 4 | click | linkText=Add Inventory | 
-        await driver.wait(until.elementLocated(By.linkText("Add Inventory")));
+        await new Promise(r => setTimeout(r, 4000)); // Inventory tree takes awhile to load
         await driver.findElement(By.linkText("Add Inventory")).click();
         await driver.wait(until.elementLocated(By.id("id_part_type")));
         // 5 | select | id=id_part_type | label=-- Cable
@@ -150,6 +151,7 @@ var myArgs = process.argv.slice(2);
 
 
         // 9 | click | linkText=Add Inventory | 
+        await new Promise(r => setTimeout(r, 4000)); // Inventory tree takes awhile to load
         await driver.findElement(By.linkText("Add Inventory")).click();
         await driver.wait(until.elementLocated(By.id("id_part_type")));
         // 10 | select | id=id_part_type | label=-- Mechanical
@@ -174,6 +176,7 @@ var myArgs = process.argv.slice(2);
 
 
         // 14 | click | linkText=Add Inventory | 
+        await new Promise(r => setTimeout(r, 4000)); // Inventory tree takes awhile to load
         await driver.findElement(By.linkText("Add Inventory")).click();
         await driver.wait(until.elementLocated(By.id("id_part_type")));
         // 15 | select | id=id_part_type | label=-- Electrical
@@ -341,6 +344,7 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.linkText("Edit Inventory Details")).click();
         await driver.wait(until.elementLocated(By.id("hint_id_serial_number")));
         await driver.findElement(By.id("hint_id_serial_number")).click();
+        await new Promise(r => setTimeout(r, 2000));  // needed for firefox
         await driver.findElement(By.id("id_serial_number")).clear();
         // 56 | type | id=id_serial_number | 3604-00131-00001-20004
         await driver.findElement(By.id("id_serial_number")).sendKeys("3604-00131-00001-20004");
@@ -361,6 +365,8 @@ var myArgs = process.argv.slice(2);
         assert(await driver.findElement(By.css("#div_id_revision .ajax-error")).getText() == "This field is required.");
         assert(await driver.findElement(By.css("#div_id_serial_number .ajax-error")).getText() == "Inventory with this Serial number already exists.");
 
+        // Close browser window
+        driver.quit();
 
     }
     catch (e) {

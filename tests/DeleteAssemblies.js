@@ -37,39 +37,27 @@ var myArgs = process.argv.slice(2);
         // DELETE ASSEMBLIES TEST
 
        // Searches for and deletes the Assemblies added during the Add and Update Assemblies Test
-
-        await driver.findElement(By.xpath("//button[contains(.,'Search')]")).click();
-        await driver.findElement(By.id("search-model-dropdown")).click();
-        await driver.findElement(By.linkText("Assembly Templates")).click();
-        // 3 | removeSelection | id=field-select_c_r0 | label=Number
- //       await driver.findElement(By.id("field-select_c_r0")).click();
-        {
-            const dropdown = await driver.findElement(By.id("field-select_c_r0"));
-            await dropdown.findElement(By.xpath("//option[. = 'Name']")).click();
-        }
- 
-        // 6 | click | id=qfield-lookup_c_r0 | 
-        await driver.findElement(By.id("qfield-lookup_c_r0")).click();
-        // 7 | select | id=qfield-lookup_c_r0 | label=Exact
-        {
-            const dropdown = await driver.findElement(By.id("qfield-lookup_c_r0"));
-            await dropdown.findElement(By.xpath("//option[. = 'Exact']")).click();
-        }
- 
-        // 10 | type | id=field-query_c_r0 | Test Assembly
-        await driver.findElement(By.id("field-query_c_r0")).sendKeys("Test Assembly");
-        // 11 | click | id=searchform-submit-button | 
-        await driver.findElement(By.id("searchform-submit-button")).click();
-        // 12 | click | linkText=123-001 | 
+        await driver.wait(until.elementLocated(By.id("searchbar-query")));
+        await driver.findElement(By.id("searchbar-query")).click();
+        var dropdown = await driver.findElement(By.id("searchbar-modelselect"));
+        await dropdown.findElement(By.xpath("//option[. = 'Assembly Templates']")).click();
+        // 16 | type | id=searchbar-query | Test Assembly 2
+        await driver.findElement(By.id("searchbar-query")).sendKeys("Test Assembly");
+        // 17 | click | css=.btn-outline-primary:nth-child(1) | 
+        await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
+        // 18 | click | linkText=123-002 | 
         await driver.wait(until.elementLocated(By.linkText("123-001")));
         await driver.findElement(By.linkText("123-001")).click();
+ 
         // 13 | click | linkText=Delete | 
+        await driver.wait(until.elementLocated(By.linkText("Delete")));
         await driver.findElement(By.linkText("Delete")).click();
         // 14 | click | css=.btn-danger | 
         await driver.wait(until.elementLocated(By.css(".btn-danger")));
         await driver.findElement(By.css(".btn-danger")).click();
 
         // 15 | click | id=searchbar-query | 
+        await driver.wait(until.elementLocated(By.id("searchbar-query")));
         await driver.findElement(By.id("searchbar-query")).click();
         // 16 | type | id=searchbar-query | Test Assembly 2
         await driver.findElement(By.id("searchbar-query")).sendKeys("Test Assembly 2");
@@ -79,12 +67,14 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.linkText("123-002")));
         await driver.findElement(By.linkText("123-002")).click();
         // 22 | click | linkText=Delete | 
+        await driver.wait(until.elementLocated(By.linkText("Delete")));
         await driver.findElement(By.linkText("Delete")).click();
         // 23 | click | css=.btn-danger | 
         await driver.wait(until.elementLocated(By.css(".btn-danger")));
         await driver.findElement(By.css(".btn-danger")).click();
 
         // 24 | click | id=searchbar-query | 
+        await driver.wait(until.elementLocated(By.id("searchbar-query")));
         await driver.findElement(By.id("searchbar-query")).click();
         // 25 | type | id=searchbar-query | Test Assembly 3
         await driver.findElement(By.id("searchbar-query")).sendKeys("Test Assembly 3");
@@ -94,12 +84,15 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.linkText("123-003")));
         await driver.findElement(By.linkText("123-003")).click();
         // 28 | click | linkText=Delete | 
+        await driver.wait(until.elementLocated(By.linkText("Delete")));
         await driver.findElement(By.linkText("Delete")).click();
         // 29 | click | css=.btn-danger | 
         await driver.wait(until.elementLocated(By.css(".btn-danger")));
         await driver.findElement(By.css(".btn-danger")).click();
 
         // 30 | click | id=searchbar-query | 
+        await new Promise(r => setTimeout(r, 2000));  //required for firefox
+        await driver.wait(until.elementLocated(By.id("searchbar-query")));
         await driver.findElement(By.id("searchbar-query")).click();
         // 31 | type | id=searchbar-query | Test Glider 1
         await driver.findElement(By.id("searchbar-query")).sendKeys("Test Glider 1");
@@ -109,10 +102,14 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.linkText("000-654-987")));
         await driver.findElement(By.linkText("000-654-987")).click();
         // 34 | click | linkText=Delete | 
+        await driver.wait(until.elementLocated(By.linkText("Delete")));
         await driver.findElement(By.linkText("Delete")).click();
         // 35 | click | css=.btn-danger | 
         await driver.wait(until.elementLocated(By.css(".btn-danger")));
         await driver.findElement(By.css(".btn-danger")).click();
+
+        // Close browser window
+        driver.quit();
 
     }
     catch (e) {

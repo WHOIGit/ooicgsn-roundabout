@@ -203,7 +203,8 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.linkText("Assemblies")));
         await driver.findElement(By.linkText("Assemblies")).click();
         // 5 | click | linkText=Create New Assembly | 
-        await driver.wait(until.elementLocated(By.linkText("Create New Assembly")));
+        await new Promise(r => setTimeout(r, 2000));
+        //await driver.wait(until.elementLocated(By.linkText("Create New Assembly"))); - firefox doesn't work
         await driver.findElement(By.linkText("Create New Assembly")).click();
         // 6 | type | id=id_name | Test Glider 1
         await driver.wait(until.elementLocated(By.id("id_name")));
@@ -226,7 +227,7 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.linkText("Create New Revision")));
         await driver.findElement(By.linkText("Create New Revision")).click();
         // 12 | click | css=.controls > .btn | 
-        await driver.wait(until.elementLocated(By.id("id_revision_code")));
+        await driver.wait(until.elementLocated(By.id("id_revision_code")),2000);  //required by firefox
         // 13 | type | id=id_revision_code | B
         await driver.findElement(By.id("id_revision_code")).sendKeys("B");
         // 14 | click | css=.controls > .btn | 
@@ -306,7 +307,13 @@ var myArgs = process.argv.slice(2);
         await new Promise(r => setTimeout(r, 2000));
 
         // Expand Revision B and 6 Wire and Shield nodes
-        var j = (await driver.findElements(By.xpath(".//*[contains(text(),'Gliders')]/preceding-sibling::*"))).length + 1;
+        var j = 1;
+        while (true) {
+            if ((await driver.findElement(By.xpath("//div/div/ul/li[" + j + "]/a")).getText()) == "Gliders") {
+                break;
+            }
+            j++;
+        }
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/ul/li/i")).click();
         await new Promise(r => setTimeout(r, 2000));
@@ -315,6 +322,9 @@ var myArgs = process.argv.slice(2);
         // Verify Top Level Part and Sub Assembly created in tree
         await driver.findElement(By.linkText("6 Wire and Shield"));
         await driver.findElement(By.linkText("2 SLOT BACKPLANE BOARD ASSEMBLY"));
+
+        // Close browser window
+        driver.quit();
 
     }
     catch (e) {

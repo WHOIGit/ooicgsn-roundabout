@@ -78,8 +78,15 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.linkText("Inventory")).click();
         await new Promise(r => setTimeout(r, 4000));
         // Expand Test Location in Inventory Tree
-        var j = (await driver.findElements(By.xpath(".//*[contains(text(),'Test')]/preceding-sibling::*"))).length + 1;
+        var j = 1;
+        while (true) {
+            if ((await driver.findElement(By.xpath("//div[2]/ul/li[" + j + "]/a")).getText()) == "Test") {
+                break;
+            }
+            j++;
+        }
         await driver.findElement(By.xpath("//div/ul/li[" + j + "]/i")).click();    
+
         // Delete Sewing Template deletes it's Inventory
 /*        await driver.wait(until.elementLocated(By.partialLinkText("sewing")));
         await driver.findElement(By.partialLinkText("sewing")).click();
@@ -100,6 +107,8 @@ var myArgs = process.argv.slice(2);
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css(".btn-danger")).click();
 
+        // Close browser window
+        driver.quit();
 
     }
     catch (e) {
