@@ -9,7 +9,8 @@ from django.urls import reverse, reverse_lazy
 from roundabout.parts.models import Part
 from roundabout.parts.forms import PartForm
 from roundabout.users.models import User
-from roundabout.inventory.models import Inventory
+from roundabout.inventory.models import Inventory, Action
+from roundabout.inventory.utils import _create_action_history
 from django.core import validators
 from sigfig import round
 from django.core.exceptions import ValidationError
@@ -74,6 +75,7 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         self.object = form.save()
         event_valueset_form.instance = self.object
         event_valueset_form.save()
+        _create_action_history(self.object, Action.ADD, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -157,6 +159,7 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         self.object = form.save()
         event_valueset_form.instance = self.object
         event_valueset_form.save()
+        _create_action_history(self.object, Action.UPDATE, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {

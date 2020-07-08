@@ -2,7 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, DecimalValidator, MaxValueValidator, RegexValidator, MaxLengthValidator
 from django.utils import timezone
 from roundabout.parts.models import Part
-from roundabout.inventory.models import Inventory, Deployment
+from roundabout.inventory.models import Inventory, Deployment, Action
 from roundabout.users.models import User
 from decimal import Decimal
 from sigfig import round
@@ -30,6 +30,11 @@ class CalibrationEvent(models.Model):
     inventory = models.ForeignKey(Inventory, related_name='calibration_events', on_delete=models.CASCADE, null=False)
     deployment = models.ForeignKey(Deployment, related_name='calibration_events', on_delete=models.CASCADE, null=True)
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
+    detail = models.TextField(blank=True)
+    
+    def get_actions(self):
+        return self.actions.filter(object_type=Action.CALEVENT)
+
 
 # Tracks Calibrations across Parts
 class CoefficientName(models.Model):

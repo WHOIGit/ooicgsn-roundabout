@@ -1,0 +1,275 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+{% load common_tags %}
+
+<div class="tab-pane fade" id="calibration-template" role="tabpanel" aria-labelledby="calibration-template-tab">
+    <ul class="list-group">
+        {% for event in coeff_events %}
+            <li class="list-group-item">
+                <a  class="collapsed" 
+                    data-toggle="collapse" 
+                    href="#event-{{ event.id }}" 
+                    aria-expanded="false" 
+                    aria-controls="event-{{ event.id }}"
+                >
+                    {{ event.calibration_date|date:"n/j/y" }}
+                </a>
+                <a  data-toggle="collapse" 
+                    class="collapsed text-right" 
+                    href="#event-{{ event.id }}" 
+                    aria-controls="event-{{ event.id }}" 
+                    aria-expanded="false" 
+                    role="button"
+                >
+                    <i class="fa" aria-hidden="true"></i>
+                    <span class="sr-only">Expand/Collapse Calibration {{ event.calibration_date }}</span>
+                </a>
+                {% if user in event.user_draft.all %}
+                    <span id="review-badge" class="badge badge-pill badge-secondary">Review Requested</span>
+                {% endif %}
+                {% if event.approved %}
+                    <span id="approve-badge" class="badge badge-pill badge-success">Approved</span> 
+                {% else %} 
+                    <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span> 
+                {% endif %}
+                <div class = 'ajax-detail-link float-right'>
+                    <a  href="#"
+                        class="btn btn-primary btn-sm mr-2"
+                        role="button"
+                        data-detail-url="{% url 'calibrations:event_valueset_update' event.id %}"
+                        data-node-id="{{ event.id }}"
+                        data-node-type="{{ event.get_object_type }}">
+                            Edit Coefficient Values
+                    </a>
+                </div>
+                <div class="collapse mt-3" id="event-{{ event.id }}">
+                    <hr>
+                    {% if user in event.user_draft.all %}
+                        <button class="btn btn-success btn-sm mr-2" id='expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_delete' event.id user.id %}">
+                            Approve
+                        </button>
+                    {% endif %}
+                    <div class="ajax-detail-link float-right">
+                        <a  href="#" 
+                            class="btn btn-danger btn-sm mr-2"
+                            data-detail-url="{% url 'calibrations:event_valueset_delete' event.id %}" 
+                            role="button" 
+                        >
+                                Delete
+                        </a>
+                    </div>
+                    <p id = 'approvers'>Approvers: 
+                        {% for user in event.user_approver.all %}
+                            <span id='approver-{{ user.id }}'>{{ user.username }}</span>
+                        {% endfor %}
+                    </p>
+                    <p id = 'reviewers'>Reviewers: 
+                        {% for user in event.user_draft.all %}
+                            <span id='reviewer-{{ user.id }}'>{{ user.username }}</span>
+                        {% endfor %}
+                    </p> 
+                    <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+                        <li class="nav-item">
+                            <a  class="nav-link active" 
+                                id="documentation-tab" 
+                                data-toggle="tab" 
+                                href="#coefficients" 
+                                role="tab" 
+                                aria-controls="coefficients" 
+                                aria-selected="false">
+                                    Coefficients
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="inventory-tabs">
+                        {% if event.coefficient_value_sets.all %}
+                            <div class="tab-pane fade show active" id="coefficients" role="tabpanel" aria-labelledby="coefficients-tab">
+                                <table class="table table-tight">
+                                    <tbody>
+                                        {% for value_set in event.coefficient_value_sets.all %}
+                                            <tr>
+                                                <td> 
+                                                    <li class = 'list-group-item'>
+                                                        <a  class="collapse show" 
+                                                            data-toggle="collapse" 
+                                                            href="#coeff-{{ value_set.coefficient_name }}{{ event.id }}" 
+                                                            aria-expanded="false" 
+                                                            aria-controls="coeff-{{ value_set.coefficient_name }}{{ event.id }}"
+                                                        >
+                                                            <b>{{ value_set.coefficient_name }}</b>
+                                                        </a>
+                                                        <a  data-toggle="collapse" 
+                                                            class="collapse show text-right" 
+                                                            href="#coeff-{{ value_set.coefficient_name }}{{ event.id }}" 
+                                                            aria-controls="coeff-{{ value_set.coefficient_name }}{{ event.id }}" 
+                                                            aria-expanded="false" 
+                                                            role="button"
+                                                        >
+                                                            <i class="fa" aria-hidden="true"></i>
+                                                            <span class="sr-only">Expand/Collapse Calibration {{ value_set.coefficient_name }}</span>
+                                                        </a>
+                                                        {% if value_set.coefficient_name.value_set_type != '2d' %}
+                                                            <div class = 'ajax-detail-link float-right'>
+                                                                <a  href="#"
+                                                                    class="btn btn-primary btn-sm mr-2"
+                                                                    role="button"
+                                                                    data-detail-url="{% url 'calibrations:valueset_value_update' value_set.id %}"
+                                                                    data-node-id="{{ value_set.id }}"
+                                                                    data-node-type="{{ value_set.get_object_type }}">
+                                                                        Edit Coefficient Metadata
+                                                                </a>
+                                                            </div>
+                                                        {% endif %}
+                                                        <div class="collapse show mt-1" id="coeff-{{ value_set.coefficient_name }}{{ event.id }}">
+                                                            <p class='font-weight-light'><b>Notes:</b> {{ value_set.notes }}</p>
+                                                            <table id = 'coeff-val-table' class="table table-tight">
+                                                                <thead>
+                                                                    <th>Value(s)</th>
+                                                                </thead>
+                                                                <tbody class = 'coeff-tbody' id = 'coeff-val-tbody' style = 'display:block; overflow: auto; max-height: 200px'>
+                                                                    {% regroup value_set.coefficient_values.all by row as row_sets %}
+                                                                    {% for row in row_sets %}
+                                                                        <tr style = 'display: block;'>
+                                                                            {% for val in row.list %}
+                                                                                <td style = 'white-space: nowrap'>
+                                                                                    <div style = 'width: 100px; text-align: center;'>{{ val }}</div>
+                                                                                </td>
+                                                                            {% endfor %}
+                                                                        </tr>
+                                                                    {% endfor %}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </li>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% endif %}
+                        <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+                            <li class="nav-item">
+                                <a  class="nav-link active" 
+                                    id="eventhistory-tab" 
+                                    data-toggle="tab" 
+                                    href="#eventhistory" 
+                                    role="tab" 
+                                    aria-controls="eventhistory" 
+                                    aria-selected="false">
+                                        Event History
+                                </a>
+                            </li>
+                        </ul>
+                        <table class="table table-tight">
+                            <tbody>
+                                <tr>
+                                    <td> 
+                                        <li class = 'list-group-item' style = 'display:block; overflow: auto; max-height: 200px'>
+                                            <table class="table table-tight table-striped action-table">
+                                                <thead>
+                                                    <th>Date</th>
+                                                    <th>Action</th>
+                                                    <th>Details</th>
+                                                    <th>Person</th>
+                                                </thead>
+                                                <tbody style = 'overflow: auto; max-height: 200px'>
+                                                    {% for action in event.get_actions.all %}
+                                                        <tr>
+                                                            <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
+                                                            <td>{{ action.get_action_type_display }}</td>
+                                                            <td>
+                                                                {{ action.detail|safe }}
+                                                            </td>
+                                                            <td>{{ action.user.username }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </li>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+{% block javascript %}
+<script>
+    $(document).ready(function() {
+
+        // Toggle display of Calibration and Configuration Actions section
+        let user_id = '{{ user.id }}'
+        let inv_part_type = '{{ inventory_item.part.part_type }}';
+        let part_has_cals = '{{ inventory_item.part.coefficient_names.exists }}';
+        if (inv_part_type == 'Instrument' && part_has_cals == 'True') {
+            $('#add_coefficient_action').show();
+            $('#calibration-template-tab').show().css('display', '');
+            $('#calibration-template').show().css('display', '');
+        } else {
+            $('#add_coefficient_action').hide();
+            $('#calibration-template-tab').hide();
+            $('#calibration-template').hide();
+        }
+
+        setCoeffTableWidth();
+        $( window ).bind( "resize", setCoeffTableWidth ); 
+
+        // Auto-resize CoefficientValue tables for horizontal scrolling
+        function setCoeffTableWidth() {
+            let invTabWidth =  $('#inventory-tabs').width();
+            let tBodyWidth = invTabWidth - (invTabWidth * .1);
+            $('.coeff-tbody').each(function() {
+                $(this).css('max-width', tBodyWidth + 'px' );
+            })
+        }
+
+        // Swap Reviewers as Approvers
+        $('#calibration-template').on('click', 'button[id^=expander]', function(e) {
+            e.preventDefault();
+            let url = $(this).attr('data-reviewer-url');
+            let review_badge = $(this).parent().parent().find('#review-badge');
+            let progress_badge = $(this).parent().parent().find('#progress-badge');
+            let reviewer = $(this).parent().parent().find('#reviewer-' + user_id)
+            let approver_list = $(this).parent().parent().find('#approvers');
+            if (review_badge.length) {
+                $.ajax({
+                    url: url,
+                    success: function (data) {
+                        if (data.approved) {
+                            review_badge.after('<span id = "approve-badge" class = "badge badge-pill badge-success">Approved</span>');
+                            progress_badge.hide();
+                        }
+                        $(this).remove();
+                        approver_list.append("<span id='approver-{{ user.id }}'>{{ user.username }}</span>");
+                        review_badge.remove();
+                        reviewer.hide();
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock javascript %}
