@@ -121,11 +121,14 @@
 
     <form id='adv-search-form' method="get" accept-charset="utf-8" class="form" onsubmit="DoSubmit(event)">
       <div id='adv-search-cards'>  </div>
-      <div class="row ml-1">
+      <div class="row mx-1">
         <button class="btn btn-primary" type="button" onclick="insert_card('{{ model }}',null,'globalhack')"
                 data-toggle="tooltip" title="Results from different cards are compounded">
           <i class="fa fa-plus"></i> New Card</button>
         <div class="ml-auto mr-3">
+          {% if trashtog %}
+          <label>Search in Trash: <input id="trashsearch-toggle" type="checkbox" {{ trashtog|slice:"1:-1" }} data-toggle="toggle" data-offstyle="primary" data-on="OK" data-off="Off" name="trashtog"></label>
+          {% endif %}
           <button class="btn btn-primary" type="button" onclick="reset_cards(prev_cards,'globalhack')">RESET</button>
           <button id='searchform-submit-button' class="btn btn-primary" type="submit">
             <span class="fa fa-search"></span> Submit</button>

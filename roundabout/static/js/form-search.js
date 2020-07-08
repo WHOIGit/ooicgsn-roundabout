@@ -335,22 +335,22 @@ function DoSubmit(e){
 // CSV DOWNLOADING STUFF //
 
 function buttonload_spinner(on_or_off =null, button_id='#search--download-csv-button', fa_replace=null){
-    const csv_button = $(button_id)
-    const button_icon = csv_button.find('span')
+    const spin_button = $(button_id)
+    const button_icon = spin_button.find('span')
     if (on_or_off === 'on'){
-        csv_button.prop('disabled',true)
+        spin_button.prop('disabled',true)
         button_icon.addClass('fa-spinner fa-spin')
         if (fa_replace) { button_icon.removeClass(fa_replace) }
     }
     else if (on_or_off === 'off'){
-        csv_button.prop('disabled',false)
+        spin_button.prop('disabled',false)
         button_icon.removeClass('fa-spinner fa-spin')
         if (fa_replace) { button_icon.addClass(fa_replace) }
     }
     else{ // straight up toggle
-        if (csv_button.prop('disabled'))
-           {csv_button.prop('disabled',false)}
-        else{ csv_button.prop('disabled',true) }
+        if (spin_button.prop('disabled'))
+           {spin_button.prop('disabled',false)}
+        else{ spin_button.prop('disabled',true) }
         button_icon.toggleClass('fa-spinner fa-spin')
         if (fa_replace) { button_icon.toggleClass(fa_replace) }
     }

@@ -356,7 +356,7 @@ class InventoryTableView(GenericSearchTableView):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if not 'trash' in self.request.GET.getlist('include'):
+        if not 'on' in self.request.GET.getlist('trashtog'):
             qs = qs.exclude(location__root_type='Trash')
         self.avail_udf.clear()
         [[self.avail_udf.add(fv.field.id) for fv in q.fieldvalues.all()] for q in qs]
@@ -396,6 +396,8 @@ class InventoryTableView(GenericSearchTableView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        trashtog = 'checked' if 'on' in self.request.GET.getlist('trashtog') else 'unchecked'
+        context['trashtog'] = json.dumps(trashtog)
         return context
 
 class PartTableView(GenericSearchTableView):
@@ -498,12 +500,14 @@ class BuildTableView(GenericSearchTableView):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if not 'trash' in self.request.GET.getlist('include'):
+        if not 'on' in self.request.GET.getlist('trashtog'):
             qs = qs.exclude(location__root_type='Trash')
         return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        trashtog = 'checked' if 'on' in self.request.GET.getlist('trashtog') else 'unchecked'
+        context['trashtog'] = trashtog
         return context
 
 
