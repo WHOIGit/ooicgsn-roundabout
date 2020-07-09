@@ -6,14 +6,19 @@ console.log('Running Retire Builds Test');
 const { Builder, By, Key, until, a, WebElement, promise } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const assert = require('assert');
-const chromedriver = require('chromedriver');
-const { exception } = require('console');
 
 var driver;
+var myArgs = process.argv.slice(2);
 
 (async function retireBuilds() {
 
-    driver = new Builder().forBrowser('chrome').build();
+    // First argument specifies the Browser type, chrome is default if no argument is supplied
+    if ((myArgs[0] == 'chrome') || (myArgs.length == 0)) {        
+        driver = new Builder().forBrowser('chrome').build();
+    }
+    else {
+        driver = new Builder().forBrowser('firefox').build();
+    }
 
     // Step # | name | target | value
     // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
@@ -35,12 +40,27 @@ var driver;
 
         // Retire Builds added during the Add Builds test.
         await driver.findElement(By.linkText("Builds")).click();
-        var j = (await driver.findElements(By.xpath(".//*[contains(text(),'Test')]/preceding-sibling::*"))).length + 1;
-        await driver.findElement(By.xpath("//div/ul/li[" + j + "]/i")).click();
-        await driver.findElement(By.xpath("//div/ul/li[" + j + "]/ul/li/i")).click();
-        // 8 | click | linkText=Test Child |
-        await driver.wait(until.elementLocated(By.partialLinkText("Test Glider 1")));
-        await driver.findElement(By.partialLinkText("Test Glider 1")).click();
+        await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click(); // search button
+        // 20 | click | id=field-select_c_r0 | 
+        await driver.wait(until.elementLocated(By.id("field-select_c_r0")));
+        await driver.findElement(By.id("field-select_c_r0")).click();
+        // 21 | select | id=field-select_c_r0 | label=Location
+        {
+            const dropdown = await driver.findElement(By.id("field-select_c_r0"));
+            await dropdown.findElement(By.xpath("//option[. = 'Location']")).click();
+        }
+        // 22 | select | id=qfield-lookup_c_r0 | label=Exact
+        {
+            const dropdown = await driver.findElement(By.id("qfield-lookup_c_r0"));
+            await dropdown.findElement(By.xpath("//option[. = 'Exact']")).click();
+        }
+        // 23 | type | id=field-query_c_r0 | Lost
+        await driver.findElement(By.id("field-query_c_r0")).sendKeys("Test Child");
+        // 24 | click | id=searchform-submit-button | 
+        await driver.findElement(By.id("searchform-submit-button")).click();
+        // 25 | click | css=.even a | 
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.css(".even:nth-child(1) a")).click();
 
         await driver.findElement(By.linkText("Retire Build")).click();
         // 20 | click | id=id_detail | 
@@ -49,6 +69,9 @@ var driver;
         await driver.findElement(By.id("id_detail")).sendKeys("Retiring for automated testing.");
         // 22 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click(); 
+
+        // Close browser window
+        driver.quit();
 
     }
     catch (e) {
