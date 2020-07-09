@@ -524,6 +524,8 @@ class Action(models.Model):
     FLAG = 'flag'
     MOVETOTRASH = 'movetotrash'
     RETIREBUILD = 'retirebuild'
+    REVIEWAPPROVE = 'reviewapprove'
+    EVENTAPPROVE = 'eventapprove'
     ACTION_TYPES = (
         (ADD, 'Added to RDB'),
         (UPDATE, 'Details updated'),
@@ -549,6 +551,8 @@ class Action(models.Model):
         (FLAG, 'Flag'),
         (MOVETOTRASH, 'Move to Trash'),
         (RETIREBUILD, 'Retire Build'),
+        (REVIEWAPPROVE, 'Reviewer approved Event'),
+        (EVENTAPPROVE, 'Event Approved'),
     )
     # object_type choices
     BUILD = 'build'

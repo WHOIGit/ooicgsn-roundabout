@@ -395,8 +395,10 @@ def event_review_approve(request, pk, user_pk):
     if user in reviewers:
         event.user_draft.remove(user)
         event.user_approver.add(user)
+        _create_action_history(event, Action.REVIEWAPPROVE, user)
     if len(event.user_draft.all()) == 0:
         event.approved = True
+        _create_action_history(event, Action.EVENTAPPROVE, user)
     event.save()
     data = {'approved':event.approved}
     return JsonResponse(data)
