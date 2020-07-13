@@ -40,7 +40,7 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
     if not action_date:
         action_date = timezone.now()
 
-    if (object_type == Action.BUILD or object_type == Action.INVENTORY) and not referring_obj:
+    if (object_type == Action.BUILD or object_type == Action.INVENTORY or object_type == Action.CALEVENT) and not referring_obj:
         detail = obj.detail
 
     # reset obj.detail for next loop
@@ -53,7 +53,8 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
     action_record.action_type = action_type
     action_record.object_type = object_type
     action_record.user = user
-    action_record.location = obj.location
+    if hasattr(obj, 'location'):
+        action_record.location = obj.location
     action_record.detail = detail
     action_record.created_at = action_date
 
@@ -81,6 +82,10 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
         # Set extra meta data fields
         action_record.build = obj.build
         action_record.deployment = deployment
+
+    elif object_type == Action.CALEVENT:
+        obj_label = 'Calibration Event'
+        action_record.calibration_event = obj
 
     # Run through the discrete Actions, set up details text and extra records if needed.
     if action_type == Action.ADD:
@@ -288,6 +293,12 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
                 inventory_deployment.deployment_retire_date = action_date
                 inventory_deployment.save()
                 action_record.inventory_deployment = inventory_deployment
+        action_record.save()
+    elif action_type == Action.REVIEWAPPROVE:
+        action_record.detail = 'Reviewer approved %s. %s' % (obj_label, detail)
+        action_record.save()
+    elif action_type == Action.EVENTAPPROVE:
+        action_record.detail = '%s Approved. %s' % (obj_label, detail)
         action_record.save()
     else:
         action_record.save()

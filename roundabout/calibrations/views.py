@@ -3,13 +3,14 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView
 from .models import CoefficientName, CalibrationEvent, CoefficientValueSet
-from .forms import CalibrationEventForm, EventValueSetFormset, CoefficientValueForm, CoefficientValueSetForm, ValueSetValueFormset, CoefficientNameForm, PartCalNameFormset
+from .forms import CalibrationEventForm, EventValueSetFormset, CoefficientValueForm, CoefficientValueSetForm, ValueSetValueFormset, CoefficientNameForm, PartCalNameFormset, CalPartCopyForm
 from common.util.mixins import AjaxFormMixin
 from django.urls import reverse, reverse_lazy
 from roundabout.parts.models import Part
 from roundabout.parts.forms import PartForm
 from roundabout.users.models import User
-from roundabout.inventory.models import Inventory
+from roundabout.inventory.models import Inventory, Action
+from roundabout.inventory.utils import _create_action_history
 from django.core import validators
 from sigfig import round
 from django.core.exceptions import ValidationError
@@ -76,6 +77,7 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         self.object = form.save()
         event_valueset_form.instance = self.object
         event_valueset_form.save()
+        _create_action_history(self.object, Action.ADD, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -159,6 +161,7 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         self.object = form.save()
         event_valueset_form.instance = self.object
         event_valueset_form.save()
+        _create_action_history(self.object, Action.UPDATE, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -313,9 +316,13 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
         part_calname_form = PartCalNameFormset(
             instance=self.object
         )
+        part_cal_copy_form = CalPartCopyForm(
+            part_id = self.kwargs['pk']
+        )
         return self.render_to_response(
             self.get_context_data(
-                part_calname_form=part_calname_form
+                part_calname_form=part_calname_form,
+                part_cal_copy_form=part_cal_copy_form
             )
         )
 
@@ -327,13 +334,18 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
             self.request.POST,
             instance=self.object
         )
-        if (part_calname_form.is_valid()):
-            return self.form_valid(part_calname_form)
-        return self.form_invalid(part_calname_form)
+        part_cal_copy_form = CalPartCopyForm(
+            self.request.POST,
+            part_id = self.kwargs['pk']
+        )
+        if (part_calname_form.is_valid() and part_cal_copy_form.is_valid()):
+            return self.form_valid(part_calname_form, part_cal_copy_form)
+        return self.form_invalid(part_calname_form, part_cal_copy_form)
 
-    def form_valid(self, part_calname_form):
+    def form_valid(self, part_calname_form, part_cal_copy_form):
         part_calname_form.instance = self.object
         part_calname_form.save()
+        part_cal_copy_form.save()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -346,8 +358,16 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
         else:
             return response
 
-    def form_invalid(self, part_calname_form):
+    def form_invalid(self, part_calname_form, part_cal_copy_form):
         if self.request.is_ajax():
+            if part_cal_copy_form.errors:
+                print('part_cal_copy_errors')
+                data = part_cal_copy_form.errors
+                return JsonResponse(
+                    data,
+                    status=400,
+                    safe=False
+                )
             if part_calname_form.errors:
                 print('partcalnameupdate errors')
                 data = part_calname_form.errors
@@ -360,6 +380,7 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
             return self.render_to_response(
                 self.get_context_data(
                     part_calname_form=part_calname_form,
+                    part_cal_copy_form=part_cal_copy_form,
                     form_errors=form_errors
                 )
             )
@@ -376,8 +397,10 @@ def event_review_approve(request, pk, user_pk):
     if user in reviewers:
         event.user_draft.remove(user)
         event.user_approver.add(user)
+        _create_action_history(event, Action.REVIEWAPPROVE, user)
     if len(event.user_draft.all()) == 0:
         event.approved = True
+        _create_action_history(event, Action.EVENTAPPROVE, user)
     event.save()
     data = {'approved':event.approved}
     return JsonResponse(data)
@@ -433,4 +456,3 @@ class ExportCalibrationEvent(DetailView,LoginRequiredMixin):
             writer = csv.writer(response)
             writer.writerows(rows)
             return response
-
