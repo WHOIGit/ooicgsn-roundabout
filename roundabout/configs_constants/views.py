@@ -3,18 +3,19 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import CreateView, UpdateView, DeleteView
 from .models import ConfigEvent, ConfigName, ConfigValue, ConstDefault, ConstDefaultEvent
-from .forms import ConfigEventForm, ConfigEventValueFormset, PartConfigNameFormset, ConfigNameForm, ConstDefaultForm, EventDefaultFormset, ConstDefaultEventForm
+from .forms import ConfigEventForm, ConfigEventValueFormset, PartConfigNameFormset, ConfigNameForm, ConstDefaultForm, EventDefaultFormset, ConstDefaultEventForm, ConfigValueForm
 from common.util.mixins import AjaxFormMixin
 from django.urls import reverse, reverse_lazy
 from roundabout.parts.models import Part
 from roundabout.parts.forms import PartForm
 from roundabout.users.models import User
-from roundabout.inventory.models import Inventory
+from roundabout.inventory.models import Inventory, Action
 from django.core import validators
 from sigfig import round
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.forms.models import inlineformset_factory, BaseInlineFormSet
+from roundabout.inventory.utils import _create_action_history
 
 # Handles creation of Configuration / Constant Events, along with Name/Value formsets
 class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
@@ -25,11 +26,26 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
     def get(self, request, *args, **kwargs):
         self.object = None
+        inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
+        const_names = ConstDefault.objects.filter(const_event=inv_inst.constant_default_events.first())
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        config_event_value_form = ConfigEventValueFormset(
+        ConfigEventValueAddFormset = inlineformset_factory(
+            ConfigEvent, 
+            ConfigValue, 
+            form=ConfigValueForm,
+            fields=('config_name', 'config_value', 'notes'), 
+            extra=len(const_names),  
+            can_delete=True
+        )
+        config_event_value_form = ConfigEventValueAddFormset(
             instance=self.object
         )
+        for idx,name in enumerate(const_names):
+            config_event_value_form.forms[idx].initial = {
+                'config_name': name.config_name,
+                'config_value': name.default_value
+            }
         return self.render_to_response(
             self.get_context_data(
                 form=form, 
@@ -105,11 +121,28 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
+        const_names = ConfigName.objects.filter(part=self.object.inventory.part, config_type='cnst')
+        const_event = self.object.inventory.constant_default_events.first()
+        event_default_names = [default for default in const_event.constant_defaults.all()]
+        extra_rows = len(const_names) - len(event_default_names)
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        config_event_value_form = ConfigEventValueFormset(
+        ConfigEventValueAddFormset = inlineformset_factory(
+            ConfigEvent, 
+            ConfigValue, 
+            form=ConfigValueForm,
+            fields=('config_name', 'config_value', 'notes'), 
+            extra=extra_rows,  
+            can_delete=True
+        )
+        config_event_value_form = ConfigEventValueAddFormset(
             instance=self.object
         )
+        for idx,name in enumerate(event_default_names):
+            config_event_value_form.forms[idx].initial = {
+                'config_name': name.config_name,
+                'config_value': name.default_value
+            }
         return self.render_to_response(
             self.get_context_data(
                 form=form, 
@@ -334,7 +367,7 @@ class EventDefaultAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         self.object = form.save()
         event_default_form.instance = self.object
         event_default_form.save()
-        # _create_action_history(self.object, Action.ADD, self.request.user)
+        _create_action_history(self.object, Action.ADD, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -438,7 +471,7 @@ class EventDefaultUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
         self.object = form.save()
         event_default_form.instance = self.object
         event_default_form.save()
-        # _create_action_history(self.object, Action.UPDATE, self.request.user)
+        _create_action_history(self.object, Action.UPDATE, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -513,10 +546,10 @@ def event_constdefault_approve(request, pk, user_pk):
     if user in reviewers:
         event.user_draft.remove(user)
         event.user_approver.add(user)
-        # _create_action_history(event, Action.REVIEWAPPROVE, user)
+        _create_action_history(event, Action.REVIEWAPPROVE, user)
     if len(event.user_draft.all()) == 0:
         event.approved = True
-        # _create_action_history(event, Action.EVENTAPPROVE, user)
+        _create_action_history(event, Action.EVENTAPPROVE, user)
     event.save()
     data = {'approved':event.approved}
     return JsonResponse(data)

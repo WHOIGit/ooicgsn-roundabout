@@ -2,7 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, DecimalValidator, MaxValueValidator, RegexValidator, MaxLengthValidator
 from django.utils import timezone
 from roundabout.parts.models import Part
-from roundabout.inventory.models import Inventory, Deployment, DeploymentAction
+from roundabout.inventory.models import Inventory, Deployment, DeploymentAction, Action
 from roundabout.users.models import User
 from decimal import Decimal
 from sigfig import round
@@ -88,8 +88,8 @@ class ConstDefaultEvent(models.Model):
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
     detail = models.TextField(blank=True)
     
-    # def get_actions(self):
-    #     return self.actions.filter(object_type=Action.CALEVENT)
+    def get_actions(self):
+        return self.actions.filter(object_type=Action.CONSTDEFEVENT)
 
 
 # Tracks Constant Defaults across ConstDefaultEvents 
