@@ -24,10 +24,17 @@ var myArgs = process.argv.slice(2);
     // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
     await driver.get("https://ooi-cgrdb-staging.whoi.net/");
     // 2 | setWindowSize | 1304x834 | 
-    await driver.manage().window().setRect(1304, 834);
+    await driver.manage().window().setRect({ width: 1304, height: 834 });
 
     try {
 
+        // If navbar toggler present in small screen
+        try {
+            var signin = await driver.findElement(By.linkText("Sign In"));
+        }
+        catch (NoSuchElementException) {
+                await driver.findElement(By.css(".navbar-toggler-icon")).click();
+         }
         // LOGIN
         await driver.findElement(By.linkText("Sign In")).click();
         await driver.findElement(By.id("id_login")).sendKeys("jkoch");
@@ -232,7 +239,11 @@ var myArgs = process.argv.slice(2);
         }
         // 29 | click | css=.controls > .btn-primary | 
         await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.css(".controls > .btn-primary")).click();
+
+	var element = driver.findElement(By.css(".controls > .btn-primary"));
+	await driver.executeScript("arguments[0].click();", element);
+	//await driver.findElement(By.css(".controls > .btn-primary")).click();	//linux elementnotinteractable error
+
         await new Promise(r => setTimeout(r, 2000));
         assert(await driver.findElement(By.css("#div_id_location .ajax-error")).getText() == "This field is required.");
 
@@ -244,7 +255,7 @@ var myArgs = process.argv.slice(2);
             await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
         }
         // 31 | click | css=.controls > .btn-primary | 
-        await driver.findElement(By.css(".controls > .btn-primary")).click();
+	await driver.findElement(By.css(".controls > .btn-primary")).click();
         // 32 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();  //Search button
         await driver.wait(until.elementLocated(By.id("field-select_c_r0")));
@@ -349,7 +360,7 @@ var myArgs = process.argv.slice(2);
         // 56 | type | id=id_serial_number | 3604-00131-00001-20004
         await driver.findElement(By.id("id_serial_number")).sendKeys("3604-00131-00001-20004");
         // 57 | click | css=.controls > .btn-primary | 
-        await driver.findElement(By.css(".controls > .btn-primary")).click();
+        await driver.findElement(By.xpath("//button[contains(.,'Update Inventory')]")).click();  //linux can't use .btn-primary
         // 58 | select | id=id_revision | label=---------
         {
             await driver.wait(until.elementLocated(By.id("id_revision")));

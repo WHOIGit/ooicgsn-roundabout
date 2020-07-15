@@ -25,10 +25,17 @@ var myArgs = process.argv.slice(2);
     // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
     await driver.get("https://ooi-cgrdb-staging.whoi.net/");
     // 2 | setWindowSize | 1304x834 | 
-    await driver.manage().window().setRect(1304, 834);
+    await driver.manage().window().setRect({ width: 1304, height: 834 });
 
     try {
 
+        // If navbar toggler present in small screen
+        try {
+            var signin = await driver.findElement(By.linkText("Sign In"));
+        }
+        catch (NoSuchElementException) {
+                await driver.findElement(By.css(".navbar-toggler-icon")).click();
+         }
         // LOGIN
         await driver.findElement(By.linkText("Sign In")).click();
         await driver.findElement(By.id("id_login")).sendKeys("jkoch");
@@ -54,6 +61,7 @@ var myArgs = process.argv.slice(2);
 
         // Add Part Type with null name
         // 9 | click | linkText=Add Part Type | 
+	await driver.wait(until.elementLocated(By.linkText("Add Part Type")));  //linux firefox
         await driver.findElement(By.linkText("Add Part Type")).click();
         // 10 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
@@ -307,8 +315,7 @@ var myArgs = process.argv.slice(2);
         // 29 | click | linkText=Create New Revision | 
         await driver.findElement(By.linkText("Create New Revision")).click();
         // 30 | type | id=id_revision_code | B
-        await new Promise(r => setTimeout(r, 2000));
-        //await driver.wait(until.elementLocated(By.id("id_revision_code")), 2000); //doesn't work
+        //await driver.wait(until.elementLocated(By.id("id_revision_code")), 2000);
         await driver.findElement(By.id("id_revision_code")).sendKeys("B");
         // 31 | click | id=div_id_created_at | 
         await driver.findElement(By.id("div_id_created_at")).click();

@@ -16,7 +16,7 @@ var myArgs = process.argv.slice(2);
 
     // First argument specifies the Browser type, chrome is default if no argument is supplied
     if ((myArgs[0] == 'chrome') || (myArgs.length == 0)) {        
-        driver = new Builder().forBrowser('chrome').build(); 
+        driver = new Builder().forBrowser('chrome').build();
     }
     else {       
         driver = new Builder().forBrowser('firefox').build();
@@ -26,12 +26,20 @@ var myArgs = process.argv.slice(2);
     // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
     await driver.get("https://ooi-cgrdb-staging.whoi.net/");
     // 2 | setWindowSize | 1304x834 | 
-    await driver.manage().window().setRect(1304, 834);
+    await driver.manage().window().setRect({ width: 1304, height: 834 });
     // Set implicit wait between commands in  - still need promise wait
- //   driver.manage().setTimeouts({ implicit: 2000});
+ //   driver.manage().setTimeouts({ implicit: 2000});  //Do not mix implicit and explicit waits.
     
 
     try {
+
+        // If navbar toggler present in small screen
+        try {
+            var signin = await driver.findElement(By.linkText("Sign In"));
+        }
+        catch (NoSuchElementException) {
+                await driver.findElement(By.css(".navbar-toggler-icon")).click();
+         }
         // LOGIN
         await driver.findElement(By.linkText("Sign In")).click();
         await driver.findElement(By.id("id_login")).sendKeys("jkoch");

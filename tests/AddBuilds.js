@@ -24,12 +24,19 @@ var myArgs = process.argv.slice(2);
     // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
     await driver.get("https://ooi-cgrdb-staging.whoi.net/");
     // 2 | setWindowSize | 1304x834 | 
-    await driver.manage().window().setRect(1304, 834);
+     await driver.manage().window().setRect({ width: 1304, height: 834 });
     // Set implict wait time in between steps
     await driver.manage().setTimeouts({ implicit: 2000 });
 
     try {
-
+	
+        // If navbar toggler present in small screen
+        try {
+            var signin = await driver.findElement(By.linkText("Sign In"));
+        }
+        catch (NoSuchElementException) {
+                await driver.findElement(By.css(".navbar-toggler-icon")).click();
+         }
         // LOGIN
         await driver.findElement(By.linkText("Sign In")).click();
         await driver.findElement(By.id("id_login")).sendKeys("jkoch");
