@@ -143,22 +143,23 @@
                 data-location-id="{{ inventory_item.location.id}}"
                 data-node-type="{{ node_type }}">Edit Inventory Details</a>
 
+            {% if not user|has_group:"inventory only" %}
+                <a  id="add_coefficient_action"
+                    class="dropdown-item" 
+                    href="#"
+                    data-detail-url="{% url 'calibrations:event_valueset_add' inventory_item.id %}"
+                    data-node-id="{{ inventory_item.id }}"
+                    data-location-id="{{ inventory_item.location.id}}"
+                    data-node-type="calibration_event">Add Calibration Coefficients</a>
 
-            <a  id="add_coefficient_action"
-                class="dropdown-item" 
-                href="#"
-                data-detail-url="{% url 'calibrations:event_valueset_add' inventory_item.id %}"
-                data-node-id="{{ inventory_item.id }}"
-                data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="calibration_event">Add Calibration Coefficients</a>
-
-            <a  id="add_conf_const_action"
-                class="dropdown-item" 
-                href="#"
-                data-detail-url="{% url 'configs_constants:config_event_value_add' inventory_item.id %}"
-                data-node-id="{{ inventory_item.id }}"
-                data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="config_event}">Add Configuration/Constant Event</a>
+                <a  id="add_conf_const_action"
+                    class="dropdown-item" 
+                    href="#"
+                    data-detail-url="{% url 'configs_constants:config_event_value_add' inventory_item.id %}"
+                    data-node-id="{{ inventory_item.id }}"
+                    data-location-id="{{ inventory_item.location.id}}"
+                    data-node-type="config_event}">Add Configuration/Constant Event</a>
+            {% endif %}
 
 
       </div>
@@ -532,16 +533,18 @@
                         {% else %} 
                             <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span> 
                         {% endif %}
-                        <div class = 'ajax-detail-link float-right'>
-                            <a  href="#"
-                                class="btn btn-primary btn-sm mr-2"
-                                role="button"
-                                data-detail-url="{% url 'calibrations:event_valueset_update' event.id %}"
-                                data-node-id="{{ event.id }}"
-                                data-node-type="{{ event.get_object_type }}">
-                                    Edit Coefficient Values
-                            </a>
-                        </div>
+                        {% if not user|has_group:"inventory only" %}
+                            <div class = 'ajax-detail-link float-right'>
+                                <a  href="#"
+                                    class="btn btn-primary btn-sm mr-2"
+                                    role="button"
+                                    data-detail-url="{% url 'calibrations:event_valueset_update' event.id %}"
+                                    data-node-id="{{ event.id }}"
+                                    data-node-type="{{ event.get_object_type }}">
+                                        Edit Coefficient Values
+                                </a>
+                            </div>
+                        {% endif %}
                         <div class="collapse mt-3" id="event-{{ event.id }}">
                             <hr>
                             {% if user in event.user_draft.all %}
@@ -549,15 +552,17 @@
                                     Approve
                                 </button>
                             {% endif %}
-                            <div class="ajax-detail-link float-right">
-                                <a  href="#" 
-                                    class="btn btn-danger btn-sm mr-2"
-                                    data-detail-url="{% url 'calibrations:event_valueset_delete' event.id %}" 
-                                    role="button" 
-                                >
-                                        Delete
-                                </a>
-                            </div>
+                            {% if not user|has_group:"inventory only" %}
+                                <div class="ajax-detail-link float-right">
+                                    <a  href="#" 
+                                        class="btn btn-danger btn-sm mr-2"
+                                        data-detail-url="{% url 'calibrations:event_valueset_delete' event.id %}" 
+                                        role="button" 
+                                    >
+                                            Delete
+                                    </a>
+                                </div>
+                            {% endif %}
                             <p id = 'approvers'>Approvers: 
                                 {% for user in event.user_approver.all %}
                                     <span id='approver-{{ user.id }}'>{{ user.username }}</span>
@@ -611,7 +616,7 @@
                                                                     <i class="fa" aria-hidden="true"></i>
                                                                     <span class="sr-only">Expand/Collapse Calibration {{ value_set.coefficient_name }}</span>
                                                                 </a>
-                                                                {% if value_set.coefficient_name.value_set_type != '2d' %}
+                                                                {% if value_set.coefficient_name.value_set_type != '2d' and not user|has_group:"inventory only" %}
                                                                     <div class = 'ajax-detail-link float-right'>
                                                                         <a  href="#"
                                                                             class="btn btn-primary btn-sm mr-2"
