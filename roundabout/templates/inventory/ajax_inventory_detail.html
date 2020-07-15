@@ -153,33 +153,23 @@
                 data-location-id="{{ inventory_item.location.id}}"
                 data-node-type="{{ node_type }}">Edit Inventory Details</a>
 
-
-            <a  id="add_coefficient_action"
-                class="dropdown-item" 
-                href="#"
-                data-detail-url="{% url 'calibrations:event_valueset_add' inventory_item.id %}"
-                data-node-id="{{ inventory_item.id }}"
-                data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="calibration_event">Add Calibration Coefficients</a>
-            
-            
-            {% if inventory_item.constant_default_events.exists == False %}
-                <a  id="add_constdefault_action"
+            {% if not user|has_group:"inventory only" %}
+                <a  id="add_coefficient_action"
                     class="dropdown-item" 
                     href="#"
-                    data-detail-url="{% url 'configs_constants:event_constdefault_add' inventory_item.id %}"
+                    data-detail-url="{% url 'calibrations:event_valueset_add' inventory_item.id %}"
                     data-node-id="{{ inventory_item.id }}"
                     data-location-id="{{ inventory_item.location.id}}"
-                    data-node-type="constant_default}">Add Constant Defaults</a>
-            {% endif %}
+                    data-node-type="calibration_event">Add Calibration Coefficients</a>
 
-            <a  id="add_conf_const_action"
-                class="dropdown-item" 
-                href="#"
-                data-detail-url="{% url 'configs_constants:config_event_value_add' inventory_item.id %}"
-                data-node-id="{{ inventory_item.id }}"
-                data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="config_event}">Add Configuration/Constant Event</a>
+                <a  id="add_conf_const_action"
+                    class="dropdown-item" 
+                    href="#"
+                    data-detail-url="{% url 'configs_constants:config_event_value_add' inventory_item.id %}"
+                    data-node-id="{{ inventory_item.id }}"
+                    data-location-id="{{ inventory_item.location.id}}"
+                    data-node-type="config_event}">Add Configuration/Constant Event</a>
+            {% endif %}
 
 
       </div>
