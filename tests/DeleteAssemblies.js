@@ -44,6 +44,7 @@ var myArgs = process.argv.slice(2);
         // DELETE ASSEMBLIES TEST
 
        // Searches for and deletes the Assemblies added during the Add and Update Assemblies Test
+	await new Promise(r => setTimeout(r, 4000));  //required for firefox
         await driver.wait(until.elementLocated(By.id("searchbar-query")));
         await driver.findElement(By.id("searchbar-query")).click();
         var dropdown = await driver.findElement(By.id("searchbar-modelselect"));
@@ -64,6 +65,7 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.css(".btn-danger")).click();
 
         // 15 | click | id=searchbar-query | 
+	await new Promise(r => setTimeout(r, 4000));  //required for firefox
         await driver.wait(until.elementLocated(By.id("searchbar-query")));
         await driver.findElement(By.id("searchbar-query")).click();
         // 16 | type | id=searchbar-query | Test Assembly 2
@@ -81,6 +83,7 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.css(".btn-danger")).click();
 
         // 24 | click | id=searchbar-query | 
+	await new Promise(r => setTimeout(r, 4000));  //required for firefox
         await driver.wait(until.elementLocated(By.id("searchbar-query")));
         await driver.findElement(By.id("searchbar-query")).click();
         // 25 | type | id=searchbar-query | Test Assembly 3
@@ -98,7 +101,7 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.css(".btn-danger")).click();
 
         // 30 | click | id=searchbar-query | 
-        await new Promise(r => setTimeout(r, 2000));  //required for firefox
+        await new Promise(r => setTimeout(r, 4000));  //required for firefox
         await driver.wait(until.elementLocated(By.id("searchbar-query")));
         await driver.findElement(By.id("searchbar-query")).click();
         // 31 | type | id=searchbar-query | Test Glider 1

@@ -61,7 +61,7 @@ var myArgs = process.argv.slice(2);
 
         // Add Part Type with null name
         // 9 | click | linkText=Add Part Type | 
-	await driver.wait(until.elementLocated(By.linkText("Add Part Type")));  //linux firefox
+	await new Promise(r => setTimeout(r, 2000));   //linux firefox
         await driver.findElement(By.linkText("Add Part Type")).click();
         // 10 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
@@ -77,7 +77,7 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.linkText("Parts")));
         await driver.findElement(By.linkText("Parts")).click();
         // 15 | click | linkText=Add Part Template | 
-        await driver.wait(until.elementLocated(By.linkText("Add Part Template")));
+        await driver.wait(until.elementLocated(By.linkText("Add Part Template")),2000);  //linux firefox
         await driver.findElement(By.linkText("Add Part Template")).click();
         /*Get the text after ajax call*/
         // 16 | type | id=id_part_number | 123-456-789
@@ -116,7 +116,8 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.linkText("Create New Revision")));
         await driver.findElement(By.linkText("Create New Revision")).click();
         // 23 | type | id=id_revision_code | B
-        await driver.wait(until.elementLocated(By.id("id_revision_code")));
+	await new Promise(r => setTimeout(r, 4000));   //linux firefox
+        // await driver.wait(until.elementLocated(By.id("id_revision_code")), 2000);  //linux firefox stale element
         await driver.findElement(By.id("id_revision_code")).sendKeys("B");
         // 24 | type | id=id_unit_cost | 3.000
         await driver.findElement(By.id("id_unit_cost")).clear();
@@ -315,7 +316,8 @@ var myArgs = process.argv.slice(2);
         // 29 | click | linkText=Create New Revision | 
         await driver.findElement(By.linkText("Create New Revision")).click();
         // 30 | type | id=id_revision_code | B
-        //await driver.wait(until.elementLocated(By.id("id_revision_code")), 2000);
+	await new Promise(r => setTimeout(r, 2000));
+        //await driver.wait(until.elementLocated(By.id("id_revision_code")), 2000); // linux firefox stale element
         await driver.findElement(By.id("id_revision_code")).sendKeys("B");
         // 31 | click | id=div_id_created_at | 
         await driver.findElement(By.id("div_id_created_at")).click();

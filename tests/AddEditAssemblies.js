@@ -51,11 +51,11 @@ var myArgs = process.argv.slice(2);
         // 5 | click | linkText=Assemblies |       
         await driver.findElement(By.linkText("Assemblies")).click();
         // 10 | click | linkText=Create New Assembly | 
+        await new Promise(r => setTimeout(r, 2000));  //linux firefox
         await driver.wait(until.elementLocated(By.linkText("Create New Assembly")));
         await driver.findElement(By.linkText("Create New Assembly")).click();
         // 11 | type | id=id_name | Test Assembly
         await driver.wait(until.elementLocated(By.id("id_name")));
- //       await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_name")).sendKeys("Test Assembly");
         // 12 | select | id=id_assembly_type | label=Towed Vehicle
         {
