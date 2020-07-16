@@ -95,7 +95,6 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
                 data = form.errors
                 return JsonResponse(data, status=400)
             elif config_event_value_form.errors:
-                print('conf_const createform errors')
                 data = config_event_value_form.errors
                 return JsonResponse(data, status=400, safe=False)
         else:
@@ -195,7 +194,6 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
                     status=400
                 )
             if config_event_value_form.errors:
-                print('conf_const updateform errors')
                 data = config_event_value_form.errors
                 return JsonResponse(
                     data, 
@@ -288,7 +286,6 @@ class PartConfNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin
     def form_invalid(self, part_confname_form):
         if self.request.is_ajax():
             if part_confname_form.errors:
-                print('partcalnameupdate errors')
                 data = part_confname_form.errors
                 return JsonResponse(
                     data, 

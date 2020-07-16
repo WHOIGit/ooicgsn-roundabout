@@ -94,7 +94,6 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
                 data = form.errors
                 return JsonResponse(data, status=400)
             elif event_valueset_form.errors:
-                print('coeffcreateform errors')
                 data = event_valueset_form.errors
                 return JsonResponse(data, status=400, safe=False)
         else:
@@ -181,7 +180,6 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
                     status=400
                 )
             if event_valueset_form.errors:
-                print('coeffupdateform errors')
                 data = event_valueset_form.errors
                 return JsonResponse(
                     data, 
@@ -279,7 +277,6 @@ class ValueSetValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
     def form_invalid(self, valueset_value_form):
         if self.request.is_ajax():
             if valueset_value_form.errors:
-                print('coeffupdateform errors')
                 data = valueset_value_form.errors
                 return JsonResponse(
                     data, 
@@ -359,7 +356,6 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
     def form_invalid(self, part_calname_form, part_cal_copy_form):
         if self.request.is_ajax():
             if part_cal_copy_form.errors:
-                print('part_cal_copy_errors')
                 data = part_cal_copy_form.errors
                 return JsonResponse(
                     data, 
@@ -367,7 +363,6 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
                     safe=False
                 )
             if part_calname_form.errors:
-                print('partcalnameupdate errors')
                 data = part_calname_form.errors
                 return JsonResponse(
                     data, 
