@@ -689,27 +689,31 @@
                             <i class="fa" aria-hidden="true"></i>
                             <span class="sr-only">Expand/Collapse Configurations/Constants {{ event.configuration_date }}</span>
                         </a>
-                        <div class = 'ajax-detail-link float-right'>
-                            <a  href="#"
-                                class="btn btn-primary btn-sm mr-2"
-                                role="button"
-                                data-detail-url="{% url 'configs_constants:config_event_value_update' event.id %}"
-                                data-node-id="{{ event.id }}"
-                                data-node-type="{{ event.get_object_type }}">
-                                    Edit Values
-                            </a>
-                        </div>
-                        <div class="collapse mt-3" id="conf_event-{{ event.id }}">
-                            <hr>
-                            <div class="ajax-detail-link float-right">
-                                <a  href="#" 
-                                    class="btn btn-danger btn-sm mr-2"
-                                    data-detail-url="{% url 'configs_constants:config_event_value_delete' event.id %}" 
-                                    role="button" 
-                                >
-                                        Delete
+                        {% if not user|has_group:"inventory only" %}
+                            <div class = 'ajax-detail-link float-right'>
+                                <a  href="#"
+                                    class="btn btn-primary btn-sm mr-2"
+                                    role="button"
+                                    data-detail-url="{% url 'configs_constants:config_event_value_update' event.id %}"
+                                    data-node-id="{{ event.id }}"
+                                    data-node-type="{{ event.get_object_type }}">
+                                        Edit Values
                                 </a>
                             </div>
+                        {% endif %}
+                        <div class="collapse mt-3" id="conf_event-{{ event.id }}">
+                            <hr>
+                            {% if not user|has_group:"inventory only" %}
+                                <div class="ajax-detail-link float-right">
+                                    <a  href="#" 
+                                        class="btn btn-danger btn-sm mr-2"
+                                        data-detail-url="{% url 'configs_constants:config_event_value_delete' event.id %}" 
+                                        role="button" 
+                                    >
+                                        Delete
+                                    </a>
+                                </div>
+                            {% endif %}
                             <p>Approved: {{ event.approved }}</p>
                             <p>Approved by: {{ event.user_approver.username }}</p>
                             <p>Last Updated by: {{ event.user_draft.username }}</p>
