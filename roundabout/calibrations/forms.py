@@ -382,7 +382,7 @@ def copy_calibrations(to_id, from_id):
             )
 
 # Validator for Part Calibration Copy
-# Checks for duplicate Coefficient Names between Parts
+# When a Part is selected, from which to copy Calibration Names into another Part, the function checks if duplicate Names exist between the two Parts in question.
 def validate_part_select(to_part, from_part):
     to_names = [name.calibration_name for name in to_part.coefficient_names.all()]
     from_names = [name.calibration_name for name in from_part.coefficient_names.all()]
