@@ -24,11 +24,12 @@ class ConfigEvent(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     configuration_date = models.DateTimeField(default=timezone.now)
-    user_draft = models.ForeignKey(User, related_name='config_events_drafter', on_delete=models.SET_NULL, null=True, blank=False)
-    user_approver = models.ForeignKey(User, related_name='config_events_approver', on_delete=models.SET_NULL, null=True, blank=False)
+    user_draft = models.ManyToManyField(User, related_name='config_events_reviewer')
+    user_approver = models.ManyToManyField(User, related_name='config_events_approver')
     inventory = models.ForeignKey(Inventory, related_name='config_events', on_delete=models.CASCADE, null=False)
     deployment = models.ForeignKey(Deployment, related_name='config_events', on_delete=models.CASCADE, null=True)
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
+    detail = models.TextField(blank=True)
 
     def get_latest_deployment_date(self):
         deploy_record = DeploymentAction.objects.filter(deployment=self.deployment).filter(action_type='deploy').first()

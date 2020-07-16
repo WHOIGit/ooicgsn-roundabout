@@ -162,6 +162,16 @@
                     data-location-id="{{ inventory_item.location.id}}"
                     data-node-type="calibration_event">Add Calibration Coefficients</a>
 
+                {% if not inventory_item.constant_default_events.exists %}
+                    <a  id="add_constdefault_action"
+                        class="dropdown-item" 
+                        href="#"
+                        data-detail-url="{% url 'configs_constants:event_constdefault_add' inventory_item.id %}"
+                        data-node-id="{{ inventory_item.id }}"
+                        data-location-id="{{ inventory_item.location.id}}"
+                        data-node-type="constant_default}">Add Constant Defaults</a>
+                {% endif %}
+
                 <a  id="add_conf_const_action"
                     class="dropdown-item" 
                     href="#"

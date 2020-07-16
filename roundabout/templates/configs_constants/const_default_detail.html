@@ -50,16 +50,18 @@
                 {% else %} 
                     <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span> 
                 {% endif %}
-                <div class = 'ajax-detail-link float-right'>
-                    <a  href="#"
-                        class="btn btn-primary btn-sm mr-2"
-                        role="button"
-                        data-detail-url="{% url 'configs_constants:event_constdefault_update' event.id %}"
-                        data-node-id="{{ event.id }}"
-                        data-node-type="constant_default_event">
-                            Edit Constant Defaults
-                    </a>
-                </div>
+                {% if not user|has_group:"inventory only" %}
+                    <div class = 'ajax-detail-link float-right'>
+                        <a  href="#"
+                            class="btn btn-primary btn-sm mr-2"
+                            role="button"
+                            data-detail-url="{% url 'configs_constants:event_constdefault_update' event.id %}"
+                            data-node-id="{{ event.id }}"
+                            data-node-type="constant_default_event">
+                                Edit Constant Defaults
+                        </a>
+                    </div>
+                {% endif %}
                 <div class="collapse mt-3" id="default-{{ event.id }}">
                     <hr>
                     {% if user in event.user_draft.all %}
@@ -67,15 +69,17 @@
                             Approve
                         </button>
                     {% endif %}
-                    <div class="ajax-detail-link float-right">
-                        <a  href="#" 
-                            class="btn btn-danger btn-sm mr-2"
-                            data-detail-url="{% url 'configs_constants:event_constdefault_delete' event.id %}" 
-                            role="button" 
-                        >
-                                Delete
-                        </a>
-                    </div>
+                    {% if not user|has_group:"inventory only" %}
+                        <div class="ajax-detail-link float-right">
+                            <a  href="#" 
+                                class="btn btn-danger btn-sm mr-2"
+                                data-detail-url="{% url 'configs_constants:event_constdefault_delete' event.id %}" 
+                                role="button" 
+                            >
+                                    Delete
+                            </a>
+                        </div>
+                    {% endif %}
                     <p id = 'approvers'>Approvers: 
                         {% for user in event.user_approver.all %}
                             <span id='approver-{{ user.id }}'>{{ user.username }}</span>

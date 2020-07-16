@@ -68,15 +68,15 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
     def form_valid(self, form, config_event_value_form):
         inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
         form.instance.inventory = inv_inst
-        if form.cleaned_data['approved']:
-            form.instance.user_approver = self.request.user
-        form.instance.user_draft = self.request.user
-        deploy_info = form.instance.deployment.get_deploytosea_details()
-        if deploy_info:
-            form.instance.configuration_date = deploy_info['deploy_date']
+        form.save()
+        if form.cleaned_data['user_draft'].exists():
+            draft_users = form.cleaned_data['user_draft']
+            for user in draft_users:
+                form.instance.user_draft.add(user)
         self.object = form.save()
         config_event_value_form.instance = self.object
         config_event_value_form.save()
+        # _create_action_history(self.object, Action.ADD, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -163,20 +163,17 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         return self.form_invalid(form, config_event_value_form)
 
     def form_valid(self, form, config_event_value_form):
-        inv_inst = Inventory.objects.get(id=self.object.inventory.id)
-        form.instance.inventory = inv_inst
-        if form.cleaned_data['approved']:
-            form.instance.user_approver = self.request.user
-        form.instance.user_draft = self.request.user
-        deploy_info = form.instance.deployment.get_deploytosea_details()
-        if deploy_info:
-            form.instance.configuration_date = deploy_info['deploy_date']
+        form.instance.inventory = self.object.inventory
+        form.instance.approved = False
+        if form.cleaned_data['user_draft'].exists():
+            draft_users = form.cleaned_data['user_draft']
+            for user in draft_users:
+                form.instance.user_draft.add(user)
+                form.instance.user_approver.remove(user)
         self.object = form.save()
         config_event_value_form.instance = self.object
-        config_event_value_form.save(commit=False)
-        for val in config_event_value_form:
-            if val.has_changed():
-                val.save()
+        config_event_value_form.save()
+        # _create_action_history(self.object, Action.UPDATE, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -550,6 +547,22 @@ def event_constdefault_approve(request, pk, user_pk):
     if len(event.user_draft.all()) == 0:
         event.approved = True
         _create_action_history(event, Action.EVENTAPPROVE, user)
+    event.save()
+    data = {'approved':event.approved}
+    return JsonResponse(data)
+
+# Swap reviewers to approvers
+def event_value_approve(request, pk, user_pk):
+    event = ConfigEvent.objects.get(id=pk)
+    user = User.objects.get(id=user_pk)
+    reviewers = event.user_draft.all()
+    if user in reviewers:
+        event.user_draft.remove(user)
+        event.user_approver.add(user)
+        # _create_action_history(event, Action.REVIEWAPPROVE, user)
+    if len(event.user_draft.all()) == 0:
+        event.approved = True
+        # _create_action_history(event, Action.EVENTAPPROVE, user)
     event.save()
     data = {'approved':event.approved}
     return JsonResponse(data)

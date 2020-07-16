@@ -21,20 +21,22 @@ TEST_DEPLOYMENT_DATES = (
 class ConfigEventForm(forms.ModelForm):
     class Meta:
         model = ConfigEvent 
-        fields = ['deployment','approved']
+        fields = ['deployment','user_draft']
         labels = {
             'deployment': 'Deployment',
-            'approved': 'Approved'
+            'user_draft': 'Reviewers'
         }
         widgets = {
             'deployment': forms.Select(
                 attrs = {
                     'required': True
                 }
-            )
+            ),
+            'user_draft': forms.SelectMultiple()
         }
     def __init__(self, *args, **kwargs):
         super(ConfigEventForm, self).__init__(*args, **kwargs)
+        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only'])
 
 # Configuration Value form
 # Inputs: Configuration values and notes per Part Config Type
@@ -48,6 +50,12 @@ class ConfigValueForm(forms.ModelForm):
             'notes': 'Additional Notes'
         }
         widgets = {
+            'config_name': forms.Select(
+                attrs = {
+                    'readonly': True,
+                    'style': 'cursor: not-allowed; pointer-events: none; background-color: #d5dfed;'
+                }
+            ),
             'config_value': forms.Textarea(
                 attrs = {
                     'style': 'white-space: nowrap'
