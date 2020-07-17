@@ -30,7 +30,8 @@
                 <div class="card-body">
 
 
-                    <form class="form-horizontal deployment-form" method="post" action="" id="snapshot-form" data-url='{{ request.build_absolute_uri|safe }}'>
+                    <form class="form-horizontal deployment-form" method="post" action="" id="snapshot-form"
+                          data-url='{{ request.build_absolute_uri|safe }}' novalidate>
                       {% csrf_token %}
                       {{ form|crispy }}
 
