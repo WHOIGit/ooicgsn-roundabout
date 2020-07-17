@@ -35,7 +35,7 @@ class ConfigEvent(models.Model):
         return self.actions.filter(object_type=Action.CONFEVENT)
 
     def get_latest_deployment_date(self):
-        deploy_record = DeploymentAction.objects.filter(deployment=self.deployment).filter(action_type='deploy').first()
+        deploy_record = self.deployment.build.actions.filter(action_type=Action.DEPLOYMENTTOFIELD).first()
         return deploy_record.created_at
 
 # Tracks Configurations across Parts

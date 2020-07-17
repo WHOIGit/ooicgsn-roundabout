@@ -73,6 +73,9 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
             draft_users = form.cleaned_data['user_draft']
             for user in draft_users:
                 form.instance.user_draft.add(user)
+        latest_deploy_date = form.instance.deployment.get_latest_deployment_date()
+        if latest_deploy_date:
+            form.instance.configuration_date = latest_deploy_date
         self.object = form.save()
         config_event_value_form.instance = self.object
         config_event_value_form.save()
@@ -169,6 +172,9 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
             for user in draft_users:
                 form.instance.user_draft.add(user)
                 form.instance.user_approver.remove(user)
+        latest_deploy_date = form.instance.deployment.get_latest_deployment_date()
+        if latest_deploy_date:
+            form.instance.configuration_date = latest_deploy_date
         self.object = form.save()
         config_event_value_form.instance = self.object
         config_event_value_form.save()
@@ -377,7 +383,6 @@ class EventDefaultAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
     def form_invalid(self, form, event_default_form):
         if self.request.is_ajax():
             if form.errors:
-                print('partcalnameupdate errors')
                 data = form.errors
                 return JsonResponse(
                     data, 
@@ -385,7 +390,6 @@ class EventDefaultAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
                     safe=False
                 )
             if event_default_form.errors:
-                print('partcalnameupdate errors')
                 data = event_default_form.errors
                 return JsonResponse(
                     data, 
@@ -481,7 +485,6 @@ class EventDefaultUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
     def form_invalid(self, form, event_default_form):
         if self.request.is_ajax():
             if form.errors:
-                print('event_default_form errors')
                 data = form.errors
                 return JsonResponse(
                     data, 
@@ -489,7 +492,6 @@ class EventDefaultUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
                     safe=False
                 )
             if event_default_form.errors:
-                print('event_default_form errors')
                 data = event_default_form.errors
                 return JsonResponse(
                     data, 

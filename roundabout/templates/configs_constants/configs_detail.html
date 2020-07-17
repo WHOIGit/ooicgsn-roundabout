@@ -30,12 +30,12 @@
                     aria-expanded="false" 
                     aria-controls="conf_event-{{ event.id }}"
                 >
-                    {% if event.deployment.get_deployment_status_label == 'Deployed' %}
+                    {% if event.deployment.build.is_deployed %}
                         {{ event.get_latest_deployment_date|date:"n/j/y" }}
                     {% else %}
                         TBD
                     {% endif %}
-                    -- {{ event.deployment }} ({{ event.deployment.get_deployment_status_label }})
+                    -- {{ event.deployment }} ({{ event.deployment.build.actions.first }})
                 </a>
                 <a  data-toggle="collapse" 
                     class="collapsed text-right" 

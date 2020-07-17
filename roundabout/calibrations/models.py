@@ -48,7 +48,7 @@ class CoefficientName(models.Model):
     VALUE_SET_TYPE = (
         ("sl", "Single"),
         ("1d", "1-Dimensional Array"),
-        ("2d", "2-DImensional Array"),
+        ("2d", "2-Dimensional Array"),
     )
     calibration_name = models.CharField(max_length=255, unique=False, db_index=True)
     value_set_type = models.CharField(max_length=3, choices=VALUE_SET_TYPE, null=False, blank=False, default="sl")
