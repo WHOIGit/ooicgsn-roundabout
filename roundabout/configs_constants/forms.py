@@ -10,11 +10,6 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 
-TEST_DEPLOYMENT_DATES = (
-      ("02/23/2015", "02/23/2015"),
-      ("07/24/2013", "07/24/2013"),
-      ("07/01/2016", "07/01/2016"),
-  )
 
 # Configuration Event form 
 # Inputs: Config Date and Approval

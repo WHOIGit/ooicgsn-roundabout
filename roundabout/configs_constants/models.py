@@ -36,7 +36,10 @@ class ConfigEvent(models.Model):
 
     def get_latest_deployment_date(self):
         deploy_record = self.deployment.build.actions.filter(action_type=Action.DEPLOYMENTTOFIELD).first()
-        return deploy_record.created_at
+        if deploy_record:
+            return deploy_record.created_at.strftime("%m/%d/%Y")
+        else:
+            return 'TBD'
 
 # Tracks Configurations across Parts
 class ConfigName(models.Model):

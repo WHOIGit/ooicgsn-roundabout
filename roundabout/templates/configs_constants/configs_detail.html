@@ -31,7 +31,7 @@
                     aria-controls="conf_event-{{ event.id }}"
                 >
                     {% if event.deployment.build.is_deployed %}
-                        {{ event.get_latest_deployment_date|date:"n/j/y" }}
+                        {{ event.get_latest_deployment_date }}
                     {% else %}
                         TBD
                     {% endif %}

@@ -73,9 +73,9 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
             draft_users = form.cleaned_data['user_draft']
             for user in draft_users:
                 form.instance.user_draft.add(user)
-        latest_deploy_date = form.instance.deployment.get_latest_deployment_date()
+        latest_deploy_date = form.instance.deployment.build.actions.filter(action_type=Action.DEPLOYMENTTOFIELD).first()
         if latest_deploy_date:
-            form.instance.configuration_date = latest_deploy_date
+            form.instance.configuration_date = latest_deploy_date.created_at
         self.object = form.save()
         config_event_value_form.instance = self.object
         config_event_value_form.save()
@@ -172,9 +172,9 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
             for user in draft_users:
                 form.instance.user_draft.add(user)
                 form.instance.user_approver.remove(user)
-        latest_deploy_date = form.instance.deployment.get_latest_deployment_date()
+        latest_deploy_date = form.instance.deployment.build.actions.filter(action_type=Action.DEPLOYMENTTOFIELD).first()
         if latest_deploy_date:
-            form.instance.configuration_date = latest_deploy_date
+            form.instance.configuration_date = latest_deploy_date.created_at
         self.object = form.save()
         config_event_value_form.instance = self.object
         config_event_value_form.save()
@@ -437,7 +437,14 @@ class EventDefaultUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
             instance=self.object
         )
         for idx,name in enumerate(const_names):
-            event_default_form.forms[idx].initial = {'config_name': name}
+            if name.constant_defaults.exists():
+                default_value = name.constant_defaults.first().default_value
+            else:
+                default_value = ''
+            event_default_form.forms[idx].initial = {
+                'config_name': name, 
+                'default_value': default_value
+            }
         return self.render_to_response(
             self.get_context_data(
                 form=form,
