@@ -30,7 +30,7 @@
                 <div class="card-body">
 
 
-                    <form class="form-horizontal ajax-form" method="post" action="" id="snapshot-form" data-url='{{ request.build_absolute_uri|safe }}'>
+                    <form class="form-horizontal ajax-form" method="post" action="" id="snapshot-form" data-url='{{ request.build_absolute_uri|safe }}' novalidate>
                       {% csrf_token %}
                       {{ form|crispy }}
 
@@ -58,6 +58,10 @@
 
                           <button type="submit" class="btn btn-primary">Take Snapshot</button>
 
+                          <input class="btn btn-light cancel-btn"
+                                 type="button" value="Cancel"
+                                 data-detail-url="{% url 'builds:ajax_builds_detail' build.id %}"
+                                 data-node-id="{{ build.id }}" />
                         </div>
                       </div>
                     </form>

@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or
+# This file is part of the Roundabout Database project ("RDB" or 
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -33,6 +33,11 @@ from .models import Part, PartType, Documentation, Revision
 from roundabout.locations.models import Location
 from roundabout.parts.widgets import PartParentWidget, PartLocationWidget
 from roundabout.userdefinedfields.models import Field, FieldValue
+from roundabout.calibrations.models import CoefficientName
+from roundabout.calibrations.forms import CoefficientNameForm
+from roundabout.inventory.models import Inventory
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 
 class PartForm(forms.ModelForm):
@@ -41,10 +46,11 @@ class PartForm(forms.ModelForm):
 
     class Meta:
         model = Part
-        fields = ['part_number', 'name', 'friendly_name', 'part_type']
+        fields = ['part_number', 'name', 'friendly_name', 'part_type', 'cal_dec_places']
         labels = {
             'parent': 'Parent Assembly',
-            'note': 'Part Template Notes'
+            'note': 'Part Template Notes',
+            'cal_dec_places': 'Max Calibration Coefficient decimal places'
         }
 """
     def clean_part_number(self):

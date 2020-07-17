@@ -47,7 +47,7 @@
 
                 <div class="card-body">
 
-                    <form class="form-horizontal" method="post" action="" id="inventory-action-form">
+                    <form class="form-horizontal" method="post" action="" id="inventory-action-form" novalidate>
                       {% csrf_token %}
                       {{ form|crispy }}
 
