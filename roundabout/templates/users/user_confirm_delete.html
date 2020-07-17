@@ -29,10 +29,10 @@
             <p>You're about to delete {{ object }}. Please confirm.</p>
             <form action="" method="post">
                 {% csrf_token %}
-                <input class="btn btn-link"
+                <input class="btn btn-danger" type="submit" value="Confirm"/>
+                <input class="btn btn-light cancel-btn-noajax"
                        type="button" value="Cancel"
                        onclick="window.history.go(-1);"/>
-                <input class="btn btn-danger" type="submit" value="Confirm"/>
             </form>
         </div>
     </div>
