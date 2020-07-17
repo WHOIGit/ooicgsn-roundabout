@@ -63,7 +63,7 @@
   presented with a Preview table that will list any errors that need to be fixed, or give you the green light to complete the process.</p>
 
 
-  <form class="form-horizontal" method="post" enctype="multipart/form-data">
+  <form class="form-horizontal" method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
     {{ form|crispy }}
 

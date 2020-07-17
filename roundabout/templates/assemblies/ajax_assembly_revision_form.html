@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or
+# This file is part of the Roundabout Database project ("RDB" or 
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -41,7 +41,7 @@
               <form class="form-horizontal parts ajax-form" method="post" action=""
                     data-url='{{ request.build_absolute_uri|safe }}'
                     data-partnumber-url=''
-                    id="parts-form">
+                    id="parts-form" novalidate>
                 {% csrf_token %}
 
                 {{ form|crispy }}
@@ -103,8 +103,16 @@
                   <div class="controls">
                     {% if copy_revision %}
                         <button type="submit" class="btn btn-primary">Create New Revision</button>
+                        <input class="btn btn-light cancel-btn"
+                               type="button" value="Cancel"
+                               data-detail-url="{% url 'assemblies:ajax_assemblyrevision_detail' copy_revision.id %}"
+                               data-node-id="{{ copy_revision.id }}" />
                     {% else %}
                         <button type="submit" class="btn btn-primary">Update Revision</button>
+                        <input class="btn btn-light cancel-btn"
+                               type="button" value="Cancel"
+                               data-detail-url="{% url 'assemblies:ajax_assemblyrevision_detail' assembly_revision.id %}"
+                               data-node-id="{{ assembly_revision.id }}" />
                     {% endif %}
                   </div>
                 </div>

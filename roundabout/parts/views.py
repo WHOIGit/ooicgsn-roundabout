@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or
+# This file is part of the Roundabout Database project ("RDB" or 
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -32,7 +32,7 @@ from django.template.defaultfilters import slugify
 
 from .models import Part, PartType, Revision, Documentation
 from .forms import PartForm, PartTypeForm, RevisionForm, DocumentationFormset, RevisionFormset, PartUdfAddFieldForm, PartUdfFieldSetValueForm
-
+from roundabout.calibrations.forms import PartCalNameFormset
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory
 from roundabout.userdefinedfields.models import Field, FieldValue
@@ -223,7 +223,7 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         #for instance in documentation_instances:
         #    instance.revision = revision
         documentation_form.save()
-
+        
         # Check for any global Part Type custom fields for this Part
         custom_fields = self.object.part_type.custom_fields.all()
 
@@ -245,12 +245,11 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         else:
             return response
 
-    def form_invalid(self, form, documentation_form):
-        form_errors = documentation_form.errors
-
+    def form_invalid(self, form, revision_form, documentation_form):
         if self.request.is_ajax():
-            data = form.errors
-            return JsonResponse(data, status=400)
+            if form.errors:
+                data = form.errors
+                return JsonResponse(data, status=400)
         else:
             return self.render_to_response(self.get_context_data(form=form, revision_form=revision_form, documentation_form=documentation_form, form_errors=form_errors))
 
@@ -265,6 +264,21 @@ class PartsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
     template_name='parts/ajax_part_form.html'
     permission_required = 'parts.add_part'
     redirect_field_name = 'home'
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+            
+        if (form.is_valid()):
+            return self.form_valid(form)
+        return self.form_invalid(form)
 
     def form_valid(self, form):
         self.object = form.save()
@@ -284,8 +298,9 @@ class PartsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
 
     def form_invalid(self, form):
         if self.request.is_ajax():
-            data = form.errors
-            return JsonResponse(data, status=400)
+            if form.errors:
+                data = form.errors
+                return JsonResponse(data, status=400)
         else:
             return self.render_to_response(self.get_context_data(form=form, form_errors=form_errors))
 
