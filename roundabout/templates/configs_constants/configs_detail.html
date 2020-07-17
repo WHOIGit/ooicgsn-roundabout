@@ -112,9 +112,6 @@
                         {% if event.config_values.all %}
                             <div class="tab-pane fade show active" id="configs_constants" role="tabpanel" aria-labelledby="configs_constants-tab">
                                 <table class="table table-tight">
-                                    <thead>
-                                        <th>Name</th>
-                                    </thead>
                                     <tbody>
                                         {% for value_set in event.config_values.all %}
                                             <tr>

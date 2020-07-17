@@ -31,6 +31,9 @@ class ConfigEvent(models.Model):
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
     detail = models.TextField(blank=True)
 
+    def get_actions(self):
+        return self.actions.filter(object_type=Action.CONFEVENT)
+
     def get_latest_deployment_date(self):
         deploy_record = DeploymentAction.objects.filter(deployment=self.deployment).filter(action_type='deploy').first()
         return deploy_record.created_at
