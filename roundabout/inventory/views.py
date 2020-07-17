@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or
+# This file is part of the Roundabout Database project ("RDB" or 
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -395,8 +395,12 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
             custom_fields = self.object.fieldvalues.filter(is_current=True)
         else:
             custom_fields = None
-
+        if self.object.calibration_events.exists():
+            coeff_events = self.object.calibration_events.prefetch_related('coefficient_value_sets__coefficient_values')
+        else:
+            coeff_events = None
         context.update({
+            'coeff_events': coeff_events,
             'printers': printers,
             'custom_fields': custom_fields,
             'node_type': node_type,
