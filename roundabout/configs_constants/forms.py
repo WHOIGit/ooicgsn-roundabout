@@ -45,7 +45,7 @@ class ConfigEventForm(forms.ModelForm):
         widgets = {
             'deployment': forms.Select(
                 attrs = {
-                    'required': True
+                    'required': False
                 }
             ),
             'user_draft': forms.SelectMultiple()
@@ -53,6 +53,7 @@ class ConfigEventForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ConfigEventForm, self).__init__(*args, **kwargs)
         self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only'])
+        self.fields['deployment'].required = False
 
 # Configuration Value form
 # Inputs: Configuration values and notes per Part Config Type
@@ -158,6 +159,35 @@ class ConstDefaultEventForm(forms.ModelForm):
         if commit:
             event.save()
             return event
+
+# Configuration/Constant Copy Form
+# Inputs: Part 
+class ConfPartCopyForm(forms.Form):
+    from_part = forms.ModelChoiceField(
+        queryset = Part.objects.filter(part_type__name='Instrument'),
+        required=False,
+        label = 'Copy Configurations/Constants from Part'
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.part_id = kwargs.pop('part_id')
+        super(ConfPartCopyForm, self).__init__(*args, **kwargs)
+        self.fields['from_part'].queryset = Part.objects.filter(part_type__name='Instrument').exclude(id__in=str(self.part_id))
+
+    def clean_from_part(self):
+        from_part = self.cleaned_data.get('from_part')
+        to_part = Part.objects.get(id=self.part_id)
+        if from_part is not None:
+            validate_from_part(to_part, from_part)
+        return from_part
+
+    def save(self):
+        from_part = self.cleaned_data.get('from_part')
+        if self.has_changed():
+            copy_to_id = self.part_id
+            copy_from_id = from_part.id
+            copy_confignames(copy_to_id, copy_from_id)
+        return from_part
         
 # Configuration Value form instance generator for ConfigEvents
 ConfigEventValueFormset = inlineformset_factory(
@@ -188,3 +218,30 @@ EventDefaultFormset = inlineformset_factory(
     extra=0, 
     can_delete=True
 )
+
+
+# Copy all Config/Constant Names across Parts
+def copy_confignames(to_id, from_id):
+    to_part = Part.objects.get(id=to_id)
+    from_part = Part.objects.get(id=from_id)
+    if from_part.config_names.exists():
+        for name in from_part.config_names.all():
+            ConfigName.objects.create(
+                name = name.name,
+                config_type = name.config_type,
+                part = to_part
+            )
+
+# Validator for Part Config/Constant Copy
+# When a Part is selected, from which to copy Config/Constant Names into another Part, the function checks if duplicate Names exist between the two Parts in question.
+def validate_from_part(to_part, from_part):
+    to_names = [name.name + name.config_type for name in to_part.config_names.all()]
+    from_names = [name.name + name.config_type for name in from_part.config_names.all()]
+    try:
+        assert not any(from_name in to_names for from_name in from_names)
+    except:
+        raise ValidationError(
+            _('Duplicate Config/Constant Names exist between Parts. Please select Part with unique Config/Constant Names.')
+        )
+    else: 
+        pass

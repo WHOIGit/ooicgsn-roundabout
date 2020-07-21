@@ -24,7 +24,7 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import CreateView, UpdateView, DeleteView
 from .models import ConfigEvent, ConfigName, ConfigValue, ConstDefault, ConstDefaultEvent
-from .forms import ConfigEventForm, ConfigEventValueFormset, PartConfigNameFormset, ConfigNameForm, ConstDefaultForm, EventDefaultFormset, ConstDefaultEventForm, ConfigValueForm
+from .forms import ConfigEventForm, ConfigEventValueFormset, PartConfigNameFormset, ConfigNameForm, ConstDefaultForm, EventDefaultFormset, ConstDefaultEventForm, ConfigValueForm, ConfPartCopyForm
 from common.util.mixins import AjaxFormMixin
 from django.urls import reverse, reverse_lazy
 from roundabout.parts.models import Part
@@ -94,9 +94,10 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
             draft_users = form.cleaned_data['user_draft']
             for user in draft_users:
                 form.instance.user_draft.add(user)
-        latest_deploy_date = form.instance.deployment.build.actions.filter(action_type=Action.DEPLOYMENTTOFIELD).first()
-        if latest_deploy_date:
-            form.instance.configuration_date = latest_deploy_date.created_at
+        if form.cleaned_data['deployment']:
+            latest_deploy_date = form.instance.deployment.build.actions.filter(action_type=Action.DEPLOYMENTTOFIELD).first()
+            if latest_deploy_date:
+                form.instance.configuration_date = latest_deploy_date.created_at
         self.object = form.save()
         config_event_value_form.instance = self.object
         config_event_value_form.save()
@@ -193,9 +194,10 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
             for user in draft_users:
                 form.instance.user_draft.add(user)
                 form.instance.user_approver.remove(user)
-        latest_deploy_date = form.instance.deployment.build.actions.filter(action_type=Action.DEPLOYMENTTOFIELD).first()
-        if latest_deploy_date:
-            form.instance.configuration_date = latest_deploy_date.created_at
+        if form.cleaned_data['deployment']:
+            latest_deploy_date = form.instance.deployment.build.actions.filter(action_type=Action.DEPLOYMENTTOFIELD).first()
+            if latest_deploy_date:
+                form.instance.configuration_date = latest_deploy_date.created_at
         self.object = form.save()
         config_event_value_form.instance = self.object
         config_event_value_form.save()
@@ -277,9 +279,13 @@ class PartConfNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin
         part_confname_form = PartConfigNameFormset(
             instance=self.object
         )
+        part_conf_copy_form = ConfPartCopyForm(
+            part_id = self.kwargs['pk']
+        )
         return self.render_to_response(
             self.get_context_data(
-                part_confname_form=part_confname_form
+                part_confname_form=part_confname_form,
+                part_conf_copy_form=part_conf_copy_form
             )
         )
 
@@ -291,13 +297,18 @@ class PartConfNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin
             self.request.POST, 
             instance=self.object
         )
-        if (part_confname_form.is_valid()):
-            return self.form_valid(part_confname_form)
-        return self.form_invalid(part_confname_form)
+        part_conf_copy_form = ConfPartCopyForm(
+            self.request.POST, 
+            part_id = self.kwargs['pk']
+        )
+        if (part_confname_form.is_valid() and part_conf_copy_form.is_valid()):
+            return self.form_valid(part_confname_form, part_conf_copy_form)
+        return self.form_invalid(part_confname_form, part_conf_copy_form)
 
-    def form_valid(self, part_confname_form):
+    def form_valid(self, part_confname_form, part_conf_copy_form):
         part_confname_form.instance = self.object
         part_confname_form.save()
+        part_conf_copy_form.save()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -310,8 +321,15 @@ class PartConfNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin
         else:
             return response
 
-    def form_invalid(self, part_confname_form):
+    def form_invalid(self, part_confname_form, part_conf_copy_form):
         if self.request.is_ajax():
+            if part_conf_copy_form.errors:
+                data = part_conf_copy_form.errors
+                return JsonResponse(
+                    data, 
+                    status=400,
+                    safe=False
+                )
             if part_confname_form.errors:
                 data = part_confname_form.errors
                 return JsonResponse(
@@ -323,6 +341,7 @@ class PartConfNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin
             return self.render_to_response(
                 self.get_context_data(
                     part_confname_form=part_confname_form, 
+                    part_conf_copy_form=part_conf_copy_form,
                     form_errors=form_errors
                 )
             )

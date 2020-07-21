@@ -66,7 +66,7 @@ class ConfigEvent(models.Model):
 class ConfigName(models.Model):
     class Meta:
         ordering = ['name']
-        unique_together = ['part','name']
+        unique_together = ['part','config_type','name']
     def __str__(self):
         return self.name
     def get_object_type(self):
