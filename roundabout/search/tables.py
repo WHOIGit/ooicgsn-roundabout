@@ -110,14 +110,6 @@ class InventoryTable(SearchTable):
                                                  or col.startswith('searchcol-'+UDF_Column.prefix)]
         self.column_default_show = self.Meta.base_shown_cols + search_cols
 
-    def render_inventory_actions__latest__action_type(self,value):
-        try: disp_value = [text for val,text in Action.ACT_TYPES if val==value][0]
-        except IndexError: disp_value = value
-        return disp_value
-
-    def render_actions__latest__detail(self,value):
-        return mark_safe(value)
-
 class PartTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Part
@@ -153,14 +145,6 @@ class BuildTable(SearchTable):
         return format_html(html_string)
     def value_build(self,record):
         return '{}-{}'.format(record.assembly.assembly_number, record.build_number.replace('Build ',''))
-
-    def render_build_actions__latest__action_type(self,value,record):
-        try: disp_value = [text for val,text in BuildAction.ACT_TYPES if val==value][0]
-        except IndexError: disp_value = value
-        return disp_value
-
-    def render_build_actions__latest__detail(self,value):
-        return mark_safe(value)
 
 class AssemblyTable(SearchTable):
     class Meta(SearchTable.Meta):
