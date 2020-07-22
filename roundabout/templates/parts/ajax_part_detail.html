@@ -217,7 +217,11 @@
                 data-node-id="{{ part_template.id }}"
                 data-node-type="detail"
             >   
-                Add Calibration(s)
+                {% if part_template.coefficient_names.exists %}
+                    Update Calibration(s)
+                {% else %}
+                    Create Calibration(s)
+                {% endif %}
             </a>
         </div>
         <h4>Calibrations</h4>
@@ -246,7 +250,11 @@
                 data-node-id="{{ part_template.id }}"
                 data-node-type="detail"
             >   
-                Add Configs/Constants
+                {% if part_template.config_names.exists %}
+                    Update Configs/Constants
+                {% else %}
+                    Create Configs/Constants
+                {% endif %}
             </a>
         </div>
         <h4>Configurations / Constants</h4>

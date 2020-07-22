@@ -48,6 +48,10 @@
         {% csrf_token %}
 
         <div class="col-md-12">
+            <div class="form-group">
+                {{ part_cal_copy_form.management_form }}
+                {{ part_cal_copy_form | crispy }}
+            </div>
             <h5 id = '__all__'>Calibration(s)</h5>
             <table class="table table-tight calibration-form" style = 'display:block; overflow: auto; max-height: 100vh'>
               <thead>

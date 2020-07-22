@@ -524,6 +524,8 @@ class Action(models.Model):
     FLAG = 'flag'
     MOVETOTRASH = 'movetotrash'
     RETIREBUILD = 'retirebuild'
+    REVIEWAPPROVE = 'reviewapprove'
+    EVENTAPPROVE = 'eventapprove'
     ACTION_TYPES = (
         (ADD, 'Added to RDB'),
         (UPDATE, 'Details updated'),
@@ -549,15 +551,19 @@ class Action(models.Model):
         (FLAG, 'Flag'),
         (MOVETOTRASH, 'Move to Trash'),
         (RETIREBUILD, 'Retire Build'),
+        (REVIEWAPPROVE, 'Reviewer approved Event'),
+        (EVENTAPPROVE, 'Event Approved'),
     )
     # object_type choices
     BUILD = 'build'
     INVENTORY = 'inventory'
     DEPLOYMENT = 'deployment'
+    CALEVENT = 'calibrationevent'
     OBJECT_TYPES = (
         (BUILD, 'Build'),
         (INVENTORY, 'Inventory'),
         (DEPLOYMENT, 'Deployment'),
+        (CALEVENT, 'Calibration Event'),
     )
     # deployment_type choices
     BUILD_DEPLOYMENT = 'build_deployment'
@@ -568,6 +574,8 @@ class Action(models.Model):
     )
 
     inventory = models.ForeignKey(Inventory, related_name='actions',
+                                  on_delete=models.CASCADE, null=True, blank=True)
+    calibration_event = models.ForeignKey('calibrations.CalibrationEvent', related_name='actions',
                                   on_delete=models.CASCADE, null=True, blank=True)
     action_type = models.CharField(max_length=20, choices=ACTION_TYPES, db_index=True)
     object_type =  models.CharField(max_length=20, choices=OBJECT_TYPES, null=False, blank=True, db_index=True)
