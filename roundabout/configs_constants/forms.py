@@ -20,7 +20,7 @@
 """
 
 from django import forms
-from .models import ConfigEvent, ConfigName, ConfigValue, ConstDefault, ConstDefaultEvent
+from .models import ConfigEvent, ConfigName, ConfigValue, ConstDefault, ConstDefaultEvent, ConfigDefaultEvent, ConfigDefault
 from roundabout.inventory.models import Inventory, Deployment
 from roundabout.parts.models import Part
 from roundabout.users.models import User
@@ -160,6 +160,60 @@ class ConstDefaultEventForm(forms.ModelForm):
             event.save()
             return event
 
+
+# Config Default Event form 
+# Inputs: Reviewers
+class ConfigDefaultEventForm(forms.ModelForm):
+    class Meta:
+        model = ConfigDefaultEvent 
+        fields = ['user_draft']
+        labels = {
+            'user_draft': 'Reviewers'
+        }
+        widgets = {
+            'user_draft': forms.SelectMultiple()
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(ConfigDefaultEventForm, self).__init__(*args, **kwargs)
+        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only'])
+
+    def clean_user_draft(self):
+        user_draft = self.cleaned_data.get('user_draft')
+        return user_draft
+
+    def save(self, commit = True): 
+        event = super(ConfigDefaultEventForm, self).save(commit = False)
+        if commit:
+            event.save()
+            return event
+
+# Config Default form
+# Inputs: Config default values
+class ConfigDefaultForm(forms.ModelForm):
+    class Meta:
+        model = ConfigDefault
+        fields = ['config_name','default_value']
+        labels = {
+            'config_name': 'Constant Name',
+            'default_value': 'Value'
+        }
+        widgets = {
+            'config_name': forms.Select(
+                attrs = {
+                    'readonly': True,
+                    'style': 'cursor: not-allowed; pointer-events: none; background-color: #d5dfed;'
+                }
+            ),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super(ConfigDefaultForm, self).__init__(*args, **kwargs)
+
+    def clean_config_name(self):
+        config_name = self.cleaned_data.get('config_name')
+        return config_name
+
 # Configuration/Constant Copy Form
 # Inputs: Part 
 class ConfPartCopyForm(forms.Form):
@@ -209,11 +263,21 @@ PartConfigNameFormset = inlineformset_factory(
     can_delete=True
 )
 
-# Configuration Name form instance generator for Parts
-EventDefaultFormset = inlineformset_factory(
+# Constant Default form instance generator for Parts
+EventConstDefaultFormset = inlineformset_factory(
     ConstDefaultEvent, 
     ConstDefault, 
     form=ConstDefaultForm, 
+    fields=('config_name', 'default_value'), 
+    extra=0, 
+    can_delete=True
+)
+
+# Constant Default form instance generator for Parts
+EventConfigDefaultFormset = inlineformset_factory(
+    ConfigDefaultEvent, 
+    ConfigDefault, 
+    form=ConfigDefaultForm, 
     fields=('config_name', 'default_value'), 
     extra=0, 
     can_delete=True

@@ -34,4 +34,8 @@ urlpatterns = [
     path('ajax/edit/<int:pk>/', view=views.ConfigEventValueUpdate.as_view(), name='config_event_value_update'),
     path('ajax/delete/<int:pk>/', view=views.ConfigEventValueDelete.as_view(), name='config_event_value_delete'),
     path('ajax/evtvaluereview/delete/<int:pk>/<int:user_pk>/', view=views.event_value_approve, name='event_value_approve'),
+    path('ajax/configdefault/add/<int:pk>/', view=views.EventConfigDefaultAdd.as_view(), name='event_configdefault_add'),
+    path('ajax/configdefault/edit/<int:pk>/', view=views.EventConfigDefaultUpdate.as_view(), name='event_configdefault_update'),
+    path('ajax/configdefault/delete/<int:pk>/', view=views.EventConfigDefaultDelete.as_view(), name='event_configdefault_delete'),
+    path('ajax/eventconfdefaultreview/delete/<int:pk>/<int:user_pk>/', view=views.event_configdefault_approve, name='event_configdefault_approve'),
 ]
