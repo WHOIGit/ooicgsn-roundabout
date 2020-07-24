@@ -49,7 +49,11 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
     def get(self, request, *args, **kwargs):
         self.object = None
         inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
-        const_names = ConstDefault.objects.filter(const_event=inv_inst.constant_default_events.first())
+        cfg_type = self.kwargs['cfg_type']
+        if cfg_type == 1:
+            names = ConstDefault.objects.filter(const_event=inv_inst.constant_default_events.first())
+        else:
+            names = ConfigDefault.objects.filter(conf_def_event=inv_inst.part.assembly_parts.first().config_default_events.first())
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         ConfigEventValueAddFormset = inlineformset_factory(
@@ -57,13 +61,13 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
             ConfigValue, 
             form=ConfigValueForm,
             fields=('config_name', 'config_value', 'notes'), 
-            extra=len(const_names),  
+            extra=len(names),  
             can_delete=True
         )
         config_event_value_form = ConfigEventValueAddFormset(
             instance=self.object
         )
-        for idx,name in enumerate(const_names):
+        for idx,name in enumerate(names):
             config_event_value_form.forms[idx].initial = {
                 'config_name': name.config_name,
                 'config_value': name.default_value
@@ -71,7 +75,8 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         return self.render_to_response(
             self.get_context_data(
                 form=form, 
-                config_event_value_form=config_event_value_form
+                config_event_value_form=config_event_value_form,
+                inv_id = self.kwargs['pk']
             )
         )
 
@@ -128,7 +133,8 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
                 self.get_context_data(
                     form=form, 
                     config_event_value_form=config_event_value_form, 
-                    form_errors=form_errors
+                    form_errors=form_errors,
+                    inv_id = self.kwargs['pk']
                 )
             )
 
@@ -146,10 +152,16 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        const_names = ConfigName.objects.filter(part=self.object.inventory.part, config_type='cnst')
-        const_event = self.object.inventory.constant_default_events.first()
-        event_default_names = [default for default in const_event.constant_defaults.all()]
-        extra_rows = len(const_names) - len(event_default_names)
+        cfg_type = self.kwargs['cfg_type']
+        if cfg_type == 1:
+            names = ConfigName.objects.filter(part=self.object.inventory.part, config_type='cnst')
+            const_event = self.object.inventory.constant_default_events.first()
+            event_default_names = [default for default in const_event.constant_defaults.all()]
+        else:
+            names = ConfigName.objects.filter(part=self.object.inventory.part, config_type='conf')
+            conf_event = self.object.inventory.part.assembly_parts.first().config_default_events.first()
+            event_default_names = [default for default in conf_event.config_defaults.all()]
+        extra_rows = len(names) - len(event_default_names)
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         ConfigEventValueAddFormset = inlineformset_factory(
@@ -171,7 +183,8 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         return self.render_to_response(
             self.get_context_data(
                 form=form, 
-                config_event_value_form=config_event_value_form
+                config_event_value_form=config_event_value_form,
+                inv_id = self.object.inventory.id
             )
         )
 
@@ -235,7 +248,8 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
                 self.get_context_data(
                     form=form, 
                     config_event_value_form=config_event_value_form, 
-                    form_errors=form_errors
+                    form_errors=form_errors,
+                    inv_id = self.object.inventory.id
                 )
             )
 

@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -70,7 +70,8 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         return self.render_to_response(
             self.get_context_data(
                 form=form,
-                event_valueset_form=event_valueset_form
+                event_valueset_form=event_valueset_form,
+                inv_id = self.kwargs['pk']
             )
         )
 
@@ -124,7 +125,8 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
                 self.get_context_data(
                     form=form,
                     event_valueset_form=event_valueset_form,
-                    form_errors=form_errors
+                    form_errors=form_errors,
+                    inv_id = self.kwargs['pk']
                 )
             )
 
@@ -151,7 +153,8 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         return self.render_to_response(
             self.get_context_data(
                 form=form,
-                event_valueset_form=event_valueset_form
+                event_valueset_form=event_valueset_form,
+                inv_id = self.object.inventory.id
             )
         )
 
@@ -214,7 +217,8 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
                 self.get_context_data(
                     form=form,
                     event_valueset_form=event_valueset_form,
-                    form_errors=form_errors
+                    form_errors=form_errors,
+                    inv_id = self.object.inventory.id
                 )
             )
 

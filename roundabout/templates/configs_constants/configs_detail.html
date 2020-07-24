@@ -56,16 +56,29 @@
                     <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span> 
                 {% endif %}
                 {% if not user|has_group:"inventory only" %}
-                    <div class = 'ajax-detail-link float-right'>
-                        <a  href="#"
-                            class="btn btn-primary btn-sm mr-2"
-                            role="button"
-                            data-detail-url="{% url 'configs_constants:config_event_value_update' event.id %}"
-                            data-node-id="{{ event.id }}"
-                            data-node-type="{{ event.get_object_type }}">
-                                Edit Values
-                        </a>
-                    </div>
+                    {% if event.config_values.first.config_name.config_type == 'cnst' %}
+                        <div class = 'ajax-detail-link float-right'>
+                            <a  href="#"
+                                class="btn btn-primary btn-sm mr-2"
+                                role="button"
+                                data-detail-url="{% url 'configs_constants:config_event_value_update' event.id 1 %}"
+                                data-node-id="{{ event.id }}"
+                                data-node-type="{{ event.get_object_type }}">
+                                    Edit Values
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class = 'ajax-detail-link float-right'>
+                            <a  href="#"
+                                class="btn btn-primary btn-sm mr-2"
+                                role="button"
+                                data-detail-url="{% url 'configs_constants:config_event_value_update' event.id 2 %}"
+                                data-node-id="{{ event.id }}"
+                                data-node-type="{{ event.get_object_type }}">
+                                    Edit Values
+                            </a>
+                        </div>
+                    {% endif %}
                 {% endif %}
                 <div class="collapse mt-3" id="conf_event-{{ event.id }}">
                     <hr>
@@ -217,11 +230,13 @@
         let user_id = '{{ user.id }}';
 
         if (inv_part_type == 'Instrument' && deployment != 'None' && deployment.length > 0) {
-            $('#add_conf_const_action').show();
+            $('#add_const_action').show();
+            $('#add_conf_action').show();
             $('#conf_const-template-tab').show().css('display', '');
             $('#conf_const-template').show().css('display', '');
         } else {
-            $('#add_conf_const_action').hide();
+            $('#add_const_action').hide();
+            $('#add_conf_action').hide();
             $('#conf_const-template-tab').hide();
             $('#conf_const-template').hide();
         }
