@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or
+# This file is part of the Roundabout Database project ("RDB" or 
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -559,11 +559,17 @@ class Action(models.Model):
     INVENTORY = 'inventory'
     DEPLOYMENT = 'deployment'
     CALEVENT = 'calibrationevent'
+    CONSTDEFEVENT = 'constdefaultevent'
+    CONFEVENT = 'configevent'
+    CONFDEFEVENT = 'configdefaultevent'
     OBJECT_TYPES = (
         (BUILD, 'Build'),
         (INVENTORY, 'Inventory'),
         (DEPLOYMENT, 'Deployment'),
         (CALEVENT, 'Calibration Event'),
+        (CONSTDEFEVENT, 'Constant Default Event'),
+        (CONFEVENT, 'Configuration/Constant Event'),
+        (CONFDEFEVENT, 'Configuration Default Event'),
     )
     # deployment_type choices
     BUILD_DEPLOYMENT = 'build_deployment'
@@ -576,6 +582,12 @@ class Action(models.Model):
     inventory = models.ForeignKey(Inventory, related_name='actions',
                                   on_delete=models.CASCADE, null=True, blank=True)
     calibration_event = models.ForeignKey('calibrations.CalibrationEvent', related_name='actions',
+                                  on_delete=models.CASCADE, null=True, blank=True)
+    const_default_event = models.ForeignKey('configs_constants.ConstDefaultEvent', related_name='actions',
+                                  on_delete=models.CASCADE, null=True, blank=True)
+    config_event = models.ForeignKey('configs_constants.ConfigEvent', related_name='actions',
+                                  on_delete=models.CASCADE, null=True, blank=True)
+    config_default_event = models.ForeignKey('configs_constants.ConfigDefaultEvent', related_name='actions',
                                   on_delete=models.CASCADE, null=True, blank=True)
     action_type = models.CharField(max_length=20, choices=ACTION_TYPES, db_index=True)
     object_type =  models.CharField(max_length=20, choices=OBJECT_TYPES, null=False, blank=True, db_index=True)

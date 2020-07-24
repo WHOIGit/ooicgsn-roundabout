@@ -48,6 +48,10 @@
         {% csrf_token %}
 
         <div class="col-md-12">
+            <div class="form-group">
+                {{ part_conf_copy_form.management_form }}
+                {{ part_conf_copy_form | crispy }}
+            </div>
             <h5 id = '__all__'>Configurations/Constants</h5>
             <table class="table table-tight conf_name-form" style = 'display:block; overflow: auto; max-height: 100vh'>
               <thead>

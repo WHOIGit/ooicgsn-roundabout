@@ -1,3 +1,24 @@
+"""
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or 
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+"""
+
 from django.db import models
 from django.core.validators import MinValueValidator, DecimalValidator, MaxValueValidator, RegexValidator, MaxLengthValidator
 from django.utils import timezone
@@ -49,7 +70,7 @@ class CoefficientName(models.Model):
     VALUE_SET_TYPE = (
         ("sl", "Single"),
         ("1d", "1-Dimensional Array"),
-        ("2d", "2-DImensional Array"),
+        ("2d", "2-Dimensional Array"),
     )
     calibration_name = models.CharField(max_length=255, unique=False, db_index=True)
     value_set_type = models.CharField(max_length=3, choices=VALUE_SET_TYPE, null=False, blank=False, default="sl")

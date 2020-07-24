@@ -1,3 +1,24 @@
+"""
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or 
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+"""
+
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -96,7 +117,6 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
                 data = form.errors
                 return JsonResponse(data, status=400)
             elif event_valueset_form.errors:
-                print('coeffcreateform errors')
                 data = event_valueset_form.errors
                 return JsonResponse(data, status=400, safe=False)
         else:
@@ -183,7 +203,6 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
                     status=400
                 )
             if event_valueset_form.errors:
-                print('coeffupdateform errors')
                 data = event_valueset_form.errors
                 return JsonResponse(
                     data,
@@ -281,7 +300,6 @@ class ValueSetValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
     def form_invalid(self, valueset_value_form):
         if self.request.is_ajax():
             if valueset_value_form.errors:
-                print('coeffupdateform errors')
                 data = valueset_value_form.errors
                 return JsonResponse(
                     data,
@@ -361,7 +379,6 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
     def form_invalid(self, part_calname_form, part_cal_copy_form):
         if self.request.is_ajax():
             if part_cal_copy_form.errors:
-                print('part_cal_copy_errors')
                 data = part_cal_copy_form.errors
                 return JsonResponse(
                     data,
@@ -369,7 +386,6 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
                     safe=False
                 )
             if part_calname_form.errors:
-                print('partcalnameupdate errors')
                 data = part_calname_form.errors
                 return JsonResponse(
                     data,

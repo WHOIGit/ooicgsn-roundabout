@@ -40,7 +40,7 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
     if not action_date:
         action_date = timezone.now()
 
-    if (object_type == Action.BUILD or object_type == Action.INVENTORY or object_type == Action.CALEVENT) and not referring_obj:
+    if (object_type == Action.BUILD or object_type == Action.INVENTORY or object_type == Action.CALEVENT or object_type == Action.CONSTDEFEVENT or object_type == Action.CONFEVENT or object_type == Action.CONFDEFEVENT) and not referring_obj:
         detail = obj.detail
 
     # reset obj.detail for next loop
@@ -86,6 +86,18 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
     elif object_type == Action.CALEVENT:
         obj_label = 'Calibration Event'
         action_record.calibration_event = obj
+
+    elif object_type == Action.CONSTDEFEVENT:
+        obj_label = 'Constant Default Event'
+        action_record.const_default_event = obj
+
+    elif object_type == Action.CONFEVENT:
+        obj_label = 'Constant Event'
+        action_record.config_event = obj
+
+    elif object_type == Action.CONFDEFEVENT:
+        obj_label = 'Configuration Default Event'
+        action_record.config_default_event = obj
 
     # Run through the discrete Actions, set up details text and extra records if needed.
     if action_type == Action.ADD:
