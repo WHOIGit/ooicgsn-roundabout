@@ -92,7 +92,7 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
         action_record.const_default_event = obj
 
     elif object_type == Action.CONFEVENT:
-        obj_label = 'Constant Event'
+        obj_label = 'Configuration Event'
         action_record.config_event = obj
 
     elif object_type == Action.CONFDEFEVENT:
