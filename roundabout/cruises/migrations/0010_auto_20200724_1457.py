@@ -12,14 +12,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveConstraint(
-            model_name='vessel',
-            name='max_speed_gt_0',
-        ),
-        migrations.RemoveConstraint(
-            model_name='vessel',
-            name='max_draft_gt_0',
-        ),
         migrations.AlterField(
             model_name='vessel',
             name='length',

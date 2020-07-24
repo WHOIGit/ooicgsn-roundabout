@@ -21,12 +21,4 @@ class Migration(migrations.Migration):
             name='MMSI_number',
             field=models.PositiveIntegerField(blank=True, null=True, validators=[django.core.validators.MaxValueValidator(999999999), django.core.validators.MinValueValidator(100000000)]),
         ),
-        migrations.AddConstraint(
-            model_name='vessel',
-            constraint=models.CheckConstraint(check=models.Q(max_speed__gt='0'), name='max_speed_gt_0'),
-        ),
-        migrations.AddConstraint(
-            model_name='vessel',
-            constraint=models.CheckConstraint(check=models.Q(max_draft__gt='0'), name='max_draft_gt_0'),
-        ),
     ]
