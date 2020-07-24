@@ -1,4 +1,7 @@
+from decimal import Decimal
 from django.db import models
+from django.core.validators import MaxValueValidator, MinValueValidator, MinLengthValidator
+
 from mptt.models import TreeForeignKey
 
 from roundabout.locations.models import Location
@@ -12,14 +15,26 @@ class Vessel(models.Model):
     prefix = models.CharField(max_length=10, null=False, blank=True)
     vessel_designation = models.CharField(max_length=10, default="R/V")
     vessel_name = models.CharField(max_length=100)
-    ICES_code = models.CharField(max_length=10, null=False, blank=True)
+    ICES_code = models.CharField(null=False, blank=True, max_length=4,
+        validators=[MinLengthValidator(4)]
+    )
     operator = models.CharField(max_length=100, null=False, blank=True)
     call_sign = models.CharField(max_length=10, null=False, blank=True)
-    MMSI_number = models.IntegerField(null=True, blank=True)
-    IMO_number = models.IntegerField(null=True, blank=True)
-    length = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
-    max_speed = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True)
-    max_draft = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True)
+    MMSI_number = models.PositiveIntegerField(null=True, blank=True,
+        validators=[MaxValueValidator(999999999), MinValueValidator(100000000)],
+        )
+    IMO_number = models.PositiveIntegerField(null=True, blank=True,
+        validators=[MinValueValidator(1000000), MaxValueValidator(9999999)],
+    )
+    length = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True,
+        validators=[MinValueValidator(Decimal('0.01'))],
+    )
+    max_speed = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True,
+        validators=[MinValueValidator(Decimal('0.01'))],
+    )
+    max_draft = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True,
+        validators=[MinValueValidator(Decimal('0.01'))],
+    )
     designation = models.CharField(max_length=10, null=False, blank=True)
     active = models.BooleanField(choices=BOOLEAN_CHOICES, null=True, default=True)
     R2R = models.BooleanField(choices=BOOLEAN_CHOICES, null=True, default=True, blank=True)
