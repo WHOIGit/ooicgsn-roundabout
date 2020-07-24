@@ -71,7 +71,8 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         return self.render_to_response(
             self.get_context_data(
                 form=form, 
-                config_event_value_form=config_event_value_form
+                config_event_value_form=config_event_value_form,
+                inv_id = self.kwargs['pk']
             )
         )
 
@@ -128,7 +129,8 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
                 self.get_context_data(
                     form=form, 
                     config_event_value_form=config_event_value_form, 
-                    form_errors=form_errors
+                    form_errors=form_errors,
+                    inv_id = self.kwargs['pk']
                 )
             )
 
@@ -171,7 +173,8 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         return self.render_to_response(
             self.get_context_data(
                 form=form, 
-                config_event_value_form=config_event_value_form
+                config_event_value_form=config_event_value_form,
+                inv_id = self.object.inventory.id
             )
         )
 
@@ -235,7 +238,8 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
                 self.get_context_data(
                     form=form, 
                     config_event_value_form=config_event_value_form, 
-                    form_errors=form_errors
+                    form_errors=form_errors,
+                    inv_id = self.object.inventory.id
                 )
             )
 
