@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -53,12 +53,35 @@
 
     <p>Current Inventory: {{ part_template.get_part_inventory_count }}</p>
 
+     {% if part_template.inventory.exists %}
+         <ul class="list-group">
+             <li class="list-group-item">
+                 <a class="collapsed" data-toggle="collapse" href="#inv-locations" aria-expanded="false" aria-controls="inv-locations">
+                     Current Inventory Locations
+                 </a>
+
+                 <a data-toggle="collapse" class="collapsed text-right" href="#inv-locations" aria-controls="inv-locations" aria-expanded="false" role="button">
+                     <i class="fa" aria-hidden="true"></i>
+                     <span class="sr-only">Expand/Collapse Current Inventory Locations</span>
+                 </a>
+
+                 <div class="collapse mt-3" id="inv-locations">
+                     <ul>
+                         {% for item in part_template.get_inventory_active.all %}
+                             <li><a href="{% url 'inventory:inventory_detail' item.id %}">{{ item.serial_number}}</a> - {{item.location }}</li>
+                         {% endfor %}
+                     </ul>
+
+                 </div>
+             </li>
+         </ul>
+    <hr>
+     {% endif %}
     <h4>Revisions</h4>
 
     <hr>
     <ul class="list-group">
     {% for revision in part_template.revisions.all %}
-
             <li class="list-group-item">
                 <a class="collapsed" data-toggle="collapse" href="#revision-{{ revision.id }}" aria-expanded="false" aria-controls="revision-{{ revision.id }}">
                     Revision: {{ revision.revision_code }}
@@ -183,7 +206,7 @@
                         {% endfor %}
 
                     <hr>
-                    
+
 
                     <div class="ajax-detail-link">
 
@@ -216,7 +239,7 @@
                 data-detail-url="{% url 'calibrations:part_calname_add' part_template.id %}"
                 data-node-id="{{ part_template.id }}"
                 data-node-type="detail"
-            >   
+            >
                 {% if part_template.coefficient_names.exists %}
                     Update Calibration(s)
                 {% else %}
@@ -240,7 +263,7 @@
                     </tr>
                 {% endfor %}
             </tbody>
-        </table> 
+        </table>
     </div>
 
     <div id = 'configuration_constant-section'>
@@ -249,7 +272,7 @@
                 data-detail-url="{% url 'configs_constants:part_confname_add' part_template.id %}"
                 data-node-id="{{ part_template.id }}"
                 data-node-type="detail"
-            >   
+            >
                 {% if part_template.config_names.exists %}
                     Update Configs/Constants
                 {% else %}
@@ -271,7 +294,7 @@
                     </tr>
                 {% endfor %}
             </tbody>
-        </table> 
+        </table>
     </div>
 
 
