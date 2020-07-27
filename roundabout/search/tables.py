@@ -77,7 +77,6 @@ class SearchTable(ColumnShiftTable):
         fields = []
         base_shown_cols = []
         attrs = {'style':'display: block; overflow-x: auto;'}
-        #attrs = {'style':'display: block; overflow-x: auto; white-space: nowrap;'}
 
     def set_column_default_show(self, table_data):
         if not self.Meta.base_shown_cols:
@@ -91,18 +90,8 @@ class SearchTable(ColumnShiftTable):
 class InventoryTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Inventory
-        action_accessors = ['actions__latest__action_type', 'actions__latest__user__name', 'actions__latest__created_at', 'actions__latest__location__name', 'actions__latest__detail']
         udf_accessors = ['fieldvalues__field__field_name','fieldvalues__field_value']
-        fields = ['serial_number','part__name','part__part_number','location__name']
         base_shown_cols = ['serial_number', 'part__name', 'location__name']
-
-    # default columns
-    serial_number = Column(verbose_name='Serial Number', attrs={'style':'white-space: nowrap;'},
-              linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('pk')]))
-    part__name = Column(verbose_name='Name')
-    location__name = Column(verbose_name='Location')
-    part__part_number = Column(verbose_name='Part Number', attrs={'style':'white-space: nowrap;'},
-                   linkify=dict(viewname="parts:parts_detail", args=[tables.A('part__pk')]))
 
     def set_column_default_show(self,table_data):
         search_cols = [col for col in self.sequence if col.startswith('searchcol-')]
@@ -114,12 +103,7 @@ class InventoryTable(SearchTable):
 class PartTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Part
-        fields = ["part_number", 'name', 'part_type__name']
-        base_shown_cols = fields
-
-    part_number = Column(verbose_name='Part Number', attrs={'style':'white-space: nowrap;'},
-                   linkify=dict(viewname='parts:parts_detail',args=[tables.A('pk')]))
-    part_type__name = Column(verbose_name='Type')
+        base_shown_cols = ["part_number", 'name', 'part_type__name']
 
     def set_column_default_show(self,table_data):
         search_cols = [col for col in self.sequence if col.startswith('searchcol-')]
@@ -131,13 +115,9 @@ class PartTable(SearchTable):
 class BuildTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Build
-        action_accessors = ['build_actions__latest__action_type', 'build_actions__latest__user__name', 'build_actions__latest__created_at','build_actions__latest__location__name','build_actions__latest__detail']
-        fields = ['build','assembly__name','build_number','assembly__assembly_type__name','location__name','time_at_sea','is_deployed']
         base_shown_cols = ['build','assembly__assembly_type__name','location__name','time_at_sea','is_deployed']
 
     build=Column(empty_values=(), order_by=('assembly__assembly_number','build_number'), attrs={'style':'white-space: nowrap;'})
-    location__name = Column(verbose_name='Location', accessor='location__name')
-    assembly__assembly_type__name = Column(verbose_name='Type')
 
     def render_build(self, record):
         item_url = reverse("builds:builds_detail", args=[record.pk])
@@ -150,12 +130,7 @@ class BuildTable(SearchTable):
 class AssemblyTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Assembly
-        fields = ['assembly_number', 'name', 'assembly_type__name', 'description']
         base_shown_cols = ['assembly_number', 'name', 'assembly_type__name']
-
-    assembly_number = Column(verbose_name='Assembly Number', attrs={'style':'white-space: nowrap;'},
-        linkify=dict(viewname='assemblies:assembly_detail',args=[tables.A('pk')]))
-    assembly_type__name = Column(verbose_name='Type')
 
 class CalibrationTable(SearchTable):
     class Meta(SearchTable.Meta):

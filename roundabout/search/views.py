@@ -340,7 +340,9 @@ class InventoryTableView(GenericSearchTableView):
     def get_avail_fields():
         avail_fields = [dict(value="part__name",                     text="Name", legal_lookup='STR_LOOKUP'),
                         dict(value="part__friendly_name",   text="Friendly Name", legal_lookup='STR_LOOKUP'),
-                        dict(value="serial_number",         text="Serial Number", legal_lookup='STR_LOOKUP'),
+                        dict(value="serial_number",         text="Serial Number", legal_lookup='STR_LOOKUP',
+                             col_args=dict(attrs={'style':'white-space: nowrap;'},
+                                           linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('pk')]))),
                         dict(value="old_serial_number", text="Old Serial Number", legal_lookup='STR_LOOKUP'),
                         dict(value="location__name",             text="Location", legal_lookup='STR_LOOKUP'),
                         dict(value="build__assembly__name",         text="Build", legal_lookup='STR_LOOKUP'),
@@ -348,16 +350,13 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="updated_at",            text="Date Modified", legal_lookup='DATE_LOOKUP'),
 
                         dict(value=None, text="--Part--", disabled=True),
-                        dict(value="part__part_number",        text="Part Number", legal_lookup='STR_LOOKUP'),
+                        dict(value="part__part_number",        text="Part Number", legal_lookup='STR_LOOKUP',
+                             col_args=dict(verbose_name='Part Number', attrs={'style':'white-space: nowrap;'},
+                                           linkify=dict(viewname="parts:parts_detail", args=[tables.A('part__pk')]))),
                         dict(value="part__part_type__name",    text="Part Type",   legal_lookup='STR_LOOKUP'),
                         dict(value="part__revision",         text="Part Revision", legal_lookup='STR_LOOKUP'),
                         dict(value="part__unit_cost",          text="Unit Cost",   legal_lookup='NUM_LOOKUP'),
                         dict(value="part__refurbishment_cost", text="Refurb Cost", legal_lookup='NUM_LOOKUP'),
-
-                        #dict(value=None, text="--Location--", disabled=True),
-                        #dict(value="location__name",          text="Name",          legal_lookup='STR_LOOKUP'),
-                        #dict(value="location__location_type", text="Location Type", legal_lookup='STR_LOOKUP'),
-                        #dict(value="location__root_location", text="Location Root", legal_lookup='STR_LOOKUP'),
 
                         dict(value=None, text="--User-Defined-Fields--", disabled=True),
                         dict(value="fieldvalues__field__field_name", text="UDF Name",  legal_lookup='STR_LOOKUP'),
@@ -439,8 +438,11 @@ class PartTableView(GenericSearchTableView):
     def get_avail_fields():
         avail_fields = [dict(value="name",                        text="Name", legal_lookup='STR_LOOKUP'),
                         dict(value="friendly_name",      text="Friendly Name", legal_lookup='STR_LOOKUP'),
-                        dict(value="part_number",          text="Part Number", legal_lookup='STR_LOOKUP'),
-                        dict(value="part_type__name",        text="Part Type", legal_lookup='STR_LOOKUP'),
+                        dict(value="part_number",          text="Part Number", legal_lookup='STR_LOOKUP',
+                             col_args=dict(verbose_name='Part Number', attrs={'style':'white-space: nowrap;'},
+                                           linkify=dict(viewname='parts:parts_detail',args=[tables.A('pk')]))),
+                        dict(value="part_type__name",        text="Part Type", legal_lookup='STR_LOOKUP',
+                             col_args=dict(verbose_name='Type')),
                         dict(value="revision",           text="Part Revision", legal_lookup='STR_LOOKUP'),
                         dict(value="unit_cost",              text="Unit Cost", legal_lookup='NUM_LOOKUP'),
                         dict(value="refurbishment_cost",   text="Refurb Cost", legal_lookup='NUM_LOOKUP'),
@@ -512,11 +514,6 @@ class BuildTableView(GenericSearchTableView):
                         dict(value="created_at",            text="Date Created", legal_lookup='DATE_LOOKUP'),
                         dict(value="updated_at",           text="Date Modified", legal_lookup='DATE_LOOKUP'),
 
-                        #dict(value=None, text="--Location--", disabled=True),
-                        #dict(value="location__name",          text="Name", legal_lookup='STR_LOOKUP'),
-                        #dict(value="location__location_type", text="Location Type", legal_lookup='STR_LOOKUP'),
-                        #dict(value="location__root_type",     text="Root", legal_lookup='STR_LOOKUP'),
-
                         dict(value=None, text="--Actions--", disabled=True),
                         dict(value="actions__latest__action_type",    text="Latest Action",           legal_lookup='STR_LOOKUP',
                              col_args=dict(render=lambda value: dict(Action.ACTION_TYPES).get(value,value))),
@@ -550,8 +547,11 @@ class AssemblyTableView(GenericSearchTableView):
     @staticmethod
     def get_avail_fields():
         avail_fields = [dict(value="name",                text="Name", legal_lookup='STR_LOOKUP'),
-                        dict(value="assembly_number",   text="Number", legal_lookup='STR_LOOKUP'),
-                        dict(value="assembly_type__name", text="Type", legal_lookup='STR_LOOKUP'),
+                        dict(value="assembly_number",   text="Number", legal_lookup='STR_LOOKUP',
+                             col_args=dict(verbose_name='Assembly Number', attrs={'style':'white-space: nowrap;'},
+                                           linkify=dict(viewname='assemblies:assembly_detail',args=[tables.A('pk')]))),
+                        dict(value="assembly_type__name", text="Type", legal_lookup='STR_LOOKUP',
+                             col_args=dict(verbose_name='Type')),
                         dict(value="description",  text="Description", legal_lookup='STR_LOOKUP'),
                         ]
         return avail_fields
