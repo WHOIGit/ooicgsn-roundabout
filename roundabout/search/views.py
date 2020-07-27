@@ -571,18 +571,12 @@ class CalibrationTableView(GenericSearchTableView):
 
     @staticmethod
     def get_avail_fields():
-        avail_fields = [dict(value="calibration_event__inventory__serial_number", text="Inventory: SN", legal_lookup='STR_LOOKUP',
-                             col_args=dict(verbose_name='Inventory: SN', attrs={'style':'white-space: nowrap;'},
-                                           linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('calibration_event__inventory__pk')]))),
-                        dict(value="calibration_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP',
-                             col_args=dict(verbose_name='Inventory Item')),
+        avail_fields = [dict(value="calibration_event__inventory__serial_number", text="Inventory: SN", legal_lookup='STR_LOOKUP'),
+                        dict(value="calibration_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
                         dict(value="coefficient_name__calibration_name", text="Coefficient Name", legal_lookup='STR_LOOKUP'),
-                        dict(value="calibration_event__calibration_date", text="Calibration Event: Date", legal_lookup='DATE_LOOKUP',
-                             col_args=dict(verbose_name='Calibration Date', format='Y-m-d',
-                                           linkify=dict(viewname="export:export_calibration", args=[tables.A('calibration_event__pk')]))),
+                        dict(value="calibration_event__calibration_date", text="Calibration Event: Date", legal_lookup='DATE_LOOKUP'),
                         #dict(value="calibration_event__id", text="Calibration Event: ID", legal_lookup='EXACT_LOOKUP'),
-                        dict(value="calibration_event__user_approver__name", text="Calibration Event: Approver Name",
-                             col_args={'verbose_name':'Approver'}, legal_lookup='STR_LOOKUP'),
+                        dict(value="calibration_event__user_approver__name", text="Calibration Event: Approver Name"),
                         dict(value="created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
                         dict(value="value_set", text="Value", legal_lookup='STR_LOOKUP'),
                         dict(value="notes", text="Notes", legal_lookup='STR_LOOKUP'),
@@ -593,6 +587,22 @@ class CalibrationTableView(GenericSearchTableView):
         context = super().get_context_data(**kwargs)
         context['model'] = 'Calibrations'
         return context
+    def get_queryset(self):
+        qs = super().get_queryset()
+        # since search model is CoefficientValueSet and results table is CalibrationEvents,
+        # final query results must be CalibrationEvents.
+        calibration_event_ids = qs.values_list('calibration_event__id', flat=True)
+        qs = CalibrationEvent.objects.filter(id__in=calibration_event_ids)
+        return qs
+    def get_table_kwargs(self):
+        # since search model is CoefficientValueSet and results are CalibrationEvents,
+        # columns must be handled by table_class, not by view_class/avail_fields
+
+        # exclude cols from download
+        try: self.exclude_columns = self.request.GET.get('excluded_columns').strip('"').split(',')
+        except AttributeError: self.exclude_columns = []
+
+        return {'extra_columns':[]}
 
 class ActionTableView(GenericSearchTableView):
     model = Action

@@ -24,7 +24,7 @@ from django.urls import reverse
 from django.db.models import Count
 
 import django_tables2 as tables
-from django_tables2.columns import Column, DateTimeColumn, BooleanColumn, ManyToManyColumn
+from django_tables2.columns import Column, DateColumn, DateTimeColumn, BooleanColumn, ManyToManyColumn
 from django_tables2_column_shifter.tables import ColumnShiftTable
 
 from roundabout.parts.models import Part
@@ -134,8 +134,27 @@ class AssemblyTable(SearchTable):
 
 class CalibrationTable(SearchTable):
     class Meta(SearchTable.Meta):
-        model = CoefficientValueSet
-        base_shown_cols = ['calibration_event__inventory__part__name','coefficient_name__calibration_name','calibration_event__calibration_date']
+        #model = CoefficientValueSet
+        model = CalibrationEvent
+        fields = ['inventory__serial_number','inventory__part__name','calibration_date','deployment','approved','user_approver__name','user_drafter__name']
+        base_shown_cols = ['inventory__serial_number','calibration_date','approved']
+
+    inventory__serial_number = Column(verbose_name='Inventory SN', attrs={'style':'white-space: nowrap;'},
+            linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('inventory__pk')]))
+    inventory__part__name = Column(verbose_name='Part',
+            linkify=dict(viewname="parts:parts_detail", args=[tables.A('inventory__part__pk')]))
+    calibration_date = DateColumn(verbose_name='Calibration Date', format='Y-m-d',
+            linkify=dict(viewname="export:export_calibration", args=[tables.A('pk')]))
+
+    user_approver__name = Column(verbose_name='Approver Name')
+    user_drafter__name = Column(verbose_name='Drafter Name')
+
+    coefficient_value_set__names = ManyToManyColumn(verbose_name='Coefficient Names',
+            accessor='coefficient_value_sets', transform=lambda x: x.coefficient_name)
+    coefficient_value_set__notes = ManyToManyColumn(verbose_name='Coefficient Notes',
+            accessor='coefficient_value_sets', transform=lambda x: format_html('<b>{}:</b> [{}]<br>'.format(x.coefficient_name,x.notes)) if x.notes else '', separator='\n')
+
+    detail = Column(verbose_name='CalibrationEvent Note', accessor='detail')
 
 class ActionTable(SearchTable):
     class Meta(SearchTable.Meta):
