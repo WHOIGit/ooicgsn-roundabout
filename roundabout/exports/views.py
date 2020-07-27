@@ -21,11 +21,18 @@
 import csv,zipfile,io
 from os.path import splitext
 
-from django.views.generic import DetailView, ListView
-from django.http import HttpResponse
+from django.views.generic import TemplateView, DetailView, ListView
+from django.http import HttpResponse,HttpResponseRedirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from roundabout.calibrations.models import CalibrationEvent
+
+class HomeView(TemplateView):
+    template_name = 'exports/home.html'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # add stuff
+        return context
 
 class ExportCalibrationEvent(DetailView,LoginRequiredMixin):
     model = CalibrationEvent
@@ -41,7 +48,6 @@ class ExportCalibrationEvent(DetailView,LoginRequiredMixin):
         prefix_qs = cal.inventory.fieldvalues.filter(field__field_name__iexact='Calibration Export Prefix',is_current=True)
         if prefix_qs.exists():
             serial_label = prefix_qs[0].field_value+serial_label
-            print(serial_label)
         elif 'OPTAA' in cal.inventory.part.name:
             serial_label = 'ACS-'+serial_label
 
@@ -80,3 +86,59 @@ class ExportCalibrationEvent(DetailView,LoginRequiredMixin):
             writer = csv.writer(response)
             writer.writerows(rows)
             return response
+
+class ZipExport(ListView,LoginRequiredMixin):
+    model=None
+    fname_zip = '{}.zip'.format(model)
+    context_object_name = 'objs'
+
+    def build_zip(self, zf, objs):
+        pass
+
+    def render_to_response(self, context, **response_kwargs):
+        response = HttpResponse(content_type='application/zip')
+        response['Content-Disposition'] = 'inline; filename="{}"'.format(self.fname_zip)
+        objs = context.get(self.context_object_name)
+        zf = zipfile.ZipFile(response, 'w')
+        print(objs)
+        self.build_zip(zf, objs)
+        return response
+
+
+class ExportCalibrationEvents(ZipExport):
+    model = CalibrationEvent
+    fname_zip = 'CalibrationEvents.zip'
+
+    def build_zip(self, zf, objs):
+        for cal in objs:
+            fname = 'CGINS-{}-{:05}__{}.csv'.format(cal.inventory.part.name.replace('-', ''),
+                    int(cal.inventory.old_serial_number), cal.calibration_date.strftime('%Y%m%d'))
+
+            serial_label = cal.inventory.old_serial_number or cal.inventory.serial_number
+            prefix_qs = cal.inventory.fieldvalues.filter(field__field_name__iexact='Calibration Export Prefix', is_current=True)
+            if prefix_qs.exists():
+                serial_label = prefix_qs[0].field_value+serial_label
+            elif 'OPTAA' in cal.inventory.part.name:
+                serial_label = 'ACS-'+serial_label
+
+            aux_files = []
+            header = ['serial', 'name', 'value', 'notes']
+            rows = [header]
+            for coeff in cal.coefficient_value_sets.all():
+                if coeff.coefficient_name.value_set_type == '2d':
+                    extra = ('{}__{}.ext'.format(splitext(fname)[0], coeff.coefficient_name),
+                             coeff.value_set)
+                    aux_files.append(extra)
+
+                row = [serial_label,
+                       coeff.coefficient_name.calibration_name,
+                       coeff.value_set_with_export_formatting(),
+                       coeff.notes]
+                rows.append(row)
+
+            csv_content = io.StringIO()
+            writer = csv.writer(csv_content)
+            writer.writerows(rows)
+            zf.writestr(fname, csv_content.getvalue())
+            for extra_fname, extra_content in aux_files:
+                zf.writestr(extra_fname, extra_content)
