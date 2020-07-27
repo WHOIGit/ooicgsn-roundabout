@@ -37,9 +37,12 @@ class ExportCalibrationEvent(DetailView,LoginRequiredMixin):
                                                 int(cal.inventory.old_serial_number),
                                                 cal.calibration_date.strftime('%Y%m%d'))
 
-        # TODO: ACS- should come from an as-yet-defined UDF named calibration-serial-prefix
         serial_label = cal.inventory.old_serial_number or cal.inventory.serial_number
-        if 'OPTAA' in cal.inventory.part.name:
+        prefix_qs = cal.inventory.fieldvalues.filter(field__field_name__iexact='Calibration Export Prefix',is_current=True)
+        if prefix_qs.exists():
+            serial_label = prefix_qs[0].field_value+serial_label
+            print(serial_label)
+        elif 'OPTAA' in cal.inventory.part.name:
             serial_label = 'ACS-'+serial_label
 
         # TODO: should this live in calibrations/models as eg an export() function?
