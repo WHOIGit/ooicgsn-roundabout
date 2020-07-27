@@ -375,7 +375,7 @@ class InventoryTableView(GenericSearchTableView):
 
                         dict(value=None, text="--Calibrations--", disabled=True),
                         dict(value="calibration_events__latest__calibration_date", text="Latest Calibration Event", legal_lookup='DATE_LOOKUP',
-                             col_args = dict(format='Y-m-d', linkify=lambda record,value: reverse(viewname="calibrations:export_calibration",
+                             col_args = dict(format='Y-m-d', linkify=lambda record,value: reverse(viewname="exports:export_calibration",
                                                                 args=[record.calibration_events.latest().pk]) if value else None)),
                         dict(value="calibration_events__latest__user_approver", text="Latest Calibration Event: Approver", legal_lookup='STR_LOOKUP'),
                         dict(value="calibration_events__latest__approved", text="Latest Calibration Event: Approved", legal_lookup='STR_LOOKUP'),
@@ -571,10 +571,15 @@ class CalibrationTableView(GenericSearchTableView):
 
     @staticmethod
     def get_avail_fields():
-        avail_fields = [dict(value="calibration_event__inventory__serial_number", text="Inventory: SN", legal_lookup='STR_LOOKUP'),
-                        dict(value="calibration_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
+        avail_fields = [dict(value="calibration_event__inventory__serial_number", text="Inventory: SN", legal_lookup='STR_LOOKUP',
+                             col_args=dict(verbose_name='Inventory: SN', attrs={'style':'white-space: nowrap;'},
+                                           linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('calibration_event__inventory__pk')]))),
+                        dict(value="calibration_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP',
+                             col_args=dict(verbose_name='Inventory Item')),
                         dict(value="coefficient_name__calibration_name", text="Coefficient Name", legal_lookup='STR_LOOKUP'),
-                        dict(value="calibration_event__calibration_date", text="Calibration Event: Date", legal_lookup='DATE_LOOKUP'),
+                        dict(value="calibration_event__calibration_date", text="Calibration Event: Date", legal_lookup='DATE_LOOKUP',
+                             col_args=dict(verbose_name='Calibration Date', format='Y-m-d',
+                                           linkify=dict(viewname="export:export_calibration", args=[tables.A('calibration_event__pk')]))),
                         #dict(value="calibration_event__id", text="Calibration Event: ID", legal_lookup='EXACT_LOOKUP'),
                         dict(value="calibration_event__user_approver__name", text="Calibration Event: Approver Name",
                              col_args={'verbose_name':'Approver'}, legal_lookup='STR_LOOKUP'),

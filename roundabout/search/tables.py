@@ -74,6 +74,7 @@ class UDF_Column(ManyToManyColumn):
 class SearchTable(ColumnShiftTable):
     class Meta:
         template_name = "django_tables2/bootstrap4.html"
+        fields = []
         base_shown_cols = []
         attrs = {'style':'display: block; overflow-x: auto;'}
         #attrs = {'style':'display: block; overflow-x: auto; white-space: nowrap;'}
@@ -159,14 +160,7 @@ class AssemblyTable(SearchTable):
 class CalibrationTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = CoefficientValueSet
-        fields = ['calibration_event__inventory__serial_number','calibration_event__inventory__part__name','coefficient_name__calibration_name','calibration_event__calibration_date']
-        base_shown_cols = fields[1:]
-
-    calibration_event__inventory__serial_number = Column(verbose_name='Inventory: SN', attrs={'style':'white-space: nowrap;'},
-              linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('calibration_event__inventory__pk')]))
-    calibration_event__inventory__part__name = Column(verbose_name='Inventory Item')
-    calibration_event__calibration_date = tables.DateColumn(verbose_name='Calibration Date', format='Y-m-d',
-              linkify=dict(viewname="calibrations:export_calibration", args=[tables.A('calibration_event__pk')]))
+        base_shown_cols = ['calibration_event__inventory__part__name','coefficient_name__calibration_name','calibration_event__calibration_date']
 
 class ActionTable(SearchTable):
     class Meta(SearchTable.Meta):
