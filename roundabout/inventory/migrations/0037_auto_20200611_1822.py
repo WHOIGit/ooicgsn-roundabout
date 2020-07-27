@@ -7,7 +7,7 @@ Action = apps.get_model('inventory', 'Action')
 
 # Update Inventory Actions to new "ADD" type
 def update_inv_actions(apps, schema_editor):
-    actions = Action.objects.all()
+    actions = Action.objects.only('action_type')
 
     for action in actions:
         if action.action_type == 'invadd':

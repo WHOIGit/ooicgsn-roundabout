@@ -5,7 +5,7 @@ from django.db import migrations
 Action = apps.get_model('inventory', 'Action')
 
 def update_actions(apps, schema_editor):
-    actions = Action.objects.all()
+    actions = Action.objects.only('action_type')
 
     for action in actions:
         if action.action_type == 'deploymenttosea':
