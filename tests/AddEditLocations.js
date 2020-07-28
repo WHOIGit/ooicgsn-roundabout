@@ -15,24 +15,30 @@ var myArgs = process.argv.slice(2);
 (async function testLocations() {
 
     let chromeCapabilities = Capabilities.chrome();
+    var firefoxOptions = new firefox.Options();
 
     // Docker linux chrome will only run headless
-    if ((myArgs[1] == 'headless') && (myArgs.length !=0)) {    
+    if ((myArgs[1] == 'headless') && (myArgs.length !=0)) {
+    
 	 chromeCapabilities.set("goog:chromeOptions", {
       	   args: [
       	    "--no-sandbox",
        	    "--disable-dev-shm-usage",
-       	    "--headless"
+       	    "--headless",
+	    "--log-level=3",
+	    "--disable-gpu"
      	    ]
    	    });
+
+	  firefoxOptions.addArguments("-headless");
     } 
 
-    // First argument specifies the Browser type, chrome is default if no argument is supplied
+    // First argument specifies the Browser type
     if (myArgs[0] == 'chrome') {        
         driver = new Builder().forBrowser('chrome').withCapabilities(chromeCapabilities).build();
     }
     else if (myArgs[0] == 'firefox') {       
-        driver = new Builder().forBrowser('firefox').build();
+        driver = new Builder().forBrowser('firefox').setFirefoxOptions(firefoxOptions).build();
     } 
     else {
 	console.log('Error: Missing Arguments');
@@ -43,9 +49,6 @@ var myArgs = process.argv.slice(2);
     await driver.get("https://ooi-cgrdb-staging.whoi.net/");
     // 2 | setWindowSize | 1304x834 | 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
-    // Set implicit wait between commands in  - still need promise wait
- //   driver.manage().setTimeouts({ implicit: 2000});  //Do not mix implicit and explicit waits.
-    
 
     try {
 
@@ -60,7 +63,7 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.linkText("Sign In")).click();
         await driver.findElement(By.id("id_login")).sendKeys("jkoch");
         await driver.findElement(By.id("id_password")).sendKeys("Automatedtests");
-        await driver.findElement(By.css(".primaryAction")).click()
+        await driver.findElement(By.css(".primaryAction")).click();
 
         // ADD LOCATIONS TEST
 
@@ -227,16 +230,20 @@ var myArgs = process.argv.slice(2);
         // Close browser window
            driver.quit();
 
+
+
+        // Close browser window
+        driver.quit();
     }
-    catch (e)
-    {
+    catch (e) {
         console.log(e.message, e.stack);
         console.log("Add Edit Locations failed.");
         throw (e);
 	return false;
-    }
+    } 
 
     console.log("Add Edit Locations completed.");
     return true;
+    
 
 })();
