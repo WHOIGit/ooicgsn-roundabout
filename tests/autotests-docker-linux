@@ -1,0 +1,14 @@
+FROM ubuntu:18.04
+RUN apt update && apt install -y
+COPY . /home
+RUN apt install -y nodejs && apt install -y npm
+RUN apt install -y wget && apt install -y unzip
+
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && apt install -y ./google-chrome-stable_current_amd64.deb
+RUN wget https://chromedriver.storage.googleapis.com/84.0.4147.30/chromedriver_linux64.zip && unzip -d /home chromedriver_linux64.zip
+RUN apt install -y firefox && apt install -y firefox-geckodriver
+
+CMD cd /home && rm Round*.log && ./RunAllTests-Chrome-Linux.bat && ./RunAllTests-Firefox-Linux.bat
+
+#CMD ["sleep", "infinity"]
+
