@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -135,10 +135,21 @@ class PartsDetailView(LoginRequiredMixin, DetailView):
         else:
             custom_fields = None
 
+        # Get Inventory items by Root Locations
+        inventory_location_data = []
+        root_locations = Location.objects.root_nodes()
+        for root in root_locations:
+            locations_list = root.get_descendants(include_self=True).values_list('id', flat=True)
+            items = self.object.inventory.filter(location__in=locations_list)
+            if items:
+                data = {'location_root': root, 'inventory_items': items, }
+                inventory_location_data.append(data)
+
         context.update({
             'node_type': 'parts',
             'multiple_revision': multiple_revision,
             'custom_fields': custom_fields,
+            'inventory_location_data': inventory_location_data,
         })
         return context
 
@@ -171,9 +182,20 @@ class PartsAjaxDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailVie
         else:
             custom_fields = None
 
+        # Get Inventory items by Root Locations
+        inventory_location_data = []
+        root_locations = Location.objects.root_nodes()
+        for root in root_locations:
+            locations_list = root.get_descendants(include_self=True).values_list('id', flat=True)
+            items = self.object.inventory.filter(location__in=locations_list)
+            if items:
+                data = {'location_root': root, 'inventory_items': items, }
+                inventory_location_data.append(data)
+
         context.update({
             'multiple_revision': multiple_revision,
             'custom_fields': custom_fields,
+            'inventory_location_data': inventory_location_data,
         })
         return context
 
@@ -223,7 +245,7 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         #for instance in documentation_instances:
         #    instance.revision = revision
         documentation_form.save()
-        
+
         # Check for any global Part Type custom fields for this Part
         custom_fields = self.object.part_type.custom_fields.all()
 
@@ -275,7 +297,7 @@ class PartsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         self.object = self.get_object()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-            
+
         if (form.is_valid()):
             return self.form_valid(form)
         return self.form_invalid(form)

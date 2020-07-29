@@ -50,33 +50,40 @@
         <p>Friendly Name: {{ part_template.friendly_name }}</p>
     {% endif %}
     <p>Part Type: {{ part_template.part_type }}</p>
-
-    <p>Current Inventory: {{ part_template.get_part_inventory_count }}</p>
-
-     {% if part_template.inventory.exists %}
-         <ul class="list-group">
-             <li class="list-group-item">
-                 <a class="collapsed" data-toggle="collapse" href="#inv-locations" aria-expanded="false" aria-controls="inv-locations">
-                     Current Inventory Locations
-                 </a>
-
-                 <a data-toggle="collapse" class="collapsed text-right" href="#inv-locations" aria-controls="inv-locations" aria-expanded="false" role="button">
-                     <i class="fa" aria-hidden="true"></i>
-                     <span class="sr-only">Expand/Collapse Current Inventory Locations</span>
-                 </a>
-
-                 <div class="collapse mt-3" id="inv-locations">
-                     <ul>
-                         {% for item in part_template.get_inventory_active.all %}
-                             <li><a href="{% url 'inventory:inventory_detail' item.id %}">{{ item.serial_number}}</a> - {{item.location }}</li>
-                         {% endfor %}
-                     </ul>
-
-                 </div>
-             </li>
-         </ul>
     <hr>
-     {% endif %}
+    <h4>Current Inventory by Location</h4>
+    <hr>
+    <ul class="list-group">
+        {% for item in inventory_location_data %}
+            <li class="list-group-item">
+                <span class="badge badge-primary badge-pill float-right">{{ item.inventory_items|length }}</span>
+                <div class="">
+                    <a class="collapsed" data-toggle="collapse" href="#inv-locations-{{ item.location_root.id }}" aria-expanded="false" aria-controls="inv-locations-{{ item.location_root.id }}">
+                        {{ item.location_root }}
+                    </a>
+                    <a data-toggle="collapse" class="collapsed text-right" href="#inv-locations-{{ item.location_root.id }}" aria-controls="inv-locations-{{ item.location_root.id }}" aria-expanded="false" role="button">
+                        <i class="fa" aria-hidden="true"></i>
+                        <span class="sr-only">Expand/Collapse Current Inventory Locations</span>
+                    </a>
+                </div>
+
+
+                <div class="collapse mt-3" id="inv-locations-{{ item.location_root.id }}">
+                    <ul>
+                        {% for inventory in item.inventory_items %}
+                            <li><a href="{% url 'inventory:inventory_detail' inventory.id %}">{{ inventory.serial_number}}</a> - {{inventory.location }}</li>
+                        {% endfor %}
+                    </ul>
+
+                </div>
+            </li>
+        {% endfor %}
+        <li class="list-group-item">
+            <span class="badge badge-primary badge-pill float-right">{{ part_template.inventory.all|length }}</span>
+            Total Inventory
+        </li>
+    </ul>
+    <hr>
     <h4>Revisions</h4>
 
     <hr>
