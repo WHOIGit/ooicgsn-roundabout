@@ -169,7 +169,7 @@ def update_build_dep_actions():
             action.deployment_type = 'build_deployment'
             action.deployment = build.get_latest_deployment()
             action.save()
-            print(action)c
+            print(action)
 
 
 # Create new InventoryDeployment objects for items that are already on deployment
