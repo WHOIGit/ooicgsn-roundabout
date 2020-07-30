@@ -79,7 +79,7 @@
             </li>
         {% endfor %}
         <li class="list-group-item">
-            <span class="badge badge-primary badge-pill float-right">{{ part_template.inventory.all|length }}</span>
+            <span class="badge badge-primary badge-pill float-right">{{ part_template.get_part_inventory_count }}</span>
             Total Inventory
         </li>
     </ul>

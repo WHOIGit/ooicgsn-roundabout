@@ -137,7 +137,7 @@ class PartsDetailView(LoginRequiredMixin, DetailView):
 
         # Get Inventory items by Root Locations
         inventory_location_data = []
-        root_locations = Location.objects.root_nodes()
+        root_locations = Location.objects.root_nodes().exclude(root_type='Trash')
         for root in root_locations:
             locations_list = root.get_descendants(include_self=True).values_list('id', flat=True)
             items = self.object.inventory.filter(location__in=locations_list)
@@ -184,7 +184,7 @@ class PartsAjaxDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailVie
 
         # Get Inventory items by Root Locations
         inventory_location_data = []
-        root_locations = Location.objects.root_nodes()
+        root_locations = Location.objects.root_nodes().exclude(root_type='Trash')
         for root in root_locations:
             locations_list = root.get_descendants(include_self=True).values_list('id', flat=True)
             items = self.object.inventory.filter(location__in=locations_list)

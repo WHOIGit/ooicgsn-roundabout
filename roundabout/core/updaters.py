@@ -90,6 +90,7 @@ def update_deployment_details():
             deployment.current_status = 'deploymentretire'
 
         deployment.save()
+        print(deployment)
 
 
 # Action model updates for v1.5 upgrade
