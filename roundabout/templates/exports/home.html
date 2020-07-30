@@ -29,7 +29,11 @@
   <h2>DB Bulk Exports</h2>
   <div class="row">
     <div class="col-md-5">
-      <a type=button class="btn btn-primary" href="{% url 'export:export_calibrations' %}">Export Calibrations</a>
+      <br><a type=button class="btn btn-primary" href="{% url 'export:calibrations' %}">Export Calibrations</a>
+      <br><br><a type=button class="btn btn-primary" href="{% url 'export:configurations' %}">Export Configs & Constants</a>
+      <br><br><a type=button class="btn btn-primary" href="{% url 'export:cruises' %}">Export Cruises</a>
+      <br><br><a type=button class="btn btn-primary" href="{% url 'export:vessels' %}">Export Vessels</a>
+      <br><br><a type=button class="btn btn-primary" href="{% url 'export:deployments' %}">Export Deployments</a>
     </div>
     <div class="col-md-7">
 

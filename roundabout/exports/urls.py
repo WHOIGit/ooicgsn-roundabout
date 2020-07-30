@@ -26,11 +26,10 @@ from . import views
 app_name = 'export'
 urlpatterns = [
     path('',view=views.HomeView.as_view(),name='dash'),
-    path('calibration_event/<int:pk>/', view=views.ExportCalibrationEvent.as_view(), name='export_calibration'),
-    path('calibration_events/', view=views.ExportCalibrationEvents.as_view(), name='export_calibrations'),
-    #path('configurations/', view=views.ExportConfigurations.as_view(), name='export_configurations'),
-    #path('constants/', view=views.ExportConstants.as_view(), name='export_constants'),
-    #path('cruises/', view=views.ExportCruises.as_view(), name='export_cruises'),
-    #path('vessels/', view=views.ExportVessels.as_view(), name='export_vessels'),
-    #path('deployments/', view=views.ExportDeployments.as_view(), name='export_deployments'),
+    path('calibration_event/<int:pk>/', view=views.ExportCalibrationEvent.as_view(), name='calibration'),
+    path('calibration_events/', view=views.ExportCalibrationEvents.as_view(), name='calibrations'),
+    path('configurations/', view=views.ExportConfigConst.as_view(), name='configurations'),
+    path('cruises/', view=views.ExportCruises.as_view(), name='cruises'),
+    path('vessels/', view=views.ExportVessels.as_view(), name='vessels'),
+    path('deployments/', view=views.ExportDeployments.as_view(), name='deployments'),
 ]
