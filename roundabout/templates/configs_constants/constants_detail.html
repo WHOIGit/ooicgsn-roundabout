@@ -20,10 +20,10 @@
 -->
 {% load common_tags %}
 
-<div class="tab-pane fade" id="conf-template" role="tabpanel" aria-labelledby="conf-template-tab">
+<div class="tab-pane fade" id="const-template" role="tabpanel" aria-labelledby="const-template-tab">
     <ul class="list-group">
         {% for event in inventory_item.config_events.all %}
-            {% if event.config_values.first.config_name.config_type == 'conf' %}
+            {% if event.config_values.first.config_name.config_type == 'cnst' %}
                 <li class="list-group-item">
                     <a  class="collapsed" 
                         data-toggle="collapse" 
@@ -61,7 +61,7 @@
                             <a  href="#"
                                 class="btn btn-primary btn-sm mr-2"
                                 role="button"
-                                data-detail-url="{% url 'configs_constants:config_event_value_update' event.id 2 %}"
+                                data-detail-url="{% url 'configs_constants:config_event_value_update' event.id 1 %}"
                                 data-node-id="{{ event.id }}"
                                 data-node-type="{{ event.get_object_type }}">
                                     Edit Values
@@ -120,29 +120,29 @@
                                                         <li class = 'list-group-item'>
                                                             <a  class="collapse show" 
                                                                 data-toggle="collapse" 
-                                                                href="#conf-{{ value_set.config_name }}{{ event.id }}" 
+                                                                href="#const-{{ value_set.config_name }}{{ event.id }}" 
                                                                 aria-expanded="false" 
-                                                                aria-controls="conf-{{ value_set.config_name }}{{ event.id }}"
+                                                                aria-controls="const-{{ value_set.config_name }}{{ event.id }}"
                                                             >
                                                                 <b>{{ value_set.config_name }}</b>
                                                             </a>
                                                             <a  data-toggle="collapse" 
                                                                 class="collapse show text-right" 
-                                                                href="#conf-{{ value_set.config_name }}{{ event.id }}" 
-                                                                aria-controls="conf-{{ value_set.config_name }}{{ event.id }}" 
+                                                                href="#const-{{ value_set.config_name }}{{ event.id }}" 
+                                                                aria-controls="const-{{ value_set.config_name }}{{ event.id }}" 
                                                                 aria-expanded="false" 
                                                                 role="button"
                                                             >
                                                                 <i class="fa" aria-hidden="true"></i>
                                                                 <span class="sr-only">Expand/Collapse Configuration {{ value_set.config_name }}</span>
                                                             </a>
-                                                            <div class="collapse show mt-1" id="conf-{{ value_set.config_name }}{{ event.id }}">
+                                                            <div class="collapse show mt-1" id="const-{{ value_set.config_name }}{{ event.id }}">
                                                                 <p class='font-weight-light'><b>Notes:</b> {{ value_set.notes }}</p>
-                                                                <table id = 'conf-val-table' class="table table-tight">
+                                                                <table id = 'const-val-table' class="table table-tight">
                                                                     <thead>
                                                                         <th>Value(s)</th>
                                                                     </thead>
-                                                                    <tbody class = 'conf-tbody' id = 'conf-val-tbody' style = 'display:block; overflow: auto; max-height: 200px'>
+                                                                    <tbody class = 'const-tbody' id = 'const-val-tbody' style = 'display:block; overflow: auto; max-height: 200px'>
                                                                         <tr style = 'display: block;'>
                                                                             <td style = 'white-space: nowrap'>{{ value_set.config_value }}</td>
                                                                         </tr>
@@ -219,16 +219,16 @@
         let user_id = '{{ user.id }}';
 
         if (inv_part_type == 'Instrument' && deployment != 'None' && deployment.length > 0) {
-            $('#add_conf_action').show();
-            $('#conf-template-tab').show().css('display', '');
-            $('#conf-template').show().css('display', '');
+            $('#add_const_action').show();
+            $('#const-template-tab').show().css('display', '');
+            $('#const-template').show().css('display', '');
         } else {
-            $('#add_conf_action').hide();
-            $('#conf-template-tab').hide();
-            $('#conf-template').hide();
+            $('#add_const_action').hide();
+            $('#const-template-tab').hide();
+            $('#const-template').hide();
         }
 
-        $('#conf-template').on('click', 'button[id^=expander]', function(e) {
+        $('#const-template').on('click', 'button[id^=expander]', function(e) {
             e.preventDefault();
             let url = $(this).attr('data-reviewer-url');
             let grandParent = $(this).parent().parent()

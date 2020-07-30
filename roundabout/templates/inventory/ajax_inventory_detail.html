@@ -352,7 +352,11 @@
           </li>
 
         <li class="nav-item">
-            <a class="nav-link" id="conf_const-template-tab" data-toggle="tab" href="#conf_const-template" role="tab" aria-controls="conf_const-template" aria-selected="false">Configuration / Constant History</a>
+            <a class="nav-link" id="const-template-tab" data-toggle="tab" href="#const-template" role="tab" aria-controls="const-template" aria-selected="false">Constant History</a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" id="conf-template-tab" data-toggle="tab" href="#conf-template" role="tab" aria-controls="conf-template" aria-selected="false">Configuration History</a>
         </li>
   
 
@@ -556,6 +560,7 @@
         {% include "calibrations/events_detail.html" with coeff_events=coeff_events user=user  %}
         {% include "configs_constants/const_default_detail.html" with inventory_item=inventory_item user=user  %}
         {% include "configs_constants/configs_detail.html" with inventory_item=inventory_item user=user  %}
+        {% include "configs_constants/constants_detail.html" with inventory_item=inventory_item user=user  %}
         
     </div>
 
