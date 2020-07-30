@@ -99,6 +99,7 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.id("id_detail")).sendKeys("Retiring for automated testing.");
         // 22 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click(); 
+	await new Promise(r => setTimeout(r, 2000));  //linux firefox
 
         // Close browser window
         driver.quit();

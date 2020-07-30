@@ -202,7 +202,7 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.id("id_part_number")).sendKeys("123-456-789");
         // 48 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 4000));
  //       await driver.wait(until.elementLocated(By.css("#div_id_part_number .ajax-error")));
         // 49 | verifyText | css=#div_id_part_number .ajax-error | Part with this Part number already exists.
         assert(await driver.findElement(By.css("#div_id_part_number .ajax-error")).getText() == "Part with this Part number already exists.");
@@ -320,6 +320,7 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.id("action")));
         await driver.findElement(By.id("action")).click();
         // 24 | click | linkText=Edit Part Template | 
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Edit Part Template")).click();
         // 25 | type | id=id_part_number | 789-456-123
         await driver.wait(until.elementLocated(By.id("id_part_number")));
@@ -403,7 +404,7 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.linkText("Edit Revision")).click();
         // 50 | type | id=id_created_at |  
         //await driver.wait(until.elementLocated(By.id("id_revision_code"))); //StaleElementReferenceError, use timeout
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.id("id_revision_code")).clear();
         await driver.findElement(By.id("id_revision_code")).sendKeys("   ");
         await driver.findElement(By.id("id_created_at")).click();

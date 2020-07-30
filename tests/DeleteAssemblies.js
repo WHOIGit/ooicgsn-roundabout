@@ -81,7 +81,7 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.linkText("123-001")).click();
  
         // 13 | click | linkText=Delete | 
-        await driver.wait(until.elementLocated(By.linkText("Delete")), 4000);  //linux firefox
+  	await new Promise(r => setTimeout(r, 4000));  //required for firefox
         await driver.findElement(By.linkText("Delete")).click();
         // 14 | click | css=.btn-danger | 
         await driver.wait(until.elementLocated(By.css(".btn-danger")));
@@ -99,7 +99,7 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.linkText("123-002")));
         await driver.findElement(By.linkText("123-002")).click();
         // 22 | click | linkText=Delete | 
-        await driver.wait(until.elementLocated(By.linkText("Delete")), 4000);  //linux firefox
+        await new Promise(r => setTimeout(r, 4000));  //required for firefox
         await driver.findElement(By.linkText("Delete")).click();
         // 23 | click | css=.btn-danger | 
         await driver.wait(until.elementLocated(By.css(".btn-danger")));
@@ -117,7 +117,7 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.linkText("123-003")));
         await driver.findElement(By.linkText("123-003")).click();
         // 28 | click | linkText=Delete | 
-        await driver.wait(until.elementLocated(By.linkText("Delete")), 4000);  //linux firefox
+        await new Promise(r => setTimeout(r, 4000));  //required for firefox
         await driver.findElement(By.linkText("Delete")).click();
         // 29 | click | css=.btn-danger | 
         await driver.wait(until.elementLocated(By.css(".btn-danger")));
@@ -134,7 +134,7 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.linkText("000-654-987")));
         await driver.findElement(By.linkText("000-654-987")).click();
         // 34 | click | linkText=Delete | 
-        await driver.wait(until.elementLocated(By.linkText("Delete")), 4000);  //linux firefox
+        await new Promise(r => setTimeout(r, 4000));  //required for firefox
         await driver.findElement(By.linkText("Delete")).click();
         // 35 | click | css=.btn-danger | 
         await driver.wait(until.elementLocated(By.css(".btn-danger")));

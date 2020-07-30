@@ -138,7 +138,7 @@ var myArgs = process.argv.slice(2);
             await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
         }
         // 14 | select | id=id_assembly | label=---------
-	await new Promise(r => setTimeout(r, 2000)); //linux firefox
+	await new Promise(r => setTimeout(r, 6000)); //linux firefox
         {
             const dropdown = await driver.findElement(By.id("id_assembly"))
             await dropdown.findElement(By.xpath("//option[. = '---------']")).click();

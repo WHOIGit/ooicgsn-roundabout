@@ -37,7 +37,7 @@ var myArgs = process.argv.slice(2);
     if (myArgs[0] == 'chrome') {        
         driver = new Builder().forBrowser('chrome').withCapabilities(chromeCapabilities).build();
     }
-    else if (myArgs[0] == 'firefox') {       
+    else if (myArgs[0] == 'firefox') {  
         driver = new Builder().forBrowser('firefox').setFirefoxOptions(firefoxOptions).build();
     } 
     else {
@@ -120,6 +120,7 @@ var myArgs = process.argv.slice(2);
 
         // Add child location with name in parent group
         // 26 | click | linkText=Add Location |
+	await new Promise(r => setTimeout(r, 2000));
         await driver.wait(until.elementLocated(By.linkText("Add Location")));
         await driver.findElement(By.linkText("Add Location")).click();
         // 27 | type | id=id_name | Test Child
@@ -139,7 +140,7 @@ var myArgs = process.argv.slice(2);
 
         // Rename location with unique name
         // Timeout needed here to avoid staleelementreferenceerror (ajax) when not running in debugger
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.linkText("Test")).click();
         // 6 | click | linkText=Edit Location | 
         await driver.wait(until.elementLocated(By.linkText("Edit Location")));

@@ -136,6 +136,7 @@ var myArgs = process.argv.slice(2);
         // Add template with null name
         // 29 | click | linkText=Create New Assembly |
         await driver.wait(until.elementLocated(By.linkText("Create New Assembly")));
+	await new Promise(r => setTimeout(r, 2000));  //linux firefox
         await driver.findElement(By.linkText("Create New Assembly")).click();
         await driver.wait(until.elementLocated(By.id("id_assembly_type")));
         // 30 | select | id=id_assembly_type | label=Glider
@@ -233,7 +234,7 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.linkText("Assemblies")));
         await driver.findElement(By.linkText("Assemblies")).click();
         // 5 | click | linkText=Create New Assembly | 
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 4000));
         //await driver.wait(until.elementLocated(By.linkText("Create New Assembly"))); - firefox doesn't work
         await driver.findElement(By.linkText("Create New Assembly")).click();
         // 6 | type | id=id_name | Test Glider 1
@@ -334,7 +335,7 @@ var myArgs = process.argv.slice(2);
         }
         // 36 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 4000));
 
         // Expand Revision B and 6 Wire and Shield nodes
         var j = 1;
@@ -344,13 +345,15 @@ var myArgs = process.argv.slice(2);
             }
             j++;
         }
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/ul/li/i")).click();
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/ul/li/ul/li/i")).click();
 
         // Verify Top Level Part and Sub Assembly created in tree
+	await new Promise(r => setTimeout(r, 4000));  //firefox linux
         await driver.findElement(By.linkText("6 Wire and Shield"));
+	await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.linkText("2 SLOT BACKPLANE BOARD ASSEMBLY"));
 
         // Close browser window

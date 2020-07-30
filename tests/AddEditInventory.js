@@ -148,7 +148,7 @@ var myArgs = process.argv.slice(2);
         // 23 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 4000));  //linux docker
         assert(await driver.findElement(By.css("#div_id_serial_number .ajax-error")).getText() == "Inventory with this Serial number already exists.");
 
     // EDIT INVENTORY TEST
@@ -230,6 +230,7 @@ var myArgs = process.argv.slice(2);
 
         // Update location with null location
         // 19 | click | css=.btn-outline-primary:nth-child(1) | 
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click(); // search button
         // 20 | click | id=field-select_c_r0 | 
         await driver.wait(until.elementLocated(By.id("field-select_c_r0")));
