@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -155,7 +155,7 @@
 
             {% if not user|has_group:"inventory only" %}
                 <a  id="add_coefficient_action"
-                    class="dropdown-item" 
+                    class="dropdown-item"
                     href="#"
                     data-detail-url="{% url 'calibrations:event_valueset_add' inventory_item.id %}"
                     data-node-id="{{ inventory_item.id }}"
@@ -164,7 +164,7 @@
 
                 {% if not inventory_item.constant_default_events.exists %}
                     <a  id="add_constdefault_action"
-                        class="dropdown-item" 
+                        class="dropdown-item"
                         href="#"
                         data-detail-url="{% url 'configs_constants:event_constdefault_add' inventory_item.id %}"
                         data-node-id="{{ inventory_item.id }}"
@@ -173,7 +173,7 @@
                 {% endif %}
 
                 <a  id="add_const_action"
-                    class="dropdown-item" 
+                    class="dropdown-item"
                     href="#"
                     data-detail-url="{% url 'configs_constants:config_event_value_add' inventory_item.id 1 %}"
                     data-node-id="{{ inventory_item.id }}"
@@ -181,7 +181,7 @@
                     data-node-type="config_event}">Add Constants</a>
 
                 <a  id="add_conf_action"
-                    class="dropdown-item" 
+                    class="dropdown-item"
                     href="#"
                     data-detail-url="{% url 'configs_constants:config_event_value_add' inventory_item.id 2 %}"
                     data-node-id="{{ inventory_item.id }}"
@@ -342,7 +342,7 @@
           <a class="nav-link" id="part-template-tab" data-toggle="tab" href="#part-template" role="tab" aria-controls="part-template" aria-selected="false">Part Specs</a>
         </li>
 
-       
+
         <li class="nav-item">
           <a class="nav-link" id="calibration-template-tab" data-toggle="tab" href="#calibration-template" role="tab" aria-controls="calibration-template" aria-selected="false">Calibration Coefficient History</a>
         </li>
@@ -354,7 +354,7 @@
         <li class="nav-item">
             <a class="nav-link" id="conf_const-template-tab" data-toggle="tab" href="#conf_const-template" role="tab" aria-controls="conf_const-template" aria-selected="false">Configuration / Constant History</a>
         </li>
-  
+
 
     </ul>
 
@@ -526,7 +526,6 @@
                 <li class="list-group-item">Part Type: {{ inventory_item.revision.part.part_type }}</li>
                 <li class="list-group-item">Unit Cost: ${{ inventory_item.revision.unit_cost|intcomma }}</li>
                 <li class="list-group-item">Refurbishment Cost: ${{ inventory_item.revision.refurbishment_cost|intcomma }}</li>
-                <li class="list-group-item">Current Inventory: {{ inventory_item.revision.part.get_part_inventory_count }}</li>
                 {% if inventory_item.part.note %}
                     <li class="list-group-item">Part Template Notes: {{ inventory_item.revision.note }}</li>
                 {% endif %}
@@ -552,11 +551,60 @@
 
             </ul>
 
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    <span class="badge badge-primary badge-pill float-right">{{ inventory_item.part.get_part_inventory_count }}</span>
+
+                    <div class="">
+                        <a class="collapsed" data-toggle="collapse" href="#inv-count" aria-expanded="false" aria-controls="inv-count">
+                            Current Inventory Count
+                        </a>
+                        <a data-toggle="collapse" class="collapsed text-right" href="#inv-count" aria-controls="inv-locations" aria-expanded="false" role="button">
+                            <i class="fa" aria-hidden="true"></i>
+                            <span class="sr-only">Expand/Collapse Current Inventory Locations</span>
+                        </a>
+                    </div>
+
+                    <div class="collapse mt-3" id="inv-count">
+                        <ul class="list-group">
+                            {% for item in inventory_location_data %}
+                                <li class="list-group-item">
+                                    <span class="badge badge-primary badge-pill float-right">{{ item.inventory_items|length }}</span>
+                                    <div class="">
+                                        <a class="collapsed" data-toggle="collapse" href="#inv-locations-{{ item.location_root.id }}" aria-expanded="false" aria-controls="inv-locations-{{ item.location_root.id }}">
+                                            {{ item.location_root }}
+                                        </a>
+                                        <a data-toggle="collapse" class="collapsed text-right" href="#inv-locations-{{ item.location_root.id }}" aria-controls="inv-locations-{{ item.location_root.id }}" aria-expanded="false" role="button">
+                                            <i class="fa" aria-hidden="true"></i>
+                                            <span class="sr-only">Expand/Collapse Current Inventory Locations</span>
+                                        </a>
+                                    </div>
+
+
+                                    <div class="collapse mt-3" id="inv-locations-{{ item.location_root.id }}">
+                                        <ul>
+                                            {% for inventory in item.inventory_items %}
+                                                <li><a href="{% url 'inventory:inventory_detail' inventory.id %}">{{ inventory.serial_number}}</a> - {{inventory.location }}</li>
+                                            {% endfor %}
+                                        </ul>
+
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+
+                    </div>
+                </li>
+
+            </ul>
+
+
+
         </div>
         {% include "calibrations/events_detail.html" with coeff_events=coeff_events user=user  %}
         {% include "configs_constants/const_default_detail.html" with inventory_item=inventory_item user=user  %}
         {% include "configs_constants/configs_detail.html" with inventory_item=inventory_item user=user  %}
-        
+
     </div>
 
 
@@ -566,7 +614,7 @@
             <a href="#"
                data-detail-url="{% url 'inventory:ajax_inventory_action' 'movetotrash' inventory_item.id %}"
                data-node-id="{{ inventory_item.id }}"
-               role="button" class="btn btn-danger parts-delete">Move to Trash</a>
+               role="button" class="btn btn-sm btn-danger parts-delete">Move to Trash</a>
         {% endif %}
     </div>
 
@@ -615,7 +663,7 @@
             });
 
         });
-        
+
     });
 </script>
 {% endblock javascript %}
