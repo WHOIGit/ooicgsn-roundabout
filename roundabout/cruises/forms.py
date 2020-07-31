@@ -60,11 +60,10 @@ class CruiseForm(forms.ModelForm):
                 "showTodayButton": False,
             }
         ),
-        initial=timezone.now,
+        #initial=timezone.now,
         help_text='Set all date/times to UTC time zone.',
     )
 
     class Meta:
         model = Cruise
         fields = '__all__'
-        

@@ -51,14 +51,58 @@
     {% endif %}
     <p>Part Type: {{ part_template.part_type }}</p>
 
-    <p>Current Inventory: {{ part_template.get_part_inventory_count }}</p>
+    <ul class="list-group">
+        <li class="list-group-item">
+            <span class="badge badge-primary badge-pill float-right">{{ part_template.get_part_inventory_count }}</span>
 
+            <div class="">
+                <a class="collapsed" data-toggle="collapse" href="#inv-count" aria-expanded="false" aria-controls="inv-count">
+                    Current Inventory Count
+                </a>
+                <a data-toggle="collapse" class="collapsed text-right" href="#inv-count" aria-controls="inv-locations" aria-expanded="false" role="button">
+                    <i class="fa" aria-hidden="true"></i>
+                    <span class="sr-only">Expand/Collapse Current Inventory Locations</span>
+                </a>
+            </div>
+
+            <div class="collapse mt-3" id="inv-count">
+                <ul class="list-group">
+                    {% for item in inventory_location_data %}
+                        <li class="list-group-item">
+                            <span class="badge badge-primary badge-pill float-right">{{ item.inventory_items|length }}</span>
+                            <div class="">
+                                <a class="collapsed" data-toggle="collapse" href="#inv-locations-{{ item.location_root.id }}" aria-expanded="false" aria-controls="inv-locations-{{ item.location_root.id }}">
+                                    {{ item.location_root }}
+                                </a>
+                                <a data-toggle="collapse" class="collapsed text-right" href="#inv-locations-{{ item.location_root.id }}" aria-controls="inv-locations-{{ item.location_root.id }}" aria-expanded="false" role="button">
+                                    <i class="fa" aria-hidden="true"></i>
+                                    <span class="sr-only">Expand/Collapse Current Inventory Locations</span>
+                                </a>
+                            </div>
+
+
+                            <div class="collapse mt-3" id="inv-locations-{{ item.location_root.id }}">
+                                <ul>
+                                    {% for inventory in item.inventory_items %}
+                                        <li><a href="{% url 'inventory:inventory_detail' inventory.id %}">{{ inventory.serial_number}}</a> - {{inventory.location }}</li>
+                                    {% endfor %}
+                                </ul>
+
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+
+            </div>
+        </li>
+
+    </ul>
+    <hr>
     <h4>Revisions</h4>
 
     <hr>
     <ul class="list-group">
     {% for revision in part_template.revisions.all %}
-
             <li class="list-group-item">
                 <a class="collapsed" data-toggle="collapse" href="#revision-{{ revision.id }}" aria-expanded="false" aria-controls="revision-{{ revision.id }}">
                     Revision: {{ revision.revision_code }}
@@ -183,7 +227,7 @@
                         {% endfor %}
 
                     <hr>
-                    
+
 
                     <div class="ajax-detail-link">
 
@@ -216,7 +260,7 @@
                 data-detail-url="{% url 'calibrations:part_calname_add' part_template.id %}"
                 data-node-id="{{ part_template.id }}"
                 data-node-type="detail"
-            >   
+            >
                 {% if part_template.coefficient_names.exists %}
                     Update Calibration(s)
                 {% else %}
@@ -240,7 +284,7 @@
                     </tr>
                 {% endfor %}
             </tbody>
-        </table> 
+        </table>
     </div>
 
     <div id = 'configuration_constant-section'>
@@ -249,7 +293,7 @@
                 data-detail-url="{% url 'configs_constants:part_confname_add' part_template.id %}"
                 data-node-id="{{ part_template.id }}"
                 data-node-type="detail"
-            >   
+            >
                 {% if part_template.config_names.exists %}
                     Update Configs/Constants
                 {% else %}
@@ -271,7 +315,7 @@
                     </tr>
                 {% endfor %}
             </tbody>
-        </table> 
+        </table>
     </div>
 
 

@@ -71,5 +71,27 @@
 </div>
 
 {% block javascript %}
+<script type="text/javascript">
+    //$('#id_cruise_stop_date').data("DateTimePicker").useCurrent(false);
+
+    $('#id_cruise_start_date').datetimepicker({
+        format: 'MM/DD/YYYY HH:mm',
+        showClose: true,
+        showClear: true
+    });
+    $('#id_cruise_stop_date').datetimepicker({
+        format: 'MM/DD/YYYY HH:mm',
+        useCurrent: false,
+        showClose: true,
+        showClear: true
+    });
+    $("#id_cruise_start_date").on("dp.change", function (e) {
+        $('#id_cruise_stop_date').data("DateTimePicker").minDate(e.date);
+    });
+    $("#id_cruise_stop_date").on("dp.change", function (e) {
+        $('#id_cruise_start_date').data("DateTimePicker").maxDate(e.date);
+     });
+</script>
+
 
 {% endblock javascript %}

@@ -78,11 +78,6 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         build.location = self.object.location
         build.is_deployed = True
         build.save()
-
-        # Get the date for the Action Record from the dae field
-        # Create Deployment Action record for deployment
-        #_create_action_history(self.object, action_type, self.request.user)
-
         # Create Build Action record for deployment
         _create_action_history(build, action_type, self.request.user)
 
@@ -91,7 +86,6 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         for item in inventory_items:
             item.location = build.location
             item.save()
-            #item.create_action_record(self.request.user, 'startdeployment', '', None, None, 'build_deployment')
             # Call the function to create an Action history chain for this event
             _create_action_history(item, action_type, self.request.user, build)
 

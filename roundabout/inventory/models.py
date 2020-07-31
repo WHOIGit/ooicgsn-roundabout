@@ -144,95 +144,6 @@ class Inventory(MPTTModel):
         except:
             return None
 
-    # method to create new Action model records to track Inventory/User
-    # also creates/updates InventoryDeployment objects to track Deployment histories
-    def create_action_record(self, user, action_type, detail='', created_at=None, cruise=None, deployment_type=''):
-        build = self.build
-        deployment = None
-        inventory_deployment = None
-        if build:
-            deployment = self.build.get_latest_deployment()
-        if not created_at:
-            created_at = timezone.now()
-
-        if action_type == Action.ADD:
-            detail = 'Item first added to Inventory. %s' % (detail)
-        elif action_type == Action.LOCATIONCHANGE or action_type == Action.MOVETOTRASH:
-            detail = 'Moved to %s from %s. %s' % (self.location, self.get_latest_action().location, detail)
-        elif action_type == Action.SUBCHANGE:
-            if not detail:
-                if self.parent:
-                    detail = 'Added to %s.' % (self.parent)
-                else:
-                    detail = 'Removed from %s.' % (self.get_latest_parent())
-        elif action_type == Action.ADDTOBUILD:
-            detail = 'Moved to %s.' % (build)
-        elif action_type == Action.REMOVEFROMBUILD:
-            build = self.get_latest_build()
-            detail = 'Removed from %s. %s' % (build, detail)
-        elif action_type == Action.ASSIGNDEST:
-            detail = 'Destination assigned - %s.' % (self.assembly_part.assembly_revision)
-        elif action_type == Action.REMOVEDEST:
-            detail = 'Destination Assignment removed. %s' % (detail)
-        elif action_type == Action.TEST:
-            detail = '%s: %s. %s' % (self.get_test_type_display(), self.get_test_result_display(), detail)
-        elif action_type == Action.STARTDEPLOYMENT:
-            detail = '%s %s started' % (labels['label_deployments_app_singular'], deployment)
-            # Create InventoryDeployment record
-            inventory_deployment = InventoryDeployment.objects.create(
-                deployment=build.current_deployment(),
-                inventory=self,
-            )
-        elif action_type == Action.DEPLOYMENTBURNIN:
-            detail = '%s %s burn in' % (labels['label_deployments_app_singular'], deployment)
-            # Update InventoryDeployment record
-            inventory_deployment = self.inventory_deployments.get_active_deployment()
-            inventory_deployment.deployment_burnin_date = created_at
-            inventory_deployment.save()
-        elif action_type == Action.DEPLOYMENTTOFIELD:
-            detail = 'Deployed to field on %s.' % (deployment)
-            if cruise:
-                detail = '%s Cruise: %s' % (detail, cruise)
-            # Update InventoryDeployment record
-            inventory_deployment = self.inventory_deployments.get_active_deployment()
-            inventory_deployment.deployment_to_field_date = created_at
-            inventory_deployment.cruise_deployed = cruise
-            inventory_deployment.save()
-        elif action_type == Action.DEPLOYMENTRECOVER:
-            build = self.get_latest_build()
-            deployment = self.get_latest_deployment()
-            detail = 'Recovered from %s. %s' % (deployment, detail)
-            if cruise:
-                detail = '%s Cruise: %s' % (detail, cruise)
-            # update InventoryDeployment record
-            inventory_deployment = self.inventory_deployments.get_active_deployment()
-            inventory_deployment.deployment_recovery_date = created_at
-            inventory_deployment.cruise_recovered = cruise
-            inventory_deployment.save()
-        elif action_type == Action.DEPLOYMENTRETIRE:
-            build = self.get_latest_build()
-            deployment = self.get_latest_deployment()
-            detail = '%s %s ended for this item.' % (labels['label_deployments_app_singular'], deployment)
-            # update InventoryDeployment record
-            inventory_deployment = self.inventory_deployments.get_active_deployment()
-            inventory_deployment.deployment_retire_date = created_at
-            inventory_deployment.save()
-
-        action_record = Action.objects.create(action_type=action_type,
-                                              object_type=self.get_object_type(),
-                                              detail=detail,
-                                              location=self.location,
-                                              parent=self.parent,
-                                              build=build,
-                                              deployment=deployment,
-                                              inventory_deployment=inventory_deployment,
-                                              deployment_type=deployment_type,
-                                              cruise=cruise,
-                                              user=user,
-                                              inventory=self,
-                                              created_at=created_at)
-        return action_record
-
     # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
     def update_time_at_sea(self):
         try:
@@ -415,24 +326,6 @@ class Deployment(DeploymentBase):
             return '%s - %s' % (self.deployment_number, self.deployed_location)
         return '%s - %s' % (self.deployment_number, self.location.name)
 
-    def get_deploytosea_details(self):
-        deploytosea_details = None
-        # get the latest 'Deploy' action record to initial
-        deploy_record = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploymenttofield').first()
-        # get the latest 'Detail' action record to find last lat/long/depth data
-        action_record = DeploymentAction.objects.filter(deployment=self).filter(action_type='deploymentdetails').first()
-
-        if action_record:
-            # create dictionary of location details
-            deploytosea_details = {
-                'latitude':  action_record.latitude,
-                'longitude': action_record.longitude,
-                'depth': action_record.depth,
-                'deploy_date': deploy_record.created_at,
-            }
-
-        return deploytosea_details
-
 
 class InventoryDeployment(DeploymentBase):
     deployment = models.ForeignKey(Deployment, related_name='inventory_deployments',
@@ -559,11 +452,17 @@ class Action(models.Model):
     INVENTORY = 'inventory'
     DEPLOYMENT = 'deployment'
     CALEVENT = 'calibrationevent'
+    CONSTDEFEVENT = 'constdefaultevent'
+    CONFEVENT = 'configevent'
+    CONFDEFEVENT = 'configdefaultevent'
     OBJECT_TYPES = (
         (BUILD, 'Build'),
         (INVENTORY, 'Inventory'),
         (DEPLOYMENT, 'Deployment'),
         (CALEVENT, 'Calibration Event'),
+        (CONSTDEFEVENT, 'Constant Default Event'),
+        (CONFEVENT, 'Configuration/Constant Event'),
+        (CONFDEFEVENT, 'Configuration Default Event'),
     )
     # deployment_type choices
     BUILD_DEPLOYMENT = 'build_deployment'
@@ -576,6 +475,12 @@ class Action(models.Model):
     inventory = models.ForeignKey(Inventory, related_name='actions',
                                   on_delete=models.CASCADE, null=True, blank=True)
     calibration_event = models.ForeignKey('calibrations.CalibrationEvent', related_name='actions',
+                                  on_delete=models.CASCADE, null=True, blank=True)
+    const_default_event = models.ForeignKey('configs_constants.ConstDefaultEvent', related_name='actions',
+                                  on_delete=models.CASCADE, null=True, blank=True)
+    config_event = models.ForeignKey('configs_constants.ConfigEvent', related_name='actions',
+                                  on_delete=models.CASCADE, null=True, blank=True)
+    config_default_event = models.ForeignKey('configs_constants.ConfigDefaultEvent', related_name='actions',
                                   on_delete=models.CASCADE, null=True, blank=True)
     action_type = models.CharField(max_length=20, choices=ACTION_TYPES, db_index=True)
     object_type =  models.CharField(max_length=20, choices=OBJECT_TYPES, null=False, blank=True, db_index=True)

@@ -66,8 +66,12 @@ class Part(models.Model):
     def get_object_type(self):
         return 'parts'
 
+    # get Inventory queryset of all items not in the Trash
+    def get_inventory_active(self):
+        return self.inventory.exclude(location__root_type='Trash')
+
     def get_part_inventory_count(self):
-        return self.inventory.count()
+        return self.inventory.exclude(location__root_type='Trash').count()
 
     def get_absolute_url(self):
         return reverse('parts:ajax_parts_detail', kwargs={'pk': self.pk, })

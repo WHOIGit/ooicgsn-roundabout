@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or
+# This file is part of the Roundabout Database project ("RDB" or 
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -153,22 +153,41 @@
                 data-location-id="{{ inventory_item.location.id}}"
                 data-node-type="{{ node_type }}">Edit Inventory Details</a>
 
+            {% if not user|has_group:"inventory only" %}
+                <a  id="add_coefficient_action"
+                    class="dropdown-item" 
+                    href="#"
+                    data-detail-url="{% url 'calibrations:event_valueset_add' inventory_item.id %}"
+                    data-node-id="{{ inventory_item.id }}"
+                    data-location-id="{{ inventory_item.location.id}}"
+                    data-node-type="calibration_event">Add Calibration Coefficients</a>
 
-            <a  id="add_coefficient_action"
-                class="dropdown-item" 
-                href="#"
-                data-detail-url="{% url 'calibrations:event_valueset_add' inventory_item.id %}"
-                data-node-id="{{ inventory_item.id }}"
-                data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="calibration_event">Add Calibration Coefficients</a>
+                {% if not inventory_item.constant_default_events.exists %}
+                    <a  id="add_constdefault_action"
+                        class="dropdown-item" 
+                        href="#"
+                        data-detail-url="{% url 'configs_constants:event_constdefault_add' inventory_item.id %}"
+                        data-node-id="{{ inventory_item.id }}"
+                        data-location-id="{{ inventory_item.location.id}}"
+                        data-node-type="constant_default}">Add Constant Defaults</a>
+                {% endif %}
 
-            <a  id="add_conf_const_action"
-                class="dropdown-item" 
-                href="#"
-                data-detail-url="{% url 'configs_constants:config_event_value_add' inventory_item.id %}"
-                data-node-id="{{ inventory_item.id }}"
-                data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="config_event}">Add Configuration/Constant Event</a>
+                <a  id="add_const_action"
+                    class="dropdown-item" 
+                    href="#"
+                    data-detail-url="{% url 'configs_constants:config_event_value_add' inventory_item.id 1 %}"
+                    data-node-id="{{ inventory_item.id }}"
+                    data-location-id="{{ inventory_item.location.id}}"
+                    data-node-type="config_event}">Add Constants</a>
+
+                <a  id="add_conf_action"
+                    class="dropdown-item" 
+                    href="#"
+                    data-detail-url="{% url 'configs_constants:config_event_value_add' inventory_item.id 2 %}"
+                    data-node-id="{{ inventory_item.id }}"
+                    data-location-id="{{ inventory_item.location.id}}"
+                    data-node-type="config_event}">Add Configurations</a>
+            {% endif %}
 
 
       </div>
@@ -327,6 +346,10 @@
         <li class="nav-item">
           <a class="nav-link" id="calibration-template-tab" data-toggle="tab" href="#calibration-template" role="tab" aria-controls="calibration-template" aria-selected="false">Calibration Coefficient History</a>
         </li>
+
+        <li class="nav-item">
+            <a class="nav-link" id="const_default-template-tab" data-toggle="tab" href="#const_default-template" role="tab" aria-controls="const_default-template" aria-selected="false">Constant Defaults</a>
+          </li>
 
         <li class="nav-item">
             <a class="nav-link" id="conf_const-template-tab" data-toggle="tab" href="#conf_const-template" role="tab" aria-controls="conf_const-template" aria-selected="false">Configuration / Constant History</a>
@@ -531,6 +554,7 @@
 
         </div>
         {% include "calibrations/events_detail.html" with coeff_events=coeff_events user=user  %}
+        {% include "configs_constants/const_default_detail.html" with inventory_item=inventory_item user=user  %}
         {% include "configs_constants/configs_detail.html" with inventory_item=inventory_item user=user  %}
         
     </div>
