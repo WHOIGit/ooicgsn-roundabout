@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -21,9 +21,22 @@
 
 from rest_framework import serializers
 
-from ..models import Inventory
+from ..models import Inventory, Action
 from roundabout.locations.api.serializers import LocationSerializer
 from roundabout.parts.api.serializers import PartSerializer
+
+
+class ActionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Action
+        fields = '__all__'
+
+    @staticmethod
+    def setup_eager_loading(queryset):
+        """ Perform necessary prefetching of data. """
+        queryset = queryset.select_related('location', 'inventory', 'build')
+        #queryset = queryset.prefetch_related('fieldvalues')
+        return queryset
 
 
 class InventorySerializer(serializers.ModelSerializer):
@@ -54,7 +67,5 @@ class InventorySerializer(serializers.ModelSerializer):
     def setup_eager_loading(queryset):
         """ Perform necessary prefetching of data. """
         queryset = queryset.select_related('location').select_related('part')
-
         queryset = queryset.prefetch_related('fieldvalues')
-
         return queryset

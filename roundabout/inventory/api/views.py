@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -20,8 +20,24 @@
 """
 
 from rest_framework import generics, viewsets, filters
-from ..models import Inventory
-from .serializers import InventorySerializer
+from ..models import Inventory, Action
+from .serializers import InventorySerializer, ActionSerializer
+
+
+class ActionViewSet(viewsets.ModelViewSet):
+    serializer_class = ActionSerializer
+    search_fields = ['inventory']
+    filter_backends = (filters.SearchFilter,)
+
+    def get_queryset(self):
+        queryset = Action.objects.filter(object_type='build')
+        # Set up eager loading to avoid N+1 selects
+        queryset = self.get_serializer_class().setup_eager_loading(queryset)
+        return queryset
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        print(instance)
 
 
 class InventoryViewSet(viewsets.ModelViewSet):

@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -21,11 +21,12 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter, SimpleRouter
-from .views import InventoryViewSet
+from .views import InventoryViewSet, ActionViewSet
 
 # Create a router and register our viewsets with it.
 router = SimpleRouter()
 router.register(r'inventory', InventoryViewSet, 'inventory' )
+router.register(r'actions', ActionViewSet, 'actions' )
 
 urlpatterns = [
     path('', include(router.urls) ),

@@ -30,7 +30,10 @@ from roundabout.users.models import User
 from roundabout.cruises.models import Cruise
 
 # AdminTool models
-
+"""
+Model to track users and registrations of "in the field" RDB instances.
+These are instances that run strictly locally without internet access necessary.
+"""
 class FieldInstance(models.Model):
     name = models.CharField(max_length=255, null=False, blank=True, db_index=True)
     start_date = models.DateTimeField(default=timezone.now, null=True, blank=True)
