@@ -1601,11 +1601,22 @@ class InventoryDetailView(LoginRequiredMixin, DetailView):
         else:
             custom_fields = None
 
+        # Get Inventory items by Root Locations
+        inventory_location_data = []
+        root_locations = Location.objects.root_nodes().exclude(root_type='Trash')
+        for root in root_locations:
+            locations_list = root.get_descendants(include_self=True).values_list('id', flat=True)
+            items = self.object.part.inventory.filter(location__in=locations_list)
+            if items:
+                data = {'location_root': root, 'inventory_items': items, }
+                inventory_location_data.append(data)
+
         context.update({
             'part_types': part_types,
             'printers': printers,
             'custom_fields': custom_fields,
             'node_type': node_type,
+            'inventory_location_data': inventory_location_data,
         })
         return context
 
