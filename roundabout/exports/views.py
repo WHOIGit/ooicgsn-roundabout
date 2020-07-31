@@ -129,22 +129,18 @@ class ExportCalibrationEvents(ZipExport):
     fname = 'CalibrationEvents.zip'
 
     def build_zip(self, zf, objs):
+        objs = objs.prefetch_related('inventory','inventory__fieldvalues','inventory__fieldvalues__field')
         for cal in objs:
-            # CGINS- is this a valid prefix all the time? should it be a UDF?
-            fname_prefix_qs = cal.inventory.fieldvalues.filter(field__field_name__iexact='Calibration Filename Prefix', is_current=True)
-            if fname_prefix_qs.exists():
-                fname_prefix = fname_prefix_qs[0].field_value
+
+            fname = '{}__{}.csv'.format(cal.inventory.serial_number, cal.calibration_date.strftime('%Y%m%d'))
+
+            # GitHub CSV Serial Number
+            serial_label_qs = cal.inventory.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number', is_current=True)
+            if serial_label_qs.exists():
+                serial_label = serial_label_qs[0].field_value
             else:
-                fname_prefix = 'CGINS-'
-
-            fname = '{}{}-{:05}__{}.csv'.format(fname_prefix, cal.inventory.part.name.replace('-', ''),
-                    int(cal.inventory.old_serial_number), cal.calibration_date.strftime('%Y%m%d'))
-
-            serial_label = cal.inventory.old_serial_number or cal.inventory.serial_number
-            serial_prefix_qs = cal.inventory.fieldvalues.filter(field__field_name__iexact='Calibration Serial Prefix', is_current=True)
-            if serial_prefix_qs.exists():
-                serial_label = serial_prefix_qs[0].field_value+serial_label
-            elif 'OPTAA' in cal.inventory.part.name:
+                serial_label = cal.inventory.old_serial_number or cal.inventory.serial_number
+            if 'OPTAA' in cal.inventory.part.name:
                 serial_label = 'ACS-'+serial_label
 
             aux_files = []
@@ -182,10 +178,11 @@ class ExportConfigConst(ZipExport):
 class ExportCruises(CSVExport):
     model = Cruise
     fname = 'CruiseInformation.csv'
-    ordering = ['-cruise_start_date']
+    ordering = ['cruise_start_date']
     #see https://github.com/oceanobservatories/asset-management/tree/master/cruise
 
     def build_csv(self, csv, objs):
+        objs = objs.prefetch_related('vessel')
         header_att = [('CUID',                  'CUID'),
                       ('ShipName',              'friendly_name'),
                       ('cruiseStartDateTime',   'cruise_start_date'),
@@ -197,11 +194,13 @@ class ExportCruises(CSVExport):
         for cruise in objs:
             row = list()
             row.append(cruise.CUID)
-            row.append(cruise.friendly_name)
-            row.append(cruise.cruise_start_date.isoformat())
-            row.append(cruise.cruise_stop_date.isoformat())
-            notes = '{} {}'.format(cruise.location, cruise.notes).strip()
+            row.append(getattr(cruise.vessel,'vessel_name',''))
+            row.append(cruise.cruise_start_date.replace(tzinfo=None).isoformat())
+            row.append(cruise.cruise_stop_date.replace(tzinfo=None).isoformat())
+            #location = cruise.location or ''
+            notes = cruise.notes or ''
             row.append(row.append(notes))
+            csv.writerow(row)
 
 
 class ExportVessels(CSVExport):
@@ -232,7 +231,14 @@ class ExportVessels(CSVExport):
         for vessel in objs:
             row = []
             for att in attribs:
-                row.append(str(getattr(vessel,att,'')))
+                val = getattr(vessel,att,None)
+                if val is None:
+                    val = ''
+                elif isinstance(val,bool):
+                    val = 'Y' if val else 'N'
+                    if att=='active' and val=='N': val = '(N)'
+                row.append(str(val))
+            csv.writerow(row)
 
 
 class ExportDeployments(ZipExport): # ZipExportCSV

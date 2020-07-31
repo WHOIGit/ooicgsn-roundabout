@@ -374,7 +374,7 @@ class InventoryTableView(GenericSearchTableView):
 
                         dict(value=None, text="--Calibrations--", disabled=True),
                         dict(value="calibration_events__latest__calibration_date", text="Latest Calibration Event", legal_lookup='DATE_LOOKUP',
-                             col_args = dict(format='Y-m-d', linkify=lambda record,value: reverse(viewname="exports:export_calibration",
+                             col_args = dict(format='Y-m-d', linkify=lambda record,value: reverse(viewname="export:calibration",
                                                                 args=[record.calibration_events.latest().pk]) if value else None)),
                         dict(value="calibration_events__latest__user_approver", text="Latest Calibration Event: Approver", legal_lookup='STR_LOOKUP'),
                         dict(value="calibration_events__latest__approved", text="Latest Calibration Event: Approved", legal_lookup='STR_LOOKUP'),
