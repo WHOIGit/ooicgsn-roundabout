@@ -3,17 +3,6 @@
 from django.apps import apps
 from django.db import migrations
 
-Action = apps.get_model('inventory', 'Action')
-
-# Update Inventory Actions to new "ADD" type
-def update_inv_actions(apps, schema_editor):
-    actions = Action.objects.only('action_type')
-
-    for action in actions:
-        if action.action_type == 'invadd':
-            action.action_type = 'add'
-        action.save()
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -21,5 +10,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(update_inv_actions),
+
     ]
