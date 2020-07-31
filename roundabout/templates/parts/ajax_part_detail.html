@@ -50,38 +50,52 @@
         <p>Friendly Name: {{ part_template.friendly_name }}</p>
     {% endif %}
     <p>Part Type: {{ part_template.part_type }}</p>
-    <hr>
-    <h4>Current Inventory by Location</h4>
-    <hr>
+
     <ul class="list-group">
-        {% for item in inventory_location_data %}
-            <li class="list-group-item">
-                <span class="badge badge-primary badge-pill float-right">{{ item.inventory_items|length }}</span>
-                <div class="">
-                    <a class="collapsed" data-toggle="collapse" href="#inv-locations-{{ item.location_root.id }}" aria-expanded="false" aria-controls="inv-locations-{{ item.location_root.id }}">
-                        {{ item.location_root }}
-                    </a>
-                    <a data-toggle="collapse" class="collapsed text-right" href="#inv-locations-{{ item.location_root.id }}" aria-controls="inv-locations-{{ item.location_root.id }}" aria-expanded="false" role="button">
-                        <i class="fa" aria-hidden="true"></i>
-                        <span class="sr-only">Expand/Collapse Current Inventory Locations</span>
-                    </a>
-                </div>
-
-
-                <div class="collapse mt-3" id="inv-locations-{{ item.location_root.id }}">
-                    <ul>
-                        {% for inventory in item.inventory_items %}
-                            <li><a href="{% url 'inventory:inventory_detail' inventory.id %}">{{ inventory.serial_number}}</a> - {{inventory.location }}</li>
-                        {% endfor %}
-                    </ul>
-
-                </div>
-            </li>
-        {% endfor %}
         <li class="list-group-item">
             <span class="badge badge-primary badge-pill float-right">{{ part_template.get_part_inventory_count }}</span>
-            Total Inventory
+
+            <div class="">
+                <a class="collapsed" data-toggle="collapse" href="#inv-count" aria-expanded="false" aria-controls="inv-count">
+                    Current Inventory Count
+                </a>
+                <a data-toggle="collapse" class="collapsed text-right" href="#inv-count" aria-controls="inv-locations" aria-expanded="false" role="button">
+                    <i class="fa" aria-hidden="true"></i>
+                    <span class="sr-only">Expand/Collapse Current Inventory Locations</span>
+                </a>
+            </div>
+
+            <div class="collapse mt-3" id="inv-count">
+                <ul class="list-group">
+                    {% for item in inventory_location_data %}
+                        <li class="list-group-item">
+                            <span class="badge badge-primary badge-pill float-right">{{ item.inventory_items|length }}</span>
+                            <div class="">
+                                <a class="collapsed" data-toggle="collapse" href="#inv-locations-{{ item.location_root.id }}" aria-expanded="false" aria-controls="inv-locations-{{ item.location_root.id }}">
+                                    {{ item.location_root }}
+                                </a>
+                                <a data-toggle="collapse" class="collapsed text-right" href="#inv-locations-{{ item.location_root.id }}" aria-controls="inv-locations-{{ item.location_root.id }}" aria-expanded="false" role="button">
+                                    <i class="fa" aria-hidden="true"></i>
+                                    <span class="sr-only">Expand/Collapse Current Inventory Locations</span>
+                                </a>
+                            </div>
+
+
+                            <div class="collapse mt-3" id="inv-locations-{{ item.location_root.id }}">
+                                <ul>
+                                    {% for inventory in item.inventory_items %}
+                                        <li><a href="{% url 'inventory:inventory_detail' inventory.id %}">{{ inventory.serial_number}}</a> - {{inventory.location }}</li>
+                                    {% endfor %}
+                                </ul>
+
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+
+            </div>
         </li>
+
     </ul>
     <hr>
     <h4>Revisions</h4>
