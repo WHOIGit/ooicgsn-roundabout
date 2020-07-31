@@ -27,8 +27,19 @@ from roundabout.builds.models import Build, BuildAction
 #------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 # v1.5 upgrades
+def run_v1_5_content_updates():
+    _update_deployment_actions()
+    _update_deployment_details()
+    _update_action_types()
+    _update_inv_actions()
+    _update_builds_actions()
+    _import_old_build_actions()
+    _update_build_dep_actions()
+    _create_inv_deployments()
+
+
 # Step 1 in migration - update DeploymentAction
-def update_deployment_actions():
+def _update_deployment_actions():
     actions = DeploymentAction.objects.all()
 
     for action in actions:
@@ -48,7 +59,7 @@ def update_deployment_actions():
 
 
 # Step 2 in migration
-def update_deployment_details():
+def _update_deployment_details():
     deployments = Deployment.objects.all()
     for deployment in deployments:
         # get the latest 'Deploy' action record to initial
@@ -95,7 +106,7 @@ def update_deployment_details():
 
 # Action model updates for v1.5 upgrade
 #------------------------------------------------------------------------------
-def update_action_types():
+def _update_action_types():
     actions = Action.objects.only('action_type')
 
     for action in actions:
@@ -112,7 +123,7 @@ def update_action_types():
 # Inventory model updates for v1.5 upgrade
 #------------------------------------------------------------------------------
 # Update legacy Inventory Actions to add Build/Parent metadata
-def update_inv_actions(apps, schema_editor):
+def _update_inv_actions(apps, schema_editor):
     items = Inventory.objects.all()
 
     for item in items:
@@ -129,7 +140,7 @@ def update_inv_actions(apps, schema_editor):
 # Build model updates for v1.5 upgrade
 #------------------------------------------------------------------------------
 # Update Build action_types
-def update_builds_actions():
+def _update_builds_actions():
     actions = BuildAction.objects.all()
 
     for action in actions:
@@ -145,7 +156,7 @@ def update_builds_actions():
 
 
 # Import old BuildAction objs to Action
-def import_old_build_actions():
+def _import_old_build_actions():
     actions = BuildAction.objects.all()
     for action in actions:
         new_action = Action.objects.create(
@@ -160,7 +171,7 @@ def import_old_build_actions():
 
 
 # Update legacy Build Actions if they're Deployment actions
-def update_build_dep_actions():
+def _update_build_dep_actions():
     builds = Build.objects.all()
     dep_action_list = ['startdeployment', 'deploymentburnin', 'deploymenttofield', 'deploymentdetails', 'deploymentrecover', 'deploymentretire']
     for build in builds:
@@ -174,7 +185,7 @@ def update_build_dep_actions():
 
 
 # Create new InventoryDeployment objects for items that are already on deployment
-def create_inv_deployments():
+def _create_inv_deployments():
     builds = Build.objects.filter(is_deployed=True)
     for build in builds:
         print(build)
