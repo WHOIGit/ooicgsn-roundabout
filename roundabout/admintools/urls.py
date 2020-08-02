@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -22,10 +22,13 @@
 from django.urls import path
 
 from . import views
+from . import requests
 
 app_name = 'admintools'
 urlpatterns = [
     path('sentry-debug/', views.trigger_error),
+    # FieldInstance functions
+    path('fieldinstances/requests/sync-to-home/', view=requests.FieldInstanceSyncToHomeView.as_view(), name='fieldinstance_sync_to_home'),
     # Printers
     path('printers/', view=views.PrinterListView.as_view(), name='printers_home'),
     path('printers/add/', view=views.PrinterCreateView.as_view(), name='printers_add'),

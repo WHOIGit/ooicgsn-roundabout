@@ -29,17 +29,32 @@ from roundabout.parts.api.serializers import PartSerializer
 class ActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Action
-        fields = '__all__'
+        #fields = '__all__'
+        fields = ['id', 'inventory', 'location', 'deployment']
 
     @staticmethod
     def setup_eager_loading(queryset):
         """ Perform necessary prefetching of data. """
-        queryset = queryset.select_related('location', 'inventory', 'build')
+        #queryset = queryset.select_related('location', 'inventory', 'deployment').all()
         #queryset = queryset.prefetch_related('fieldvalues')
         return queryset
 
 
 class InventorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Inventory
+        fields = '__all__'
+
+    @staticmethod
+    def setup_eager_loading(queryset):
+        """ Perform necessary prefetching of data. """
+        queryset = queryset.select_related('location').select_related('part')
+        queryset = queryset.prefetch_related('fieldvalues')
+        return queryset
+
+
+class InventoryFullTextSerializer(serializers.ModelSerializer):
     location = LocationSerializer(read_only=True)
     part = PartSerializer(read_only=True)
     custom_fields = serializers.SerializerMethodField('get_custom_fields')
