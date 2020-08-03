@@ -42,8 +42,8 @@ class ActionViewSet(viewsets.ModelViewSet):
 
 class InventoryViewSet(viewsets.ModelViewSet):
     serializer_class = InventorySerializer
-    search_fields = ['serial_number']
-    filter_backends = (filters.SearchFilter,)
+    #filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['serial_number',]
 
     def get_queryset(self):
         queryset = Inventory.objects.all()
@@ -54,8 +54,8 @@ class InventoryViewSet(viewsets.ModelViewSet):
 
 class InventoryFullTextViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = InventoryFullTextSerializer
-    search_fields = ['serial_number']
-    filter_backends = (filters.SearchFilter,)
+    #filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['serial_number',]
 
     def get_queryset(self):
         queryset = Inventory.objects.all()

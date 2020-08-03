@@ -19,9 +19,12 @@ class FieldInstanceSyncToHomeView(View):
             return HttpResponse('ERROR. This is not a Field Instance of RDB.')
         user_list = field_instance.users
         actions = Action.objects.filter(user__in=user_list.all()).filter(created_at__gte=field_instance.start_date)
+        # need a data structure to hold mappings of field instance ID to new home base ID
+        pk_mappings = []
 
-        # Get all updated Inventory items
+        ##### SYNC INVENTORY #####
         base_url = 'http://localhost:8000/api/v1/inventory/'
+        # Get new items that were added, these need special handling
         actions_add_qs = actions.filter(object_type=Action.INVENTORY).filter(action_type=Action.ADD)
         if actions_add_qs:
             new_inventory = [action.inventory for action in actions_add_qs.all()]
@@ -29,19 +32,44 @@ class FieldInstanceSyncToHomeView(View):
             for item in new_inventory:
                 # check if serial number already exists
                 response = requests.get(base_url, params={'serial_number': item.serial_number}, headers={'Content-Type': 'application/json'}, )
-                print(response.content)
+                if response.json():
+                    # Need to change the Serial Number to avoid naming conflict
+                    item.serial_number = item.serial_number + '-Z'
+                    item.save()
+
+            inventory_serializer = InventorySerializer(
+                new_inventory,
+                many=True,
+                context={'request': request, }
+            )
+            inventory_dict = inventory_serializer.data
+
+            for item in inventory_dict:
+                old_pk = item['id']
+                item.pop('id')
+                # testing
+                item['serial_number'] = '999-9999-Zc'
+                print(json.dumps(item))
+                url = base_url
+                response = requests.post(url, data=json.dumps(item), headers={'Content-Type': 'application/json'}, )
+                print(response.json())
+                new_obj = response.json()
+                pk_mappings.append({'old_pk': old_pk, 'new_pk': new_obj['id']})
+            print(pk_mappings)
+
+        # Get all existing items in Home Base RDB
         actions_other_qs = actions.filter(object_type=Action.INVENTORY).exclude(action_type=Action.ADD)
         if actions_other_qs:
             existing_inventory = [action.inventory for action in actions_other_qs.all()]
             print(existing_inventory)
 
-            #inventory_qs = Inventory.objects.filter(updated_at__gte=field_instance.start_date)
             inventory_serializer = InventorySerializer(
                 existing_inventory,
                 many=True,
                 context={'request': request, }
             )
             inventory_dict = inventory_serializer.data
+
             for item in inventory_dict:
                 print(json.dumps(item))
                 url = F"{base_url}{item['id']}/"

@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -98,6 +98,7 @@ THIRD_PARTY_APPS = [
     'import_export', # simple model import/export using admin interface
     'django_tables2', # interactive tables views
     'django_tables2_column_shifter', # show/hide tables2 columns
+    'django_filters', #filters for API searching
 ]
 LOCAL_APPS = [
     'roundabout.users.apps.UsersAppConfig',
@@ -299,6 +300,7 @@ REST_FRAMEWORK = {
     # When you enable API versioning, the request.version attribute will contain a string
     # that corresponds to the version requested in the incoming client request.
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),

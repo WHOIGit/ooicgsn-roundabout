@@ -44,7 +44,11 @@ class InventorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Inventory
-        fields = '__all__'
+        fields = [
+            'id', 'serial_number', 'old_serial_number', 'part', 'location', 'revision', \
+            'parent', 'build', 'assembly_part', 'assigned_destination_root', 'created_at', \
+            'updated_at', 'detail', 'test_result', 'test_type', 'flag', 'time_at_sea',
+        ]
 
     @staticmethod
     def setup_eager_loading(queryset):
