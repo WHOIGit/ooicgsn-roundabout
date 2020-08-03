@@ -90,16 +90,22 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.id("searchform-submit-button")).click();
         // 25 | click | css=.even a | 
         await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.css(".even:nth-child(1) a")).click();
 
-        await driver.findElement(By.linkText("Retire Build")).click();
-        // 20 | click | id=id_detail | 
-        await driver.findElement(By.id("id_detail")).click();
-        // 21 | type | id=id_detail | Retiring for automated testing.
-        await driver.findElement(By.id("id_detail")).sendKeys("Retiring for automated testing.");
-        // 22 | click | css=.controls > .btn | 
-        await driver.findElement(By.css(".controls > .btn")).click(); 
-	await new Promise(r => setTimeout(r, 2000));  //linux firefox
+        if ((await driver.findElements(By.css(".even:nth-child(1) a"))).length != 0)
+        {
+	    await driver.findElement(By.css(".even:nth-child(1) a")).click();
+
+            await driver.findElement(By.linkText("Retire Build")).click();
+        	// 20 | click | id=id_detail | 
+            await driver.findElement(By.id("id_detail")).click();
+            // 21 | type | id=id_detail | Retiring for automated testing.
+            await driver.findElement(By.id("id_detail")).sendKeys("Retiring for automated testing.");
+            // 22 | click | css=.controls > .btn | 
+            await driver.findElement(By.css(".controls > .btn")).click(); 
+	    await new Promise(r => setTimeout(r, 2000));  //linux firefox
+	}
+	else
+	    console.log("Retire Builds Failed: Test Glider 1 Build not found");
 
         // Close browser window
         driver.quit();

@@ -75,11 +75,17 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.linkText("Locations")).click(); 
         // 5 | click | linkText=Test | 
         await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.linkText("Test1")).click(); 
-        // 6 | click | linkText=Delete | 
-        await driver.findElement(By.linkText("Delete")).click();
-        // 7 | click | css=.btn-danger | 
-        await driver.findElement(By.css(".btn-danger")).click();
+
+	if ((await driver.findElements(By.linkText("Test1"))).length != 0)
+	{
+            await driver.findElement(By.linkText("Test1")).click(); 
+            // 6 | click | linkText=Delete | 
+            await driver.findElement(By.linkText("Delete")).click();
+            // 7 | click | css=.btn-danger | 
+            await driver.findElement(By.css(".btn-danger")).click();
+	}
+	else
+	    console.log("Delete Locations failed: Test1 not found");
 
         // Expand all first level tree nodes   
         var j = 1;
@@ -96,11 +102,17 @@ var myArgs = process.argv.slice(2);
         
         // 8 | click | linkText=Test Child |
         await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.linkText("Test Child1")).click();
-        // 9 | click | linkText=Delete | 
-        await driver.findElement(By.linkText("Delete")).click();
-        // 10 | click | css=.btn-danger | 
-        await driver.findElement(By.css(".btn-danger")).click();
+        
+	if ((await driver.findElements(By.linkText("Test Child1"))).length != 0)
+	{
+	    await driver.findElement(By.linkText("Test Child1")).click();
+            // 9 | click | linkText=Delete | 
+            await driver.findElement(By.linkText("Delete")).click();
+            // 10 | click | css=.btn-danger | 
+            await driver.findElement(By.css(".btn-danger")).click();
+	}
+	else
+	    console.log("Delete Locations failed: Test Child1 not found");
 
         // 11 | click | linkText=Add Location |
         await driver.wait(until.elementLocated(By.linkText("Add Location")));
@@ -123,32 +135,50 @@ var myArgs = process.argv.slice(2);
         // Delete location with child location
         // 18 | click | linkText=Test Child |
         await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.linkText("Test Child")).click();
-        // 19 | click | linkText=Delete | 
-        await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.linkText("Delete")).click();
-        // 20 | click | css=.btn-danger | 
-        await driver.findElement(By.css(".btn-danger")).click();
+	if ((await driver.findElements(By.linkText("Test Child"))).length != 0)
+	{
+            await driver.findElement(By.linkText("Test Child")).click();
+            // 19 | click | linkText=Delete | 
+            await new Promise(r => setTimeout(r, 2000));
+            await driver.findElement(By.linkText("Delete")).click();
+            // 20 | click | css=.btn-danger | 
+            await driver.findElement(By.css(".btn-danger")).click();
+	}
+	else
+	    console.log("Delete Locations failed: Test Child not found");
+
 
         // 21 | click | linkText=Test Child2 | 
         //Stale element error here because only the name changes
         // only thing that works is this wait
         await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.linkText("Test Child2")).click();
-        // 22 | click | linkText=Delete | 
-        await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.linkText("Delete")).click();
-        // 23 | click | css=.btn-danger | 
-        await driver.findElement(By.css(".btn-danger")).click();
+
+	if ((await driver.findElements(By.linkText("Test Child2"))).length != 0)
+	{        
+	    await driver.findElement(By.linkText("Test Child2")).click();
+            // 22 | click | linkText=Delete | 
+            await new Promise(r => setTimeout(r, 2000));
+            await driver.findElement(By.linkText("Delete")).click();
+            // 23 | click | css=.btn-danger | 
+            await driver.findElement(By.css(".btn-danger")).click();
+	}
+	else
+	    console.log("Delete Locations failed: Test Child2 not found");
 
         // Delete location with inventory, move inventory to the trash
         // 24 | click | linkText=Test |
         await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.linkText("Test")).click();
-        // 25 | click | linkText=Delete | 
-        await driver.findElement( By.linkText("Delete")).click();
-        // 26 | click | css=.btn-danger | 
-        await driver.findElement(By.css(".btn-danger")).click();
+
+	if ((await driver.findElements(By.linkText("Test"))).length != 0)
+	{   
+            await driver.findElement(By.linkText("Test")).click();
+            // 25 | click | linkText=Delete | 
+            await driver.findElement( By.linkText("Delete")).click();
+            // 26 | click | css=.btn-danger | 
+            await driver.findElement(By.css(".btn-danger")).click();
+	}
+	else
+	    console.log("Delete Locations failed: Test not found");
 
         // Close browser window
         driver.quit();

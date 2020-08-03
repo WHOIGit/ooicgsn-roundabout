@@ -250,6 +250,7 @@ var myArgs = process.argv.slice(2);
         // 24 | click | id=searchform-submit-button | 
         await driver.findElement(By.id("searchform-submit-button")).click();
         // 25 | click | css=.even a | 
+	await new Promise(r => setTimeout(r, 2000));  //linux docker
         await driver.findElement(By.css(".even a")).click();
         // 26 | click | id=action | 
         await driver.findElement(By.id("action")).click();
@@ -306,6 +307,7 @@ var myArgs = process.argv.slice(2);
         // 41 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 42 | click | css=.even a | 
+	await new Promise(r => setTimeout(r, 2000));  //linux docker
         await driver.findElement(By.css(".even a")).click();
         // 43 | click | id=action | 
 
@@ -361,6 +363,7 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.id("field-query_c_r1")).sendKeys("CPM Board Assembly");
         await driver.findElement(By.id("searchform-submit-button")).click();
         // 42 | click | css=.even a | 
+	await new Promise(r => setTimeout(r, 2000));  //linux docker
         await driver.findElement(By.css(".even a")).click();
         // 43 | click | id=action |
         await driver.wait(until.elementLocated(By.id("action")));

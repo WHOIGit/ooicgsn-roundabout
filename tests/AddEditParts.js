@@ -234,13 +234,19 @@ var myArgs = process.argv.slice(2);
         // 5 | click | css=tr:nth-child(1) .btn-primary | 
         // Get the index to the row Sewing Machine is displayed on screen
         await new Promise(r => setTimeout(r, 2000));  //until element located not working here
-        var i = 1;
-        while (true) {
-            if ((await driver.findElement(By.xpath("//tr["+i+"]/td")).getText()) == "Sewing Machine") { 
-                break;
-            }
-            i++;
+
+	if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Sewing Machine']"))).length != 0)
+	{
+            var i = 1;
+            while (true) {
+              if ((await driver.findElement(By.xpath("//tr["+i+"]/td")).getText()) == "Sewing Machine") { 
+                  break;
+              }
+              i++;
+	    }
         }
+	else
+	    console.log("Edit Parts failed: Sewing Machine type not found");
         
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css("tr:nth-child("+i+") .btn-primary")).click();
@@ -254,13 +260,20 @@ var myArgs = process.argv.slice(2);
         // Change part type name to null
         // 9 | verifyText | xpath=//td[contains(.,'Sewing Machine - Updated')] | Sewing Machine - updated
         await new Promise(r => setTimeout(r, 2000));
-        var i = 1;
-        while (true) {
-            if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Sewing Machine - Updated") {
-                break;
-            }
-            i++;
+
+	if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Sewing Machine - Updated']"))).length != 0)
+	{
+            var i = 1;
+            while (true) {
+                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Sewing Machine - Updated") {
+                    break;
+                }
+                i++;
+	    }
         }
+	else
+	    console.log("Edit Parts failed: Sewing Machine - Updated type not found");
+
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css("tr:nth-child("+i+") .btn-primary")).click();
         // 11 | type | id=id_name |  
@@ -283,6 +296,7 @@ var myArgs = process.argv.slice(2);
         await dropdown.findElement(By.xpath("//option[. = ' Mechanical']")).click();
         // 17 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
+
         // 18 | verifyElementPresent | xpath=//td[contains(.,'Sewing Machine')] | 
         {
             await new Promise(r => setTimeout(r, 2000));

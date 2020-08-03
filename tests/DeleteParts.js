@@ -65,24 +65,30 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.id("id_password")).sendKeys("Automatedtests");
         await driver.findElement(By.css(".primaryAction")).click();
 
-//      Delete Part Types, Part Templates and Inventory created running automated tests.
+        // Delete Part Types, Part Templates and Inventory created running automated tests.
         // 10 | click | id=navbarTemplates |
         await driver.findElement(By.id("navbarTemplates")).click();
         await driver.findElement(By.id("navbarAdmintools")).click();
         // 5 | click | linkText=Test |
         await driver.findElement(By.linkText("Edit Part Types")).click();
 
-        var i = 1;
-        while (true) {
-            if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Sewing Machine") {
-                break;
-            } 
-            i++;
-        }
 
-        await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
-        // 6 | click | css=.btn-danger | 
-        await driver.findElement(By.css(".btn-danger")).click();
+	if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Sewing Machine']"))).length != 0)
+	{
+            var i = 1;
+            while (true) {
+                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Sewing Machine") {
+                    break;
+                } 
+                i++;
+            }
+
+            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
+            // 6 | click | css=.btn-danger | 
+            await driver.findElement(By.css(".btn-danger")).click();
+	}
+	else
+	    console.log("Delete Parts failed: Sewing Machine type not found");
 
         // 7 | click | id=navbarTemplates | 
         await driver.findElement(By.id("navbarTemplates")).click();
@@ -96,46 +102,54 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 12 | click | linkText=1232 | 
         await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.linkText("1232")).click();
-        // 13 | click | linkText=Delete | 
-        await driver.findElement(By.linkText("Delete")).click();
-        // 14 | click | css=.btn-danger | 
-        await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.css(".btn-danger")).click(); 
 
+	if ((await driver.findElements(By.linkText("1232"))).length != 0)
+	{
+            await driver.findElement(By.linkText("1232")).click();
+            // 13 | click | linkText=Delete | 
+            await driver.findElement(By.linkText("Delete")).click();
+            // 14 | click | css=.btn-danger | 
+            await new Promise(r => setTimeout(r, 2000));
+            await driver.findElement(By.css(".btn-danger")).click();
+	}
+	else
+	    console.log("Delete Parts failed: Sewing Template not found");
 
         // 15 | click | linkText=Inventory | 
         await driver.findElement(By.linkText("Inventory")).click();
         await new Promise(r => setTimeout(r, 4000));
+
         // Expand Test Location in Inventory Tree
-        var j = 1;
-        while (true) {
-            if ((await driver.findElement(By.xpath("//div[2]/ul/li[" + j + "]/a")).getText()) == "Test") {
-                break;
+
+	if ((await driver.findElements(By.linkText("Test"))).length != 0)
+	{
+            var j = 1;
+            while (true) {
+                if ((await driver.findElement(By.xpath("//div[2]/ul/li[" + j + "]/a")).getText()) == "Test") {
+                    break;
+                }
+                j++;
             }
-            j++;
-        }
-        await driver.findElement(By.xpath("//div/ul/li[" + j + "]/i")).click();    
-
-        // Delete Sewing Template deletes it's Inventory
-/*        await driver.wait(until.elementLocated(By.partialLinkText("sewing")));
-        await driver.findElement(By.partialLinkText("sewing")).click();
-        // 9 | click | linkText=Delete | 
-        await driver.wait(until.elementLocated(By.linkText("Move to Trash")));
-        await driver.findElement(By.linkText("Move to Trash")).click();
-        // 10 | click | css=.btn-danger | 
-        await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.css(".btn-danger")).click */
+            await driver.findElement(By.xpath("//div/ul/li[" + j + "]/i")).click();  
+	}
+	else
+	    console.log("Delete Parts failed: Test location not found");
 
         await new Promise(r => setTimeout(r, 2000));
-        await driver.wait(until.elementLocated(By.partialLinkText("PIONEER INSHORE DECK")));
-        await driver.findElement(By.partialLinkText("PIONEER INSHORE DECK")).click();
-        // 9 | click | linkText=Delete | 
-        await driver.wait(until.elementLocated(By.linkText("Move to Trash")));
-        await driver.findElement(By.linkText("Move to Trash")).click();
-        // 10 | click | css=.btn-danger | 
-        await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.css(".btn-danger")).click();
+
+	if ((await driver.findElements(By.partialLinkText("PIONEER INSHORE DECK"))).length != 0)
+	{
+            await driver.findElement(By.partialLinkText("PIONEER INSHORE DECK")).click();
+            // 9 | click | linkText=Delete | 
+            await driver.wait(until.elementLocated(By.linkText("Move to Trash")));
+            await driver.findElement(By.linkText("Move to Trash")).click();
+            // 10 | click | css=.btn-danger | 
+            await new Promise(r => setTimeout(r, 2000));
+            await driver.findElement(By.css(".btn-danger")).click();
+	}
+	else
+	    console.log("Delete Parts failed: PIONEER INSHORE DECK not found");
+
 
         // Close browser window
         driver.quit();

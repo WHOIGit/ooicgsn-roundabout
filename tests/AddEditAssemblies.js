@@ -266,7 +266,7 @@ var myArgs = process.argv.slice(2);
 
         // Add top level part with non null part type and part template
         // 15 | click | id=action | 
-        await driver.wait(until.elementLocated(By.id("action")));
+        await new Promise(r => setTimeout(r, 2000));  //linux docker
         await driver.findElement(By.id("action")).click();
         // 16 | click | linkText=Add Top Level Part | 
         await driver.findElement(By.linkText("Add Top Level Part")).click();
@@ -337,14 +337,20 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.css(".controls > .btn-primary")).click();
         await new Promise(r => setTimeout(r, 4000));
 
-        // Expand Revision B and 6 Wire and Shield nodes
-        var j = 1;
-        while (true) {
-            if ((await driver.findElement(By.xpath("//div/div/ul/li[" + j + "]/a")).getText()) == "Gliders") {
-                break;
-            }
-            j++;
+	if ((await driver.findElements(By.xpath("//div/div/ul/li[*]/a[text()='Gliders']"))).length != 0)
+	{
+            // Expand Revision B and 6 Wire and Shield nodes
+            var j = 1;
+            while (true) {
+                if ((await driver.findElement(By.xpath("//div/div/ul/li[" + j + "]/a")).getText()) == "Gliders") {
+                    break;
+                }
+                j++;
+	    }
         }
+	else
+	    console.log("Edit Assemblies failed: Gliders type not found");
+
         await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/ul/li/i")).click();
         await new Promise(r => setTimeout(r, 4000));
