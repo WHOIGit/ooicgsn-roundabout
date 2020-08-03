@@ -47,16 +47,13 @@ class ExportCalibrationEvent(DetailView,LoginRequiredMixin):
 
     def render_to_response(self, context, **response_kwargs):
         cal = context.get(self.context_object_name)  # getting object from context
-        fname = 'CGINS-{}-{:05}__{}.csv'.format(cal.inventory.part.name.replace('-',''),
-                                                int(cal.inventory.old_serial_number),
-                                                cal.calibration_date.strftime('%Y%m%d'))
+        fname = '{}__{}.csv'.format(cal.inventory.serial_number, cal.calibration_date.strftime('%Y%m%d'))
 
-        serial_label = cal.inventory.old_serial_number or cal.inventory.serial_number
-        prefix_qs = cal.inventory.fieldvalues.filter(field__field_name__iexact='Calibration Export Prefix',is_current=True)
-        if prefix_qs.exists():
-            serial_label = prefix_qs[0].field_value+serial_label
-        elif 'OPTAA' in cal.inventory.part.name:
-            serial_label = 'ACS-'+serial_label
+        serial_label_qs = cal.inventory.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number', is_current=True)
+        if serial_label_qs.exists():
+            serial_label = serial_label_qs[0].field_value
+        else:
+            serial_label = '' #cal.inventory.old_serial_number or cal.inventory.serial_number
 
         zip_mode = []
         header = ['serial','name','value','notes']
@@ -134,14 +131,13 @@ class ExportCalibrationEvents(ZipExport):
 
             fname = '{}__{}.csv'.format(cal.inventory.serial_number, cal.calibration_date.strftime('%Y%m%d'))
 
-            # GitHub CSV Serial Number
             serial_label_qs = cal.inventory.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number', is_current=True)
             if serial_label_qs.exists():
                 serial_label = serial_label_qs[0].field_value
             else:
-                serial_label = cal.inventory.old_serial_number or cal.inventory.serial_number
-            if 'OPTAA' in cal.inventory.part.name:
-                serial_label = 'ACS-'+serial_label
+                serial_label = ''  #cal.inventory.old_serial_number or cal.inventory.serial_number
+            #if 'OPTAA' in cal.inventory.part.name:
+            #    serial_label = 'ACS-'+serial_label
 
             aux_files = []
             header = ['serial', 'name', 'value', 'notes']

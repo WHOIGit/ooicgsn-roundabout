@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -144,7 +144,7 @@ class CalibrationTable(SearchTable):
     inventory__part__name = Column(verbose_name='Part',
             linkify=dict(viewname="parts:parts_detail", args=[tables.A('inventory__part__pk')]))
     calibration_date = DateColumn(verbose_name='Calibration Date', format='Y-m-d',
-            linkify=dict(viewname="export:export_calibration", args=[tables.A('pk')]))
+            linkify=dict(viewname="export:calibration", args=[tables.A('pk')]))
 
     user_approver__name = Column(verbose_name='Approver Name')
     user_drafter__name = Column(verbose_name='Drafter Name')
