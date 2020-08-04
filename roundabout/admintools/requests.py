@@ -16,7 +16,7 @@ class FieldInstanceSyncToHomeView(View):
 
     def get(self, request, *args, **kwargs):
         # Get the FieldInstance object that is current
-        field_instance = FieldInstance.objects.filter(is_this_instance=True).last()
+        field_instance = FieldInstance.objects.filter(is_this_instance=True).first()
         if not field_instance:
             return HttpResponse('ERROR. This is not a Field Instance of RDB.')
         user_list = field_instance.users
@@ -25,7 +25,7 @@ class FieldInstanceSyncToHomeView(View):
         pk_mappings = []
 
         ##### SYNC INVENTORY #####
-        base_url = 'http://localhost:8000/api/v1/inventory/'
+        base_url = 'https://ooi-cgrdb-staging.whoi.net/api/v1/inventory/'
         # Get new items that were added, these need special handling
         new_inventory = Inventory.objects.filter(created_at__gte=field_instance.start_date).order_by('-parent')
         #actions_add_qs = actions.filter(object_type=Action.INVENTORY).filter(action_type=Action.ADD).order_by('-parent')
@@ -55,8 +55,7 @@ class FieldInstanceSyncToHomeView(View):
                 if new_key:
                     print('NEW KEY: ' + new_key)
                     item['parent'] = new_key['new_pk']
-                # testing
-                #item['serial_number'] = randint(1,101)
+
                 print(json.dumps(item))
                 url = base_url
 
