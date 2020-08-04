@@ -25,15 +25,14 @@ workflows:
   version: 2
   test:
     jobs:
-      - build
+      - build:
+          filters:
+            branches:
+              only:
+                - master
+                - develop
 
 jobs:
-  build:
-    filters:
-      branches:
-        only:
-          - develop
-          
     machine: true
     steps:
       - checkout
