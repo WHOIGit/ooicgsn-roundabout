@@ -180,7 +180,6 @@ var myArgs = process.argv.slice(2);
 
         // Add template with null Part Number, name, type or revision code.
         // 40 | click | linkText=Add Part Template | 
- //       await driver.switchTo().frame(0);
         await driver.wait(until.elementLocated(By.linkText("Add Part Template")));
         await driver.findElement(By.linkText("Add Part Template")).click();
         // 41 | click | id=id_part_number |         
