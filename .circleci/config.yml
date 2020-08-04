@@ -21,12 +21,6 @@
 
 version: 2
 
-general:
-  branches:
-    only:
-     - develop
-     - automated
-
 workflows:
   version: 2
   test:
@@ -35,6 +29,11 @@ workflows:
 
 jobs:
   build:
+    filters:
+      branches:
+        only:
+          - develop
+          
     machine: true
     steps:
       - checkout
