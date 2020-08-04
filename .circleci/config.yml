@@ -19,19 +19,18 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 
-version: 2
-
 workflows:
   version: 2
-  test:
+  main:
     jobs:
-      - build:
-          filters:
-            branches:
-              only:
-                - master
-                - develop
+    - build:
+        filters:
+          branches:
+            only:
+              - develop
+              - automated_tests
 
+version: 2
 jobs:
     machine: true
     steps:
