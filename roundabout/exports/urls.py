@@ -33,4 +33,5 @@ urlpatterns = [
     path('cruises/', view=views.ExportCruises.as_view(), name='cruises'),
     path('vessels/', view=views.ExportVessels.as_view(), name='vessels'),
     path('deployments/', view=views.ExportDeployments.as_view(), name='deployments'),
+    path('CI/', view=views.ExportCI.as_view(), name='CI'),
 ]

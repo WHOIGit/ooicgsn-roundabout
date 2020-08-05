@@ -20,7 +20,7 @@
 """
 import csv as CSV
 import zipfile, io
-from os.path import splitext
+from os.path import splitext, join
 import datetime as dt
 
 from django.views.generic import TemplateView, DetailView, ListView
@@ -133,7 +133,9 @@ class CSVExport(ListView,LoginRequiredMixin):
         objs = context.get(self.context_object_name)
         self.build_csv(csv_writer, objs)
         return response
-    def build_csv(self, csv, objs):
+
+    @staticmethod
+    def build_csv(csv, objs):
         pass
 
 
@@ -148,7 +150,9 @@ class ZipExport(ListView,LoginRequiredMixin):
         zf = zipfile.ZipFile(response, 'w')
         self.build_zip(zf, objs)
         return response
-    def build_zip(self, zf, objs):
+
+    @staticmethod
+    def build_zip(zf, objs):
         pass
 
 
@@ -161,23 +165,25 @@ class ExportCalibrationEvents(ZipExport):
 
         return qs
 
-    def build_zip(self, zf, objs):
+    @staticmethod
+    def build_zip(zf, objs, subdir=None):
         objs = objs.prefetch_related('inventory','inventory__fieldvalues','inventory__fieldvalues__field')
         for cal in objs:
-            fname = '{}__{}.csv'.format(cal.inventory.serial_number, cal.calibration_date.strftime('%Y%m%d'))
+            csv_fname = '{}__{}.csv'.format(cal.inventory.serial_number, cal.calibration_date.strftime('%Y%m%d'))
+            if subdir: csv_fname = join(subdir,csv_fname)
 
             serial_label_qs = cal.inventory.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number', is_current=True)
             if serial_label_qs.exists():
                 serial_label = serial_label_qs[0].field_value
             else:
-                serial_label = ''  #cal.inventory.old_serial_number or cal.inventory.serial_number
+                serial_label = ''
 
             aux_files = []
             header = ['serial', 'name', 'value', 'notes']
             rows = [header]
             for coeff in cal.coefficient_value_sets.all():
                 if coeff.coefficient_name.value_set_type == '2d':
-                    extra = ('{}__{}.ext'.format(splitext(fname)[0], coeff.coefficient_name),
+                    extra = ('{}__{}.ext'.format(splitext(csv_fname)[0], coeff.coefficient_name),
                              coeff.value_set)
                     aux_files.append(extra)
 
@@ -190,7 +196,7 @@ class ExportCalibrationEvents(ZipExport):
             csv_content = io.StringIO()
             writer = CSV.writer(csv_content)
             writer.writerows(rows)
-            zf.writestr(fname, csv_content.getvalue())
+            zf.writestr(csv_fname, csv_content.getvalue())
             for extra_fname, extra_content in aux_files:
                 zf.writestr(extra_fname, extra_content)
         # todo include config/const objects with an "export with configurations" flag True
@@ -200,10 +206,12 @@ class ExportConfigEvents(ZipExport):
     model = ConfigEvent
     fname = 'ConfigEvents.zip'
 
-    def build_zip(self, zf, objs):
+    @staticmethod
+    def build_zip(zf, objs, subdir=None):
         objs = objs.prefetch_related('inventory','inventory__fieldvalues','inventory__fieldvalues__field')
         for confconst in objs:
-            fname = '{}__{}.csv'.format(confconst.inventory.serial_number, confconst.configuration_date.strftime('%Y%m%d'))
+            csv_fname = '{}__{}.csv'.format(confconst.inventory.serial_number, confconst.configuration_date.strftime('%Y%m%d'))
+            if subdir: csv_fname = join(subdir,csv_fname)
 
             serial_label_qs = confconst.inventory.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number', is_current=True)
             if serial_label_qs.exists():
@@ -223,7 +231,7 @@ class ExportConfigEvents(ZipExport):
             csv_content = io.StringIO()
             writer = CSV.writer(csv_content)
             writer.writerows(rows)
-            zf.writestr(fname, csv_content.getvalue())
+            zf.writestr(csv_fname, csv_content.getvalue())
 
 
 class ExportCruises(CSVExport):
@@ -232,7 +240,8 @@ class ExportCruises(CSVExport):
     ordering = ['cruise_start_date']
     #see https://github.com/oceanobservatories/asset-management/tree/master/cruise
 
-    def build_csv(self, csv, objs):
+    @staticmethod
+    def build_csv(csv, objs):
         objs = objs.prefetch_related('vessel')
         header_att = [('CUID',                  'CUID'),
                       ('ShipName',              'friendly_name'),
@@ -260,7 +269,8 @@ class ExportVessels(CSVExport):
     ordering = ['prefix']
     # see https://github.com/oceanobservatories/asset-management/tree/master/vessel
 
-    def build_csv(self, csv, objs):
+    @staticmethod
+    def build_csv(csv, objs):
         header_att = [('Prefix',                'prefix'),
                       ('Vessel Designation',    'vessel_designation'),
                       ('Vessel Name',           'vessel_name'),
@@ -296,8 +306,8 @@ class ExportDeployments(ZipExport): # ZipExportCSV
     model = Deployment
     fname = 'Deployments.zip'
 
-    csv_fnames = '{}_Deploy.csv'
-    def build_zip(self, zf, objs):
+    @staticmethod
+    def build_zip(zf, objs, subdir=None):
         header_att = [('CUID_Deploy',           'cruise_deployed'),
                       ('deployedBy',            ''),
                       ('CUID_Recover',          'cruise_recovered'),
@@ -317,34 +327,65 @@ class ExportDeployments(ZipExport): # ZipExportCSV
                       ('water_depth',           'depth'),
                       ('notes',                 ''), ]
         headers, attribs = zip(*header_att)
+
+        def depl_row(depl_obj, attribs):
+            row = []
+            for att in attribs:
+                val = getattr(depl_obj, att, None)
+                if val is None:
+                    val = ''  # TODO check udf's
+                elif isinstance(val, dt.datetime):  # dates
+                    val = val.replace(tzinfo=None)  # remove timezone awareness such that
+                    val = val.isoformat(timespec='seconds')  # +00:00 doesn't appear in iso string
+                elif isinstance(val, float):  # lat,lon
+                    val = '{:.5f}'.format(val)
+                row.append(str(val))
+            return row
+
         objs = objs.prefetch_related('build__assembly_revision__assembly')
         assy_names = objs.values_list('build__assembly_revision__assembly__name',flat=True)
         assy_names = set(assy_names)
         #assy_names.discard(None) # removes None if any
         for assy_name in assy_names:
             csv_fname = '{}_Deploy.csv'.format(str(assy_name).replace(' ','_'))
+            if subdir: csv_fname = join(subdir,csv_fname)
             csv_content = io.StringIO()
             csv = CSV.writer(csv_content)
             csv.writerow(headers)
             for depl in objs.filter(build__assembly_revision__assembly__name__exact=assy_name):
-                row = self.depl_row(depl,attribs)
+                row = depl_row(depl,attribs)
                 csv.writerow(row)
                 #for inv_depl in depl.inventory_deployments.all():
                 #    row = self.depl_row(inv_depl,attribs)
                 #    csv.writerow(row)
             zf.writestr(csv_fname,csv_content.getvalue())
 
+
+class ExportCI(ZipExport):
+    model=None
+    fname='asset-management.zip'
+    def get_queryset(self):
+        return None
+
     @staticmethod
-    def depl_row(depl_obj,attribs):
-        row = []
-        for att in attribs:
-            val = getattr(depl_obj, att, None)
-            if val is None:
-                val = ''  # TODO check udf's
-            elif isinstance(val, dt.datetime):          # dates
-                val = val.replace(tzinfo=None)          # remove timezone awareness such that
-                val = val.isoformat(timespec='seconds') # +00:00 doesn't appear in iso string
-            elif isinstance(val, float):  # lat,lon
-                val = '{:.5f}'.format(val)
-            row.append(str(val))
-        return row
+    def build_zip(zf, objs):
+
+        deployments = Deployment.objects.all()
+        ExportDeployments.build_zip(      zf, deployments,  subdir='deployment')
+
+        calibrations = CalibrationEvent.objects.all()
+        ExportCalibrationEvents.build_zip(zf, calibrations, subdir='calibration')
+
+        cruises = Cruise.objects.all()
+        cruise_csv_fname = join('cruise',ExportCruises.fname)
+        cruise_csv_content = io.StringIO()
+        cruise_csv = CSV.writer(cruise_csv_content)
+        ExportCruises.build_csv(  cruise_csv, cruises)
+        zf.writestr(cruise_csv_fname,cruise_csv_content.getvalue())
+
+        vessels = Vessel.objects.all()
+        vessel_csv_fname = join('vessel',ExportVessels.fname)
+        vessel_csv_content = io.StringIO()
+        vessel_csv = CSV.writer(vessel_csv_content)
+        ExportVessels.build_csv(  vessel_csv, vessels)
+        zf.writestr(vessel_csv_fname,vessel_csv_content.getvalue())
