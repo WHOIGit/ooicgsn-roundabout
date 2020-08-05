@@ -28,12 +28,12 @@ from django_tables2.columns import Column, DateColumn, DateTimeColumn, BooleanCo
 from django_tables2_column_shifter.tables import ColumnShiftTable
 
 from roundabout.parts.models import Part
-from roundabout.builds.models import Build, BuildAction
-from roundabout.inventory.models import Inventory, Action, DeploymentAction
+from roundabout.builds.models import Build
+from roundabout.inventory.models import Inventory, Action
 from roundabout.assemblies.models import Assembly
 from roundabout.userdefinedfields.models import Field
-from roundabout.calibrations.models import CalibrationEvent, CoefficientValueSet
-
+from roundabout.calibrations.models import CalibrationEvent
+from roundabout.configs_constants.models import ConfigEvent
 
 class UDF_Column(ManyToManyColumn):
     prefix = 'udf-'
@@ -100,6 +100,7 @@ class InventoryTable(SearchTable):
                                                  or col.startswith('searchcol-'+UDF_Column.prefix)]
         self.column_default_show = self.Meta.base_shown_cols + search_cols
 
+
 class PartTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Part
@@ -111,6 +112,7 @@ class PartTable(SearchTable):
         udf_cols = [col for col in self.sequence if col.startswith(UDF_Column.prefix) \
                                                  or col.startswith('searchcol-'+UDF_Column.prefix)]
         self.column_default_show = self.Meta.base_shown_cols + search_cols
+
 
 class BuildTable(SearchTable):
     class Meta(SearchTable.Meta):
@@ -127,14 +129,22 @@ class BuildTable(SearchTable):
     def value_build(self,record):
         return '{}-{}'.format(record.assembly.assembly_number, record.build_number.replace('Build ',''))
 
+
 class AssemblyTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Assembly
         base_shown_cols = ['assembly_number', 'name', 'assembly_type__name']
 
+
+class ActionTable(SearchTable):
+    class Meta(SearchTable.Meta):
+        model = Action
+        fields = ['action_type','user__name','created_at','detail']
+        base_shown_cols = fields
+
+
 class CalibrationTable(SearchTable):
     class Meta(SearchTable.Meta):
-        #model = CoefficientValueSet
         model = CalibrationEvent
         fields = ['inventory__serial_number','inventory__part__name','calibration_date','deployment','approved','user_approver__name','user_drafter__name']
         base_shown_cols = ['inventory__serial_number','calibration_date','approved']
@@ -144,7 +154,7 @@ class CalibrationTable(SearchTable):
     inventory__part__name = Column(verbose_name='Part',
             linkify=dict(viewname="parts:parts_detail", args=[tables.A('inventory__part__pk')]))
     calibration_date = DateColumn(verbose_name='Calibration Date', format='Y-m-d',
-            linkify=dict(viewname="export:calibration", args=[tables.A('pk')]))
+            linkify=dict(viewname="exports:calibration", args=[tables.A('pk')]))
 
     user_approver__name = Column(verbose_name='Approver Name')
     user_drafter__name = Column(verbose_name='Drafter Name')
@@ -156,10 +166,28 @@ class CalibrationTable(SearchTable):
 
     detail = Column(verbose_name='CalibrationEvent Note', accessor='detail')
 
-class ActionTable(SearchTable):
-    class Meta(SearchTable.Meta):
-        model = Action
-        fields = ['action_type','user__name','created_at','detail']
-        base_shown_cols = fields
 
-#TODO move most field Column specifications to col_args section of views page.
+class ConfigConstTable(SearchTable):
+    class Meta(SearchTable.Meta):
+        model = ConfigEvent
+        fields = ['inventory__serial_number','inventory__part__name','configuration_date','deployment','approved','user_approver__name','user_drafter__name']
+        base_shown_cols = ['inventory__serial_number','configuration_date','approved']
+
+    inventory__serial_number = Column(verbose_name='Inventory SN', attrs={'style':'white-space: nowrap;'},
+            linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('inventory__pk')]))
+    inventory__part__name = Column(verbose_name='Part',
+            linkify=dict(viewname="parts:parts_detail", args=[tables.A('inventory__part__pk')]))
+    configuration_date = DateColumn(verbose_name='Event Date', format='Y-m-d',
+            #linkify=dict(viewname="exports:configconst", args=[tables.A('pk')])
+            )
+
+    user_approver__name = Column(verbose_name='Approver Name')
+    user_drafter__name = Column(verbose_name='Drafter Name')
+
+    config_values__names = ManyToManyColumn(verbose_name='Config/Constant Names',
+            accessor='config_values', transform=lambda x: x.config_name)
+    config_values__notes = ManyToManyColumn(verbose_name='Config/Constant Notes',
+            accessor='config_values', transform=lambda x: format_html('<b>{}:</b> [{}]<br>'.format(x.config_name,x.notes)) if x.notes else '', separator='\n')
+
+    detail = Column(verbose_name='ConfigEvent Note', accessor='detail')
+

@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -81,7 +81,7 @@ class ConfigName(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     part = models.ForeignKey(Part, related_name='config_names', on_delete=models.CASCADE, null=True)
 
-# Tracks Configuration/Constant Sets across ConfigNames 
+# Tracks Configuration/Constant Sets across ConfigNames
 class ConfigValue(models.Model):
     class Meta:
         ordering = ['created_at']
@@ -95,6 +95,11 @@ class ConfigValue(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     config_name = models.ForeignKey(ConfigName, related_name='config_values', on_delete=models.CASCADE, null=True)
     config_event = models.ForeignKey(ConfigEvent, related_name='config_values', on_delete=models.CASCADE, null=True)
+    def config_value_with_export_formatting(self):
+        if ',' in self.config_value:
+            return '"[{}]"'.format(self.config_value)
+        else:
+            return self.config_value
 
 
 # Tracks Constant Default event history across Inventory Parts
@@ -116,12 +121,12 @@ class ConstDefaultEvent(models.Model):
     inventory = models.ForeignKey(Inventory, related_name='constant_default_events', on_delete=models.CASCADE, null=False)
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
     detail = models.TextField(blank=True)
-    
+
     def get_actions(self):
         return self.actions.filter(object_type=Action.CONSTDEFEVENT)
 
 
-# Tracks Constant Defaults across ConstDefaultEvents 
+# Tracks Constant Defaults across ConstDefaultEvents
 class ConstDefault(models.Model):
     class Meta:
         ordering = ['created_at']
@@ -155,12 +160,12 @@ class ConfigDefaultEvent(models.Model):
     assembly_part = models.ForeignKey(AssemblyPart, related_name='config_default_events', on_delete=models.CASCADE, null=False)
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
     detail = models.TextField(blank=True)
-    
+
     def get_actions(self):
         return self.actions.filter(object_type=Action.CONFDEFEVENT)
 
 
-# Tracks Config Defaults across ConstDefaultEvents 
+# Tracks Config Defaults across ConstDefaultEvents
 class ConfigDefault(models.Model):
     class Meta:
         ordering = ['created_at']

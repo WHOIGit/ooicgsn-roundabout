@@ -23,12 +23,13 @@ from django.urls import path
 
 from . import views
 
-app_name = 'export'
+app_name = 'exports'
 urlpatterns = [
-    path('',view=views.HomeView.as_view(),name='dash'),
+    path('',view=views.HomeView.as_view(),name='home'),
     path('calibration_event/<int:pk>/', view=views.ExportCalibrationEvent.as_view(), name='calibration'),
+    path('configconst_event/<int:pk>', view=views.ExportConfigEvent.as_view(), name='configconst'),
     path('calibration_events/', view=views.ExportCalibrationEvents.as_view(), name='calibrations'),
-    path('configurations/', view=views.ExportConfigConst.as_view(), name='configurations'),
+    path('configconst_events/', view=views.ExportConfigEvents.as_view(), name='configconsts'),
     path('cruises/', view=views.ExportCruises.as_view(), name='cruises'),
     path('vessels/', view=views.ExportVessels.as_view(), name='vessels'),
     path('deployments/', view=views.ExportDeployments.as_view(), name='deployments'),

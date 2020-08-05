@@ -46,6 +46,8 @@ class ExportCalibrationEvent(DetailView,LoginRequiredMixin):
     context_object_name = 'cal_event'
 
     def render_to_response(self, context, **response_kwargs):
+        #TODO gotta fetch any ConfigEvents with "export-with-calibrations" rollup flag
+        # AHEAD of this calibration but BEFORE next calibration an include ConfigValues from those in csv
         cal = context.get(self.context_object_name)  # getting object from context
         fname = '{}__{}.csv'.format(cal.inventory.serial_number, cal.calibration_date.strftime('%Y%m%d'))
 
@@ -90,6 +92,35 @@ class ExportCalibrationEvent(DetailView,LoginRequiredMixin):
             writer.writerows(rows)
             return response
 
+class ExportConfigEvent(DetailView,LoginRequiredMixin):
+    model = ConfigEvent
+    context_object_name = 'confconst'
+
+    def render_to_response(self, context, **response_kwargs):
+        confconst = context.get(self.context_object_name)  # getting object from context
+        fname = '{}__{}.csv'.format(confconst.inventory.serial_number, confconst.configuration_date.strftime('%Y%m%d'))
+
+        serial_label_qs = confconst.inventory.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number', is_current=True)
+        if serial_label_qs.exists():
+            serial_label = serial_label_qs[0].field_value
+        else:
+            serial_label = ''
+
+        header = ['serial','name','value','notes']
+        rows = [header]
+        for confconst_val in confconst.config_values.all():
+            row = [serial_label,
+                   confconst_val.config_name.name,
+                   confconst_val.config_value_with_export_formatting(),
+                   confconst_val.notes]
+            rows.append(row)
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'inline; filename="{}"'.format(fname)
+        writer = CSV.writer(response)
+        writer.writerows(rows)
+        return response
+
 
 class CSVExport(ListView,LoginRequiredMixin):
     model = None
@@ -125,10 +156,14 @@ class ExportCalibrationEvents(ZipExport):
     model = CalibrationEvent
     fname = 'CalibrationEvents.zip'
 
+    def get_queryset(self):
+        qs = super(ZipExport, self).get_queryset()
+
+        return qs
+
     def build_zip(self, zf, objs):
         objs = objs.prefetch_related('inventory','inventory__fieldvalues','inventory__fieldvalues__field')
         for cal in objs:
-
             fname = '{}__{}.csv'.format(cal.inventory.serial_number, cal.calibration_date.strftime('%Y%m%d'))
 
             serial_label_qs = cal.inventory.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number', is_current=True)
@@ -136,8 +171,6 @@ class ExportCalibrationEvents(ZipExport):
                 serial_label = serial_label_qs[0].field_value
             else:
                 serial_label = ''  #cal.inventory.old_serial_number or cal.inventory.serial_number
-            #if 'OPTAA' in cal.inventory.part.name:
-            #    serial_label = 'ACS-'+serial_label
 
             aux_files = []
             header = ['serial', 'name', 'value', 'notes']
@@ -160,15 +193,37 @@ class ExportCalibrationEvents(ZipExport):
             zf.writestr(fname, csv_content.getvalue())
             for extra_fname, extra_content in aux_files:
                 zf.writestr(extra_fname, extra_content)
+        # todo include config/const objects with an "export with configurations" flag True
 
 
-class ExportConfigConst(ZipExport):
+class ExportConfigEvents(ZipExport):
     model = ConfigEvent
-    fname = 'ConfigEvent.zip'
+    fname = 'ConfigEvents.zip'
 
     def build_zip(self, zf, objs):
-        for conf in objs:
-            pass
+        objs = objs.prefetch_related('inventory','inventory__fieldvalues','inventory__fieldvalues__field')
+        for confconst in objs:
+            fname = '{}__{}.csv'.format(confconst.inventory.serial_number, confconst.configuration_date.strftime('%Y%m%d'))
+
+            serial_label_qs = confconst.inventory.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number', is_current=True)
+            if serial_label_qs.exists():
+                serial_label = serial_label_qs[0].field_value
+            else:
+                serial_label = ''
+
+            header = ['serial', 'name', 'value', 'notes']
+            rows = [header]
+            for confconst_val in confconst.config_values.all():
+                row = [serial_label,
+                       confconst_val.config_name.name,
+                       confconst_val.config_value_with_export_formatting(),
+                       confconst_val.notes]
+                rows.append(row)
+
+            csv_content = io.StringIO()
+            writer = CSV.writer(csv_content)
+            writer.writerows(rows)
+            zf.writestr(fname, csv_content.getvalue())
 
 
 class ExportCruises(CSVExport):
