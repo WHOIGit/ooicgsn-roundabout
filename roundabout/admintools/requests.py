@@ -110,9 +110,10 @@ class FieldInstanceSyncToHomeView(View):
                 actions_dict = actions_serializer.data
 
                 for item in actions_dict:
+                    item.pop('id')
                     print(json.dumps(item))
                     response = requests.post(action_url, data=json.dumps(item), headers={'Content-Type': 'application/json'}, )
-                    print('ACTION RESPONSE:', response.json())
+                    print('ACTION RESPONSE:', response.text)
                     print(response.status_code)
 
             #response = requests.post(url, auth=HTTPBasicAuth('USER', 'PASSWORD'), headers={'Content-Type': 'application/json'}, json=body)

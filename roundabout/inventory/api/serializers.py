@@ -33,12 +33,24 @@ class PhotoNoteSerializer(serializers.ModelSerializer):
 
 
 class ActionSerializer(serializers.ModelSerializer):
-    photo_note = PhotoNoteSerializer(source='photos', many=True)
+    photo_notes = PhotoNoteSerializer(source='photos', many=True)
 
     class Meta:
         model = Action
         fields = '__all__'
         #fields = ['id', 'inventory', 'location', 'deployment']
+
+    # need a custom create() method to handle nested fields
+    def create(self, validated_data):
+        photo_note_validated_data = validated_data.pop('photo_notes')
+        action = Action.objects.create(**validated_data)
+        photo_note_serializer = self.fields['photo_notes']
+
+        for item in photo_note_validated_data:
+            item['action'] = action
+
+        photo_notes = photo_note_serializer.create(photo_note_validated_data)
+        return action
 
     @staticmethod
     def setup_eager_loading(queryset):
