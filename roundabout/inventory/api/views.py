@@ -26,8 +26,12 @@ from .serializers import InventorySerializer, InventoryFullTextSerializer, Actio
 
 class ActionViewSet(viewsets.ModelViewSet):
     serializer_class = ActionSerializer
-    search_fields = ['inventory']
-    filter_backends = (filters.SearchFilter,)
+    filterset_fields = {
+        'created_at':['gte', 'lte', 'exact', 'gt', 'lt'],
+        'inventory':['exact'],
+        'action_type':['exact'],
+        'object_type':['exact'],
+    }
 
     def get_queryset(self):
         queryset = Action.objects.all()
@@ -42,7 +46,6 @@ class ActionViewSet(viewsets.ModelViewSet):
 
 class InventoryViewSet(viewsets.ModelViewSet):
     serializer_class = InventorySerializer
-    #filter_backends = [DjangoFilterBackend]
     filterset_fields = ['serial_number',]
 
     def get_queryset(self):

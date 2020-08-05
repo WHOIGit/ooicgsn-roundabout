@@ -21,16 +21,24 @@
 
 from rest_framework import serializers
 
-from ..models import Inventory, Action
+from ..models import Inventory, Action, PhotoNote
 from roundabout.locations.api.serializers import LocationSerializer
 from roundabout.parts.api.serializers import PartSerializer
 
 
+class PhotoNoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PhotoNote
+        fields = '__all__'
+
+
 class ActionSerializer(serializers.ModelSerializer):
+    photo_note = PhotoNoteSerializer(source='photos', many=True)
+
     class Meta:
         model = Action
-        #fields = '__all__'
-        fields = ['id', 'inventory', 'location', 'deployment']
+        fields = '__all__'
+        #fields = ['id', 'inventory', 'location', 'deployment']
 
     @staticmethod
     def setup_eager_loading(queryset):

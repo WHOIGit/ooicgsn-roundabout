@@ -7,7 +7,7 @@ from django.views.generic import View
 from django.db.models import Q
 
 from .models import FieldInstance
-from roundabout.inventory.api.serializers import InventorySerializer
+from roundabout.inventory.api.serializers import InventorySerializer, ActionSerializer
 from roundabout.inventory.models import Inventory, Action
 from roundabout.parts.models import Part, Revision
 from roundabout.locations.models import Location
@@ -20,12 +20,14 @@ class FieldInstanceSyncToHomeView(View):
         if not field_instance:
             return HttpResponse('ERROR. This is not a Field Instance of RDB.')
         user_list = field_instance.users
-        actions = Action.objects.filter(user__in=user_list.all()).filter(created_at__gte=field_instance.start_date)
+        #actions = Action.objects.filter(user__in=user_list.all()).filter(created_at__gte=field_instance.start_date)
         # need a data structure to hold mappings of field instance ID to new home base ID
         pk_mappings = []
 
         ##### SYNC INVENTORY #####
-        base_url = 'https://ooi-cgrdb-staging.whoi.net/api/v1/inventory/'
+        base_url = 'https://ooi-cgrdb-staging.whoi.net'
+        inventory_url = F"{base_url}/api/v1/inventory/"
+        action_url = F"{base_url}/api/v1/actions/"
         # Get new items that were added, these need special handling
         new_inventory = Inventory.objects.filter(created_at__gte=field_instance.start_date).order_by('-parent')
         #actions_add_qs = actions.filter(object_type=Action.INVENTORY).filter(action_type=Action.ADD).order_by('-parent')
@@ -34,7 +36,7 @@ class FieldInstanceSyncToHomeView(View):
             print(new_inventory)
             for item in new_inventory:
                 # check if serial number already exists
-                response = requests.get(base_url, params={'serial_number': item.serial_number}, headers={'Content-Type': 'application/json'}, )
+                response = requests.get(inventory_url, params={'serial_number': item.serial_number}, headers={'Content-Type': 'application/json'}, )
                 if response.json():
                     # Need to change the Serial Number to avoid naming conflict
                     item.serial_number = item.serial_number + '-' + str(random.randint(1,1001))
@@ -57,13 +59,12 @@ class FieldInstanceSyncToHomeView(View):
                     item['parent'] = new_key['new_pk']
 
                 print(json.dumps(item))
-                url = base_url
-
-                response = requests.post(url, data=json.dumps(item), headers={'Content-Type': 'application/json'}, )
+                """
+                response = requests.post(inventory_url, data=json.dumps(item), headers={'Content-Type': 'application/json'}, )
                 print('RESPONSE:', response.json())
                 new_obj = response.json()
                 pk_mappings.append({'old_pk': old_pk, 'new_pk': new_obj['id']})
-
+                """
             print(pk_mappings)
 
         # Get all existing items in Home Base RDB
@@ -85,7 +86,7 @@ class FieldInstanceSyncToHomeView(View):
 
             for item in inventory_dict:
                 print(json.dumps(item))
-                url = F"{base_url}{item['id']}/"
+                url = F"{inventory_url}{item['id']}/"
                 print(url)
 
                 # Need to remap any Parent items that have new PKs
@@ -96,6 +97,23 @@ class FieldInstanceSyncToHomeView(View):
 
                 response = requests.patch(url, data=json.dumps(item), headers={'Content-Type': 'application/json'}, )
                 print(response.status_code)
+
+            # post all new Actions for this item
+            for inv in existing_inventory:
+                actions = inv.actions.filter(created_at__gte=field_instance.start_date)
+                print(actions)
+                actions_serializer = ActionSerializer(
+                    actions,
+                    many=True,
+                    context={'request': request, }
+                )
+                actions_dict = actions_serializer.data
+
+                for item in actions_dict:
+                    print(json.dumps(item))
+                    response = requests.post(action_url, data=json.dumps(item), headers={'Content-Type': 'application/json'}, )
+                    print('ACTION RESPONSE:', response.json())
+                    print(response.status_code)
 
             #response = requests.post(url, auth=HTTPBasicAuth('USER', 'PASSWORD'), headers={'Content-Type': 'application/json'}, json=body)
 
