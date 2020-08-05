@@ -812,7 +812,7 @@ class ActionNoteAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         self.object.object_type = 'inventory'
         self.object.parent = inventory_item.parent
         self.object.build = inventory_item.build
-        self.object.deployment = inventory_item.get_latest_action().deployment
+        self.object.deployment = inventory_item.get_latest_deployment()
         self.object.save()
 
         photo_ids = form.cleaned_data['photo_ids']
