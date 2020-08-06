@@ -80,7 +80,7 @@ class ConfigName(models.Model):
     config_type = models.CharField(max_length=4, choices=CONFIG_TYPE, null=False, blank=False, default="cnst")
     created_at = models.DateTimeField(default=timezone.now)
     part = models.ForeignKey(Part, related_name='config_names', on_delete=models.CASCADE, null=True)
-#    include_with_calibrations = models.BooleanField(null=False, default=False)
+    include_with_calibrations = models.BooleanField(null=False, default=False)
 
 # Tracks Configuration/Constant Sets across ConfigNames
 class ConfigValue(models.Model):

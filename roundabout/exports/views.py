@@ -170,8 +170,8 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
         config_qs = ConfigEvent.objects.all().annotate(date = F('configuration_date')).order_by('-date')
 
         # keep configs where at least one ConfigValue has include_with_calibration=True
-        #include_with_calibs = ConfigValue.objects.filter(config_event=OuterRef('pk'), config_name__include_with_calibrations=True)
-        #config_qs = config_qs.annotate(include=Exists(include_with_calibs)).filter(include=True)
+        include_with_calibs = ConfigValue.objects.filter(config_event=OuterRef('pk'), config_name__include_with_calibrations=True)
+        config_qs = config_qs.annotate(include=Exists(include_with_calibs)).filter(include=True)
 
         # merging is not allowed on different models.
         # instead, lets pre-bundle these by instrument
@@ -226,8 +226,7 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
                     csv_done = True
                 else: # isinstance(obj, ConfigEvent):
                     rows = ExportConfigEvents.get_csvrows(obj)
-                    # TODO check that any name fields don't conflict.
-                    #      if yes, start a new csv.
+                    # TODO check that no field names conflict. if yes, start a new csv.
                     csv_writer.writerows(rows)
 
             # final write for given instrument
