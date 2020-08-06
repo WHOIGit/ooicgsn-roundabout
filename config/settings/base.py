@@ -304,6 +304,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_PAGINATION_CLASS': 'drf_link_header_pagination.LinkHeaderPagination',
+    'PAGE_SIZE': 100,
     #'DEFAULT_PERMISSION_CLASSES': [
     #    'rest_framework.permissions.IsAuthenticated',
     #]

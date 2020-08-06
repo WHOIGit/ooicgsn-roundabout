@@ -21,7 +21,7 @@
 
 from rest_framework import generics, viewsets, filters
 from ..models import Inventory, Action
-from .serializers import InventorySerializer, InventoryFullTextSerializer, ActionSerializer
+from .serializers import InventorySerializer, ActionSerializer
 
 
 class ActionViewSet(viewsets.ModelViewSet):
@@ -38,10 +38,11 @@ class ActionViewSet(viewsets.ModelViewSet):
         # Set up eager loading to avoid N+1 selects
         queryset = self.get_serializer_class().setup_eager_loading(queryset)
         return queryset
-
+    """
     def perform_create(self, serializer):
         instance = serializer.save()
         print(instance)
+    """
 
 
 class InventoryViewSet(viewsets.ModelViewSet):
@@ -54,7 +55,7 @@ class InventoryViewSet(viewsets.ModelViewSet):
         queryset = self.get_serializer_class().setup_eager_loading(queryset)
         return queryset
 
-
+"""
 class InventoryFullTextViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = InventoryFullTextSerializer
     #filter_backends = [DjangoFilterBackend]
@@ -65,3 +66,4 @@ class InventoryFullTextViewSet(viewsets.ReadOnlyModelViewSet):
         # Set up eager loading to avoid N+1 selects
         queryset = self.get_serializer_class().setup_eager_loading(queryset)
         return queryset
+"""

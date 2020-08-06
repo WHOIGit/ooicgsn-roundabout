@@ -25,7 +25,8 @@ class FieldInstanceSyncToHomeView(View):
         pk_mappings = []
 
         ##### SYNC INVENTORY #####
-        base_url = 'https://ooi-cgrdb-staging.whoi.net'
+        #base_url = 'https://ooi-cgrdb-staging.whoi.net'
+        base_url = 'http://localhost:8000'
         inventory_url = F"{base_url}/api/v1/inventory/"
         action_url = F"{base_url}/api/v1/actions/"
         # Get new items that were added, these need special handling
@@ -108,11 +109,11 @@ class FieldInstanceSyncToHomeView(View):
                     context={'request': request, }
                 )
                 actions_dict = actions_serializer.data
-
-                for item in actions_dict:
-                    item.pop('id')
-                    print(json.dumps(item))
-                    response = requests.post(action_url, data=json.dumps(item), headers={'Content-Type': 'application/json'}, )
+                print(actions_dict)
+                for action in actions_dict:
+                    action.pop('id')
+                    print(json.dumps(action))
+                    response = requests.post(action_url, data=json.dumps(action), headers={'Content-Type': 'application/json'}, )
                     print('ACTION RESPONSE:', response.text)
                     print(response.status_code)
 
