@@ -54,13 +54,13 @@ var myArgs = process.argv.slice(2);
 
         // If navbar toggler present in small screen
 //        try {
-	    await new Promise(r => setTimeout(r, 9000));
             var signin = await driver.findElement(By.linkText("Sign In"));
 //        }
 //        catch (NoSuchElementException) {
 //                await driver.findElement(By.css(".navbar-toggler-icon")).click();
 //         }
         // LOGIN
+	await new Promise(r => setTimeout(r, 60000));
         await driver.findElement(By.linkText("Sign In")).click();
         await driver.findElement(By.id("id_login")).sendKeys("jkoch");
         await driver.findElement(By.id("id_password")).sendKeys("Automatedtests");
