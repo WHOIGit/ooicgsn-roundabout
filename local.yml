@@ -67,7 +67,11 @@ services:
     image: roundabout_production_tests
     volumes:
       - rdb_tests:/tests
+    ports:
+      - "127.0.0.1:5858"
     command: sh -c "./RunAllTests-Chrome-Linux.bat && ./RunAllTests-Firefox-Linux.bat"
+    networks:
+      - roundabout-network
 
 networks:
   roundabout-network:
