@@ -136,8 +136,6 @@ var myArgs = process.argv.slice(2);
 
         // EDIT LOCATIONS TEST
 
-        //    await activeTest.click(); //doesn't work - saved id from the add
-
         // Rename location with unique name
         // Timeout needed here to avoid staleelementreferenceerror (ajax) when not running in debugger
         await new Promise(r => setTimeout(r, 4000));
@@ -230,11 +228,6 @@ var myArgs = process.argv.slice(2);
 
         // Close browser window
            driver.quit();
-
-
-
-        // Close browser window
-        driver.quit();
     }
     catch (e) {
         console.log(e.message, e.stack);

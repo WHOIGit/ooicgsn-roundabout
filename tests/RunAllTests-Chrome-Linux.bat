@@ -1,2 +1,4 @@
-# Runs all Roundabout Selenium Webdriver automated tests in Docker linux container. Takes about 11 minutes to run. 
+#!/bin/sh
+
+# Runs all Roundabout Selenium Webdriver automated tests in linux Docker container. Takes about 11 minutes to run.
 node AddEditLocations.js chrome headless > RoundAboutTesting.log && node AddEditParts.js chrome headless >> RoundAboutTesting.log && node AddEditAssemblies.js chrome headless >> RoundAboutTesting.log && node AddEditInventory.js chrome headless >> RoundAboutTesting.log && node AddBuilds.js chrome headless >> RoundAboutTesting.log && node RetireBuilds.js chrome headless >> RoundAboutTesting.log && node DeleteAssemblies.js chrome headless >> RoundAboutTesting.log && node DeleteParts.js chrome headless >> RoundAboutTesting.log && node DeleteLocations.js chrome headless >> RoundAboutTesting.log
