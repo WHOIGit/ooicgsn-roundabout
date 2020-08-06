@@ -54,7 +54,7 @@ var myArgs = process.argv.slice(2);
 
         // If navbar toggler present in small screen
 //        try {
-	    await new Promise(r => setTimeout(r, 2000));
+	    await new Promise(r => setTimeout(r, 9000));
             var signin = await driver.findElement(By.linkText("Sign In"));
 //        }
 //        catch (NoSuchElementException) {
