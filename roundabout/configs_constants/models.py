@@ -36,7 +36,7 @@ class ConfigEvent(models.Model):
     class Meta:
         ordering = ['-configuration_date']
     def __str__(self):
-        return self.configuration_date
+        return self.configuration_date.strftime("%m/%d/%Y")
     def get_object_type(self):
         return 'config_event'
     APPROVAL_STATUS = (
@@ -80,6 +80,7 @@ class ConfigName(models.Model):
     config_type = models.CharField(max_length=4, choices=CONFIG_TYPE, null=False, blank=False, default="cnst")
     created_at = models.DateTimeField(default=timezone.now)
     part = models.ForeignKey(Part, related_name='config_names', on_delete=models.CASCADE, null=True)
+#    include_with_calibrations = models.BooleanField(null=False, default=False)
 
 # Tracks Configuration/Constant Sets across ConfigNames
 class ConfigValue(models.Model):
