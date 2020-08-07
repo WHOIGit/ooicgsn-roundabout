@@ -44,7 +44,7 @@ class ActionSerializer(DynamicModelSerializer):
             'location', 'deployment',  'inventory_deployment', 'deployment_type', \
             'detail', 'user', 'build', 'parent', 'cruise', 'latitude', 'longitude', \
             'depth', 'calibration_event', 'const_default_event', 'config_event', \
-            'config_default_event',
+            'config_default_event', 'photos',
         ]
         optional_fields = ['photos']
 
