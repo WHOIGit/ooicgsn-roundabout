@@ -10,7 +10,7 @@ from django.db.models import Q
 
 from .models import FieldInstance
 from roundabout.inventory.api.serializers import InventorySerializer, ActionSerializer
-from roundabout.inventory.models import Inventory, Action
+from roundabout.inventory.models import Inventory, Action, PhotoNote
 from roundabout.parts.models import Part, Revision
 from roundabout.locations.models import Location
 
@@ -114,14 +114,17 @@ class FieldInstanceSyncToHomeView(View):
                 print(actions_dict)
                 for action in actions_dict:
                     action.pop('id')
+                    photos = action.pop('photos')
+                    print('PHOTOS ', photos)
                     response = requests.post(action_url, json=action,)
                     print(json.dumps(action))
                     print('ACTION RESPONSE:', response.text)
                     new_action = response.text
                     print("Action Post: ", response.status_code)
-
-                    if action.photos.exists():
-                        for photo in action.photos.exists():
+                    # Add the photos for Action notes if they exist
+                    if photos:
+                        photo_qs = PhotoNote.objects.filter(id__in=photos)
+                        for photo in photo_qs:
                             multipart_form_data = {
                                 'photo': (photo.photo.name, photo.photo.file),
                                 #'photo': (photo.photo.name, open('myfile.zip', 'rb')),
