@@ -27,7 +27,7 @@
 {% block content %}
 <div class="container">
   <h1>{% if vessel %} Edit {{ vessel.vessel_name }} {% else %} Add Vessel {% endif %}</h1>
-  <form class="form-horizontal" method="post" action="" id="printer-form">
+  <form class="form-horizontal" method="post" action="" novalidate>
     {% csrf_token %}
     {{ form|crispy }}
 

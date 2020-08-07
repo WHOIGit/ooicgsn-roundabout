@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -407,12 +407,23 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
             coeff_events = self.object.calibration_events.prefetch_related('coefficient_value_sets__coefficient_values')
         else:
             coeff_events = None
-            
+
+        # Get Inventory items by Root Locations
+        inventory_location_data = []
+        root_locations = Location.objects.root_nodes().exclude(root_type='Trash')
+        for root in root_locations:
+            locations_list = root.get_descendants(include_self=True).values_list('id', flat=True)
+            items = self.object.part.inventory.filter(location__in=locations_list)
+            if items:
+                data = {'location_root': root, 'inventory_items': items, }
+                inventory_location_data.append(data)
+
         context.update({
             'coeff_events': coeff_events,
             'printers': printers,
             'custom_fields': custom_fields,
             'node_type': node_type,
+            'inventory_location_data': inventory_location_data,
         })
         return context
 
@@ -801,7 +812,7 @@ class ActionNoteAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         self.object.object_type = 'inventory'
         self.object.parent = inventory_item.parent
         self.object.build = inventory_item.build
-        self.object.deployment = inventory_item.get_latest_action().deployment
+        self.object.deployment = inventory_item.get_latest_deployment()
         self.object.save()
 
         photo_ids = form.cleaned_data['photo_ids']
@@ -1590,11 +1601,22 @@ class InventoryDetailView(LoginRequiredMixin, DetailView):
         else:
             custom_fields = None
 
+        # Get Inventory items by Root Locations
+        inventory_location_data = []
+        root_locations = Location.objects.root_nodes().exclude(root_type='Trash')
+        for root in root_locations:
+            locations_list = root.get_descendants(include_self=True).values_list('id', flat=True)
+            items = self.object.part.inventory.filter(location__in=locations_list)
+            if items:
+                data = {'location_root': root, 'inventory_items': items, }
+                inventory_location_data.append(data)
+
         context.update({
             'part_types': part_types,
             'printers': printers,
             'custom_fields': custom_fields,
             'node_type': node_type,
+            'inventory_location_data': inventory_location_data,
         })
         return context
 
