@@ -54,7 +54,7 @@ var myArgs = process.argv.slice(2);
 
         // If navbar toggler present in small screen
 //        try {
-            var signin = await driver.findElement(By.linkText("Sign In"));
+//            var signin = await driver.findElement(By.linkText("Sign In"));
 //        }
 //        catch (NoSuchElementException) {
 //                await driver.findElement(By.css(".navbar-toggler-icon")).click();
