@@ -99,6 +99,7 @@ THIRD_PARTY_APPS = [
     'django_tables2', # interactive tables views
     'django_tables2_column_shifter', # show/hide tables2 columns
     'django_filters', #filters for API searching
+    'dynamic_rest', # dynamic functionality for API
 ]
 LOCAL_APPS = [
     'roundabout.users.apps.UsersAppConfig',
@@ -304,11 +305,16 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
-    'DEFAULT_PAGINATION_CLASS': 'drf_link_header_pagination.LinkHeaderPagination',
-    'PAGE_SIZE': 100,
+    #'DEFAULT_PAGINATION_CLASS': 'drf_link_header_pagination.LinkHeaderPagination',
+    #'PAGE_SIZE': 100,
     #'DEFAULT_PERMISSION_CLASSES': [
     #    'rest_framework.permissions.IsAuthenticated',
     #]
+}
+
+DYNAMIC_REST = {
+    #'DEFER_MANY_RELATIONS': True,
+    'PAGE_SIZE': 100,
 }
 
 # Summernote CONFIGURATION

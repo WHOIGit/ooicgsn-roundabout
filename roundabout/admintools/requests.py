@@ -1,7 +1,9 @@
 import requests
 import json
 import random
+import os
 
+from django.conf import settings
 from django.http import HttpResponse
 from django.views.generic import View
 from django.db.models import Q
@@ -26,9 +28,10 @@ class FieldInstanceSyncToHomeView(View):
 
         ##### SYNC INVENTORY #####
         #base_url = 'https://ooi-cgrdb-staging.whoi.net'
-        base_url = 'http://localhost:8000'
+        base_url = 'https://ooi-cgrdb-staging.whoi.net'
         inventory_url = F"{base_url}/api/v1/inventory/"
         action_url = F"{base_url}/api/v1/actions/"
+        action_url = F"{base_url}/api/v1/photos/"
         # Get new items that were added, these need special handling
         new_inventory = Inventory.objects.filter(created_at__gte=field_instance.start_date).order_by('-parent')
         #actions_add_qs = actions.filter(object_type=Action.INVENTORY).filter(action_type=Action.ADD).order_by('-parent')
@@ -75,7 +78,6 @@ class FieldInstanceSyncToHomeView(View):
         #actions_other_qs = actions.filter(object_type=Action.INVENTORY).exclude(action_type=Action.ADD).order_by('inventory', '-parent')
         if existing_inventory:
             #existing_inventory = [action.inventory for action in actions_other_qs.exclude(inventory__in=new_inventory).distinct('inventory')]
-            #existing_inventory = Inventory.objects.filter(id=8)
             print(existing_inventory)
 
             inventory_serializer = InventorySerializer(
@@ -96,7 +98,7 @@ class FieldInstanceSyncToHomeView(View):
                     print('NEW KEY: ', new_key)
                     item['parent'] = new_key['new_pk']
 
-                response = requests.patch(url, data=json.dumps(item), headers={'Content-Type': 'application/json'}, )
+                response = requests.patch(url, json=item, )
                 print(response.status_code)
 
             # post all new Actions for this item
@@ -112,12 +114,23 @@ class FieldInstanceSyncToHomeView(View):
                 print(actions_dict)
                 for action in actions_dict:
                     action.pop('id')
+                    response = requests.post(action_url, json=action,)
                     print(json.dumps(action))
-                    response = requests.post(action_url, data=json.dumps(action), headers={'Content-Type': 'application/json'}, )
                     print('ACTION RESPONSE:', response.text)
-                    print(response.status_code)
+                    new_action = response.text
+                    print("Action Post: ", response.status_code)
 
-            #response = requests.post(url, auth=HTTPBasicAuth('USER', 'PASSWORD'), headers={'Content-Type': 'application/json'}, json=body)
+                    if action.photos.exists():
+                        for photo in action.photos.exists():
+                            multipart_form_data = {
+                                'photo': (photo.photo.name, photo.photo.file),
+                                #'photo': (photo.photo.name, open('myfile.zip', 'rb')),
+                                'inventory': (None, photo.inventory.id),
+                                'action': (None, new_action['id']),
+                                'user': (None, photo.user.id)
+                            }
+                            response = requests.post(photo_url, files=multipart_form_data, )
+                            print("Photo post: ", response.status_code)
 
         if response:
             return HttpResponse("Code 200")

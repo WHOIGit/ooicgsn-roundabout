@@ -21,13 +21,14 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter, SimpleRouter
-from .views import InventoryViewSet, ActionViewSet
+from dynamic_rest.routers import DynamicRouter
+from .views import InventoryViewSet, ActionViewSet, PhotoNoteViewSet
 
 # Create a router and register our viewsets with it.
-router = SimpleRouter()
+router = DynamicRouter()
 router.register(r'inventory', InventoryViewSet, 'inventory' )
-#router.register(r'inventory-fulltext', InventoryFullTextViewSet, 'inventory-fulltext' )
 router.register(r'actions', ActionViewSet, 'actions' )
+router.register(r'photos', PhotoNoteViewSet, 'photos' )
 
 urlpatterns = [
     path('', include(router.urls) ),

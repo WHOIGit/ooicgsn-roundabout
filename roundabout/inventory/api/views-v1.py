@@ -21,24 +21,42 @@
 
 from rest_framework import generics, viewsets, filters
 from rest_framework.parsers import FormParser, MultiPartParser
-from dynamic_rest.viewsets import DynamicModelViewSet
-from ..models import Inventory, Action, PhotoNote
-from .serializers import InventorySerializer, ActionSerializer, PhotoNoteSerializer
+
+from ..models import Inventory, Action
+from .serializers import InventorySerializer, ActionSerializer
 
 
-class ActionViewSet(DynamicModelViewSet):
+class ActionViewSet(viewsets.ModelViewSet):
+    parser_classes = (MultiPartParser,)
     serializer_class = ActionSerializer
-    queryset = Action.objects.all()
+    filterset_fields = {
+        'created_at':['gte', 'lte', 'exact', 'gt', 'lt'],
+        'inventory':['exact'],
+        'action_type':['exact'],
+        'object_type':['exact'],
+    }
+
+    def get_queryset(self):
+        queryset = Action.objects.all()
+        # Set up eager loading to avoid N+1 selects
+        queryset = self.get_serializer_class().setup_eager_loading(queryset)
+        return queryset
+    """
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        print(instance)
+    """
 
 
-class InventoryViewSet(DynamicModelViewSet):
+class InventoryViewSet(viewsets.ModelViewSet):
     serializer_class = InventorySerializer
-    queryset = Inventory.objects.all()
+    filterset_fields = ['serial_number',]
 
-
-class PhotoNoteViewSet(DynamicModelViewSet):
-    serializer_class = PhotoNoteSerializer
-    queryset = PhotoNote.objects.all()
+    def get_queryset(self):
+        queryset = Inventory.objects.all()
+        # Set up eager loading to avoid N+1 selects
+        queryset = self.get_serializer_class().setup_eager_loading(queryset)
+        return queryset
 
 """
 class InventoryFullTextViewSet(viewsets.ReadOnlyModelViewSet):

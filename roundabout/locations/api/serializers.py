@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -20,10 +20,11 @@
 """
 
 from rest_framework import serializers
+from dynamic_rest.serializers import DynamicModelSerializer
 from ..models import Location
 
 
-class LocationSerializer(serializers.ModelSerializer):
+class LocationSerializer(DynamicModelSerializer):
     class Meta:
         model = Location
         fields = ('id', 'name', 'location_type', 'location_id', )

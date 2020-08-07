@@ -20,20 +20,22 @@
 """
 
 from rest_framework import serializers
-
+from dynamic_rest.serializers import DynamicModelSerializer
+from dynamic_rest.fields import DynamicRelationField
 from ..models import Inventory, Action, PhotoNote
 from roundabout.locations.api.serializers import LocationSerializer
 from roundabout.parts.api.serializers import PartSerializer
 
 
-class PhotoNoteSerializer(serializers.ModelSerializer):
+class PhotoNoteSerializer(DynamicModelSerializer):
     class Meta:
         model = PhotoNote
-        fields = '__all__'
+        fields = ['id', 'photo', 'inventory', 'action', 'user']
 
 
-class ActionSerializer(serializers.ModelSerializer):
-    photos = PhotoNoteSerializer(many=True)
+class ActionSerializer(DynamicModelSerializer):
+    photos = DynamicRelationField('PhotoNoteSerializer', many=True)
+    location = DynamicRelationField('LocationSerializer')
 
     class Meta:
         model = Action
@@ -45,52 +47,10 @@ class ActionSerializer(serializers.ModelSerializer):
             'config_default_event',
         ]
 
-    # need a custom create() method to handle nested fields
-    def create(self, validated_data):
-        print(self.fields)
-        print('VALIDATED ', validated_data)
-        photo_note_data = validated_data.pop('photos')
-        action = Action.objects.create(**validated_data)
 
-        if photo_note_data:
-            for photo_note in photo_note_data:
-                PhotoNote.objects.create(action=action, **photo_note)
-            """
-            photo_note_serializer = self.fields['photos']
-            for photo in photo_note_data:
-                photo['action'] = action
-            photo_notes = photo_note_serializer.create(photo_note_data)
-            """
-        return action
-
-    @staticmethod
-    def setup_eager_loading(queryset):
-        """ Perform necessary prefetching of data. """
-        queryset = queryset.select_related('location', 'inventory', 'deployment').all()
-        #queryset = queryset.prefetch_related('fieldvalues')
-        return queryset
-
-"""
-class InventorySerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Inventory
-        fields = [
-            'id', 'serial_number', 'old_serial_number', 'part', 'location', 'revision', \
-            'parent', 'build', 'assembly_part', 'assigned_destination_root', 'created_at', \
-            'updated_at', 'detail', 'test_result', 'test_type', 'flag', 'time_at_sea',
-        ]
-
-    @staticmethod
-    def setup_eager_loading(queryset):
-        queryset = queryset.select_related('location').select_related('part')
-        queryset = queryset.prefetch_related('fieldvalues')
-        return queryset
-"""
-
-class InventorySerializer(serializers.ModelSerializer):
-    location = LocationSerializer(read_only=True)
-    part = PartSerializer(read_only=True)
+class InventorySerializer(DynamicModelSerializer):
+    location = DynamicRelationField('LocationSerializer')
+    part = DynamicRelationField('PartSerializer', read_only=True)
     custom_fields = serializers.SerializerMethodField('get_custom_fields')
 
     class Meta:
@@ -115,10 +75,3 @@ class InventorySerializer(serializers.ModelSerializer):
                 custom_fields[field.field.field_name] = field.field_value
 
         return custom_fields
-
-    @staticmethod
-    def setup_eager_loading(queryset):
-        """ Perform necessary prefetching of data. """
-        queryset = queryset.select_related('location').select_related('part')
-        queryset = queryset.prefetch_related('fieldvalues')
-        return queryset
