@@ -60,7 +60,7 @@ var myArgs = process.argv.slice(2);
 //                await driver.findElement(By.css(".navbar-toggler-icon")).click();
 //         }
         // LOGIN
-	await new Promise(r => setTimeout(r, 600000));
+	await new Promise(r => setTimeout(r, 60000));
         await driver.findElement(By.linkText("Sign In")).click();
         await driver.findElement(By.id("id_login")).sendKeys("jkoch");
         await driver.findElement(By.id("id_password")).sendKeys("Automatedtests");
