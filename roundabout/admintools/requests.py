@@ -75,59 +75,49 @@ class FieldInstanceSyncToHomeView(View):
         existing_inventory = Inventory.objects.filter(
             Q(updated_at__gte=field_instance.start_date) & Q(created_at__lt=field_instance.start_date)
         )
-        #actions_other_qs = actions.filter(object_type=Action.INVENTORY).exclude(action_type=Action.ADD).order_by('inventory', '-parent')
         if existing_inventory:
-            #existing_inventory = [action.inventory for action in actions_other_qs.exclude(inventory__in=new_inventory).distinct('inventory')]
             print(existing_inventory)
-
-            inventory_serializer = InventorySerializer(
-                existing_inventory,
-                many=True,
-                context={'request': request, }
-            )
-            inventory_dict = inventory_serializer.data
-
-            for item in inventory_dict:
-                print(json.dumps(item))
-                url = F"{inventory_url}{item['id']}/"
+            for inv in existing_inventory:
+                # serialize data for JSON request
+                inventory_serializer = InventorySerializer(inv)
+                inventory_dict = inventory_serializer.data
+                url = F"{inventory_url}{inv.id}/"
                 print(url)
-
                 # Need to remap any Parent items that have new PKs
-                new_key = next((pk for pk in pk_mappings if pk['old_pk'] == item['parent']), False)
+                new_key = next((pk for pk in pk_mappings if pk['old_pk'] == inventory_dict['parent']), False)
                 if new_key:
                     print('NEW KEY: ', new_key)
-                    item['parent'] = new_key['new_pk']
+                    inventory_dict['parent'] = new_key['new_pk']
 
-                response = requests.patch(url, json=item, )
-                print(response.status_code)
+                response = requests.patch(url, json=inventory_dict, )
+                print('INVENTORY RESPONSE:', response.text)
+                print("INVENTORY CODE: ", response.status_code)
 
-            # post all new Actions for this item
-            for inv in existing_inventory:
+                # post all new Actions for this item
                 actions = inv.actions.filter(created_at__gte=field_instance.start_date)
                 for action in actions:
+                    # serialize data for JSON request
                     action_serializer = ActionSerializer(action)
-
-                    action_dict = actions_serializer.data
-                    print(actions_dict)
+                    action_dict = action_serializer.data
+                    # These will be POST as new, so remove id
                     action_dict.pop('id')
-                    response = requests.post(action_url, json=actions_dict )
+                    response = requests.post(action_url, json=action_dict )
                     print('ACTION RESPONSE:', response.text)
-                    new_action = response.text
-                    print("Action Post: ", response.status_code)
-
+                    print("ACTION CODE: ", response.status_code)
+                    new_action = response.json()
+                    # Upload any photos for new Action notes
                     if action.photos.exists():
                         for photo in action.photos.all():
                             multipart_form_data = {
                                 'photo': (photo.photo.name, photo.photo.file),
                                 #'photo': (photo.photo.name, open('myfile.zip', 'rb')),
                                 'inventory': (None, photo.inventory.id),
-                                'action': (None, new_action['id']),
+                                'action': (None, new_action['action']['id']),
                                 'user': (None, photo.user.id)
                             }
-                            response = requests.post(photo_url, file=multipart_form_data )
+                            response = requests.post(photo_url, files=multipart_form_data )
                             print('PHOTO RESPONSE:', response.text)
                             print("PHOTO CODE: ", response.status_code)
-
 
         if response:
             return HttpResponse("Code 200")
