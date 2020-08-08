@@ -125,7 +125,8 @@ class FieldInstanceSyncToHomeView(View):
                                 'user': (None, photo.user.id)
                             }
                             response = requests.post(photo_url, file=multipart_form_data )
-
+                            print('PHOTO RESPONSE:', response.text)
+                            print("PHOTO CODE: ", response.status_code)
 
 
         if response:

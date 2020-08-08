@@ -48,7 +48,7 @@ class ActionSerializer(DynamicModelSerializer):
         ]
         #optional_fields = ['photos']
         deferred_fields = ('photos', )
-
+    """
     # need a custom create() method to handle nested fields
     def create(self, validated_data):
         photo_note_data = validated_data.pop('photos')
@@ -57,7 +57,7 @@ class ActionSerializer(DynamicModelSerializer):
             for photo_note in photo_note_data:
                 PhotoNote.objects.create(action=action, **photo_note)
         return action
-
+    """
 
 class InventorySerializer(DynamicModelSerializer):
     location = DynamicRelationField('LocationSerializer')
