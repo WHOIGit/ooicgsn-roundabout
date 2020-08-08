@@ -34,7 +34,7 @@ class PhotoNoteSerializer(DynamicModelSerializer):
 
 
 class ActionSerializer(DynamicModelSerializer):
-    photos = DynamicRelationField('PhotoNoteSerializer', many=True)
+    photos = DynamicRelationField('PhotoNoteSerializer', many=True, read_only=True)
     location = DynamicRelationField('LocationSerializer')
 
     class Meta:
@@ -47,6 +47,15 @@ class ActionSerializer(DynamicModelSerializer):
             'config_default_event', 'photos',
         ]
         optional_fields = ['photos']
+
+    # need a custom create() method to handle nested fields
+    def create(self, validated_data):
+        photo_note_data = validated_data.pop('photos')
+        action = Action.objects.create(**validated_data)
+        if photo_note_data:
+            for photo_note in photo_note_data:
+                PhotoNote.objects.create(action=action, **photo_note)
+        return action
 
 
 class InventorySerializer(DynamicModelSerializer):

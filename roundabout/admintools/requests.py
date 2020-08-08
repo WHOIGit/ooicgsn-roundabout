@@ -114,14 +114,17 @@ class FieldInstanceSyncToHomeView(View):
                 print(actions_dict)
                 for action in actions_dict:
                     action.pop('id')
-                    photos = action.pop('photos')
-                    print('PHOTOS ', photos)
-                    response = requests.post(action_url, json=action,)
+                    files = {}
+                    for photo in action['photos']:
+                        print(photo)
+                        obj = PhotoNote.objects.get(id=photo)
+                        files = {'photo': (obj.photo.name, obj.photo.file),}
+
+                    #response = requests.post(action_url, json=action,)
                     print(json.dumps(action))
-                    print('ACTION RESPONSE:', response.text)
-                    new_action = response.text
-                    print("Action Post: ", response.status_code)
+                    payload = json.dumps(action)
                     # Add the photos for Action notes if they exist
+                    """
                     if photos:
                         photo_qs = PhotoNote.objects.filter(id__in=photos)
                         for photo in photo_qs:
@@ -132,8 +135,11 @@ class FieldInstanceSyncToHomeView(View):
                                 'action': (None, new_action['id']),
                                 'user': (None, photo.user.id)
                             }
-                            response = requests.post(photo_url, files=multipart_form_data, )
-                            print("Photo post: ", response.status_code)
+                    """
+                    response = requests.post(action_url, files=files, data=action )
+                    print('ACTION RESPONSE:', response.text)
+                    new_action = response.text
+                    print("Action Post: ", response.status_code)
 
         if response:
             return HttpResponse("Code 200")
