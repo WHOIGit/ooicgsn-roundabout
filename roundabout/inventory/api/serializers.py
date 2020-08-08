@@ -46,7 +46,8 @@ class ActionSerializer(DynamicModelSerializer):
             'depth', 'calibration_event', 'const_default_event', 'config_event', \
             'config_default_event', 'photos',
         ]
-        optional_fields = ['photos']
+        #optional_fields = ['photos']
+        deferred_fields = ('photos', )
 
     # need a custom create() method to handle nested fields
     def create(self, validated_data):

@@ -104,30 +104,19 @@ class FieldInstanceSyncToHomeView(View):
             # post all new Actions for this item
             for inv in existing_inventory:
                 actions = inv.actions.filter(created_at__gte=field_instance.start_date)
-                print(actions)
-                actions_serializer = ActionSerializer(
-                    actions,
-                    many=True,
-                    context={'request': request, }
-                )
-                actions_dict = actions_serializer.data
-                print(actions_dict)
-                for action in actions_dict:
-                    action.pop('id')
-                    files = {}
-                    for photo in action['photos']:
-                        print(photo)
-                        obj = PhotoNote.objects.get(id=photo)
-                        files = {'photo': (obj.photo.name, obj.photo.file),}
+                for action in actions:
+                    action_serializer = ActionSerializer(action)
 
-                    #response = requests.post(action_url, json=action,)
-                    print(json.dumps(action))
-                    payload = json.dumps(action)
-                    # Add the photos for Action notes if they exist
-                    """
-                    if photos:
-                        photo_qs = PhotoNote.objects.filter(id__in=photos)
-                        for photo in photo_qs:
+                    action_dict = actions_serializer.data
+                    print(actions_dict)
+                    action_dict.pop('id')
+                    response = requests.post(action_url, json=actions_dict )
+                    print('ACTION RESPONSE:', response.text)
+                    new_action = response.text
+                    print("Action Post: ", response.status_code)
+
+                    if action.photos.exists():
+                        for photo in action.photos.all():
                             multipart_form_data = {
                                 'photo': (photo.photo.name, photo.photo.file),
                                 #'photo': (photo.photo.name, open('myfile.zip', 'rb')),
@@ -135,11 +124,9 @@ class FieldInstanceSyncToHomeView(View):
                                 'action': (None, new_action['id']),
                                 'user': (None, photo.user.id)
                             }
-                    """
-                    response = requests.post(action_url, files=files, data=action )
-                    print('ACTION RESPONSE:', response.text)
-                    new_action = response.text
-                    print("Action Post: ", response.status_code)
+                            response = requests.post(photo_url, file=multipart_form_data )
+
+
 
         if response:
             return HttpResponse("Code 200")
