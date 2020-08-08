@@ -34,7 +34,7 @@ class PhotoNoteSerializer(DynamicModelSerializer):
 
 
 class ActionSerializer(DynamicModelSerializer):
-    photos = DynamicRelationField('PhotoNoteSerializer', many=True, read_only=True)
+    photos = DynamicRelationField('PhotoNoteSerializer', many=True)
     location = DynamicRelationField('LocationSerializer')
 
     class Meta:

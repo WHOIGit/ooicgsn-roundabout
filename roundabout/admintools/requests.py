@@ -31,7 +31,7 @@ class FieldInstanceSyncToHomeView(View):
         base_url = 'https://ooi-cgrdb-staging.whoi.net'
         inventory_url = F"{base_url}/api/v1/inventory/"
         action_url = F"{base_url}/api/v1/actions/"
-        action_url = F"{base_url}/api/v1/photos/"
+        photo_url = F"{base_url}/api/v1/photos/"
         # Get new items that were added, these need special handling
         new_inventory = Inventory.objects.filter(created_at__gte=field_instance.start_date).order_by('-parent')
         #actions_add_qs = actions.filter(object_type=Action.INVENTORY).filter(action_type=Action.ADD).order_by('-parent')
