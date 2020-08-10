@@ -79,6 +79,7 @@ jobs:
              sudo apt-get install -y wget && apt install -y unzip
              cd ~/project/tests
              sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 78BD65473CB3BD13
+             sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4E6910DFCB68C9CD
              sudo wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
              sudo apt install -y google-chrome-stable_current_amd64.deb
              sudo wget https://chromedriver.storage.googleapis.com/84.0.4147.30/chromedriver_linux64.zip && unzip chromedriver_linux64.zip
