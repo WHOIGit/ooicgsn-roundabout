@@ -21,10 +21,6 @@ RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.d
 RUN wget https://chromedriver.storage.googleapis.com/84.0.4147.30/chromedriver_linux64.zip && unzip -d /tests chromedriver_linux64.zip
 RUN apt install -y firefox && apt install -y firefox-geckodriver
 
-RUN chromedriver -v
-RUN firefox -v
-RUN geckodriver -v
-
 RUN chmod +x RunAllTests-Chrome-Linux.bat
 RUN sed -i 's/\r//' RunAllTests-Chrome-Linux.bat
 
