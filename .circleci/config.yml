@@ -74,15 +74,12 @@ jobs:
       - run:
           name: Running Automated tests
           command: >-
-             sudo apt-get update && sudo apt-get upgrade
              sudo apt-get install -y nodejs && apt install -y npm
              sudo apt-get install -y wget && apt install -y unzip
              cd ~/project/tests
-             sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 78BD65473CB3BD13
-             sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 4E6910DFCB68C9CD
-             sudo apt-key list
-             sudo wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+             sudo wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb | sudo apt-key add - 
              sudo apt install -y google-chrome-stable_current_amd64.deb
+             sudo apt-get update && sudo apt-get upgrade
              sudo wget https://chromedriver.storage.googleapis.com/84.0.4147.30/chromedriver_linux64.zip && unzip chromedriver_linux64.zip
              sudo apt install -y firefox && sudo apt install -y firefox-geckodriver
              chmod +x RunAllTests-Chrome-Linux.bat
