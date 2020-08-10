@@ -24,7 +24,6 @@ version: '3.5'
 volumes:
   local_postgres_data: {}
   local_postgres_data_backups: {}
-  rdb_tests: {}
 
 services:
   django:
@@ -62,10 +61,6 @@ services:
 
   tests:
     image: roundabout_production_tests
-    volumes:
-      - rdb_tests:/tests
-    ports:
-      - "5858:5858"
     command: |
         mkdir tests
         cp ./tests  
