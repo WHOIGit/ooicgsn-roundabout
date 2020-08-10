@@ -70,10 +70,7 @@ services:
 	mkdir tests
 	cp ./tests /tests
 	apt-get install -y wget && apt install -y unzip
-	apt-get update &&\
-  	  apt-get -y install curl &&\
-    	  curl -sL https://deb.nodesource.com/setup_10.x &&\
-    	  apt-get -y install nodejs
+	apt-get update && apt-get -y install curl && curl -sL https://deb.nodesource.com/setup_10.x && apt-get -y install nodejs
 	cd tests
 	wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && apt install -y ./google-chrome-stable_current_amd64.deb
 	wget https://chromedriver.storage.googleapis.com/84.0.4147.30/chromedriver_linux64.zip && unzip -d /tests chromedriver_linux64.zip
