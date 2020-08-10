@@ -62,7 +62,7 @@ services:
   tests:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./compose/local/tests/Dockerfile
     image: roundabout_production_tests
     command: |
         apt-get install -y nodejs && apt install -y npm
