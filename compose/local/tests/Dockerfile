@@ -1,13 +1,21 @@
 FROM ubuntu:18.04
-RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 
-WORKDIR /tests
+# Install nodejs
+RUN apt-get update &&\
+    apt-get -y install curl &&\
+    curl -sL https://deb.nodesource.com/setup_10.x &&\
+    apt-get -y install nodejs
 
-RUN apt-get install -y nodejs && apt install -y npm
+RUN node -v
+
 RUN apt-get install -y wget && apt install -y unzip
 
 # For Circleci
-COPY /tests /tests
+COPY ./tests /tests
+# For command line testing
+#COPY . /tests
+
+WORKDIR /tests
 
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && apt install -y ./google-chrome-stable_current_amd64.deb
 RUN wget https://chromedriver.storage.googleapis.com/84.0.4147.30/chromedriver_linux64.zip && unzip -d /tests chromedriver_linux64.zip
