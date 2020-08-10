@@ -60,6 +60,8 @@ services:
       - roundabout-network
 
   tests:
+    build:
+      context: .
     image: roundabout_production_tests
     command: |
         mkdir tests
