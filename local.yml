@@ -66,7 +66,7 @@ services:
       - rdb_tests:/tests
     ports:
       - "5858:5858"
-    command: |
+    command: 
 	mkdir tests
 	cp ./tests /tests
 	apt-get install -y wget && apt install -y unzip
