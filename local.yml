@@ -65,12 +65,12 @@ services:
       dockerfile: ./compose/local/tests/Dockerfile
     image: roundabout_production_tests
     command: |
-        apt-get install -y nodejs && apt install -y npm
-        apt-get install -y wget && apt install -y unzip
+        sudo apt-get install -y nodejs && apt install -y npm
+        sudo apt-get install -y wget && apt install -y unzip
         wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-        apt install -y google-chrome-stable_current_amd64.deb
+        sudo apt install -y google-chrome-stable_current_amd64.deb
         wget https://chromedriver.storage.googleapis.com/84.0.4147.30/chromedriver_linux64.zip && unzip chromedriver_linux64.zip
-        apt install -y firefox && apt install -y firefox-geckodriver
+        sudo apt install -y firefox && apt install -y firefox-geckodriver
         chmod +x RunAllTests-Chrome-Linux.bat
         chmod +x RunAllTests-Firefox-Linux.bat
         RunAllTests-Chrome-Linux.bat && RunAllTests-Firefox-Linux.bat
