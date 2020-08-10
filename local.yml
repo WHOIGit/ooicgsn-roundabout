@@ -60,12 +60,8 @@ services:
       - roundabout-network
 
   tests:
-    build:
-      context: .
     image: roundabout_production_tests
     command: |
-        mkdir tests
-        cp ./tests  
         curl -sL https://deb.nodesource.com/setup_10.x && apt-get -y install nodejs
         cd tests
         wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && apt install -y ./google-chrome-stable_current_amd64.deb
