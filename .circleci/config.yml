@@ -74,6 +74,7 @@ jobs:
       - run:
           name: Running Automated tests
           command: >-
+             sudo apt-get update && sudo apt-get upgrade
              sudo apt-get install -y nodejs && apt install -y npm
              sudo apt-get install -y wget && apt install -y unzip
              cd ~/project/tests
