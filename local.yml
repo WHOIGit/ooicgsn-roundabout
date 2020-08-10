@@ -60,7 +60,6 @@ services:
       - roundabout-network
 
   tests:
-    image: roundabout_production_tests
     command: |
         curl -sL https://deb.nodesource.com/setup_10.x && apt-get -y install nodejs
         cd tests
