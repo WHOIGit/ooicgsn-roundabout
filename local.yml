@@ -60,19 +60,23 @@ services:
       - roundabout-network
 
   tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: roundabout_production_tests
     command: |
-        curl -sL https://deb.nodesource.com/setup_10.x && apt-get -y install nodejs
-        cd tests
-        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && apt install -y ./google-chrome-stable_current_amd64.deb
-        wget https://chromedriver.storage.googleapis.com/84.0.4147.30/chromedriver_linux64.zip && unzip -d /tests chromedriver_linux64.zip
+        apt-get install -y nodejs && apt install -y npm
+        apt-get install -y wget && apt install -y unzip
+        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        apt install -y google-chrome-stable_current_amd64.deb
+        wget https://chromedriver.storage.googleapis.com/84.0.4147.30/chromedriver_linux64.zip && unzip chromedriver_linux64.zip
         apt install -y firefox && apt install -y firefox-geckodriver
-        chmod +x ./RunAllTests-Chrome-Linux.bat
-        sed -i 's/\r//' ./RunAllTests-Chrome-Linux.bat
-        chmod +x ./RunAllTests-Firefox-Linux.bat
-        sed -i 's/\r//' ./RunAllTests-Firefox-Linux.bat
-        sh -c "./RunAllTests-Chrome-Linux.bat && ./RunAllTests-Firefox-Linux.bat"
+        chmod +x RunAllTests-Chrome-Linux.bat
+        chmod +x RunAllTests-Firefox-Linux.bat
+        RunAllTests-Chrome-Linux.bat && RunAllTests-Firefox-Linux.bat
     networks:
       - roundabout-network
+
 
 networks:
   roundabout-network:
