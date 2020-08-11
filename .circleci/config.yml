@@ -82,11 +82,11 @@ jobs:
              wget https://chromedriver.storage.googleapis.com/84.0.4147.30/chromedriver_linux64.zip && unzip chromedriver_linux64.zip &&
              sudo apt install -y firefox && sudo apt install -y firefox-geckodriver &&
              cd ~/project/tests
-             chmod +x RunAllTests-Chrome-Linux.bat &&
-             sed -i 's/\r//' RunAllTests-Chrome-Linux.bat &&
-             chmod +x RunAllTests-Firefox-Linux.bat &&
-             sed -i 's/\r//' RunAllTests-Firefox-Linux.bat &&
-             RunAllTests-Chrome-Linux.bat && RunAllTests-Firefox-Linux.bat
+             chmod +x ./RunAllTests-Chrome-Linux.bat &&
+             sed -i 's/\r//' ./RunAllTests-Chrome-Linux.bat &&
+             chmod +x ./RunAllTests-Firefox-Linux.bat &&
+             sed -i 's/\r//' ./RunAllTests-Firefox-Linux.bat &&
+             ./RunAllTests-Chrome-Linux.bat && ./RunAllTests-Firefox-Linux.bat
       - run:
           name: Stopping Docker application
           command: >-
