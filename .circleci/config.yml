@@ -86,7 +86,7 @@ jobs:
              sudo sed -i 's/\r//' ./RunAllTests-Chrome-Linux.bat &&
              sudo chmod +x ./RunAllTests-Firefox-Linux.bat &&
              sudo sed -i 's/\r//' ./RunAllTests-Firefox-Linux.bat &&
-             sh -c "./RunAllTests-Chrome-Linux.bat" && sh -c "./RunAllTests-Firefox-Linux.bat"
+             sudo sh -c "./RunAllTests-Chrome-Linux.bat" && sudo sh -c "./RunAllTests-Firefox-Linux.bat"
       - run:
           name: Stopping Docker application
           command: >-
