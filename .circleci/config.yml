@@ -75,7 +75,7 @@ jobs:
       - run:
           name: Running Automated tests
           command: >-
-             sudo apt-get update && sudo apt-get upgrade
+             sudo apt-get update
              sudo sed -i '/ google /s/^/#/' /etc/apt/sources.list.d/google.list
              sudo sed -i '/ google /s/^/#/' /etc/apt/sources.list.d/google-chrome.list
              sudo apt-get update
