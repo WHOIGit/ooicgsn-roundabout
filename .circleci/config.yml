@@ -77,7 +77,6 @@ jobs:
              - image: circleci/node
           name: Running Automated tests
           command: >-
-             sudo apt-get install -y wget && sudo apt install -y unzip
              sudo apt-get install -y nodejs
              cd ~/project/tests
              wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
