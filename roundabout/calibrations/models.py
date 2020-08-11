@@ -57,6 +57,12 @@ class CalibrationEvent(models.Model):
     def get_actions(self):
         return self.actions.filter(object_type=Action.CALEVENT)
 
+    def get_sorted_reviewers(self):
+        return self.user_draft.all().order_by('username')
+
+    def get_sorted_approvers(self):
+        return self.user_approver.all().order_by('username')
+
 
 # Tracks Calibrations across Parts
 class CoefficientName(models.Model):

@@ -87,12 +87,12 @@
                             </div>
                         {% endif %}
                         <p id = 'approvers'>Approvers: 
-                            {% for user in event.user_approver.all %}
+                            {% for user in event.get_sorted_approvers.all %}
                                 <span id='approver-{{ user.id }}'>{{ user.username }}</span>
                             {% endfor %}
                         </p>
                         <p id = 'reviewers'>Reviewers: 
-                            {% for user in event.user_draft.all %}
+                            {% for user in event.get_sorted_reviewers.all %}
                                 <span id='reviewer-{{ user.id }}'>{{ user.username }}</span>
                             {% endfor %}
                         </p> 

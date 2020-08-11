@@ -57,6 +57,7 @@
               <thead>
                   <th>Name</th>
                   <th>Type</th>
+                  <th>Export with Calibrations</th>
               </thead>
               <tbody>
                 {{ part_confname_form.management_form }}
@@ -64,6 +65,8 @@
                   <tr>
                       <td>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.name }}</td>
                       <td>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.config_type }}</td>
+                      <td style = 'text-align: center;'>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.export_with_calibrations }}</td>
+                      <td class = 'delete-here'></td>
                   </tr>
               {% endfor %}
               </tbody>
@@ -105,16 +108,13 @@
             $('.conf_name-form tbody tr').formset({
                 prefix: 'config_names',
                 addText: 'Add Configurtations/Constants',
+                deleteContainerClass: 'delete-here',
                 deleteText: 'Remove',
                 added: function(row) {
-
                     let remove_button = row.find('.delete-row');
-                    remove_button.addClass('pull-right');
                 }
             });
-
-            $('.delete-row').addClass('pull-right');
-        })
+        });
 
     </script>
 {% endblock javascript %}

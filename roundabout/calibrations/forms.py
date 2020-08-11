@@ -55,7 +55,7 @@ class CalibrationEventForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(CalibrationEventForm, self).__init__(*args, **kwargs)
-        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only'])
+        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username')
 
     def clean_user_draft(self):
         user_draft = self.cleaned_data.get('user_draft')
@@ -64,6 +64,10 @@ class CalibrationEventForm(forms.ModelForm):
     def save(self, commit = True): 
         event = super(CalibrationEventForm, self).save(commit = False)
         if commit:
+            if event.user_approver.exists():
+                for user in event.user_approver.all():
+                    event.user_draft.add(user)
+                    event.user_approver.remove(user)
             event.save()
             return event
          

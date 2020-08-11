@@ -63,6 +63,12 @@ class ConfigEvent(models.Model):
         else:
             return 'TBD'
 
+    def get_sorted_reviewers(self):
+        return self.user_draft.all().order_by('username')
+
+    def get_sorted_approvers(self):
+        return self.user_approver.all().order_by('username')
+
 # Tracks Configurations across Parts
 class ConfigName(models.Model):
     class Meta:
@@ -120,6 +126,12 @@ class ConstDefaultEvent(models.Model):
     def get_actions(self):
         return self.actions.filter(object_type=Action.CONSTDEFEVENT)
 
+    def get_sorted_reviewers(self):
+        return self.user_draft.all().order_by('username')
+
+    def get_sorted_approvers(self):
+        return self.user_approver.all().order_by('username')
+
 
 # Tracks Constant Defaults across ConstDefaultEvents 
 class ConstDefault(models.Model):
@@ -158,6 +170,12 @@ class ConfigDefaultEvent(models.Model):
     
     def get_actions(self):
         return self.actions.filter(object_type=Action.CONFDEFEVENT)
+
+    def get_sorted_reviewers(self):
+        return self.user_draft.all().order_by('username')
+
+    def get_sorted_approvers(self):
+        return self.user_approver.all().order_by('username')
 
 
 # Tracks Config Defaults across ConstDefaultEvents 

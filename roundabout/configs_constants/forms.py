@@ -52,8 +52,19 @@ class ConfigEventForm(forms.ModelForm):
         }
     def __init__(self, *args, **kwargs):
         super(ConfigEventForm, self).__init__(*args, **kwargs)
-        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only'])
+        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username')
         self.fields['deployment'].required = False
+
+    def save(self, commit = True): 
+        event = super(ConfigEventForm, self).save(commit = False)
+        if commit:
+            if event.user_approver.exists():
+                for user in event.user_approver.all():
+                    event.user_draft.add(user)
+                    event.user_approver.remove(user)
+            event.save()
+            return event
+
 
 # Configuration Value form
 # Inputs: Configuration values and notes per Part Config Type
@@ -92,10 +103,15 @@ class ConfigValueForm(forms.ModelForm):
 class ConfigNameForm(forms.ModelForm):
     class Meta:
         model = ConfigName
-        fields = ['name', 'config_type']
+        fields = [
+            'name', 
+            'config_type', 
+            # 'include_with_calibrations'
+        ] 
         labels = {
             'name': 'Configuration/Constant Name',
-            'config_type': 'Type'
+            'config_type': 'Type',
+            # 'include_with_calibrations': 'Export with Calibrations' 
         }
         widgets = {
             'name': forms.TextInput(
@@ -103,6 +119,7 @@ class ConfigNameForm(forms.ModelForm):
                     'required': False
                 }
             ),
+            # 'include_with_calibrations': forms.CheckboxInput() 
         }
 
 
@@ -148,7 +165,7 @@ class ConstDefaultEventForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ConstDefaultEventForm, self).__init__(*args, **kwargs)
-        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only'])
+        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username')
 
     def clean_user_draft(self):
         user_draft = self.cleaned_data.get('user_draft')
@@ -157,6 +174,10 @@ class ConstDefaultEventForm(forms.ModelForm):
     def save(self, commit = True): 
         event = super(ConstDefaultEventForm, self).save(commit = False)
         if commit:
+            if event.user_approver.exists():
+                for user in event.user_approver.all():
+                    event.user_draft.add(user)
+                    event.user_approver.remove(user)
             event.save()
             return event
 
@@ -176,7 +197,7 @@ class ConfigDefaultEventForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ConfigDefaultEventForm, self).__init__(*args, **kwargs)
-        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only'])
+        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username')
 
     def clean_user_draft(self):
         user_draft = self.cleaned_data.get('user_draft')
@@ -185,6 +206,10 @@ class ConfigDefaultEventForm(forms.ModelForm):
     def save(self, commit = True): 
         event = super(ConfigDefaultEventForm, self).save(commit = False)
         if commit:
+            if event.user_approver.exists():
+                for user in event.user_approver.all():
+                    event.user_draft.add(user)
+                    event.user_approver.remove(user)
             event.save()
             return event
 
@@ -258,7 +283,11 @@ PartConfigNameFormset = inlineformset_factory(
     Part, 
     ConfigName, 
     form=ConfigNameForm, 
-    fields=('name', 'config_type'), 
+    fields=(
+        'name', 
+        'config_type', 
+        # 'export_with_calibrations'
+    ), 
     extra=1, 
     can_delete=True
 )
