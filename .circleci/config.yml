@@ -78,7 +78,9 @@ jobs:
           name: Running Automated tests
           command: >-
              curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash - &&
-             sudo apt-get install -y nodejs &&      
+             sudo apt-get install -y nodejs &&
+             sudo apt-get remove google-chrome &&
+             curl -O https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && sudo apt install -y google-chrome-stable_current_amd64.deb  &&               
              wget https://chromedriver.storage.googleapis.com/84.0.4147.30/chromedriver_linux64.zip && unzip chromedriver_linux64.zip &&
              sudo apt install -y firefox && sudo apt install -y firefox-geckodriver &&
              cd ~/project/tests
