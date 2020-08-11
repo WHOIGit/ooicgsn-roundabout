@@ -33,8 +33,7 @@ workflows:
 version: 2
 jobs:
   build:
-    machine:
-       image: ubuntu-1604:202007-01 
+    machine: true
     steps:
       - checkout
       - run:
@@ -73,9 +72,11 @@ jobs:
             docker-compose --file local.yml run --rm django \
               python manage.py test
       - run:
+          docker:
+             - image: circleci/node
           name: Running Automated tests
           command: >-
-             sudo apt-get update
+             sudo apt-get update && sudo apt-get upgrade
              sudo sed -i '/ google /s/^/#/' /etc/apt/sources.list.d/google.list
              sudo sed -i '/ google /s/^/#/' /etc/apt/sources.list.d/google-chrome.list
              sudo apt-get update
