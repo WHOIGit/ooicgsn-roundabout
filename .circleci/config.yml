@@ -18,6 +18,8 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 #
+#             wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+#             sudo apt install -y google-chrome-stable_current_amd64.deb        
 
 workflows:
   version: 2
@@ -78,9 +80,7 @@ jobs:
              sudo apt-get update && sudo apt-get upgrade
              sudo apt-get install -y wget && sudo apt install -y unzip
              sudo apt-get install -y nodejs
-             cd ~/project/tests
-#             wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-#             sudo apt install -y google-chrome-stable_current_amd64.deb             
+             cd ~/project/tests     
              wget https://chromedriver.storage.googleapis.com/84.0.4147.30/chromedriver_linux64.zip && unzip chromedriver_linux64.zip
              sudo apt install -y firefox && sudo apt install -y firefox-geckodriver
              chmod +x RunAllTests-Chrome-Linux.bat
