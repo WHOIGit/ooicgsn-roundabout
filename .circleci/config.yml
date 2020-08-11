@@ -17,9 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
-#
-#             wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-#             sudo apt install -y google-chrome-stable_current_amd64.deb        
+#  
 
 workflows:
   version: 2
@@ -36,7 +34,7 @@ version: 2
 jobs:
   build:
     machine:
-       image: ubuntu-1604:202004-01 
+       image: ubuntu-1604:202007-01 
     steps:
       - checkout
       - run:
@@ -77,10 +75,14 @@ jobs:
       - run:
           name: Running Automated tests
           command: >-
+             sudo sed -i '/ google /s/^/#/' /etc/apt/sources.list.d/google.list
+             sudo sed -i '/ google /s/^/#/' /etc/apt/sources.list.d/google-chrome.list
              sudo apt-get update && sudo apt-get upgrade
              sudo apt-get install -y wget && sudo apt install -y unzip
              sudo apt-get install -y nodejs
-             cd ~/project/tests     
+             cd ~/project/tests
+             wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+             sudo apt install -y google-chrome-stable_current_amd64.deb           
              wget https://chromedriver.storage.googleapis.com/84.0.4147.30/chromedriver_linux64.zip && unzip chromedriver_linux64.zip
              sudo apt install -y firefox && sudo apt install -y firefox-geckodriver
              chmod +x RunAllTests-Chrome-Linux.bat
