@@ -77,7 +77,7 @@ jobs:
              - image: circleci/node
           name: Running Automated tests
           command: >-
-             curl -sL https://deb.nodesource.com/setup_12.13.1 | sudo -E bash - &&
+             curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash - &&
              sudo apt-get install -y nodejs &&
              sudo apt-get purge /usr/bin/google-chrome-stable &&
              curl -O https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && sudo apt install -y google-chrome-stable_current_amd64.deb  &&               
