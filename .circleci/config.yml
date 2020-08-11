@@ -77,17 +77,15 @@ jobs:
              - image: circleci/node
           name: Running Automated tests
           command: >-
-             sudo apt-get install -y nodejs
-             curl -Lo ~/google-chrome-stable_current_amd64.deb \
-               https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-             sudo apt install -y google-chrome-stable_current_amd64.deb           
-             wget https://chromedriver.storage.googleapis.com/84.0.4147.30/chromedriver_linux64.zip && unzip chromedriver_linux64.zip
-             sudo apt install -y firefox && sudo apt install -y firefox-geckodriver
-             chmod +x RunAllTests-Chrome-Linux.bat
-             sed -i 's/\r//' RunAllTests-Chrome-Linux.bat
-             chmod +x RunAllTests-Firefox-Linux.bat
-             sed -i 's/\r//' RunAllTests-Firefox-Linux.bat
-             RunAllTests-Chrome-Linux.bat && RunAllTests-Firefox-Linux.bat
+             sudo apt-get install -y nodejs &&
+             curl -O https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && sudo apt install -y google-chrome-stable_current_amd64.deb  &&         
+             wget https://chromedriver.storage.googleapis.com/84.0.4147.30/chromedriver_linux64.zip && unzip chromedriver_linux64.zip &&
+             sudo apt install -y firefox && sudo apt install -y firefox-geckodriver &&
+             chmod +x RunAllTests-Chrome-Linux.bat &&
+             sed -i 's/\r//' RunAllTests-Chrome-Linux.bat &&
+             chmod +x RunAllTests-Firefox-Linux.bat &&
+             sed -i 's/\r//' RunAllTests-Firefox-Linux.bat &&
+             RunAllTests-Chrome-Linux.bat && RunAllTests-Firefox-Linux.bat &&
       - run:
           name: Stopping Docker application
           command: >-
