@@ -33,7 +33,7 @@ workflows:
 version: 2
 jobs:
   build:
-    machine: ubuntu-1604:202007-01
+    machine: ubuntu-1604:201903-01 
     steps:
       - checkout
       - run:
