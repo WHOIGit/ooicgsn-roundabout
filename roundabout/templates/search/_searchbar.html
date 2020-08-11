@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -31,6 +31,7 @@
                 <select class="btn btn-outline-primary" name="model" id="searchbar-modelselect">
                   <option value="inventory" selected>{{ label_inventory_app_plural }}</option>
                   <option value="calibrations"> -- Calibrations</option>
+                  <option value="configconsts"> -- Configs/Constants</option>
                   <option value="build">{{ label_builds_app_plural }}</option>
                   <option value="part">Part Templates</option>
                   <option value="assembly">{{ label_assemblies_app_singular }} Templates</option>
@@ -51,10 +52,11 @@
   if (domain === 'search'){ domain = path[2] }
   // no case for calibration searchbar search
   if      (domain.includes('calib'))   { select_idx = 1 }
-  else if (domain.startsWith('build')) { select_idx = 2 }
-  else if (domain.startsWith('part'))  { select_idx = 3 }
-  else if (domain.startsWith('assem')) { select_idx = 4 }
-  else if (domain.startsWith('action')){ select_idx = 5 }
+  else if (domain.startsWith('config')){ select_idx = 2 }
+  else if (domain.startsWith('build')) { select_idx = 3 }
+  else if (domain.startsWith('part'))  { select_idx = 4 }
+  else if (domain.startsWith('assem')) { select_idx = 5 }
+  else if (domain.startsWith('action')){ select_idx = 6 }
   else { select_idx = 0 } // inventory, the default
 
   document.getElementById("searchbar-modelselect").selectedIndex = select_idx

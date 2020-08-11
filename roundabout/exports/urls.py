@@ -23,14 +23,16 @@ from django.urls import path
 
 from . import views
 
-app_name = 'search'
+app_name = 'exports'
 urlpatterns = [
-    path('searchbar', view=views.searchbar_redirect, name='searchbar'),
-    path('inventory', view=views.InventoryTableView.as_view(), name='inventory'),
-    path('calibrations',view=views.CalibrationTableView.as_view(),name='calibrations'),
-    path('configconsts',view=views.ConfigConstTableView.as_view(),name='configconsts'),
-    path('builds', view=views.BuildTableView.as_view(), name='build'),
-    path('parts',view=views.PartTableView.as_view(),name='part'),
-    path('assembly', view=views.AssemblyTableView.as_view(), name='assembly'),
-    path('actions', view=views.ActionTableView.as_view(), name='action'),
+    path('',view=views.HomeView.as_view(),name='home'),
+    path('calibration_event/<int:pk>/', view=views.ExportCalibrationEvent.as_view(), name='calibration'),
+    path('configconst_event/<int:pk>', view=views.ExportConfigEvent.as_view(), name='configconst'),
+    path('calibration_events_with_configs/', view=views.ExportCalibrationEvents_withConfigs.as_view(), name='calibrations_with_configs'),
+    path('calibration_events/', view=views.ExportCalibrationEvents.as_view(), name='calibrations'),
+    path('configconst_events/', view=views.ExportConfigEvents.as_view(), name='configconsts'),
+    path('cruises/', view=views.ExportCruises.as_view(), name='cruises'),
+    path('vessels/', view=views.ExportVessels.as_view(), name='vessels'),
+    path('deployments/', view=views.ExportDeployments.as_view(), name='deployments'),
+    path('CI/', view=views.ExportCI.as_view(), name='CI'),
 ]
