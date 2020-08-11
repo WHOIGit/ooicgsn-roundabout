@@ -22,6 +22,8 @@ import csv as CSV
 import zipfile, io
 from os.path import splitext, join
 import datetime as dt
+from itertools import chain
+
 
 from django.views.generic import TemplateView, DetailView, ListView
 from django.http import HttpResponse,HttpResponseRedirect
@@ -42,6 +44,8 @@ class HomeView(TemplateView):
         return context
 
 
+## Single Event Exports ##
+
 class ExportCalibrationEvent(DetailView,LoginRequiredMixin):
     model = CalibrationEvent
     context_object_name = 'cal_event'
@@ -52,28 +56,11 @@ class ExportCalibrationEvent(DetailView,LoginRequiredMixin):
         cal = context.get(self.context_object_name)  # getting object from context
         fname = '{}__{}.csv'.format(cal.inventory.serial_number, cal.calibration_date.strftime('%Y%m%d'))
 
-        serial_label_qs = cal.inventory.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number', is_current=True)
-        if serial_label_qs.exists():
-            serial_label = serial_label_qs[0].field_value
-        else:
-            serial_label = ''
-
-        zip_mode = []
         header = ['serial','name','value','notes']
-        rows = [header]
-        for coeff in cal.coefficient_value_sets.all():
-            if coeff.coefficient_name.value_set_type == '2d':
-                extra = ('{}__{}.ext'.format(splitext(fname)[0], coeff.coefficient_name),
-                         coeff.value_set)
-                zip_mode.append(extra)
+        rows,aux_files = ExportCalibrationEvents.get_csvrows_aux(cal)
+        rows.insert(0,header)
 
-            row = [serial_label,
-                   coeff.coefficient_name.calibration_name,
-                   coeff.value_set_with_export_formatting(),
-                   coeff.notes]
-            rows.append(row)
-
-        if zip_mode:
+        if aux_files:
             response = HttpResponse(content_type='application/zip')
             fname_zip = '{}.zip'.format(splitext(fname)[0])
             response['Content-Disposition'] = 'inline; filename="{}"'.format(fname_zip)
@@ -82,7 +69,7 @@ class ExportCalibrationEvent(DetailView,LoginRequiredMixin):
             writer = CSV.writer(csv_content)
             writer.writerows(rows)
             zf.writestr(fname,csv_content.getvalue())
-            for extra_fname,extra_content in zip_mode:
+            for extra_fname,extra_content in aux_files:
                 zf.writestr(extra_fname, extra_content)
             return response
 
@@ -101,20 +88,9 @@ class ExportConfigEvent(DetailView,LoginRequiredMixin):
         confconst = context.get(self.context_object_name)  # getting object from context
         fname = '{}__{}.csv'.format(confconst.inventory.serial_number, confconst.configuration_date.strftime('%Y%m%d'))
 
-        serial_label_qs = confconst.inventory.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number', is_current=True)
-        if serial_label_qs.exists():
-            serial_label = serial_label_qs[0].field_value
-        else:
-            serial_label = ''
-
         header = ['serial','name','value','notes']
-        rows = [header]
-        for confconst_val in confconst.config_values.all():
-            row = [serial_label,
-                   confconst_val.config_name.name,
-                   confconst_val.config_value_with_export_formatting(),
-                   confconst_val.notes]
-            rows.append(row)
+        rows = ExportConfigEvents.get_csvrows(confconst)
+        rows.insert(0,header)
 
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'inline; filename="{}"'.format(fname)
@@ -122,6 +98,8 @@ class ExportConfigEvent(DetailView,LoginRequiredMixin):
         writer.writerows(rows)
         return response
 
+
+## Bulk Export Base Classes ##
 
 class CSVExport(ListView,LoginRequiredMixin):
     model = None
@@ -139,7 +117,6 @@ class CSVExport(ListView,LoginRequiredMixin):
     def build_csv(csv, objs):
         pass
 
-
 class ZipExport(ListView,LoginRequiredMixin):
     model = None
     fname = '{}.zip'
@@ -156,8 +133,104 @@ class ZipExport(ListView,LoginRequiredMixin):
     def build_zip(zf, objs):
         pass
 
-from itertools import chain
 
+## Bulk Export Classes ##
+
+# Calibrations Only
+class ExportCalibrationEvents(ZipExport):
+    model = CalibrationEvent
+    fname = 'CalibrationEvents.zip'
+
+    @staticmethod
+    def build_zip(zf, objs, subdir=None):
+        objs = objs.prefetch_related('inventory', 'inventory__fieldvalues', 'inventory__fieldvalues__field')
+        for cal in objs:
+            csv_fname = '{}__{}.csv'.format(cal.inventory.serial_number, cal.calibration_date.strftime('%Y%m%d'))
+            if subdir: csv_fname = join(subdir, csv_fname)
+
+            header = ['serial', 'name', 'value', 'notes']
+            rows, aux_files = ExportCalibrationEvents.get_csvrows_aux(cal)
+            rows.insert(0, header)
+
+            csv_content = io.StringIO()
+            writer = CSV.writer(csv_content)
+            writer.writerows(rows)
+            zf.writestr(csv_fname, csv_content.getvalue())
+            for extra_fname, extra_content in aux_files:
+                zf.writestr(extra_fname, extra_content)
+        # todo include config/const objects with an "export with configurations" flag True
+
+    @staticmethod
+    def get_csvrows_aux(cal):
+        serial_label_qs = cal.inventory.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number',
+                                                           is_current=True)
+        if serial_label_qs.exists():
+            serial_label = serial_label_qs[0].field_value
+        else:
+            serial_label = ''
+
+        aux_files = []
+        rows = []
+        for coeff in cal.coefficient_value_sets.all():
+            if coeff.coefficient_name.value_set_type == '2d':
+                extra = ('{}__{}__{}.ext'.format(cal.inventory.serial_number,
+                                                 cal.calibration_date.strftime('%Y%m%d'),
+                                                 coeff.coefficient_name),
+                         coeff.value_set)
+                aux_files.append(extra)
+
+            row = [serial_label,
+                   coeff.coefficient_name.calibration_name,
+                   coeff.value_set_with_export_formatting(),
+                   coeff.notes]
+            rows.append(row)
+
+        return rows, aux_files
+
+
+# Configs Only
+class ExportConfigEvents(ZipExport):
+    model = ConfigEvent
+    fname = 'ConfigEvents.zip'
+
+    @staticmethod
+    def build_zip(zf, objs, subdir=None):
+        objs = objs.prefetch_related('inventory', 'inventory__fieldvalues', 'inventory__fieldvalues__field')
+        for confconst in objs:
+            csv_fname = '{}__{}.csv'.format(confconst.inventory.serial_number,
+                                            confconst.configuration_date.strftime('%Y%m%d'))
+            if subdir: csv_fname = join(subdir, csv_fname)
+
+            header = ['serial', 'name', 'value', 'notes']
+            rows = ExportConfigEvents.get_csvrows(confconst)
+            rows.insert(0, header)
+
+            csv_content = io.StringIO()
+            writer = CSV.writer(csv_content)
+            writer.writerows(rows)
+            zf.writestr(csv_fname, csv_content.getvalue())
+
+    @staticmethod
+    def get_csvrows(confconst):
+        serial_label_qs = confconst.inventory.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number',
+                                                                 is_current=True)
+        if serial_label_qs.exists():
+            serial_label = serial_label_qs[0].field_value
+        else:
+            serial_label = ''
+
+        rows = []
+        for confconst_val in confconst.config_values.all():
+            row = [serial_label,
+                   confconst_val.config_name.name,
+                   confconst_val.config_value_with_export_formatting(),
+                   confconst_val.notes]
+            rows.append(row)
+
+        return rows
+
+
+# Calibrations WITH Congigs
 class ExportCalibrationEvents_withConfigs(ZipExport):
     model=None
     fname = 'CalibrationEvents_withConfigs.zip'
@@ -194,8 +267,8 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
     @staticmethod
     def build_zip(zf, objs, subdir=None):
         header = ['serial', 'name', 'value', 'notes']
-        # objs in this case is a dict
-        # where each key is an inst_id
+        # objs here is a dict, not a real queryset.
+        # Each key is an inst_id,
         # and each val is either (a) a queryset of CalibEvents,
         #                        (b) a queryset of ConfigEvent, or
         #                        (c) a list of CalibEvents and ConfigEvents
@@ -218,107 +291,24 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
                     csv_writer.writerow(header)
 
                 if isinstance(obj, CalibrationEvent):
-                    rows,aux_files = ExportCalibrationEvents.csvrows_aux(obj)
+                    # Reference to Calibrations-Only Class
+                    rows,aux_files = ExportCalibrationEvents.get_csvrows_aux(obj)
                     csv_writer.writerows(rows)
                     for extra_fname, extra_content in aux_files:
                         if subdir: extra_fname = join(subdir, extra_fname)
                         zf.writestr(extra_fname, extra_content)
                     csv_done = True
                 else: # isinstance(obj, ConfigEvent):
+                    # Reference to Configs-Only Class
                     rows = ExportConfigEvents.get_csvrows(obj)
-                    # TODO check that no field names conflict. if yes, start a new csv.
+                    # TODO check that no field names conflict. if yes, start a new csv
                     csv_writer.writerows(rows)
 
             # final write for given instrument
             zf.writestr(csv_fname, csv_content.getvalue())
 
-class ExportCalibrationEvents(ZipExport):
-    model = CalibrationEvent
-    fname = 'CalibrationEvents.zip'
 
-    @staticmethod
-    def build_zip(zf, objs, subdir=None):
-        objs = objs.prefetch_related('inventory','inventory__fieldvalues','inventory__fieldvalues__field')
-        for cal in objs:
-            csv_fname = '{}__{}.csv'.format(cal.inventory.serial_number, cal.calibration_date.strftime('%Y%m%d'))
-            if subdir: csv_fname = join(subdir,csv_fname)
-
-            header = ['serial', 'name', 'value', 'notes']
-            rows,aux_files = ExportCalibrationEvents.csvrows_aux(cal)
-            rows.insert(0,header)
-
-            csv_content = io.StringIO()
-            writer = CSV.writer(csv_content)
-            writer.writerows(rows)
-            zf.writestr(csv_fname, csv_content.getvalue())
-            for extra_fname, extra_content in aux_files:
-                zf.writestr(extra_fname, extra_content)
-        # todo include config/const objects with an "export with configurations" flag True
-
-    @staticmethod
-    def csvrows_aux(cal):
-        serial_label_qs = cal.inventory.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number', is_current=True)
-        if serial_label_qs.exists():
-            serial_label = serial_label_qs[0].field_value
-        else:
-            serial_label = ''
-
-        aux_files = []
-        rows = []
-        for coeff in cal.coefficient_value_sets.all():
-            if coeff.coefficient_name.value_set_type == '2d':
-                extra = ('{}__{}__{}.ext'.format(cal.inventory.serial_number,
-                                                 cal.calibration_date.strftime('%Y%m%d'),
-                                                 coeff.coefficient_name),
-                         coeff.value_set)
-                aux_files.append(extra)
-
-            row = [serial_label,
-                   coeff.coefficient_name.calibration_name,
-                   coeff.value_set_with_export_formatting(),
-                   coeff.notes]
-            rows.append(row)
-
-        return rows,aux_files
-
-class ExportConfigEvents(ZipExport):
-    model = ConfigEvent
-    fname = 'ConfigEvents.zip'
-
-    @staticmethod
-    def build_zip(zf, objs, subdir=None):
-        objs = objs.prefetch_related('inventory','inventory__fieldvalues','inventory__fieldvalues__field')
-        for confconst in objs:
-            csv_fname = '{}__{}.csv'.format(confconst.inventory.serial_number, confconst.configuration_date.strftime('%Y%m%d'))
-            if subdir: csv_fname = join(subdir,csv_fname)
-
-            header = ['serial', 'name', 'value', 'notes']
-            rows = ExportConfigEvents.get_csvrows(confconst)
-            rows.insert(0,header)
-
-            csv_content = io.StringIO()
-            writer = CSV.writer(csv_content)
-            writer.writerows(rows)
-            zf.writestr(csv_fname, csv_content.getvalue())
-
-    @staticmethod
-    def get_csvrows(confconst):
-        serial_label_qs = confconst.inventory.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number', is_current=True)
-        if serial_label_qs.exists():
-            serial_label = serial_label_qs[0].field_value
-        else:
-            serial_label = ''
-
-        rows = []
-        for confconst_val in confconst.config_values.all():
-            row = [serial_label,
-                   confconst_val.config_name.name,
-                   confconst_val.config_value_with_export_formatting(),
-                   confconst_val.notes]
-            rows.append(row)
-
-        return rows
-
+# Cruises CSV
 class ExportCruises(CSVExport):
     model = Cruise
     fname = 'CruiseInformation.csv'
@@ -348,6 +338,7 @@ class ExportCruises(CSVExport):
             csv.writerow(row)
 
 
+# Vessels CSV
 class ExportVessels(CSVExport):
     model = Vessel
     fname = 'shiplist.csv'
@@ -387,7 +378,8 @@ class ExportVessels(CSVExport):
             csv.writerow(row)
 
 
-class ExportDeployments(ZipExport): # ZipExportCSV
+# Deployment Bulk Export
+class ExportDeployments(ZipExport):
     model = Deployment
     fname = 'Deployments.zip'
 
@@ -446,6 +438,7 @@ class ExportDeployments(ZipExport): # ZipExportCSV
             zf.writestr(csv_fname,csv_content.getvalue())
 
 
+# Bulk Export Combo!!
 class ExportCI(ZipExport):
     model=None
     fname='asset-management.zip'
@@ -455,12 +448,15 @@ class ExportCI(ZipExport):
     @staticmethod
     def build_zip(zf, objs):
 
+        # Deployment csv's
         deployments = Deployment.objects.all()
         ExportDeployments.build_zip(      zf, deployments,  subdir='deployment')
 
+        # Calibration csv's
         calibrations = CalibrationEvent.objects.all()
-        ExportCalibrationEvents.build_zip(zf, calibrations, subdir='calibration')
+        ExportCalibrationEvents_withConfigs.build_zip(zf, calibrations, subdir='calibration')
 
+        # Cruises csv
         cruises = Cruise.objects.all()
         cruise_csv_fname = join('cruise',ExportCruises.fname)
         cruise_csv_content = io.StringIO()
@@ -468,6 +464,7 @@ class ExportCI(ZipExport):
         ExportCruises.build_csv(  cruise_csv, cruises)
         zf.writestr(cruise_csv_fname,cruise_csv_content.getvalue())
 
+        # Vessels csv
         vessels = Vessel.objects.all()
         vessel_csv_fname = join('vessel',ExportVessels.fname)
         vessel_csv_content = io.StringIO()
