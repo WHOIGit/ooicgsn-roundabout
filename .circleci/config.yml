@@ -36,7 +36,7 @@ version: 2
 jobs:
   build:
     machine:
-       image: ubuntu-1604:202007-01 
+       image: ubuntu-1604:202004-01 
     steps:
       - checkout
       - run:
