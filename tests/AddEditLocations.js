@@ -25,7 +25,8 @@ var myArgs = process.argv.slice(2);
       	    "--no-sandbox",
        	    "--disable-dev-shm-usage",
        	    "--headless",
-	    "--log-level=3",
+            "--enable-logging=stderr",
+            "--v=1",
 	    "--disable-gpu"
      	    ]
    	    });
@@ -60,7 +61,7 @@ var myArgs = process.argv.slice(2);
 //                await driver.findElement(By.css(".navbar-toggler-icon")).click();
 //         }
         // LOGIN
-	await new Promise(r => setTimeout(r, 60000));
+	await new Promise(r => setTimeout(r, 20000));
         await driver.findElement(By.linkText("Sign In")).click();
         await driver.findElement(By.id("id_login")).sendKeys("jkoch");
         await driver.findElement(By.id("id_password")).sendKeys("Automatedtests");
