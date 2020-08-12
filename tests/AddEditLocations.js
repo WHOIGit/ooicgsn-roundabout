@@ -25,7 +25,7 @@ var myArgs = process.argv.slice(2);
       	    "--no-sandbox",
        	    "--disable-dev-shm-usage",
        	    "--headless",
-            "--enable-logging=stderr",
+            "--enable-logging",
             "--v=1",
 	    "--disable-gpu"
      	    ]
@@ -54,12 +54,12 @@ var myArgs = process.argv.slice(2);
     try {
 
         // If navbar toggler present in small screen
-//        try {
-//            var signin = await driver.findElement(By.linkText("Sign In"));
-//        }
-//        catch (NoSuchElementException) {
-//                await driver.findElement(By.css(".navbar-toggler-icon")).click();
-//         }
+        try {
+            var signin = await driver.findElement(By.linkText("Sign In"));
+        }
+        catch (NoSuchElementException) {
+                await driver.findElement(By.css(".navbar-toggler-icon")).click();
+         }
         // LOGIN
 	await new Promise(r => setTimeout(r, 20000));
         await driver.findElement(By.linkText("Sign In")).click();
