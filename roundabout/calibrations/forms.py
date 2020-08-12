@@ -20,7 +20,7 @@
 """
 
 from django import forms
-from .models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientValue
+from .models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientValue, CoefficientNameEvent
 from roundabout.inventory.models import Inventory
 from roundabout.parts.models import Part
 from roundabout.users.models import User
@@ -64,6 +64,40 @@ class CalibrationEventForm(forms.ModelForm):
     def save(self, commit = True): 
         event = super(CalibrationEventForm, self).save(commit = False)
         if commit:
+            event.save()
+            if event.user_approver.exists():
+                for user in event.user_approver.all():
+                    event.user_draft.add(user)
+                    event.user_approver.remove(user)
+            event.save()
+            return event
+
+
+# CoefficientName Event form 
+# Inputs: Reviewers 
+class CoefficientNameEventForm(forms.ModelForm):
+    class Meta:
+        model = CoefficientNameEvent 
+        fields = ['user_draft']
+        labels = {
+            'user_draft': 'Reviewers'
+        }
+        widgets = {
+            'user_draft': forms.SelectMultiple()
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(CoefficientNameEventForm, self).__init__(*args, **kwargs)
+        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username')
+
+    def clean_user_draft(self):
+        user_draft = self.cleaned_data.get('user_draft')
+        return user_draft
+
+    def save(self, commit = True): 
+        event = super(CoefficientNameEventForm, self).save(commit = False)
+        if commit:
+            event.save()
             if event.user_approver.exists():
                 for user in event.user_approver.all():
                     event.user_draft.add(user)
@@ -241,7 +275,7 @@ EventValueSetFormset = inlineformset_factory(
 
 # Coefficient Name form instance generator for Parts
 PartCalNameFormset = inlineformset_factory(
-    Part, 
+    CoefficientNameEvent, 
     CoefficientName, 
     form=CoefficientNameForm, 
     fields=('calibration_name', 'value_set_type', 'sigfig_override'), 

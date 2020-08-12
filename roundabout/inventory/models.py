@@ -455,6 +455,7 @@ class Action(models.Model):
     CONSTDEFEVENT = 'constdefaultevent'
     CONFEVENT = 'configevent'
     CONFDEFEVENT = 'configdefaultevent'
+    COEFFNAMEEVENT = 'coefficientnameevent'
     OBJECT_TYPES = (
         (BUILD, 'Build'),
         (INVENTORY, 'Inventory'),
@@ -463,6 +464,7 @@ class Action(models.Model):
         (CONSTDEFEVENT, 'Constant Default Event'),
         (CONFEVENT, 'Configuration/Constant Event'),
         (CONFDEFEVENT, 'Configuration Default Event'),
+        (COEFFNAMEEVENT, 'Coefficient Name Event'),
     )
     # deployment_type choices
     BUILD_DEPLOYMENT = 'build_deployment'
@@ -481,6 +483,8 @@ class Action(models.Model):
     config_event = models.ForeignKey('configs_constants.ConfigEvent', related_name='actions',
                                   on_delete=models.CASCADE, null=True, blank=True)
     config_default_event = models.ForeignKey('configs_constants.ConfigDefaultEvent', related_name='actions',
+                                  on_delete=models.CASCADE, null=True, blank=True)
+    coefficient_name_event = models.ForeignKey('calibrations.CoefficientNameEvent', related_name='actions',
                                   on_delete=models.CASCADE, null=True, blank=True)
     action_type = models.CharField(max_length=20, choices=ACTION_TYPES, db_index=True)
     object_type =  models.CharField(max_length=20, choices=OBJECT_TYPES, null=False, blank=True, db_index=True)

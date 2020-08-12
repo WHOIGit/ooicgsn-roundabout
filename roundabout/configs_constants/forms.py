@@ -58,6 +58,7 @@ class ConfigEventForm(forms.ModelForm):
     def save(self, commit = True): 
         event = super(ConfigEventForm, self).save(commit = False)
         if commit:
+            event.save()
             if event.user_approver.exists():
                 for user in event.user_approver.all():
                     event.user_draft.add(user)
@@ -106,12 +107,12 @@ class ConfigNameForm(forms.ModelForm):
         fields = [
             'name', 
             'config_type', 
-            # 'include_with_calibrations'
+            'include_with_calibrations'
         ] 
         labels = {
             'name': 'Configuration/Constant Name',
             'config_type': 'Type',
-            # 'include_with_calibrations': 'Export with Calibrations' 
+            'include_with_calibrations': 'Export with Calibrations' 
         }
         widgets = {
             'name': forms.TextInput(
@@ -119,7 +120,7 @@ class ConfigNameForm(forms.ModelForm):
                     'required': False
                 }
             ),
-            # 'include_with_calibrations': forms.CheckboxInput() 
+            'include_with_calibrations': forms.CheckboxInput() 
         }
 
 
@@ -174,6 +175,7 @@ class ConstDefaultEventForm(forms.ModelForm):
     def save(self, commit = True): 
         event = super(ConstDefaultEventForm, self).save(commit = False)
         if commit:
+            event.save()
             if event.user_approver.exists():
                 for user in event.user_approver.all():
                     event.user_draft.add(user)
@@ -206,6 +208,7 @@ class ConfigDefaultEventForm(forms.ModelForm):
     def save(self, commit = True): 
         event = super(ConfigDefaultEventForm, self).save(commit = False)
         if commit:
+            event.save()
             if event.user_approver.exists():
                 for user in event.user_approver.all():
                     event.user_draft.add(user)
@@ -286,7 +289,7 @@ PartConfigNameFormset = inlineformset_factory(
     fields=(
         'name', 
         'config_type', 
-        # 'export_with_calibrations'
+        'include_with_calibrations'
     ), 
     extra=1, 
     can_delete=True

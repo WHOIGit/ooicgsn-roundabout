@@ -65,7 +65,7 @@
                   <tr>
                       <td>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.name }}</td>
                       <td>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.config_type }}</td>
-                      <td style = 'text-align: center;'>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.export_with_calibrations }}</td>
+                      <td style = 'text-align: center;'>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.include_with_calibrations }}</td>
                       <td class = 'delete-here'></td>
                   </tr>
               {% endfor %}
