@@ -7,6 +7,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.views.generic import View
 from django.db.models import Q
+from rest_framework.reverse import reverse, reverse_lazy
 
 #from .models import FieldInstance
 from .models import *
@@ -19,15 +20,14 @@ from roundabout.locations.models import Location
 Request function to sync Field Instance: Inventory items
 Args - field_instance: FieldInstance object
 """
-def sync_request_inventory(field_instance):
+def sync_request_inventory(request, field_instance):
     pk_mappings = []
 
     ##### SYNC INVENTORY #####
-    #base_url = 'https://ooi-cgrdb-staging.whoi.net'
     base_url = 'https://ooi-cgrdb-staging.whoi.net'
-    inventory_url = F"{base_url}/api/v1/inventory/"
-    action_url = F"{base_url}/api/v1/actions/"
-    photo_url = F"{base_url}/api/v1/photos/"
+    #inventory_url = F"{base_url}/api/v1/inventory/"
+    inventory_url = base_url + reverse('inventory-list')
+    print(inventory_url)
     # Get new items that were added, these need special handling
     new_inventory = Inventory.objects.filter(created_at__gte=field_instance.start_date).order_by('-parent')
     #actions_add_qs = actions.filter(object_type=Action.INVENTORY).filter(action_type=Action.ADD).order_by('-parent')
@@ -77,7 +77,8 @@ def sync_request_inventory(field_instance):
             # serialize data for JSON request
             inventory_serializer = InventorySerializer(inv)
             inventory_dict = inventory_serializer.data
-            url = F"{inventory_url}{inv.id}/"
+            url = base_url + reverse('inventory-detail', kwargs={'pk': inv.id},)
+            #url = F"{inventory_url}{inv.id}/"
             print(url)
             # Need to remap any Parent items that have new PKs
             new_key = next((pk for pk in pk_mappings if pk['old_pk'] == inventory_dict['parent']), False)
@@ -91,28 +92,45 @@ def sync_request_inventory(field_instance):
 
             # post all new Actions for this item
             actions = inv.actions.filter(created_at__gte=field_instance.start_date)
-            for action in actions:
-                # serialize data for JSON request
-                action_serializer = ActionSerializer(action)
-                action_dict = action_serializer.data
-                # These will be POST as new, so remove id
-                action_dict.pop('id')
-                response = requests.post(action_url, json=action_dict )
-                print('ACTION RESPONSE:', response.text)
-                print("ACTION CODE: ", response.status_code)
-                new_action = response.json()
-                # Upload any photos for new Action notes
-                if action.photos.exists():
-                    for photo in action.photos.all():
-                        multipart_form_data = {
-                            'photo': (photo.photo.name, photo.photo.file),
-                            #'photo': (photo.photo.name, open('myfile.zip', 'rb')),
-                            'inventory': (None, photo.inventory.id),
-                            'action': (None, new_action['action']['id']),
-                            'user': (None, photo.user.id)
-                        }
-                        response = requests.post(photo_url, files=multipart_form_data )
-                        print('PHOTO RESPONSE:', response.text)
-                        print("PHOTO CODE: ", response.status_code)
+            action_response = sync_request_actions(request, actions)
 
         return response.status_code
+
+
+"""
+Request function to sync Field Instance: Actions
+Args:
+actions: queryset of Action objects
+pk_mappings: array that maps old_pk to new_pk for new objects
+"""
+def sync_request_actions(request, actions, pk_mappings=None):
+    base_url = 'https://ooi-cgrdb-staging.whoi.net'
+    action_url = base_url + reverse('actions-list')
+    print(action_url)
+    #action_url = F"{base_url}/api/v1/actions/"
+    photo_url = base_url + reverse('photos-list')
+
+    for action in actions:
+        # serialize data for JSON request
+        action_serializer = ActionSerializer(action)
+        action_dict = action_serializer.data
+        # These will be POST as new, so remove id
+        action_dict.pop('id')
+        response = requests.post(action_url, json=action_dict )
+        print('ACTION RESPONSE:', response.text)
+        print("ACTION CODE: ", response.status_code)
+        new_action = response.json()
+        # Upload any photos for new Action notes
+        if action.photos.exists():
+            for photo in action.photos.all():
+                multipart_form_data = {
+                    'photo': (photo.photo.name, photo.photo.file),
+                    'inventory': (None, photo.inventory.id),
+                    'action': (None, new_action['action']['id']),
+                    'user': (None, photo.user.id)
+                }
+                response = requests.post(photo_url, files=multipart_form_data )
+                print('PHOTO RESPONSE:', response.text)
+                print("PHOTO CODE: ", response.status_code)
+
+    return 'ACTIONS COMPLETE'
