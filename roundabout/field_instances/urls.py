@@ -19,13 +19,11 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from django.contrib import admin
+from django.urls import path
 
-from .models import *
+from . import views
 
-# Register your models here.
-admin.site.register(Printer)
-admin.site.register(TempImport)
-admin.site.register(TempImportItem)
-admin.site.register(TempImportAssembly)
-admin.site.register(TempImportAssemblyPart)
+app_name = 'field_instances'
+urlpatterns = [
+    path('sync-to-home/', view=views.FieldInstanceSyncToHomeView.as_view(), name='field_instance_sync_to_home'),
+]

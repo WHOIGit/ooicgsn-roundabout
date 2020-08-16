@@ -60,6 +60,7 @@ urlpatterns = [
     path('search/', include('roundabout.search.urls', namespace='search')),
     path('calibrations/', include('roundabout.calibrations.urls', namespace='calibrations')),
     path('configs_constants/', include('roundabout.configs_constants.urls', namespace='configs_constants')),
+    path('field_instances/', include('roundabout.field_instances.urls', namespace='field_instances')),
     # API urls
     path('api/v1/', include('roundabout.inventory.api.urls')),
     path('api/v1/', include('roundabout.locations.api.urls')),
