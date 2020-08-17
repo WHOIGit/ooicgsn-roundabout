@@ -78,7 +78,7 @@ var myArgs = process.argv.slice(2);
         // 5 | select | id=id_assembly | label=Test Glider 1
         {
             const dropdown = await driver.findElement(By.id("id_assembly"));
-            await dropdown.findElement(By.xpath("//option[. = 'Test Glider 1']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Singer']")).click();
         }
    
         await new Promise(r => setTimeout(r, 2000));  //needed for firefox build number to populate
@@ -121,11 +121,11 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.linkText("Builds")).click();
         await driver.wait(until.elementLocated(By.linkText("Create New Build")));
         await driver.findElement(By.linkText("Create New Build")).click();
-	await new Promise(r => setTimeout(r, 6000));  //linux firefox
+	    await new Promise(r => setTimeout(r, 6000));  //linux firefox
         // 10 | select | id=id_assembly | label=Test Glider 1
         {
             const dropdown = await driver.findElement(By.id("id_assembly"));
-            await dropdown.findElement(By.xpath("//option[. = 'Test Glider 1']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Singer']")).click();
         }
         // 11 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click()
@@ -151,7 +151,7 @@ var myArgs = process.argv.slice(2);
         // 17 | select | id=id_assembly | label=Test Glider 1
         {
             const dropdown = await driver.findElement(By.id("id_assembly"));
-            await dropdown.findElement(By.xpath("//option[. = 'Test Glider 1']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Singer']")).click();
         }
         // 18 | type | id=id_build_number |  
         await driver.findElement(By.id("hint_id_build_number")).click();

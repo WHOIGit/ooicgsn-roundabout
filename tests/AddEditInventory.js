@@ -153,28 +153,29 @@ var myArgs = process.argv.slice(2);
 
     // EDIT INVENTORY TEST
 
-        // Add three Assemblies from DB
+       // Add Inventories
         await driver.findElement(By.linkText("Inventory")).click();
         // 4 | click | linkText=Add Inventory | 
         await new Promise(r => setTimeout(r, 4000)); // Inventory tree takes awhile to load
         await driver.findElement(By.linkText("Add Inventory")).click();
         await driver.wait(until.elementLocated(By.id("id_part_type")));
-        // 5 | select | id=id_part_type | label=-- Cable
+        // 5 | select | id=id_part_type | label=-- Sewing Machine
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
-            await dropdown.findElement(By.xpath("//option[. = '-- Electrical']")).click();
+            await dropdown.findElement(By.xpath("//option[. = '-- Sewing Machine']")).click();
         }
-        // 6 | select | id=id_part | label=6 Wire and Shield
+        // 6 | select | id=id_part | label=Wheel Template
         {
             await new Promise(r => setTimeout(r, 2000));  //only thing that works here
             const dropdown = await driver.findElement(By.id("id_part"));
-            await dropdown.findElement(By.xpath("//option[. = 'CPM BOARD ASSEMBLY']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Wheel Template']")).click();
         }
         // 7 | select | id=id_location | label=--- Lost
         {
             await new Promise(r => setTimeout(r, 2000));
             const dropdown = await driver.findElement(By.id("id_location"));
-            await dropdown.findElement(By.xpath("//option[. = '--- Lost']")).click();
+            // Space needed before Test
+            await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
         }
         // 8 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
@@ -184,16 +185,16 @@ var myArgs = process.argv.slice(2);
         await new Promise(r => setTimeout(r, 4000)); // Inventory tree takes awhile to load
         await driver.findElement(By.linkText("Add Inventory")).click();
         await driver.wait(until.elementLocated(By.id("id_part_type")));
-        // 10 | select | id=id_part_type | label=-- Mechanical
+        // 10 | select | id=id_part_type | label=-- Sewing Machine
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
-            await dropdown.findElement(By.xpath("//option[. = '-- Mechanical']")).click();
+            await dropdown.findElement(By.xpath("//option[. = '-- Sewing Machine']")).click();
         }
-        // 11 | select | id=id_part | label=PIONEER INSHORE DECK ASSEMBLY
+        // 11 | select | id=id_part | label=Pin Template
         {
             await new Promise(r => setTimeout(r, 2000));
             const dropdown = await driver.findElement(By.id("id_part"));
-            await dropdown.findElement(By.xpath("//option[. = 'PIONEER INSHORE DECK ASSEMBLY']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Pin Template']")).click();
         }
         // 12 | select | id=id_location | label=Test
         {
@@ -204,33 +205,9 @@ var myArgs = process.argv.slice(2);
         // 13 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
-
-        // 14 | click | linkText=Add Inventory | 
-        await new Promise(r => setTimeout(r, 4000)); // Inventory tree takes awhile to load
-        await driver.findElement(By.linkText("Add Inventory")).click();
-        await driver.wait(until.elementLocated(By.id("id_part_type")));
-        // 15 | select | id=id_part_type | label=-- Electrical
-        {
-            const dropdown = await driver.findElement(By.id("id_part_type"))
-            await dropdown.findElement(By.xpath("//option[. = '-- Electrical']")).click()
-        }
-        // 16 | select | id=id_part | label=SOLAR PANEL MOUNT ASSEMBLY
-        {
-            await new Promise(r => setTimeout(r, 2000));
-            const dropdown = await driver.findElement(By.id("id_part"))
-            await dropdown.findElement(By.xpath("//option[. = 'SOLAR PANEL MOUNT ASSEMBLY']")).click()
-        }
-        // 17 | select | id=id_location | label=Test
-        {
-            const dropdown = await driver.findElement(By.id("id_location"));
-            await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
-        }
-        // 18 | click | css=.controls > .btn | 
-        await driver.findElement(By.css(".controls > .btn")).click();
-
         // Update location with null location
         // 19 | click | css=.btn-outline-primary:nth-child(1) | 
-	await new Promise(r => setTimeout(r, 2000));
+	    await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click(); // search button
         // 20 | click | id=field-select_c_r0 | 
         await driver.wait(until.elementLocated(By.id("field-select_c_r0")));
@@ -246,11 +223,11 @@ var myArgs = process.argv.slice(2);
             await dropdown.findElement(By.xpath("//option[. = 'Exact']")).click();
         }
         // 23 | type | id=field-query_c_r0 | Lost
-        await driver.findElement(By.id("field-query_c_r0")).sendKeys("Lost");
+        await driver.findElement(By.id("field-query_c_r0")).sendKeys("Test");
         // 24 | click | id=searchform-submit-button | 
         await driver.findElement(By.id("searchform-submit-button")).click();
         // 25 | click | css=.even a | 
-	await new Promise(r => setTimeout(r, 2000));  //linux docker
+	    await new Promise(r => setTimeout(r, 2000));  //linux docker
         await driver.findElement(By.css(".even a")).click();
         // 26 | click | id=action | 
         await driver.findElement(By.id("action")).click();
@@ -265,9 +242,9 @@ var myArgs = process.argv.slice(2);
         // 29 | click | css=.controls > .btn-primary | 
         await new Promise(r => setTimeout(r, 2000));
 
-	var element = driver.findElement(By.css(".controls > .btn-primary"));
-	await driver.executeScript("arguments[0].click();", element);
-	//await driver.findElement(By.css(".controls > .btn-primary")).click();	//linux elementnotinteractable error
+	    var element = driver.findElement(By.css(".controls > .btn-primary"));
+	    await driver.executeScript("arguments[0].click();", element);
+	    //await driver.findElement(By.css(".controls > .btn-primary")).click();	//linux elementnotinteractable error
 
         await new Promise(r => setTimeout(r, 2000));
         assert(await driver.findElement(By.css("#div_id_location .ajax-error")).getText() == "This field is required.");
@@ -280,7 +257,7 @@ var myArgs = process.argv.slice(2);
             await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
         }
         // 31 | click | css=.controls > .btn-primary | 
-	await driver.findElement(By.css(".controls > .btn-primary")).click();
+	    await driver.findElement(By.css(".controls > .btn-primary")).click();
         // 32 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();  //Search button
         await driver.wait(until.elementLocated(By.id("field-select_c_r0")));
@@ -302,12 +279,12 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.id("searchform-submit-button")).click();
         // 39 | click | id=searchbar-query | 
         await driver.findElement(By.id("searchbar-query")).click(); //search within these results
-        // 40 | type | id=searchbar-query | pioneer inshore deck assembly
-        await driver.findElement(By.id("searchbar-query")).sendKeys("pioneer inshore deck assembly");
+        // 40 | type | id=searchbar-query | Sewing Template
+        await driver.findElement(By.id("searchbar-query")).sendKeys("Sewing Template");
         // 41 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 42 | click | css=.even a | 
-	await new Promise(r => setTimeout(r, 2000));  //linux docker
+	    await new Promise(r => setTimeout(r, 2000));  //linux docker
         await driver.findElement(By.css(".even a")).click();
         // 43 | click | id=action | 
 
@@ -327,7 +304,7 @@ var myArgs = process.argv.slice(2);
         // Add another subassembly item to valid parent - no more children appear
         await driver.findElement(By.linkText("Add Sub-Assembly")).click();
         // 48 | type | id=searchbar-query | pioneer inshore deck assembly
-        await driver.findElement(By.id("searchbar-query")).sendKeys("pioneer inshore deck assembly");
+        await driver.findElement(By.id("searchbar-query")).sendKeys("singer");
         // 49 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.xpath("//p[contains(.,'NONE')]"));
             
@@ -359,11 +336,11 @@ var myArgs = process.argv.slice(2);
 
         // 35 | click | id=field-query_c_r1 | 
         await driver.findElement(By.id("field-query_c_r1")).click();
-        // 36 | type | id=field-query_c_r1 | CPM Board Assembly
-        await driver.findElement(By.id("field-query_c_r1")).sendKeys("CPM Board Assembly");
+        // 36 | type | id=field-query_c_r1 | Pin
+        await driver.findElement(By.id("field-query_c_r1")).sendKeys("Pin");
         await driver.findElement(By.id("searchform-submit-button")).click();
         // 42 | click | css=.even a | 
-	await new Promise(r => setTimeout(r, 2000));  //linux docker
+	    await new Promise(r => setTimeout(r, 2000));  //linux docker
         await driver.findElement(By.css(".even a")).click();
         // 43 | click | id=action |
         await driver.wait(until.elementLocated(By.id("action")));

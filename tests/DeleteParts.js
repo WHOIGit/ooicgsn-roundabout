@@ -88,7 +88,24 @@ var myArgs = process.argv.slice(2);
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
-	    console.log("Delete Parts failed: Sewing Machine type not found");
+            console.log("Delete Parts failed: Sewing Machine type not found");
+
+        // Delete Computerized Part Type
+        if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Computerized']"))).length != 0) {
+            var i = 1;
+            while (true) {
+                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Computerized") {
+                    break;
+                }
+                i++;
+            }
+
+            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
+            // 6 | click | css=.btn-danger | 
+            await driver.findElement(By.css(".btn-danger")).click();
+        }
+        else
+            console.log("Delete Parts failed: Computerized type not found");
 
         // 7 | click | id=navbarTemplates | 
         await driver.findElement(By.id("navbarTemplates")).click();
@@ -135,11 +152,11 @@ var myArgs = process.argv.slice(2);
 	else
 	    console.log("Delete Parts failed: Test location not found");
 
-        await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 2000));
 
-	if ((await driver.findElements(By.partialLinkText("PIONEER INSHORE DECK"))).length != 0)
+	if ((await driver.findElements(By.partialLinkText("sewing"))).length != 0)
 	{
-            await driver.findElement(By.partialLinkText("PIONEER INSHORE DECK")).click();
+            await driver.findElement(By.partialLinkText("sewing")).click();
             // 9 | click | linkText=Delete | 
             await driver.wait(until.elementLocated(By.linkText("Move to Trash")));
             await driver.findElement(By.linkText("Move to Trash")).click();
@@ -148,11 +165,22 @@ var myArgs = process.argv.slice(2);
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
-	    console.log("Delete Parts failed: PIONEER INSHORE DECK not found");
+            console.log("Delete Parts failed: sewing not found"); 
 
+    if ((await driver.findElements(By.partialLinkText("wheel"))).length != 0) {
+            await driver.findElement(By.partialLinkText("wheel")).click();
+            // 9 | click | linkText=Delete | 
+            await driver.wait(until.elementLocated(By.linkText("Move to Trash")));
+            await driver.findElement(By.linkText("Move to Trash")).click();
+            // 10 | click | css=.btn-danger | 
+            await new Promise(r => setTimeout(r, 2000));
+            await driver.findElement(By.css(".btn-danger")).click();
+     }
+     else
+            console.log("Delete Parts failed: wheel not found"); 
 
         // Close browser window
-        driver.quit();
+    driver.quit();
 
     }
     catch (e) {

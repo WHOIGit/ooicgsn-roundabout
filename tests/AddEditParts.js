@@ -68,11 +68,18 @@ var myArgs = process.argv.slice(2);
         // ADD PARTS TEST
 
         // 10 | click | id=navbarTemplates |
-        await driver.findElement(By.id("navbarTemplates")).click();
         await driver.findElement(By.id("navbarAdmintools")).click();
         // 11 | click | linkText=Locations | 
         await driver.findElement(By.linkText("Edit Part Types")).click();
         // 5 | click | linkText=Test | 
+
+        // Add Computerized Part Type
+        // 5 | click | linkText=Add Part Type | 
+        await driver.findElement(By.linkText("Add Part Type")).click();
+        // 7 | type | id=id_name | Computerized
+        await driver.findElement(By.id("id_name")).sendKeys("Computerized");
+        // 8 | click | css=.btn-primary | 
+        await driver.findElement(By.css(".btn-primary")).click();
 
         // Add a Part Type with a name
         // 5 | click | linkText=Add Part Type | 
@@ -84,7 +91,7 @@ var myArgs = process.argv.slice(2);
 
         // Add Part Type with null name
         // 9 | click | linkText=Add Part Type | 
-	await new Promise(r => setTimeout(r, 2000));   //linux firefox
+	    await new Promise(r => setTimeout(r, 2000));   //linux firefox
         await driver.findElement(By.linkText("Add Part Type")).click();
         // 10 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
@@ -131,6 +138,77 @@ var myArgs = process.argv.slice(2);
             throw new Error("Please run the Delete Parts Test. Sewing Template already created");
         }
 
+        // 13 | click | id=navbarTemplates | 
+        await driver.findElement(By.id("navbarTemplates")).click();
+        // 14 | click | linkText=Parts | 
+        await driver.wait(until.elementLocated(By.linkText("Parts")));
+        await driver.findElement(By.linkText("Parts")).click();
+        // 15 | click | linkText=Add Part Template | 
+        await new Promise(r => setTimeout(r, 4000));   //linux firefox keeps hanging here
+        await driver.findElement(By.linkText("Add Part Template")).click();
+        /*Get the text after ajax call*/
+        // 16 | type | id=id_part_number | 123-456-789
+        await driver.wait(until.elementLocated(By.id("id_part_number")));
+        await driver.findElement(By.id("id_part_number")).sendKeys("555-456-789");
+        // 17 | type | id=id_name | Sewing Template
+        await driver.findElement(By.id("id_name")).sendKeys("Wheel Template");
+        // 18 | type | id=id_friendly_name | sewing
+        await driver.findElement(By.id("id_friendly_name")).sendKeys("wheel");
+        // 19 | select | id=id_part_type | label=Sewing Machine
+        {
+            dropdown = await driver.findElement(By.id("id_part_type"));
+            await dropdown.findElement(By.xpath("//option[. = ' Sewing Machine']")).click();
+
+        }
+        // 20 | click | css=.controls > .btn | 
+        await driver.findElement(By.css(".controls > .btn")).click();
+        await new Promise(r => setTimeout(r, 2000));
+
+        try {
+            var obj = await driver.findElement(By.xpath("//*[text()='Part with this Part number already exists.']"));
+        }
+        catch (NoSuchElementException) {
+            console.log("Add Parts running...");
+        }
+        if (obj) {
+            throw new Error("Please run the Delete Parts Test. Wheel Template already created");
+        }
+
+        await driver.findElement(By.id("navbarTemplates")).click();
+        // 14 | click | linkText=Parts | 
+        await driver.wait(until.elementLocated(By.linkText("Parts")));
+        await driver.findElement(By.linkText("Parts")).click();
+        // 15 | click | linkText=Add Part Template | 
+        await new Promise(r => setTimeout(r, 4000));   //linux firefox keeps hanging here
+        await driver.findElement(By.linkText("Add Part Template")).click();
+        /*Get the text after ajax call*/
+        // 16 | type | id=id_part_number | 123-456-789
+        await driver.wait(until.elementLocated(By.id("id_part_number")));
+        await driver.findElement(By.id("id_part_number")).sendKeys("666-456-789");
+        // 17 | type | id=id_name | Sewing Template
+        await driver.findElement(By.id("id_name")).sendKeys("Pin Template");
+        // 18 | type | id=id_friendly_name | sewing
+        await driver.findElement(By.id("id_friendly_name")).sendKeys("pin");
+        // 19 | select | id=id_part_type | label=Sewing Machine
+        {
+            dropdown = await driver.findElement(By.id("id_part_type"));
+            await dropdown.findElement(By.xpath("//option[. = ' Sewing Machine']")).click();
+
+        }
+        // 20 | click | css=.controls > .btn | 
+        await driver.findElement(By.css(".controls > .btn")).click();
+        await new Promise(r => setTimeout(r, 2000));
+
+        try {
+            var obj = await driver.findElement(By.xpath("//*[text()='Part with this Part number already exists.']"));
+        }
+        catch (NoSuchElementException) {
+            console.log("Add Parts running...");
+        }
+        if (obj) {
+            throw new Error("Please run the Delete Parts Test. Pin Template already created");
+        }
+
         // Create new Template Revision with cost or refurbishment cost with greater than 2 decimal places.
         // 21 | click | id=action | 
         await driver.wait(until.elementLocated(By.id("action")));
@@ -139,7 +217,7 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.linkText("Create New Revision")));
         await driver.findElement(By.linkText("Create New Revision")).click();
         // 23 | type | id=id_revision_code | B
-	await new Promise(r => setTimeout(r, 4000));   //linux firefox
+	    await new Promise(r => setTimeout(r, 4000));   //linux firefox
         // await driver.wait(until.elementLocated(By.id("id_revision_code")), 2000);  //linux firefox stale element
         await driver.findElement(By.id("id_revision_code")).sendKeys("B");
         // 24 | type | id=id_unit_cost | 3.000
@@ -283,16 +361,16 @@ var myArgs = process.argv.slice(2);
         // 13 | verifyText | id=error_1_id_name | This field is required.
         assert(await driver.findElement(By.id("error_1_id_name")).getText() == "This field is required.");
 
-        // Change part type parent
+// Change part type parent
         // 14 | type | id=id_name | Sewing Machine
         await driver.wait(until.elementLocated(By.id("id_name")));
         await driver.findElement(By.id("id_name")).clear();
         await driver.findElement(By.id("id_name")).sendKeys("Sewing Machine");
         // 15 | click | css=.parts | 
         await driver.findElement(By.css(".parts")).click();
-        // 16 | select | id=id_parent | label=Mechanical
+        // 16 | select | id=id_parent | label=Computerized
         dropdown = await driver.findElement(By.id("id_parent"));
-        await dropdown.findElement(By.xpath("//option[. = ' Mechanical']")).click();
+        await dropdown.findElement(By.xpath("//option[. = ' Computerized']")).click();
         // 17 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
 
@@ -333,15 +411,15 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.id("action")));
         await driver.findElement(By.id("action")).click();
         // 24 | click | linkText=Edit Part Template | 
-	await new Promise(r => setTimeout(r, 2000));
+	    await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Edit Part Template")).click();
         // 25 | type | id=id_part_number | 789-456-123
         await driver.wait(until.elementLocated(By.id("id_part_number")));
         await driver.findElement(By.id("id_part_number")).clear();
         await driver.findElement(By.id("id_part_number")).sendKeys("789-456-123");
-        // 26 | select | id=id_part_type | label=Cable
+        // 26 | select | id=id_part_type | label=Computerized
         dropdown = await driver.findElement(By.id("id_part_type"));
-        await dropdown.findElement(By.xpath("//option[. = ' Cable']")).click();
+        await dropdown.findElement(By.xpath("//option[. = ' Computerized']")).click();
         // 27 | click | css=.controls > .btn | 
         await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.css(".controls > .btn")).click();

@@ -66,8 +66,22 @@ var myArgs = process.argv.slice(2);
 
         // ADD ASSEMBLIES TEST
 
+        // 10 | click | id=navbarAdminTools |
+        await driver.findElement(By.id("navbarAdmintools")).click();
+        // 11 | click | linkText=Locations | 
+        await driver.findElement(By.linkText("Edit Assembly Types")).click();
+        // 5 | click | linkText=Test | 
+
+        // Add Computerized Assembly Type
+        // 5 | click | linkText=Add Assembly Type | 
+        await driver.findElement(By.linkText("Add Assembly Type")).click();
+        // 7 | type | id=id_name | Electric
+        await driver.findElement(By.id("id_name")).sendKeys("Electric");
+        // 8 | click | css=.btn-primary | 
+        await driver.findElement(By.css(".btn-primary")).click();
+
         // 10 | click | id=navbarTemplates |
-	await driver.wait(until.elementLocated(By.id("navbarTemplates")));
+	    await driver.wait(until.elementLocated(By.id("navbarTemplates")));
         await driver.findElement(By.id("navbarTemplates")).click();
 
 //      Add template with non null name and type
@@ -80,10 +94,10 @@ var myArgs = process.argv.slice(2);
         // 11 | type | id=id_name | Test Assembly
         await driver.wait(until.elementLocated(By.id("id_name")));
         await driver.findElement(By.id("id_name")).sendKeys("Test Assembly");
-        // 12 | select | id=id_assembly_type | label=Towed Vehicle
+        // 12 | select | id=id_assembly_type | label=Electric
         {
             const dropdown = await driver.findElement(By.id("id_assembly_type"));
-            await dropdown.findElement(By.xpath("//option[. = 'Towed Vehicle']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Electric']")).click();
         }
         // 13 | type | id=id_assembly_number | 123-001
         await driver.findElement(By.id("id_assembly_number")).sendKeys("123-001");
@@ -106,7 +120,7 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.linkText("Test Assembly")));
         await driver.findElement(By.linkText("Test Assembly"));
        
-//      Add template with null type
+        //  Add template with null type
         // 19 | click | linkText=Create New Assembly |
         await driver.wait(until.elementLocated(By.linkText("Create New Assembly")));
         await driver.findElement(By.linkText("Create New Assembly")).click();
@@ -119,10 +133,10 @@ var myArgs = process.argv.slice(2);
         // 22 | verifyText | css=#div_id_assembly_type .ajax-error | This field is required.
         // Checks Test Assembly 2 with null type not added - Add Assembly button present
         assert(await driver.findElement(By.css("#div_id_assembly_type .ajax-error")).getText() == "This field is required.");
-        // 25 | select | id=id_assembly_type | label=HOV
+        // 25 | select | id=id_assembly_type | label=Electric
         {
             const dropdown = await driver.findElement(By.id("id_assembly_type"));
-            await dropdown.findElement(By.xpath("//option[. = 'HOV']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Electric']")).click();
         }
         // 26 | type | id=id_assembly_number | 123-002
         await driver.findElement(By.id("id_assembly_number")).sendKeys("123-002");
@@ -136,13 +150,13 @@ var myArgs = process.argv.slice(2);
         // Add template with null name
         // 29 | click | linkText=Create New Assembly |
         await driver.wait(until.elementLocated(By.linkText("Create New Assembly")));
-	await new Promise(r => setTimeout(r, 2000));  //linux firefox
+	    await new Promise(r => setTimeout(r, 2000));  //linux firefox
         await driver.findElement(By.linkText("Create New Assembly")).click();
         await driver.wait(until.elementLocated(By.id("id_assembly_type")));
-        // 30 | select | id=id_assembly_type | label=Glider
+        // 30 | select | id=id_assembly_type | label=Electric
         {
             const dropdown = await driver.findElement(By.id("id_assembly_type"));
-            await dropdown.findElement(By.xpath("//option[. = 'Glider']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Electric']")).click();
         }
         // 31 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
@@ -164,10 +178,10 @@ var myArgs = process.argv.slice(2);
         // 38 | type | id=id_name | Test Assembly 3
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_name")).sendKeys("Test Assembly 3");
-        // 39 | select | id=id_assembly_type | label=HOV
+        // 39 | select | id=id_assembly_type | label=Electric
         {
             const dropdown = await driver.findElement(By.id("id_assembly_type"));
-            await dropdown.findElement(By.xpath("//option[. = 'HOV']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Electric']")).click();
         }
         // 40 | type | id=id_assembly_number |  
         await driver.findElement(By.id("id_assembly_number")).sendKeys(" ");
@@ -215,10 +229,10 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.linkText("Copy Assembly Template")));
         await driver.findElement(By.linkText("Copy Assembly Template")).click();
         await driver.wait(until.elementLocated(By.id("id_assembly_type")));
-        // 56 | select | id=id_assembly_type | label=HOV
+        // 56 | select | id=id_assembly_type | label=Electric
         {
             const dropdown = await driver.findElement(By.id("id_assembly_type"));
-            await dropdown.findElement(By.xpath("//option[. = 'HOV']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Electric']")).click();
         }
         // 57 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
@@ -239,11 +253,11 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.linkText("Create New Assembly")).click();
         // 6 | type | id=id_name | Test Glider 1
         await driver.wait(until.elementLocated(By.id("id_name")));
-        await driver.findElement(By.id("id_name")).sendKeys("Test Glider 1");
+        await driver.findElement(By.id("id_name")).sendKeys("Singer");
         // 7 | select | id=id_assembly_type | label=Glider
         {
             const dropdown = await driver.findElement(By.id("id_assembly_type"));
-            await dropdown.findElement(By.xpath("//option[. = 'Glider']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Electric']")).click();
         }
         // 8 | type | id=id_assembly_number | 000-654-987
         await driver.findElement(By.id("id_assembly_number")).sendKeys("000-654-987");
@@ -276,7 +290,7 @@ var myArgs = process.argv.slice(2);
         // 19 | select | id=id_part_type | label=-- Cable
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
-            await dropdown.findElement(By.xpath("//option[. = '-- Cable']")).click();
+            await dropdown.findElement(By.xpath("//option[. = '-- Sewing Machine']")).click();
         }
  
         // 21 | click | css=.controls > .btn-primary | 
@@ -288,11 +302,11 @@ var myArgs = process.argv.slice(2);
         assert(await driver.findElement(By.css("#div_id_part .ajax-error")).getText() == "This field is required.");
         // 23 | click | id=div_id_parent | 
         await driver.findElement(By.id("div_id_parent")).click();
-        // 24 | select | id=id_part | label=6 Wire and Shield
+        // 24 | select | id=id_part | label=Sewing Template
         // Now specify non null part type
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await dropdown.findElement(By.xpath("//option[. = '6 Wire and Shield']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Sewing Template']")).click();
         }
         
         // 26 | click | css=.controls > .btn-primary | 
@@ -314,10 +328,10 @@ var myArgs = process.argv.slice(2);
 
         // 30 | click | id=id_part_type | 
         await driver.findElement(By.id("id_part_type")).click();
-        // 31 | select | id=id_part_type | label=-- Electrical
+        // 31 | select | id=id_part_type | label=-- Sewing Machine
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
-            await dropdown.findElement(By.xpath("//option[. = '-- Electrical']")).click();
+            await dropdown.findElement(By.xpath("//option[. = '-- Sewing Machine']")).click();
         }
      
         await driver.findElement(By.css(".controls > .btn-primary")).click();
@@ -328,40 +342,64 @@ var myArgs = process.argv.slice(2);
         // 34 | click | id=id_part | 
         await driver.wait(until.elementLocated(By.id("id_part")));
         await driver.findElement(By.id("id_part")).click();
-        // 35 | select | id=id_part | label=2 SLOT BACKPLANE BOARD ASSEMBLY
+        // 35 | select | id=id_part | label=Wheel Template
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await dropdown.findElement(By.xpath("//option[. = '2 SLOT BACKPLANE BOARD ASSEMBLY']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Wheel Template']")).click();
         }
         // 36 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
         await new Promise(r => setTimeout(r, 4000));
 
-	if ((await driver.findElements(By.xpath("//div/div/ul/li[*]/a[text()='Gliders']"))).length != 0)
-	{
-            // Expand Revision B and 6 Wire and Shield nodes
+        if ((await driver.findElements(By.xpath("//div/div/ul/li[*]/a[text()='Electrics']"))).length != 0) {
+            // Expand Revision B and Sewing Template
             var j = 1;
             while (true) {
-                if ((await driver.findElement(By.xpath("//div/div/ul/li[" + j + "]/a")).getText()) == "Gliders") {
+                if ((await driver.findElement(By.xpath("//div/div/ul/li[" + j + "]/a")).getText()) == "Electrics") {
                     break;
                 }
                 j++;
-	    }
+            }
         }
-	else
-	    console.log("Edit Assemblies failed: Gliders type not found");
+        else
+            console.log("Edit Assemblies failed: Electrics type not found");
 
         await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/ul/li/i")).click();
         await new Promise(r => setTimeout(r, 4000));
-        await driver.findElement(By.xpath("//li[" + j + "]/ul/li/ul/li/ul/li/i")).click();
+        await driver.findElement(By.xpath("//li[" + j + "]/ul/li/ul/li/ul/li/i")).click(); 
+
+        // Add Pin sub assembly part
+        // 27 | click | id=action | 
+        await driver.findElement(By.linkText("wheel"));
+        await driver.findElement(By.id("action")).click();
+        // 28 | click | linkText=Add New Sub-Assembly | 
+        await driver.wait(until.elementLocated(By.linkText("Add New Sub-Assembly")));
+        await driver.findElement(By.linkText("Add New Sub-Assembly")).click();
+        // 29 | click | css=.controls > .btn-primary | 
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.css(".controls > .btn-primary")).click();
+        await driver.findElement(By.id("id_part_type")).click();
+        // 31 | select | id=id_part_type | label=-- Sewing Machine
+        {
+            const dropdown = await driver.findElement(By.id("id_part_type"));
+            await dropdown.findElement(By.xpath("//option[. = '-- Sewing Machine']")).click();
+        }
+        await driver.wait(until.elementLocated(By.id("id_part")));
+        await driver.findElement(By.id("id_part")).click();
+        // 35 | select | id=id_part | label=Wheel Template
+        {
+            const dropdown = await driver.findElement(By.id("id_part"));
+            await dropdown.findElement(By.xpath("//option[. = 'Pin Template']")).click();
+        }
+        await driver.findElement(By.css(".controls > .btn-primary")).click();
 
         // Verify Top Level Part and Sub Assembly created in tree
-	await new Promise(r => setTimeout(r, 4000));  //firefox linux
-        await driver.findElement(By.linkText("6 Wire and Shield"));
-	await new Promise(r => setTimeout(r, 4000));
-        await driver.findElement(By.linkText("2 SLOT BACKPLANE BOARD ASSEMBLY"));
-
+        await new Promise(r => setTimeout(r, 4000));  //firefox linux
+        await driver.findElement(By.linkText("sewing"));
+        await driver.findElement(By.linkText("wheel"));
+        await driver.findElement(By.linkText("pin"));
+	    
         // Close browser window
         driver.quit();
 

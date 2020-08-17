@@ -24,8 +24,8 @@ var myArgs = process.argv.slice(2);
       	    "--no-sandbox",
        	    "--disable-dev-shm-usage",
        	    "--headless",
-	    "--log-level=3",
-	    "--disable-gpu"
+	        "--log-level=3",
+	        "--disable-gpu"
      	    ]
    	    });
 

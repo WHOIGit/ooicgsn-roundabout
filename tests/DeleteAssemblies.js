@@ -24,8 +24,8 @@ var myArgs = process.argv.slice(2);
       	    "--no-sandbox",
        	    "--disable-dev-shm-usage",
        	   "--headless",
-	    "--log-level=3",
-	    "--disable-gpu"
+	       "--log-level=3",
+	       "--disable-gpu"
      	    ]
    	    });
 
@@ -66,8 +66,31 @@ var myArgs = process.argv.slice(2);
 
         // DELETE ASSEMBLIES TEST
 
+        // Delete Assembly Type
+        // 10 | click | id=navbarTemplates |
+        await driver.findElement(By.id("navbarTemplates")).click();
+        await driver.findElement(By.id("navbarAdmintools")).click();
+        // 5 | click | linkText=Test |
+        await driver.findElement(By.linkText("Edit Assembly Types")).click();
+
+        if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Electric']"))).length != 0) {
+            var i = 1;
+            while (true) {
+                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Electric") {
+                    break;
+                }
+                i++;
+            }
+
+            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
+            // 6 | click | css=.btn-danger | 
+            await driver.findElement(By.css(".btn-danger")).click();
+        }
+        else
+            console.log("Delete Parts failed: Electric type not found");
+
        // Searches for and deletes the Assemblies added during the Add and Update Assemblies Test
-	await new Promise(r => setTimeout(r, 4000));  //required for firefox
+	    await new Promise(r => setTimeout(r, 4000));  //required for firefox
         await driver.wait(until.elementLocated(By.id("searchbar-query")));
         await driver.findElement(By.id("searchbar-query")).click();
         var dropdown = await driver.findElement(By.id("searchbar-modelselect"));
@@ -141,8 +164,8 @@ var myArgs = process.argv.slice(2);
         // 30 | click | id=searchbar-query | 
         await new Promise(r => setTimeout(r, 6000));  //required for firefox
         await driver.findElement(By.id("searchbar-query")).click();
-        // 31 | type | id=searchbar-query | Test Glider 1
-        await driver.findElement(By.id("searchbar-query")).sendKeys("Test Glider 1");
+        // 31 | type | id=searchbar-query | Singer
+        await driver.findElement(By.id("searchbar-query")).sendKeys("Singer");
         // 32 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 33 | click | linkText=000-654-987 | 
@@ -159,7 +182,29 @@ var myArgs = process.argv.slice(2);
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
-	    Console.log("Delete Assemblies failed: Test Glider 1 not found");
+	    Console.log("Delete Assemblies failed: Singer not found");
+
+    // 30 | click | id=searchbar-query | 
+    await new Promise(r => setTimeout(r, 6000));  //required for firefox
+    await driver.findElement(By.id("searchbar-query")).click();
+    // 31 | type | id=searchbar-query | Wheel
+    await driver.findElement(By.id("searchbar-query")).sendKeys("Pin");
+    // 32 | click | css=.btn-outline-primary:nth-child(1) | 
+    await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
+    // 33 | click | linkText=000-654-987 | 
+
+
+    if ((await driver.findElements(By.linkText("666-456-789"))).length != 0) {
+        await driver.findElement(By.linkText("666-456-789")).click();
+        // 34 | click | linkText=Delete | 
+        await new Promise(r => setTimeout(r, 4000));  //required for firefox
+        await driver.findElement(By.linkText("Delete")).click();
+        // 35 | click | css=.btn-danger | 
+        await driver.wait(until.elementLocated(By.css(".btn-danger")));
+        await driver.findElement(By.css(".btn-danger")).click();
+    }
+    else
+        Console.log("Delete Assemblies failed: Pin not found");
 
         // Close browser window
         driver.quit();
