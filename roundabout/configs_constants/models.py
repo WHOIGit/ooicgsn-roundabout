@@ -80,6 +80,7 @@ class ConfigName(models.Model):
     config_type = models.CharField(max_length=4, choices=CONFIG_TYPE, null=False, blank=False, default="cnst")
     created_at = models.DateTimeField(default=timezone.now)
     part = models.ForeignKey(Part, related_name='config_names', on_delete=models.CASCADE, null=True)
+    include_with_calibrations = models.BooleanField(null=False, default=False)
 
 # Tracks Configuration/Constant Sets across ConfigNames
 class ConfigValue(models.Model):
@@ -95,6 +96,11 @@ class ConfigValue(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     config_name = models.ForeignKey(ConfigName, related_name='config_values', on_delete=models.CASCADE, null=True)
     config_event = models.ForeignKey(ConfigEvent, related_name='config_values', on_delete=models.CASCADE, null=True)
+    def config_value_with_export_formatting(self):
+        if ',' in self.config_value:
+            return '"[{}]"'.format(self.config_value)
+        else:
+            return self.config_value
 
 
 # Tracks Constant Default event history across Inventory Parts

@@ -58,6 +58,7 @@ urlpatterns = [
     path('cruises/', include('roundabout.cruises.urls', namespace='cruises')),
     path('reports/', include('roundabout.reports.urls', namespace='reports')),
     path('search/', include('roundabout.search.urls', namespace='search')),
+    path('export/', include('roundabout.exports.urls', namespace='export')),
     path('calibrations/', include('roundabout.calibrations.urls', namespace='calibrations')),
     path('configs_constants/', include('roundabout.configs_constants.urls', namespace='configs_constants')),
     path('field_instances/', include('roundabout.field_instances.urls', namespace='field_instances')),
