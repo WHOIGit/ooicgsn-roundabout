@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -45,8 +45,9 @@ from roundabout.inventory.models import Inventory, Action
 from roundabout.assemblies.models import Assembly
 from roundabout.userdefinedfields.models import Field
 from roundabout.calibrations.models import CalibrationEvent, CoefficientValueSet
+from roundabout.configs_constants.models import ConfigEvent, ConfigValue
 
-from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, CalibrationTable, ActionTable, UDF_Column
+from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable,  ActionTable, CalibrationTable, ConfigConstTable, UDF_Column
 
 
 def searchbar_redirect(request):
@@ -61,8 +62,13 @@ def searchbar_redirect(request):
             if fnmatch(query.strip(),'????-??-??'):
                 query = query.strip()
                 getstr = '?f=.0.calibration_event__calibration_date&l=.0.exact&q=.0.{query}'
+            else: getstr = '?f=.0.calibration_event__inventory__serial_number&f=.0.calibration_event__inventory__part__name&f=.0.coefficient_name__calibration_name&f=.0.calibration_event__user_approver__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
+        elif model == 'configconsts':
+            if fnmatch(query.strip(), '????-??-??'):
+                query = query.strip()
+                getstr = '?f=.0.config_event__configuration_date&l=.0.exact&q=.0.{query}'
             else:
-                getstr = '?f=.0.calibration_event__inventory__serial_number&f=.0.calibration_event__inventory__part__name&f=.0.coefficient_name__calibration_name&f=.0.calibration_event__user_approver__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
+                getstr = '?f=.0.config_event__inventory__serial_number&f=.0.config_event__inventory__part__name&f=.0.config_name__name&f=.0.config_event__user_approver__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
         elif model=='part':         getstr = '?f=.0.part_number&f=.0.name&f=.0.friendly_name&l=.0.icontains&q=.0.{query}'
         elif model == 'build':      getstr = '?f=.0.build_number&f=.0.assembly__name&f=.0.assembly__assembly_type__name&f=.0.assembly__description&f=.0.build_notes&f=.0.location__name&l=.0.icontains&q=.0.{query}'
         elif model == 'assembly':   getstr = '?f=.0.assembly_number&f=.0.name&f=.0.assembly_type__name&f=.0.description&l=.0.icontains&q=.0.{query}'
@@ -340,7 +346,9 @@ class InventoryTableView(GenericSearchTableView):
     def get_avail_fields():
         avail_fields = [dict(value="part__name",                     text="Name", legal_lookup='STR_LOOKUP'),
                         dict(value="part__friendly_name",   text="Friendly Name", legal_lookup='STR_LOOKUP'),
-                        dict(value="serial_number",         text="Serial Number", legal_lookup='STR_LOOKUP'),
+                        dict(value="serial_number",         text="Serial Number", legal_lookup='STR_LOOKUP',
+                             col_args=dict(attrs={'style':'white-space: nowrap;'},
+                                           linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('pk')]))),
                         dict(value="old_serial_number", text="Old Serial Number", legal_lookup='STR_LOOKUP'),
                         dict(value="location__name",             text="Location", legal_lookup='STR_LOOKUP'),
                         dict(value="build__assembly__name",         text="Build", legal_lookup='STR_LOOKUP'),
@@ -348,16 +356,13 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="updated_at",            text="Date Modified", legal_lookup='DATE_LOOKUP'),
 
                         dict(value=None, text="--Part--", disabled=True),
-                        dict(value="part__part_number",        text="Part Number", legal_lookup='STR_LOOKUP'),
+                        dict(value="part__part_number",        text="Part Number", legal_lookup='STR_LOOKUP',
+                             col_args=dict(verbose_name='Part Number', attrs={'style':'white-space: nowrap;'},
+                                           linkify=dict(viewname="parts:parts_detail", args=[tables.A('part__pk')]))),
                         dict(value="part__part_type__name",    text="Part Type",   legal_lookup='STR_LOOKUP'),
                         dict(value="part__revision",         text="Part Revision", legal_lookup='STR_LOOKUP'),
                         dict(value="part__unit_cost",          text="Unit Cost",   legal_lookup='NUM_LOOKUP'),
                         dict(value="part__refurbishment_cost", text="Refurb Cost", legal_lookup='NUM_LOOKUP'),
-
-                        #dict(value=None, text="--Location--", disabled=True),
-                        #dict(value="location__name",          text="Name",          legal_lookup='STR_LOOKUP'),
-                        #dict(value="location__location_type", text="Location Type", legal_lookup='STR_LOOKUP'),
-                        #dict(value="location__root_location", text="Location Root", legal_lookup='STR_LOOKUP'),
 
                         dict(value=None, text="--User-Defined-Fields--", disabled=True),
                         dict(value="fieldvalues__field__field_name", text="UDF Name",  legal_lookup='STR_LOOKUP'),
@@ -375,7 +380,7 @@ class InventoryTableView(GenericSearchTableView):
 
                         dict(value=None, text="--Calibrations--", disabled=True),
                         dict(value="calibration_events__latest__calibration_date", text="Latest Calibration Event", legal_lookup='DATE_LOOKUP',
-                             col_args = dict(format='Y-m-d', linkify=lambda record,value: reverse(viewname="calibrations:export_calibration",
+                             col_args = dict(format='Y-m-d', linkify=lambda record,value: reverse(viewname="exports:calibration",
                                                                 args=[record.calibration_events.latest().pk]) if value else None)),
                         dict(value="calibration_events__latest__user_approver", text="Latest Calibration Event: Approver", legal_lookup='STR_LOOKUP'),
                         dict(value="calibration_events__latest__approved", text="Latest Calibration Event: Approved", legal_lookup='STR_LOOKUP'),
@@ -439,8 +444,11 @@ class PartTableView(GenericSearchTableView):
     def get_avail_fields():
         avail_fields = [dict(value="name",                        text="Name", legal_lookup='STR_LOOKUP'),
                         dict(value="friendly_name",      text="Friendly Name", legal_lookup='STR_LOOKUP'),
-                        dict(value="part_number",          text="Part Number", legal_lookup='STR_LOOKUP'),
-                        dict(value="part_type__name",        text="Part Type", legal_lookup='STR_LOOKUP'),
+                        dict(value="part_number",          text="Part Number", legal_lookup='STR_LOOKUP',
+                             col_args=dict(verbose_name='Part Number', attrs={'style':'white-space: nowrap;'},
+                                           linkify=dict(viewname='parts:parts_detail',args=[tables.A('pk')]))),
+                        dict(value="part_type__name",        text="Part Type", legal_lookup='STR_LOOKUP',
+                             col_args=dict(verbose_name='Type')),
                         dict(value="revision",           text="Part Revision", legal_lookup='STR_LOOKUP'),
                         dict(value="unit_cost",              text="Unit Cost", legal_lookup='NUM_LOOKUP'),
                         dict(value="refurbishment_cost",   text="Refurb Cost", legal_lookup='NUM_LOOKUP'),
@@ -512,11 +520,6 @@ class BuildTableView(GenericSearchTableView):
                         dict(value="created_at",            text="Date Created", legal_lookup='DATE_LOOKUP'),
                         dict(value="updated_at",           text="Date Modified", legal_lookup='DATE_LOOKUP'),
 
-                        #dict(value=None, text="--Location--", disabled=True),
-                        #dict(value="location__name",          text="Name", legal_lookup='STR_LOOKUP'),
-                        #dict(value="location__location_type", text="Location Type", legal_lookup='STR_LOOKUP'),
-                        #dict(value="location__root_type",     text="Root", legal_lookup='STR_LOOKUP'),
-
                         dict(value=None, text="--Actions--", disabled=True),
                         dict(value="actions__latest__action_type",    text="Latest Action",           legal_lookup='STR_LOOKUP',
                              col_args=dict(render=lambda value: dict(Action.ACTION_TYPES).get(value,value))),
@@ -550,8 +553,11 @@ class AssemblyTableView(GenericSearchTableView):
     @staticmethod
     def get_avail_fields():
         avail_fields = [dict(value="name",                text="Name", legal_lookup='STR_LOOKUP'),
-                        dict(value="assembly_number",   text="Number", legal_lookup='STR_LOOKUP'),
-                        dict(value="assembly_type__name", text="Type", legal_lookup='STR_LOOKUP'),
+                        dict(value="assembly_number",   text="Number", legal_lookup='STR_LOOKUP',
+                             col_args=dict(verbose_name='Assembly Number', attrs={'style':'white-space: nowrap;'},
+                                           linkify=dict(viewname='assemblies:assembly_detail',args=[tables.A('pk')]))),
+                        dict(value="assembly_type__name", text="Type", legal_lookup='STR_LOOKUP',
+                             col_args=dict(verbose_name='Type')),
                         dict(value="description",  text="Description", legal_lookup='STR_LOOKUP'),
                         ]
         return avail_fields
@@ -564,30 +570,7 @@ class AssemblyTableView(GenericSearchTableView):
         context = super().get_context_data(**kwargs)
         return context
 
-class CalibrationTableView(GenericSearchTableView):
-    model = CoefficientValueSet
-    table_class = CalibrationTable
-    query_prefetch = ['coefficient_name','calibration_event','calibration_event__inventory','calibration_event__inventory__part','calibration_event__user_approver']
 
-    @staticmethod
-    def get_avail_fields():
-        avail_fields = [dict(value="calibration_event__inventory__serial_number", text="Inventory: SN", legal_lookup='STR_LOOKUP'),
-                        dict(value="calibration_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
-                        dict(value="coefficient_name__calibration_name", text="Coefficient Name", legal_lookup='STR_LOOKUP'),
-                        dict(value="calibration_event__calibration_date", text="Calibration Event: Date", legal_lookup='DATE_LOOKUP'),
-                        #dict(value="calibration_event__id", text="Calibration Event: ID", legal_lookup='EXACT_LOOKUP'),
-                        dict(value="calibration_event__user_approver__name", text="Calibration Event: Approver Name",
-                             col_args={'verbose_name':'Approver'}, legal_lookup='STR_LOOKUP'),
-                        dict(value="created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
-                        dict(value="value_set", text="Value", legal_lookup='STR_LOOKUP'),
-                        dict(value="notes", text="Notes", legal_lookup='STR_LOOKUP'),
-                        #dict(value="calibration_event__is_current", text="Latest Only", legal_lookup='BOOL_LOOKUP'),
-                        ]
-        return avail_fields
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['model'] = 'Calibrations'
-        return context
 
 class ActionTableView(GenericSearchTableView):
     model = Action
@@ -614,3 +597,83 @@ class ActionTableView(GenericSearchTableView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
+
+
+class CalibrationTableView(GenericSearchTableView):
+    model = CoefficientValueSet
+    table_class = CalibrationTable
+    query_prefetch = ['coefficient_name','calibration_event','calibration_event__inventory','calibration_event__inventory__part','calibration_event__user_approver']
+
+    @staticmethod
+    def get_avail_fields():
+        avail_fields = [dict(value="calibration_event__inventory__serial_number", text="Inventory: SN", legal_lookup='STR_LOOKUP'),
+                        dict(value="calibration_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
+                        dict(value="coefficient_name__calibration_name", text="Coefficient Name", legal_lookup='STR_LOOKUP'),
+                        dict(value="calibration_event__calibration_date", text="Calibration Event: Date", legal_lookup='DATE_LOOKUP'),
+                        #dict(value="calibration_event__id", text="Calibration Event: ID", legal_lookup='EXACT_LOOKUP'),
+                        dict(value="calibration_event__user_approver__name", text="Calibration Event: Approver Name"),
+                        dict(value="created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
+                        dict(value="value_set", text="Value", legal_lookup='STR_LOOKUP'),
+                        dict(value="notes", text="Notes", legal_lookup='STR_LOOKUP'),
+                        #dict(value="calibration_event__is_current", text="Latest Only", legal_lookup='BOOL_LOOKUP'),
+                        ]
+        return avail_fields
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['model'] = 'Calibrations'
+        return context
+    def get_queryset(self):
+        qs = super().get_queryset()
+        # since search model is CoefficientValueSet and results table is CalibrationEvents,
+        # final query results must be CalibrationEvents.
+        calibration_event_ids = qs.values_list('calibration_event__id', flat=True)
+        qs = CalibrationEvent.objects.filter(id__in=calibration_event_ids)
+        return qs
+    def get_table_kwargs(self):
+        # since search model is CoefficientValueSet and results are CalibrationEvents,
+        # columns must be handled by table_class, not by view_class/avail_fields
+
+        # exclude cols from download
+        try: self.exclude_columns = self.request.GET.get('excluded_columns').strip('"').split(',')
+        except AttributeError: self.exclude_columns = []
+
+        return {'extra_columns':[]}
+
+class ConfigConstTableView(GenericSearchTableView):
+    model = ConfigValue
+    table_class = ConfigConstTable
+    query_prefetch = ['config_name','config_event','config_event__inventory','config_event__inventory__part','config_event__user_approver']
+
+    @staticmethod
+    def get_avail_fields():
+        avail_fields = [dict(value="config_event__inventory__serial_number", text="Inventory: SN", legal_lookup='STR_LOOKUP'),
+                        dict(value="config_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
+                        dict(value="config_name__name", text="Config/Const Name", legal_lookup='STR_LOOKUP'),
+                        dict(value="config_event__configuraton_date", text="Config/Const Event: Date", legal_lookup='DATE_LOOKUP'),
+                        dict(value="config_event__user_approver__name", text="Config/Const Event: Approver Name"),
+                        dict(value="created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
+                        dict(value="config_value", text="Value", legal_lookup='STR_LOOKUP'),
+                        dict(value="notes", text="Notes", legal_lookup='STR_LOOKUP'),
+                        ]
+        return avail_fields
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['model'] = 'Configs_Constants'
+        return context
+    def get_queryset(self):
+        qs = super().get_queryset()
+        # since search model is CoefficientValueSet and results table is CalibrationEvents,
+        # final query results must be CalibrationEvents.
+        config_event_ids = qs.values_list('config_event__id', flat=True)
+        qs = CalibrationEvent.objects.filter(id__in=config_event_ids)
+        return qs
+    def get_table_kwargs(self):
+        # since search model is ConfigValue and results are ConfigEvents,
+        # columns must be handled by table_class, not by view_class/avail_fields
+
+        # exclude cols from download
+        try: self.exclude_columns = self.request.GET.get('excluded_columns').strip('"').split(',')
+        except AttributeError: self.exclude_columns = []
+
+        return {'extra_columns':[]}
+
