@@ -145,7 +145,7 @@ class CoefficientValueSetForm(forms.ModelForm):
         raw_set = self.cleaned_data.get('value_set')
         coefficient_name = self.cleaned_data.get('coefficient_name')
         try:
-            cal_obj = CoefficientName.objects.get(part = self.instance.part, calibration_name = coefficient_name)
+            cal_obj = CoefficientName.objects.get(coeff_name_event = self.instance.part.coefficient_name_events.first(), calibration_name = coefficient_name)
             set_type =  cal_obj.value_set_type
         except:
             raise ValidationError(
@@ -431,20 +431,23 @@ def parse_valid_coeff_vals(value_set_instance):
 def copy_calibrations(to_id, from_id):
     to_part = Part.objects.get(id=to_id)
     from_part = Part.objects.get(id=from_id)
-    if from_part.coefficient_names.exists():
-        for name in from_part.coefficient_names.all():
+    if from_part.coefficient_name_events.exists():
+        from_coeff_event = from_part.coefficient_name_events.first()
+        to_coeff_event = to_part.coefficient_name_events.first()
+        for name in from_coeff_event.coefficient_names.all():
             CoefficientName.objects.create(
                 calibration_name = name.calibration_name,
                 value_set_type = name.value_set_type,
                 sigfig_override = name.sigfig_override,
-                part = to_part
+                part = to_part,
+                coeff_name_event=to_coeff_event,
             )
 
 # Validator for Part Calibration Copy
 # When a Part is selected, from which to copy Calibration Names into another Part, the function checks if duplicate Names exist between the two Parts in question.
 def validate_part_select(to_part, from_part):
-    to_names = [name.calibration_name for name in to_part.coefficient_names.all()]
-    from_names = [name.calibration_name for name in from_part.coefficient_names.all()]
+    to_names = [name.calibration_name for name in to_part.coefficient_name_events.first().coefficient_names.all()]
+    from_names = [name.calibration_name for name in from_part.coefficient_name_events.first().coefficient_names.all()]
     try:
         assert not any(from_name in to_names for from_name in from_names)
     except:

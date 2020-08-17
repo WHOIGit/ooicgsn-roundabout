@@ -22,34 +22,187 @@
 {% load common_tags %}
 
 <div id = 'configuration_constant-section'>
-  <div class="ajax-detail-link float-right">
-      <a class="btn btn-primary btn-sm" href="#" role="button"
-          data-detail-url="{% url 'configs_constants:part_confname_add' part_template.id %}"
-          data-node-id="{{ part_template.id }}"
-          data-node-type="detail"
-      >
-          {% if part_template.config_names.exists %}
-              Update Configs/Constants
-          {% else %}
-              Create Configs/Constants
-          {% endif %}
-      </a>
-  </div>
+    <div class="ajax-detail-link float-right">
+        {% if not user|has_group:"inventory only" %}
+            {% if part_template.config_name_events.exists %}
+                <div class = 'ajax-detail-link float-right'>
+                    <a  href="#"
+                        class="btn btn-primary btn-sm mr-2"
+                        role="button"
+                        data-detail-url="{% url 'configs_constants:event_confname_update' part_template.config_name_events.first.id %}"
+                        data-node-id="{{ part_template.id }}"
+                        data-node-type="detail">
+                            Edit Configurations / Constants
+                    </a>
+                </div>
+            {% else %}
+                <a class="btn btn-primary btn-sm" href="#" role="button"
+                    data-detail-url="{% url 'configs_constants:event_confname_add' part_template.id %}"
+                    data-node-id="{{ part_template.id }}"
+                    data-node-type="detail"
+                >
+                    Create Configurations / Constants
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
   <h4>Configurations / Constants</h4>
-  <table class="table table-striped action-table">
-      <thead>
-          <th>Name</th>
-          <th>Type</th>
-      </thead>
-      <tbody>
-          {% for conf in part_template.config_names.all %}
-              <tr>
-                  <td>{{ conf.name }}</td>
-                  <td>{{ conf.config_type }}</td>
-              </tr>
-          {% endfor %}
-      </tbody>
-  </table>
+  <hr>
+    <div id="config_name-template" aria-labelledby="config_name-template-tab">
+        <ul class="list-group">
+            {% for event in part_template.config_name_events.all %}
+                <li class="list-group-item">
+                    <a  class="collapsed" 
+                        data-toggle="collapse" 
+                        href="#conf_name-{{ event.id }}" 
+                        aria-expanded="false" 
+                        aria-controls="conf_name-{{ event.id }}"
+                    >
+                        Configurations / Constants
+                    </a>
+                    <a  data-toggle="collapse" 
+                        class="collapsed text-right" 
+                        href="#conf_name-{{ event.id }}" 
+                        aria-controls="conf_name-{{ event.id }}" 
+                        aria-expanded="false" 
+                        role="button"
+                    >
+                        <i class="fa" aria-hidden="true"></i>
+                        <span class="sr-only">Expand/Collapse Default</span>
+                    </a>
+                    {% if user in event.user_draft.all %}
+                        <span id="review-badge" class="badge badge-pill badge-secondary">Review Requested</span>
+                    {% endif %}
+                    {% if event.approved %}
+                        <span id="approve-badge" class="badge badge-pill badge-success">Approved</span> 
+                    {% else %} 
+                        <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span> 
+                    {% endif %}
+                    <div class="collapse mt-3" id="conf_name-{{ event.id }}">
+                        <hr>
+                        {% if user in event.user_draft.all %}
+                            <button class="btn btn-success btn-sm mr-2" id='expander-date-{{event.id}}' data-reviewer-url="{% url 'configs_constants:event_configname_approve' event.id user.id %}">
+                                Approve
+                            </button>
+                        {% endif %}
+                        {% if not user|has_group:"inventory only" %}
+                            <div class="ajax-detail-link float-right">
+                                <a  href="#" 
+                                    class="btn btn-danger btn-sm mr-2"
+                                    data-detail-url="{% url 'configs_constants:event_confname_delete' event.id %}" 
+                                    role="button" 
+                                >
+                                        Delete
+                                </a>
+                            </div>
+                        {% endif %}
+                        <p id = 'approvers'>Approvers: 
+                            {% for user in event.get_sorted_approvers.all %}
+                                <span id='approver-{{ user.id }}'>{{ user.username }}</span>
+                            {% endfor %}
+                        </p>
+                        <p id = 'reviewers'>Reviewers: 
+                            {% for user in event.get_sorted_reviewers.all %}
+                                <span id='reviewer-{{ user.id }}'>{{ user.username }}</span>
+                            {% endfor %}
+                        </p> 
+                        <div class="tab-content" id="inventory-tabs">
+                            <div class="tab-pane fade show active" id="names" role="tabpanel" aria-labelledby="names-tab">
+                                <table class="table table-tight">
+                                    <tbody>
+                                        {% for name in event.config_names.all %}
+                                            <tr>
+                                                <td>
+                                                    <li class = 'list-group-item'>
+                                                        <a  class="collapse show" 
+                                                            data-toggle="collapse" 
+                                                            href="#name-{{ name.name }}{{ name.config_type }}{{ event.id }}" 
+                                                            aria-expanded="false" 
+                                                            aria-controls="name-{{ name.name }}{{ name.config_type }}{{ event.id }}"
+                                                        >
+                                                            <b>{{ name.name }}</b>
+                                                        </a>
+                                                        <a  data-toggle="collapse" 
+                                                            class="collapse show text-right" 
+                                                            href="#name-{{ name.name }}{{ name.config_type }}{{ event.id }}" 
+                                                            aria-controls="name-{{ name.name }}{{ name.config_type }}{{ event.id }}" 
+                                                            aria-expanded="false" 
+                                                            role="button"
+                                                        >
+                                                            <i class="fa" aria-hidden="true"></i>
+                                                            <span class="sr-only">Expand/Collapse Default</span>
+                                                        </a>
+                                                        <div class="collapse show mt-1" id="name-{{ name.name }}{{ name.config_type }}{{ event.id }}">
+                                                            <table id = 'config_name-val-table' class="table table-tight" style = 'display:block; overflow: auto; max-height: 200px'>
+                                                                <thead>
+                                                                    <th>Type</th>
+                                                                    <th>Export with Calibrations</th>
+                                                                </thead>
+                                                                <tbody class = 'config_name-tbody' id = 'config_name-val-tbody' style = 'overflow: auto; max-height: 200px'>
+                                                                    <tr style = 'text-align: center;'>
+                                                                        <td>{{ name.config_type }}</td>
+                                                                        <td>{{ name.include_with_calibrations }}</td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </li>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+                                <li class="nav-item">
+                                    <a  class="nav-link active" 
+                                        id="configname_event_history-tab" 
+                                        data-toggle="tab" 
+                                        href="#configname_event_history" 
+                                        role="tab" 
+                                        aria-controls="configname_event_history" 
+                                        aria-selected="false">
+                                            Event History
+                                    </a>
+                                </li>
+                            </ul>
+                            <table class="table table-tight">
+                                <tbody>
+                                    <tr>
+                                        <td> 
+                                            <li class = 'list-group-item' style = 'display:block; overflow: auto; max-height: 200px'>
+                                                <table class="table table-tight table-striped action-table">
+                                                    <thead>
+                                                        <th>Date</th>
+                                                        <th>Action</th>
+                                                        <th>Details</th>
+                                                        <th>Person</th>
+                                                    </thead>
+                                                    <tbody style = 'overflow: auto; max-height: 200px'>
+                                                        {% for action in event.get_actions.all %}
+                                                            <tr>
+                                                                <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
+                                                                <td>{{ action.get_action_type_display }}</td>
+                                                                <td>
+                                                                    {{ action.detail|safe }}
+                                                                </td>
+                                                                <td>{{ action.user.username }}</td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </li>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <hr>
 </div>
 
 

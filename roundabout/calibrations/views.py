@@ -48,7 +48,8 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
     def get(self, request, *args, **kwargs):
         self.object = None
         inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
-        cal_names = CoefficientName.objects.filter(part=inv_inst.part)
+        coeff_event = inv_inst.part.coefficient_name_events.first()
+        cal_names = coeff_event.coefficient_names.all()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         EventValueSetAddFormset = inlineformset_factory(

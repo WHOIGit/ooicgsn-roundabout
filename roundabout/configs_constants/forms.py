@@ -20,7 +20,7 @@
 """
 
 from django import forms
-from .models import ConfigEvent, ConfigName, ConfigValue, ConstDefault, ConstDefaultEvent, ConfigDefaultEvent, ConfigDefault
+from .models import ConfigEvent, ConfigName, ConfigValue, ConstDefault, ConstDefaultEvent, ConfigDefaultEvent, ConfigDefault, ConfigNameEvent
 from roundabout.inventory.models import Inventory, Deployment
 from roundabout.parts.models import Part
 from roundabout.users.models import User
@@ -98,6 +98,38 @@ class ConfigValueForm(forms.ModelForm):
     def clean_config_name(self):
         config_name = self.cleaned_data.get('config_name')
         return config_name
+
+# ConfigNameEvent form 
+# Inputs: Reviewers 
+class ConfigNameEventForm(forms.ModelForm):
+    class Meta:
+        model = ConfigNameEvent 
+        fields = ['user_draft']
+        labels = {
+            'user_draft': 'Reviewers'
+        }
+        widgets = {
+            'user_draft': forms.SelectMultiple()
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(ConfigNameEventForm, self).__init__(*args, **kwargs)
+        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username')
+
+    def clean_user_draft(self):
+        user_draft = self.cleaned_data.get('user_draft')
+        return user_draft
+
+    def save(self, commit = True): 
+        event = super(ConfigNameEventForm, self).save(commit = False)
+        if commit:
+            event.save()
+            if event.user_approver.exists():
+                for user in event.user_approver.all():
+                    event.user_draft.add(user)
+                    event.user_approver.remove(user)
+            event.save()
+            return event
 
 # Configuration Name Form
 # Inputs: Name, Input Type
@@ -283,7 +315,7 @@ ConfigEventValueFormset = inlineformset_factory(
 
 # Configuration Name form instance generator for Parts
 PartConfigNameFormset = inlineformset_factory(
-    Part, 
+    ConfigNameEvent, 
     ConfigName, 
     form=ConfigNameForm, 
     fields=(
@@ -320,12 +352,16 @@ EventConfigDefaultFormset = inlineformset_factory(
 def copy_confignames(to_id, from_id):
     to_part = Part.objects.get(id=to_id)
     from_part = Part.objects.get(id=from_id)
-    if from_part.config_names.exists():
-        for name in from_part.config_names.all():
+    if from_part.config_name_events.exists():
+        from_event = from_part.config_name_events.first()
+        to_event = to_part.config_name_events.first()
+        for name in from_event.config_names.all():
             ConfigName.objects.create(
                 name = name.name,
                 config_type = name.config_type,
-                part = to_part
+                include_with_calibrations = name.include_with_calibrations,
+                part = to_part,
+                config_name_event = to_event
             )
 
 # Validator for Part Config/Constant Copy
