@@ -113,7 +113,7 @@ var myArgs = process.argv.slice(2);
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
-	    Console.log("Delete Assemblies failed: Test Assembly not found");
+	    console.log("Delete Assemblies failed: Test Assembly not found");
 
         // 15 | click | id=searchbar-query | 
 	await new Promise(r => setTimeout(r, 4000));  //required for firefox
@@ -136,7 +136,7 @@ var myArgs = process.argv.slice(2);
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
-	    Console.log("Delete Assemblies failed: Test Assembly 2 not found");
+	    console.log("Delete Assemblies failed: Test Assembly 2 not found");
 
         // 24 | click | id=searchbar-query | 
 	await new Promise(r => setTimeout(r, 4000));  //required for firefox
@@ -159,7 +159,7 @@ var myArgs = process.argv.slice(2);
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
-	    Console.log("Delete Assemblies failed: Test Assembly 3 not found");
+	    console.log("Delete Assemblies failed: Test Assembly 3 not found");
 
         // 30 | click | id=searchbar-query | 
         await new Promise(r => setTimeout(r, 6000));  //required for firefox
@@ -182,29 +182,9 @@ var myArgs = process.argv.slice(2);
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
-	    Console.log("Delete Assemblies failed: Singer not found");
-
-    // 30 | click | id=searchbar-query | 
-    await new Promise(r => setTimeout(r, 6000));  //required for firefox
-    await driver.findElement(By.id("searchbar-query")).click();
-    // 31 | type | id=searchbar-query | Wheel
-    await driver.findElement(By.id("searchbar-query")).sendKeys("Pin");
-    // 32 | click | css=.btn-outline-primary:nth-child(1) | 
-    await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
-    // 33 | click | linkText=000-654-987 | 
+	    console.log("Delete Assemblies failed: Singer not found");
 
 
-    if ((await driver.findElements(By.linkText("666-456-789"))).length != 0) {
-        await driver.findElement(By.linkText("666-456-789")).click();
-        // 34 | click | linkText=Delete | 
-        await new Promise(r => setTimeout(r, 4000));  //required for firefox
-        await driver.findElement(By.linkText("Delete")).click();
-        // 35 | click | css=.btn-danger | 
-        await driver.wait(until.elementLocated(By.css(".btn-danger")));
-        await driver.findElement(By.css(".btn-danger")).click();
-    }
-    else
-        Console.log("Delete Assemblies failed: Pin not found");
 
         // Close browser window
         driver.quit();

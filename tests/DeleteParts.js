@@ -132,52 +132,56 @@ var myArgs = process.argv.slice(2);
 	else
 	    console.log("Delete Parts failed: Sewing Template not found");
 
-        // 15 | click | linkText=Inventory | 
-        await driver.findElement(By.linkText("Inventory")).click();
-        await new Promise(r => setTimeout(r, 4000));
+        // 7 | click | id=navbarTemplates | 
+        await driver.findElement(By.id("navbarTemplates")).click();
+        // 8 | click | linkText=Parts | 
+        await driver.findElement(By.linkText("Parts")).click();
+        // 9 | click | id=searchbar-query | 
+        await driver.findElement(By.id("searchbar-query")).click();
+        // 10 | type | id=searchbar-query | Sewing Template
+        await driver.findElement(By.id("searchbar-query")).sendKeys("Wheel Template");
+        // 11 | click | css=.btn-outline-primary:nth-child(1) | 
+        await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
+        // 12 | click | linkText=1232 | 
+        await new Promise(r => setTimeout(r, 2000));
 
-        // Expand Test Location in Inventory Tree
-
-	if ((await driver.findElements(By.linkText("Test"))).length != 0)
+	if ((await driver.findElements(By.linkText("555-456-789"))).length != 0)
 	{
-            var j = 1;
-            while (true) {
-                if ((await driver.findElement(By.xpath("//div[2]/ul/li[" + j + "]/a")).getText()) == "Test") {
-                    break;
-                }
-                j++;
-            }
-            await driver.findElement(By.xpath("//div/ul/li[" + j + "]/i")).click();  
-	}
-	else
-	    console.log("Delete Parts failed: Test location not found");
-
-    await new Promise(r => setTimeout(r, 2000));
-
-	if ((await driver.findElements(By.partialLinkText("sewing"))).length != 0)
-	{
-            await driver.findElement(By.partialLinkText("sewing")).click();
-            // 9 | click | linkText=Delete | 
-            await driver.wait(until.elementLocated(By.linkText("Move to Trash")));
-            await driver.findElement(By.linkText("Move to Trash")).click();
-            // 10 | click | css=.btn-danger | 
+            await driver.findElement(By.linkText("555-456-789")).click();
+            // 13 | click | linkText=Delete | 
+            await driver.findElement(By.linkText("Delete")).click();
+            // 14 | click | css=.btn-danger | 
             await new Promise(r => setTimeout(r, 2000));
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
-            console.log("Delete Parts failed: sewing not found"); 
+	    console.log("Delete Parts failed: Wheel Template not found");
 
-    if ((await driver.findElements(By.partialLinkText("wheel"))).length != 0) {
-            await driver.findElement(By.partialLinkText("wheel")).click();
-            // 9 | click | linkText=Delete | 
-            await driver.wait(until.elementLocated(By.linkText("Move to Trash")));
-            await driver.findElement(By.linkText("Move to Trash")).click();
-            // 10 | click | css=.btn-danger | 
+        // 7 | click | id=navbarTemplates | 
+        await driver.findElement(By.id("navbarTemplates")).click();
+        // 8 | click | linkText=Parts | 
+        await driver.findElement(By.linkText("Parts")).click();
+        // 9 | click | id=searchbar-query | 
+        await driver.findElement(By.id("searchbar-query")).click();
+        // 10 | type | id=searchbar-query | Sewing Template
+        await driver.findElement(By.id("searchbar-query")).sendKeys("Pin Template");
+        // 11 | click | css=.btn-outline-primary:nth-child(1) | 
+        await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
+        // 12 | click | linkText=1232 | 
+        await new Promise(r => setTimeout(r, 2000));
+
+	if ((await driver.findElements(By.linkText("666-456-789"))).length != 0)
+	{
+            await driver.findElement(By.linkText("666-456-789")).click();
+            // 13 | click | linkText=Delete | 
+            await driver.findElement(By.linkText("Delete")).click();
+            // 14 | click | css=.btn-danger | 
             await new Promise(r => setTimeout(r, 2000));
             await driver.findElement(By.css(".btn-danger")).click();
-     }
-     else
-            console.log("Delete Parts failed: wheel not found"); 
+	}
+	else
+	    console.log("Delete Parts failed: Pin Template not found");
+
 
         // Close browser window
     driver.quit();

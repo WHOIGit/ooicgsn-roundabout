@@ -284,7 +284,7 @@ var myArgs = process.argv.slice(2);
         // 41 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 42 | click | css=.even a | 
-	    await new Promise(r => setTimeout(r, 2000));  //linux docker
+	await new Promise(r => setTimeout(r, 2000));  //linux docker
         await driver.findElement(By.css(".even a")).click();
         // 43 | click | id=action | 
 
@@ -356,6 +356,7 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.id("action")));
         await driver.findElement(By.id("action")).click();
         // 55 | click | linkText=Edit Inventory Details | 
+	await new Promise(r => setTimeout(r, 2000)); 
         await driver.findElement(By.linkText("Edit Inventory Details")).click();
         await driver.wait(until.elementLocated(By.id("hint_id_serial_number")));
         await driver.findElement(By.id("hint_id_serial_number")).click();

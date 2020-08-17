@@ -366,11 +366,12 @@ var myArgs = process.argv.slice(2);
 
         await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/ul/li/i")).click();
-        await new Promise(r => setTimeout(r, 4000));
+        await new Promise(r => setTimeout(r, 6000));
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/ul/li/ul/li/i")).click(); 
 
         // Add Pin sub assembly part
         // 27 | click | id=action | 
+	await new Promise(r => setTimeout(r, 2000)); 
         await driver.findElement(By.linkText("wheel"));
         await driver.findElement(By.id("action")).click();
         // 28 | click | linkText=Add New Sub-Assembly | 
