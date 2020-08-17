@@ -107,7 +107,6 @@ def sync_request_actions(request, actions, pk_mappings=None):
     base_url = 'https://ooi-cgrdb-staging.whoi.net'
     action_url = base_url + reverse('actions-list')
     print(action_url)
-    #action_url = F"{base_url}/api/v1/actions/"
     photo_url = base_url + reverse('photos-list')
 
     for action in actions:
@@ -125,7 +124,7 @@ def sync_request_actions(request, actions, pk_mappings=None):
             for photo in action.photos.all():
                 multipart_form_data = {
                     'photo': (photo.photo.name, photo.photo.file),
-                    'inventory': (None, photo.inventory.id),
+                    #'inventory': (None, photo.inventory.id),
                     'action': (None, new_action['action']['id']),
                     'user': (None, photo.user.id)
                 }
