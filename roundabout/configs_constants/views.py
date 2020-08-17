@@ -336,7 +336,7 @@ class EventConfigNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
         part_confname_form.instance = self.object
         part_confname_form.save()
         part_conf_copy_form.save()
-        # _create_action_history(self.object, Action.ADD, self.request.user)
+        _create_action_history(self.object, Action.ADD, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -443,7 +443,7 @@ class EventConfigNameUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFor
         part_confname_form.instance = self.object
         part_confname_form.save()
         part_conf_copy_form.save()
-        # _create_action_history(self.object, Action.UPDATE, self.request.user)
+        _create_action_history(self.object, Action.UPDATE, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -1038,10 +1038,10 @@ def event_configname_approve(request, pk, user_pk):
     if user in reviewers:
         event.user_draft.remove(user)
         event.user_approver.add(user)
-        # _create_action_history(event, Action.REVIEWAPPROVE, user)
+        _create_action_history(event, Action.REVIEWAPPROVE, user)
     if len(event.user_draft.all()) == 0:
         event.approved = True
-        # _create_action_history(event, Action.EVENTAPPROVE, user)
+        _create_action_history(event, Action.EVENTAPPROVE, user)
     event.save()
     data = {'approved':event.approved}
     return JsonResponse(data)

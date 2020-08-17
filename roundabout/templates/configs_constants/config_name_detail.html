@@ -211,46 +211,39 @@
     $(document).ready(function() {
 
         // // Toggle display of Constant functionality 
-        // let user_id = '{{ user.id }}'
-        // let inv_part_type = '{{ assembly_part.part.part_type }}';
-        // let part_has_cals = '{{ assembly_part.part.config_names.exists }}';
-        // if (inv_part_type == 'Instrument' && part_has_cals == 'True') {
-        //     $('#add_configdefault_action').show();
-        //     $('#config-tabs-nav').show();
-        //     $('#config_default-template-tab').show().css('display', '');
-        //     $('#config_default-template').show().css('display', '');
-        // } else {
-        //     $('#add_configdefault_action').hide();
-        //     $('#config-tabs-nav').hide();
-        //     $('#config_default-template-tab').hide();
-        //     $('#config_default-template').hide();
-        // }
+        let user_id = '{{ user.id }}'
+        let inv_part_type = '{{ part_template.part_type }}';
+        if (inv_part_type == 'Instrument') {
+            $('#configuration_constant-section').show();
+        } else {
+            $('#configuration_constant-section').hide();
+        }
 
         // // Swap Reviewers as Approvers
-        // $('#config_default-template').on('click', 'button[id^=expander]', function(e) {
-        //     e.preventDefault();
-        //     let url = $(this).attr('data-reviewer-url');
-        //     let grandParent = $(this).parent().parent()
-        //     let review_badge = grandParent.find('#review-badge');
-        //     let progress_badge = grandParent.find('#progress-badge');
-        //     let reviewer = grandParent.find('#reviewer-' + user_id)
-        //     let approver_list = grandParent.find('#approvers');
-        //     if (review_badge.length) {
-        //         $.ajax({
-        //             url: url,
-        //             success: function (data) {
-        //                 if (data.approved) {
-        //                     review_badge.after('<span id = "approve-badge" class = "badge badge-pill badge-success">Approved</span>');
-        //                     progress_badge.hide();
-        //                 }
-        //                 $(this).remove();
-        //                 approver_list.append("<span id='approver-{{ user.id }}'>{{ user.username }}</span>");
-        //                 review_badge.remove();
-        //                 reviewer.hide();
-        //             }
-        //         });
-        //     }
-        // });
+        $('#config_name-template').on('click', 'button[id^=expander]', function(e) {
+            e.preventDefault();
+            let url = $(this).attr('data-reviewer-url');
+            let grandParent = $(this).parent().parent()
+            let review_badge = grandParent.find('#review-badge');
+            let progress_badge = grandParent.find('#progress-badge');
+            let reviewer = grandParent.find('#reviewer-' + user_id)
+            let approver_list = grandParent.find('#approvers');
+            if (review_badge.length) {
+                $.ajax({
+                    url: url,
+                    success: function (data) {
+                        if (data.approved) {
+                            review_badge.after('<span id = "approve-badge" class = "badge badge-pill badge-success">Approved</span>');
+                            progress_badge.hide();
+                        }
+                        $(this).remove();
+                        approver_list.append("<span id='approver-{{ user.id }}'>{{ user.username }}</span>");
+                        review_badge.remove();
+                        reviewer.hide();
+                    }
+                });
+            }
+        });
     });
 </script>
 {% endblock javascript %}

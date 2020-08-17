@@ -212,19 +212,12 @@
 
         // Toggle display of Constant functionality 
         let user_id = '{{ user.id }}'
-        // let inv_part_type = '{{ part_template.part_type }}';
-        // let part_has_cals = '{{ part_template.coefficient_names.exists }}';
-        // if (inv_part_type == 'Instrument' && part_has_cals == 'True') {
-        //     $('#add_configdefault_action').show();
-        //     $('#config-tabs-nav').show();
-        //     $('#coefficient_name-template-tab').show().css('display', '');
-        //     $('#coefficient_name-template').show().css('display', '');
-        // } else {
-        //     $('#add_configdefault_action').hide();
-        //     $('#config-tabs-nav').hide();
-        //     $('#coefficient_name-template-tab').hide();
-        //     $('#coefficient_name-template').hide();
-        // }
+        let inv_part_type = '{{ part_template.part_type }}';
+        if (inv_part_type == 'Instrument') {
+            $('#calibrations-section').show();
+        } else {
+            $('#calibrations-section').hide();
+        }
 
         // Swap Reviewers as Approvers
         $('#coefficient_name-template').on('click', 'button[id^=expander]', function(e) {

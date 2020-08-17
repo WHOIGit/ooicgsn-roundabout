@@ -89,8 +89,8 @@ class ConfigNameEvent(models.Model):
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
     detail = models.TextField(blank=True)
 
-    # def get_actions(self):
-    #     return self.actions.filter(object_type=Action.COEFFNAMEEVENT)
+    def get_actions(self):
+        return self.actions.filter(object_type=Action.CONFNAMEEVENT)
 
     def get_sorted_reviewers(self):
         return self.user_draft.all().order_by('username')
