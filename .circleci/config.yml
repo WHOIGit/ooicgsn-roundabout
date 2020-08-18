@@ -71,6 +71,8 @@ jobs:
       - run:
           docker:
              - image: circleci/node
+	  networks: 
+            - roundabout-network
           name: Running Automated tests
           command: >-
              curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash - &&
