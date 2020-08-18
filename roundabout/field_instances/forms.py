@@ -19,16 +19,13 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from django.urls import path
+from django import forms
 
-from . import views
+from .models import FieldInstance
 
-app_name = 'field_instances'
-urlpatterns = [
-    path('sync-to-home/', view=views.FieldInstanceSyncToHomeView.as_view(), name='field_instance_sync_to_home'),
-    # CRUD views
-    path('', view=views.FieldInstanceListView.as_view(), name='field_instances_home'),
-    path('add/', view=views.FieldInstanceCreateView.as_view(), name='field_instances_add'),
-    path('edit/<int:pk>/', view=views.FieldInstanceUpdateView.as_view(), name='field_instances_update'),
-    path('delete/<int:pk>/', view=views.FieldInstanceDeleteView.as_view(), name='field_instances_delete'),
-]
+
+class FieldInstanceForm(forms.ModelForm):
+
+    class Meta:
+        model = FieldInstance
+        fields = '__all__'

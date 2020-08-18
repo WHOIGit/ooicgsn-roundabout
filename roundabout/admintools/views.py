@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -28,7 +28,6 @@ from dateutil import parser
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
-from django.db import IntegrityError
 from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 

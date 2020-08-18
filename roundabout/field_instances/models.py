@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
 
+from roundabout.users.models import *
+
 """
 Model to track users and registrations of "in the field" RDB instances.
 These are instances that run strictly locally without internet access necessary.
@@ -22,3 +24,12 @@ class FieldInstance(models.Model):
 
     def __str__(self):
         return self.name
+
+    # Custom save method to deactive non-deployed users
+    def save(self, *args, **kwargs):
+        super(FieldInstance, self).save(*args, **kwargs)
+        if self.is_this_instance:
+            users_deactivate = User.objects.exclude(id__in=self.users.all())
+            for user in users_deactivate:
+                user.is_active = False
+                user.save()
