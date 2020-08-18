@@ -30,6 +30,9 @@ class User(AbstractUser):
     name =  models.CharField(_("Name of User"), blank=True, max_length=255)
     is_infield = models.BooleanField(default=False)
 
+    class Meta:
+        ordering = ['username']
+
     def __str__(self):
         return self.username
 
