@@ -47,7 +47,7 @@ var myArgs = process.argv.slice(2);
 
     // Step # | name | target | value
     // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
-    await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+    await driver.get("http://localhost:8000/ooi-cgrdb-staging.whoi.net/");
     // 2 | setWindowSize | 1304x834 | 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
 
