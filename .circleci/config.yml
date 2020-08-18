@@ -71,7 +71,7 @@ jobs:
       - run:
           docker:
              - image: circleci/node
-	  networks: 
+          networks: 
              - roundabout-network
           name: Running Automated tests
           command: >-
