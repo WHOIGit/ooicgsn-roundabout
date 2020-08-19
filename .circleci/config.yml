@@ -67,12 +67,6 @@ jobs:
           command: >-
             docker-compose --file local.yml run --rm django \
               python manage.py check
- 
-      - run:
-          name: Running Automated tests
-          command: >-
-            docker-compose --file local.yml run --rm tests 
-
       - run:
           name: Stopping Docker application
           command: >-
