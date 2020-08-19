@@ -29,6 +29,10 @@ class FieldInstance(models.Model):
     def save(self, *args, **kwargs):
         super(FieldInstance, self).save(*args, **kwargs)
         if self.is_this_instance:
+            for user in self.users.all():
+                user.is_active = True
+                user.save()
+            
             users_deactivate = User.objects.exclude(id__in=self.users.all())
             for user in users_deactivate:
                 user.is_active = False
