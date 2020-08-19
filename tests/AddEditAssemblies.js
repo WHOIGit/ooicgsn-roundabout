@@ -46,7 +46,7 @@ var myArgs = process.argv.slice(2);
     // Step # | name | target | value
     if (myArgs[1] == 'headless')
     {
-        await driver.get("http://localhost:8000/ooi-cgrdb-staging.whoi.net/");   
+        await driver.get("http://localhost:8000/");   
     }
     else
     {
