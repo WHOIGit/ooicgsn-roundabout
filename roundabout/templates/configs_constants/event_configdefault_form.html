@@ -25,9 +25,9 @@
 
 <div class="card-header">
     {% if event_template.id %}
-        <h3>Update Config Default(s)</h3>
+        <h3>Update Configuration Default(s)</h3>
     {% else %}
-        <h3>Add Config Default(s)</h3>
+        <h3>Add Configuration Default(s)</h3>
     {% endif %}
 </div>
 
@@ -50,7 +50,7 @@
         {{ form|crispy }}
 
         <div class="col-md-12">
-            <h5 id = '__all__'>Config Default(s)</h5>
+            <h5 id = '__all__'>Configuration Default(s)</h5>
             <table class="table table-tight configdefault-form" style = 'display:block; overflow: auto; max-height: 100vh'>
               <thead>
                   <th>Name</th>
@@ -74,10 +74,10 @@
                     {% if action_type == 'movetotrash' %}
                         <button type="submit" class="btn btn-danger">Confirm Move to Trash</button>
                     {% else %}
-                        <button type="submit" class="btn btn-primary">Update Config Default(s)</button>
+                        <button type="submit" class="btn btn-primary">Update Configuration Default(s)</button>
                     {% endif %}
                 {% else %}
-                    <button type="submit" class="btn btn-primary">Add Config Default(s)</button>
+                    <button type="submit" class="btn btn-primary">Add Configuration Default(s)</button>
                 {% endif %}
 
                 <input  class="btn btn-light cancel-btn" 

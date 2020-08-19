@@ -24,7 +24,7 @@
 {% load crispy_forms_tags %}
 
 <div class="card-header">
-    {% if part_template.id %}
+    {% if event_template.id %}
         <h3>Update Configurations/Constants</h3>
     {% else %}
         <h3>Add Configurations/Constants</h3>
@@ -52,11 +52,16 @@
                 {{ part_conf_copy_form.management_form }}
                 {{ part_conf_copy_form | crispy }}
             </div>
+            <div class="form-group">
+                {{ form.management_form }}
+                {{ form | crispy }}
+            </div>
             <h5 id = '__all__'>Configurations/Constants</h5>
             <table class="table table-tight conf_name-form" style = 'display:block; overflow: auto; max-height: 100vh'>
               <thead>
                   <th>Name</th>
                   <th>Type</th>
+                  <th>Export with Calibrations</th>
               </thead>
               <tbody>
                 {{ part_confname_form.management_form }}
@@ -64,6 +69,8 @@
                   <tr>
                       <td>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.name }}</td>
                       <td>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.config_type }}</td>
+                      <td style = 'text-align: center;'>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.include_with_calibrations }}</td>
+                      <td class = 'delete-here'></td>
                   </tr>
               {% endfor %}
               </tbody>
@@ -72,7 +79,7 @@
 
         <div class="control-group">
             <div class="controls">
-                {% if part_template.id %}
+                {% if event_template.id %}
                     {% if action_type == 'movetotrash' %}
                         <button type="submit" class="btn btn-danger">Confirm Move to Trash</button>
                     {% else %}
@@ -82,14 +89,12 @@
                     <button type="submit" class="btn btn-primary">Add Configurations/Constant(s)</button>
                 {% endif %}
 
-                {% if part_template.id %}
-                    <input  class="btn btn-light cancel-btn" 
-                            type="button" 
-                            value="Cancel"
-                            data-detail-url="{% url 'parts:ajax_parts_detail' part_template.id %}"
-                            data-node-id="{{ part_template.id }}" 
-                    />
-                {% endif %}
+                <input  class="btn btn-light cancel-btn" 
+                        type="button" 
+                        value="Cancel"
+                        data-detail-url="{% url 'parts:ajax_parts_detail' part_id %}"
+                        data-node-id="{{ part_id }}" 
+                />
             </div>
         </div>
     </form>
@@ -105,16 +110,13 @@
             $('.conf_name-form tbody tr').formset({
                 prefix: 'config_names',
                 addText: 'Add Configurtations/Constants',
+                deleteContainerClass: 'delete-here',
                 deleteText: 'Remove',
                 added: function(row) {
-
                     let remove_button = row.find('.delete-row');
-                    remove_button.addClass('pull-right');
                 }
             });
-
-            $('.delete-row').addClass('pull-right');
-        })
+        });
 
     </script>
 {% endblock javascript %}
