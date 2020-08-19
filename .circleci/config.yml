@@ -56,8 +56,8 @@ jobs:
           # The Django start script will run migrations for us
           name: Starting Docker application
           command: >-
-#            docker-compose --file local.yml up --detach
            docker-compose --file local.yml up 
+#            docker-compose --file local.yml up --detach
       - run:
           name: Checking for missing migrations
           command: >-
