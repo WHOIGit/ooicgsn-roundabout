@@ -36,7 +36,7 @@ def sync_request_inventory(request, field_instance):
         print(new_inventory)
         for item in new_inventory:
             # check if serial number already exists
-            response = requests.get(inventory_url, params={'serial_number': item.serial_number}, headers={'Content-Type': 'application/json'}, )
+            response = requests.get(inventory_url, params={'filter{serial_number}': item.serial_number}, headers={'Content-Type': 'application/json'}, )
             if response.json():
                 # Need to change the Serial Number to avoid naming conflict
                 item.serial_number = item.serial_number + '-' + str(random.randint(1,1001))
