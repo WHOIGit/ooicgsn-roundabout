@@ -24,6 +24,7 @@ version: '3.5'
 volumes:
   local_postgres_data: {}
   local_postgres_data_backups: {}
+  rdb_tests: {}
 
 services:
   django:
@@ -35,7 +36,7 @@ services:
       - postgres
     volumes:
       - .:/app
-    env_file:
+    env_file:   
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres
     ports:
@@ -43,6 +44,19 @@ services:
     command: /start
     networks:
       - roundabout-network
+
+  tests:
+    build:
+      context: .
+      dockerfile: ./compose/local/tests/Dockerfile
+    image: roundabout_production_tests
+    depends_on:
+      - django
+    volumes:
+      - rdb_tests:/tests
+    command: sh -c "./RunAllTests-Chrome-Linux.bat && ./RunAllTests-Firefox-Linux.bat"
+    networks:
+       - roundabout-network
 
   postgres:
     build:

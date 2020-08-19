@@ -67,25 +67,6 @@ jobs:
           command: >-
             docker-compose --file local.yml run --rm django \
               python manage.py check
-
-      - run:
-          docker:
-             - image: circleci/node
-          networks: 
-             - roundabout-network
-          name: Running Automated tests
-          command: >-
-             curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash - &&
-             sudo apt-get install -y nodejs &&
-             wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && sudo apt install -y ./google-chrome-stable_current_amd64.deb  &&               
-             wget https://chromedriver.storage.googleapis.com/84.0.4147.30/chromedriver_linux64.zip && sudo unzip -o chromedriver_linux64.zip -d/usr/local/bin &&
-             sudo apt install -y firefox && sudo apt install -y firefox-geckodriver &&
-             cd ~/project/tests
-             sudo chmod +x ./RunAllTests-Chrome-Linux.bat &&
-             sudo sed -i 's/\r//' ./RunAllTests-Chrome-Linux.bat &&
-             sudo chmod +x ./RunAllTests-Firefox-Linux.bat &&
-             sudo sed -i 's/\r//' ./RunAllTests-Firefox-Linux.bat &&
-             sudo bash ./RunAllTests-Chrome-Linux.bat && sudo bash ./RunAllTests-Firefox-Linux.bat
       - run:
           name: Stopping Docker application
           command: >-
