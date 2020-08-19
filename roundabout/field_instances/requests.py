@@ -7,6 +7,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.views.generic import View
 from django.db.models import Q
+from django.contrib.sites.shortcuts import get_current_site
 from rest_framework.reverse import reverse, reverse_lazy
 
 #from .models import FieldInstance
@@ -16,15 +17,21 @@ from roundabout.inventory.models import Inventory, Action, PhotoNote
 from roundabout.parts.models import Part, Revision
 from roundabout.locations.models import Location
 
+# Import environment variables from .env files
+import environ
+env = environ.Env()
+base_url = env('RDB_SITE_URL')
+
 """
 Request function to sync Field Instance: Inventory items
-Args - field_instance: FieldInstance object
+Args -
+request: Django request object
+field_instance: FieldInstance object
 """
-def sync_request_inventory(request, field_instance):
+def _sync_request_inventory(request, field_instance):
     pk_mappings = []
 
     ##### SYNC INVENTORY #####
-    base_url = 'https://ooi-cgrdb-staging.whoi.net'
     #inventory_url = F"{base_url}/api/v1/inventory/"
     inventory_url = base_url + reverse('inventory-list')
     print(inventory_url)
@@ -92,7 +99,7 @@ def sync_request_inventory(request, field_instance):
 
             # post all new Actions for this item
             actions = inv.actions.filter(created_at__gte=field_instance.start_date)
-            action_response = sync_request_actions(request, actions)
+            action_response = _sync_request_actions(request, actions)
 
         return response.status_code
 
@@ -100,11 +107,11 @@ def sync_request_inventory(request, field_instance):
 """
 Request function to sync Field Instance: Actions
 Args:
+request: Django request object
 actions: queryset of Action objects
 pk_mappings: array that maps old_pk to new_pk for new objects
 """
-def sync_request_actions(request, actions, pk_mappings=None):
-    base_url = 'https://ooi-cgrdb-staging.whoi.net'
+def _sync_request_actions(request, actions, pk_mappings=None):
     action_url = base_url + reverse('actions-list')
     print(action_url)
     photo_url = base_url + reverse('photos-list')

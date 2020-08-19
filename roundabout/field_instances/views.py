@@ -41,7 +41,7 @@ class FieldInstanceSyncToHomeView(View):
             return HttpResponse('ERROR. This is not a Field Instance of RDB.')
         user_list = field_instance.users
 
-        status_code = sync_request_inventory(request, field_instance)
+        status_code = _sync_request_inventory(request, field_instance)
         print(status_code)
 
         if status_code == 200:
