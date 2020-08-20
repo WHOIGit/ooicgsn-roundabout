@@ -318,6 +318,8 @@ REST_FRAMEWORK = {
 DYNAMIC_REST = {
     #'DEFER_MANY_RELATIONS': True,
     'PAGE_SIZE': 100,
+    # ENABLE_BROWSABLE_API: enable/disable the browsable API.
+    'ENABLE_BROWSABLE_API': True,
 }
 
 # Summernote CONFIGURATION

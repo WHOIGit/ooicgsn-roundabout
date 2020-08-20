@@ -14,6 +14,7 @@ from rest_framework.reverse import reverse, reverse_lazy
 from .models import *
 from roundabout.inventory.api.serializers import InventorySerializer, ActionSerializer
 from roundabout.inventory.models import Inventory, Action, PhotoNote
+from roundabout.userdefinedfields.api.serializers import FieldSerializer, FieldValueSerializer
 from roundabout.parts.models import Part, Revision
 from roundabout.locations.models import Location
 
@@ -24,7 +25,7 @@ base_url = env('RDB_SITE_URL')
 
 """
 Request function to sync Field Instance: Inventory items
-Args -
+Args:
 request: Django request object
 field_instance: FieldInstance object
 """
@@ -140,3 +141,27 @@ def _sync_request_actions(request, actions, pk_mappings=None):
                 print("PHOTO CODE: ", response.status_code)
 
     return 'ACTIONS COMPLETE'
+
+
+"""
+Request function to sync Field Instance: Fields and FieldValues
+Args:
+request: Django request object
+field_values: queryset of FieldValue objects
+pk_mappings: array that maps old_pk to new_pk for new objects
+"""
+def _sync_request_field_values(request, field_values, pk_mappings=None):
+    field_url = base_url + reverse('userdefinedfields/fields-list')
+    field_value_url = base_url + reverse('userdefinedfields/field-values-list')
+
+    for fv in field_values:
+        # serialize data for JSON request
+        fv_serializer = FieldValueSerializer(fv)
+        fv_dict = fv_serializer.data
+        # These will be POST as new, so remove id
+        fv_dict.pop('id')
+        response = requests.post(action_url, json=action_dict )
+        print('Field Value RESPONSE:', response.text)
+        print("Field Valu CODE: ", response.status_code)
+
+    return 'FIELD VALUES COMPLETE'
