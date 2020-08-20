@@ -24,6 +24,8 @@ import io
 import json
 import requests
 from dateutil import parser
+import datetime
+from types import SimpleNamespace
 
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
@@ -31,6 +33,8 @@ from django.urls import reverse, reverse_lazy
 from django.db import IntegrityError
 from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 
 from .forms import PrinterForm, ImportInventoryForm, ImportCalibrationForm
@@ -41,7 +45,10 @@ from roundabout.parts.models import Part, Revision
 from roundabout.locations.models import Location
 from roundabout.assemblies.models import AssemblyType, Assembly, AssemblyPart
 from roundabout.assemblies.views import _make_tree_copy
-from roundabout.calibrations import models as cal_models
+from roundabout.inventory.utils import _create_action_history
+from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
+from roundabout.calibrations.forms import validate_coeff_vals, parse_valid_coeff_vals
+from roundabout.users.models import User
 
 
 # Test URL for Sentry.io logging
@@ -55,9 +62,76 @@ class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
     form_class = ImportCalibrationForm
     template_name = 'admintools/import_calibrations_upload_form.html'
 
-
-
     def form_valid(self, form):
+        cal_csv = form.cleaned_data['cal_csv']
+        cal_csv.seek(0)
+        reader = csv.DictReader(io.StringIO(cal_csv.read().decode('utf-8')))
+        headers = reader.fieldnames
+        coeff_val_sets = []
+        for idx, row in enumerate(reader):
+            row_data = row.items()
+            for key, value in row_data:
+                if key == 'serial':
+                    inventory_serial = value.strip()
+                    try:
+                        inventory_item = Inventory.objects.get(serial_number=inventory_serial)
+                    except:
+                        raise ValidationError(
+                            _('Row %(row)s, %(value)s: Unable to find Inventory item with this Serial Number'),
+                            params={'value': inventory_serial, 'row': idx},
+                        )
+                elif key == 'name':
+                    calibration_name = value.strip()
+                    try:
+                        cal_name_item = CoefficientName.objects.get(
+                            calibration_name = calibration_name,
+                            coeff_name_event =  inventory_item.part.coefficient_name_events.first()
+                        )
+                    except:
+                        raise ValidationError(
+                            _('Row %(row)s, %(value)s: Unable to find Calibration item with this Name'),
+                            params={'value': calibration_name, 'row': idx},
+                        )
+                elif key == 'value':
+                    valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
+                    mock_valset_instance = SimpleNamespace(**valset_keys)
+                    try:
+                        raw_valset = str(value)[1:-1]
+                    except:
+                        raise ValidationError(
+                            _('Row %(row)s: Unable to parse Calibration Coefficient value(s)'),
+                            params={'row': idx},
+                        )
+                    validate_coeff_vals(mock_valset_instance, cal_name_item.value_set_type, raw_valset)
+                elif key == 'notes':
+                    try:
+                        notes = value.strip()
+                    except:
+                        raise ValidationError(
+                            _('Row %(row)s: Unable to parse Calibration Coefficient note(s)'),
+                            params={'row': idx},
+                        )
+                    coeff_val_set = CoefficientValueSet(
+                        coefficient_name = cal_name_item,
+                        value_set = raw_valset,
+                        notes = notes
+                    )
+                    coeff_val_sets.append(coeff_val_set)
+        cal_date_string = cal_csv.name.split('__')[1][:8]
+        cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
+        csv_event = CalibrationEvent.objects.create(
+            calibration_date = cal_date_date,
+            inventory = inventory_item
+        )
+        if form.cleaned_data['user_draft'].exists():
+            draft_users = form.cleaned_data['user_draft']
+            for user in draft_users:
+                csv_event.user_draft.add(user)
+        for valset in coeff_val_sets:
+            valset.calibration_event = csv_event
+            valset.save()
+            parse_valid_coeff_vals(valset)
+        _create_action_history(csv_event, Action.CALCSVIMPORT, self.request.user)
         return super(ImportCalibrationsUploadView, self).form_valid(form)
 
     def get_success_url(self):
