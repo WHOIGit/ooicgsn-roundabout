@@ -573,7 +573,8 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
 
                             self.object.detail = 'Change field value for "%s" to %s' % (currentvalue.field, value)
                             self.object.save()
-                            self.object.create_action_record(self.request.user, 'fieldchange', self.object.detail)
+                            # Call the function to create an Action history chain this event
+                            _create_action_history(self.object, Action.FIELDCHANGE, self.request.user)
                     else:
                         if value:
                             # Create new value object
