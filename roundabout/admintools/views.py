@@ -56,8 +56,7 @@ def trigger_error(request):
     division_by_zero = 1 / 0
 
 
-# Calibrations Github CSV file uploader
-# Upload formview for Inventory Bulk upload
+# CSV File Uploader for GitHub Calibration Coefficients 
 class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
     form_class = ImportCalibrationForm
     template_name = 'admintools/import_calibrations_upload_form.html'
@@ -68,61 +67,36 @@ class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
         reader = csv.DictReader(io.StringIO(cal_csv.read().decode('utf-8')))
         headers = reader.fieldnames
         coeff_val_sets = []
+        inv_serial = cal_csv.name.split('__')[0]
+        cal_date_string = cal_csv.name.split('__')[1][:8]
+        inventory_item = Inventory.objects.get(serial_number=inv_serial)
+        cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
+        csv_event = CalibrationEvent.objects.create(
+            calibration_date = cal_date_date,
+            inventory = inventory_item
+        )
         for idx, row in enumerate(reader):
             row_data = row.items()
             for key, value in row_data:
-                if key == 'serial':
-                    inventory_serial = value.strip()
-                    try:
-                        inventory_item = Inventory.objects.get(serial_number=inventory_serial)
-                    except:
-                        raise ValidationError(
-                            _('Row %(row)s, %(value)s: Unable to find Inventory item with this Serial Number'),
-                            params={'value': inventory_serial, 'row': idx},
-                        )
-                elif key == 'name':
+                if key == 'name':
                     calibration_name = value.strip()
-                    try:
-                        cal_name_item = CoefficientName.objects.get(
-                            calibration_name = calibration_name,
-                            coeff_name_event =  inventory_item.part.coefficient_name_events.first()
-                        )
-                    except:
-                        raise ValidationError(
-                            _('Row %(row)s, %(value)s: Unable to find Calibration item with this Name'),
-                            params={'value': calibration_name, 'row': idx},
-                        )
+                    cal_name_item = CoefficientName.objects.get(
+                        calibration_name = calibration_name,
+                        coeff_name_event =  inventory_item.part.coefficient_name_events.first()
+                    )
                 elif key == 'value':
                     valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
                     mock_valset_instance = SimpleNamespace(**valset_keys)
-                    try:
-                        raw_valset = str(value)[1:-1]
-                    except:
-                        raise ValidationError(
-                            _('Row %(row)s: Unable to parse Calibration Coefficient value(s)'),
-                            params={'row': idx},
-                        )
+                    raw_valset = str(value)[1:-1]
                     validate_coeff_vals(mock_valset_instance, cal_name_item.value_set_type, raw_valset)
                 elif key == 'notes':
-                    try:
-                        notes = value.strip()
-                    except:
-                        raise ValidationError(
-                            _('Row %(row)s: Unable to parse Calibration Coefficient note(s)'),
-                            params={'row': idx},
-                        )
+                    notes = value.strip()
                     coeff_val_set = CoefficientValueSet(
                         coefficient_name = cal_name_item,
                         value_set = raw_valset,
                         notes = notes
                     )
                     coeff_val_sets.append(coeff_val_set)
-        cal_date_string = cal_csv.name.split('__')[1][:8]
-        cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
-        csv_event = CalibrationEvent.objects.create(
-            calibration_date = cal_date_date,
-            inventory = inventory_item
-        )
         if form.cleaned_data['user_draft'].exists():
             draft_users = form.cleaned_data['user_draft']
             for user in draft_users:
