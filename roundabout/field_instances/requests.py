@@ -33,6 +33,7 @@ def _sync_main(request, field_instance):
     status_code = 401
     # Sync base models needed for DB relationships
     location_pk_mappings = _sync_request_locations(request, field_instance)
+    print(location_pk_mappings)
     field_pk_mappings = _sync_request_fields(request, field_instance)
     # Sync Inventory items
     inventory_respone = _sync_request_inventory(request, field_instance, field_pk_mappings)
@@ -176,7 +177,7 @@ def _sync_request_locations(request, field_instance):
     location_url = base_url + reverse('locations-list')
     location_pk_mappings = []
     # Get new Locations that were added
-    new_locations = Locations.objects.filter(created_at__gte=field_instance.start_date).order_by('-parent')
+    new_locations = Location.objects.filter(created_at__gte=field_instance.start_date).order_by('-parent')
     if new_locations:
         for location in new_locations:
             old_pk = location.id
@@ -189,11 +190,11 @@ def _sync_request_locations(request, field_instance):
                 print('NEW KEY: ' + new_key)
                 data_dict['parent'] = new_key['new_pk']
             # These will be POST as new, so remove id
-            location_dict.pop('id')
+            data_dict.pop('id')
             response = requests.post(location_url, json=data_dict)
             print('Location RESPONSE:', response.text)
             print("Location CODE: ", response.status_code)
-            new_obj = response.json()
+            new_obj = response.json()['location']
             location_pk_mappings.append({'old_pk': old_pk, 'new_pk': new_obj['id']})
 
     # Get all existing fields in Home Base RDB that were updated
@@ -203,7 +204,7 @@ def _sync_request_locations(request, field_instance):
     if existing_locations:
         for location in existing_locations:
             # serialize data for JSON request
-            serializer = FieldSerializer(location)
+            serializer = LocationSerializer(location)
             data_dict = serializer.data
             # Need to remap any Parent items that have new PKs
             new_key = next((pk for pk in location_pk_mappings if pk['old_pk'] == data_dict['parent']), False)
@@ -211,7 +212,7 @@ def _sync_request_locations(request, field_instance):
                 print('NEW KEY: ' + new_key)
                 data_dict['parent'] = new_key['new_pk']
 
-            url = base_url + reverse('locations-detail', kwargs={'pk': field.id},)
+            url = base_url + reverse('locations-detail', kwargs={'pk': location.id},)
             response = requests.patch(url, json=data_dict, )
             print('Location RESPONSE:', response.text)
             print("Location CODE: ", response.status_code)

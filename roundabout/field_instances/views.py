@@ -40,7 +40,6 @@ class FieldInstanceSyncToHomeView(View):
         field_instance = FieldInstance.objects.filter(is_this_instance=True).first()
         if not field_instance:
             return HttpResponse('ERROR. This is not a Field Instance of RDB.')
-        user_list = field_instance.users
 
         sync_code = _sync_main(request, field_instance)
         print(sync_code)
