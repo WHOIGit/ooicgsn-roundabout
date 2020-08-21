@@ -60,6 +60,7 @@ class FieldValue(models.Model):
     part = models.ForeignKey('parts.Part', related_name='fieldvalues',
                           on_delete=models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey('users.User', related_name='fieldvalues',
                              on_delete=models.SET_NULL, null=True, blank=False)
     is_current = models.BooleanField(default=False)

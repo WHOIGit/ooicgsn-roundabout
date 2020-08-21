@@ -21,12 +21,13 @@
 
 from django.shortcuts import render
 from django.conf import settings
+from django.urls import reverse, reverse_lazy
 from django.http import HttpResponse
 from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 
-from .requests import *
+from .requests import _sync_main
 from .models import *
 from .forms import *
 
@@ -41,10 +42,10 @@ class FieldInstanceSyncToHomeView(View):
             return HttpResponse('ERROR. This is not a Field Instance of RDB.')
         user_list = field_instance.users
 
-        status_code = _sync_request_inventory(request, field_instance)
-        print(status_code)
+        sync_code = _sync_main(request, field_instance)
+        print(sync_code)
 
-        if status_code == 200:
+        if sync_code == 200:
             return HttpResponse("Code 200")
         else:
             return HttpResponse("API error")

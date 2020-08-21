@@ -15,6 +15,7 @@ from .models import *
 from roundabout.inventory.api.serializers import InventorySerializer, ActionSerializer
 from roundabout.inventory.models import Inventory, Action, PhotoNote
 from roundabout.userdefinedfields.api.serializers import FieldSerializer, FieldValueSerializer
+from roundabout.userdefinedfields.models import Field
 from roundabout.parts.models import Part, Revision
 from roundabout.locations.models import Location
 
@@ -24,13 +25,26 @@ env = environ.Env()
 base_url = env('RDB_SITE_URL')
 
 """
+Main sync function to coordinate the different models
+"""
+def _sync_main(request, field_instance):
+    status_code = 401
+    # Get base models needed for relationships
+    field_pk_mappings = _sync_request_fields(request, field_instance)
+    inventory_respone = _sync_request_inventory(request, field_instance, field_pk_mappings)
+    status_code = inventory_respone
+    print('STATUS CODE: ', inventory_respone)
+    return status_code
+
+
+"""
 Request function to sync Field Instance: Inventory items
 Args:
 request: Django request object
 field_instance: FieldInstance object
 """
-def _sync_request_inventory(request, field_instance):
-    pk_mappings = []
+def _sync_request_inventory(request, field_instance, field_pk_mappings):
+    inventory_pk_mappings = []
 
     ##### SYNC INVENTORY #####
     #inventory_url = F"{base_url}/api/v1/inventory/"
@@ -61,7 +75,7 @@ def _sync_request_inventory(request, field_instance):
             old_pk = item['id']
             item.pop('id')
             # Need to remap any Parent items that have new PKs
-            new_key = next((pk for pk in pk_mappings if pk['old_pk'] == item['parent']), False)
+            new_key = next((pk for pk in inventory_pk_mappings if pk['old_pk'] == item['parent']), False)
             if new_key:
                 print('NEW KEY: ' + new_key)
                 item['parent'] = new_key['new_pk']
@@ -71,9 +85,9 @@ def _sync_request_inventory(request, field_instance):
             response = requests.post(inventory_url, data=json.dumps(item), headers={'Content-Type': 'application/json'}, )
             print('RESPONSE:', response.json())
             new_obj = response.json()
-            pk_mappings.append({'old_pk': old_pk, 'new_pk': new_obj['id']})
+            inventory_pk_mappings.append({'old_pk': old_pk, 'new_pk': new_obj['id']})
             """
-        print(pk_mappings)
+        print(inventory_pk_mappings)
 
     # Get all existing items in Home Base RDB
     existing_inventory = Inventory.objects.filter(
@@ -89,7 +103,7 @@ def _sync_request_inventory(request, field_instance):
             #url = F"{inventory_url}{inv.id}/"
             print(url)
             # Need to remap any Parent items that have new PKs
-            new_key = next((pk for pk in pk_mappings if pk['old_pk'] == inventory_dict['parent']), False)
+            new_key = next((pk for pk in inventory_pk_mappings if pk['old_pk'] == inventory_dict['parent']), False)
             if new_key:
                 print('NEW KEY: ', new_key)
                 inventory_dict['parent'] = new_key['new_pk']
@@ -99,8 +113,9 @@ def _sync_request_inventory(request, field_instance):
             print("INVENTORY CODE: ", response.status_code)
 
             # post all new Actions for this item
-            actions = inv.actions.filter(created_at__gte=field_instance.start_date)
-            action_response = _sync_request_actions(request, actions)
+            action_response = _sync_request_actions(request, field_instance, inv, inventory_pk_mappings)
+            # post all Field Values for this item
+            field_value_response = _sync_request_field_values(request, field_instance, inv, field_pk_mappings, inventory_pk_mappings)
 
         return response.status_code
 
@@ -112,10 +127,12 @@ request: Django request object
 actions: queryset of Action objects
 pk_mappings: array that maps old_pk to new_pk for new objects
 """
-def _sync_request_actions(request, actions, pk_mappings=None):
+def _sync_request_actions(request, field_instance, obj, inventory_pk_mappings=None):
     action_url = base_url + reverse('actions-list')
-    print(action_url)
     photo_url = base_url + reverse('photos-list')
+    # Get all actions for this object
+    object_type = obj._meta.model_name
+    actions = obj.actions.filter(object_type=object_type).filter(created_at__gte=field_instance.start_date)
 
     for action in actions:
         # serialize data for JSON request
@@ -144,24 +161,81 @@ def _sync_request_actions(request, actions, pk_mappings=None):
 
 
 """
-Request function to sync Field Instance: Fields and FieldValues
+Request function to sync Field Instance: Fields
 Args:
 request: Django request object
 field_values: queryset of FieldValue objects
 pk_mappings: array that maps old_pk to new_pk for new objects
 """
-def _sync_request_field_values(request, field_values, pk_mappings=None):
+def _sync_request_fields(request, field_instance):
     field_url = base_url + reverse('userdefinedfields/fields-list')
-    field_value_url = base_url + reverse('userdefinedfields/field-values-list')
+    field_pk_mappings = []
+    # Get new fields that were added
+    new_fields = Field.objects.filter(created_at__gte=field_instance.start_date)
+    if new_fields:
+        for field in new_fields:
+            old_pk = field['id']
+            # serialize data for JSON request
+            field_serializer = FieldSerializer(field)
+            field_dict = field_serializer.data
+            # These will be POST as new, so remove id
+            field_dict.pop('id')
+            response = requests.post(field_url, json=field_dict )
+            print('Field RESPONSE:', response.text)
+            print("Field CODE: ", response.status_code)
+            new_obj = response.json()
+            field_pk_mappings.append({'old_pk': old_pk, 'new_pk': new_obj['id']})
 
-    for fv in field_values:
+    # Get all existing fields in Home Base RDB that were updated
+    existing_fields = Field.objects.filter(
+        Q(updated_at__gte=field_instance.start_date) & Q(created_at__lt=field_instance.start_date)
+    )
+    if existing_fields:
+        for field in existing_fields:
+            # serialize data for JSON request
+            field_serializer = FieldSerializer(field)
+            field_dict = field_serializer.data
+            url = base_url + reverse('userdefinedfields/fields-detail', kwargs={'pk': field.id},)
+            response = requests.patch(url, json=field_dict, )
+            print('Field RESPONSE:', response.text)
+            print("Field CODE: ", response.status_code)
+
+    return field_pk_mappings
+
+
+"""
+Request function to sync Field Instance: FieldValues
+Args:
+request: Django request object
+field_values: queryset of FieldValue objects
+field_pk_mappings, inventory_pk_mappings: array that maps old_pk to new_pk for new objects
+"""
+def _sync_request_field_values(request, field_instance, inventory_item, field_pk_mappings, inventory_pk_mappings=None):
+    field_value_url = base_url + reverse('userdefinedfields/field-values-list')
+    # Get new field values that were added
+    new_field_values = inventory_item.fieldvalues.filter(created_at__gte=field_instance.start_date)
+    for fv in new_field_values:
         # serialize data for JSON request
         fv_serializer = FieldValueSerializer(fv)
         fv_dict = fv_serializer.data
         # These will be POST as new, so remove id
         fv_dict.pop('id')
-        response = requests.post(action_url, json=action_dict )
+        response = requests.post(field_value_url, json=fv_dict )
         print('Field Value RESPONSE:', response.text)
-        print("Field Valu CODE: ", response.status_code)
+        print("Field Value CODE: ", response.status_code)
+
+
+    # Get all existing field values in Home Base RDB that were updated
+    existing_field_values = inventory_item.fieldvalues.filter(
+        Q(updated_at__gte=field_instance.start_date) & Q(created_at__lt=field_instance.start_date)
+    )
+    for fv in existing_field_values:
+        # serialize data for JSON request
+        fv_serializer = FieldValueSerializer(fv)
+        fv_dict = fv_serializer.data
+        url = base_url + reverse('userdefinedfields/field-values-detail', kwargs={'pk': fv.id},)
+        response = requests.post(field_value_url, json=fv_dict )
+        print('Field Value RESPONSE:', response.text)
+        print("Field Value CODE: ", response.status_code)
 
     return 'FIELD VALUES COMPLETE'
