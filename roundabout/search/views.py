@@ -49,6 +49,11 @@ from roundabout.configs_constants.models import ConfigEvent, ConfigValue
 
 from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable,  ActionTable, CalibrationTable, ConfigConstTable, UDF_Column
 
+def rgetattr(obj, attr, *args):
+    """Recursive getattr(), where attr is dot.separated"""
+    def _getattr(obj, attr):
+        return getattr(obj, attr, *args)
+    return reduce(_getattr, [obj] + attr.split('.'))
 
 def searchbar_redirect(request):
     model = request.GET.get('model')
@@ -146,6 +151,15 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
             select_ones = ['__latest__', '__last__', '__earliest__', '__first__']
             select_one = [s1 for s1 in select_ones if s1 in field]
             select_one = select_one[0] if select_one else None
+
+            select_somes = ['__any__','__all__']
+            select_some = [s1 for s1 in select_somes if s1 in field]
+            select_some = select_one[0] if select_one else None
+            # TODO a query system by which you can look into object lists and perform whatever is downstream on each
+            # __any__ returns true if any of the listed items match.
+            # this keyword functionality will have to carry over to displaying things in search-tables.
+            # TODO to account for any nesting of levels for this, we might have to make a recursive function 😬
+
             if not select_one:
                 # default
                 Q_kwarg = {'{field}__{lookup}'.format(field=field, lookup=row['lookup']): row['query']}
@@ -324,6 +338,11 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
                     col = tables.DateTimeColumn(accessor=field['value'], **col_args)
                 elif 'BOOL_LOOKUP' == field['legal_lookup']:
                     col = tables.BooleanColumn(accessor=field['value'], **col_args)
+                elif 'ITER_LOOKUP' == field['legal_lookup']:
+                    acc,atts = field['value'].split('__any__',1)
+                    atts = atts.replace('__','.')
+                    col = tables.ManyToManyColumn(accessor=acc, **col_args, default='',
+                            transform=lambda x: rgetattr(x,atts))
                 else:
                     col = tables.Column(accessor=field['value'], **col_args)
 
@@ -379,11 +398,12 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="actions__count",                  text="Total Action Count",      legal_lookup='NUM_LOOKUP'),
 
                         dict(value=None, text="--Calibrations--", disabled=True),
-                        dict(value="calibration_events__latest__calibration_date", text="Latest Calibration Event", legal_lookup='DATE_LOOKUP',
+                        dict(value="calibration_events__latest__calibration_date", text="Latest Calibration Event: Date", legal_lookup='DATE_LOOKUP',
                              col_args = dict(format='Y-m-d', linkify=lambda record,value: reverse(viewname="exports:calibration",
                                                                 args=[record.calibration_events.latest().pk]) if value else None)),
-                        dict(value="calibration_events__latest__user_approver", text="Latest Calibration Event: Approver", legal_lookup='STR_LOOKUP'),
-                        dict(value="calibration_events__latest__approved", text="Latest Calibration Event: Approved", legal_lookup='STR_LOOKUP'),
+                        dict(value="calibration_events__latest__user_approver__any__name", text="Latest Calibration Event: Approvers", legal_lookup='ITER_LOOKUP'),
+                        dict(value="calibration_events__latest__user_draft__any__name", text="Latest Calibration Event: Reviewers", legal_lookup='ITER_LOOKUP'),
+                        dict(value="calibration_events__latest__approved", text="Latest Calibration Event: Approved", legal_lookup='BOOL_LOOKUP'),
 
                         ]
         return avail_fields
@@ -602,7 +622,7 @@ class ActionTableView(GenericSearchTableView):
 class CalibrationTableView(GenericSearchTableView):
     model = CoefficientValueSet
     table_class = CalibrationTable
-    query_prefetch = ['coefficient_name','calibration_event','calibration_event__inventory','calibration_event__inventory__part','calibration_event__user_approver']
+    query_prefetch = ['coefficient_name','calibration_event','calibration_event__inventory','calibration_event__inventory__part','calibration_event__user_approver','calibration_event__user_draft']
 
     @staticmethod
     def get_avail_fields():
@@ -610,8 +630,9 @@ class CalibrationTableView(GenericSearchTableView):
                         dict(value="calibration_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
                         dict(value="coefficient_name__calibration_name", text="Coefficient Name", legal_lookup='STR_LOOKUP'),
                         dict(value="calibration_event__calibration_date", text="Calibration Event: Date", legal_lookup='DATE_LOOKUP'),
-                        #dict(value="calibration_event__id", text="Calibration Event: ID", legal_lookup='EXACT_LOOKUP'),
-                        dict(value="calibration_event__user_approver__name", text="Calibration Event: Approver Name"),
+#                        dict(value="calibration_event__user_approver__any__name", text="Calibration Event: Approvers", legal_lookup='???'), # TODO
+#                        dict(value="calibration_event__user_draft__any__name", text="Calibration Event: Reviewers", legal_lookup='???'), # TODO
+                        dict(value="calibration_event__approved", text="Calibration Event: Approved Flag", legal_lookup='BOOL_LOOKUP'),
                         dict(value="created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
                         dict(value="value_set", text="Value", legal_lookup='STR_LOOKUP'),
                         dict(value="notes", text="Notes", legal_lookup='STR_LOOKUP'),
@@ -642,7 +663,7 @@ class CalibrationTableView(GenericSearchTableView):
 class ConfigConstTableView(GenericSearchTableView):
     model = ConfigValue
     table_class = ConfigConstTable
-    query_prefetch = ['config_name','config_event','config_event__inventory','config_event__inventory__part','config_event__user_approver']
+    query_prefetch = ['config_name','config_event','config_event__inventory','config_event__inventory__part','config_event__user_approver','config_event__draft_approver']
 
     @staticmethod
     def get_avail_fields():
@@ -650,7 +671,9 @@ class ConfigConstTableView(GenericSearchTableView):
                         dict(value="config_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
                         dict(value="config_name__name", text="Config/Const Name", legal_lookup='STR_LOOKUP'),
                         dict(value="config_event__configuraton_date", text="Config/Const Event: Date", legal_lookup='DATE_LOOKUP'),
-                        dict(value="config_event__user_approver__name", text="Config/Const Event: Approver Name"),
+#                        dict(value="config_event__user_approver__any__name", text="Config/Const Event: Approvers", legal_lookup='???'), # TODO
+#                        dict(value="config_event__draft_approver__any__name", text="Config/Const Event: Reviewers", legal_lookup='???'), # TODO
+                        dict(value="calibration_event__approved", text="Calibration Event: Approved Flag", legal_lookup='BOOL_LOOKUP'),
                         dict(value="created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
                         dict(value="config_value", text="Value", legal_lookup='STR_LOOKUP'),
                         dict(value="notes", text="Notes", legal_lookup='STR_LOOKUP'),
