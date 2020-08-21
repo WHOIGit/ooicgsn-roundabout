@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -25,7 +25,7 @@ from .views import LocationViewSet
 
 # Create a router and register our viewsets with it.
 router = SimpleRouter()
-router.register(r'locations', LocationViewSet )
+router.register(r'locations', LocationViewSet, 'locations' )
 
 urlpatterns = [
     path('', include(router.urls) ),

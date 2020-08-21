@@ -27,4 +27,6 @@ from ..models import Location
 class LocationSerializer(DynamicModelSerializer):
     class Meta:
         model = Location
-        fields = ('id', 'name', 'location_type', 'location_id', )
+        fields = ('id', 'name', 'parent', 'weight',
+            'location_type', 'location_id', 'root_type', 'created_at',
+        )

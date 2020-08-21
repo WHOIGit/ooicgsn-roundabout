@@ -19,16 +19,17 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import generics, viewsets, filters
+from rest_framework import generics, filters
+from dynamic_rest.viewsets import DynamicModelViewSet
 from ..models import *
 from .serializers import FieldSerializer, FieldValueSerializer
 
 
-class FieldViewSet(viewsets.ModelViewSet):
+class FieldViewSet(DynamicModelViewSet):
     queryset = Field.objects.all()
     serializer_class = FieldSerializer
 
 
-class FieldValueViewSet(viewsets.ModelViewSet):
+class FieldValueViewSet(DynamicModelViewSet):
     queryset = FieldValue.objects.all()
     serializer_class = FieldValueSerializer
