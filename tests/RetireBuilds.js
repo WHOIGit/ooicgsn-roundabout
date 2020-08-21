@@ -46,7 +46,7 @@ var myArgs = process.argv.slice(2);
     // Step # | name | target | value
     if (myArgs[1] == 'headless')
     {
-        await driver.get("http://localhost:8000/ooi-cgrdb-staging.whoi.net/");   
+        await driver.get("http://localhost:8000/");   
     }
     else
     {
@@ -59,6 +59,12 @@ var myArgs = process.argv.slice(2);
     // Set implict wait time in between steps
     await driver.manage().setTimeouts({ implicit: 20000 });
 
+    //Hide Timer Panel when connecting to circleci local rdb django app
+    if ((await driver.findElements(By.css("#djHideToolBarButton"))).length != 0)
+    {
+       await driver.findElement(By.css("#djHideToolBarButton")).click();
+    }
+
     try {
 
         // If navbar toggler present in small screen
@@ -70,8 +76,8 @@ var myArgs = process.argv.slice(2);
          }
         // LOGIN
         await driver.findElement(By.linkText("Sign In")).click();
-        await driver.findElement(By.id("id_login")).sendKeys("jkoch");
-        await driver.findElement(By.id("id_password")).sendKeys("Automatedtests");
+        await driver.findElement(By.id("id_login")).sendKeys("admin");
+        await driver.findElement(By.id("id_password")).sendKeys("admin");
         await driver.findElement(By.css(".primaryAction")).click();
 
         // RETIRE BUILDS TEST

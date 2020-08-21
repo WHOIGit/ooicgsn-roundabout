@@ -57,6 +57,12 @@ var myArgs = process.argv.slice(2);
     // 2 | setWindowSize | 1304x834 | 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
 
+    //Hide Timer Panel when connecting to circleci local rdb django app
+    if ((await driver.findElements(By.css("#djHideToolBarButton"))).length != 0)
+    {
+       await driver.findElement(By.css("#djHideToolBarButton")).click();
+    }
+
     try {
 
 	// If navbar toggler present in small screen
@@ -68,8 +74,8 @@ var myArgs = process.argv.slice(2);
          }
         // LOGIN
         await driver.findElement(By.linkText("Sign In")).click();
-        await driver.findElement(By.id("id_login")).sendKeys("jkoch");
-        await driver.findElement(By.id("id_password")).sendKeys("Automatedtests");
+        await driver.findElement(By.id("id_login")).sendKeys("admin");
+        await driver.findElement(By.id("id_password")).sendKeys("admin");
         await driver.findElement(By.css(".primaryAction")).click();
 
         // ADD ASSEMBLIES TEST
@@ -179,7 +185,7 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.linkText("Test Assembly")));
         await driver.findElement(By.linkText("Test Assembly")).click();
         // 36 | click | id=action | 
-        await driver.wait(until.elementLocated(By.id("action")));
+        await new Promise(r => setTimeout(r, 2000));  //circleci
         await driver.findElement(By.id("action")).click();
         await driver.wait(until.elementLocated(By.linkText("Copy Assembly Template")));
         await driver.findElement(By.linkText("Copy Assembly Template")).click();
@@ -215,7 +221,7 @@ var myArgs = process.argv.slice(2);
 
 //      Copy template with null name or type
         // 48 | click | id=action | 
-        await driver.wait(until.elementLocated(By.id("action")));
+        await new Promise(r => setTimeout(r, 2000));  //circleci
         await driver.findElement(By.id("action")).click();
         // 49 | click | linkText=Copy Assembly Template | 
         await driver.findElement(By.linkText("Copy Assembly Template")).click();
@@ -231,7 +237,7 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.linkText("Test Assembly 3")));
         await driver.findElement(By.linkText("Test Assembly 3")).click();
         // 54 | click | id=action | 
-        await driver.wait(until.elementLocated(By.id("action")));
+        await new Promise(r => setTimeout(r, 2000));  //circleci
         await driver.findElement(By.id("action")).click();
         // 55 | click | linkText=Copy Assembly Template | 
         await driver.wait(until.elementLocated(By.linkText("Copy Assembly Template")));
@@ -274,7 +280,7 @@ var myArgs = process.argv.slice(2);
 
         // Create a Revision of an Assembly Template
         // 10 | click | id=action | 
-        await driver.wait(until.elementLocated(By.id("action")));
+        await new Promise(r => setTimeout(r, 2000));  //circleci
         await driver.findElement(By.id("action")).click();
         // 11 | click | linkText=Create New Revision | 
         await driver.wait(until.elementLocated(By.linkText("Create New Revision")));
@@ -322,7 +328,7 @@ var myArgs = process.argv.slice(2);
 
         // Add sub assembly part with non null selection
         // 27 | click | id=action | 
-        await driver.wait(until.elementLocated(By.id("action")));
+        await new Promise(r => setTimeout(r, 2000));  //circleci
         await driver.findElement(By.id("action")).click();
         // 28 | click | linkText=Add New Sub-Assembly | 
         await driver.wait(until.elementLocated(By.linkText("Add New Sub-Assembly")));
@@ -381,6 +387,7 @@ var myArgs = process.argv.slice(2);
         // 27 | click | id=action | 
 	await new Promise(r => setTimeout(r, 2000)); 
         await driver.findElement(By.linkText("wheel"));
+	await new Promise(r => setTimeout(r, 2000));  //circleci
         await driver.findElement(By.id("action")).click();
         // 28 | click | linkText=Add New Sub-Assembly | 
         await driver.wait(until.elementLocated(By.linkText("Add New Sub-Assembly")));

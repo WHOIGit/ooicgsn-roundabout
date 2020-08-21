@@ -58,6 +58,12 @@ var myArgs = process.argv.slice(2);
     // 2 | setWindowSize | 1304x834 | 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
 
+    //Hide Timer Panel when connecting to circleci local rdb django app
+    if ((await driver.findElements(By.css("#djHideToolBarButton"))).length != 0)
+    {
+       await driver.findElement(By.css("#djHideToolBarButton")).click();
+    }
+
     try {
 
         // If navbar toggler present in small screen
@@ -69,8 +75,8 @@ var myArgs = process.argv.slice(2);
          }
         // LOGIN
         await driver.findElement(By.linkText("Sign In")).click();
-        await driver.findElement(By.id("id_login")).sendKeys("jkoch");
-        await driver.findElement(By.id("id_password")).sendKeys("Automatedtests");
+        await driver.findElement(By.id("id_login")).sendKeys("admin");
+        await driver.findElement(By.id("id_password")).sendKeys("admin");
         await driver.findElement(By.css(".primaryAction")).click();
 
         // ADD PARTS TEST

@@ -46,7 +46,7 @@ var myArgs = process.argv.slice(2);
     // Step # | name | target | value
     if (myArgs[1] == 'headless')
     {
-        await driver.get("http://localhost:8000/ooi-cgrdb-staging.whoi.net/");   
+        await driver.get("http://localhost:8000/");   
     }
     else
     {
@@ -57,6 +57,11 @@ var myArgs = process.argv.slice(2);
     // 2 | setWindowSize | 1304x834 | 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
 
+    //Hide Timer Panel when connecting to circleci local rdb django app
+    if ((await driver.findElements(By.css("#djHideToolBarButton"))).length != 0)
+    {
+       await driver.findElement(By.css("#djHideToolBarButton")).click();
+    }
     try {
 
         // If navbar toggler present in small screen
@@ -68,8 +73,8 @@ var myArgs = process.argv.slice(2);
          }
         // LOGIN
         await driver.findElement(By.linkText("Sign In")).click();
-        await driver.findElement(By.id("id_login")).sendKeys("jkoch");
-        await driver.findElement(By.id("id_password")).sendKeys("Automatedtests");
+        await driver.findElement(By.id("id_login")).sendKeys("admin");
+        await driver.findElement(By.id("id_password")).sendKeys("admin");
         await driver.findElement(By.css(".primaryAction")).click();
 
         // ADD INVENTORY TEST
@@ -100,6 +105,7 @@ var myArgs = process.argv.slice(2);
         }
         // 8 | storeValue | id=id_serial_number | Serial_Number
         // Stores the value of the Serial Number assigned
+	await new Promise(r => setTimeout(r, 2000)); //circleci
         var Serial_Number = await driver.findElement(By.id("id_serial_number")).getAttribute("value");
         // 10 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
@@ -144,6 +150,7 @@ var myArgs = process.argv.slice(2);
         // 18 | click | id=hint_id_serial_number | 
         await driver.findElement(By.id("hint_id_serial_number")).click();
         // 19 | click | id=id_serial_number | 
+	await new Promise(r => setTimeout(r, 2000)); //circleci
         await driver.findElement(By.id("id_serial_number")).click();
         // 20 | type | id=id_serial_number | [Serial_Number]
         // Uses stored serial number assigned above
@@ -265,7 +272,8 @@ var myArgs = process.argv.slice(2);
             await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
         }
         // 31 | click | css=.controls > .btn-primary | 
-	    await driver.findElement(By.css(".controls > .btn-primary")).click();
+	await new Promise(r => setTimeout(r, 2000)); //circleci
+	await driver.findElement(By.css(".controls > .btn-primary")).click();
         // 32 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();  //Search button
         await driver.wait(until.elementLocated(By.id("field-select_c_r0")));
@@ -381,9 +389,11 @@ var myArgs = process.argv.slice(2);
             await dropdown.findElement(By.xpath("//option[. = '---------']")).click();
         }
         // 59 | type | id=id_serial_number | 3604-00131-00001-20003
+	await new Promise(r => setTimeout(r, 2000)); //circleci
         await driver.findElement(By.id("id_serial_number")).clear();
         await driver.findElement(By.id("id_serial_number")).sendKeys("3604-00131-00001-20004");
         // 60 | click | css=.controls > .btn-primary | 
+	await new Promise(r => setTimeout(r, 2000)); //circleci
         await driver.findElement(By.css(".controls > .btn-primary")).click();
         await new Promise(r => setTimeout(r, 2000));
         assert(await driver.findElement(By.css("#div_id_revision .ajax-error")).getText() == "This field is required.");
