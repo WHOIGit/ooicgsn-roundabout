@@ -305,7 +305,7 @@ var myArgs = process.argv.slice(2);
         // 43 | click | id=action | 
 
         // Add subassembly item to valid parent
-        await driver.wait(until.elementLocated(By.id("action")));
+        await new Promise(r => setTimeout(r, 2000));  //circleci
         await driver.findElement(By.id("action")).click();
         // 44 | click | linkText=Add Sub-Assembly | 
         await driver.findElement(By.linkText("Add Sub-Assembly")).click();
@@ -313,7 +313,7 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.linkText("Add")));
         await driver.findElement(By.linkText("Add")).click();
         // 46 | click | id=action | 
-        await driver.wait(until.elementLocated(By.id("action")));
+        await new Promise(r => setTimeout(r, 2000));  //circleci
         await driver.findElement(By.id("action")).click();
         // 47 | click | linkText=Add Sub-Assembly | 
 
@@ -359,7 +359,7 @@ var myArgs = process.argv.slice(2);
 	    await new Promise(r => setTimeout(r, 2000));  //linux docker
         await driver.findElement(By.css(".even a")).click();
         // 43 | click | id=action |
-        await driver.wait(until.elementLocated(By.id("action")));
+        await new Promise(r => setTimeout(r, 2000));  //circleci
         await driver.findElement(By.id("action")).click();
         // 52 | click | linkText=Add to Parent Assembly | 
         await driver.findElement(By.linkText("Add to Parent Assembly")).click();
@@ -369,16 +369,16 @@ var myArgs = process.argv.slice(2);
 
         // Edit item dtails with null revision code
         await driver.wait(until.elementLocated(By.id("action")));
-        await driver.wait(until.elementLocated(By.id("action")));
         await driver.findElement(By.id("action")).click();
         // 55 | click | linkText=Edit Inventory Details | 
 	await new Promise(r => setTimeout(r, 2000)); 
         await driver.findElement(By.linkText("Edit Inventory Details")).click();
         await driver.wait(until.elementLocated(By.id("hint_id_serial_number")));
         await driver.findElement(By.id("hint_id_serial_number")).click();
-        await new Promise(r => setTimeout(r, 2000));  // needed for firefox
+        await new Promise(r => setTimeout(r, 4000));  // circleci
         await driver.findElement(By.id("id_serial_number")).clear();
         // 56 | type | id=id_serial_number | 3604-00131-00001-20004
+        await new Promise(r => setTimeout(r, 2000));  // circleci
         await driver.findElement(By.id("id_serial_number")).sendKeys("3604-00131-00001-20004");
         // 57 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.xpath("//button[contains(.,'Update Inventory')]")).click();  //linux can't use .btn-primary
@@ -391,6 +391,7 @@ var myArgs = process.argv.slice(2);
         // 59 | type | id=id_serial_number | 3604-00131-00001-20003
 	await new Promise(r => setTimeout(r, 2000)); //circleci
         await driver.findElement(By.id("id_serial_number")).clear();
+	await new Promise(r => setTimeout(r, 2000)); //circleci
         await driver.findElement(By.id("id_serial_number")).sendKeys("3604-00131-00001-20004");
         // 60 | click | css=.controls > .btn-primary | 
 	await new Promise(r => setTimeout(r, 2000)); //circleci

@@ -51,10 +51,8 @@ services:
     image: roundabout_production_tests
     depends_on:
       - django
-    command: sh -c "until curl -Is http://localhost:8000; do echo 'sleeping'; sleep 10; done  &&
-                    ./RunAllTests-Chrome-Linux.bat && 
-                    ./RunAllTests-Firefox-Linux.bat"
     network_mode: "service:django"
+
   postgres:
     build:
       context: .
