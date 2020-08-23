@@ -20,7 +20,7 @@
 """
 
 from django import forms
-from .models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientValue
+from .models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientValue, CoefficientNameEvent
 from roundabout.inventory.models import Inventory
 from roundabout.parts.models import Part
 from roundabout.users.models import User
@@ -55,7 +55,7 @@ class CalibrationEventForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(CalibrationEventForm, self).__init__(*args, **kwargs)
-        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only'])
+        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username')
 
     def clean_user_draft(self):
         user_draft = self.cleaned_data.get('user_draft')
@@ -64,6 +64,44 @@ class CalibrationEventForm(forms.ModelForm):
     def save(self, commit = True): 
         event = super(CalibrationEventForm, self).save(commit = False)
         if commit:
+            event.save()
+            if event.user_approver.exists():
+                for user in event.user_approver.all():
+                    event.user_draft.add(user)
+                    event.user_approver.remove(user)
+            event.save()
+            return event
+
+
+# CoefficientName Event form 
+# Inputs: Reviewers 
+class CoefficientNameEventForm(forms.ModelForm):
+    class Meta:
+        model = CoefficientNameEvent 
+        fields = ['user_draft']
+        labels = {
+            'user_draft': 'Reviewers'
+        }
+        widgets = {
+            'user_draft': forms.SelectMultiple()
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(CoefficientNameEventForm, self).__init__(*args, **kwargs)
+        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username')
+
+    def clean_user_draft(self):
+        user_draft = self.cleaned_data.get('user_draft')
+        return user_draft
+
+    def save(self, commit = True): 
+        event = super(CoefficientNameEventForm, self).save(commit = False)
+        if commit:
+            event.save()
+            if event.user_approver.exists():
+                for user in event.user_approver.all():
+                    event.user_draft.add(user)
+                    event.user_approver.remove(user)
             event.save()
             return event
          
@@ -107,7 +145,7 @@ class CoefficientValueSetForm(forms.ModelForm):
         raw_set = self.cleaned_data.get('value_set')
         coefficient_name = self.cleaned_data.get('coefficient_name')
         try:
-            cal_obj = CoefficientName.objects.get(part = self.instance.part, calibration_name = coefficient_name)
+            cal_obj = CoefficientName.objects.get(coeff_name_event = self.instance.part.coefficient_name_events.first(), calibration_name = coefficient_name)
             set_type =  cal_obj.value_set_type
         except:
             raise ValidationError(
@@ -237,7 +275,7 @@ EventValueSetFormset = inlineformset_factory(
 
 # Coefficient Name form instance generator for Parts
 PartCalNameFormset = inlineformset_factory(
-    Part, 
+    CoefficientNameEvent, 
     CoefficientName, 
     form=CoefficientNameForm, 
     fields=('calibration_name', 'value_set_type', 'sigfig_override'), 
@@ -393,20 +431,23 @@ def parse_valid_coeff_vals(value_set_instance):
 def copy_calibrations(to_id, from_id):
     to_part = Part.objects.get(id=to_id)
     from_part = Part.objects.get(id=from_id)
-    if from_part.coefficient_names.exists():
-        for name in from_part.coefficient_names.all():
+    if from_part.coefficient_name_events.exists():
+        from_coeff_event = from_part.coefficient_name_events.first()
+        to_coeff_event = to_part.coefficient_name_events.first()
+        for name in from_coeff_event.coefficient_names.all():
             CoefficientName.objects.create(
                 calibration_name = name.calibration_name,
                 value_set_type = name.value_set_type,
                 sigfig_override = name.sigfig_override,
-                part = to_part
+                part = to_part,
+                coeff_name_event=to_coeff_event,
             )
 
 # Validator for Part Calibration Copy
 # When a Part is selected, from which to copy Calibration Names into another Part, the function checks if duplicate Names exist between the two Parts in question.
 def validate_part_select(to_part, from_part):
-    to_names = [name.calibration_name for name in to_part.coefficient_names.all()]
-    from_names = [name.calibration_name for name in from_part.coefficient_names.all()]
+    to_names = [name.calibration_name for name in to_part.coefficient_name_events.first().coefficient_names.all()]
+    from_names = [name.calibration_name for name in from_part.coefficient_name_events.first().coefficient_names.all()]
     try:
         assert not any(from_name in to_names for from_name in from_names)
     except:

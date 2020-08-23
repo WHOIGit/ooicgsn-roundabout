@@ -23,8 +23,8 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView
-from .models import CoefficientName, CalibrationEvent, CoefficientValueSet
-from .forms import CalibrationEventForm, EventValueSetFormset, CoefficientValueForm, CoefficientValueSetForm, ValueSetValueFormset, CoefficientNameForm, PartCalNameFormset, CalPartCopyForm
+from .models import CoefficientName, CalibrationEvent, CoefficientValueSet, CoefficientNameEvent
+from .forms import CalibrationEventForm, EventValueSetFormset, CoefficientValueForm, CoefficientValueSetForm, ValueSetValueFormset, CoefficientNameForm, PartCalNameFormset, CalPartCopyForm, CoefficientNameEventForm
 from common.util.mixins import AjaxFormMixin
 from django.urls import reverse, reverse_lazy
 from roundabout.parts.models import Part
@@ -48,7 +48,8 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
     def get(self, request, *args, **kwargs):
         self.object = None
         inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
-        cal_names = CoefficientName.objects.filter(part=inv_inst.part)
+        coeff_event = inv_inst.part.coefficient_name_events.first()
+        cal_names = coeff_event.coefficient_names.all()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         EventValueSetAddFormset = inlineformset_factory(
@@ -321,33 +322,37 @@ class ValueSetValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
 
 
 # Handles creation of Calibration Names for Parts
-class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, CreateView):
-    model = Part
-    form_class = PartForm
-    context_object_name = 'part_template'
+class EventCoeffNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, CreateView):
+    model = CoefficientNameEvent
+    form_class = CoefficientNameEventForm
+    context_object_name = 'event_template'
     template_name='calibrations/part_calname_form.html'
     permission_required = 'calibrations.add_coefficientname'
     redirect_field_name = 'home'
 
     def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
+        part_id = self.kwargs['pk']
+        self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         part_calname_form = PartCalNameFormset(
             instance=self.object
         )
         part_cal_copy_form = CalPartCopyForm(
-            part_id = self.kwargs['pk']
+            part_id = part_id
         )
+
         return self.render_to_response(
             self.get_context_data(
+                part_id=part_id,
+                form=form,
                 part_calname_form=part_calname_form,
                 part_cal_copy_form=part_cal_copy_form
             )
         )
 
     def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
+        self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         part_calname_form = PartCalNameFormset(
@@ -358,14 +363,22 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
             self.request.POST,
             part_id = self.kwargs['pk']
         )
-        if (part_calname_form.is_valid() and part_cal_copy_form.is_valid()):
-            return self.form_valid(part_calname_form, part_cal_copy_form)
-        return self.form_invalid(part_calname_form, part_cal_copy_form)
+        if (form.is_valid() and part_calname_form.is_valid() and part_cal_copy_form.is_valid()):
+            return self.form_valid(form, part_calname_form, part_cal_copy_form)
+        return self.form_invalid(form, part_calname_form, part_cal_copy_form)
 
-    def form_valid(self, part_calname_form, part_cal_copy_form):
+    def form_valid(self, form, part_calname_form, part_cal_copy_form):
+        form.instance.part = Part.objects.get(id=self.kwargs['pk'])
+        form.save()
+        if form.cleaned_data['user_draft'].exists():
+            draft_users = form.cleaned_data['user_draft']
+            for user in draft_users:
+                form.instance.user_draft.add(user)
+        self.object = form.save()
         part_calname_form.instance = self.object
         part_calname_form.save()
         part_cal_copy_form.save()
+        _create_action_history(self.object, Action.ADD, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -378,8 +391,15 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
         else:
             return response
 
-    def form_invalid(self, part_calname_form, part_cal_copy_form):
+    def form_invalid(self, form, part_calname_form, part_cal_copy_form):
         if self.request.is_ajax():
+            if form.errors:
+                data = form.errors
+                return JsonResponse(
+                    data,
+                    status=400,
+                    safe=False
+                )
             if part_cal_copy_form.errors:
                 data = part_cal_copy_form.errors
                 return JsonResponse(
@@ -397,6 +417,7 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
         else:
             return self.render_to_response(
                 self.get_context_data(
+                    form=form,
                     part_calname_form=part_calname_form,
                     part_cal_copy_form=part_cal_copy_form,
                     form_errors=form_errors
@@ -404,7 +425,138 @@ class PartCalNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin,
             )
 
     def get_success_url(self):
-        return reverse('parts:ajax_parts_detail', args=(self.object.id, ))
+        return reverse('parts:ajax_parts_detail', args=(self.object.part.id, ))
+
+
+# Handles editing of Calibration Names for Parts
+class EventCoeffNameUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMixin, CreateView):
+    model = CoefficientNameEvent
+    form_class = CoefficientNameEventForm
+    context_object_name = 'event_template'
+    template_name='calibrations/part_calname_form.html'
+    permission_required = 'calibrations.add_coefficientname'
+    redirect_field_name = 'home'
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        part_id = self.object.part.id
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        part_calname_form = PartCalNameFormset(
+            instance=self.object
+        )
+        part_cal_copy_form = CalPartCopyForm(
+            part_id = part_id
+        )
+
+        return self.render_to_response(
+            self.get_context_data(
+                part_id=part_id,
+                form=form,
+                part_calname_form=part_calname_form,
+                part_cal_copy_form=part_cal_copy_form
+            )
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        part_calname_form = PartCalNameFormset(
+            self.request.POST,
+            instance=self.object
+        )
+        part_cal_copy_form = CalPartCopyForm(
+            self.request.POST,
+            part_id = self.object.part.id
+        )
+        if (form.is_valid() and part_calname_form.is_valid() and part_cal_copy_form.is_valid()):
+            return self.form_valid(form, part_calname_form, part_cal_copy_form)
+        return self.form_invalid(form, part_calname_form, part_cal_copy_form)
+
+    def form_valid(self, form, part_calname_form, part_cal_copy_form):
+        form.instance.part = self.object.part
+        form.instance.approved = False
+        form.save()
+        if form.cleaned_data['user_draft'].exists():
+            draft_users = form.cleaned_data['user_draft']
+            for user in draft_users:
+                form.instance.user_draft.add(user)
+        self.object = form.save()
+        part_calname_form.instance = self.object
+        part_calname_form.save()
+        part_cal_copy_form.save()
+        _create_action_history(self.object, Action.UPDATE, self.request.user)
+        response = HttpResponseRedirect(self.get_success_url())
+        if self.request.is_ajax():
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def form_invalid(self, form, part_calname_form, part_cal_copy_form):
+        if self.request.is_ajax():
+            if form.errors:
+                data = form.errors
+                return JsonResponse(
+                    data,
+                    status=400,
+                    safe=False
+                )
+            if part_cal_copy_form.errors:
+                data = part_cal_copy_form.errors
+                return JsonResponse(
+                    data,
+                    status=400,
+                    safe=False
+                )
+            if part_calname_form.errors:
+                data = part_calname_form.errors
+                return JsonResponse(
+                    data,
+                    status=400,
+                    safe=False
+                )
+        else:
+            return self.render_to_response(
+                self.get_context_data(
+                    form=form,
+                    part_calname_form=part_calname_form,
+                    part_cal_copy_form=part_cal_copy_form,
+                    form_errors=form_errors
+                )
+            )
+
+    def get_success_url(self):
+        return reverse('parts:ajax_parts_detail', args=(self.object.part.id, ))
+
+
+# Handles deletion of CoefficientNameEvents
+class EventCoeffNameDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = CoefficientNameEvent
+    context_object_name='event_template'
+    template_name = 'calibrations/event_calname_delete.html'
+    permission_required = 'calibrations.add_calibrationevent'
+    redirect_field_name = 'home'
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        data = {
+            'message': "Successfully submitted form data.",
+            'parent_id': self.object.part.id,
+            'parent_type': 'part_type',
+            'object_type': self.object.get_object_type(),
+        }
+        self.object.delete()
+        return JsonResponse(data)
+
+    def get_success_url(self):
+        return reverse_lazy('parts:ajax_part_detail', args=(self.object.part.id, ))
 
 
 # Swap reviewers to approvers
@@ -423,3 +575,19 @@ def event_review_approve(request, pk, user_pk):
     data = {'approved':event.approved}
     return JsonResponse(data)
 
+
+# Swap reviewers to approvers
+def event_coeffname_approve(request, pk, user_pk):
+    event = CoefficientNameEvent.objects.get(id=pk)
+    user = User.objects.get(id=user_pk)
+    reviewers = event.user_draft.all()
+    if user in reviewers:
+        event.user_draft.remove(user)
+        event.user_approver.add(user)
+        _create_action_history(event, Action.REVIEWAPPROVE, user)
+    if len(event.user_draft.all()) == 0:
+        event.approved = True
+        _create_action_history(event, Action.EVENTAPPROVE, user)
+    event.save()
+    data = {'approved':event.approved}
+    return JsonResponse(data)

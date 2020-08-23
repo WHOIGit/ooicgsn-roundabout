@@ -57,6 +57,42 @@ class CalibrationEvent(models.Model):
     def get_actions(self):
         return self.actions.filter(object_type=Action.CALEVENT)
 
+    def get_sorted_reviewers(self):
+        return self.user_draft.all().order_by('username')
+
+    def get_sorted_approvers(self):
+        return self.user_approver.all().order_by('username')
+    
+
+# Tracks Coefficient Name Event history across Parts
+class CoefficientNameEvent(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+    def __str__(self):
+        return self.created_at.strftime("%m/%d/%Y")
+    def get_object_type(self):
+        return 'coefficient_name_event'
+    APPROVAL_STATUS = (
+        (True, "Approved"),
+        (False, "Draft"),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    user_draft = models.ManyToManyField(User, related_name='coefficient_name_events_reviewers')
+    user_approver = models.ManyToManyField(User, related_name='coefficient_name_events_approvers')
+    part = models.ForeignKey(Part, related_name='coefficient_name_events', on_delete=models.CASCADE, null=True)
+    approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
+    detail = models.TextField(blank=True)
+
+    def get_actions(self):
+        return self.actions.filter(object_type=Action.COEFFNAMEEVENT)
+
+    def get_sorted_reviewers(self):
+        return self.user_draft.all().order_by('username')
+
+    def get_sorted_approvers(self):
+        return self.user_approver.all().order_by('username')
+
 
 # Tracks Calibrations across Parts
 class CoefficientName(models.Model):
@@ -77,6 +113,7 @@ class CoefficientName(models.Model):
     sigfig_override = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(20)], null=False, blank=True, default=3, help_text='Part-based default if sigfigs cannot be captured from input')
     created_at = models.DateTimeField(default=timezone.now)
     part = models.ForeignKey(Part, related_name='coefficient_names', on_delete=models.CASCADE, null=True)
+    coeff_name_event = models.ForeignKey(CoefficientNameEvent, related_name='coefficient_names', on_delete=models.CASCADE, null=True)
 
 # Tracks Coefficient Sets across Calibrations
 class CoefficientValueSet(models.Model):

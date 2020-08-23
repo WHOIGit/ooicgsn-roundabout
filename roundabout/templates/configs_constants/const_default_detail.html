@@ -81,12 +81,12 @@
                         </div>
                     {% endif %}
                     <p id = 'approvers'>Approvers: 
-                        {% for user in event.user_approver.all %}
+                        {% for user in event.get_sorted_approvers.all %}
                             <span id='approver-{{ user.id }}'>{{ user.username }}</span>
                         {% endfor %}
                     </p>
                     <p id = 'reviewers'>Reviewers: 
-                        {% for user in event.user_draft.all %}
+                        {% for user in event.get_sorted_reviewers.all %}
                             <span id='reviewer-{{ user.id }}'>{{ user.username }}</span>
                         {% endfor %}
                     </p> 
@@ -207,7 +207,7 @@
         // Toggle display of Constant functionality 
         let user_id = '{{ user.id }}'
         let inv_part_type = '{{ inventory_item.part.part_type }}';
-        let part_has_cals = '{{ inventory_item.part.config_names.exists }}';
+        let part_has_cals = '{{ inventory_item.part.config_name_events.exists }}';
         if (inv_part_type == 'Instrument' && part_has_cals == 'True') {
             $('#add_constdefault_action').show();
             $('#const_default-template-tab').show().css('display', '');

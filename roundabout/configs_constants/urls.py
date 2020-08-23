@@ -25,7 +25,6 @@ from . import views
 
 app_name = 'configs_constants'
 urlpatterns = [
-    path('ajax/confname/add/<int:pk>/', view=views.PartConfNameAdd.as_view(), name='part_confname_add'),
     path('ajax/constdefault/add/<int:pk>/', view=views.EventDefaultAdd.as_view(), name='event_constdefault_add'),
     path('ajax/constdefault/edit/<int:pk>/', view=views.EventDefaultUpdate.as_view(), name='event_constdefault_update'),
     path('ajax/constdefault/delete/<int:pk>/', view=views.EventDefaultDelete.as_view(), name='event_constdefault_delete'),
@@ -38,4 +37,8 @@ urlpatterns = [
     path('ajax/configdefault/edit/<int:pk>/', view=views.EventConfigDefaultUpdate.as_view(), name='event_configdefault_update'),
     path('ajax/configdefault/delete/<int:pk>/', view=views.EventConfigDefaultDelete.as_view(), name='event_configdefault_delete'),
     path('ajax/eventconfdefaultreview/delete/<int:pk>/<int:user_pk>/', view=views.event_configdefault_approve, name='event_configdefault_approve'),
+    path('ajax/confname/add/<int:pk>/', view=views.EventConfigNameAdd.as_view(), name='event_confname_add'),
+    path('ajax/confname/edit/<int:pk>/', view=views.EventConfigNameUpdate.as_view(), name='event_confname_update'),
+    path('ajax/confname/delete/<int:pk>/', view=views.EventConfigNameDelete.as_view(), name='event_confname_delete'),
+    path('ajax/eventconfname/delete/<int:pk>/<int:user_pk>/', view=views.event_configname_approve, name='event_configname_approve'),
 ]
