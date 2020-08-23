@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -93,11 +93,11 @@
       <div class="col-sm-12 d-flex flex-row">
         <h2>Search: </h2>
         <div class="dropdown ml-3">
-          <button class="btn btn-secondary dropdown-toggle" type="button" id="search-model-dropdown"
-                  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <button class="btn btn-secondary dropdown-toggle" type="button" id="search-model-dropdown" data-toggle="dropdown">
             <span class="fa"></span>
             {% if model == 'Inventory' %}  {{ label_inventory_app_plural }}
             {% elif model == 'Calibrations' %} Calibrations
+            {% elif model == 'Configs_Constants' %} Configs/Constants
             {% elif model == 'Build' %}    {{ label_builds_app_plural }}
             {% elif model == 'Part' %}     Part Templates
             {% elif model == 'Assembly' %} {{ label_assemblies_app_singular }} Templates
@@ -107,6 +107,7 @@
           <div class="dropdown-menu" aria-labelledby="search-model-dropdown">
             <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:inventory' %}>{{ label_inventory_app_plural }}</a>
             <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:calibrations' %}> -- Calibrations</a>
+            <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:configconsts' %}> -- Config/Constants</a>
             <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:build' %}>{{ label_builds_app_plural }}</a>
             <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:part' %}>Part Templates</a>
             <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:assembly' %}>{{ label_assemblies_app_singular }} Templates</a>
