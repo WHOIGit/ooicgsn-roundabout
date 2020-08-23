@@ -77,6 +77,7 @@ def searchbar_redirect(request):
         elif model=='part':         getstr = '?f=.0.part_number&f=.0.name&f=.0.friendly_name&l=.0.icontains&q=.0.{query}'
         elif model == 'build':      getstr = '?f=.0.build_number&f=.0.assembly__name&f=.0.assembly__assembly_type__name&f=.0.assembly__description&f=.0.build_notes&f=.0.location__name&l=.0.icontains&q=.0.{query}'
         elif model == 'assembly':   getstr = '?f=.0.assembly_number&f=.0.name&f=.0.assembly_type__name&f=.0.description&l=.0.icontains&q=.0.{query}'
+        elif model == 'action':     getstr = '?f=.0.action_type&f=.0.user__name&f=.0.detail&f=.0.location__name&f=.0.inventory__serial_number&f=.0.inventory__part__name&l=.0.icontains'+'&q=.0.{query}'
         getstr = getstr.format(query=query)
         resp['Location'] += getstr
     return resp
@@ -609,7 +610,7 @@ class ActionTableView(GenericSearchTableView):
                         dict(value="inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
                         dict(value="build__assembly_revision__assembly__name", text="Build Assembly", legal_lookup='STR_LOOKUP'),
                         dict(value="build__build_number", text="Build Number", legal_lookup='STR_LOOKUP'),
-                        dict(value="deployment__deployment_number", text="Build Number", legal_lookup='STR_LOOKUP'),
+                        dict(value="deployment__deployment_number", text="Deployment Number", legal_lookup='STR_LOOKUP'),
                         dict(value="cruise__CUID", text="Cruise: ID", legal_lookup='STR_LOOKUP'),
                         dict(value="cruise__friendly_name", text="Cruise: Name", legal_lookup='STR_LOOKUP'),
                         ]
@@ -700,3 +701,6 @@ class ConfigConstTableView(GenericSearchTableView):
 
         return {'extra_columns':[]}
 
+# TODO see sn CGINS-DOSTAD-00134 for approver/reviewer search functionality
+# http://0.0.0.0:8000/search/calibrations?f=.0.calibration_event__inventory__serial_number&l=.0.icontains&q=.0.CGINS-DOSTAD-00134
+# http://0.0.0.0:8000/search/inventory?f=.0.serial_number&l=.0.icontains&q=.0.CGINS-DOSTAD-00134
