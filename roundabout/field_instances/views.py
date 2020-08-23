@@ -27,7 +27,7 @@ from django.views.generic import View, DetailView, ListView, RedirectView, Updat
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 
-from .requests import _sync_main
+from .requests import field_instance_sync_main
 from .models import *
 from .forms import *
 
@@ -41,7 +41,7 @@ class FieldInstanceSyncToHomeView(View):
         if not field_instance:
             return HttpResponse('ERROR. This is not a Field Instance of RDB.')
 
-        sync_code = _sync_main(request, field_instance)
+        sync_code = field_instance_sync_main(request, field_instance)
         print(sync_code)
 
         if sync_code == 200:

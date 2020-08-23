@@ -29,17 +29,184 @@ base_url = env('RDB_SITE_URL')
 """
 Main sync function to coordinate the different models
 """
-def _sync_main(request, field_instance):
+def field_instance_sync_main(request, field_instance):
     status_code = 401
+    pk_mappings = {}
     # Sync base models needed for DB relationships
+    # Run Location sync
     location_pk_mappings = _sync_request_locations(request, field_instance)
     print(location_pk_mappings)
+    pk_mappings.update({'location_pk_mappings': location_pk_mappings})
+    # Run Field model sync
     field_pk_mappings = _sync_request_fields(request, field_instance)
+    pk_mappings.update({'field_pk_mappings': field_pk_mappings})
     # Sync Inventory items
-    inventory_respone = _sync_request_inventory(request, field_instance, field_pk_mappings)
+    inventory_respone = _sync_request_inventory(request, field_instance, pk_mappings)
     status_code = inventory_respone
     print('STATUS CODE: ', inventory_respone)
     return status_code
+
+
+"""
+Function to sync NEW objects
+"""
+def _sync_new_objects(field_instance, model, api_url, serializer):
+    pk_mappings = []
+    new_objects = model.objects.filter(created_at__gte=field_instance.start_date)
+
+    if new_objects:
+        for obj in new_objects:
+            old_pk = obj.id
+            # serialize data for JSON request
+            serializer = serializer(obj)
+            data_dict = serializer.data
+            # Need to remap any Parent items that have new PKs
+            new_key = next((pk for pk in pk_mappings if pk['old_pk'] == data_dict['parent']), False)
+            if new_key:
+                print('NEW KEY: ' + new_key)
+                data_dict['parent'] = new_key['new_pk']
+            # These will be POST as new, so remove id
+            data_dict.pop('id')
+            response = requests.post(api_url, json=data_dict)
+            print(f'{model._meta.model_name} RESPONSE: {response.text}')
+            print(f'{model._meta.model_name} CODE: {response.status_code}')
+            new_obj = response.json()[model._meta.model_name]
+            pk_mappings.append({'old_pk': old_pk, 'new_pk': new_obj['id']})
+    return pk_mappings
+
+
+"""
+Function to sync EXISTING objects
+"""
+def _sync_existing_objects(field_instance, model, api_url, serializer, pk_mappings):
+    status = None
+    # Get all existing fields in Home Base RDB that were updated
+    existing_objects = model.objects.filter(
+        Q(updated_at__gte=field_instance.start_date) & Q(created_at__lt=field_instance.start_date)
+    )
+    if existing_objects:
+        for obj in existing_objects:
+            # serialize data for JSON request
+            serializer = serializer(obj)
+            data_dict = serializer.data
+            # Need to remap any Parent items that have new PKs
+            new_key = next((pk for pk in pk_mappings if pk['old_pk'] == data_dict['parent']), False)
+            if new_key:
+                print('NEW KEY: ' + new_key)
+                data_dict['parent'] = new_key['new_pk']
+
+            url = base_url + reverse('locations-detail', kwargs={'pk': location.id},)
+            response = requests.patch(url, json=data_dict, )
+            print(f'{model._meta.model_name} RESPONSE: {response.text}')
+            print(f'{model._meta.model_name} CODE: {response.status_code}')
+            status = response.status_code
+    return status
+
+
+"""
+Request function to sync Field Instance: Locations
+Args:
+request: Django request object
+field_values: queryset of FieldValue objects
+Returns:
+location_pk_mappings: array that maps old_pk to new_pk for new objects
+"""
+def _sync_request_locations(request, field_instance):
+    model = Location
+    serializer = LocationSerializer
+    api_url = base_url + reverse('locations-list')
+    # Sync new objects
+    location_pk_mappings = _sync_new_objects(field_instance, model, api_url, serializer)
+    print(location_pk_mappings)
+    api_url = base_url + reverse('locations-detail')
+    status = _sync_new_objects(field_instance, model, api_url, serializer, location_pk_mappings)
+    """
+    location_pk_mappings = []
+    # Get new Locations that were added
+    new_locations = model_name.objects.filter(created_at__gte=field_instance.start_date).order_by('-parent')
+    if new_locations:
+        for location in new_locations:
+            old_pk = location.id
+            # serialize data for JSON request
+            serializer = serializer(location)
+            data_dict = serializer.data
+            # Need to remap any Parent items that have new PKs
+            new_key = next((pk for pk in location_pk_mappings if pk['old_pk'] == data_dict['parent']), False)
+            if new_key:
+                print('NEW KEY: ' + new_key)
+                data_dict['parent'] = new_key['new_pk']
+            # These will be POST as new, so remove id
+            data_dict.pop('id')
+            response = requests.post(location_url, json=data_dict)
+            print('Location RESPONSE:', response.text)
+            print("Location CODE: ", response.status_code)
+            new_obj = response.json()[model_name._meta.model_name]
+            location_pk_mappings.append({'old_pk': old_pk, 'new_pk': new_obj['id']})
+    """
+    # Get all existing fields in Home Base RDB that were updated
+    existing_locations = model.objects.filter(
+        Q(updated_at__gte=field_instance.start_date) & Q(created_at__lt=field_instance.start_date)
+    )
+    if existing_locations:
+        for location in existing_locations:
+            # serialize data for JSON request
+            serializer = LocationSerializer(location)
+            data_dict = serializer.data
+            # Need to remap any Parent items that have new PKs
+            new_key = next((pk for pk in location_pk_mappings if pk['old_pk'] == data_dict['parent']), False)
+            if new_key:
+                print('NEW KEY: ' + new_key)
+                data_dict['parent'] = new_key['new_pk']
+
+            url = base_url + reverse('locations-detail', kwargs={'pk': location.id},)
+            response = requests.patch(url, json=data_dict, )
+            print('Location RESPONSE:', response.text)
+            print("Location CODE: ", response.status_code)
+
+    return location_pk_mappings
+
+
+"""
+Request function to sync Field Instance: Fields
+Args:
+request: Django request object
+field_values: queryset of FieldValue objects
+pk_mappings: array that maps old_pk to new_pk for new objects
+"""
+def _sync_request_fields(request, field_instance):
+    field_url = base_url + reverse('userdefinedfields/fields-list')
+    field_pk_mappings = []
+    # Get new fields that were added
+    new_fields = Field.objects.filter(created_at__gte=field_instance.start_date)
+    if new_fields:
+        for field in new_fields:
+            old_pk = field['id']
+            # serialize data for JSON request
+            field_serializer = FieldSerializer(field)
+            field_dict = field_serializer.data
+            # These will be POST as new, so remove id
+            field_dict.pop('id')
+            response = requests.post(field_url, json=field_dict )
+            print('Field RESPONSE:', response.text)
+            print("Field CODE: ", response.status_code)
+            new_obj = response.json()
+            field_pk_mappings.append({'old_pk': old_pk, 'new_pk': new_obj['id']})
+
+    # Get all existing fields in Home Base RDB that were updated
+    existing_fields = Field.objects.filter(
+        Q(updated_at__gte=field_instance.start_date) & Q(created_at__lt=field_instance.start_date)
+    )
+    if existing_fields:
+        for field in existing_fields:
+            # serialize data for JSON request
+            field_serializer = FieldSerializer(field)
+            field_dict = field_serializer.data
+            url = base_url + reverse('userdefinedfields/fields-detail', kwargs={'pk': field.id},)
+            response = requests.patch(url, json=field_dict, )
+            print('Field RESPONSE:', response.text)
+            print("Field CODE: ", response.status_code)
+
+    return field_pk_mappings
 
 
 """
@@ -48,7 +215,7 @@ Args:
 request: Django request object
 field_instance: FieldInstance object
 """
-def _sync_request_inventory(request, field_instance, field_pk_mappings):
+def _sync_request_inventory(request, field_instance, pk_mappings):
     inventory_pk_mappings = []
 
     ##### SYNC INVENTORY #####
@@ -163,104 +330,6 @@ def _sync_request_actions(request, field_instance, obj, inventory_pk_mappings=No
                 print("PHOTO CODE: ", response.status_code)
 
     return 'ACTIONS COMPLETE'
-
-
-"""
-Request function to sync Field Instance: Locations
-Args:
-request: Django request object
-field_values: queryset of FieldValue objects
-ReturnsL
-location_pk_mappings: array that maps old_pk to new_pk for new objects
-"""
-def _sync_request_locations(request, field_instance):
-    location_url = base_url + reverse('locations-list')
-    location_pk_mappings = []
-    # Get new Locations that were added
-    new_locations = Location.objects.filter(created_at__gte=field_instance.start_date).order_by('-parent')
-    if new_locations:
-        for location in new_locations:
-            old_pk = location.id
-            # serialize data for JSON request
-            serializer = LocationSerializer(location)
-            data_dict = serializer.data
-            # Need to remap any Parent items that have new PKs
-            new_key = next((pk for pk in location_pk_mappings if pk['old_pk'] == data_dict['parent']), False)
-            if new_key:
-                print('NEW KEY: ' + new_key)
-                data_dict['parent'] = new_key['new_pk']
-            # These will be POST as new, so remove id
-            data_dict.pop('id')
-            response = requests.post(location_url, json=data_dict)
-            print('Location RESPONSE:', response.text)
-            print("Location CODE: ", response.status_code)
-            new_obj = response.json()['location']
-            location_pk_mappings.append({'old_pk': old_pk, 'new_pk': new_obj['id']})
-
-    # Get all existing fields in Home Base RDB that were updated
-    existing_locations = Location.objects.filter(
-        Q(updated_at__gte=field_instance.start_date) & Q(created_at__lt=field_instance.start_date)
-    )
-    if existing_locations:
-        for location in existing_locations:
-            # serialize data for JSON request
-            serializer = LocationSerializer(location)
-            data_dict = serializer.data
-            # Need to remap any Parent items that have new PKs
-            new_key = next((pk for pk in location_pk_mappings if pk['old_pk'] == data_dict['parent']), False)
-            if new_key:
-                print('NEW KEY: ' + new_key)
-                data_dict['parent'] = new_key['new_pk']
-
-            url = base_url + reverse('locations-detail', kwargs={'pk': location.id},)
-            response = requests.patch(url, json=data_dict, )
-            print('Location RESPONSE:', response.text)
-            print("Location CODE: ", response.status_code)
-
-    return location_pk_mappings
-
-
-"""
-Request function to sync Field Instance: Fields
-Args:
-request: Django request object
-field_values: queryset of FieldValue objects
-pk_mappings: array that maps old_pk to new_pk for new objects
-"""
-def _sync_request_fields(request, field_instance):
-    field_url = base_url + reverse('userdefinedfields/fields-list')
-    field_pk_mappings = []
-    # Get new fields that were added
-    new_fields = Field.objects.filter(created_at__gte=field_instance.start_date)
-    if new_fields:
-        for field in new_fields:
-            old_pk = field['id']
-            # serialize data for JSON request
-            field_serializer = FieldSerializer(field)
-            field_dict = field_serializer.data
-            # These will be POST as new, so remove id
-            field_dict.pop('id')
-            response = requests.post(field_url, json=field_dict )
-            print('Field RESPONSE:', response.text)
-            print("Field CODE: ", response.status_code)
-            new_obj = response.json()
-            field_pk_mappings.append({'old_pk': old_pk, 'new_pk': new_obj['id']})
-
-    # Get all existing fields in Home Base RDB that were updated
-    existing_fields = Field.objects.filter(
-        Q(updated_at__gte=field_instance.start_date) & Q(created_at__lt=field_instance.start_date)
-    )
-    if existing_fields:
-        for field in existing_fields:
-            # serialize data for JSON request
-            field_serializer = FieldSerializer(field)
-            field_dict = field_serializer.data
-            url = base_url + reverse('userdefinedfields/fields-detail', kwargs={'pk': field.id},)
-            response = requests.patch(url, json=field_dict, )
-            print('Field RESPONSE:', response.text)
-            print("Field CODE: ", response.status_code)
-
-    return field_pk_mappings
 
 
 """
