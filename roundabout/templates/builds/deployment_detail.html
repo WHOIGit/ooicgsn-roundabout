@@ -42,8 +42,12 @@
 
     <p>{{ label_deployments_app_singular }} Location: {{ deployment.deployed_location }}</p>
 
-    {% if deployment.get_deploytosea_details %}
-        <p>{{ label_deployments_app_singular }} Date: {{ deployment.get_deploytosea_details|get_item:'deploy_date' }}</p>
+    {% if deployment.deployment_to_field_date %}
+        <p>{{ label_deployments_app_singular }} To Field Date: {{ deployment.deployment_to_field_date }}</p>
+    {% endif %}
+
+    {% if deployment.deployment_to_field_date %}
+        <p>{{ label_deployments_app_singular }} Recovery Date: {{ deployment.deployment_recovery_date }}</p>
     {% endif %}
 
     {% if deployment.cruise_deployed %}
@@ -58,8 +62,8 @@
         </p>
     {% endif %}
 
-    {% if deployment.get_deployment_time_at_sea %}
-        <p>Deployment Time in Field: {{ deployment.get_deployment_time_at_sea|time_at_sea_display }}
+    {% if deployment.deployment_time_in_field %}
+        <p>Deployment Time in Field: {{ deployment.deployment_time_in_field|time_at_sea_display }}
     {% endif %}
 
     <table class="table table-striped action-table">

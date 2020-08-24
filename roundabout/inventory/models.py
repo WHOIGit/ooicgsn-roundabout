@@ -137,6 +137,13 @@ class Inventory(MPTTModel):
             return True
         return False
 
+    def current_deployment(self):
+        try:
+            current_deployment = self.inventory_deployments.exclude(current_status=DeploymentBase.DEPLOYMENTRETIRE).latest()
+            return current_deployment
+        except:
+            return None
+
     def get_latest_deployment(self):
         try:
             action = self.actions.filter(deployment__isnull=False).latest()
@@ -144,49 +151,21 @@ class Inventory(MPTTModel):
         except:
             return None
 
-    # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
+    # get the most recent Deployment time in field, add this time delta to the time_at_sea column
     def update_time_at_sea(self):
-        try:
-            action_deploy_to_sea = self.actions.filter(action_type=Action.DEPLOYMENTTOFIELD).latest()
-        except Action.DoesNotExist:
-            action_deploy_to_sea = None
-
-        try:
-            action_recover = self.actions.filter(action_type=Action.DEPLOYMENTRECOVER).latest()
-        except Action.DoesNotExist:
-            action_recover = None
-
-        if action_deploy_to_sea and action_recover:
-            latest_time_at_sea =  action_recover.created_at - action_deploy_to_sea.created_at
-        else:
-            latest_time_at_sea = timedelta(minutes=0)
-
+        latest_time_at_sea = self.get_latest_deployment().deployment_time_in_field
         # add to existing Time at Sea duration
         self.time_at_sea = self.time_at_sea + latest_time_at_sea
         self.save()
 
     # get the Total Time at Sea by adding historical sea time and current deployment sea time
     def total_time_at_sea(self):
-        try:
-            total_time_at_sea = self.time_at_sea + self.current_deployment_time_at_sea()
+        if self.current_deployment():
+            current_deployment_time_at_sea = self.current_deployment().deployment_time_in_field
+            total_time_at_sea = self.time_at_sea + current_deployment_time_at_sea
             return total_time_at_sea
-        except:
-            return timedelta(minutes=0)
-
-    # get the time at sea for the current Deployment only (if item is at sea)
-    def current_deployment_time_at_sea(self):
-        if self.build and self.build.current_deployment() and self.build.current_deployment().current_status == Action.DEPLOYMENTTOFIELD:
-            try:
-                action_deploy_to_sea = self.actions.filter(action_type=Action.DEPLOYMENTTOFIELD).latest()
-            except Action.DoesNotExist:
-                action_deploy_to_sea = None
-
-            if action_deploy_to_sea:
-                now = timezone.now()
-                current_time_at_sea = now - action_deploy_to_sea.created_at
-                return current_time_at_sea
-            return timedelta(minutes=0)
-        return timedelta(minutes=0)
+        else:
+            return self.time_at_sea
 
 
 class DeploymentBase(models.Model):
