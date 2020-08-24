@@ -274,8 +274,8 @@
         <p>Current {{ label_builds_app_singular }}: {{ inventory_item.build }}</p>
     {% endif %}
     <p>Total Time in Field: {{ inventory_item.total_time_at_sea|time_at_sea_display }}</p>
-    {% if inventory_item.current_deployment_time_at_sea %}
-        <p>Current {{ label_deployments_app_singular }} Time in Field: {{ inventory_item.current_deployment_time_at_sea|time_at_sea_display }}
+    {% if inventory_item.current_deployment %}
+        <p>Current {{ label_deployments_app_singular }} Time in Field: {{ inventory_item.current_deployment.deployment_time_in_field|time_at_sea_display }}
     {% endif %}
 
     {% if inventory_item.parent %}
@@ -609,7 +609,7 @@
         {% include "configs_constants/const_default_detail.html" with inventory_item=inventory_item user=user  %}
         {% include "configs_constants/configs_detail.html" with inventory_item=inventory_item user=user  %}
         {% include "configs_constants/constants_detail.html" with inventory_item=inventory_item user=user  %}
-        
+
     </div>
 
 
