@@ -146,7 +146,7 @@ class ActionTable(SearchTable):
 class CalibrationTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = CalibrationEvent
-        fields = ['inventory__serial_number','inventory__part__name','calibration_date','deployment','approved','user_approver__name','user_drafter__name']
+        fields = ['inventory__serial_number','inventory__part__name','calibration_date','deployment','approved','user_approver__all__name','user_draft__all__name']
         base_shown_cols = ['inventory__serial_number','calibration_date','approved']
 
     inventory__serial_number = Column(verbose_name='Inventory SN', attrs={'style':'white-space: nowrap;'},
@@ -156,8 +156,8 @@ class CalibrationTable(SearchTable):
     calibration_date = DateColumn(verbose_name='Calibration Date', format='Y-m-d',
             linkify=dict(viewname="exports:calibration", args=[tables.A('pk')]))
 
-    user_approver__name = Column(verbose_name='Approver Name')
-    user_drafter__name = Column(verbose_name='Drafter Name')
+    user_approver__all__name = ManyToManyColumn(verbose_name='Approvers', accessor='user_approver', transform=lambda x: x.name, default='')
+    user_draft__all__name = ManyToManyColumn(verbose_name='Reviewers', accessor='user_draft', transform=lambda x: x.name, default='')
 
     coefficient_value_set__names = ManyToManyColumn(verbose_name='Coefficient Names',
             accessor='coefficient_value_sets', transform=lambda x: x.coefficient_name)
@@ -170,7 +170,7 @@ class CalibrationTable(SearchTable):
 class ConfigConstTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = ConfigEvent
-        fields = ['inventory__serial_number','inventory__part__name','configuration_date','deployment','approved','user_approver__name','user_drafter__name']
+        fields = ['inventory__serial_number','inventory__part__name','configuration_date','deployment','approved','user_approver__all__name','user_draft__all__name']
         base_shown_cols = ['inventory__serial_number','configuration_date','approved']
 
     inventory__serial_number = Column(verbose_name='Inventory SN', attrs={'style':'white-space: nowrap;'},
@@ -178,11 +178,11 @@ class ConfigConstTable(SearchTable):
     inventory__part__name = Column(verbose_name='Part',
             linkify=dict(viewname="parts:parts_detail", args=[tables.A('inventory__part__pk')]))
     configuration_date = DateColumn(verbose_name='Event Date', format='Y-m-d',
-            #linkify=dict(viewname="exports:configconst", args=[tables.A('pk')])
+            linkify=dict(viewname="exports:configconst", args=[tables.A('pk')])
             )
 
-    user_approver__name = Column(verbose_name='Approver Name')
-    user_drafter__name = Column(verbose_name='Drafter Name')
+    user_approver__all__name = ManyToManyColumn(verbose_name='Approvers', accessor='user_approver', transform=lambda x: x.name, default='')
+    user_draft__all__name = ManyToManyColumn(verbose_name='Reviewers', accessor='user_draft', transform=lambda x: x.name, default='')
 
     config_values__names = ManyToManyColumn(verbose_name='Config/Constant Names',
             accessor='config_values', transform=lambda x: x.config_name)
