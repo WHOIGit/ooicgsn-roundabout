@@ -195,25 +195,53 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
             if cfg_type == 1:
                 if name.constant_defaults.exists():
                     default_value = name.constant_defaults.first().default_value
-                    config_event_value_form.forms[idx].initial = {
-                        'config_name': name,
-                        'config_value': default_value
-                    }
+                    if name.config_values.exists():
+                        config_event_value_form.forms[idx].initial = {
+                            'config_name': name,
+                            'config_value': default_value,
+                            'notes': name.config_values.filter(config_event = self.object, config_name = name).first().notes
+                        }
+                    else:
+                        config_event_value_form.forms[idx].initial = {
+                            'config_name': name,
+                            'config_value': default_value
+                        }
                 else:
-                    config_event_value_form.forms[idx].initial = {
-                        'config_name': name
-                    }
+                    if name.config_values.exists():
+                        config_event_value_form.forms[idx].initial = {
+                            'config_name': name,
+                            'config_value': name.config_values.filter(config_event = self.object, config_name = name).first().config_value,
+                            'notes': name.config_values.filter(config_event = self.object, config_name = name).first().notes
+                        }
+                    else:
+                        config_event_value_form.forms[idx].initial = {
+                            'config_name': name
+                        }
             else:
                 if name.config_defaults.exists():
                     default_value = name.config_defaults.first().default_value
-                    config_event_value_form.forms[idx].initial = {
-                        'config_name': name,
-                        'config_value': default_value
-                    }
+                    if name.config_values.exists():
+                        config_event_value_form.forms[idx].initial = {
+                            'config_name': name,
+                            'config_value': default_value,
+                            'notes': name.config_values.filter(config_event = self.object, config_name = name).first().notes
+                        }
+                    else:
+                        config_event_value_form.forms[idx].initial = {
+                            'config_name': name,
+                            'config_value': default_value
+                        }
                 else:
-                    config_event_value_form.forms[idx].initial = {
-                        'config_name': name
-                    }
+                    if name.config_values.exists():
+                        config_event_value_form.forms[idx].initial = {
+                            'config_name': name,
+                            'config_value': name.config_values.filter(config_event = self.object, config_name = name).first().config_value,
+                            'notes': name.config_values.filter(config_event = self.object, config_name = name).first().notes
+                        }
+                    else:
+                        config_event_value_form.forms[idx].initial = {
+                            'config_name': name
+                        }
         return self.render_to_response(
             self.get_context_data(
                 form=form, 
