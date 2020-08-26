@@ -3,6 +3,7 @@
 set -e
 
 # Runs all Roundabout Selenium Webdriver automated tests in linux Docker container. Takes about 14 minutes to run.
+echo Run Chrome Tests
 
 val=$(node AddEditLocations.js chrome headless)
 echo $val
