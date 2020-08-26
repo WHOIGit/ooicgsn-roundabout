@@ -3,7 +3,7 @@
 set -e
 
 # Runs all Roundabout Selenium Webdriver automated tests in linux Docker container. Takes about 11 minutes to run.
-echo Run Firefox Tests
+echo Running Firefox Tests
 
 val=$(node AddEditLocations.js firefox headless)
 echo $val
