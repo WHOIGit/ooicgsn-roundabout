@@ -1197,7 +1197,7 @@ class ActionDeployInventoryAjaxFormView(LoginRequiredMixin, AjaxFormMixin, FormV
                     action.created_at = action_date
                     action.save()
             # Call the function to create an Action history chain for this event
-            _create_action_history(item, Action.DEPLOYMENTTOFIELD, self.request.user)
+            _create_action_history(item, Action.DEPLOYMENTTOFIELD, self.request.user, None, '', action_date)
 
         # Check if any subassembly orphan children items already exist.  If so, make this item the parent
         children = inventory_item.assembly_part.get_children()
