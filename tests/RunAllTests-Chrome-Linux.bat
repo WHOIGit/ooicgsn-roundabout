@@ -1,4 +1,61 @@
-#!/bin/sh
+#!/bin/bash
 
-# Runs all Roundabout Selenium Webdriver automated tests in linux Docker container. Takes about 11 minutes to run.
-node AddEditLocations.js chrome headless  && node AddEditParts.js chrome headless  && node AddEditAssemblies.js chrome headless  && node AddEditInventory.js chrome headless  && node AddBuilds.js chrome headless  && node RetireBuilds.js chrome headless  && node DeleteAssemblies.js chrome headless  && node DeleteParts.js chrome headless  && node DeleteLocations.js chrome headless 
+set -e
+
+# Runs all Roundabout Selenium Webdriver automated tests in linux Docker container. Takes about 14 minutes to run.
+
+val=$(node AddEditLocations.js chrome headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node AddEditParts.js chrome headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node AddEditAssemblies.js chrome headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node AddEditInventory.js chrome headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node AddBuilds.js chrome headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node RetireBuilds.js chrome headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node DeleteAssemblies.js chrome headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node DeleteParts.js chrome headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node DeleteLocations.js chrome headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+exit 0

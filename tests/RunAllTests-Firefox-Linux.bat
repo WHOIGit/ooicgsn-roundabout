@@ -1,4 +1,85 @@
-#!/bin/sh
+#!/bin/bash
+
+set -e
 
 # Runs all Roundabout Selenium Webdriver automated tests in linux Docker container. Takes about 11 minutes to run.
-node AddEditLocations.js firefox headless   && node AddEditParts.js firefox headless   && node AddEditAssemblies.js firefox headless   && node AddEditInventory.js firefox headless   && node AddBuilds.js firefox headless   && node RetireBuilds.js firefox headless   && node DeleteAssemblies.js firefox headless   && node DeleteParts.js firefox headless   && node DeleteLocations.js firefox headless  
+
+val=$(node AddEditLocations.js firefox headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node AddEditLocations.js firefox headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node AddEditLocations.js firefox headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node AddEditLocations.js firefox headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node AddEditLocations.js firefox headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node AddEditParts.js firefox headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node AddEditAssemblies.js firefox headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node AddEditInventory.js firefox headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node AddBuilds.js firefox headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node RetireBuilds.js firefox headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node DeleteAssemblies.js firefox headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node DeleteParts.js firefox headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node DeleteLocations.js firefox headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+exit 0
