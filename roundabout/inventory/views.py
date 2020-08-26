@@ -408,6 +408,15 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         else:
             coeff_events = None
 
+        part_has_configs = False
+        part_has_consts = False
+        if self.object.part.config_name_events.exists():
+            if self.object.part.config_name_events.first().config_names.filter(config_type='conf').exists():
+                part_has_configs = True
+            if self.object.part.config_name_events.first().config_names.filter(config_type='cnst').exists():
+                part_has_consts = True
+
+
         # Get Inventory items by Root Locations
         inventory_location_data = []
         root_locations = Location.objects.root_nodes().exclude(root_type='Trash')
@@ -419,11 +428,13 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
                 inventory_location_data.append(data)
 
         context.update({
+            'part_has_configs': part_has_configs,
+            'part_has_consts': part_has_consts,
             'coeff_events': coeff_events,
             'printers': printers,
             'custom_fields': custom_fields,
             'node_type': node_type,
-            'inventory_location_data': inventory_location_data,
+            'inventory_location_data': inventory_location_data
         })
         return context
 
