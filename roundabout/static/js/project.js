@@ -434,6 +434,28 @@ function handleFormComplete() {
     $("#spinner-loader").hide();
 }
 
+// Append a formset row's field error messages below the respective field
+function apply_form_field_error_array(index, value, error) {
+    let inputField = $("input[id$=" + index + '-' + value + "]");
+    let selectField = $("select[id$=" + index + '-' + value + "]");
+    let textArea = $("textarea[id$=" + index + '-' + value + "]");
+    let allRow = $("#__all__")
+    let fieldType = '';
+    if (inputField.length) {
+        fieldType = inputField;
+    } else if (selectField.length) {
+        fieldType = selectField;
+    } else if (textArea.length) {
+        fieldType = textArea;
+    } else if (allRow.length) {
+        fieldType = allRow;
+    }
+    let error_msg = $("<div style = 'width: " + fieldType.width() + "px; padding: 1rem 1rem' id = error-" + index + '-' + value + " />")
+        .addClass("ajax-error alert-danger")
+        .text(error[0]);
+    error_msg.insertAfter(fieldType);
+}
+
 // AJAX functions to display Django error messages
 function apply_form_field_error(fieldname, error) {
     var input = $("#id_" + fieldname),
@@ -499,6 +521,115 @@ $(document).ready(function(){
         })
     })
 
+    function handleFormSuccess(data, textStatus, jqXHR){
+        console.log(data)
+        console.log(textStatus)
+        console.log(data.detail_path)
+
+        if (data.hasOwnProperty('object_type')) {
+            var objectTypePrefix = data.object_type;
+        } else {
+            var objectTypePrefix = navtreePrefix;
+        }
+
+        $.ajax({
+            url: data.detail_path,
+            success: function (data) {
+              $("#detail-view").html(data);
+            }
+        });
+
+        var nodeID = objectTypePrefix + '_' + data.object_id ;
+        console.log(nodeID)
+        $(navTree).jstree(true).settings.core.data.url = navURL;
+        $(navTree).jstree(true).refresh();
+        $(navTree).on('refresh.jstree', function (event, data) {
+            data.instance.deselect_all();
+            data.instance._open_to(nodeID);
+            data.instance.select_node(nodeID);
+        });
+    }
+
+    function handleDeleteFormSuccess(data, textStatus, jqXHR){
+        console.log(data)
+        console.log(textStatus)
+        console.log(jqXHR)
+        console.log(data.parent_id);
+        console.log(data.object_type);
+        console.log(navtreePrefix);
+        $("#detail-view").html('');
+
+        if (data.hasOwnProperty('object_type')) {
+            var objectTypePrefix = data.object_type;
+        } else {
+            var objectTypePrefix = navtreePrefix;
+        }
+
+        if (data.hasOwnProperty('parent_type')) {
+            var parentTypePrefix = data.parent_type;
+        } else {
+            var parentTypePrefix = navtreePrefix;
+        }
+
+        var nodeID = parentTypePrefix + '_' + data.parent_id;
+
+        $(navTree).jstree(true).settings.core.data.url = navURL;
+        $(navTree).jstree(true).refresh();
+        $(navTree).on('refresh.jstree', function (event, data) {
+          data.instance._open_to(nodeID);
+        });
+    }
+
+    function handleCopyFormSuccess(data, textStatus, jqXHR){
+        console.log(data)
+        console.log(textStatus)
+        console.log(jqXHR)
+        $.ajax({
+            url: '/' + navtreePrefix + '/ajax/detail/location/' + data.object_id + '/',
+            success: function (data) {
+              $("#detail-view").html(data);
+            }
+        });
+        var nodeID = 'locations_' + data.object_id ;
+        //$("#jstree_inventory").jstree(true).refresh_node(parentID);
+
+        $.ajax({
+            url: '/' + navtreePrefix + '/ajax/load-navtree/',
+            success: function (data) {
+                $(navTree).jstree(true).destroy();
+                $(navTree).html(data);
+                $(navTree).jstree();
+                $(navTree).jstree(true).select_node(nodeID);
+                console.log(nodeID);
+            }
+        });
+    }
+
+    function handleFormError(data, textStatus, errorThrown){
+        console.log(data)
+        console.log(textStatus)
+        console.log(errorThrown)
+        var errors = $.parseJSON(data.responseText);
+        console.log(errors)
+        $('[id^=error-]').each(function() {
+            $(this).remove();
+        });
+        if (Array.isArray(errors)) {
+            errors.map((error, rowNum) => {
+                $.each(error, function(columnName, value) {
+                    apply_form_field_error_array(rowNum, columnName, value);
+                });
+            });
+        } else {
+            $.each(errors, function(index, value) {
+                if (index === "__all__") {
+                    django_message(value[0], "error");
+                } else {
+                    apply_form_field_error(index, value);
+                }
+            });
+        }
+    }
 })
 
 /* Function to print specific page DIV */
