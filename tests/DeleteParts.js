@@ -140,7 +140,7 @@ var myArgs = process.argv.slice(2);
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 2000));
+            await new Promise(r => setTimeout(r, 4000)); //circleci
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
