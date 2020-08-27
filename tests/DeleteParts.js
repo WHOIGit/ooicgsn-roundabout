@@ -97,6 +97,7 @@ var myArgs = process.argv.slice(2);
                 i++;
             }
 
+	    await new Promise(r => setTimeout(r, 2000));  //circleci
             await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
             // 6 | click | css=.btn-danger | 
 	    await new Promise(r => setTimeout(r, 2000));  //circleci
@@ -115,7 +116,8 @@ var myArgs = process.argv.slice(2);
                 i++;
             }
 
-            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
+            await new Promise(r => setTimeout(r, 2000));  //circleci
+	    await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
             // 6 | click | css=.btn-danger | 
 	    await new Promise(r => setTimeout(r, 2000));  //circleci
             await driver.findElement(By.css(".btn-danger")).click();
@@ -142,7 +144,7 @@ var myArgs = process.argv.slice(2);
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 6000)); //circleci
+            await new Promise(r => setTimeout(r, 4000)); //circleci
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
