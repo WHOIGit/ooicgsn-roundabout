@@ -128,7 +128,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(DeploymentAjaxActionView, self).get_context_data(**kwargs)
-        latest_action_record = self.object.build.actions.filter(deployment=self.object).first()
+        latest_action_record = self.object.build.get_actions().filter(deployment=self.object).first()
 
         context.update({
             'latest_action_record': latest_action_record

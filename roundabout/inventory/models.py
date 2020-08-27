@@ -139,21 +139,21 @@ class Inventory(MPTTModel):
 
     def current_deployment(self):
         try:
-            current_deployment = self.inventory_deployments.exclude(current_status=DeploymentBase.DEPLOYMENTRETIRE).latest()
+            current_deployment = self.inventory_deployments.get_active_deployment()
             return current_deployment
         except:
             return None
 
     def get_latest_deployment(self):
         try:
-            action = self.actions.filter(deployment__isnull=False).latest()
+            action = self.actions.filter(inventory_deployment__isnull=False).latest()
             return action.deployment
         except:
             return None
 
     # get the most recent Deployment time in field, add this time delta to the time_at_sea column
     def update_time_at_sea(self):
-        latest_time_at_sea = self.get_latest_deployment().deployment_time_in_field
+        latest_time_at_sea = self.inventory_deployments.get_active_deployment().deployment_time_in_field
         # add to existing Time at Sea duration
         self.time_at_sea = self.time_at_sea + latest_time_at_sea
         self.save()
