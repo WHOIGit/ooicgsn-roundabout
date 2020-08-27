@@ -1077,27 +1077,6 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
         subassembly.assembly_part = assembly_part
         subassembly.save()
 
-        """
-        # Add Action Record if Location change
-        if subassembly.location_changed():
-            subassembly.create_action_record(self.request.user, 'locationchange')
-
-        detail = 'Moved to %s.' % (subassembly.build)
-        if subassembly.parent:
-            parent_detail = 'Sub-%s %s added.' % (labels['label_assemblies_app_singular'], subassembly)
-            subassembly.create_action_record(self.request.user, 'subchange')
-            subassembly.parent.create_action_record(self.request.user, 'subchange', parent_detail)
-
-        # create default Action record for Inventory
-        subassembly.create_action_record(self.request.user, action_type, detail)
-
-        # If Build is deployed, need to add extra Action record to add to Deployment
-        if build.is_deployed:
-            subassembly.create_action_record(self.request.user, 'startdeployment', '', None, None, 'inventory_deployment')
-            if build.current_deployment().current_deployment_status() == 'deploymentburnin':
-                subassembly.create_action_record(self.request.user, 'deploymentburnin')
-        """
-
         # Get any subassembly children items, move their location to match parent and add Action to history
         subassemblies = subassembly.get_descendants()
         assembly_parts_added = []
@@ -1117,29 +1096,6 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
             item.save()
             # Call the function to create an Action history chain for this event
             _create_action_history(item, action_type, self.request.user, subassembly)
-            """
-            # Add Action Record if Location change
-            if item.location_changed():
-                item.create_action_record(self.request.user, 'locationchange')
-            item.create_action_record(self.request.user, action_type, item.detail)
-
-            # If Build is deployed, need to add extra Action record to add to Deployment
-            if build.is_deployed:
-                item.create_action_record(self.request.user, 'startdeployment', '', None, None, 'inventory_deployment')
-                if build.current_deployment().current_deployment_status() == 'deploymentburnin':
-                    item.create_action_record(self.request.user, 'deploymentburnin')
-            """
-        """
-        # Create Build Action record for adding inventory item
-        detail = '%s added to %s' % (subassembly, labels['label_builds_app_singular'])
-        build_record = BuildAction.objects.create(
-                                            action_type='subassemblychange',
-                                            detail=detail,
-                                            location=build.location,
-                                            user=self.request.user,
-                                            build=build,
-                                            )
-        """
         # Call the function to create an Action history chain for this event
         _create_action_history(subassembly, action_type, self.request.user)
 
