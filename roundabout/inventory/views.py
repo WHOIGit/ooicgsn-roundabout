@@ -658,7 +658,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
     def form_valid(self, form):
         action_type = self.kwargs['action_type']
         detail = self.object.detail
-        created_at = timezone.now()
+        created_at = form.cleaned_data.get('date', timezone.now())
         cruise = None
 
         inventory_form = form.save()
@@ -717,12 +717,14 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
             inventory_deployment.cruise_recovered = cruise
             inventory_deployment.deployment_recovery_date = action_date
             inventory_deployment.save()
+            # update time at sea after setting deployment recovery date
+            self.object.update_time_at_sea()
 
             # Find Build it was removed from
             old_build = self.object.get_latest_build()
             if old_build:
                 # Create Build Action record
-                _create_action_history(old_build, Action.SUBCHANGE, self.request.user, self.object)
+                _create_action_history(old_build, Action.SUBCHANGE, self.request.user, self.object, '', action_date)
 
             # Get any subassembly children items, add Action to history
             subassemblies = self.object.get_descendants()
@@ -731,15 +733,16 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 item.build = None
                 item.location = self.object.location
                 item.save()
-                item.update_time_at_sea()
                 inventory_deployment = item.inventory_deployments.get_active_deployment()
                 inventory_deployment.cruise_recovered = cruise
                 inventory_deployment.deployment_recovery_date = action_date
                 inventory_deployment.save()
+                # update time at sea after setting deployment recovery date
+                item.update_time_at_sea()
                 # Call the function to create an Action history chain for all child items
-                _create_action_history(item, action_type, self.request.user, self.object)
+                _create_action_history(item, action_type, self.request.user, self.object, '', action_date)
                 # Create Build Action record
-                _create_action_history(old_build, Action.SUBCHANGE, self.request.user, item)
+                _create_action_history(old_build, Action.SUBCHANGE, self.request.user, item, '', action_date)
 
         if action_type == Action.REMOVEDEST:
             # Get any subassembly children items, add Action to history
@@ -776,11 +779,8 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 _create_action_history(item, action_type, self.request.user, self.object)
 
         # Call the function to create an Action history chain for this event
-        _create_action_history(self.object, action_type, self.request.user)
+        _create_action_history(self.object, action_type, self.request.user, '', '', created_at)
         #action_record = self.object.create_action_record(self.request.user, action_type, detail, created_at, cruise, 'inventory_deployment')
-        # update the Time At Sea field
-        if action_type == 'deploymentrecover':
-            self.object.update_time_at_sea()
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -1136,7 +1136,8 @@ class ActionDeployInventoryAjaxFormView(LoginRequiredMixin, AjaxFormMixin, FormV
         context = super(ActionDeployInventoryAjaxFormView, self).get_context_data(**kwargs)
         inventory_item = Inventory.objects.get(id=self.kwargs['pk'])
         context.update({
-            'inventory_item': inventory_item
+            'inventory_item': inventory_item,
+            'action_type': Action.DEPLOYMENTTOFIELD,
         })
         return context
 
