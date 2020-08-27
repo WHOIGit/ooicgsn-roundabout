@@ -200,7 +200,7 @@ console.log("btn-danger 6.");
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 4000));  //circleci
+            await new Promise(r => setTimeout(r, 6000));  //circleci
 console.log("btn-danger 7.");
             await driver.findElement(By.css(".btn-danger")).click();
 	}
