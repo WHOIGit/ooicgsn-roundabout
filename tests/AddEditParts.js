@@ -281,11 +281,6 @@ var myArgs = process.argv.slice(2);
         // 33 | click | id=id_refurbishment_cost | 
         await driver.findElement(By.id("id_part_number")).clear();
         await driver.findElement(By.id("id_part_number")).sendKeys("123-456-789");
-        // 48 | click | css=.controls > .btn | 
-        await driver.findElement(By.css(".controls > .btn")).click();
-        await new Promise(r => setTimeout(r, 6000));  //circleci
-        // 49 | verifyText | css=#div_id_part_number .ajax-error | Part with this Part number already exists.
-        assert(await driver.findElement(By.css("#div_id_part_number .ajax-error")).getText() == "Part with this Part number already exists.");
         // 50 | type | id=id_name | Sewing Template
         // 33 | click | id=id_refurbishment_cost | 
         await driver.wait(until.elementLocated(By.id("id_name")));
