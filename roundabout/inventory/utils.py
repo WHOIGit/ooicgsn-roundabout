@@ -31,7 +31,7 @@ labels = set_app_labels()
 # ------------------------------------------------------------------------------
 
 # Function to handle creating new Action records with meta data for different Action.OBJECT_TYPES
-# Current objects available = Inventory, Build 
+# Current objects available = Inventory, Build
 def _create_action_history(obj, action_type, user, referring_obj=None, referring_action='', action_date=None):
     # Set default variables
     object_type = obj._meta.model_name
@@ -170,7 +170,7 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
 
     elif action_type == Action.REMOVEFROMBUILD:
         if obj.location_changed():
-            _create_action_history(obj, Action.LOCATIONCHANGE, user)
+            _create_action_history(obj, Action.LOCATIONCHANGE, user, '', '', action_date)
 
         action_record.build = obj.get_latest_build()
         action_record.detail = 'Removed from %s. %s' % (obj.get_latest_build(), detail)
@@ -183,7 +183,7 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
 
         # If Build is deployed, need to add extra Action record to add to Deployment
         if obj.get_latest_build().is_deployed:
-            _create_action_history(obj, Action.DEPLOYMENTRETIRE, user)
+            _create_action_history(obj, Action.DEPLOYMENTRETIRE, user, '', '', action_date)
 
         # Add Action record for the Build
         _create_action_history(obj.get_latest_build(), Action.SUBCHANGE, user, obj, action_type)
@@ -314,12 +314,15 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
                 inventory_deployment.save()
                 action_record.inventory_deployment = inventory_deployment
         action_record.save()
+
     elif action_type == Action.REVIEWAPPROVE:
         action_record.detail = 'Reviewer approved %s. %s' % (obj_label, detail)
         action_record.save()
+
     elif action_type == Action.EVENTAPPROVE:
         action_record.detail = '%s Approved. %s' % (obj_label, detail)
         action_record.save()
+
     else:
         action_record.save()
 
