@@ -98,6 +98,7 @@ var myArgs = process.argv.slice(2);
 
         // Add a Part Type with a name
         // 5 | click | linkText=Add Part Type | 
+	await new Promise(r => setTimeout(r, 2000));   //circleci firefox
         await driver.findElement(By.linkText("Add Part Type")).click();
         // 7 | type | id=id_name | Sewing Machine
         await driver.findElement(By.id("id_name")).sendKeys("Sewing Machine");
@@ -106,7 +107,7 @@ var myArgs = process.argv.slice(2);
 
         // Add Part Type with null name
         // 9 | click | linkText=Add Part Type | 
-	    await new Promise(r => setTimeout(r, 2000));   //linux firefox
+	await new Promise(r => setTimeout(r, 2000));   //linux firefox
         await driver.findElement(By.linkText("Add Part Type")).click();
         // 10 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
