@@ -51,9 +51,9 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
         cfg_type = self.kwargs['cfg_type']
         if cfg_type == 1:
-            names = ConstDefault.objects.filter(const_event=inv_inst.constant_default_events.first())
+            names = ConfigName.objects.filter(config_name_event = inv_inst.part.config_name_events.first(), config_type = 'cnst')
         else:
-            names = ConfigDefault.objects.filter(conf_def_event=inv_inst.part.assembly_parts.first().config_default_events.first())
+            names = ConfigName.objects.filter(config_name_event = inv_inst.part.config_name_events.first(), config_type = 'conf')
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         ConfigEventValueAddFormset = inlineformset_factory(
@@ -68,15 +68,34 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
             instance=self.object
         )
         for idx,name in enumerate(names):
-            config_event_value_form.forms[idx].initial = {
-                'config_name': name.config_name,
-                'config_value': name.default_value
-            }
+            if cfg_type == 1:
+                if inv_inst.constant_default_events.exists():
+                    default_value = ConstDefault.objects.get(const_event = inv_inst.constant_default_events.first(), config_name = name).default_value
+                    config_event_value_form.forms[idx].initial = {
+                        'config_name': name,
+                        'config_value': default_value
+                    }
+                else:
+                    config_event_value_form.forms[idx].initial = {
+                        'config_name': name
+                    }
+            else:
+                if inv_inst.assembly_part.config_default_events.exists():
+                    default_value = ConfigDefault.objects.get(conf_def_event = inv_inst.assembly_part.config_default_events.first(), config_name = name).default_value
+                    config_event_value_form.forms[idx].initial = {
+                        'config_name': name,
+                        'config_value': default_value
+                    }
+                else:
+                    config_event_value_form.forms[idx].initial = {
+                        'config_name': name
+                    }
         return self.render_to_response(
             self.get_context_data(
                 form=form, 
                 config_event_value_form=config_event_value_form,
-                inv_id = self.kwargs['pk']
+                inv_id = self.kwargs['pk'],
+                cfg_type=cfg_type
             )
         )
 
@@ -153,16 +172,12 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         cfg_type = self.kwargs['cfg_type']
-        config_name_event = self.object.inventory.part.config_name_events.first()
         if cfg_type == 1:
-            names = config_name_event.config_names.filter(config_type='cnst')
-            const_event = self.object.inventory.constant_default_events.first()
-            event_default_names = [default for default in const_event.constant_defaults.all()]
+            part_config_names = ConfigName.objects.filter(config_name_event = self.object.inventory.part.config_name_events.first(), config_type = 'cnst')
         else:
-            names = config_name_event.config_names.filter(config_type='conf')
-            conf_event = self.object.inventory.part.assembly_parts.first().config_default_events.first()
-            event_default_names = [default for default in conf_event.config_defaults.all()]
-        extra_rows = len(names) - len(event_default_names)
+            part_config_names = ConfigName.objects.filter(config_name_event = self.object.inventory.part.config_name_events.first(), config_type = 'conf')
+        event_config_names = self.object.config_values.all()
+        extra_rows = len(part_config_names) - len (event_config_names)
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         ConfigEventValueAddFormset = inlineformset_factory(
@@ -176,16 +191,63 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         config_event_value_form = ConfigEventValueAddFormset(
             instance=self.object
         )
-        for idx,name in enumerate(event_default_names):
-            config_event_value_form.forms[idx].initial = {
-                'config_name': name.config_name,
-                'config_value': name.default_value
-            }
+        for idx,name in enumerate(part_config_names):
+            if cfg_type == 1:
+                if self.object.inventory.constant_default_events.exists():
+                    default_value = ConstDefault.objects.get(const_event = self.object.inventory.constant_default_events.first(), config_name = name).default_value
+                    if name.config_values.exists():
+                        config_event_value_form.forms[idx].initial = {
+                            'config_name': name,
+                            'config_value': default_value,
+                            'notes': name.config_values.filter(config_event = self.object, config_name = name).first().notes
+                        }
+                    else:
+                        config_event_value_form.forms[idx].initial = {
+                            'config_name': name,
+                            'config_value': default_value
+                        }
+                else:
+                    if name.config_values.exists():
+                        config_event_value_form.forms[idx].initial = {
+                            'config_name': name,
+                            'config_value': name.config_values.filter(config_event = self.object, config_name = name).first().config_value,
+                            'notes': name.config_values.filter(config_event = self.object, config_name = name).first().notes
+                        }
+                    else:
+                        config_event_value_form.forms[idx].initial = {
+                            'config_name': name
+                        }
+            else:
+                if self.object.inventory.assembly_part.config_default_events.exists():
+                    default_value = ConfigDefault.objects.get(conf_def_event = self.object.inventory.assembly_part.config_default_events.first(), config_name = name).default_value
+                    if name.config_values.exists():
+                        config_event_value_form.forms[idx].initial = {
+                            'config_name': name,
+                            'config_value': default_value,
+                            'notes': name.config_values.filter(config_event = self.object, config_name = name).first().notes
+                        }
+                    else:
+                        config_event_value_form.forms[idx].initial = {
+                            'config_name': name,
+                            'config_value': default_value
+                        }
+                else:
+                    if name.config_values.exists():
+                        config_event_value_form.forms[idx].initial = {
+                            'config_name': name,
+                            'config_value': name.config_values.filter(config_event = self.object, config_name = name).first().config_value,
+                            'notes': name.config_values.filter(config_event = self.object, config_name = name).first().notes
+                        }
+                    else:
+                        config_event_value_form.forms[idx].initial = {
+                            'config_name': name
+                        }
         return self.render_to_response(
             self.get_context_data(
                 form=form, 
                 config_event_value_form=config_event_value_form,
-                inv_id = self.object.inventory.id
+                inv_id = self.object.inventory.id,
+                cfg_type=cfg_type
             )
         )
 
@@ -630,7 +692,7 @@ class EventDefaultUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
         form = self.get_form(form_class)
         conf_name_event = self.object.inventory.part.config_name_events.first()
         const_names = conf_name_event.config_names.filter(config_type='cnst')
-        event_default_names = [default.config_name for default in self.object.constant_defaults.all()]
+        event_default_names = self.object.constant_defaults.all()
         extra_rows = len(const_names) - len(event_default_names)
         EventDefaultAddFormset = inlineformset_factory(
             ConstDefaultEvent, 
@@ -644,14 +706,16 @@ class EventDefaultUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
             instance=self.object
         )
         for idx,name in enumerate(const_names):
-            if name.constant_defaults.exists():
-                default_value = name.constant_defaults.first().default_value
+            if self.object.inventory.constant_default_events.exists():
+                default_value = ConstDefault.objects.get(const_event = self.object, config_name = name).default_value
+                event_default_form.forms[idx].initial = {
+                    'config_name': name, 
+                    'default_value': default_value
+                }
             else:
-                default_value = ''
-            event_default_form.forms[idx].initial = {
-                'config_name': name, 
-                'default_value': default_value
-            }
+                event_default_form.forms[idx].initial = {
+                    'config_name': name
+                }
         return self.render_to_response(
             self.get_context_data(
                 form=form,
@@ -861,10 +925,10 @@ class EventConfigDefaultUpdate(LoginRequiredMixin, AjaxFormMixin, CreateView):
         self.object = self.get_object()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        conf_name_event = self.object.assembly_part.part.config_name_events.first()
-        conf_names = conf_name_event.config_names.filter(config_type='conf')
-        event_default_names = [default.config_name for default in self.object.config_defaults.all()]
-        extra_rows = len(conf_names) - len(event_default_names)
+        part_confname_event = self.object.assembly_part.part.config_name_events.first()
+        part_config_names = part_confname_event.config_names.filter(config_type='conf')
+        event_config_names = self.object.config_defaults.all()
+        extra_rows = len(part_config_names) - len(event_config_names)
         EventConfigDefaultAddFormset = inlineformset_factory(
             ConfigDefaultEvent, 
             ConfigDefault, 
@@ -876,15 +940,17 @@ class EventConfigDefaultUpdate(LoginRequiredMixin, AjaxFormMixin, CreateView):
         event_default_form = EventConfigDefaultAddFormset(
             instance=self.object
         )
-        for idx,name in enumerate(conf_names):
-            if name.config_defaults.exists():
-                default_value = name.config_defaults.first().default_value
+        for idx,name in enumerate(part_config_names):
+            if self.object.assembly_part.config_default_events.exists():
+                default_value = ConfigDefault.objects.get(conf_def_event = self.object, config_name = name).default_value
+                event_default_form.forms[idx].initial = {
+                    'config_name': name,
+                    'default_value': default_value
+                }
             else:
-                default_value = ''
-            event_default_form.forms[idx].initial = {
-                'config_name': name,
-                'default_value': default_value
-            }
+                event_default_form.forms[idx].initial = {
+                    'config_name': name
+                }
         return self.render_to_response(
             self.get_context_data(
                 form=form,

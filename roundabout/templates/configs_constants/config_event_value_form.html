@@ -24,15 +24,15 @@
 {% load crispy_forms_tags %}
 
 <div class="card-header">
-    {% if event_template.config_values.first.config_name.config_type == 'cnst' %}
-        {% if event_template.id %}
+    {% if event_template.id %}
+        {% if cfg_type == 1 %}
             <h3>Update Constants</h3>
         {% else %}
-            <h3>Add Constants</h3>
+            <h3>Update Configurations</h3>
         {% endif %}
     {% else %}
-        {% if event_template.id %}
-            <h3>Update Configurations</h3>
+        {% if cfg_type == 1 %}
+            <h3>Add Constants</h3>
         {% else %}
             <h3>Add Configurations</h3>
         {% endif %}
@@ -58,7 +58,13 @@
         {{ form|crispy }}
 
         <div class="col-md-12">
-            <h5 id = '__all__'>Configuration/Constant(s)</h5>
+            <h5 id = '__all__'>
+                {% if cfg_type == 1 %}
+                    Constants
+                {% else %}
+                    Configurations
+                {% endif %}
+            </h5>
             <table class="table table-tight conf_const-form">
               <thead>
                   <th>Name</th>
@@ -80,26 +86,21 @@
 
         <div class="control-group">
             <div class="controls">
-                {% if event_template.config_values.first.config_name.config_type == 'cnst' %}
+                <button type="submit" class="btn btn-primary">
                     {% if event_template.id %}
-                        {% if action_type == 'movetotrash' %}
-                            <button type="submit" class="btn btn-danger">Confirm Move to Trash</button>
-                        {% else %}
-                            <button type="submit" class="btn btn-primary">Update Constants</button>
-                        {% endif %}
+                        Update
                     {% else %}
-                        <button type="submit" class="btn btn-primary">Add Constants</button>
+                        Add
                     {% endif %}
-                {% else %}
-                    {% if event_template.id %}
-                        {% if action_type == 'movetotrash' %}
-                            <button type="submit" class="btn btn-danger">Confirm Move to Trash</button>
-                        {% else %}
-                            <button type="submit" class="btn btn-primary">Update Configurations</button>
-                        {% endif %}
+                    
+                    {% if cfg_type == 1 %}
+                        Constants
                     {% else %}
-                        <button type="submit" class="btn btn-primary">Add Configurations</button>
+                        Configurations
                     {% endif %}
+                </button>
+                {% if action_type == 'movetotrash' %}
+                    <button type="submit" class="btn btn-danger">Confirm Move to Trash</button>
                 {% endif %}
 
                 <input  class="btn btn-light cancel-btn" 
