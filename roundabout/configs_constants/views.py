@@ -69,8 +69,8 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         )
         for idx,name in enumerate(names):
             if cfg_type == 1:
-                if name.constant_defaults.exists():
-                    default_value = name.constant_defaults.first().default_value
+                if inv_inst.constant_default_events.exists():
+                    default_value = ConstDefault.objects.get(const_event = inv_inst.constant_default_events.first(), config_name = name).default_value
                     config_event_value_form.forms[idx].initial = {
                         'config_name': name,
                         'config_value': default_value
@@ -80,8 +80,8 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
                         'config_name': name
                     }
             else:
-                if name.config_defaults.exists():
-                    default_value = name.config_defaults.first().default_value
+                if inv_inst.assembly_part.config_default_events.exists():
+                    default_value = ConfigDefault.objects.get(conf_def_event = inv_inst.assembly_part.config_default_events.first(), config_name = name).default_value
                     config_event_value_form.forms[idx].initial = {
                         'config_name': name,
                         'config_value': default_value
@@ -193,8 +193,8 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         )
         for idx,name in enumerate(part_config_names):
             if cfg_type == 1:
-                if name.constant_defaults.exists():
-                    default_value = name.constant_defaults.first().default_value
+                if self.object.inventory.constant_default_events.exists():
+                    default_value = ConstDefault.objects.get(const_event = self.object.inventory.constant_default_events.first(), config_name = name).default_value
                     if name.config_values.exists():
                         config_event_value_form.forms[idx].initial = {
                             'config_name': name,
@@ -218,8 +218,8 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
                             'config_name': name
                         }
             else:
-                if name.config_defaults.exists():
-                    default_value = name.config_defaults.first().default_value
+                if self.object.inventory.assembly_part.config_default_events.exists():
+                    default_value = ConfigDefault.objects.get(conf_def_event = self.object.inventory.assembly_part.config_default_events.first(), config_name = name).default_value
                     if name.config_values.exists():
                         config_event_value_form.forms[idx].initial = {
                             'config_name': name,
@@ -706,8 +706,8 @@ class EventDefaultUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
             instance=self.object
         )
         for idx,name in enumerate(const_names):
-            if name.constant_defaults.exists():
-                default_value = name.constant_defaults.first().default_value
+            if self.object.inventory.constant_default_events.exists():
+                default_value = ConstDefault.objects.get(const_event = self.object, config_name = name).default_value
                 event_default_form.forms[idx].initial = {
                     'config_name': name, 
                     'default_value': default_value
@@ -941,8 +941,8 @@ class EventConfigDefaultUpdate(LoginRequiredMixin, AjaxFormMixin, CreateView):
             instance=self.object
         )
         for idx,name in enumerate(part_config_names):
-            if name.config_defaults.exists():
-                default_value = name.config_defaults.first().default_value
+            if self.object.assembly_part.config_default_events.exists():
+                default_value = ConfigDefault.objects.get(conf_def_event = self.object, config_name = name).default_value
                 event_default_form.forms[idx].initial = {
                     'config_name': name,
                     'default_value': default_value
