@@ -376,7 +376,7 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.linkText("Edit Inventory Details")).click();
         await driver.wait(until.elementLocated(By.id("hint_id_serial_number")));
         await driver.findElement(By.id("hint_id_serial_number")).click();
-        await new Promise(r => setTimeout(r, 4000));  // circleci
+        await new Promise(r => setTimeout(r, 8000));  // circleci firefox
         await driver.findElement(By.id("id_serial_number")).clear();
         // 56 | type | id=id_serial_number | 3604-00131-00001-20004
         await new Promise(r => setTimeout(r, 2000));  // circleci
