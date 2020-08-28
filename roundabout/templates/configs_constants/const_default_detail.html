@@ -207,8 +207,8 @@
         // Toggle display of Constant functionality 
         let user_id = '{{ user.id }}'
         let inv_part_type = '{{ inventory_item.part.part_type }}';
-        let part_has_cals = '{{ inventory_item.part.config_name_events.exists }}';
-        if (inv_part_type == 'Instrument' && part_has_cals == 'True') {
+        let part_has_consts = '{{ part_has_consts }}';
+        if (inv_part_type == 'Instrument' && part_has_consts == 'True') {
             $('#add_constdefault_action').show();
             $('#const_default-template-tab').show().css('display', '');
             $('#const_default-template').show().css('display', '');

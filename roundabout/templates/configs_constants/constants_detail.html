@@ -217,8 +217,9 @@
         let inv_part_type = '{{ inventory_item.part.part_type }}';
         let deployment = '{{ inventory_item.build.current_deployment }}';
         let user_id = '{{ user.id }}';
+        let part_has_consts = '{{ part_has_consts }}';
 
-        if (inv_part_type == 'Instrument' && deployment != 'None' && deployment.length > 0) {
+        if (inv_part_type == 'Instrument' && deployment != 'None' && deployment.length > 0 && part_has_consts == 'True') {
             $('#add_const_action').show();
             $('#const-template-tab').show().css('display', '');
             $('#const-template').show().css('display', '');
