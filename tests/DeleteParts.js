@@ -131,7 +131,7 @@ console.log("btn-danger 3.");
             // 6 | click | css=.btn-danger | 
 //	    await new Promise(r => setTimeout(r, 4000));  //circleci
 console.log("btn-danger 4.");
-	    var element = await driver.findElement(By.css(".btn-danger")).click();
+	    var element = await driver.findElement(By.css(".btn-danger"));
             await driver.executeScript("arguments[0].click();", element);
 //            await driver.findElement(By.css(".btn-danger")).click();
         }
