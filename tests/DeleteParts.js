@@ -121,9 +121,18 @@ console.log("btn-danger 2.");
             await new Promise(r => setTimeout(r, 4000));  //circleci
 console.log("btn-danger 3.");
 	    await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
+
             // 6 | click | css=.btn-danger | 
-	    await new Promise(r => setTimeout(r, 4000));  //circleci
+//	    await new Promise(r => setTimeout(r, 4000));  //circleci
+	    for (let i = 0; i < 10; i++)
+	    {
+	       if (await driver.findElement(By.css(".btn-danger")))
+               {
+                  break;
+               }
+               await new Promise(r => setTimeout(r, 1000)); //circleci firefox
 console.log("btn-danger 4.");
+            }
             await driver.findElement(By.css(".btn-danger")).click();
         }
         else
