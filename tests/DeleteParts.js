@@ -97,8 +97,16 @@ var myArgs = process.argv.slice(2);
                 i++;
             }
 
-	    await new Promise(r => setTimeout(r, 2000));  //circleci
+//	    await new Promise(r => setTimeout(r, 2000));  //circleci
+	    for (let j = 0; j < 10; j++)
+	    {
+	       if (await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")))
+               {
+                  break;
+               }
+               await new Promise(r => setTimeout(r, 1000)); //circleci firefox
 console.log("btn-danger 1.");
+            }
             var btn = await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger"));
             btn.click();
 
