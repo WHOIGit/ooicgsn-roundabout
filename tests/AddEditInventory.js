@@ -323,6 +323,7 @@ var myArgs = process.argv.slice(2);
         // 48 | type | id=searchbar-query | pioneer inshore deck assembly
         await driver.findElement(By.id("searchbar-query")).sendKeys("singer");
         // 49 | click | css=.btn-outline-primary:nth-child(1) | 
+        await new Promise(r => setTimeout(r, 2000));  //circleci
         await driver.findElement(By.xpath("//p[contains(.,'NONE')]"));
             
         // Add valid child to parent assembly

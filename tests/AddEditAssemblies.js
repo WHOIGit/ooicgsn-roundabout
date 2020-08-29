@@ -393,7 +393,7 @@ var myArgs = process.argv.slice(2);
         await driver.wait(until.elementLocated(By.linkText("Add New Sub-Assembly")));
         await driver.findElement(By.linkText("Add New Sub-Assembly")).click();
         // 29 | click | css=.controls > .btn-primary | 
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.css(".controls > .btn-primary")).click();
         await driver.findElement(By.id("id_part_type")).click();
         // 31 | select | id=id_part_type | label=-- Sewing Machine
