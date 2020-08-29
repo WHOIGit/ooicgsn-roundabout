@@ -100,26 +100,25 @@ var myArgs = process.argv.slice(2);
 //	    await new Promise(r => setTimeout(r, 2000));  //circleci
 	    for (let j = 0; j < 10; j++)
 	    {
+console.log("btn-danger 1.");
 	       if (await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")))
                {
                   break;
                }
                await new Promise(r => setTimeout(r, 1000)); //circleci firefox
-console.log("btn-danger 1.");
             }
-            var btn = await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger"));
-            btn.click();
+            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
 
             // 6 | click | css=.btn-danger | 
 //	    await new Promise(r => setTimeout(r, 4000));  //circleci
 	    for (let j = 0; j < 10; j++)
 	    {
+console.log("btn-danger 2.");
 	       if (await driver.findElement(By.css(".btn-danger")))
                {
                   break;
                }
                await new Promise(r => setTimeout(r, 1000)); //circleci firefox
-console.log("btn-danger 2.");
             }
             await driver.findElement(By.css(".btn-danger")).click();
 	}
@@ -138,12 +137,12 @@ console.log("btn-danger 2.");
 //            await new Promise(r => setTimeout(r, 4000));  //circleci
 	    for (let j = 0; j < 10; j++)
 	    {
+console.log("btn-danger 3.");
 	       if (await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")))
                {
                   break;
                }
                await new Promise(r => setTimeout(r, 1000)); //circleci firefox
-console.log("btn-danger 3.");
             }
 	    await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
 
@@ -151,12 +150,12 @@ console.log("btn-danger 3.");
 //	    await new Promise(r => setTimeout(r, 4000));  //circleci
 	    for (let j = 0; j < 10; j++)
 	    {
+console.log("btn-danger 4.");
 	       if (await driver.findElement(By.css(".btn-danger")))
                {
                   break;
                }
                await new Promise(r => setTimeout(r, 1000)); //circleci firefox
-console.log("btn-danger 4.");
             }
             await driver.findElement(By.css(".btn-danger")).click();
         }
@@ -185,12 +184,12 @@ console.log("btn-danger 4.");
 //            await new Promise(r => setTimeout(r, 11000)); //circleci firefox
 	    for (let j = 0; j < 10; j++)
 	    {
+console.log("btn-danger 5.");
 	       if (await driver.findElement(By.css(".btn-danger")))
                {
                   break;
                }
                await new Promise(r => setTimeout(r, 1000)); //circleci firefox
-console.log("btn-danger 5.");
             }
             await driver.findElement(By.css(".btn-danger")).click();
 	}
@@ -219,12 +218,12 @@ console.log("btn-danger 5.");
 //            await new Promise(r => setTimeout(r, 11000));  //circleci firefox
 	    for (let j = 0; j < 10; j++)
 	    {
+console.log("btn-danger 6.");
 	       if (await driver.findElement(By.css(".btn-danger")))
                {
                   break;
                }
                await new Promise(r => setTimeout(r, 1000)); //circleci firefox
-console.log("btn-danger 6.");
             }
             await driver.findElement(By.css(".btn-danger")).click();
 	}
@@ -253,12 +252,12 @@ console.log("btn-danger 6.");
 //            await new Promise(r => setTimeout(r, 30000));  //circleci firefox keeps failing here
 	    for (let j = 0; j < 10; j++)
 	    {
+console.log("btn-danger 7.");
 	       if (await driver.findElement(By.css(".btn-danger")))
                {
                   break;
                }
                await new Promise(r => setTimeout(r, 1000)); //circleci firefox
-console.log("btn-danger 7.");
             }
             await driver.findElement(By.css(".btn-danger")).click();
 	}
