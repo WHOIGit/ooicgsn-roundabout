@@ -106,7 +106,7 @@ console.log("btn-danger 1.");
             // 6 | click | css=.btn-danger | 
 //	    await new Promise(r => setTimeout(r, 4000));  //circleci
 console.log("btn-danger 2.");
-	    var element = await driver.findElement(By.css(".btn-danger")).click();
+	    var element = await driver.findElement(By.css(".btn-danger"));
             await driver.executeScript("arguments[0].click();", element);
 //await driver.findElement(By.css(".btn-danger")).click();
 	}
@@ -124,7 +124,7 @@ console.log("btn-danger 2.");
             }
 //           await new Promise(r => setTimeout(r, 4000));  //circleci
 console.log("btn-danger 3.");
-	    var element = await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
+	    var element = await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger"));
             await driver.executeScript("arguments[0].click();", element);
 //	    await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
 
@@ -159,7 +159,7 @@ console.log("btn-danger 4.");
             // 14 | click | css=.btn-danger | 
 //            await new Promise(r => setTimeout(r, 11000)); //circleci firefox
 console.log("btn-danger 5.");
-	    var element = await driver.findElement(By.css(".btn-danger")).click();
+	    var element = await driver.findElement(By.css(".btn-danger"));
             await driver.executeScript("arguments[0].click();", element);
 //            await driver.findElement(By.css(".btn-danger")).click();
 	}
@@ -187,7 +187,7 @@ console.log("btn-danger 5.");
             // 14 | click | css=.btn-danger | 
 //            await new Promise(r => setTimeout(r, 11000));  //circleci firefox
 console.log("btn-danger 6.");
-            var element = await driver.findElement(By.css(".btn-danger")).click();
+            var element = await driver.findElement(By.css(".btn-danger"));
             await driver.executeScript("arguments[0].click();", element);
 //            await driver.findElement(By.css(".btn-danger")).click();
 	}
@@ -215,7 +215,7 @@ console.log("btn-danger 6.");
             // 14 | click | css=.btn-danger | 
 //            await new Promise(r => setTimeout(r, 30000));  //circleci firefox keeps failing here
 console.log("btn-danger 7.");
-	    var element = await driver.findElement(By.css(".btn-danger")).click();
+	    var element = await driver.findElement(By.css(".btn-danger"));
             await driver.executeScript("arguments[0].click();", element);
 //            await driver.findElement(By.css(".btn-danger")).click();
 	}
