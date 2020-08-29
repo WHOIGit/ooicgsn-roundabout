@@ -104,7 +104,7 @@ console.log("btn-danger 1.");
 
             // 6 | click | css=.btn-danger | 
 //	    await new Promise(r => setTimeout(r, 4000));  //circleci
-	    for (let i = 0; i < 10; i++)
+	    for (let j = 0; j < 10; j++)
 	    {
 	       if (await driver.findElement(By.css(".btn-danger")))
                {
@@ -128,7 +128,7 @@ console.log("btn-danger 2.");
                 i++;
             }
 //            await new Promise(r => setTimeout(r, 4000));  //circleci
-	    for (let i = 0; i < 10; i++)
+	    for (let j = 0; j < 10; j++)
 	    {
 	       if (await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")))
                {
@@ -141,7 +141,7 @@ console.log("btn-danger 3.");
 
             // 6 | click | css=.btn-danger | 
 //	    await new Promise(r => setTimeout(r, 4000));  //circleci
-	    for (let i = 0; i < 10; i++)
+	    for (let j = 0; j < 10; j++)
 	    {
 	       if (await driver.findElement(By.css(".btn-danger")))
                {
@@ -175,7 +175,7 @@ console.log("btn-danger 4.");
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
 //            await new Promise(r => setTimeout(r, 11000)); //circleci firefox
-	    for (let i = 0; i < 10; i++)
+	    for (let j = 0; j < 10; j++)
 	    {
 	       if (await driver.findElement(By.css(".btn-danger")))
                {
@@ -209,7 +209,7 @@ console.log("btn-danger 5.");
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
 //            await new Promise(r => setTimeout(r, 11000));  //circleci firefox
-	    for (let i = 0; i < 10; i++)
+	    for (let j = 0; j < 10; j++)
 	    {
 	       if (await driver.findElement(By.css(".btn-danger")))
                {
@@ -243,7 +243,7 @@ console.log("btn-danger 6.");
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
 //            await new Promise(r => setTimeout(r, 30000));  //circleci firefox keeps failing here
-	    for (let i = 0; i < 10; i++)
+	    for (let j = 0; j < 10; j++)
 	    {
 	       if (await driver.findElement(By.css(".btn-danger")))
                {
