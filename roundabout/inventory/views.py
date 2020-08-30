@@ -985,37 +985,46 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
         else:
             parent = None
 
-        inventory_item.assembly_part = assembly_part
-        inventory_item.build = build
-        inventory_item.parent = parent
-        inventory_item.location = build.location
-        inventory_item.save()
-        # Call the function to create an Action history chain
-        _create_action_history(inventory_item, action_type, self.request.user)
-
-        # Get any subassembly children items, move their location to match parent and add Action to history
-        subassemblies = inventory_item.get_descendants()
-        assembly_parts_added = []
-        for item in subassemblies:
-            sub_assembly_parts = inventory_item.assembly_part.get_descendants()
-            sub_assembly_part = sub_assembly_parts.filter(part=item.part)
-
-            for sub in sub_assembly_part:
-                if sub.id not in assembly_parts_added:
-                    item.assembly_part = sub
-                    assembly_parts_added.append(sub.id)
-                    break
-
-            item.location = inventory_item.location
-            item.build = inventory_item.build
-            item.save()
-            # Call the function to create an Action history chain for child items
-            _create_action_history(item, action_type, self.request.user, inventory_item)
-
-        # If Build is already at sea, need to add Action item for deploying to field with Cruise data
         if build.is_deployed_to_field():
+            # Need to save temporary object data for extra Deployment to Field form step
+            self.request.session['inventory_todeploy'] = {}
+            self.request.session['inventory_todeploy']['id'] = inventory_item.id
+            self.request.session['inventory_todeploy']['location_id'] = build.location.id
+            self.request.session['inventory_todeploy']['build_id'] = build.id
+            self.request.session['inventory_todeploy']['assembly_part_id'] = assembly_part.id
+            if parent:
+                self.request.session['inventory_todeploy']['parent_id'] = parent.id
+            self.request.session.modified = True
+            print(self.request.session['inventory_todeploy'])
             return reverse('inventory:ajax_deploy_action', args=(self.kwargs['pk'], ))
         else:
+            inventory_item.assembly_part = assembly_part
+            inventory_item.build = build
+            inventory_item.parent = parent
+            inventory_item.location = build.location
+            inventory_item.save()
+            # Call the function to create an Action history chain
+            _create_action_history(inventory_item, action_type, self.request.user)
+
+            # Get any subassembly children items, move their location to match parent and add Action to history
+            subassemblies = inventory_item.get_descendants()
+            assembly_parts_added = []
+            for item in subassemblies:
+                sub_assembly_parts = inventory_item.assembly_part.get_descendants()
+                sub_assembly_part = sub_assembly_parts.filter(part=item.part)
+
+                for sub in sub_assembly_part:
+                    if sub.id not in assembly_parts_added:
+                        item.assembly_part = sub
+                        assembly_parts_added.append(sub.id)
+                        break
+
+                item.location = inventory_item.location
+                item.build = inventory_item.build
+                item.save()
+                # Call the function to create an Action history chain for child items
+                _create_action_history(item, action_type, self.request.user, inventory_item)
+
             # Check if any subassembly orphan children items already exist.  If so, make this item the parent
             children = inventory_item.assembly_part.get_children()
             for child in children:
@@ -1081,39 +1090,48 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
         else:
             parent = None
 
-        subassembly.location = location
-        subassembly.build = build
-        subassembly.future_destination = None
-        subassembly.parent = parent
-        subassembly.assembly_part = assembly_part
-        subassembly.save()
-
-        # Get any subassembly children items, move their location to match parent and add Action to history
-        subassemblies = subassembly.get_descendants()
-        assembly_parts_added = []
-        for item in subassemblies:
-            sub_assembly_parts = subassembly.assembly_part.get_descendants()
-            sub_assembly_part = sub_assembly_parts.filter(part=item.part)
-
-            for sub in sub_assembly_part:
-                if sub.id not in assembly_parts_added:
-                    item.assembly_part = sub
-                    assembly_parts_added.append(sub.id)
-                    break
-
-            item.location = subassembly.location
-            item.build = subassembly.build
-            #item.detail = 'Moved to %s' % (item.build)
-            item.save()
-            # Call the function to create an Action history chain for this event
-            _create_action_history(item, action_type, self.request.user, subassembly)
-        # Call the function to create an Action history chain for this event
-        _create_action_history(subassembly, action_type, self.request.user)
-
-        # If Build is already at sea, need to add Action item for deploying to field with Cruise data
         if build.is_deployed_to_field():
+            # Need to save temporary object data for extra Deployment form step
+            self.request.session['inventory_todeploy'] = {}
+            self.request.session['inventory_todeploy']['id'] = subassembly.id
+            self.request.session['inventory_todeploy']['location_id'] = location.id
+            self.request.session['inventory_todeploy']['build_id'] = build.id
+            self.request.session['inventory_todeploy']['assembly_part_id'] = assembly_part.id
+            if parent:
+                self.request.session['inventory_todeploy']['parent_id'] = parent.id
+            self.request.session.modified = True
+            print(self.request.session['inventory_todeploy'])
             return reverse('inventory:ajax_deploy_action', args=(self.kwargs['pk'], ))
         else:
+            subassembly.location = location
+            subassembly.build = build
+            subassembly.future_destination = None
+            subassembly.parent = parent
+            subassembly.assembly_part = assembly_part
+            subassembly.save()
+
+            # Get any subassembly children items, move their location to match parent and add Action to history
+            subassemblies = subassembly.get_descendants()
+            assembly_parts_added = []
+            for item in subassemblies:
+                sub_assembly_parts = subassembly.assembly_part.get_descendants()
+                sub_assembly_part = sub_assembly_parts.filter(part=item.part)
+
+                for sub in sub_assembly_part:
+                    if sub.id not in assembly_parts_added:
+                        item.assembly_part = sub
+                        assembly_parts_added.append(sub.id)
+                        break
+
+                item.location = subassembly.location
+                item.build = subassembly.build
+                #item.detail = 'Moved to %s' % (item.build)
+                item.save()
+                # Call the function to create an Action history chain for this event
+                _create_action_history(item, action_type, self.request.user, subassembly)
+            # Call the function to create an Action history chain for this event
+            _create_action_history(subassembly, action_type, self.request.user)
+
             # Check if any subassembly orphan children items already exist.  If so, make this item the parent
             children = subassembly.assembly_part.get_children()
             for child in children:
@@ -1135,6 +1153,7 @@ class ActionDeployInventoryAjaxFormView(LoginRequiredMixin, AjaxFormMixin, FormV
     def get_context_data(self, **kwargs):
         context = super(ActionDeployInventoryAjaxFormView, self).get_context_data(**kwargs)
         inventory_item = Inventory.objects.get(id=self.kwargs['pk'])
+
         context.update({
             'inventory_item': inventory_item,
             'action_type': Action.DEPLOYMENTTOFIELD,
@@ -1148,8 +1167,40 @@ class ActionDeployInventoryAjaxFormView(LoginRequiredMixin, AjaxFormMixin, FormV
         inventory_item = Inventory.objects.get(id=self.kwargs['pk'])
         cruise = form.cleaned_data['cruise']
         action_date = form.cleaned_data['date']
+        action_type = Action.ADDTOBUILD
 
-        # Add Actions for all Inventory item and children
+        # Retrieve temporary object data from session key, update Inventory object
+        inventory_todeploy = self.request.session.get('inventory_todeploy')
+        inventory_item.location_id = inventory_todeploy['location_id']
+        inventory_item.build_id = inventory_todeploy['build_id']
+        inventory_item.future_destination = None
+        inventory_item.parent_id = inventory_todeploy.get('parent_id', None)
+        inventory_item.assembly_part_id = inventory_todeploy['assembly_part_id']
+        inventory_item.save()
+
+        # Get any subassembly children items, move their location to match parent and add Action to history
+        subassemblies = inventory_item.get_descendants()
+        assembly_parts_added = []
+        for item in subassemblies:
+            sub_assembly_parts = inventory_item.assembly_part.get_descendants()
+            sub_assembly_part = sub_assembly_parts.filter(part=item.part)
+
+            for sub in sub_assembly_part:
+                if sub.id not in assembly_parts_added:
+                    item.assembly_part = sub
+                    assembly_parts_added.append(sub.id)
+                    break
+
+            item.location = inventory_item.location
+            item.build = inventory_item.build
+            #item.detail = 'Moved to %s' % (item.build)
+            item.save()
+            # Call the function to create an Action history chain for this event
+            _create_action_history(item, action_type, self.request.user, inventory_item, '', action_date)
+        # Call the function to create an Action history chain for the ADDTOBUILD event
+        _create_action_history(inventory_item, action_type, self.request.user, None, '', action_date)
+
+        # Add DEPLOYMENTTOFIELD Actions for all Inventory item and children
         inventory_tree = inventory_item.get_descendants(include_self=True)
         for item in inventory_tree:
             # Update InventoryDeployment object
@@ -1157,13 +1208,6 @@ class ActionDeployInventoryAjaxFormView(LoginRequiredMixin, AjaxFormMixin, FormV
             inventory_deployment.cruise_deployed = cruise
             inventory_deployment.deployment_to_field_date = action_date
             inventory_deployment.save()
-            # Need to update last Action dates to match Deployment date
-            actions = item.actions.filter(deployment__isnull=False).order_by('-id')[:4]
-            actions_to_update = ['locationchange', 'addtobuild', 'startdeployment', 'subchange']
-            for action in actions:
-                if action.action_type in actions_to_update:
-                    action.created_at = action_date
-                    action.save()
             # Call the function to create an Action history chain for this event
             _create_action_history(item, Action.DEPLOYMENTTOFIELD, self.request.user, None, '', action_date)
 

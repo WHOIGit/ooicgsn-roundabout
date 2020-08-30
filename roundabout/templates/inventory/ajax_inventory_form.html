@@ -130,17 +130,10 @@
           {% endif %}
 
          {% if inventory_item.id %}
-            {% if action_type == 'deploymenttofield' %}
-                <input class="btn btn-light cancel-btn"
-                       type="button" value="Cancel"
-                       data-detail-url="{% url 'inventory:ajax_inventory_action' 'removefrombuild' inventory_item.id %}"
-                       data-node-id="{{ inventory_item.id }}" />
-            {% else %}
                <input class="btn btn-light cancel-btn"
                       type="button" value="Cancel"
                       data-detail-url="{% url 'inventory:ajax_inventory_detail' inventory_item.id %}"
                       data-node-id="{{ inventory_item.id }}" />
-            {% endif %}
          {% else %}
              <input class="btn btn-light cancel-btn-noajax"
                     type="button" value="Cancel"
