@@ -97,18 +97,14 @@ var myArgs = process.argv.slice(2);
                 i++;
             }
 
-//	    await new Promise(r => setTimeout(r, 2000));  //circleci
-console.log("btn-danger 1.");
             var element = await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger"));
             await driver.executeScript("arguments[0].click();", element);
 //            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
 
             // 6 | click | css=.btn-danger | 
-//	    await new Promise(r => setTimeout(r, 4000));  //circleci
-console.log("btn-danger 2.");
 	    var element = await driver.findElement(By.css(".btn-danger"));
             await driver.executeScript("arguments[0].click();", element);
-//await driver.findElement(By.css(".btn-danger")).click();
+	   //await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
             console.log("Delete Parts failed: Sewing Machine type not found");
@@ -122,15 +118,12 @@ console.log("btn-danger 2.");
                 }
                 i++;
             }
-//           await new Promise(r => setTimeout(r, 4000));  //circleci
-console.log("btn-danger 3.");
+
 	    var element = await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger"));
             await driver.executeScript("arguments[0].click();", element);
 //	    await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
 
             // 6 | click | css=.btn-danger | 
-//	    await new Promise(r => setTimeout(r, 4000));  //circleci
-console.log("btn-danger 4.");
 	    var element = await driver.findElement(By.css(".btn-danger"));
             await driver.executeScript("arguments[0].click();", element);
 //            await driver.findElement(By.css(".btn-danger")).click();
@@ -159,7 +152,6 @@ console.log("btn-danger 4.");
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
             await new Promise(r => setTimeout(r, 8000)); //circleci firefox
-console.log("btn-danger 5.");
 	    var element = await driver.findElement(By.xpath("//input[3]"));
             await driver.executeScript("arguments[0].click();", element);
 //            await driver.findElement(By.css(".btn-danger")).click();
@@ -187,7 +179,6 @@ console.log("btn-danger 5.");
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
             await new Promise(r => setTimeout(r, 8000));  //circleci firefox
-console.log("btn-danger 6.");
             var element = await driver.findElement(By.xpath("//input[3]"));
             await driver.executeScript("arguments[0].click();", element);
 //            await driver.findElement(By.css(".btn-danger")).click();
@@ -215,7 +206,6 @@ console.log("btn-danger 6.");
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
             await new Promise(r => setTimeout(r, 8000));  //circleci firefox keeps failing here
-console.log("btn-danger 7.");
 	    var element = await driver.findElement(By.xpath("//input[3]"));
             await driver.executeScript("arguments[0].click();", element);
 //            await driver.findElement(By.css(".btn-danger")).click();
