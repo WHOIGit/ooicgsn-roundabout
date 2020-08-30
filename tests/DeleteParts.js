@@ -138,6 +138,7 @@ console.log("btn-danger 4.");
         else
             console.log("Delete Parts failed: Computerized type not found");
 
+	await new Promise(r => setTimeout(r, 4000));  //circleci firefox
         // 7 | click | id=navbarTemplates | 
         await driver.findElement(By.id("navbarTemplates")).click();
         // 8 | click | linkText=Parts | 
