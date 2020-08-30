@@ -149,24 +149,24 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
 
     elif action_type == Action.ADDTOBUILD:
         if obj.location_changed():
-            _create_action_history(obj, Action.LOCATIONCHANGE, user)
+            _create_action_history(obj, Action.LOCATIONCHANGE, user, '', '', action_date)
 
         action_record.detail = 'Moved to %s.' % (obj.build)
         action_record.save()
 
         if not referring_obj:
             if obj.parent:
-                _create_action_history(obj, Action.SUBCHANGE, user)
-                _create_action_history(obj.parent, Action.SUBCHANGE, user, obj)
+                _create_action_history(obj, Action.SUBCHANGE, user, '', '', action_date)
+                _create_action_history(obj.parent, Action.SUBCHANGE, user, obj, '', action_date)
 
         # If Build is deployed, need to add extra Action record to add to Deployment
         if obj.build.is_deployed:
-            _create_action_history(obj, Action.STARTDEPLOYMENT, user)
+            _create_action_history(obj, Action.STARTDEPLOYMENT, user, '', '', action_date)
             if obj.build.current_deployment().current_status == Action.DEPLOYMENTBURNIN:
-                _create_action_history(obj, Action.DEPLOYMENTBURNIN, user)
+                _create_action_history(obj, Action.DEPLOYMENTBURNIN, user, '', '', action_date)
 
         # Add Action record for the Build
-        _create_action_history(obj.get_latest_build(), Action.SUBCHANGE, user, obj, action_type)
+        _create_action_history(obj.get_latest_build(), Action.SUBCHANGE, user, obj, action_type, action_date)
 
     elif action_type == Action.REMOVEFROMBUILD:
         if obj.location_changed():
@@ -186,10 +186,10 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
             _create_action_history(obj, Action.DEPLOYMENTRETIRE, user, '', '', action_date)
 
         # Add Action record for the Build
-        _create_action_history(obj.get_latest_build(), Action.SUBCHANGE, user, obj, action_type)
+        _create_action_history(obj.get_latest_build(), Action.SUBCHANGE, user, obj, action_type, action_date)
 
     elif action_type == Action.ASSIGNDEST:
-        action_record.detail = 'Destination assigned - %s.' % (self.assembly_part.assembly_revision)
+        action_record.detail = 'Destination assigned - %s.' % (obj.assembly_part.assembly_revision)
         action_record.save()
 
     elif action_type == Action.REMOVEDEST:
