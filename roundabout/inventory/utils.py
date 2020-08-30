@@ -189,7 +189,7 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
         _create_action_history(obj.get_latest_build(), Action.SUBCHANGE, user, obj, action_type, action_date)
 
     elif action_type == Action.ASSIGNDEST:
-        action_record.detail = 'Destination assigned - %s.' % (self.assembly_part.assembly_revision)
+        action_record.detail = 'Destination assigned - %s.' % (obj.assembly_part.assembly_revision)
         action_record.save()
 
     elif action_type == Action.REMOVEDEST:
