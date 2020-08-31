@@ -228,15 +228,15 @@
         let user_id = '{{ user.id }}'
         let inv_part_type = '{{ inventory_item.part.part_type }}';
         let part_has_cals = '{{ inventory_item.part.coefficient_name_events.exists }}';
-        if (inv_part_type == 'Instrument' && part_has_cals == 'True') {
-            $('#add_coefficient_action').show();
-            $('#calibration-template-tab').show().css('display', '');
-            $('#calibration-template').show().css('display', '');
-        } else {
-            $('#add_coefficient_action').hide();
-            $('#calibration-template-tab').hide();
-            $('#calibration-template').hide();
-        }
+        // if (inv_part_type == 'Instrument' && part_has_cals == 'True') {
+        //     $('#add_coefficient_action').show();
+        //     $('#calibration-template-tab').show().css('display', '');
+        //     $('#calibration-template').show().css('display', '');
+        // } else {
+        //     $('#add_coefficient_action').hide();
+        //     $('#calibration-template-tab').hide();
+        //     $('#calibration-template').hide();
+        // }
 
         setCoeffTableWidth();
         $( window ).bind( "resize", setCoeffTableWidth ); 
