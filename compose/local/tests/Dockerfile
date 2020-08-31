@@ -13,6 +13,7 @@ RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
 RUN apt-get install -y nodejs
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && apt install -y ./google-chrome-stable_current_amd64.deb              
 RUN wget https://chromedriver.storage.googleapis.com/84.0.4147.30/chromedriver_linux64.zip && unzip -o chromedriver_linux64.zip -d/usr/local/bin
+RUN apt remove firefox && apt remove firefox-geckodriver
 RUN apt install -y firefox && apt install -y firefox-geckodriver
 
 RUN chmod +x /tests/RunAllTests-Chrome-Linux.bat
