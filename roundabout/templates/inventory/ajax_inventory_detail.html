@@ -342,22 +342,27 @@
           <a class="nav-link" id="part-template-tab" data-toggle="tab" href="#part-template" role="tab" aria-controls="part-template" aria-selected="false">Part Specs</a>
         </li>
 
+        {% if inventory_item.calibration_events.exists %}
+            <li class="nav-item">
+                <a class="nav-link" id="calibration-template-tab" data-toggle="tab" href="#calibration-template" role="tab" aria-controls="calibration-template" aria-selected="false">Calibration Coefficient History</a>
+            </li>
+        {% endif %}
 
-        <li class="nav-item">
-          <a class="nav-link" id="calibration-template-tab" data-toggle="tab" href="#calibration-template" role="tab" aria-controls="calibration-template" aria-selected="false">Calibration Coefficient History</a>
-        </li>
+        {% if inventory_item.constant_default_events.exists %}
+            <li class="nav-item">
+                <a class="nav-link" id="const_default-template-tab" data-toggle="tab" href="#const_default-template" role="tab" aria-controls="const_default-template" aria-selected="false">Constant Defaults</a>
+            </li>
+        {% endif %}
 
-        <li class="nav-item">
-            <a class="nav-link" id="const_default-template-tab" data-toggle="tab" href="#const_default-template" role="tab" aria-controls="const_default-template" aria-selected="false">Constant Defaults</a>
-          </li>
+        {% if inventory_item.config_events.exists %}
+            <li class="nav-item">
+                <a class="nav-link" id="const-template-tab" data-toggle="tab" href="#const-template" role="tab" aria-controls="const-template" aria-selected="false">Constant History</a>
+            </li>
 
-        <li class="nav-item">
-            <a class="nav-link" id="const-template-tab" data-toggle="tab" href="#const-template" role="tab" aria-controls="const-template" aria-selected="false">Constant History</a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link" id="conf-template-tab" data-toggle="tab" href="#conf-template" role="tab" aria-controls="conf-template" aria-selected="false">Configuration History</a>
-        </li>
+            <li class="nav-item">
+                <a class="nav-link" id="conf-template-tab" data-toggle="tab" href="#conf-template" role="tab" aria-controls="conf-template" aria-selected="false">Configuration History</a>
+            </li>
+        {% endif %}
 
 
     </ul>

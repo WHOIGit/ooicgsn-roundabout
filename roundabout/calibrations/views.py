@@ -159,14 +159,18 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         )
         event_valueset_form = EventValueSetAddFormset(
             instance=self.object,
-            form_kwargs={'inv_id': self.kwargs['pk']}
+            form_kwargs={'inv_id': self.object.inventory.id}
         )
         for idx,name in enumerate(coeff_name_event_names):
-            if name.coefficient_value_sets.exists():
+            try:
+                coeff_val_set = CoefficientValueSet.objects.get(coefficient_name = name, calibration_event = self.object)
+            except CoefficientValueSet.DoesNotExist:
+                coeff_val_set = ''
+            if coeff_val_set != '':
                 event_valueset_form.forms[idx].initial = {
                     'coefficient_name': name,
-                    'value_set': name.coefficient_value_sets.filter(coefficient_name = name, calibration_event = self.object).first().value_set,
-                    'notes': name.coefficient_value_sets.filter(coefficient_name = name, calibration_event = self.object).first().notes
+                    'value_set': coeff_val_set.value_set,
+                    'notes': coeff_val_set.notes
                 }
             else:
                 event_valueset_form.forms[idx].initial = {
