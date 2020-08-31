@@ -80,52 +80,7 @@ var myArgs = process.argv.slice(2);
         await driver.findElement(By.css(".primaryAction")).click();
 
         // Delete Part Types, Part Templates and Inventory created running automated tests.
-        // 10 | click | id=navbarTemplates |
-        await driver.findElement(By.id("navbarTemplates")).click();
-        await driver.findElement(By.id("navbarAdmintools")).click();
-        // 5 | click | linkText=Test |
-        await driver.findElement(By.linkText("Edit Part Types")).click();
 
-
-	if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Sewing Machine']"))).length != 0)
-	{
-            var i = 1;
-            while (true) {
-                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Sewing Machine") {
-                    break;
-                } 
-                i++;
-            }
-
-//            var element = await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger"));
-//            await driver.executeScript("arguments[0].click();", element);
-            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
-
-            // 6 | click | css=.btn-danger | 
-	    await driver.findElement(By.css(".btn-danger")).click();
-	}
-	else
-            console.log("Delete Parts failed: Sewing Machine type not found");
-
-        // Delete Computerized Part Type
-        if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Computerized']"))).length != 0) {
-            var i = 1;
-            while (true) {
-                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Computerized") {
-                    break;
-                }
-                i++;
-            }
-
-	    await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
-
-            // 6 | click | css=.btn-danger | 
-            await driver.findElement(By.css(".btn-danger")).click();
-        }
-        else
-            console.log("Delete Parts failed: Computerized type not found");
-
-	await new Promise(r => setTimeout(r, 4000));  //circleci firefox
         // 7 | click | id=navbarTemplates | 
         await driver.findElement(By.id("navbarTemplates")).click();
         // 8 | click | linkText=Parts | 
@@ -146,7 +101,7 @@ var myArgs = process.argv.slice(2);
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
             await new Promise(r => setTimeout(r, 8000)); //circleci firefox
-            await driver.findElement(By.id("delete-form")).click();
+            await driver.findElement(By.id("delete-form")).click();  //Required for circleci firefox - dying on btn-danger.click
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
@@ -171,12 +126,14 @@ var myArgs = process.argv.slice(2);
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 8000));  //circleci firefox
+            await new Promise(r => setTimeout(r, 12000));  //circleci firefox
 	   await driver.findElement(By.id("delete-form")).click();
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
 	    console.log("Delete Parts failed: Wheel Template not found");
+
+	await new Promise(r => setTimeout(r, 4000));  //circleci firefox
 
         // 7 | click | id=navbarTemplates | 
         await driver.findElement(By.id("navbarTemplates")).click();
@@ -197,12 +154,52 @@ var myArgs = process.argv.slice(2);
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 8000));  //circleci firefox keeps failing here
+            await new Promise(r => setTimeout(r, 12000));  //circleci firefox keeps failing here
             await driver.findElement(By.id("delete-form")).click();
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
 	    console.log("Delete Parts failed: Pin Template not found");
+
+        // 10 | click | id=navbarTemplates |
+        await driver.findElement(By.id("navbarTemplates")).click();
+        await driver.findElement(By.id("navbarAdmintools")).click();
+        // 5 | click | linkText=Test |
+        await driver.findElement(By.linkText("Edit Part Types")).click();
+
+
+	if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Sewing Machine']"))).length != 0)
+	{
+            var i = 1;
+            while (true) {
+                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Sewing Machine") {
+                    break;
+                } 
+                i++;
+            }
+            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
+            // 6 | click | css=.btn-danger | 
+	    await driver.findElement(By.css(".btn-danger")).click();
+	}
+	else
+            console.log("Delete Parts failed: Sewing Machine type not found");
+
+        // Delete Computerized Part Type
+        if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Computerized']"))).length != 0) {
+            var i = 1;
+            while (true) {
+                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Computerized") {
+                    break;
+                }
+                i++;
+            }
+
+	    await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
+            // 6 | click | css=.btn-danger | 
+            await driver.findElement(By.css(".btn-danger")).click();
+        }
+        else
+            console.log("Delete Parts failed: Computerized type not found");
 
 
         // Close browser window
