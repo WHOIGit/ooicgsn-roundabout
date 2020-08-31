@@ -97,14 +97,12 @@ var myArgs = process.argv.slice(2);
                 i++;
             }
 
-            var element = await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger"));
-            await driver.executeScript("arguments[0].click();", element);
-//            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
+//            var element = await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger"));
+//            await driver.executeScript("arguments[0].click();", element);
+            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
 
             // 6 | click | css=.btn-danger | 
-	    var element = await driver.findElement(By.css(".btn-danger"));
-            await driver.executeScript("arguments[0].click();", element);
-	   //await driver.findElement(By.css(".btn-danger")).click();
+	    await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
             console.log("Delete Parts failed: Sewing Machine type not found");
@@ -119,14 +117,10 @@ var myArgs = process.argv.slice(2);
                 i++;
             }
 
-	    var element = await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger"));
-            await driver.executeScript("arguments[0].click();", element);
-//	    await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
+	    await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
 
             // 6 | click | css=.btn-danger | 
-	    var element = await driver.findElement(By.css(".btn-danger"));
-            await driver.executeScript("arguments[0].click();", element);
-//            await driver.findElement(By.css(".btn-danger")).click();
+            await driver.findElement(By.css(".btn-danger")).click();
         }
         else
             console.log("Delete Parts failed: Computerized type not found");
@@ -152,9 +146,7 @@ var myArgs = process.argv.slice(2);
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
             await new Promise(r => setTimeout(r, 8000)); //circleci firefox
-	    var element = await driver.findElement(By.xpath("//input[3]"));
-            await driver.executeScript("arguments[0].click();", element);
-//            await driver.findElement(By.css(".btn-danger")).click();
+            await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
 	    console.log("Delete Parts failed: Sewing Template not found");
@@ -179,9 +171,7 @@ var myArgs = process.argv.slice(2);
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
             await new Promise(r => setTimeout(r, 8000));  //circleci firefox
-            var element = await driver.findElement(By.xpath("//input[3]"));
-            await driver.executeScript("arguments[0].click();", element);
-//            await driver.findElement(By.css(".btn-danger")).click();
+            await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
 	    console.log("Delete Parts failed: Wheel Template not found");
@@ -206,9 +196,7 @@ var myArgs = process.argv.slice(2);
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
             await new Promise(r => setTimeout(r, 8000));  //circleci firefox keeps failing here
-	    var element = await driver.findElement(By.xpath("//input[3]"));
-            await driver.executeScript("arguments[0].click();", element);
-//            await driver.findElement(By.css(".btn-danger")).click();
+            await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
 	    console.log("Delete Parts failed: Pin Template not found");
