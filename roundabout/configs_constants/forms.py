@@ -286,7 +286,7 @@ class ConfPartCopyForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.part_id = kwargs.pop('part_id')
         super(ConfPartCopyForm, self).__init__(*args, **kwargs)
-        self.fields['from_part'].queryset = Part.objects.filter(part_type__name='Instrument').exclude(id__in=str(self.part_id))
+        self.fields['from_part'].queryset = Part.objects.filter(part_type__name='Instrument', config_name_events__gt=0).exclude(id__in=str(self.part_id))
 
     def clean_from_part(self):
         from_part = self.cleaned_data.get('from_part')
