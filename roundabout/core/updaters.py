@@ -19,7 +19,7 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from roundabout.inventory.models import Inventory, Action, DeploymentAction, Deployment
+from roundabout.inventory.models import Inventory, Action, DeploymentAction, Deployment, InventoryDeployment
 from roundabout.builds.models import Build, BuildAction
 
 
