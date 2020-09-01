@@ -9,6 +9,7 @@ const firefox = require('selenium-webdriver/firefox');
 
 var driver;
 var myArgs = process.argv.slice(2);
+//let fs = require('fs');
 
 (async function testParts() {
 
@@ -49,7 +50,7 @@ var myArgs = process.argv.slice(2);
     }
     else
     {
-        // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
+        // 1 | open | https://ooi-cgrdb-staging.whoi.net/      
         await driver.get("https://ooi-cgrdb-staging.whoi.net/");
     }
 
@@ -100,8 +101,9 @@ var myArgs = process.argv.slice(2);
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 20000)); //circleci firefox
-            await driver.findElement(By.id("delete-form")).click();  //Required for circleci firefox - dying on btn-danger.click
+            await new Promise(r => setTimeout(r, 8000)); //circleci firefox
+   	    //let encodedString = await driver.takeScreenshot();
+            //await fs.writeFileSync('./sewing.png', encodedString, 'base64');
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
@@ -126,8 +128,7 @@ var myArgs = process.argv.slice(2);
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 20000));  //circleci firefox
-	   await driver.findElement(By.id("delete-form")).click();
+            await new Promise(r => setTimeout(r, 8000));  //circleci firefox
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
@@ -154,8 +155,7 @@ var myArgs = process.argv.slice(2);
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 20000));  //circleci firefox keeps failing here
-            await driver.findElement(By.id("delete-form")).click();
+            await new Promise(r => setTimeout(r, 8000));  //circleci firefox keeps failing here
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
