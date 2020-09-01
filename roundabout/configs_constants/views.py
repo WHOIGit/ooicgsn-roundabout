@@ -38,6 +38,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.forms.models import inlineformset_factory, BaseInlineFormSet
 from roundabout.inventory.utils import _create_action_history
+from roundabout.calibrations.utils import handle_reviewers
 
 # Handles creation of Configuration / Constant Events, along with Name/Value formsets
 class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
@@ -56,6 +57,7 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
             names = ConfigName.objects.filter(config_name_event = inv_inst.part.config_name_events.first(), config_type = 'conf')
         form_class = self.get_form_class()
         form = self.get_form(form_class)
+        form.fields['user_draft'].required = True
         ConfigEventValueAddFormset = inlineformset_factory(
             ConfigEvent, 
             ConfigValue, 
@@ -188,6 +190,7 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         extra_rows = len(part_config_names) - len (event_config_names)
         form_class = self.get_form_class()
         form = self.get_form(form_class)
+        form.fields['user_draft'].required = False
         ConfigEventValueAddFormset = inlineformset_factory(
             ConfigEvent, 
             ConfigValue, 
@@ -260,11 +263,7 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
     def form_valid(self, form, config_event_value_form):
         form.instance.inventory = self.object.inventory
         form.instance.approved = False
-        if form.cleaned_data['user_draft'].exists():
-            draft_users = form.cleaned_data['user_draft']
-            for user in draft_users:
-                form.instance.user_draft.add(user)
-                form.instance.user_approver.remove(user)
+        handle_reviewers(form)
         if form.cleaned_data['deployment']:
             latest_deploy_date = form.instance.deployment.build.actions.filter(action_type=Action.DEPLOYMENTTOFIELD).first()
             if latest_deploy_date:
@@ -349,6 +348,7 @@ class EventConfigNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
+        form.fields['user_draft'].required = True
         part_confname_form = PartConfigNameFormset(
             instance=self.object
         )
@@ -455,6 +455,7 @@ class EventConfigNameUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFor
         part_id = self.object.part.id
         form_class = self.get_form_class()
         form = self.get_form(form_class)
+        form.fields['user_draft'].required = False
         part_confname_form = PartConfigNameFormset(
             instance=self.object
         )
@@ -491,10 +492,7 @@ class EventConfigNameUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFor
         form.instance.part = self.object.part
         form.instance.approved = False
         form.save()
-        if form.cleaned_data['user_draft'].exists():
-            draft_users = form.cleaned_data['user_draft']
-            for user in draft_users:
-                form.instance.user_draft.add(user)
+        handle_reviewers(form)
         self.object = form.save()
         part_confname_form.instance = self.object
         part_confname_form.save()
@@ -585,6 +583,7 @@ class EventDefaultAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         const_names = conf_name_event.config_names.filter(config_type='cnst')
         form_class = self.get_form_class()
         form = self.get_form(form_class)
+        form.fields['user_draft'].required = True
         EventDefaultAddFormset = inlineformset_factory(
             ConstDefaultEvent, 
             ConstDefault, 
@@ -684,6 +683,7 @@ class EventDefaultUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
         self.object = self.get_object()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
+        form.fields['user_draft'].required = False
         conf_name_event = self.object.inventory.part.config_name_events.first()
         const_names = conf_name_event.config_names.filter(config_type='cnst')
         event_default_names = self.object.constant_defaults.all()
@@ -738,11 +738,7 @@ class EventDefaultUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
     def form_valid(self, form, event_default_form):
         form.instance.inventory = self.object.inventory
         form.instance.approved = False
-        if form.cleaned_data['user_draft'].exists():
-            draft_users = form.cleaned_data['user_draft']
-            for user in draft_users:
-                form.instance.user_draft.add(user)
-                form.instance.user_approver.remove(user)
+        handle_reviewers(form)
         self.object = form.save()
         event_default_form.instance = self.object
         event_default_form.save()
@@ -825,6 +821,7 @@ class EventConfigDefaultAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         conf_names = conf_name_event.config_names.filter(config_type='conf')
         form_class = self.get_form_class()
         form = self.get_form(form_class)
+        form.fields['user_draft'].required = True
         EventConfigDefaultAddFormset = inlineformset_factory(
             ConfigDefaultEvent, 
             ConfigDefault, 
@@ -924,6 +921,7 @@ class EventConfigDefaultUpdate(LoginRequiredMixin, AjaxFormMixin, CreateView):
         self.object = self.get_object()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
+        form.fields['user_draft'].required = False
         part_confname_event = self.object.assembly_part.part.config_name_events.first()
         part_config_names = part_confname_event.config_names.filter(config_type='conf')
         event_config_names = self.object.config_defaults.all()
@@ -977,10 +975,7 @@ class EventConfigDefaultUpdate(LoginRequiredMixin, AjaxFormMixin, CreateView):
     def form_valid(self, form, event_default_form):
         form.instance.assembly_part = self.object.assembly_part
         form.instance.approved = False
-        if form.cleaned_data['user_draft'].exists():
-            draft_users = form.cleaned_data['user_draft']
-            for user in draft_users:
-                form.instance.user_draft.add(user)
+        handle_reviewers(form)
         self.object = form.save()
         event_default_form.instance = self.object
         event_default_form.save()
