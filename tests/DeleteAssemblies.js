@@ -101,7 +101,7 @@ var myArgs = process.argv.slice(2);
             await driver.findElement(By.css(".btn-danger")).click();
         }
         else
-            console.log("Delete Parts failed: Electric type not found");
+            console.log("Delete Assemblies failed: Electric type not found");
 
        // Searches for and deletes the Assemblies added during the Add and Update Assemblies Test
 	    await new Promise(r => setTimeout(r, 4000));  //required for firefox
