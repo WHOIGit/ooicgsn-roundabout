@@ -7,7 +7,8 @@ RUN apt-get install iputils-ping -y && apt-get install net-tools -y
 RUN apt-get install -y wget && apt install -y unzip
 
 # At Circleci root dir
-COPY ./tests /tests
+COPY ./tests/*.bat /tests/
+COPY ./tests/*.js /tests/
 
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
 RUN apt-get install -y nodejs
