@@ -221,9 +221,10 @@ $(document).ready(function() {
         $('#div_id_cal_dec_places').hide();
     }
 
+    // On-change of dropdown selection, obtain part type name, show/hide max-cal attribute 
     $('#id_part_type').change(function() {
-        let part_id = $(this).val();
-        if (part_id == 3) {
+        let part_type = $(this).find('option:selected').text();
+        if (part_type == ' Instrument') {
             $('#div_id_cal_dec_places').show();
         } else {
             $('#div_id_cal_dec_places').hide();

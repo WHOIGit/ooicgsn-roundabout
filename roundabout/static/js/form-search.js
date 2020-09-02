@@ -275,12 +275,12 @@ function DoSubmit(e){
 
         field_texts.forEach(function(field_text){
             const idx = avail_fields.findIndex(f => f.text === field_text)
-            if ( ! lookup_categories[avail_fields[idx].legal_lookups].includes(lookup_value) ){
+            if ( ! lookup_categories[avail_fields[idx].legal_lookup].includes(lookup_value) ){
                 validation_alerts.push(`Field "${field_text}" cannot be used with "${lookup_text}".`)
             }
 
             //Assert that date input is valid
-            if (avail_fields[idx].legal_lookups === 'DATE_LOOKUP') {
+            if (avail_fields[idx].legal_lookup === 'DATE_LOOKUP') {
                 if ( !( query_value.match(/^\d{4}-\d{2}-\d{2}$/) ||
                         query_value.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)) ){
                     validation_alerts.push(`Date query "${query_value}" is invalid. Must use "YYYY-MM-DD" or "YYYY-MM-DD HH:MM" format`)
@@ -296,7 +296,7 @@ function DoSubmit(e){
             }
 
             //Assert that boolean field recieves only legal boolean input/query
-            if (avail_fields[idx].legal_lookups === 'BOOL_LOOKUP'){
+            if (avail_fields[idx].legal_lookup === 'BOOL_LOOKUP'){
                 if (['True','False'].includes(query_value)) {  }
                 else if(['TRUE','true','T','t','1','yes','Yes','YES','y','Y'].includes(query_value))
                     { query_input.val('True') }
@@ -335,22 +335,22 @@ function DoSubmit(e){
 // CSV DOWNLOADING STUFF //
 
 function buttonload_spinner(on_or_off =null, button_id='#search--download-csv-button', fa_replace=null){
-    const csv_button = $(button_id)
-    const button_icon = csv_button.find('span')
+    const spin_button = $(button_id)
+    const button_icon = spin_button.find('span')
     if (on_or_off === 'on'){
-        csv_button.prop('disabled',true)
+        spin_button.prop('disabled',true)
         button_icon.addClass('fa-spinner fa-spin')
         if (fa_replace) { button_icon.removeClass(fa_replace) }
     }
     else if (on_or_off === 'off'){
-        csv_button.prop('disabled',false)
+        spin_button.prop('disabled',false)
         button_icon.removeClass('fa-spinner fa-spin')
         if (fa_replace) { button_icon.addClass(fa_replace) }
     }
     else{ // straight up toggle
-        if (csv_button.prop('disabled'))
-           {csv_button.prop('disabled',false)}
-        else{ csv_button.prop('disabled',true) }
+        if (spin_button.prop('disabled'))
+           {spin_button.prop('disabled',false)}
+        else{ spin_button.prop('disabled',true) }
         button_icon.toggleClass('fa-spinner fa-spin')
         if (fa_replace) { button_icon.toggleClass(fa_replace) }
     }

@@ -34,6 +34,7 @@ from .forms import *
 from roundabout.assemblies.models import Assembly, AssemblyPart, AssemblyRevision
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory, Action
+from roundabout.inventory.utils import _create_action_history
 from roundabout.admintools.models import Printer
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
@@ -109,8 +110,11 @@ def load_new_build_id_number(request):
                 builds_qs = Build.objects.filter(assembly=assembly_obj).filter(build_number__iregex=regex)
                 if builds_qs:
                     build_last = builds_qs.latest('id')
-                    last_serial_number_fragment = int(build_last.build_number.split('-')[-1])
-                    new_serial_number_fragment = last_serial_number_fragment + 1
+                    try:
+                        last_serial_number_fragment = int(build_last.build_number.split('-')[-1])
+                        new_serial_number_fragment = last_serial_number_fragment + 1
+                    except:
+                        new_serial_number_fragment = fragment_default
                     # Fill fragment with leading zeroes if necessary
                     if fragment_length:
                         new_serial_number_fragment = str(new_serial_number_fragment).zfill(fragment_length)
@@ -183,7 +187,7 @@ class BuildDetailView(LoginRequiredMixin, DetailView):
         # Get Lat/Long, Depth if Deployed
         if self.object.is_deployed:
             current_deployment = self.object.current_deployment()
-            action_record = DeploymentAction.objects.filter(deployment=current_deployment).filter(action_type='deploy').first()
+            action_record = DeploymentAction.objects.filter(deployment=current_deployment).filter(action_type='deploymenttosea').first()
 
         context.update({
             'printers': printers,
@@ -226,7 +230,7 @@ class BuildAjaxDetailView(LoginRequiredMixin, DetailView):
         # Get Lat/Long, Depth if Deployed
         if self.object.is_deployed:
             current_deployment = self.object.current_deployment()
-            action_record = DeploymentAction.objects.filter(deployment=current_deployment).filter(action_type='deploy').first()
+            action_record = DeploymentAction.objects.filter(deployment=current_deployment).filter(action_type='deploymenttosea').first()
 
         context.update({
             'printers': printers,
@@ -247,9 +251,8 @@ class BuildAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
     def form_valid(self, form):
         self.object = form.save()
-        action_detail = '%s created.' % (labels['label_builds_app_singular'])
-        action_record = BuildAction.objects.create(action_type='buildadd', detail=action_detail, location=self.object.location,
-                                                   user=self.request.user, build=self.object)
+        # Call the function to create an Action history chain
+        _create_action_history(self.object, Action.ADD, self.request.user)
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -278,6 +281,9 @@ class BuildAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
 
     def form_valid(self, form):
         self.object = form.save()
+        # Create new Action record
+        # Call the function to create an Action history chain
+        _create_action_history(self.object, Action.UPDATE, self.request.user)
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -314,57 +320,21 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
         return form_class_name
 
     def form_valid(self, form):
-        if self.kwargs['action_type'] == 'locationchange':
-            # Find previous location to add to Detail field text
-            old_location_pk = self.object.tracker.previous('location')
-            if old_location_pk:
-                old_location = Location.objects.get(pk=old_location_pk)
-                if old_location.name != self.object.location.name:
-                    self.object.detail = 'Moved to %s from %s. ' % (self.object.location.name, old_location) + self.object.detail
+        action_type = self.kwargs['action_type']
+        action_form = form.save()
+        # Create new Action record
+        # Call the function to create an Action history chain for this event
+        _create_action_history(self.object, action_type, self.request.user)
 
+        if self.kwargs['action_type'] == Action.LOCATIONCHANGE:
             # Get any subassembly children items, move their locations to match parent and add Action to history
             subassemblies = self.object.inventory.all()
             assembly_parts_added = []
             for item in subassemblies:
                 item.location = self.object.location
-                if old_location.name != self.object.location.name:
-                    item.detail = 'Moved to %s from %s' % (self.object.location.name, old_location.name)
-                else:
-                    item.detail = 'Parent Inventory Change'
                 item.save()
-                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location=item.location,
-                                                      user=self.request.user, inventory=item)
-
-        if self.kwargs['action_type'] == 'removefromdeployment':
-            # Find Deployment it was removed from
-            old_deployment_pk = self.object.tracker.previous('deployment')
-            if old_deployment_pk:
-                old_deployment = Deployment.objects.get(pk=old_deployment_pk)
-                self.object.detail = ' Removed from %s.' % (old_deployment.get_deployment_label()) + self.object.detail
-
-            # Get any subassembly children items, add Action to history
-            subassemblies = Inventory.objects.get(id=self.object.id).get_descendants()
-            for item in subassemblies:
-                item.mooring_part = None
-                item.deployment = None
-                item.location = self.object.location
-                item.detail = ' Removed from %s.' % (old_deployment.get_deployment_label())
-                item.save()
-                action_record = Action.objects.create(action_type=self.kwargs['action_type'], detail=item.detail, location_id=item.location_id,
-                                                      user_id=self.request.user.id, inventory_id=item.id)
-
-        if self.kwargs['action_type'] == 'test':
-            self.object.detail = '%s: %s. ' % (self.object.get_test_type_display(), self.object.get_test_result_display()) + self.object.detail
-
-        #if self.kwargs['action_type'] == 'flag':
-            #self.kwargs['action_type'] = self.object.get_flag_display()
-
-        action_form = form.save()
-        action_record = BuildAction.objects.create(action_type=self.kwargs['action_type'],
-                                                   detail=self.object.detail,
-                                                   location=self.object.location,
-                                                   user=self.request.user,
-                                                   build=self.object)
+                # Call the function to create an Action history chain for this event
+                _create_action_history(item, action_type, self.request.user, self.object)
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -383,7 +353,7 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
 
 
 class BuildNoteAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
-    model = BuildAction
+    model = Action
     form_class = BuildActionPhotoNoteForm
     context_object_name = 'action'
     template_name='builds/ajax_inventory_photo_note_form.html'

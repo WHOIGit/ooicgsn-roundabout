@@ -24,7 +24,7 @@
 {% load crispy_forms_tags %}
 
 <div class="card-header">
-    {% if part_template.id %}
+    {% if event_template.id %}
         <h3>Update Calibration(s)</h3>
     {% else %}
         <h3>Add Calibration(s)</h3>
@@ -52,6 +52,10 @@
                 {{ part_cal_copy_form.management_form }}
                 {{ part_cal_copy_form | crispy }}
             </div>
+            <div class="form-group">
+                {{ form.management_form }}
+                {{ form | crispy }}
+            </div>
             <h5 id = '__all__'>Calibration(s)</h5>
             <table class="table table-tight calibration-form" style = 'display:block; overflow: auto; max-height: 100vh'>
               <thead>
@@ -74,7 +78,7 @@
 
         <div class="control-group">
             <div class="controls">
-                {% if part_template.id %}
+                {% if event_template.id %}
                     {% if action_type == 'movetotrash' %}
                         <button type="submit" class="btn btn-danger">Confirm Move to Trash</button>
                     {% else %}
@@ -83,15 +87,12 @@
                 {% else %}
                     <button type="submit" class="btn btn-primary">Add Calibration(s)</button>
                 {% endif %}
-
-                {% if part_template.id %}
-                    <input  class="btn btn-light cancel-btn" 
-                            type="button" 
-                            value="Cancel"
-                            data-detail-url="{% url 'parts:ajax_parts_detail' part_template.id %}"
-                            data-node-id="{{ part_template.id }}" 
-                    />
-                {% endif %}
+                <input  class="btn btn-light cancel-btn" 
+                        type="button" 
+                        value="Cancel"
+                        data-detail-url="{% url 'parts:ajax_parts_detail' part_id %}"
+                        data-node-id="{{ part_id}}" 
+                />
             </div>
         </div>
     </form>

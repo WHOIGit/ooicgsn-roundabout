@@ -1,0 +1,258 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+{% load common_tags %}
+
+<div class="tab-pane fade" id="const-template" role="tabpanel" aria-labelledby="const-template-tab">
+    <ul class="list-group">
+        {% for event in inventory_item.config_events.all %}
+            {% if event.config_values.first.config_name.config_type == 'cnst' %}
+                <li class="list-group-item">
+                    <a  class="collapsed" 
+                        data-toggle="collapse" 
+                        href="#conf_event-{{ event.id }}" 
+                        aria-expanded="false" 
+                        aria-controls="conf_event-{{ event.id }}"
+                    >
+                        {% if event.deployment.build.is_deployed %}
+                            {{ event.get_latest_deployment_date }}
+                        {% else %}
+                            TBD
+                        {% endif %}
+                        -- {{ event.deployment }} ({{ event.deployment.build.actions.first }})
+                    </a>
+                    <a  data-toggle="collapse" 
+                        class="collapsed text-right" 
+                        href="#conf_event-{{ event.id }}" 
+                        aria-controls="conf_event-{{ event.id }}" 
+                        aria-expanded="false" 
+                        role="button"
+                    >
+                        <i class="fa" aria-hidden="true"></i>
+                        <span class="sr-only">Expand/Collapse Configurations/Constants {{ event.configuration_date }}</span>
+                    </a>
+                    {% if user in event.user_draft.all %}
+                        <span id="review-badge" class="badge badge-pill badge-secondary">Review Requested</span>
+                    {% endif %}
+                    {% if event.approved %}
+                        <span id="approve-badge" class="badge badge-pill badge-success">Approved</span> 
+                    {% else %} 
+                        <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span> 
+                    {% endif %}
+                    {% if not user|has_group:"inventory only" %}
+                        <div class = 'ajax-detail-link float-right'>
+                            <a  href="#"
+                                class="btn btn-primary btn-sm mr-2"
+                                role="button"
+                                data-detail-url="{% url 'configs_constants:config_event_value_update' event.id 1 %}"
+                                data-node-id="{{ event.id }}"
+                                data-node-type="{{ event.get_object_type }}">
+                                    Edit Constant Values
+                            </a>
+                        </div>
+                    {% endif %}
+                    <div class="collapse mt-3" id="conf_event-{{ event.id }}">
+                        <hr>
+                        {% if user in event.user_draft.all %}
+                            <button class="btn btn-success btn-sm mr-2" id='expander-date-{{event.id}}' data-reviewer-url="{% url 'configs_constants:event_value_approve' event.id user.id %}">
+                                Approve
+                            </button>
+                        {% endif %}
+                        {% if not user|has_group:"inventory only" %}
+                            <div class="ajax-detail-link float-right">
+                                <a  href="#" 
+                                    class="btn btn-danger btn-sm mr-2"
+                                    data-detail-url="{% url 'configs_constants:config_event_value_delete' event.id %}" 
+                                    role="button" 
+                                >
+                                        Delete
+                                </a>
+                            </div>
+                        {% endif %}
+                        <p id = 'approvers'>Approvers: 
+                            {% for user in event.get_sorted_approvers.all %}
+                                <span id='approver-{{ user.id }}'>{{ user.username }}</span>
+                            {% endfor %}
+                        </p>
+                        <p id = 'reviewers'>Reviewers: 
+                            {% for user in event.get_sorted_reviewers.all %}
+                                <span id='reviewer-{{ user.id }}'>{{ user.username }}</span>
+                            {% endfor %}
+                        </p> 
+                        <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+                            <li class="nav-item">
+                                <a  class="nav-link active" 
+                                    id="documentation-tab" 
+                                    data-toggle="tab" 
+                                    href="#configs_constants" 
+                                    role="tab" 
+                                    aria-controls="configs_constants" 
+                                    aria-selected="false">
+                                        Constants
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="tab-content" id="inventory-tabs">
+                            {% if event.config_values.all %}
+                                <div class="tab-pane fade show active" id="configs_constants" role="tabpanel" aria-labelledby="configs_constants-tab">
+                                    <table class="table table-tight">
+                                        <tbody>
+                                            {% for value_set in event.config_values.all %}
+                                                <tr>
+                                                    <td> 
+                                                        <li class = 'list-group-item'>
+                                                            <a  class="collapse show" 
+                                                                data-toggle="collapse" 
+                                                                href="#const-{{ value_set.config_name }}{{ event.id }}" 
+                                                                aria-expanded="false" 
+                                                                aria-controls="const-{{ value_set.config_name }}{{ event.id }}"
+                                                            >
+                                                                <b>{{ value_set.config_name }}</b>
+                                                            </a>
+                                                            <a  data-toggle="collapse" 
+                                                                class="collapse show text-right" 
+                                                                href="#const-{{ value_set.config_name }}{{ event.id }}" 
+                                                                aria-controls="const-{{ value_set.config_name }}{{ event.id }}" 
+                                                                aria-expanded="false" 
+                                                                role="button"
+                                                            >
+                                                                <i class="fa" aria-hidden="true"></i>
+                                                                <span class="sr-only">Expand/Collapse Configuration {{ value_set.config_name }}</span>
+                                                            </a>
+                                                            <div class="collapse show mt-1" id="const-{{ value_set.config_name }}{{ event.id }}">
+                                                                <p class='font-weight-light'><b>Notes:</b> {{ value_set.notes }}</p>
+                                                                <table id = 'const-val-table' class="table table-tight">
+                                                                    <thead>
+                                                                        <th>Value(s)</th>
+                                                                    </thead>
+                                                                    <tbody class = 'const-tbody' id = 'const-val-tbody' style = 'display:block; overflow: auto; max-height: 200px'>
+                                                                        <tr style = 'display: block;'>
+                                                                            <td style = 'white-space: nowrap'>{{ value_set.config_value }}</td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </li>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+                                    <li class="nav-item">
+                                        <a  class="nav-link active" 
+                                            id="default_event_history-tab" 
+                                            data-toggle="tab" 
+                                            href="#default_event_history" 
+                                            role="tab" 
+                                            aria-controls="default_event_history" 
+                                            aria-selected="false">
+                                                Event History
+                                        </a>
+                                    </li>
+                                </ul>
+                                <table class="table table-tight">
+                                    <tbody>
+                                        <tr>
+                                            <td> 
+                                                <li class = 'list-group-item' style = 'display:block; overflow: auto; max-height: 200px'>
+                                                    <table class="table table-tight table-striped action-table">
+                                                        <thead>
+                                                            <th>Date</th>
+                                                            <th>Action</th>
+                                                            <th>Details</th>
+                                                            <th>Person</th>
+                                                        </thead>
+                                                        <tbody style = 'overflow: auto; max-height: 200px'>
+                                                            {% for action in event.get_actions.all %}
+                                                                <tr>
+                                                                    <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
+                                                                    <td>{{ action.get_action_type_display }}</td>
+                                                                    <td>
+                                                                        {{ action.detail|safe }}
+                                                                    </td>
+                                                                    <td>{{ action.user.username }}</td>
+                                                                </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </li>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            {% endif %}
+                        </div>
+                    </div>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</div>
+
+
+{% block javascript %}
+<script>
+    $(document).ready(function(){
+
+        // Toggle display of Calibration and Configuration Actions sections
+        let inv_part_type = '{{ inventory_item.part.part_type }}';
+        let deployment = '{{ inventory_item.build.current_deployment }}';
+        let user_id = '{{ user.id }}';
+        let part_has_consts = '{{ part_has_consts }}';
+
+        // if (inv_part_type == 'Instrument' && deployment != 'None' && deployment.length > 0 && part_has_consts == 'True') {
+        //     $('#add_const_action').show();
+        //     $('#const-template-tab').show().css('display', '');
+        //     $('#const-template').show().css('display', '');
+        // } else {
+        //     $('#add_const_action').hide();
+        //     $('#const-template-tab').hide();
+        //     $('#const-template').hide();
+        // }
+
+        $('#const-template').on('click', 'button[id^=expander]', function(e) {
+            e.preventDefault();
+            let url = $(this).attr('data-reviewer-url');
+            let grandParent = $(this).parent().parent()
+            let review_badge = grandParent.find('#review-badge');
+            let progress_badge = grandParent.find('#progress-badge');
+            let reviewer = grandParent.find('#reviewer-' + user_id)
+            let approver_list = grandParent.find('#approvers');
+            if (review_badge.length) {
+                $.ajax({
+                    url: url,
+                    success: function (data) {
+                        if (data.approved) {
+                            review_badge.after('<span id = "approve-badge" class = "badge badge-pill badge-success">Approved</span>');
+                            progress_badge.hide();
+                        }
+                        $(this).remove();
+                        approver_list.append("<span id='approver-{{ user.id }}'>{{ user.username }}</span>");
+                        review_badge.remove();
+                        reviewer.hide();
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock javascript %}

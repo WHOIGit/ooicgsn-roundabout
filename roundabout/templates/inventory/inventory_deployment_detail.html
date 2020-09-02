@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -18,54 +18,222 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 -->
-
 {% load static i18n %}
+{% load common_tags %}
 
-                <div class="card-header"><h3>Deployment {{ deployment.deployment_number }} - {{ deployment.final_location.location_id }}</h3></div>
+<a class="collapsed" data-toggle="collapse" href="#deployment-{{ inventory_deployment.id }}" aria-expanded="false" aria-controls="deployment-{{ inventory_deployment.id }}">
+    {{ inventory_deployment.deployment.build.build_number }} - {{ label_deployments_app_singular }}: {{ inventory_deployment.deployment }}
+</a>
 
-                <div class="card-body">
+<a data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ inventory_deployment.id }}" aria-controls="deployment-{{ inventory_deployment.id }}" aria-expanded="false" role="button">
+    <i class="fa" aria-hidden="true"></i>
+    <span class="sr-only">Expand/Collapse Revision {{ inventory_deployment.deployment }}</span>
+</a>
 
-                    <div class="dropdown float-right">
-                      <button id="action" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-primary">
-                        Choose Action
-                      </button>
-                      <div class="dropdown-menu" aria-labelledby="action">
-                            <a class="dropdown-item" href="#">Update Completion %</a>
-                            <a class="dropdown-item" href="{% url 'deployments:deployment_deploy_confirm' deployment.id %}">Deploy to Sea</a>
-                      </div>
-                    </div>
+<div class="progress" style="height: 20px;">
+    <div class="progress-bar {{ inventory_deployment.deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ inventory_deployment.deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ inventory_deployment.deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
+        <span>{{ inventory_deployment.deployment_progress_bar|get_item:'status_label' }}</span>
+    </div>
+</div>
 
-                    <p>Current Location: {{ deployment.location.name }}</p>
-                    <p>Deployment Number: {{ deployment.deployment_number }}</p>
-                    <p>Deployment ID: {{ deployment.final_location.location_id }}</p>
+<div class="collapse mt-3" id="deployment-{{ inventory_deployment.id }}">
 
-                    <hr>
+    <p>Build:
+        <a href="{% url 'builds:builds_detail' inventory_deployment.deployment.build.id %}">{{ inventory_deployment.deployment.build }}</a>
+    </p>
 
-                    <h4>Percent Complete</h4>
+    <p>{{ label_deployments_app_singular }} Location: {{ inventory_deployment.deployment.deployed_location }}</p>
 
-                    <div class="progress" style="height: 20px;">
-                      <div class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25%</div>
-                    </div>
+    {% if inventory_deployment.deployment_to_field_date %}
+        <p>{{ label_deployments_app_singular }} To Field Date: {{ inventory_deployment.deployment_to_field_date }}</p>
+    {% endif %}
+
+    {% if inventory_deployment.deployment_recovery_date %}
+        <p>{{ label_deployments_app_singular }} Recovery Date: {{ inventory_deployment.deployment_recovery_date }}</p>
+    {% endif %}
+
+    {% if inventory_deployment.cruise_deployed %}
+        <p>Cruise Deployed On:
+            <a href="{% url 'cruises:cruises_detail' inventory_deployment.cruise_deployed.id %}">{{ inventory_deployment.cruise_deployed}}</a>
+        </p>
+    {% endif %}
+
+    {% if inventory_deployment.cruise_recovered %}
+        <p>Cruise Recovered On:
+            <a href="{% url 'cruises:cruises_detail' inventory_deployment.cruise_recovered.id %}">{{ inventory_deployment.cruise_recovered }}</a>
+        </p>
+    {% endif %}
+
+    <p>Current Build Deployment Status: {{ inventory_deployment.deployment.deployment_number }}<br>
+        <div class="progress" style="height: 20px;">
+            <div class="progress-bar {{ inventory_deployment.deployment.deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ inventory_deployment.deployment.deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ inventory_deployment.deployment.deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
+                <span>{{ inventory_deployment.deployment.deployment_progress_bar|get_item:'status_label' }}</span>
+            </div>
+        </div>
+    </p>
+
+    {% if inventory_deployment.deployment_to_field_date %}
+    <p><strong>Item's Time on Deployment vs. Total {{ label_builds_app_singular }} Deployment</strong></p>
+    <hr>
+    <p>Inventory Time in Field: {{ inventory_deployment.deployment_time_in_field|time_at_sea_display }}</p>
+    {% if inventory_deployment.deployment.deployment_time_in_field %}
+        <p>Total Build Deployment Time in Field: {{ inventory_deployment.deployment.deployment_time_in_field|time_at_sea_display }}</p>
+    {% endif %}
+
+	    <div id="deployment-percent-{{ inventory_deployment.id }}"></div>
 
 
 
+    {% endif %}
 
+    <table class="table table-striped action-table">
+        <thead>
+          <th>Date</th>
+          <th>Action</th>
+          <th>Details</th>
+          <th>Person</th>
+          <th>Location</th>
 
-
-                </div>
-
+        </thead>
+        <tbody>
+          {% for action in inventory_deployment.actions.all %}
+            <tr>
+                <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
+                <td>{{ action.get_action_type_display }}</td>
+                <td>
+                    {{ action.detail|safe }}
+                </td>
+                <td>{{ action.user.username }}</td>
+                <td>{{ action.location.name }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+  </table>
+</div>
 
 {% block javascript %}
 
-
-
 <script>
+    var containerID = 'deployment-percent-' + {{ inventory_deployment.id }};
+    var deploymentPecentage = {{ inventory_deployment.deployment_percentage_vs_build }};
+    var timeInField = '{{ inventory_deployment.deployment_time_in_field|time_at_sea_display }}';
+    var deploymentTotalTime = '{{ inventory_deployment.deployment.deployment_time_in_field|time_at_sea_display }}'
 
-$(document).ready(function() {
+    Highcharts.chart(containerID, {
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: 0,
+            plotShadow: false,
+            spacingBottom: 0,
+            spacingTop: 0,
+            marginTop: 0,
+            marginBottom: 0
+        },
+        title: {
+            text: {{ inventory_deployment.deployment_percentage_vs_build }} + '% of <br>Total Deployment',
+            align: 'center',
+            verticalAlign: 'middle',
+            y: 60
+        },
+        tooltip: {
+            formatter: function() { return ' ' +
+                this.point.name + '<br />' +
+                'Time in Field: ' + this.point.time
+            }
+        },
+        accessibility: {
+            point: {
+                valueSuffix: '%'
+            }
+        },
+        plotOptions: {
+            pie: {
+                dataLabels: {
+                    enabled: true,
+                    distance: -50,
+                    style: {
+                        fontWeight: 'bold',
+                        color: 'white'
+                    }
+                },
+                startAngle: -90,
+                endAngle: 90,
+                center: ['50%', '75%'],
+                size: '110%'
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Deployment Percentage',
+            innerSize: '50%',
+            data: [
+                {
+                    name: 'Item\'s Time On Deployment',
+                    y: deploymentPecentage,
+                    time: timeInField,
+                },
+                {
+                    name: 'Total Build Deployment',
+                    y: 100 - deploymentPecentage,
+                    time: deploymentTotalTime,
+                },
+            ]
+        }]
+    });
+    /*
+    Highcharts.chart(containerID, {
+        'chart': {
+            'type': 'solidgauge'
+        },
 
+        'title': null,
 
-});
+        'tooltip': {
+            'enabled': false
+        },
+
+        'pane': {
+          'center': ['50%', '50%'],
+          'size': '200px',
+          'startAngle': 0,
+          'endAngle': 360,
+          'background': {
+            'backgroundColor': '#EEE',
+            'innerRadius': '80%',
+            'outerRadius': '100%',
+            'borderWidth': 0
+          }
+        },
+
+        'yAxis': {
+          'min': 0,
+          'max': 100,
+          'labels': {
+            'enabled': false
+          },
+
+          'lineWidth': 0,
+          'minorTickInterval': null,
+          'tickPixelInterval': 400,
+          'tickWidth': 0
+        },
+
+        'plotOptions': {
+            'solidgauge': {
+                'innerRadius': '80%'
+            }
+        },
+
+        'series': [{
+            'name': 'Speed',
+            'data': [80],
+            'dataLabels': {
+                'enabled': false
+            }
+        }]
+    });
+    */
+
 </script>
-
 
 {% endblock javascript %}

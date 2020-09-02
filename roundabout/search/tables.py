@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -24,15 +24,16 @@ from django.urls import reverse
 from django.db.models import Count
 
 import django_tables2 as tables
-from django_tables2.columns import Column, DateTimeColumn, BooleanColumn, ManyToManyColumn
+from django_tables2.columns import Column, DateColumn, DateTimeColumn, BooleanColumn, ManyToManyColumn
 from django_tables2_column_shifter.tables import ColumnShiftTable
 
 from roundabout.parts.models import Part
-from roundabout.builds.models import Build, BuildAction
-from roundabout.inventory.models import Inventory, Action, DeploymentAction
+from roundabout.builds.models import Build
+from roundabout.inventory.models import Inventory, Action
 from roundabout.assemblies.models import Assembly
 from roundabout.userdefinedfields.models import Field
-
+from roundabout.calibrations.models import CalibrationEvent
+from roundabout.configs_constants.models import ConfigEvent
 
 class UDF_Column(ManyToManyColumn):
     prefix = 'udf-'
@@ -73,9 +74,9 @@ class UDF_Column(ManyToManyColumn):
 class SearchTable(ColumnShiftTable):
     class Meta:
         template_name = "django_tables2/bootstrap4.html"
+        fields = []
         base_shown_cols = []
         attrs = {'style':'display: block; overflow-x: auto;'}
-        #attrs = {'style':'display: block; overflow-x: auto; white-space: nowrap;'}
 
     def set_column_default_show(self, table_data):
         if not self.Meta.base_shown_cols:
@@ -89,18 +90,8 @@ class SearchTable(ColumnShiftTable):
 class InventoryTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Inventory
-        action_accessors = ['inventory_actions__latest__action_type', 'inventory_actions__latest__user__name', 'inventory_actions__latest__created_at', 'inventory_actions__latest__location__name', 'inventory_actions__latest__detail']
         udf_accessors = ['fieldvalues__field__field_name','fieldvalues__field_value']
-        fields = ['serial_number','part__name','part__part_number','location__name']
         base_shown_cols = ['serial_number', 'part__name', 'location__name']
-
-    # default columns
-    serial_number = Column(verbose_name='Serial Number', attrs={'style':'white-space: nowrap;'},
-              linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('pk')]))
-    part__name = Column(verbose_name='Name')
-    location__name = Column(verbose_name='Location')
-    part__part_number = Column(verbose_name='Part Number', attrs={'style':'white-space: nowrap;'},
-                   linkify=dict(viewname="parts:parts_detail", args=[tables.A('part__pk')]))
 
     def set_column_default_show(self,table_data):
         search_cols = [col for col in self.sequence if col.startswith('searchcol-')]
@@ -109,23 +100,11 @@ class InventoryTable(SearchTable):
                                                  or col.startswith('searchcol-'+UDF_Column.prefix)]
         self.column_default_show = self.Meta.base_shown_cols + search_cols
 
-    def render_inventory_actions__latest__action_type(self,value):
-        try: disp_value = [text for val,text in Action.ACT_TYPES if val==value][0]
-        except IndexError: disp_value = value
-        return disp_value
-
-    def render_inventory_actions__latest__detail(self,value):
-        return mark_safe(value)
 
 class PartTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Part
-        fields = ["part_number", 'name', 'part_type__name']
-        base_shown_cols = fields
-
-    part_number = Column(verbose_name='Part Number', attrs={'style':'white-space: nowrap;'},
-                   linkify=dict(viewname='parts:parts_detail',args=[tables.A('pk')]))
-    part_type__name = Column(verbose_name='Type')
+        base_shown_cols = ["part_number", 'name', 'part_type__name']
 
     def set_column_default_show(self,table_data):
         search_cols = [col for col in self.sequence if col.startswith('searchcol-')]
@@ -134,16 +113,13 @@ class PartTable(SearchTable):
                                                  or col.startswith('searchcol-'+UDF_Column.prefix)]
         self.column_default_show = self.Meta.base_shown_cols + search_cols
 
+
 class BuildTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Build
-        action_accessors = ['build_actions__latest__action_type', 'build_actions__latest__user__name', 'build_actions__latest__created_at','build_actions__latest__location__name','build_actions__latest__detail']
-        fields = ['build','assembly__name','build_number','assembly__assembly_type__name','location__name','time_at_sea','is_deployed']
         base_shown_cols = ['build','assembly__assembly_type__name','location__name','time_at_sea','is_deployed']
 
     build=Column(empty_values=(), order_by=('assembly__assembly_number','build_number'), attrs={'style':'white-space: nowrap;'})
-    location__name = Column(verbose_name='Location', accessor='location__name')
-    assembly__assembly_type__name = Column(verbose_name='Type')
 
     def render_build(self, record):
         item_url = reverse("builds:builds_detail", args=[record.pk])
@@ -153,20 +129,65 @@ class BuildTable(SearchTable):
     def value_build(self,record):
         return '{}-{}'.format(record.assembly.assembly_number, record.build_number.replace('Build ',''))
 
-    def render_build_actions__latest__action_type(self,value,record):
-        try: disp_value = [text for val,text in BuildAction.ACT_TYPES if val==value][0]
-        except IndexError: disp_value = value
-        return disp_value
-
-    def render_build_actions__latest__detail(self,value):
-        return mark_safe(value)
 
 class AssemblyTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Assembly
-        fields = ['assembly_number', 'name', 'assembly_type__name', 'description']
         base_shown_cols = ['assembly_number', 'name', 'assembly_type__name']
 
-    assembly_number = Column(verbose_name='Assembly Number', attrs={'style':'white-space: nowrap;'},
-        linkify=dict(viewname='assemblies:assembly_detail',args=[tables.A('pk')]))
-    assembly_type__name = Column(verbose_name='Type')
+
+class ActionTable(SearchTable):
+    class Meta(SearchTable.Meta):
+        model = Action
+        fields = ['action_type','user__name','created_at','detail']
+        base_shown_cols = fields
+
+
+class CalibrationTable(SearchTable):
+    class Meta(SearchTable.Meta):
+        model = CalibrationEvent
+        fields = ['inventory__serial_number','inventory__part__name','calibration_date','deployment','approved','user_approver__all__name','user_draft__all__name']
+        base_shown_cols = ['inventory__serial_number','calibration_date','approved']
+
+    inventory__serial_number = Column(verbose_name='Inventory SN', attrs={'style':'white-space: nowrap;'},
+            linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('inventory__pk')]))
+    inventory__part__name = Column(verbose_name='Part',
+            linkify=dict(viewname="parts:parts_detail", args=[tables.A('inventory__part__pk')]))
+    calibration_date = DateColumn(verbose_name='Calibration Date', format='Y-m-d',
+            linkify=dict(viewname="exports:calibration", args=[tables.A('pk')]))
+
+    user_approver__all__name = ManyToManyColumn(verbose_name='Approvers', accessor='user_approver', transform=lambda x: x.name, default='')
+    user_draft__all__name = ManyToManyColumn(verbose_name='Reviewers', accessor='user_draft', transform=lambda x: x.name, default='')
+
+    coefficient_value_set__names = ManyToManyColumn(verbose_name='Coefficient Names',
+            accessor='coefficient_value_sets', transform=lambda x: x.coefficient_name)
+    coefficient_value_set__notes = ManyToManyColumn(verbose_name='Coefficient Notes',
+            accessor='coefficient_value_sets', transform=lambda x: format_html('<b>{}:</b> [{}]<br>'.format(x.coefficient_name,x.notes)) if x.notes else '', separator='\n')
+
+    detail = Column(verbose_name='CalibrationEvent Note', accessor='detail')
+
+
+class ConfigConstTable(SearchTable):
+    class Meta(SearchTable.Meta):
+        model = ConfigEvent
+        fields = ['inventory__serial_number','inventory__part__name','configuration_date','deployment','approved','user_approver__all__name','user_draft__all__name']
+        base_shown_cols = ['inventory__serial_number','configuration_date','approved']
+
+    inventory__serial_number = Column(verbose_name='Inventory SN', attrs={'style':'white-space: nowrap;'},
+            linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('inventory__pk')]))
+    inventory__part__name = Column(verbose_name='Part',
+            linkify=dict(viewname="parts:parts_detail", args=[tables.A('inventory__part__pk')]))
+    configuration_date = DateColumn(verbose_name='Event Date', format='Y-m-d',
+            linkify=dict(viewname="exports:configconst", args=[tables.A('pk')])
+            )
+
+    user_approver__all__name = ManyToManyColumn(verbose_name='Approvers', accessor='user_approver', transform=lambda x: x.name, default='')
+    user_draft__all__name = ManyToManyColumn(verbose_name='Reviewers', accessor='user_draft', transform=lambda x: x.name, default='')
+
+    config_values__names = ManyToManyColumn(verbose_name='Config/Constant Names',
+            accessor='config_values', transform=lambda x: x.config_name)
+    config_values__notes = ManyToManyColumn(verbose_name='Config/Constant Notes',
+            accessor='config_values', transform=lambda x: format_html('<b>{}:</b> [{}]<br>'.format(x.config_name,x.notes)) if x.notes else '', separator='\n')
+
+    detail = Column(verbose_name='ConfigEvent Note', accessor='detail')
+
