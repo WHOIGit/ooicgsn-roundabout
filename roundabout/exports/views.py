@@ -351,8 +351,9 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
         has_content = None
         csv_writer.writerow(header)
 
+        # skip csv if not all events are approved
         approvals = [obj.approved for obj in bundle if obj is not None]
-        #if not all(approvals): return  # TODO
+        if not all(approvals): return
 
         for obj in bundle:
             if isinstance(obj,CalibrationEvent):
