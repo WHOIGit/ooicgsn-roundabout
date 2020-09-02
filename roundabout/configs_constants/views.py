@@ -124,6 +124,12 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
     def form_valid(self, form, config_event_value_form):
         inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
         form.instance.inventory = inv_inst
+        cfg_type = self.kwargs['cfg_type']
+        if cfg_type == 1:
+            config_type = 'cnst'
+        if cfg_type == 2:
+            config_type = 'conf'
+        form.instance.config_type = config_type
         form.save()
         if form.cleaned_data['user_draft'].exists():
             draft_users = form.cleaned_data['user_draft']
