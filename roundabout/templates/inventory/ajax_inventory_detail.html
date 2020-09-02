@@ -172,21 +172,25 @@
                         data-node-type="constant_default}">Add Constant Defaults</a>
                 {% endif %}
 
-                <a  id="add_const_action"
-                    class="dropdown-item"
-                    href="#"
-                    data-detail-url="{% url 'configs_constants:config_event_value_add' inventory_item.id 1 %}"
-                    data-node-id="{{ inventory_item.id }}"
-                    data-location-id="{{ inventory_item.location.id}}"
-                    data-node-type="config_event}">Add Constants</a>
-
-                <a  id="add_conf_action"
-                    class="dropdown-item"
-                    href="#"
-                    data-detail-url="{% url 'configs_constants:config_event_value_add' inventory_item.id 2 %}"
-                    data-node-id="{{ inventory_item.id }}"
-                    data-location-id="{{ inventory_item.location.id}}"
-                    data-node-type="config_event}">Add Configurations</a>
+                {% if part_has_consts and inventory_item.build.current_deployment %}
+                    <a  id="add_const_action"
+                        class="dropdown-item"
+                        href="#"
+                        data-detail-url="{% url 'configs_constants:config_event_value_add' inventory_item.id 1 %}"
+                        data-node-id="{{ inventory_item.id }}"
+                        data-location-id="{{ inventory_item.location.id}}"
+                        data-node-type="config_event}">Add Constants</a>
+                {% endif %}
+                
+                {% if part_has_configs and inventory_item.build.current_deployment %}
+                    <a  id="add_conf_action"
+                        class="dropdown-item"
+                        href="#"
+                        data-detail-url="{% url 'configs_constants:config_event_value_add' inventory_item.id 2 %}"
+                        data-node-id="{{ inventory_item.id }}"
+                        data-location-id="{{ inventory_item.location.id}}"
+                        data-node-type="config_event}">Add Configurations</a>
+                {% endif %}
             {% endif %}
 
 
