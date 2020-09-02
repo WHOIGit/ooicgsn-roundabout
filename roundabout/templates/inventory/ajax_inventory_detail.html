@@ -154,13 +154,15 @@
                 data-node-type="{{ node_type }}">Edit Inventory Details</a>
 
             {% if not user|has_group:"inventory only" %}
-                <a  id="add_coefficient_action"
-                    class="dropdown-item"
-                    href="#"
-                    data-detail-url="{% url 'calibrations:event_valueset_add' inventory_item.id %}"
-                    data-node-id="{{ inventory_item.id }}"
-                    data-location-id="{{ inventory_item.location.id}}"
-                    data-node-type="calibration_event">Add Calibration Coefficients</a>
+                {% if inventory_item.part.coefficient_name_events.exists %}
+                    <a  id="add_coefficient_action"
+                        class="dropdown-item"
+                        href="#"
+                        data-detail-url="{% url 'calibrations:event_valueset_add' inventory_item.id %}"
+                        data-node-id="{{ inventory_item.id }}"
+                        data-location-id="{{ inventory_item.location.id}}"
+                        data-node-type="calibration_event">Add Calibration Coefficients</a>
+                {% endif %}
 
                 {% if not inventory_item.constant_default_events.exists %}
                     <a  id="add_constdefault_action"
