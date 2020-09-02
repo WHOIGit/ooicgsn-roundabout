@@ -298,7 +298,8 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
                 # calibs carry forwards with each new config until the next calib.
                 # consts always carry forward.
                 # consecutive and trailing calibs need-not be bundled.
-                inv_objs =  sorted(inv_objs,key=lambda x: x.date ) # earliest first
+                inv_objs =  sorted(inv_objs, # earliest objs first. if same-date, sort in calib, constant, config order
+                                   key=lambda x: (x.date,['calib','cnst','conf'].index(getattr(x,'config_type','calib'))))
 
                 # TESTING #
                 #if inv_objs[0].inventory.serial_number == 'CGINS-CTDBPF-50001':
