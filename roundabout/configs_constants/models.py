@@ -43,6 +43,10 @@ class ConfigEvent(models.Model):
         (True, "Approved"),
         (False, "Draft"),
     )
+    CONFIG_TYPE = (
+        ("cnst", "Constant"),
+        ("conf", "Configuration"),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     configuration_date = models.DateTimeField(default=timezone.now)
@@ -52,6 +56,7 @@ class ConfigEvent(models.Model):
     deployment = models.ForeignKey(Deployment, related_name='config_events', on_delete=models.CASCADE, null=True)
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
     detail = models.TextField(blank=True)
+    config_type = models.CharField(max_length=4, choices=CONFIG_TYPE, null=False, blank=False, default="cnst")
 
     def get_actions(self):
         return self.actions.filter(object_type=Action.CONFEVENT)
