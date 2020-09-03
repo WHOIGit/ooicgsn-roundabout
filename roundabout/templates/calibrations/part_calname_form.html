@@ -108,15 +108,17 @@
             $('.calibration-form tbody tr').formset({
                 prefix: 'coefficient_names',
                 addText: 'Add Calibration',
-                deleteText: 'Remove',
-                added: function(row) {
-
-                    let remove_button = row.find('.delete-row');
-                    remove_button.addClass('pull-right');
-                }
+                deleteText: 'Remove'
             });
 
-            $('.delete-row').addClass('pull-right');
+            let addRowCount = 0;
+            $('.add-row').each(function() {
+                addRowCount++;
+            })
+
+            if (addRowCount > 1) {
+                $('.add-row')[0].remove();
+            }
         })
 
     </script>
