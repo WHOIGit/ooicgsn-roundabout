@@ -111,7 +111,25 @@
                 deleteText: 'Remove'
             });
 
-            
+            let formRows = $('.dynamic-form');
+            formRows.each(function() {
+                row = $(this)
+                let removeButtons = row.find('.delete-row')
+                for (i = 0; i < removeButtons.length; i++) { 
+                    if (i != 0) {
+                        removeButtons[i].remove()
+                    }
+                }
+            })
+
+            let addRowCount = 0;
+            $('.add-row').each(function() {
+                addRowCount++;
+            })
+
+            if (addRowCount > 1) {
+                $('.add-row')[0].remove();
+            }
         })
 
     </script>
