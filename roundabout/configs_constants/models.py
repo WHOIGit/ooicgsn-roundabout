@@ -74,6 +74,7 @@ class ConfigEvent(models.Model):
     def get_sorted_approvers(self):
         return self.user_approver.all().order_by('username')
 
+
 # Tracks Config Name  history across Parts
 class ConfigNameEvent(models.Model):
     class Meta:

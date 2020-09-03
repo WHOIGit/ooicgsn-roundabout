@@ -19,7 +19,7 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from roundabout.inventory.models import Inventory, Action, DeploymentAction, Deployment
+from roundabout.inventory.models import Inventory, Action, DeploymentAction, Deployment, InventoryDeployment
 from roundabout.builds.models import Build, BuildAction
 
 
@@ -123,7 +123,7 @@ def _update_action_types():
 # Inventory model updates for v1.5 upgrade
 #------------------------------------------------------------------------------
 # Update legacy Inventory Actions to add Build/Parent metadata
-def _update_inv_actions(apps, schema_editor):
+def _update_inv_actions():
     items = Inventory.objects.all()
 
     for item in items:
