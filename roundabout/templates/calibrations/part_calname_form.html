@@ -111,12 +111,12 @@
                 deleteText: 'Remove'
             });
 
-            let submitButtonCount = 0;
+            let addRowCount = 0;
             $('.add-row').each(function() {
-                submitButtonCount++;
+                addRowCount++;
             })
 
-            if (submitButtonCount > 1) {
+            if (addRowCount > 1) {
                 $('.add-row')[0].remove();
             }
         })
