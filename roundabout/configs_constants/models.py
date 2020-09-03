@@ -74,6 +74,16 @@ class ConfigEvent(models.Model):
     def get_sorted_approvers(self):
         return self.user_approver.all().order_by('username')
 
+    @property
+    def config_type(self):
+        vals = self.config_values.all()
+        if all([val.config_name.config_type=='cnst' for val in vals]):
+            return 'cnst'
+        elif all([val.config_name.config_type=='conf' for val in vals]):
+            return 'conf'
+        else:
+            return 'mix'
+
 # Tracks Config Name  history across Parts
 class ConfigNameEvent(models.Model):
     class Meta:
