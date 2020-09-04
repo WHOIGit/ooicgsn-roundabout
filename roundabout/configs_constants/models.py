@@ -43,15 +43,20 @@ class ConfigEvent(models.Model):
         (True, "Approved"),
         (False, "Draft"),
     )
+    CONFIG_TYPE = (
+        ("cnst", "Constant"),
+        ("conf", "Configuration"),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     configuration_date = models.DateTimeField(default=timezone.now)
-    user_draft = models.ManyToManyField(User, related_name='config_events_reviewer')
+    user_draft = models.ManyToManyField(User, related_name='config_events_reviewer', blank=True)
     user_approver = models.ManyToManyField(User, related_name='config_events_approver')
     inventory = models.ForeignKey(Inventory, related_name='config_events', on_delete=models.CASCADE, null=False)
     deployment = models.ForeignKey(Deployment, related_name='config_events', on_delete=models.CASCADE, null=True)
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
     detail = models.TextField(blank=True)
+    config_type = models.CharField(max_length=4, choices=CONFIG_TYPE, null=False, blank=False, default="cnst")
 
     def get_actions(self):
         return self.actions.filter(object_type=Action.CONFEVENT)
@@ -69,6 +74,7 @@ class ConfigEvent(models.Model):
     def get_sorted_approvers(self):
         return self.user_approver.all().order_by('username')
 
+
 # Tracks Config Name  history across Parts
 class ConfigNameEvent(models.Model):
     class Meta:
@@ -83,7 +89,7 @@ class ConfigNameEvent(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    user_draft = models.ManyToManyField(User, related_name='config_name_events_reviewers')
+    user_draft = models.ManyToManyField(User, related_name='config_name_events_reviewers', blank=True)
     user_approver = models.ManyToManyField(User, related_name='config_name_events_approvers')
     part = models.ForeignKey(Part, related_name='config_name_events', on_delete=models.CASCADE, null=True)
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
@@ -153,7 +159,7 @@ class ConstDefaultEvent(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    user_draft = models.ManyToManyField(User, related_name='constant_default_events_reviewer')
+    user_draft = models.ManyToManyField(User, related_name='constant_default_events_reviewer', blank=True)
     user_approver = models.ManyToManyField(User, related_name='constant_default_events_approver')
     inventory = models.ForeignKey(Inventory, related_name='constant_default_events', on_delete=models.CASCADE, null=False)
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
@@ -198,7 +204,7 @@ class ConfigDefaultEvent(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    user_draft = models.ManyToManyField(User, related_name='config_default_events_reviewer')
+    user_draft = models.ManyToManyField(User, related_name='config_default_events_reviewer', blank=True)
     user_approver = models.ManyToManyField(User, related_name='config_default_events_approver')
     assembly_part = models.ForeignKey(AssemblyPart, related_name='config_default_events', on_delete=models.CASCADE, null=False)
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)

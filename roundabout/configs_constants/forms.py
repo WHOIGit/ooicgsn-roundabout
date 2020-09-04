@@ -286,7 +286,7 @@ class ConfPartCopyForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.part_id = kwargs.pop('part_id')
         super(ConfPartCopyForm, self).__init__(*args, **kwargs)
-        self.fields['from_part'].queryset = Part.objects.filter(part_type__name='Instrument').exclude(id__in=str(self.part_id))
+        self.fields['from_part'].queryset = Part.objects.filter(part_type__name='Instrument', config_name_events__gt=0).exclude(id__in=str(self.part_id))
 
     def clean_from_part(self):
         from_part = self.cleaned_data.get('from_part')
@@ -367,8 +367,14 @@ def copy_confignames(to_id, from_id):
 # Validator for Part Config/Constant Copy
 # When a Part is selected, from which to copy Config/Constant Names into another Part, the function checks if duplicate Names exist between the two Parts in question.
 def validate_from_part(to_part, from_part):
-    to_names = [name.name + name.config_type for name in to_part.config_names.all()]
-    from_names = [name.name + name.config_type for name in from_part.config_names.all()]
+    if to_part.config_names.exists():
+        to_names = [name.name + name.config_type for name in to_part.config_names.all()]
+    else:
+        to_names = []
+    if from_part.config_names.exists():
+        from_names = [name.name + name.config_type for name in from_part.config_names.all()]
+    else:
+        from_names = []
     try:
         assert not any(from_name in to_names for from_name in from_names)
     except:

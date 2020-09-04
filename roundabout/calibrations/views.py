@@ -37,6 +37,7 @@ from sigfig import round
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.forms.models import inlineformset_factory, BaseInlineFormSet
+from .utils import handle_reviewers
 
 # Handles creation of Calibration Events, Names,and Coefficients
 class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
@@ -52,6 +53,7 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         cal_names = coeff_event.coefficient_names.all()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
+        form.fields['user_draft'].required = True
         EventValueSetAddFormset = inlineformset_factory(
             CalibrationEvent,
             CoefficientValueSet,
@@ -145,10 +147,38 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         self.object = self.get_object()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        event_valueset_form = EventValueSetFormset(
+        form.fields['user_draft'].required = False
+        coeff_name_event = self.object.inventory.part.coefficient_name_events.first()
+        coeff_name_event_names = coeff_name_event.coefficient_names.all()
+        cal_event_names = [valset.coefficient_name for valset in self.object.coefficient_value_sets.all()]
+        extra_rows = len(coeff_name_event_names) - len(cal_event_names)
+        EventValueSetAddFormset = inlineformset_factory(
+            CalibrationEvent,
+            CoefficientValueSet,
+            form=CoefficientValueSetForm,
+            fields=('coefficient_name', 'value_set', 'notes'),
+            extra=extra_rows,
+            can_delete=True
+        )
+        event_valueset_form = EventValueSetAddFormset(
             instance=self.object,
             form_kwargs={'inv_id': self.object.inventory.id}
         )
+        for idx,name in enumerate(coeff_name_event_names):
+            try:
+                coeff_val_set = CoefficientValueSet.objects.get(coefficient_name = name, calibration_event = self.object)
+            except CoefficientValueSet.DoesNotExist:
+                coeff_val_set = ''
+            if coeff_val_set != '':
+                event_valueset_form.forms[idx].initial = {
+                    'coefficient_name': name,
+                    'value_set': coeff_val_set.value_set,
+                    'notes': coeff_val_set.notes
+                }
+            else:
+                event_valueset_form.forms[idx].initial = {
+                    'coefficient_name': name
+                }
         return self.render_to_response(
             self.get_context_data(
                 form=form,
@@ -174,12 +204,7 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         inv_inst = Inventory.objects.get(id=self.object.inventory.id)
         form.instance.inventory = inv_inst
         form.instance.approved = False
-        if form.cleaned_data['user_draft'].exists():
-            draft_users = form.cleaned_data['user_draft']
-            form.instance.user_draft.clear()
-            for user in draft_users:
-                form.instance.user_draft.add(user)
-                form.instance.user_approver.remove(user)
+        handle_reviewers(form)
         self.object = form.save()
         event_valueset_form.instance = self.object
         event_valueset_form.save()
@@ -335,6 +360,7 @@ class EventCoeffNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMix
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
+        form.fields['user_draft'].required = True
         part_calname_form = PartCalNameFormset(
             instance=self.object
         )
@@ -442,6 +468,7 @@ class EventCoeffNameUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxForm
         part_id = self.object.part.id
         form_class = self.get_form_class()
         form = self.get_form(form_class)
+        form.fields['user_draft'].required = False
         part_calname_form = PartCalNameFormset(
             instance=self.object
         )
@@ -478,10 +505,7 @@ class EventCoeffNameUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxForm
         form.instance.part = self.object.part
         form.instance.approved = False
         form.save()
-        if form.cleaned_data['user_draft'].exists():
-            draft_users = form.cleaned_data['user_draft']
-            for user in draft_users:
-                form.instance.user_draft.add(user)
+        handle_reviewers(form)
         self.object = form.save()
         part_calname_form.instance = self.object
         part_calname_form.save()

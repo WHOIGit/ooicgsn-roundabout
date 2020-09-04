@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -31,7 +31,7 @@ from django.core.validators import FileExtensionValidator
 from model_utils import FieldTracker
 
 from roundabout.locations.models import Location
-from roundabout.inventory.models import Action
+from roundabout.inventory.models import Action, Deployment
 from roundabout.assemblies.models import Assembly, AssemblyRevision
 from roundabout.users.models import User
 
@@ -83,7 +83,7 @@ class Build(models.Model):
     def current_deployment(self):
         if self.is_deployed:
             # get the latest deployment if available
-            current_deployment = self.deployments.latest()
+            current_deployment = self.deployments.exclude(current_status=Deployment.DEPLOYMENTRETIRE).latest()
             return current_deployment
         return None
 
@@ -108,23 +108,9 @@ class Build(models.Model):
             return True
         return False
 
-    # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
+    # get the most recent Deployment timee in field, add this time delta to the time_at_sea column
     def update_time_at_sea(self):
-        try:
-            action_deploy_to_sea = self.actions.filter(object_type='build').filter(action_type=Action.DEPLOYMENTTOFIELD).latest()
-        except BuildAction.DoesNotExist:
-            action_deploy_to_sea = None
-
-        try:
-            action_recover = self.actions.filter(object_type='build').filter(action_type=Action.DEPLOYMENTRECOVER).latest()
-        except BuildAction.DoesNotExist:
-            action_recover = None
-
-        if action_deploy_to_sea and action_recover:
-            latest_time_at_sea =  action_recover.created_at - action_deploy_to_sea.created_at
-        else:
-            latest_time_at_sea = timedelta(minutes=0)
-
+        latest_time_at_sea = self.current_deployment().deployment_time_in_field
         # add to existing Time at Sea duration
         self.time_at_sea = self.time_at_sea + latest_time_at_sea
         self.save()

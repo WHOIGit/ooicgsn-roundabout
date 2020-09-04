@@ -245,7 +245,7 @@ class CalPartCopyForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.part_id = kwargs.pop('part_id')
         super(CalPartCopyForm, self).__init__(*args, **kwargs)
-        self.fields['part_select'].queryset = Part.objects.filter(part_type__name='Instrument').exclude(id__in=str(self.part_id))
+        self.fields['part_select'].queryset = Part.objects.filter(part_type__name='Instrument',coefficient_name_events__gt=0).exclude(id__in=str(self.part_id))
 
     def clean_part_select(self):
         part_select = self.cleaned_data.get('part_select')
@@ -446,8 +446,14 @@ def copy_calibrations(to_id, from_id):
 # Validator for Part Calibration Copy
 # When a Part is selected, from which to copy Calibration Names into another Part, the function checks if duplicate Names exist between the two Parts in question.
 def validate_part_select(to_part, from_part):
-    to_names = [name.calibration_name for name in to_part.coefficient_name_events.first().coefficient_names.all()]
-    from_names = [name.calibration_name for name in from_part.coefficient_name_events.first().coefficient_names.all()]
+    if to_part.coefficient_name_events.exists():
+        to_names = [name.calibration_name for name in to_part.coefficient_name_events.first().coefficient_names.all()]
+    else:
+        to_names = []
+    if from_part.coefficient_name_events.exists():
+        from_names = [name.calibration_name for name in from_part.coefficient_name_events.first().coefficient_names.all()]
+    else:
+        from_names = []
     try:
         assert not any(from_name in to_names for from_name in from_names)
     except:

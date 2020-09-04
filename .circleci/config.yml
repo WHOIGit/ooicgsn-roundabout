@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
-#
+#  
 
 workflows:
   version: 2
@@ -33,7 +33,8 @@ workflows:
 version: 2
 jobs:
   build:
-    machine: true
+    machine:
+       image: ubuntu-1604:202007-01
     steps:
       - checkout
       - run:
@@ -71,6 +72,19 @@ jobs:
           command: >-
             docker-compose --file local.yml run --rm django \
               python manage.py test
+
+      - run:
+          name: Running Automated tests
+          command: >-
+            docker-compose -f local.yml run --rm tests \
+               sh -c "until curl -Is http://localhost:8000; do echo 'sleeping'; sleep 10; done  && 
+                  google-chrome --version && chromedriver --version &&
+                  firefox --version && geckodriver --version &&
+                  nodejs -v &&
+                  ./RunAllTests-Chrome-Linux.bat && 
+                  ./RunAllTests-Firefox-Linux.bat"
+
+
       - run:
           name: Stopping Docker application
           command: >-

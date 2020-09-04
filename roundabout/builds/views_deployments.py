@@ -128,7 +128,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(DeploymentAjaxActionView, self).get_context_data(**kwargs)
-        latest_action_record = DeploymentAction.objects.filter(deployment=self.object).first()
+        latest_action_record = self.object.build.get_actions().filter(deployment=self.object).first()
 
         context.update({
             'latest_action_record': latest_action_record
@@ -212,7 +212,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
 
         build.save()
         # Create Build Action record for deployment
-        build_record = _create_action_history(build, action_type, self.request.user)
+        build_record = _create_action_history(build, action_type, self.request.user, None, '', action_date)
 
         #update Time at Sea if Recovered from Sea with Build model method
         if action_type == 'deploymentrecover':
@@ -252,7 +252,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         for item in inventory_items:
             item.location = build.location
             item.save()
-            _create_action_history(item, action_type, self.request.user, build)
+            _create_action_history(item, action_type, self.request.user, build, '', action_date)
             #update Time at Sea if Recovered from Sea with Inventory model method
             if action_type == Action.DEPLOYMENTRECOVER:
                 item.update_time_at_sea()
