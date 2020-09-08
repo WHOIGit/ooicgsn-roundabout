@@ -167,12 +167,26 @@ class CoefficientValueSetForm(forms.ModelForm):
 class CoefficientNameForm(forms.ModelForm):
     class Meta:
         model = CoefficientName
-        fields = ['calibration_name', 'value_set_type', 'sigfig_override']
+        fields = ['calibration_name', 'value_set_type', 'sigfig_override', 'deprecated']
         labels = {
             'calibration_name': 'Name',
             'value_set_type': 'Type',
-            'sigfig_override': 'Significant Figures'
+            'sigfig_override': 'Significant Figures',
+            'deprecated': 'Deprecated'
         }
+        widgets = {
+            'deprecated': forms.CheckboxInput() 
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(CoefficientNameForm, self).__init__(*args, **kwargs)
+        if self.instance.deprecated:
+            self.fields['calibration_name'].widget.attrs.update(
+                {
+                    'readonly': True,
+                    'style': 'cursor: not-allowed; pointer-events: none; background-color: #d5dfed;'
+                }
+            )
 
     def clean_sigfig_override(self):
         raw_sigfig = self.cleaned_data.get('sigfig_override')
@@ -278,7 +292,7 @@ PartCalNameFormset = inlineformset_factory(
     CoefficientNameEvent, 
     CoefficientName, 
     form=CoefficientNameForm, 
-    fields=('calibration_name', 'value_set_type', 'sigfig_override'), 
+    fields=('calibration_name', 'value_set_type', 'sigfig_override', 'deprecated'), 
     extra=1, 
     can_delete=True
 )
