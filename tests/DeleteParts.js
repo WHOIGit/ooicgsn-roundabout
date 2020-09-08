@@ -101,9 +101,10 @@ var myArgs = process.argv.slice(2);
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 8000)); //circleci firefox
+            await new Promise(r => setTimeout(r, 8000));  //circleci firefox keeps failing here
    	    //let encodedString = await driver.takeScreenshot();
             //await fs.writeFileSync('./sewing.png', encodedString, 'base64');
+	    //await driver.navigate().refresh();  //this did not work
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
@@ -155,7 +156,7 @@ var myArgs = process.argv.slice(2);
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 8000));  //circleci firefox keeps failing here
+            await new Promise(r => setTimeout(r, 8000)); 
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
