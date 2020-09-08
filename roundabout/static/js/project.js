@@ -27,6 +27,7 @@ $(document).ready(function() {
 
     /* Make the Documentation Inline Formset Jquery work */
     $('.form-group').removeClass('row');
+
 });
 
 /* Use History API to load AJAX data on Back button click */
@@ -238,7 +239,7 @@ $(document).ready(function() {
 
               history.pushState(state, '', bookmarkURL);
               console.log(history.state);
-            }
+          }
         });
     });
 
