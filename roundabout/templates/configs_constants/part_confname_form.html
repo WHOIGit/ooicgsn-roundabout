@@ -19,17 +19,13 @@
 # If not, see <http://www.gnu.org/licenses/>.
 -->
 <script type="text/javascript">
-
-    $(document).ready(function() {
         // Handles CoefficientValueSet form instance generation
         $('.conf_name-form tbody tr').formset({
             prefix: 'config_names',
             addText: 'Add Configurations/Constants',
-            //deleteContainerClass: 'delete-here',
+            deleteContainerClass: 'delete-here',
             deleteText: 'Remove'
         });
-    });
-
 </script>
 
 {% load static i18n %}
