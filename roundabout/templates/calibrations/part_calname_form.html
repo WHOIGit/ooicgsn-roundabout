@@ -19,27 +19,23 @@
 # If not, see <http://www.gnu.org/licenses/>.
 -->
 <script type="text/javascript">
+    $(document).ready(function() {
     // Handles CoefficientValueSet form instance generation
-    $('.calibration-form tbody tr').formset({
-        prefix: 'coefficient_names',
-        addText: 'Add Calibration',
-        deleteText: 'Remove'
-    });
+        $('.calibration-form tbody tr').formset({
+            prefix: 'coefficient_names',
+            addText: 'Add Calibration',
+            deleteText: 'Remove'
+        });
 
-    let formRows = $('.dynamic-form');
-    formRows.each(function() {
-        row = $(this)
-        let removeButtons = row.find('.delete-row')
-        let deprecated = row.find("[id$='deprecated']").attr('checked')
-        for (i = 0; i < removeButtons.length; i++) { 
-            if (i != 0) {
-                removeButtons[i].remove()
-            }
-        }
-
-        if (deprecated == 'checked') {
-            removeButtons.remove()
-        } 
+        let formRows = $('.dynamic-form');
+        formRows.each(function() {
+            row = $(this)
+            let removeButtons = row.find('.delete-row')
+            let deprecated = row.find("[id$='deprecated']").attr('checked')
+            if (deprecated == 'checked') {
+                removeButtons.remove()
+            } 
+        })
     })
 </script>
 
