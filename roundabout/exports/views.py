@@ -226,7 +226,7 @@ class ExportConfigEvents(ZipExport):
             cls.zf_safewrite(zf, csv_fname, csv_content.getvalue())
 
     @staticmethod
-    def get_csvrows(confconst):
+    def get_csvrows(confconst, export_with_calibs_only=False):
         filter_kwargs = dict(field__field_name__iexact='Manufacturer Serial Number', is_current=True)
         serial_label_qs = confconst.inventory.fieldvalues.filter(**filter_kwargs)
         if serial_label_qs.exists():
@@ -236,6 +236,7 @@ class ExportConfigEvents(ZipExport):
 
         rows = []
         for confconst_val in confconst.config_values.all():
+            if export_with_calibs_only and not confconst_val.config_name.include_with_calibrations: continue
             row = [serial_label,
                    confconst_val.config_name.name,
                    confconst_val.config_value_with_export_formatting(),
@@ -293,30 +294,47 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
                     bundle = (obj,None)
                     cls.write_csv(zf, bundle, subdir)
 
-            else: # theres a mix of Calibrations and Configurations
+            else: # theres a mix of CalibrationEvents and ConfigEvents.
                 # calibs carry forwards with each new config until the next calib.
+                # consts always carry forward.
                 # consecutive and trailing calibs need-not be bundled.
-                inv_objs =  sorted(inv_objs,key=lambda x: x.date ) # earliest first
+                inv_objs =  sorted(inv_objs, # earliest objs first. if same-date, sort in calib, constant, config order
+                                   key=lambda x: (x.date,['calib','cnst','conf'].index(getattr(x,'config_type','calib'))))
+
+                # TESTING #
+                #if inv_objs[0].inventory.serial_number == 'CGINS-CTDBPF-50001':
+                #    obj_type = [obj.config_values.all()[0].config_name.config_type if isinstance(obj,ConfigEvent) else 'CALIB' for obj in inv_objs]
+                #    dates = [obj.date.strftime('%Y-%m-%d') for obj in inv_objs]
+                #    TBDs = [obj.deployment.current_status if obj.deployment else 'NA' for obj in inv_objs]
+                #    x = list(zip(inv_objs,obj_type, dates, TBDs))
+                #    print(x)
+
                 bundled_objs = []
-                prev, calib, config= None, None, None
+                prev, calib, config, const = None, None, None, None
                 for obj in inv_objs:
                     if isinstance(obj,CalibrationEvent):
                         calib=obj
                     elif isinstance(obj,ConfigEvent):
-                        config=obj
+                        if all([cv.config_name.config_type=='cnst' for cv in obj.config_values.all()]):
+                            const=obj
+                        else: # it's a config.
+                            if obj.deployment: # ie not "TBD"
+                                config=obj
+                            else: continue # skip it if it's TBD, ie not "deployed".
 
                     if obj==config:
                         # config obj's always result in a new csv, incl. previous calibration if any
-                        bundled_objs.append( (calib,config) )
+                        bundled_objs.append( (calib,config,const) )
                     elif obj==calib and isinstance(prev,CalibrationEvent):
                         # consecutive calibrations get their own csv's
-                        bundled_objs.append( (prev,None) )
+                        bundled_objs.append( (prev,None,const) )
 
-                    prev = obj  # note previous object
+                    if obj!=const:
+                        prev = obj  # note previous object, unless it's a constant
 
                 # make sure not to skip an end-of-loop trailing Calibration
                 if isinstance(prev,CalibrationEvent):
-                    bundled_objs.append( (prev,None) )
+                    bundled_objs.append( (prev,None,const) )
 
                 # write bundles to zip as csv's
                 for bundle in bundled_objs:
@@ -325,17 +343,23 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
 
     @classmethod
     def write_csv(cls, zf, bundle, subdir=None):
-        fname_obj = bundle[1] or bundle[0] # config is bundle[1] if avail
+        fname_obj = bundle[1] or bundle[0] # config is in bundle[1] if avail
         csv_fname = '{}__{}.csv'.format(fname_obj.inventory.serial_number, fname_obj.date.strftime('%Y%m%d'))
         csv_content = io.StringIO()
         csv_writer = CSV.writer(csv_content)
         header = ['serial', 'name', 'value', 'notes']
+        has_content = None
         csv_writer.writerow(header)
+
+        # skip csv if not all events are approved
+        approvals = [obj.approved for obj in bundle if obj is not None]
+        if not all(approvals): return
 
         for obj in bundle:
             if isinstance(obj,CalibrationEvent):
                 # Reference to Calibrations-Only Class
                 rows, aux_files = ExportCalibrationEvents.get_csvrows_aux(obj)
+                if rows: has_content = True
                 csv_writer.writerows(rows)
                 for extra_fname, extra_content in aux_files:
                     if subdir: extra_fname = join(subdir, extra_fname)
@@ -343,12 +367,14 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
 
             elif isinstance(obj,ConfigEvent):
                 # Reference to Configs-Only Class
-                rows = ExportConfigEvents.get_csvrows(obj)
+                rows = ExportConfigEvents.get_csvrows(obj,export_with_calibs_only=True)
+                if rows: has_content = True
                 csv_writer.writerows(rows)
 
         # write csv to zip
         if subdir: csv_fname = join(subdir, csv_fname)
-        cls.zf_safewrite(zf, csv_fname, csv_content.getvalue())
+        if has_content: # avoid blank files
+            cls.zf_safewrite(zf, csv_fname, csv_content.getvalue())
 
 
 # Cruises CSV
