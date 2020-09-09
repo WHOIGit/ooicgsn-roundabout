@@ -689,7 +689,7 @@ class ConfigConstTableView(GenericSearchTableView):
         # since search model is CoefficientValueSet and results table is CalibrationEvents,
         # final query results must be CalibrationEvents.
         config_event_ids = qs.values_list('config_event__id', flat=True)
-        qs = CalibrationEvent.objects.filter(id__in=config_event_ids)
+        qs = ConfigEvent.objects.filter(id__in=config_event_ids)
         return qs
     def get_table_kwargs(self):
         # since search model is ConfigValue and results are ConfigEvents,
