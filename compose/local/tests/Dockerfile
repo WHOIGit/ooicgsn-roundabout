@@ -1,6 +1,6 @@
 FROM ubuntu:18.04
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
-RUN apt-get install curl -y
+RUN apt-get install curl -y && apt-get install npm -y
 # Tools for Circleci debugging
 RUN apt-get install iputils-ping -y && apt-get install net-tools -y
 
@@ -12,7 +12,6 @@ COPY ./tests/*.js /tests/
 
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
 RUN apt-get install -y nodejs
-RUN npm --version
 RUN npm install selenium-webdriver
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && apt install -y ./google-chrome-stable_current_amd64.deb              
 RUN wget https://chromedriver.storage.googleapis.com/85.0.4183.83/chromedriver_linux64.zip && unzip -o chromedriver_linux64.zip -d/usr/local/bin
