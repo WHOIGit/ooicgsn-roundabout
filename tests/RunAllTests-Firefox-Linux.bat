@@ -29,6 +29,12 @@ if [[ "$val" == *"failed."* ]]; then
   exit 1
 fi
 
+val=$(node ImportExportInventory.js firefox headless)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
 val=$(node AddBuilds.js firefox headless)
 echo $val
 if [[ "$val" == *"failed."* ]]; then

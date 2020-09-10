@@ -81,8 +81,7 @@ jobs:
                   google-chrome --version && chromedriver --version &&
                   firefox --version && geckodriver --version &&
                   nodejs -v &&
-                  ./RunAllTests-Chrome-Linux.bat && 
-                  ./RunAllTests-Firefox-Linux.bat"
+                  ./RunAllTests-Chrome-Linux.bat"
 
 
       - run:

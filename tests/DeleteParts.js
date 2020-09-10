@@ -9,7 +9,8 @@ const firefox = require('selenium-webdriver/firefox');
 
 var driver;
 var myArgs = process.argv.slice(2);
-//let fs = require('fs');
+var user;
+var password;
 
 (async function testParts() {
 
@@ -47,11 +48,15 @@ var myArgs = process.argv.slice(2);
     if (myArgs[1] == 'headless')
     {
         await driver.get("http://localhost:8000/");   
+        user = "admin";
+        password = "admin";
     }
     else
     {
-        // 1 | open | https://ooi-cgrdb-staging.whoi.net/      
+        // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
         await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+        user = "jkoch";
+        password = "Automatedtests";
     }
 
     // 2 | setWindowSize | 1304x834 | 
@@ -76,8 +81,8 @@ var myArgs = process.argv.slice(2);
          }
         // LOGIN
         await driver.findElement(By.linkText("Sign In")).click();
-        await driver.findElement(By.id("id_login")).sendKeys("admin");
-        await driver.findElement(By.id("id_password")).sendKeys("admin");
+        await driver.findElement(By.id("id_login")).sendKeys(user);
+        await driver.findElement(By.id("id_password")).sendKeys(password);
         await driver.findElement(By.css(".primaryAction")).click();
 
         // Delete Part Types, Part Templates and Inventory created running automated tests.
@@ -201,6 +206,30 @@ var myArgs = process.argv.slice(2);
         }
         else
             console.log("Delete Parts failed: Computerized type not found");
+
+	// Delete Custom Fields
+        // 10 | click | id=navbarTemplates |
+        await driver.findElement(By.id("navbarTemplates")).click();
+        await driver.findElement(By.id("navbarAdmintools")).click();
+        // 5 | click | linkText=Test |
+        await driver.findElement(By.linkText("Custom Fields")).click();
+
+
+	if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Condition']"))).length != 0)
+	{
+            var i = 1;
+            while (true) {
+                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Condition") {
+                    break;
+                } 
+                i++;
+            }
+            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
+            // 6 | click | css=.btn-danger | 
+	    await driver.findElement(By.css(".btn-danger")).click();
+	}
+	else
+            console.log("Delete Parts failed: Condition Custom Field not found");
 
 
         // Close browser window
