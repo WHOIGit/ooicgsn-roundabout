@@ -164,7 +164,7 @@
                         data-node-type="calibration_event">Add Calibration Coefficients</a>
                 {% endif %}
 
-                {% if not inventory_item.constant_default_events.exists %}
+                {% if not inventory_item.constant_default_events.exists and part_has_consts %}
                     <a  id="add_constdefault_action"
                         class="dropdown-item"
                         href="#"
