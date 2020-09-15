@@ -119,7 +119,7 @@ var password;
         // 16 | type | id=id_field_default_value | Good
         await driver.findElement(By.id("id_field_default_value")).sendKeys("Good");
         // 17 | click | id=id_global_for_part_types_6 | 
-        await driver.findElement(By.id("id_global_for_part_types_6")).click();
+//      await driver.findElement(By.id("id_global_for_part_types_6")).click();
         // 18 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
 
@@ -198,11 +198,16 @@ var password;
 
 	if (myArgs[1] == 'headless')
 	{
+		// Docker/Circleci puts file in the current dir
 		var rdb_inv = process.cwd()+"//RDB_Inventory.csv";
 	}
 	else
 	{
-	        var rdb_inv = process.cwd()+"\\RDB_Inventory.csv";
+		// Windows command line puts file in the User's default Downloads dir
+ 		const execSync = require('child_process').execSync;
+        	var username = execSync('echo %username%', { encoding: 'utf-8' });
+        	username = username.replace(/[\n\r]+/g, '');
+        	var rdb_inv = "C:\\Users\\" + username + "\\Downloads\\RDB_Inventory.csv";
 	}
      	
         var csv = fs.readFileSync(rdb_inv,'utf8');
@@ -247,7 +252,7 @@ var password;
         }
 	else
         {
-            console.log("Import/Export Serial Number does not match.");
+	    throw new error("Import/Export Serial Number does not match.");
         }
 
         if (data.includes(part_number)) 
@@ -256,7 +261,7 @@ var password;
         }
 	else
 	{
-            console.log("Import/Export Part Number does not match.");
+            throw new error("Import/Export Part Number does not match.");
         }
 
         if (data.includes(location)) 
@@ -265,7 +270,7 @@ var password;
         }
 	else
 	{
-            console.log("Import/Export Location does not match.");
+            throw new error("Import/Export Location does not match.");
         }
 
         if (data.includes(notes))
@@ -274,7 +279,7 @@ var password;
         }
 	else
 	{
-            console.log("Import/Export Notes does not match."); 
+            throw new error("Import/Export Notes does not match."); 
         }
 
         if (data.includes(condition)) 
@@ -283,7 +288,7 @@ var password;
         }
 	else
 	{
-            console.log("Import/Export Condition does not match");
+            throw new error("Import/Export Condition does not match");
         }
 
 	    

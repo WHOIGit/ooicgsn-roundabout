@@ -167,6 +167,32 @@ var password;
 	else
 	    console.log("Delete Parts failed: Pin Template not found");
 
+        // 7 | click | id=navbarTemplates | 
+	await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.id("navbarTemplates")).click();
+        // 8 | click | linkText=Parts | 
+        await driver.findElement(By.linkText("Parts")).click();
+        // 9 | click | id=searchbar-query | 
+        await driver.findElement(By.id("searchbar-query")).click();
+        // 10 | type | id=searchbar-query | Sewing Template
+        await driver.findElement(By.id("searchbar-query")).sendKeys("Disk Drive");
+        // 11 | click | css=.btn-outline-primary:nth-child(1) | 
+        await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
+        // 12 | click | linkText=1232 | 
+        await new Promise(r => setTimeout(r, 2000));
+
+	if ((await driver.findElements(By.linkText("100-259-785"))).length != 0)
+	{
+            await driver.findElement(By.linkText("100-259-785")).click();
+            // 13 | click | linkText=Delete | 
+            await driver.findElement(By.linkText("Delete")).click();
+            // 14 | click | css=.btn-danger | 
+            await new Promise(r => setTimeout(r, 8000)); 
+            await driver.findElement(By.css(".btn-danger")).click();
+	}
+	else
+	    console.log("Delete Parts failed: Disk Drive not found");
+
         // 10 | click | id=navbarTemplates |
         await driver.findElement(By.id("navbarTemplates")).click();
         await driver.findElement(By.id("navbarAdmintools")).click();

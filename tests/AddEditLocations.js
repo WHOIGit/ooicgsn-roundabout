@@ -81,7 +81,7 @@ var password;
                 await driver.findElement(By.css(".navbar-toggler-icon")).click();
          }
         // LOGIN
-	await new Promise(r => setTimeout(r, 20000));
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Sign In")).click();
         await driver.findElement(By.id("id_login")).sendKeys(user);
         await driver.findElement(By.id("id_password")).sendKeys(password);
