@@ -25,6 +25,7 @@ from roundabout.locations.api.serializers import LocationSerializer
 import environ
 env = environ.Env()
 base_url = env('RDB_SITE_URL')
+api_version_url = '/api/v1'
 
 """
 Main sync function to coordinate the different models
@@ -65,7 +66,7 @@ def _sync_new_objects(field_instance, model, api_url, serializer):
             if new_key:
                 print('NEW KEY: ' + new_key)
                 data_dict['parent'] = new_key['new_pk']
-            # These will be POST as new, so remove id
+            # These will be POST as new item, so remove id
             data_dict.pop('id')
             response = requests.post(api_url, json=data_dict)
             print(f'{model._meta.model_name} RESPONSE: {response.text}')
@@ -95,7 +96,7 @@ def _sync_existing_objects(field_instance, model, api_url, serializer, pk_mappin
                 print('NEW KEY: ' + new_key)
                 data_dict['parent'] = new_key['new_pk']
 
-            url = base_url + reverse('locations-detail', kwargs={'pk': location.id},)
+            url = F'{api_url}{obj.id}/'
             response = requests.patch(url, json=data_dict, )
             print(f'{model._meta.model_name} RESPONSE: {response.text}')
             print(f'{model._meta.model_name} CODE: {response.status_code}')
@@ -115,53 +116,9 @@ def _sync_request_locations(request, field_instance):
     model = Location
     serializer = LocationSerializer
     api_url = base_url + reverse('locations-list')
-    # Sync new objects
+    # Sync new objects, return the pk_mappings for new items
     location_pk_mappings = _sync_new_objects(field_instance, model, api_url, serializer)
-    print(location_pk_mappings)
-    api_url = base_url + reverse('locations-detail')
-    status = _sync_new_objects(field_instance, model, api_url, serializer, location_pk_mappings)
-    """
-    location_pk_mappings = []
-    # Get new Locations that were added
-    new_locations = model_name.objects.filter(created_at__gte=field_instance.start_date).order_by('-parent')
-    if new_locations:
-        for location in new_locations:
-            old_pk = location.id
-            # serialize data for JSON request
-            serializer = serializer(location)
-            data_dict = serializer.data
-            # Need to remap any Parent items that have new PKs
-            new_key = next((pk for pk in location_pk_mappings if pk['old_pk'] == data_dict['parent']), False)
-            if new_key:
-                print('NEW KEY: ' + new_key)
-                data_dict['parent'] = new_key['new_pk']
-            # These will be POST as new, so remove id
-            data_dict.pop('id')
-            response = requests.post(location_url, json=data_dict)
-            print('Location RESPONSE:', response.text)
-            print("Location CODE: ", response.status_code)
-            new_obj = response.json()[model_name._meta.model_name]
-            location_pk_mappings.append({'old_pk': old_pk, 'new_pk': new_obj['id']})
-    """
-    # Get all existing fields in Home Base RDB that were updated
-    existing_locations = model.objects.filter(
-        Q(updated_at__gte=field_instance.start_date) & Q(created_at__lt=field_instance.start_date)
-    )
-    if existing_locations:
-        for location in existing_locations:
-            # serialize data for JSON request
-            serializer = LocationSerializer(location)
-            data_dict = serializer.data
-            # Need to remap any Parent items that have new PKs
-            new_key = next((pk for pk in location_pk_mappings if pk['old_pk'] == data_dict['parent']), False)
-            if new_key:
-                print('NEW KEY: ' + new_key)
-                data_dict['parent'] = new_key['new_pk']
-
-            url = base_url + reverse('locations-detail', kwargs={'pk': location.id},)
-            response = requests.patch(url, json=data_dict, )
-            print('Location RESPONSE:', response.text)
-            print("Location CODE: ", response.status_code)
+    status = _sync_existing_objects(field_instance, model, api_url, serializer, location_pk_mappings)
 
     return location_pk_mappings
 

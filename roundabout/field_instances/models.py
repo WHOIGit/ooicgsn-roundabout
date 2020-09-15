@@ -25,15 +25,20 @@ class FieldInstance(models.Model):
     def __str__(self):
         return self.name
 
+    """
     # Custom save method to deactive non-deployed users
     def save(self, *args, **kwargs):
         super(FieldInstance, self).save(*args, **kwargs)
+        print(self.cruise)
         if self.is_this_instance:
             for user in self.users.all():
+                print(user)
                 user.is_active = True
                 user.save()
-            
+
             users_deactivate = User.objects.exclude(id__in=self.users.all())
             for user in users_deactivate:
+                print(user)
                 user.is_active = False
                 user.save()
+    """
