@@ -88,7 +88,11 @@ class ImportCalibrationForm(forms.Form):
                     valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
                     mock_valset_instance = SimpleNamespace(**valset_keys)
                     try:
-                        raw_valset = str(value)[1:-1]
+                        raw_valset = str(value)
+                        if '[' in raw_valset:
+                            raw_valset = raw_valset[1:-1]
+                        if 'SheetRef' in raw_valset:
+                            raw_valset = ''
                     except:
                         raise ValidationError(
                             _('Row %(row)s: Unable to parse Calibration Coefficient value(s)'),

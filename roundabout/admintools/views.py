@@ -87,7 +87,11 @@ class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
                 elif key == 'value':
                     valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
                     mock_valset_instance = SimpleNamespace(**valset_keys)
-                    raw_valset = str(value)[1:-1]
+                    raw_valset = str(value)
+                    if '[' in raw_valset:
+                        raw_valset = raw_valset[1:-1]
+                    if 'SheetRef' in raw_valset:
+                        raw_valset = ''
                     validate_coeff_vals(mock_valset_instance, cal_name_item.value_set_type, raw_valset)
                 elif key == 'notes':
                     notes = value.strip()
