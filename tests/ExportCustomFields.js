@@ -345,6 +345,7 @@ var password;
 
         // Check if Serial Number and Custom Field in exported data matches created Assembly.
         //Find the created serial number and verify condition matches
+	var Serial_Number;
         var serial_num_found = false;
         for (var j = 1, elen = exported_data.length; j < elen; j++) {
             if (Serial_Number == exported_data[j][eserial_num_index]) {
