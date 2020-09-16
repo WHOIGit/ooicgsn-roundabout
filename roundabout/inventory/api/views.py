@@ -20,7 +20,7 @@
 """
 
 from rest_framework import generics, viewsets, filters
-from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.permissions import IsAuthenticated
 from dynamic_rest.viewsets import DynamicModelViewSet
 from ..models import Inventory, Action, PhotoNote
 from .serializers import InventorySerializer, ActionSerializer, PhotoNoteSerializer
@@ -28,16 +28,19 @@ from .serializers import InventorySerializer, ActionSerializer, PhotoNoteSeriali
 
 class ActionViewSet(DynamicModelViewSet):
     serializer_class = ActionSerializer
+    permission_classes = (IsAuthenticated,)
     queryset = Action.objects.all()
 
 
 class InventoryViewSet(DynamicModelViewSet):
     serializer_class = InventorySerializer
+    permission_classes = (IsAuthenticated,)
     queryset = Inventory.objects.all()
 
 
 class PhotoNoteViewSet(DynamicModelViewSet):
     serializer_class = PhotoNoteSerializer
+    permission_classes = (IsAuthenticated,)
     queryset = PhotoNote.objects.all()
 
 """

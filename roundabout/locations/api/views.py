@@ -27,6 +27,6 @@ from .serializers import LocationSerializer
 
 
 class LocationViewSet(DynamicModelViewSet):
-    queryset = Location.objects.all()
     serializer_class = LocationSerializer
-    permission_classes = (IsAuthenticated,) 
+    permission_classes = (IsAuthenticated,)
+    queryset = Location.objects.all()
