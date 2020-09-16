@@ -23,10 +23,17 @@ from rest_framework import serializers
 from dynamic_rest.serializers import DynamicModelSerializer
 from ..models import Location
 
+# Need a "sub-serializer" to handle self refernce MPTT tree structures
+class RecursiveField(serializers.Serializer):
+    def to_representation(self, value):
+        serializer = self.parent.parent.__class__(value, context=self.context)
+        return serializer.data
 
 class LocationSerializer(DynamicModelSerializer):
+    children = RecursiveField(many=True)
+
     class Meta:
         model = Location
-        fields = ('id', 'name', 'parent', 'weight',
+        fields = ('id', 'name', 'parent', 'children', 'weight',
             'location_type', 'location_id', 'root_type', 'created_at',
         )
