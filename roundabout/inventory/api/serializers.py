@@ -59,16 +59,25 @@ class ActionSerializer(DynamicModelSerializer):
         return action
     """
 
+
+# Need a "sub-serializer" to handle self refernce MPTT tree structures
+class RecursiveField(serializers.Serializer):
+    def to_representation(self, value):
+        serializer = self.parent.parent.__class__(value, context=self.context)
+        return serializer.data
+
+
 class InventorySerializer(DynamicModelSerializer):
     location = DynamicRelationField('LocationSerializer')
     part = DynamicRelationField('PartSerializer', read_only=True)
+    children = RecursiveField(many=True)
     custom_fields = serializers.SerializerMethodField('get_custom_fields')
 
     class Meta:
         model = Inventory
         fields = [
             'id', 'serial_number', 'old_serial_number', 'part', 'location', 'revision', \
-            'parent', 'build', 'assembly_part', 'assigned_destination_root', 'created_at', \
+            'parent', 'children', 'build', 'assembly_part', 'assigned_destination_root', 'created_at', \
             'updated_at', 'detail', 'test_result', 'test_type', 'flag', 'time_at_sea', 'custom_fields'
         ]
 
