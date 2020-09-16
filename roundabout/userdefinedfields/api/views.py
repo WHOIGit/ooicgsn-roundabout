@@ -20,16 +20,19 @@
 """
 
 from rest_framework import generics, filters
+from rest_framework.permissions import IsAuthenticated
 from dynamic_rest.viewsets import DynamicModelViewSet
 from ..models import *
 from .serializers import FieldSerializer, FieldValueSerializer
 
 
 class FieldViewSet(DynamicModelViewSet):
-    queryset = Field.objects.all()
     serializer_class = FieldSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = Field.objects.all()
 
 
 class FieldValueViewSet(DynamicModelViewSet):
-    queryset = FieldValue.objects.all()
     serializer_class = FieldValueSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = FieldValue.objects.all()

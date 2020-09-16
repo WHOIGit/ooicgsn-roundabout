@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -20,12 +20,14 @@
 """
 
 from rest_framework import generics, viewsets, filters
+from rest_framework.permissions import IsAuthenticated
 from ..models import Assembly
 from .serializers import AssemblySerializer, AssemblyPartSerializer
 
 
 class AssemblyViewSet(viewsets.ModelViewSet):
     serializer_class = AssemblySerializer
+    permission_classes = (IsAuthenticated,)
     search_fields = ['name']
     filter_backends = (filters.SearchFilter,)
 
