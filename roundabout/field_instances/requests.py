@@ -117,10 +117,10 @@ def _sync_request_locations(request, field_instance):
     serializer = LocationSerializer
     api_url = base_url + reverse('locations-list')
     # Sync new objects, return the pk_mappings for new items
-    location_pk_mappings = _sync_new_objects(field_instance, model, api_url, serializer)
-    status = _sync_existing_objects(field_instance, model, api_url, serializer, location_pk_mappings)
+    pk_mappings = _sync_new_objects(field_instance, model, api_url, serializer)
+    status = _sync_existing_objects(field_instance, model, api_url, serializer, pk_mappings)
 
-    return location_pk_mappings
+    return pk_mappings
 
 
 """
@@ -131,6 +131,14 @@ field_values: queryset of FieldValue objects
 pk_mappings: array that maps old_pk to new_pk for new objects
 """
 def _sync_request_fields(request, field_instance):
+    model = Field
+    serializer = FieldSerializer
+    api_url = base_url + reverse('userdefinedfields/fields-list')
+    # Sync new objects, return the pk_mappings for new items
+    pk_mappings = _sync_new_objects(field_instance, model, api_url, serializer)
+    status = _sync_existing_objects(field_instance, model, api_url, serializer, pk_mappings)
+
+    """
     field_url = base_url + reverse('userdefinedfields/fields-list')
     field_pk_mappings = []
     # Get new fields that were added
@@ -162,8 +170,8 @@ def _sync_request_fields(request, field_instance):
             response = requests.patch(url, json=field_dict, )
             print('Field RESPONSE:', response.text)
             print("Field CODE: ", response.status_code)
-
-    return field_pk_mappings
+    """
+    return pk_mappings
 
 
 """

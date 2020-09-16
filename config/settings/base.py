@@ -100,6 +100,7 @@ THIRD_PARTY_APPS = [
     'django_tables2_column_shifter', # show/hide tables2 columns
     'django_filters', #filters for API searching
     'dynamic_rest', # dynamic functionality for API
+    'rest_framework.authtoken',
 ]
 LOCAL_APPS = [
     'roundabout.users.apps.UsersAppConfig',
@@ -306,7 +307,8 @@ REST_FRAMEWORK = {
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     ),
     #'DEFAULT_PAGINATION_CLASS': 'drf_link_header_pagination.LinkHeaderPagination',
     #'PAGE_SIZE': 100,

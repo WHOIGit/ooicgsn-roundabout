@@ -20,6 +20,7 @@
 """
 
 from rest_framework import generics, filters
+from rest_framework.permissions import IsAuthenticated
 from dynamic_rest.viewsets import DynamicModelViewSet
 from ..models import Location
 from .serializers import LocationSerializer
@@ -28,3 +29,4 @@ from .serializers import LocationSerializer
 class LocationViewSet(DynamicModelViewSet):
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
+    permission_classes = (IsAuthenticated,) 
