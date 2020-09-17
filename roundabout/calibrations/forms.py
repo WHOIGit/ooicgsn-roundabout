@@ -331,7 +331,8 @@ def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
                 )
             else:
                 try:
-                    assert len(rounded_coeff_val) <= 21
+                    digits_only = rounded_coeff_val.replace('-','').replace('.','')
+                    assert len(digits_only) <= 20
                 except:
                     raise ValidationError(
                         _('Row: %(row)s, Column: %(column)s, %(value)s Exceeded 20-digit max length'),

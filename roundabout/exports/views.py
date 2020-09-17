@@ -315,7 +315,7 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
                     if isinstance(obj,CalibrationEvent):
                         calib=obj
                     elif isinstance(obj,ConfigEvent):
-                        if all([cv.config_name.config_type=='cnst' for cv in obj.config_values.all()]):
+                        if obj.config_type=='cnst':
                             const=obj
                         else: # it's a config.
                             if obj.deployment: # ie not "TBD"
@@ -403,7 +403,7 @@ class ExportCruises(CSVExport):
             row.append(cruise.cruise_stop_date.replace(tzinfo=None).isoformat())
             #location = cruise.location or ''
             notes = cruise.notes or ''
-            row.append(row.append(notes))
+            row.append(notes)
             csv.writerow(row)
 
 

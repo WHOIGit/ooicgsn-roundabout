@@ -150,8 +150,8 @@ class CoefficientValue(models.Model):
         ("sci", "Scientific"),
         ("std", "Standard"),
     )
-    value = models.CharField(max_length = 21, unique = False, db_index = False)
-    original_value = models.CharField(max_length = 21, unique = False, db_index = False, null=True)
+    value = models.CharField(max_length = 25, unique = False, db_index = False)
+    original_value = models.CharField(max_length = 25, unique = False, db_index = False, null=True)
     notation_format = models.CharField(max_length=3, choices=NOTATION_FORMAT, null=False, blank=False, default="std")
     sigfig = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(20)], null=False, blank=True, default=3)
     row = models.IntegerField(null=False, blank=True, default=0)
