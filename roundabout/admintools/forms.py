@@ -27,6 +27,9 @@ from .models import Printer
 class ImportInventoryForm(forms.Form):
     document = forms.FileField()
 
+class ImportCalibrationForm(forms.Form):
+    document = forms.FileField()
+
 
 class PrinterForm(forms.ModelForm):
 

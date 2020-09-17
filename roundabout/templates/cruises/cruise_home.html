@@ -1,0 +1,96 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+{% extends "base.html" %}
+{% load static i18n %}
+{% load mptt_tags %}
+
+
+{% block title %}Cruises{% endblock %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-md-5 navtree-container">
+            <h2>Cruises</h2>
+
+            <div id="jstree-navtree" data-navtree-url="{% url 'cruises:ajax_load_cruises_navtree' %}"
+                                     data-node-type="{{ node_type }}">
+                <!-- AJAX navtree inserted here! -->
+                <img src="{% static 'images/loading-icon.gif' %}" class="loading-icon"/>
+            </div>
+
+        </div>
+        <div class="col-md-7 cruise-detail">
+
+            <div class="row mb-3">
+                <div class="col-md-12">
+
+                        <div class="dropdown float-right">
+                          <button id="action" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-primary">
+                            Choose Action
+                          </button>
+                          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="action">
+                                <div class="ajax-btn">
+                                    <a href="#" class="dropdown-item"
+                                       data-update-url="{% url 'cruises:ajax_cruises_add' %}"
+                                       role="button">Add Cruise</a>
+                                </div>
+                                <a href="{% url 'cruises:vessels_home' %}" class="dropdown-item"
+                                   role="button">Edit Vessel List</a>
+                          </div>
+                        </div>
+
+                </div>
+            </div>
+
+            <!-- Spinner icon loader -->
+            <div id="spinner-loader" class="fa-3x" style='display: none;'>
+                    <i class="fas fa-spinner fa-spin"></i>
+            </div>
+
+            <div class="card" id="detail-view">
+
+                <!-- AJAX detail templates inserted here! -->
+
+                <!-- If direct link to Cruise detail view, include template -->
+                {% if cruise %}
+                    {% include "cruises/ajax_cruise_detail.html" %}
+                {% elif cruise_year %}
+                    {% include "cruises/ajax_cruise_by_year.html" %}
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+
+
+{% endblock content %}
+
+{% block javascript %}
+<script type="text/javascript">
+    $(document).ready(function(){
+        $('#jstree-navtree').on('ready.jstree', function (event, data) {
+            $(this).jstree("open_all");
+        });
+    });
+</script>
+{% endblock javascript %}
