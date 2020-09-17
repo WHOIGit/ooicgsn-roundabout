@@ -32,7 +32,7 @@ from django.db import IntegrityError
 from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
-from .forms import PrinterForm, ImportInventoryForm
+from .forms import PrinterForm, ImportInventoryForm, ImportCalibrationForm
 from .models import *
 from roundabout.userdefinedfields.models import FieldValue, Field
 from roundabout.inventory.models import Inventory, Action
@@ -44,6 +44,28 @@ from roundabout.assemblies.views import _make_tree_copy
 # Test URL for Sentry.io logging
 def trigger_error(request):
     division_by_zero = 1 / 0
+
+
+# Calibrations Github CSV file uploader
+# Upload formview for Inventory Bulk upload
+class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
+    form_class = ImportCalibrationForm
+    template_name = 'admintools/import_calibrations_upload_form.html'
+
+    def form_valid(self, form):
+        csv_file = self.request.FILES['document']
+        print(csv_file)
+        # Set up the Django file object for CSV DictReader
+        csv_file.seek(0)
+        reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+
+        for row in reader:
+            print(row)
+
+        return super(ImportCalibrationsUploadView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse('admintools:import_inventory_upload_success', )
 
 # Bulk Inventory Import Functions
 # ------------------------------------------

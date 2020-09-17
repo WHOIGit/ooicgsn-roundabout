@@ -95,6 +95,7 @@ THIRD_PARTY_APPS = [
     'mptt', # Tree structures in database
     'django_summernote', #WYSIWYG
     'bootstrap_datepicker_plus', # Date Picker
+    'import_export', # simple model import/export using admin interface
     'django_tables2', # interactive tables views
     'django_tables2_column_shifter', # show/hide tables2 columns
 ]
@@ -110,8 +111,11 @@ LOCAL_APPS = [
     'roundabout.userdefinedfields',
     'roundabout.assemblies',
     'roundabout.builds',
+    'roundabout.cruises',
     'roundabout.calibrations',
     'roundabout.configs_constants',
+    'roundabout.search',
+    'roundabout.exports',
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -364,5 +368,7 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
+# import-export settings
+IMPORT_EXPORT_USE_TRANSACTIONS = True
 # Allow for larger CoefficientValue formset handling
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
