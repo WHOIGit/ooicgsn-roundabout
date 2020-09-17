@@ -23,7 +23,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, DecimalValidator, MaxValueValidator, RegexValidator, MaxLengthValidator
 from django.utils import timezone
 from roundabout.parts.models import Part
-from roundabout.inventory.models import Inventory, Deployment
+from roundabout.inventory.models import Inventory, Deployment, Action
 from roundabout.users.models import User
 from decimal import Decimal
 from sigfig import round
@@ -35,6 +35,7 @@ from django.utils.translation import gettext_lazy as _
 class CalibrationEvent(models.Model):
     class Meta:
         ordering = ['-calibration_date']
+        get_latest_by = 'calibration_date'
     def __str__(self):
         return self.calibration_date.strftime("%m/%d/%Y")
     def get_object_type(self):
@@ -46,11 +47,52 @@ class CalibrationEvent(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     calibration_date = models.DateTimeField(default=timezone.now)
-    user_draft = models.ManyToManyField(User, related_name='calibration_events_drafter')
+    user_draft = models.ManyToManyField(User, related_name='calibration_events_drafter', blank=True)
     user_approver = models.ManyToManyField(User, related_name='calibration_events_approver')
     inventory = models.ForeignKey(Inventory, related_name='calibration_events', on_delete=models.CASCADE, null=False)
     deployment = models.ForeignKey(Deployment, related_name='calibration_events', on_delete=models.CASCADE, null=True)
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
+    detail = models.TextField(blank=True)
+    
+    def get_actions(self):
+        return self.actions.filter(object_type=Action.CALEVENT)
+
+    def get_sorted_reviewers(self):
+        return self.user_draft.all().order_by('username')
+
+    def get_sorted_approvers(self):
+        return self.user_approver.all().order_by('username')
+    
+
+# Tracks Coefficient Name Event history across Parts
+class CoefficientNameEvent(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+    def __str__(self):
+        return self.created_at.strftime("%m/%d/%Y")
+    def get_object_type(self):
+        return 'coefficient_name_event'
+    APPROVAL_STATUS = (
+        (True, "Approved"),
+        (False, "Draft"),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    user_draft = models.ManyToManyField(User, related_name='coefficient_name_events_reviewers', blank=True)
+    user_approver = models.ManyToManyField(User, related_name='coefficient_name_events_approvers')
+    part = models.ForeignKey(Part, related_name='coefficient_name_events', on_delete=models.CASCADE, null=True)
+    approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
+    detail = models.TextField(blank=True)
+
+    def get_actions(self):
+        return self.actions.filter(object_type=Action.COEFFNAMEEVENT)
+
+    def get_sorted_reviewers(self):
+        return self.user_draft.all().order_by('username')
+
+    def get_sorted_approvers(self):
+        return self.user_approver.all().order_by('username')
+
 
 # Tracks Calibrations across Parts
 class CoefficientName(models.Model):
@@ -64,15 +106,16 @@ class CoefficientName(models.Model):
     VALUE_SET_TYPE = (
         ("sl", "Single"),
         ("1d", "1-Dimensional Array"),
-        ("2d", "2-DImensional Array"),
+        ("2d", "2-Dimensional Array"),
     )
     calibration_name = models.CharField(max_length=255, unique=False, db_index=True)
     value_set_type = models.CharField(max_length=3, choices=VALUE_SET_TYPE, null=False, blank=False, default="sl")
     sigfig_override = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(20)], null=False, blank=True, default=3, help_text='Part-based default if sigfigs cannot be captured from input')
     created_at = models.DateTimeField(default=timezone.now)
     part = models.ForeignKey(Part, related_name='coefficient_names', on_delete=models.CASCADE, null=True)
+    coeff_name_event = models.ForeignKey(CoefficientNameEvent, related_name='coefficient_names', on_delete=models.CASCADE, null=True)
 
-# Tracks Coefficient Sets across Calibrations 
+# Tracks Coefficient Sets across Calibrations
 class CoefficientValueSet(models.Model):
     class Meta:
         ordering = ['created_at']
@@ -86,6 +129,13 @@ class CoefficientValueSet(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     coefficient_name = models.ForeignKey(CoefficientName, related_name='coefficient_value_sets', on_delete=models.CASCADE, null=True)
     calibration_event = models.ForeignKey(CalibrationEvent, related_name='coefficient_value_sets', on_delete=models.CASCADE, null=True)
+    def value_set_with_export_formatting(self):
+        if self.coefficient_name.value_set_type == '1d':
+            return '"[{}]"'.format(self.value_set)
+        elif self.coefficient_name.value_set_type == '2d':
+            return 'SheetRef:{}'.format(self.coefficient_name)
+        else:  # self.coefficient_name.value_set_type == 'sl'
+            return self.value_set
 
 # Tracks Coefficeint Values across Coeficient Sets
 class CoefficientValue(models.Model):

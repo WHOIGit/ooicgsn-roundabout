@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -108,13 +108,15 @@
         function updateDatePicker() {
             var picker_options = $('#id_date').attr('dp_config');
             var options_obj = JSON.parse(picker_options);
+
             {% if deployment.id %}
                 // Convert the UTC datetime in the database to user's local time for validation
-                var local_date = moment.utc('{{ latest_action_record.created_at|date:"SHORT_DATE_FORMAT" }} {{ latest_action_record.created_at|time:"H:i" }}').local().format('YYYY-MM-DD HH:mm:ss');
-            {% else %}
-                var local_date = moment.utc('{{ build.created_at|date:"SHORT_DATE_FORMAT" }} {{ build.created_at|time:"H:i" }}').local().format('YYYY-MM-DD HH:mm:ss');
+                //var local_date = moment.utc('{{ latest_action_record.created_at|date:"SHORT_DATE_FORMAT" }} {{ latest_action_record.created_at|time:"H:i" }}').local().format('YYYY-MM-DD HH:mm:ss');
+                //options_obj.options.minDate = local_date;
+            //{% else %}
+                //var local_date = moment.utc('{{ build.created_at|date:"SHORT_DATE_FORMAT" }} {{ build.created_at|time:"H:i" }}').local().format('YYYY-MM-DD HH:mm:ss');
             {% endif %}
-            options_obj.options.minDate = local_date;
+
             options_obj.options.maxDate = '{% tomorrow "%m/%d/%Y %H:%M" %}';
             options_obj.options.useCurrent = true;
             console.log(options_obj);

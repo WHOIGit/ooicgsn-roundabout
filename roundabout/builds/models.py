@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -24,14 +24,17 @@ import datetime
 from datetime import timedelta
 
 from django.db import models
+from django.apps import apps
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils import timezone
 from django.core.validators import FileExtensionValidator
 from model_utils import FieldTracker
 
 from roundabout.locations.models import Location
+from roundabout.inventory.models import Action, Deployment
 from roundabout.assemblies.models import Assembly, AssemblyRevision
 from roundabout.users.models import User
+
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
 labels = set_app_labels()
@@ -74,83 +77,63 @@ class Build(models.Model):
     def get_object_type(self):
         return 'builds'
 
-    def current_deployment(self):
-        # set default to None
-        current_deployment = None
+    def get_actions(self):
+        return self.actions.filter(object_type=Action.BUILD)
 
+    def current_deployment(self):
         if self.is_deployed:
             # get the latest deployment if available
-            current_deployment = self.deployments.first()
-        return current_deployment
-    """
-    def current_deployment_status(self):
-        # set default deployment_status to None
-        deployment_status = None
+            current_deployment = self.deployments.exclude(current_status=Deployment.DEPLOYMENTRETIRE).latest()
+            return current_deployment
+        return None
 
-        # get the latest deployment if available
-        latest_deployment = self.deployments.first()
-        if latest_deployment:
-            deployment_action = latest_deployment.deployment_action.first()
-            if deployment_action.action_type != 'retire':
-                deployment_status = deployment_action.action_type
-            else:
-                deployment_status = None
-        return deployment_status
-    """
-    # get the most recent Deploy to Sea and Recover from Sea action timestamps, add this time delta to the time_at_sea column
+    def get_latest_deployment(self):
+        try:
+            latest_deployment = self.deployments.latest()
+            return latest_deployment
+        except:
+            pass
+        return None
+
+    def is_deployed_to_field(self):
+        if self.current_deployment():
+            if self.current_deployment().current_status == Action.DEPLOYMENTTOFIELD:
+                return True
+        return False
+
+    def location_changed(self):
+        current_location = self.location
+        last_location = self.actions.latest().location
+        if current_location != last_location:
+            return True
+        return False
+
+    # get the most recent Deployment timee in field, add this time delta to the time_at_sea column
     def update_time_at_sea(self):
-        try:
-            action_deploy_to_sea = BuildAction.objects.filter(build=self).filter(action_type='deploymenttosea').latest('created_at')
-        except BuildAction.DoesNotExist:
-            action_deploy_to_sea = None
-
-        try:
-            action_recover = BuildAction.objects.filter(build=self).filter(action_type='deploymentrecover').latest('created_at')
-        except BuildAction.DoesNotExist:
-            action_recover = None
-
-        if action_deploy_to_sea and action_recover:
-            latest_time_at_sea =  action_recover.created_at - action_deploy_to_sea.created_at
-        else:
-            latest_time_at_sea = timedelta(minutes=0)
-
+        latest_time_at_sea = self.current_deployment().deployment_time_in_field
         # add to existing Time at Sea duration
         self.time_at_sea = self.time_at_sea + latest_time_at_sea
         self.save()
 
-    # get the time at sea for the current deployment only (if item is at sea)
-    def current_deployment_time_at_sea(self):
-        current_deployment_time = timedelta(minutes=0)
-
-
-        if self.current_deployment() and self.current_deployment().current_deployment_status() == 'deploy':
-            try:
-                action_deploy_to_sea = BuildAction.objects.filter(build=self).filter(action_type='deploymenttosea').latest('created_at')
-            except BuildAction.DoesNotExist:
-                action_deploy_to_sea = None
-
-            if action_deploy_to_sea:
-                now = timezone.now()
-                current_time_at_sea = now - action_deploy_to_sea.created_at
-                current_deployment_time = current_time_at_sea
-
-        return current_deployment_time
-
     # get the Total Time at Sea by adding historical sea time and current deployment sea time
     def total_time_at_sea(self):
-        return self.time_at_sea + self.current_deployment_time_at_sea()
+        if self.current_deployment() and self.current_deployment().current_status == Action.DEPLOYMENTTOFIELD:
+            return self.time_at_sea + self.current_deployment().deployment_time_in_field
+        return self.time_at_sea
 
 
 class BuildAction(models.Model):
     BUILDADD = 'buildadd'
     LOCATIONCHANGE = 'locationchange'
     SUBASSEMBLYCHANGE = 'subassemblychange'
-    STARTDEPLOY = 'startdeploy'
+    STARTDEPLOYMENT = 'startdeployment'
     REMOVEFROMDEPLOYMENT = 'removefromdeployment'
     DEPLOYMENTBURNIN = 'deploymentburnin'
-    DEPLOYMENTTOSEA = 'deploymenttosea'
+    DEPLOYMENTTOFIELD = 'deploymenttofield'
     DEPLOYMENTUPDATE = 'deploymentupdate'
     DEPLOYMENTRECOVER = 'deploymentrecover'
+    DEPLOYMENTRETIRE = 'deploymentretire'
+    DEPLOYMENTDETAILS = 'deploymentdetails'
     TEST = 'test'
     NOTE = 'note'
     HISTORYNOTE = 'historynote'
@@ -161,12 +144,14 @@ class BuildAction(models.Model):
         (BUILDADD, 'Add %s' % (labels['label_builds_app_singular'])),
         (LOCATIONCHANGE, 'Location Change'),
         (SUBASSEMBLYCHANGE, 'Subassembly Change'),
-        (STARTDEPLOY, 'Start %s' % (labels['label_deployments_app_singular'])),
+        (STARTDEPLOYMENT, 'Start %s' % (labels['label_deployments_app_singular'])),
         (REMOVEFROMDEPLOYMENT, '%s Ended' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTTOSEA, '%s to Field' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTTOFIELD, '%s to Field' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTUPDATE, '%s Update' % (labels['label_deployments_app_singular'])),
         (DEPLOYMENTRECOVER, '%s Recovered' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTRETIRE, '%s Retired' % (labels['label_deployments_app_singular'])),
+        (DEPLOYMENTDETAILS, '%s Details Updated' % (labels['label_deployments_app_singular'])),
         (TEST, 'Test'),
         (NOTE, 'Note'),
         (HISTORYNOTE, 'Historical Note'),
@@ -197,7 +182,7 @@ class PhotoNote(models.Model):
                              validators=[FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg', 'gif', 'csv'])])
     build = models.ForeignKey(Build, related_name='build_photos',
                                  on_delete=models.CASCADE, null=True, blank=True)
-    action = models.ForeignKey(BuildAction, related_name='build_photos',
+    action = models.ForeignKey(Action, related_name='build_photos',
                                  on_delete=models.CASCADE, null=True, blank=True)
     user = models.ForeignKey(User, related_name='build_photos',
                              on_delete=models.SET_NULL, null=True, blank=False)
