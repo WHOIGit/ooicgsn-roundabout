@@ -35,7 +35,7 @@ services:
       - postgres
     volumes:
       - .:/app
-    env_file:
+    env_file:   
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres
     ports:
@@ -43,6 +43,15 @@ services:
     command: /start
     networks:
       - roundabout-network
+
+  tests:
+    build:
+      context: .
+      dockerfile: ./compose/local/tests/Dockerfile
+    image: roundabout_production_tests
+    depends_on:
+      - django
+    network_mode: "service:django"
 
   postgres:
     build:

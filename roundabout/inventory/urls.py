@@ -47,8 +47,8 @@ urlpatterns = [
     path('ajax/add-subassembly/action/<int:pk>/<int:parent_pk>/', view=views.InventoryAjaxSubassemblyActionView.as_view(), name='ajax_inventory_add_subassembly_action'),
     # Add subassembly by Assembly Part
     path('ajax/add-subassembly/assembly-part/<int:pk>/<int:location_pk>/<int:build_pk>/', view=views.InventoryAjaxByAssemblyPartListView.as_view(), name='ajax_inventory_assembly_part_add_subassembly'),
-    path('ajax/add-subassembly/assembly-part/action/<int:pk>/<int:build_pk>/<int:assembly_part_pk>/', view=views.InventoryAjaxByAssemblyPartyActionView.as_view(), name='ajax_inventory_assembly_part_add_subassembly_action'),
-    path('ajax/add-subassembly/assembly-part/action/<int:pk>/<int:build_pk>/<int:assembly_part_pk>/<int:parent_pk>/', view=views.InventoryAjaxByAssemblyPartyActionView.as_view(), name='ajax_inventory_assembly_part_add_subassembly_action'),
+    path('ajax/add-subassembly/assembly-part/action/<int:pk>/<int:build_pk>/<int:assembly_part_pk>/', view=views.InventoryAjaxByAssemblyPartActionView.as_view(), name='ajax_inventory_assembly_part_add_subassembly_action'),
+    path('ajax/add-subassembly/assembly-part/action/<int:pk>/<int:build_pk>/<int:assembly_part_pk>/<int:parent_pk>/', view=views.InventoryAjaxByAssemblyPartActionView.as_view(), name='ajax_inventory_assembly_part_add_subassembly_action'),
     # Assign Destination paths
     path('ajax/assign-destination/<int:pk>/', view=views.InventoryAjaxAssignDestinationView.as_view(), name='ajax_inventory_assign_destination'),
     path('ajax/assign-destination/action/<int:pk>/<int:assembly_part_pk>/', view=views.InventoryAjaxAssignDestinationActionView.as_view(), name='ajax_inventory_assign_destination_action'),
@@ -59,6 +59,7 @@ urlpatterns = [
     path('ajax/edit/<int:pk>/', view=views.InventoryAjaxUpdateView.as_view(), name='ajax_inventory_update'),
     path('ajax/action/<action_type>/<int:pk>/', view=views.InventoryAjaxActionView.as_view(), name='ajax_inventory_action'),
     path('ajax/note/<int:pk>/', view=views.ActionNoteAjaxCreateView.as_view(), name='ajax_note_action'),
+    path('ajax/deploy/<int:pk>/', view=views.ActionDeployInventoryAjaxFormView.as_view(), name='ajax_deploy_action'),
     path('ajax/photo-upload/<int:pk>/', view=views.ActionPhotoUploadAjaxCreateView.as_view(), name='ajax_photo_upload_action'),
     path('ajax/history/<int:pk>/', view=views.ActionHistoryNoteAjaxCreateView.as_view(), name='ajax_history_action'),
     path('ajax/location/<int:pk>/', view=views.InventoryAjaxLocationDetailView.as_view(), name='ajax_inventory_location_detail'),

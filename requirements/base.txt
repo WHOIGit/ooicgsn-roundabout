@@ -1,7 +1,7 @@
 pytz==2018.7  # https://github.com/stub42/pytz
 python-slugify==1.2.6  # https://github.com/un33k/python-slugify
 Pillow==5.3.0  # https://github.com/python-pillow/Pillow
-argon2-cffi==18.3.0  # https://github.com/hynek/argon2_cffi
+argon2-cffi==20.1.0  # https://github.com/hynek/argon2_cffi
 redis>=2.10.6, < 3  # pyup: < 3 # https://github.com/antirez/redis
 
 # Django
@@ -27,6 +27,7 @@ sigfig==1.1.8 #https://pypi.org/project/sigfig/
 django-tables2==2.2.1  # https://github.com/jieter/django-tables2
 tablib==1.1  # https://github.com/jazzband/tablib for exporting/downloading tables2/tabular data
 django-tables2-column-shifter==0.5.2  # for showing/hiding columns for tables2
+django-import-export==2.0.2
 
 # Sentry error logging
 sentry-sdk==0.14.3

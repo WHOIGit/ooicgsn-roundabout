@@ -1,0 +1,43 @@
+# Must match host version - cmd window /ver - 10.0.1904.388, build 1904 is version 2004
+# Switch to Docker Windows Containers (right click menu docker desktop)  & restart Docker
+#FROM mcr.microsoft.com/windows/servercore:2004
+#FROM mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-2004
+
+#THIS IS THE ONLY IMAGE THAT WORKS WITH CHROME AND FIREFOX!!!!
+FROM mcr.microsoft.com/windows:2004
+
+# Current dir is c:\
+
+# extending the `microsoft/aspnet` image.
+#FROM microsoft/aspnet - causing iis error & cur dir changes
+
+# Copy Chrome, Chromedriver, Firefox, Geckodriver & script files from project github repo
+RUN mkdir c:\tests
+COPY . tests
+
+RUN c:/tests/ChromeStandaloneSetup64.exe /silent /install
+RUN c:/tests/"Firefox Setup 78.0.2.exe" -ms
+
+# Set PATH to executables
+RUN setx path "%path%;c:\Program Files (x86)\Google\Chrome\Application;c:\tests;c:\tests\node_modules\.bin;c:\tests\node_modules\chromedriver\lib\chromedriver;c:\Program Files\Mozilla Firefox"
+
+WORKDIR tests
+
+# Must run in Powershell or get connection refused error
+#CMD powershell -Command RunAllTests-Chrome-DockerW10.bat
+CMD powershell -Command RunAllTests-Firefox-DockerW10.bat
+#CMD powershell -Command node AddEditParts.js firefox headless > RoundAboutTesting1.log - this fails, but not in RunAllTests!!!
+#CMD powershell -Command RunAllTests-Chrome-DockerW10.bat ; powershell -Command RunAllTests-Firefox-DockerW10.bat
+
+# Sleep forever
+#CMD ping -t localhost > NUL
+
+
+# Chrome install from chocolatey failed. Download & upzip fails - get internet explorer error 
+#RUN powershell -Command Install-PackageProvider -name chocolatey -force 
+#RUN powershell -Command Set-PackageSource -Name chocolatey -Trusted
+#RUN powershell -Command Get-PackageSource -ProviderName chocolatey
+#RUN powershell -Command Find-Package -Name googlechrome -Source chocolatey -AllVersions
+#RUN powershell -Command Install-Package GoogleChrome -MinimumVersion 84 -Force
+# Must install nuget to get any packages to install!
+# RUN Install-PackageProvider -Name Nuget -Force
