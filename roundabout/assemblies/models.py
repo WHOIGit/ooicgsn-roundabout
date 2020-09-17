@@ -69,7 +69,7 @@ class AssemblyRevision(models.Model):
         get_latest_by = 'created_at'
 
     def __str__(self):
-        return '%s - %s' % (self.revision_code, self.assembly.name)
+        return 'Revision %s - %s' % (self.revision_code, self.assembly.name)
 
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
