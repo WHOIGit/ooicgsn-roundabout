@@ -403,7 +403,7 @@ class ExportCruises(CSVExport):
             row.append(cruise.cruise_stop_date.replace(tzinfo=None).isoformat())
             #location = cruise.location or ''
             notes = cruise.notes or ''
-            row.append(row.append(notes))
+            row.append(notes)
             csv.writerow(row)
 
 
