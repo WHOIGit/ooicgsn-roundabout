@@ -310,6 +310,10 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     ),
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'roundabout.core.api.renderers.BrowsableAPIRendererWithoutForms',
+    ),
     #'DEFAULT_PAGINATION_CLASS': 'drf_link_header_pagination.LinkHeaderPagination',
     #'PAGE_SIZE': 100,
     #'DEFAULT_PERMISSION_CLASSES': [
