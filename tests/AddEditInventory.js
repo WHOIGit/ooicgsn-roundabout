@@ -10,6 +10,8 @@ const assert = require('assert');
 
 var driver;
 var myArgs = process.argv.slice(2);
+var user;
+var password;
 
 (async function addInventory() {
 
@@ -47,11 +49,15 @@ var myArgs = process.argv.slice(2);
     if (myArgs[1] == 'headless')
     {
         await driver.get("http://localhost:8000/");   
+        user = "admin";
+        password = "admin";
     }
     else
     {
         // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
         await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+        user = "jkoch";
+        password = "Automatedtests";
     }
 
     // 2 | setWindowSize | 1304x834 | 
@@ -73,8 +79,8 @@ var myArgs = process.argv.slice(2);
          }
         // LOGIN
         await driver.findElement(By.linkText("Sign In")).click();
-        await driver.findElement(By.id("id_login")).sendKeys("admin");
-        await driver.findElement(By.id("id_password")).sendKeys("admin");
+        await driver.findElement(By.id("id_login")).sendKeys(user);
+        await driver.findElement(By.id("id_password")).sendKeys(password);
         await driver.findElement(By.css(".primaryAction")).click();
 
         // ADD INVENTORY TEST
