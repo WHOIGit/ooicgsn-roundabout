@@ -24,11 +24,11 @@ from dynamic_rest.serializers import DynamicModelSerializer
 from dynamic_rest.fields import DynamicRelationField
 
 from ..models import CalibrationEvent, CoefficientValueSet, CoefficientName, CoefficientNameEvent, CoefficientValue
-from roundabout.inventory.api.serializers import InventorySerializer
+#from roundabout.inventory.api.serializers import InventorySerializer
 from roundabout.parts.api.serializers import PartSerializer
 
 class CalibrationEventSerializer(DynamicModelSerializer):
-    inventory = DynamicRelationField('InventorySerializer', read_only=True)
+    #inventory = DynamicRelationField('InventorySerializer', read_only=True)
     coefficient_value_sets = DynamicRelationField('CoefficientValueSetSerializer', read_only=True, many=True, embed=True)
 
     class Meta:

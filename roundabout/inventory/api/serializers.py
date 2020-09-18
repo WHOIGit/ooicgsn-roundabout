@@ -25,6 +25,7 @@ from dynamic_rest.fields import DynamicRelationField
 from ..models import Inventory, Action, PhotoNote
 from roundabout.locations.api.serializers import LocationSerializer
 from roundabout.parts.api.serializers import PartSerializer
+from roundabout.calibrations.api.serializers import CalibrationEventSerializer
 
 
 class PhotoNoteSerializer(DynamicModelSerializer):
@@ -66,13 +67,15 @@ class InventorySerializer(DynamicModelSerializer):
     children = DynamicRelationField('InventorySerializer', read_only=True, many=True)
     custom_fields = serializers.SerializerMethodField('get_custom_fields')
     parent = DynamicRelationField('InventorySerializer', read_only=True)
+    calibration_events = DynamicRelationField('CalibrationEventSerializer', read_only=True, many=True)
 
     class Meta:
         model = Inventory
         fields = [
             'id', 'serial_number', 'old_serial_number', 'part', 'location', 'revision', \
             'parent', 'children', 'build', 'assembly_part', 'assigned_destination_root', 'created_at', \
-            'updated_at', 'detail', 'test_result', 'test_type', 'flag', 'time_at_sea', 'custom_fields'
+            'updated_at', 'detail', 'test_result', 'test_type', 'flag', 'time_at_sea', 'custom_fields',
+            'calibration_events'
         ]
 
     def get_custom_fields(self, obj):
