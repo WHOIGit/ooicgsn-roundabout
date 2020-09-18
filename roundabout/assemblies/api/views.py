@@ -19,15 +19,27 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
+from django.db.models import Prefetch
 from rest_framework import generics, viewsets, filters
 from rest_framework.permissions import IsAuthenticated
 from dynamic_rest.viewsets import DynamicModelViewSet
 
-from ..models import Assembly
-from .serializers import AssemblySerializer, AssemblyPartSerializer
+from ..models import Assembly, AssemblyRevision, AssemblyPart
+from .serializers import AssemblySerializer, AssemblyRevisionSerializer, AssemblyPartSerializer
 
 
 class AssemblyViewSet(DynamicModelViewSet):
     serializer_class = AssemblySerializer
     permission_classes = (IsAuthenticated,)
     queryset = Assembly.objects.all()
+
+
+class AssemblyRevisionViewSet(DynamicModelViewSet):
+    serializer_class = AssemblyRevisionSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = AssemblyRevision.objects.all()
+
+class AssemblyPartViewSet(DynamicModelViewSet):
+    serializer_class = AssemblyPartSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = AssemblyPart.objects.all()

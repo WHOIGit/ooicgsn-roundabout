@@ -25,14 +25,18 @@ from dynamic_rest.fields import DynamicRelationField
 
 from ..models import Assembly, AssemblyPart, AssemblyType, AssemblyRevision
 from roundabout.parts.api.serializers import PartSerializer
+from roundabout.core.api.serializers import RecursiveFieldSerializer
 
 
 class AssemblyPartSerializer(DynamicModelSerializer):
     part = DynamicRelationField('PartSerializer', read_only=True, embed=True)
+    parent = DynamicRelationField('AssemblyPartSerializer', read_only=True)
+    #children = RecursiveFieldSerializer(many=True)
+    children = DynamicRelationField('AssemblyPartSerializer', read_only=True, many=True)
 
     class Meta:
         model = AssemblyPart
-        fields = ['id', 'part', 'parent', 'note', 'order' ]
+        fields = ['id', 'part', 'parent', 'children', 'note' ]
 
 
 class AssemblyTypeSerializer(DynamicModelSerializer):
@@ -43,7 +47,14 @@ class AssemblyTypeSerializer(DynamicModelSerializer):
 
 class AssemblyRevisionSerializer(DynamicModelSerializer):
     #assembly = AssemblySerializer(read_only=True)
-    assembly_parts = DynamicRelationField('AssemblyPartSerializer', read_only=True, many=True)
+    assembly = DynamicRelationField('AssemblySerializer', read_only=True, embed=True)
+    assembly_parts = DynamicRelationField(
+        'AssemblyPartSerializer',
+        read_only=True,
+        many=True,
+        #embed=True,
+        #queryset=AssemblyPart.objects.root_nodes()
+    )
 
     class Meta:
         model = AssemblyRevision
