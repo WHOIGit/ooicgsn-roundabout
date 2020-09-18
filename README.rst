@@ -3,7 +3,6 @@ Roundabout DB - OOI Parts and Inventory Web Application
 
 Django application to manage Part, Location, and Assembly Templates, and Inventory tracking for OOI-CGSN arrays. Uses PostgreSQL database.
 
-:Current Version: 1.3.2
 :License: GPL v2.0 or later
 
 

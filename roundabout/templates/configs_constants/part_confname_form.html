@@ -18,6 +18,15 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 -->
+<script type="text/javascript">
+        // Handles CoefficientValueSet form instance generation
+        $('.conf_name-form tbody tr').formset({
+            prefix: 'config_names',
+            addText: 'Add Configurations/Constants',
+            deleteContainerClass: 'delete-here',
+            deleteText: 'Remove'
+        });
+</script>
 
 {% load static i18n %}
 {% load mptt_tags %}
@@ -49,11 +58,9 @@
 
         <div class="col-md-12">
             <div class="form-group">
-                {{ part_conf_copy_form.management_form }}
                 {{ part_conf_copy_form | crispy }}
             </div>
             <div class="form-group">
-                {{ form.management_form }}
                 {{ form | crispy }}
             </div>
             <h5 id = '__all__'>Configurations/Constants</h5>
@@ -102,38 +109,5 @@
 
 
 {% block javascript %}
-    <script type="text/javascript">
 
-        $(document).ready(function() {
-
-            // Handles CoefficientValueSet form instance generation
-            $('.conf_name-form tbody tr').formset({
-                prefix: 'config_names',
-                addText: 'Add Configurations/Constants',
-                deleteContainerClass: 'delete-here',
-                deleteText: 'Remove'
-            });
-
-            let formRows = $('.dynamic-form');
-            formRows.each(function() {
-                row = $(this)
-                let removeButtons = row.find('.delete-row')
-                for (i = 0; i < removeButtons.length; i++) { 
-                    if (i != 0) {
-                        removeButtons[i].remove()
-                    }
-                }
-            })
-
-            let addRowCount = 0;
-            $('.add-row').each(function() {
-                addRowCount++;
-            })
-
-            if (addRowCount > 1) {
-                $('.add-row')[0].remove();
-            }
-        });
-
-    </script>
 {% endblock javascript %}
