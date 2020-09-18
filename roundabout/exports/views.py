@@ -139,16 +139,29 @@ class ZipExport(ListView,LoginRequiredMixin):
         pass
 
     @staticmethod
-    def zf_safewrite(zf, fname, content):
-        """Catch duplicate filenames in zip and rename them with a counter: eg: "fname (1).ext" """
-        with warnings.catch_warnings():
-            warnings.filterwarnings('error')
-            try: zf.writestr(fname, content)
-            except UserWarning:
-                base, ext = splitext(fname)
-                dupes = [zi for zi in zf.infolist() if zi.filename.startswith(base) and zi.filename.endswith(ext)]
-                dupe_fname = '{} ({}){}'.format(base, len(dupes), ext)
-                zf.writestr(dupe_fname, content)
+    def zf_safewrite(zf, fname, content, mode=('count','skip',None)[0]):
+        """
+        Catch duplicate filename to be written into zip and respond according to "mode".
+            mode=count: rename duplicate filename to include a counter: eg: "fname (1).ext"
+            mode=skip: incoming duplicate filename is not written to the zip
+            mode=None: duplicate filename is written into zip anyways (the default zf.writestr() behavior)
+        Default mode is "count".
+        """
+        if mode:
+            with warnings.catch_warnings():
+                warnings.filterwarnings('error')
+                try: zf.writestr(fname, content)
+                except UserWarning:
+                    if mode == 'count':
+                        base, ext = splitext(fname)
+                        dupes = [zi for zi in zf.infolist() if zi.filename.startswith(base) and zi.filename.endswith(ext)]
+                        dupe_fname = '{} ({}){}'.format(base, len(dupes), ext)
+                        zf.writestr(dupe_fname, content)
+                    else:  # mode=='skip'
+                        pass  # file is not written
+
+        else: # regular zf filewrite. zip may include duplicate filenames
+            zf.writestr(fname, content)
 
 
 ## Bulk Export Classes ##
@@ -322,28 +335,30 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
                                 config=obj
                             else: continue # skip it if it's TBD, ie not "deployed".
 
-                    if obj==config:
-                        # config obj's always result in a new csv, incl. previous calibration if any
+                    if obj==config:  # config obj's always trigger csv file-writes.
                         bundled_objs.append( (calib,config,const) )
+                    elif obj == const:  # consts obj's always trigger csv file-writes.
+                        bundled_objs.append( (calib,const,config) )
                     elif obj==calib and isinstance(prev,CalibrationEvent):
                         # consecutive calibrations get their own csv's
                         bundled_objs.append( (prev,None,const) )
-
-                    if obj!=const:
-                        prev = obj  # note previous object, unless it's a constant
+                    prev = obj  # note previous object
 
                 # make sure not to skip an end-of-loop trailing Calibration
                 if isinstance(prev,CalibrationEvent):
                     bundled_objs.append( (prev,None,const) )
 
                 # write bundles to zip as csv's
-                for bundle in bundled_objs:
+                for bundle in reversed(bundled_objs):
+                    # reversed() invoked to record only the _final_ "same-day bundle", if multiple are present.
+                    # This works because in write_csv(), zf_safewrite() is set to mode='skip', which disallows the recording of duplicate filenames.
+                    # In this way, the ultimate "same-day file" is recorded first and any subsequent others are skipped.
                     cls.write_csv(zf, bundle, subdir)
 
 
     @classmethod
     def write_csv(cls, zf, bundle, subdir=None):
-        fname_obj = bundle[1] or bundle[0] # config is in bundle[1] if avail
+        fname_obj = bundle[1] or bundle[0] # new config/const are found in bundle[1]
         csv_fname = '{}__{}.csv'.format(fname_obj.inventory.serial_number, fname_obj.date.strftime('%Y%m%d'))
         csv_content = io.StringIO()
         csv_writer = CSV.writer(csv_content)
@@ -363,7 +378,7 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
                 csv_writer.writerows(rows)
                 for extra_fname, extra_content in aux_files:
                     if subdir: extra_fname = join(subdir, extra_fname)
-                    cls.zf_safewrite(zf, extra_fname, extra_content)
+                    cls.zf_safewrite(zf, extra_fname, extra_content, mode='skip')
 
             elif isinstance(obj,ConfigEvent):
                 # Reference to Configs-Only Class
@@ -374,7 +389,7 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
         # write csv to zip
         if subdir: csv_fname = join(subdir, csv_fname)
         if has_content: # avoid blank files
-            cls.zf_safewrite(zf, csv_fname, csv_content.getvalue())
+            cls.zf_safewrite(zf, csv_fname, csv_content.getvalue(), mode='skip')
 
 
 # Cruises CSV
