@@ -36,7 +36,7 @@ class AssemblyPartSerializer(DynamicModelSerializer):
 
     class Meta:
         model = AssemblyPart
-        fields = ['id', 'part', 'parent', 'children', 'note' ]
+        fields = ['id', 'part', 'parent', 'children', 'note', ]
 
 
 class AssemblyTypeSerializer(DynamicModelSerializer):
