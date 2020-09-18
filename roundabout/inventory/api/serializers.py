@@ -67,12 +67,20 @@ class RecursiveField(serializers.Serializer):
         return serializer.data
 """
 
+class SubcategorySerializer(DynamicModelSerializer):
+
+    class Meta:
+        model = Inventory
+        fields = ('id', 'parent')
+
 class InventorySerializer(DynamicModelSerializer):
-    location = DynamicRelationField('LocationSerializer')
-    part = DynamicRelationField('PartSerializer', read_only=True)
-    #children = RecursiveField(many=True)
-    children = serializers.SerializerMethodField('get_children')
+    location = DynamicRelationField('LocationSerializer', embed=True)
+    part = DynamicRelationField('PartSerializer', read_only=True, embed=True)
+    children = DynamicRelationField('InventorySerializer', read_only=True, many=True)
     custom_fields = serializers.SerializerMethodField('get_custom_fields')
+    parent = DynamicRelationField(
+        'InventorySerializer', read_only=True
+    )
 
     class Meta:
         model = Inventory
@@ -90,7 +98,7 @@ class InventorySerializer(DynamicModelSerializer):
             obj_custom_fields = obj.fieldvalues.filter(is_current=True).select_related('field')
             # create initial empty dict
             custom_fields = {}
-            
+
             for field in obj_custom_fields:
                 custom_fields[field.field.field_name] = field.field_value
             return custom_fields
@@ -100,8 +108,6 @@ class InventorySerializer(DynamicModelSerializer):
     def get_children(self, obj):
         # Get this item's children
         custom_fields = None
-
         if obj.children.exists():
             custom_fields = [child.id for child in obj.children.all()]
-
         return custom_fields

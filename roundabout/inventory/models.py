@@ -89,7 +89,7 @@ class Inventory(MPTTModel):
     flag = models.BooleanField(choices=FLAG_TYPES, blank=False, default=False)
     time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
 
-    tracker = FieldTracker(fields=['location', 'parent', 'build'])
+    #tracker = FieldTracker(fields=['location', 'build'])
 
     class MPTTMeta:
         order_insertion_by = ['serial_number']

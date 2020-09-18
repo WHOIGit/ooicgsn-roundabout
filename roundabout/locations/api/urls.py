@@ -21,10 +21,11 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter, SimpleRouter
+from dynamic_rest.routers import DynamicRouter
 from .views import LocationViewSet
 
 # Create a router and register our viewsets with it.
-router = SimpleRouter()
+router = DynamicRouter()
 router.register(r'locations', LocationViewSet, 'locations' )
 
 urlpatterns = [
