@@ -59,28 +59,13 @@ class ActionSerializer(DynamicModelSerializer):
         return action
     """
 
-"""
-# Need a "sub-serializer" to handle self refernce MPTT tree structures
-class RecursiveField(serializers.Serializer):
-    def to_representation(self, value):
-        serializer = self.parent.parent.__class__(value, context=self.context)
-        return serializer.data
-"""
-
-class SubcategorySerializer(DynamicModelSerializer):
-
-    class Meta:
-        model = Inventory
-        fields = ('id', 'parent')
 
 class InventorySerializer(DynamicModelSerializer):
-    location = DynamicRelationField('LocationSerializer', embed=True)
-    part = DynamicRelationField('PartSerializer', read_only=True, embed=True)
+    location = DynamicRelationField('LocationSerializer', read_only=True)
+    part = DynamicRelationField('PartSerializer', read_only=True)
     children = DynamicRelationField('InventorySerializer', read_only=True, many=True)
     custom_fields = serializers.SerializerMethodField('get_custom_fields')
-    parent = DynamicRelationField(
-        'InventorySerializer', read_only=True
-    )
+    parent = DynamicRelationField('InventorySerializer', read_only=True)
 
     class Meta:
         model = Inventory
@@ -111,3 +96,19 @@ class InventorySerializer(DynamicModelSerializer):
         if obj.children.exists():
             custom_fields = [child.id for child in obj.children.all()]
         return custom_fields
+
+
+# Need a "sub-serializer" to handle self refernce MPTT tree structures
+# If we need to embed parent/children data instead of side-loading
+class InventoryTreeSerializer(InventorySerializer):
+    children = DynamicRelationField('InventorySerializer', read_only=True, many=True, embed=True)
+    parent = DynamicRelationField('InventorySerializer', read_only=True, embed=True)
+
+
+"""
+# Need a "sub-serializer" to handle self refernce MPTT tree structures
+class RecursiveField(serializers.Serializer):
+    def to_representation(self, value):
+        serializer = self.parent.parent.__class__(value, context=self.context)
+        return serializer.data
+"""

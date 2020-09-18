@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -20,43 +20,40 @@
 """
 
 from rest_framework import serializers
+from dynamic_rest.serializers import DynamicModelSerializer
+from dynamic_rest.fields import DynamicRelationField
 
-from ..models import Assembly, AssemblyPart, AssemblyType
+from ..models import Assembly, AssemblyPart, AssemblyType, AssemblyRevision
 from roundabout.parts.api.serializers import PartSerializer
 
 
-class AssemblyPartSerializer(serializers.ModelSerializer):
-    part = PartSerializer(read_only=True)
+class AssemblyPartSerializer(DynamicModelSerializer):
+    part = DynamicRelationField('PartSerializer', read_only=True, embed=True)
 
     class Meta:
         model = AssemblyPart
         fields = ['id', 'part', 'parent', 'note', 'order' ]
 
-    @staticmethod
-    def setup_eager_loading(queryset):
-        """ Perform necessary prefetching of data. """
-        queryset = queryset.select_related('part')
 
-        return queryset
-
-
-class AssemblyTypeSerializer(serializers.ModelSerializer):
+class AssemblyTypeSerializer(DynamicModelSerializer):
     class Meta:
         model = AssemblyType
         fields = ['name']
 
 
-class AssemblySerializer(serializers.ModelSerializer):
-    assembly_parts = AssemblyPartSerializer(many=True, read_only=True)
-    assembly_type = AssemblyTypeSerializer(read_only=True)
+class AssemblyRevisionSerializer(DynamicModelSerializer):
+    #assembly = AssemblySerializer(read_only=True)
+    assembly_parts = DynamicRelationField('AssemblyPartSerializer', read_only=True, many=True)
+
+    class Meta:
+        model = AssemblyRevision
+        fields = ['id', 'revision_code', 'revision_note', 'created_at', 'assembly', 'assembly_parts']
+
+
+class AssemblySerializer(DynamicModelSerializer):
+    assembly_type = DynamicRelationField('AssemblyTypeSerializer', read_only=True, embed=True)
+    assembly_revisions = DynamicRelationField('AssemblyRevisionSerializer', read_only=True, many=True)
 
     class Meta:
         model = Assembly
-        fields = ['id', 'name', 'assembly_number', 'description', 'assembly_type', 'assembly_parts' ]
-
-    @staticmethod
-    def setup_eager_loading(queryset):
-        """ Perform necessary prefetching of data. """
-        queryset = queryset.prefetch_related('assembly_parts')
-
-        return queryset
+        fields = ['id', 'name', 'assembly_number', 'description', 'assembly_type', 'assembly_revisions' ]

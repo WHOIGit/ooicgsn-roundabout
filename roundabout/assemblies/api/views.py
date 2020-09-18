@@ -21,18 +21,13 @@
 
 from rest_framework import generics, viewsets, filters
 from rest_framework.permissions import IsAuthenticated
+from dynamic_rest.viewsets import DynamicModelViewSet
+
 from ..models import Assembly
 from .serializers import AssemblySerializer, AssemblyPartSerializer
 
 
-class AssemblyViewSet(viewsets.ModelViewSet):
+class AssemblyViewSet(DynamicModelViewSet):
     serializer_class = AssemblySerializer
     permission_classes = (IsAuthenticated,)
-    search_fields = ['name']
-    filter_backends = (filters.SearchFilter,)
-
-    def get_queryset(self):
-        queryset = Assembly.objects.all()
-        # Set up eager loading to avoid N+1 selects
-        queryset = self.get_serializer_class().setup_eager_loading(queryset)
-        return queryset
+    queryset = Assembly.objects.all()

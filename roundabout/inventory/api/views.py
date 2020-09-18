@@ -23,7 +23,7 @@ from rest_framework import generics, viewsets, filters
 from rest_framework.permissions import IsAuthenticated
 from dynamic_rest.viewsets import DynamicModelViewSet
 from ..models import Inventory, Action, PhotoNote
-from .serializers import InventorySerializer, ActionSerializer, PhotoNoteSerializer
+from .serializers import InventorySerializer, InventoryTreeSerializer, ActionSerializer, PhotoNoteSerializer
 
 
 class ActionViewSet(DynamicModelViewSet):
