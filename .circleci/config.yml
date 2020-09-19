@@ -79,10 +79,8 @@ jobs:
             docker-compose -f local.yml run --rm tests \
                sh -c "until curl -Is http://localhost:8000; do echo 'sleeping'; sleep 10; done  && 
                   google-chrome --version && chromedriver --version &&
-                  firefox --version && geckodriver --version &&
                   nodejs -v &&
-                  ./RunAllTests-Chrome-Linux.bat && 
-                  ./RunAllTests-Firefox-Linux.bat"
+                  ./RunAllTests-Chrome-Linux.bat"
 
 
       - run:
