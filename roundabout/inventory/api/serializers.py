@@ -62,7 +62,11 @@ class ActionSerializer(DynamicModelSerializer):
 
 
 class InventorySerializer(DynamicModelSerializer):
-    location = DynamicRelationField('LocationSerializer', read_only=True)
+    #location = DynamicRelationField('LocationSerializer', read_only=True)
+    location = serializers.HyperlinkedRelatedField(
+        read_only=True,
+        view_name='locations-detail'
+    )
     part = DynamicRelationField('PartSerializer', read_only=True)
     children = DynamicRelationField('InventorySerializer', read_only=True, many=True)
     custom_fields = serializers.SerializerMethodField('get_custom_fields')

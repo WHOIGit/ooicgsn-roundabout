@@ -24,7 +24,6 @@ from dynamic_rest.serializers import DynamicModelSerializer
 from dynamic_rest.fields import DynamicRelationField
 
 from ..models import CalibrationEvent, CoefficientValueSet, CoefficientName, CoefficientNameEvent, CoefficientValue
-#from roundabout.inventory.api.serializers import InventorySerializer
 from roundabout.parts.api.serializers import PartSerializer
 
 class CalibrationEventSerializer(DynamicModelSerializer):
