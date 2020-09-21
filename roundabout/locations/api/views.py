@@ -19,14 +19,14 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import generics, filters
+from rest_framework import generics, filters, viewsets
 from rest_framework.permissions import IsAuthenticated
-from dynamic_rest.viewsets import DynamicModelViewSet
+
 from ..models import Location
 from .serializers import LocationSerializer
 
 
-class LocationViewSet(DynamicModelViewSet):
+class LocationViewSet(viewsets.ModelViewSet):
     serializer_class = LocationSerializer
     permission_classes = (IsAuthenticated,)
     queryset = Location.objects.all()

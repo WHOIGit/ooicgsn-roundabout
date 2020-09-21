@@ -20,16 +20,12 @@
 """
 
 from rest_framework import serializers
-from dynamic_rest.serializers import DynamicModelSerializer
-from dynamic_rest.fields import DynamicRelationField
+from rest_flex_fields import FlexFieldsModelSerializer
 
 from ..models import CalibrationEvent, CoefficientValueSet, CoefficientName, CoefficientNameEvent, CoefficientValue
 from roundabout.parts.api.serializers import PartSerializer
 
-class CalibrationEventSerializer(DynamicModelSerializer):
-    #inventory = DynamicRelationField('InventorySerializer', read_only=True)
-    coefficient_value_sets = DynamicRelationField('CoefficientValueSetSerializer', read_only=True, many=True, embed=True)
-
+class CalibrationEventSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = CalibrationEvent
         fields = [
@@ -46,11 +42,12 @@ class CalibrationEventSerializer(DynamicModelSerializer):
             'coefficient_value_sets'
         ]
 
+        expandable_fields = {
+            'coefficient_value_sets': ('roundabout.calibrations.api.serializers.CoefficientValueSetSerializer', {'many': True})
+        }
 
-class CoefficientNameEventSerializer(DynamicModelSerializer):
-    part = DynamicRelationField('PartSerializer', read_only=True)
-    coefficient_names = DynamicRelationField('CoefficientNameSerializer', read_only=True, many=True, embed=True)
 
+class CoefficientNameEventSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = CoefficientNameEvent
         fields = [
@@ -65,9 +62,13 @@ class CoefficientNameEventSerializer(DynamicModelSerializer):
             'coefficient_names'
         ]
 
+        expandable_fields = {
+            'part': PartSerializer,
+            'coefficient_names': ('roundabout.calibrations.api.serializers.CoefficientNameSerializer', {'many': True})
+        }
 
-class CoefficientNameSerializer(DynamicModelSerializer):
 
+class CoefficientNameSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = CoefficientName
         fields = [
@@ -81,11 +82,7 @@ class CoefficientNameSerializer(DynamicModelSerializer):
         ]
 
 
-class CoefficientValueSetSerializer(DynamicModelSerializer):
-    calibration_event = DynamicRelationField('CalibrationEventSerializer', read_only=True)
-    coefficient_name = DynamicRelationField('CoefficientNameSerializer', read_only=True, embed=True)
-    coefficient_values = DynamicRelationField('CoefficientValueSerializer', read_only=True, embed=True, many=True)
-
+class CoefficientValueSetSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = CoefficientValueSet
         fields = [
@@ -98,9 +95,14 @@ class CoefficientValueSetSerializer(DynamicModelSerializer):
             'coefficient_values',
         ]
 
+        expandable_fields = {
+            'calibration_event': 'roundabout.calibrations.api.serializers.CalibrationEventSerializer',
+            'coefficient_name': 'roundabout.calibrations.api.serializers.CoefficientNameSerializer',
+            'coefficient_values': ('roundabout.calibrations.api.serializers.CoefficientValueSerializer', {'many': True})
+        }
 
-class CoefficientValueSerializer(DynamicModelSerializer):
 
+class CoefficientValueSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = CoefficientValue
         fields = [

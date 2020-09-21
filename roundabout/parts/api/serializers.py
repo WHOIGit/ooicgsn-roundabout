@@ -20,11 +20,11 @@
 """
 
 from rest_framework import serializers
-from dynamic_rest.serializers import DynamicModelSerializer
+from rest_flex_fields import FlexFieldsModelSerializer
 from ..models import Part, PartType
 
 
-class PartSerializer(DynamicModelSerializer):
+class PartSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = Part
         fields = ('id', 'name', 'friendly_name', 'part_number', 'unit_cost', 'refurbishment_cost' )

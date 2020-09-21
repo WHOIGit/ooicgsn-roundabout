@@ -20,51 +20,46 @@
 """
 
 from rest_framework import serializers
-from dynamic_rest.serializers import DynamicModelSerializer
-from dynamic_rest.fields import DynamicRelationField
+from rest_flex_fields import FlexFieldsModelSerializer
 
 from ..models import Assembly, AssemblyPart, AssemblyType, AssemblyRevision
 from roundabout.parts.api.serializers import PartSerializer
 from roundabout.core.api.serializers import RecursiveFieldSerializer
 
 
-class AssemblyPartSerializer(DynamicModelSerializer):
-    part = DynamicRelationField('PartSerializer', read_only=True, embed=True)
-    parent = DynamicRelationField('AssemblyPartSerializer', read_only=True)
-    #children = RecursiveFieldSerializer(many=True)
-    children = DynamicRelationField('AssemblyPartSerializer', read_only=True, many=True)
-
+class AssemblyPartSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = AssemblyPart
         fields = ['id', 'part', 'parent', 'children', 'note', ]
 
+        expandable_fields = {
+            'part': PartSerializer,
+            'parent': 'roundabout.assemblies.api.serializers.AssemblyPartSerializer',
+            'children': ('roundabout.assemblies.api.serializers.AssemblyPartSerializer', {'many': True})
+        }
 
-class AssemblyTypeSerializer(DynamicModelSerializer):
+class AssemblyTypeSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = AssemblyType
         fields = ['name']
 
 
-class AssemblyRevisionSerializer(DynamicModelSerializer):
-    #assembly = AssemblySerializer(read_only=True)
-    assembly = DynamicRelationField('AssemblySerializer', read_only=True, embed=True)
-    assembly_parts = DynamicRelationField(
-        'AssemblyPartSerializer',
-        read_only=True,
-        many=True,
-        #embed=True,
-        #queryset=AssemblyPart.objects.root_nodes()
-    )
-
+class AssemblyRevisionSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = AssemblyRevision
         fields = ['id', 'revision_code', 'revision_note', 'created_at', 'assembly', 'assembly_parts']
 
+        expandable_fields = {
+            'assembly': 'roundabout.assemblies.api.serializers.AssemblySerializer',
+            'assembly_parts': ('roundabout.assemblies.api.serializers.AssemblyPartSerializer', {'many': True})
+        }
 
-class AssemblySerializer(DynamicModelSerializer):
-    assembly_type = DynamicRelationField('AssemblyTypeSerializer', read_only=True, embed=True)
-    assembly_revisions = DynamicRelationField('AssemblyRevisionSerializer', read_only=True, many=True)
-
+class AssemblySerializer(FlexFieldsModelSerializer):
     class Meta:
         model = Assembly
         fields = ['id', 'name', 'assembly_number', 'description', 'assembly_type', 'assembly_revisions' ]
+
+        expandable_fields = {
+            'assembly_type': 'roundabout.assemblies.api.serializers.AssemblyTypeSerializer',
+            'assembly_revisions': ('roundabout.assemblies.api.serializers.AssemblyRevisionSerializer', {'many': True})
+        }

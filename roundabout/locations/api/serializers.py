@@ -20,17 +20,22 @@
 """
 
 from rest_framework import serializers
-from dynamic_rest.serializers import DynamicModelSerializer
-from dynamic_rest.fields import DynamicRelationField
+from rest_flex_fields import FlexFieldsModelSerializer
 from ..models import Location
 
 
-class LocationSerializer(DynamicModelSerializer):
-    parent = DynamicRelationField('LocationSerializer', read_only=True)
-    children = DynamicRelationField('LocationSerializer', read_only=True, many=True)
+class LocationSerializer(FlexFieldsModelSerializer):
+    parent = serializers.PrimaryKeyRelatedField(read_only=True)
+    #parent = DynamicRelationField('LocationSerializer', read_only=True)
+    #children = DynamicRelationField('LocationSerializer', read_only=True, many=True)
 
     class Meta:
         model = Location
-        fields = ('id', 'name', 'parent', 'children', 'weight',
+        fields = ['id', 'name', 'parent', 'children', 'weight',
             'location_type', 'location_id', 'root_type', 'created_at',
-        )
+        ]
+
+        expandable_fields = {
+            'parent': 'roundabout.locations.api.serializers.LocationSerializer',
+            'children': ('roundabout.locations.api.serializers.LocationSerializer', {'many': True})
+        }

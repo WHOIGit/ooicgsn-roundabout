@@ -21,11 +21,10 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter, SimpleRouter
-from dynamic_rest.routers import DynamicRouter
 from .views import CalibrationEventViewSet, CoefficientNameEventViewSet
 
 # Create a router and register our viewsets with it.
-router = DynamicRouter()
+router = DefaultRouter()
 router.register(r'calibrations/calibration_events', CalibrationEventViewSet, 'calibrations/calibration_events' )
 router.register(r'calibrations/coefficent_name_events', CoefficientNameEventViewSet, 'calibrations/coefficent_name_events' )
 

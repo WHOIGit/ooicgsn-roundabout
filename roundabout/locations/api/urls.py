@@ -25,7 +25,7 @@ from dynamic_rest.routers import DynamicRouter
 from .views import LocationViewSet
 
 # Create a router and register our viewsets with it.
-router = DynamicRouter()
+router = DefaultRouter()
 router.register(r'locations', LocationViewSet, 'locations' )
 
 urlpatterns = [

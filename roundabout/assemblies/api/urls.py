@@ -21,11 +21,10 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter, SimpleRouter
-from dynamic_rest.routers import DynamicRouter
 from .views import AssemblyViewSet, AssemblyRevisionViewSet, AssemblyPartViewSet
 
 # Create a router and register our viewsets with it.
-router = DynamicRouter()
+router = DefaultRouter()
 router.register(r'assemblies', AssemblyViewSet, 'assemblies' )
 router.register(r'assembly_revisions', AssemblyRevisionViewSet, 'assembly_revisions' )
 router.register(r'assembly_parts', AssemblyPartViewSet, 'assembly_parts' )
