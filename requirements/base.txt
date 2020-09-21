@@ -20,6 +20,7 @@ coreapi==2.3.3  # https://github.com/core-api/python-client
 django-filter==2.2.0
 dynamic-rest==1.9.6
 djangorestframework-link-header-pagination==0.1.1
+drf-flex-fields==0.1.8
 
 # Your custom requirements go here
 django-mptt==0.9.1
