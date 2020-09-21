@@ -207,8 +207,8 @@
         // Toggle display of Constant functionality 
         let user_id = '{{ user.id }}'
         let inv_part_type = '{{ assembly_part.part.part_type }}';
-        let part_has_cals = '{{ assembly_part.part.config_name_events.exists }}';
-        if (inv_part_type == 'Instrument' && part_has_cals == 'True') {
+        let part_has_configs = '{{ part_has_configs }}';
+        if ((inv_part_type == 'Instrument' || inv_part_type == 'Electrical') && part_has_configs == 'True') {
             $('#add_configdefault_action').show();
             $('#config-tabs-nav').show();
             $('#config_default-template-tab').show().css('display', '');
