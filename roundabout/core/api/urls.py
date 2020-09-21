@@ -26,6 +26,7 @@ from roundabout.assemblies.api.views import AssemblyViewSet, AssemblyRevisionVie
 from roundabout.calibrations.api.views import CalibrationEventViewSet, CoefficientNameEventViewSet
 from roundabout.locations.api.views import LocationViewSet
 from roundabout.parts.api.views import PartViewSet
+from roundabout.userdefinedfields.api.views import FieldViewSet, FieldValueViewSet
 
 # Create a router and register our viewsets with it.
 router = DefaultRouter()
@@ -43,6 +44,9 @@ router.register(r'calibrations/coefficent_name_events', CoefficientNameEventView
 router.register(r'locations', LocationViewSet, 'locations' )
 
 router.register(r'parts', PartViewSet, 'parts' )
+
+router.register(r'userdefinedfields/fields', FieldViewSet, 'userdefinedfields/fields' )
+router.register(r'userdefinedfields/field-values', FieldValueViewSet, 'userdefinedfields/field-values' )
 
 app_name = 'api_v1'
 urlpatterns = [
