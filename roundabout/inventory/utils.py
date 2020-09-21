@@ -322,7 +322,9 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
     elif action_type == Action.EVENTAPPROVE:
         action_record.detail = '%s Approved. %s' % (obj_label, detail)
         action_record.save()
-
+    elif action_type == Action.CALCSVIMPORT:
+        action_record.detail = '%s Created via CSV Import. %s' % (obj_label, detail)
+        action_record.save()
     else:
         action_record.save()
 
