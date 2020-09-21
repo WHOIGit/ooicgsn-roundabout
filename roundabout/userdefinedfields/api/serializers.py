@@ -20,25 +20,26 @@
 """
 
 from rest_framework import serializers
-from dynamic_rest.serializers import DynamicModelSerializer
-from dynamic_rest.fields import DynamicRelationField
+from rest_flex_fields import FlexFieldsModelSerializer
 
 from ..models import *
 from roundabout.parts.api.serializers import PartSerializer
 from roundabout.inventory.api.serializers import InventorySerializer
 
 
-class FieldSerializer(DynamicModelSerializer):
+class FieldSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = Field
         fields = '__all__'
 
 
-class FieldValueSerializer(DynamicModelSerializer):
-    field = DynamicRelationField('FieldSerializer')
-    part = DynamicRelationField('PartSerializer')
-    inventory = DynamicRelationField('InventorySerializer')
-
+class FieldValueSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = FieldValue
         fields = '__all__'
+
+        expandable_fields = {
+            'field': FieldSerializer,
+            'part': PartSerializer,
+            'inventory': (InventorySerializer, {'many': True})
+        }

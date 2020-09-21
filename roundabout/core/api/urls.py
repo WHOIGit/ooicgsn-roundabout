@@ -21,14 +21,30 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter, SimpleRouter
-from .views import AssemblyViewSet, AssemblyRevisionViewSet, AssemblyPartViewSet
+from roundabout.inventory.api.views import InventoryViewSet, ActionViewSet, PhotoNoteViewSet
+from roundabout.assemblies.api.views import AssemblyViewSet, AssemblyRevisionViewSet, AssemblyPartViewSet
+from roundabout.calibrations.api.views import CalibrationEventViewSet, CoefficientNameEventViewSet
+from roundabout.locations.api.views import LocationViewSet
+from roundabout.parts.api.views import PartViewSet
 
 # Create a router and register our viewsets with it.
 router = DefaultRouter()
+router.register(r'inventory', InventoryViewSet, 'inventory' )
+router.register(r'actions', ActionViewSet, 'actions' )
+router.register(r'photos', PhotoNoteViewSet, 'photos' )
+
 router.register(r'assemblies', AssemblyViewSet, 'assemblies' )
 router.register(r'assembly_revisions', AssemblyRevisionViewSet, 'assembly_revisions' )
 router.register(r'assembly_parts', AssemblyPartViewSet, 'assembly_parts' )
 
+router.register(r'calibrations/calibration_events', CalibrationEventViewSet, 'calibrations/calibration_events' )
+router.register(r'calibrations/coefficent_name_events', CoefficientNameEventViewSet, 'calibrations/coefficent_name_events' )
+
+router.register(r'locations', LocationViewSet, 'locations' )
+
+router.register(r'parts', PartViewSet, 'parts' )
+
+app_name = 'api_v1'
 urlpatterns = [
     path('', include(router.urls) ),
 ]

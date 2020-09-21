@@ -24,7 +24,7 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 from .views import FieldViewSet, FieldValueViewSet
 
 # Create a router and register our viewsets with it.
-router = SimpleRouter()
+router = DefaultRouter()
 router.register(r'userdefinedfields/fields', FieldViewSet, 'userdefinedfields/fields' )
 router.register(r'userdefinedfields/field-values', FieldValueViewSet, 'userdefinedfields/field-values' )
 

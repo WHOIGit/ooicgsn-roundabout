@@ -19,20 +19,20 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import generics, filters
+from rest_framework import generics, filters, viewsets
 from rest_framework.permissions import IsAuthenticated
-from dynamic_rest.viewsets import DynamicModelViewSet
+
 from ..models import *
 from .serializers import FieldSerializer, FieldValueSerializer
 
 
-class FieldViewSet(DynamicModelViewSet):
+class FieldViewSet(viewsets.ModelViewSet):
+    queryset = Field.objects.all()
     serializer_class = FieldSerializer
     permission_classes = (IsAuthenticated,)
-    queryset = Field.objects.all()
 
 
-class FieldValueViewSet(DynamicModelViewSet):
+class FieldValueViewSet(viewsets.ModelViewSet):
+    queryset = FieldValue.objects.all()
     serializer_class = FieldValueSerializer
     permission_classes = (IsAuthenticated,)
-    queryset = FieldValue.objects.all()

@@ -21,24 +21,24 @@
 
 from rest_framework import generics, viewsets, filters
 from rest_framework.permissions import IsAuthenticated
-from dynamic_rest.viewsets import DynamicModelViewSet
 from ..models import Inventory, Action, PhotoNote
-from .serializers import InventorySerializer, InventoryTreeSerializer, ActionSerializer, PhotoNoteSerializer
+from .serializers import InventorySerializer, ActionSerializer, PhotoNoteSerializer
 
 
-class ActionViewSet(DynamicModelViewSet):
+class ActionViewSet(viewsets.ModelViewSet):
     serializer_class = ActionSerializer
     permission_classes = (IsAuthenticated,)
     queryset = Action.objects.all()
 
 
-class InventoryViewSet(DynamicModelViewSet):
+class InventoryViewSet(viewsets.ModelViewSet):
     serializer_class = InventorySerializer
     permission_classes = (IsAuthenticated,)
     queryset = Inventory.objects.all()
+    filterset_fields = ('serial_number',)
 
 
-class PhotoNoteViewSet(DynamicModelViewSet):
+class PhotoNoteViewSet(viewsets.ModelViewSet):
     serializer_class = PhotoNoteSerializer
     permission_classes = (IsAuthenticated,)
     queryset = PhotoNote.objects.all()
