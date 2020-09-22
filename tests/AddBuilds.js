@@ -34,6 +34,20 @@ async function getDate(dateString, daysPrior) {
     return newDate;
 }
 
+async function fixMonthAbbr(month)
+{
+    var abbr;
+
+    if (month == "Sep") { abbr = month + "t.";}
+    else if (month == "Jul") { abbr = month + "y.";}
+    else if (month == "Mar") { abbr = month + "ch";}
+    else if (month == "Apr")  { abbr = month + "il";}
+    else if (month == "Jun") { abbr = month + "e";}
+    else { abbr = month + "."; }
+
+    return abbr;
+}
+
 (async function addBuilds() {
 
     let chromeCapabilities = Capabilities.chrome();
@@ -264,12 +278,14 @@ async function getDate(dateString, daysPrior) {
         // 27 | click | id=id_date | 
         var ele = await driver.findElement(By.xpath("//input[@id='id_date']"));
         var dateString = await ele.getAttribute("value");  //getText did not work
+
+        // Get new date 2 days prior to current date
         var newDate = await getDate(dateString, 2);
 
-   
+  
         await driver.findElement(By.xpath("//input[@id='id_date']")).clear();
         await driver.executeScript("arguments[0].value = arguments[1]", ele, newDate); 
-//        await driver.findElement(By.xpath("//input[@id='id_date']")).sendKeys(newDate);  //this appends new date to old date
+       // await driver.findElement(By.xpath("//input[@id='id_date']")).sendKeys(newDate);  //this appends new date to old date
 
         // Set Location - to avoid spinning wheel bug
         const dropdown = await driver.findElement(By.id("id_location"));
@@ -280,7 +296,7 @@ async function getDate(dateString, daysPrior) {
         // Verify Total Time in Field and Current Deployment Time in Field: 2 days 0 hours
         await new Promise(r => setTimeout(r, 4000));
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
-// UNCOMMENT FOR DOCKER - history shows 27 days due to staging testing
+        // UNCOMMENT FOR DOCKER - history shows 27 days due to staging testing
         assert(bodyText.includes("Total Time in Field: 2 days 0 hours"));        
         assert(bodyText.includes("Current Deployment Time in Field: 2 days 0 hours"));
 
@@ -294,17 +310,19 @@ async function getDate(dateString, daysPrior) {
         // Verify Deployment Times in the Deployments Tab
         bodyText = await driver.findElement(By.tagName("Body")).getText();
         assert(bodyText.includes("Deployment Time in Field: 2 days 0 hours"));
+
         var date = new Date(newDate);
         var fullDate = date.toDateString();
         var rdbDate = fullDate.split(" ");
-//FIX date Sep -> Sept. & other months
-        if (rdbDate[1] == "Sep") { rdbDate[1] = rdbDate[1] + "t";}
-        rdbDate = rdbDate[1] + ". " + rdbDate[2] + ", " + rdbDate[3] + ",";
+
+        //FIX date Sep -> Sept. & other months
+        var month = await fixMonthAbbr(rdbDate[1]);
+        rdbDate = month + " " + rdbDate[2] + ", " + rdbDate[3] + ",";
         assert(bodyText.includes("Deployment To Field Date: " + rdbDate));
 
         // Click Inventory and verify Deployment times
         // 33 | click | id=inventory_12_anchor | 
-        await driver.findElement(By.partialLinkText("sewing")).click();
+        await driver.findElement(By.partialLinkText("sewing - 1232")).click();
         // 34 | click | id=deployments-tab | 
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("deployments-tab")).click();
@@ -315,9 +333,9 @@ async function getDate(dateString, daysPrior) {
         bodyText = await driver.findElement(By.tagName("Body")).getText();
         assert(bodyText.includes("Inventory Time in Field: 2 days 0 hours"));    
         var rdbDate = fullDate.split(" ");
-//FIX date Sep -> Sept. & other months
-        if (rdbDate[1] == "Sep") { rdbDate[1] = rdbDate[1] + "t"; }
-        rdbDate = rdbDate[1] + ". " + rdbDate[2] + ", " + rdbDate[3] + ",";
+
+        month = await fixMonthAbbr(rdbDate[1]);
+        rdbDate = month + " " + rdbDate[2] + ", " + rdbDate[3] + ",";
         assert(bodyText.includes("Deployment To Field Date: " + rdbDate));
         
         // Remove sewing Inventory from Build
@@ -327,10 +345,12 @@ async function getDate(dateString, daysPrior) {
         // 40 | click | linkText=Recover from Deployment | 
         await driver.findElement(By.linkText("Recover from Deployment")).click();
 
-        // Set date to 1 day prior to current date
+        // Get current date
         await new Promise(r => setTimeout(r, 2000));
         var ele = await driver.findElement(By.xpath("//input[@id='id_date']"));
         var dateString = await ele.getAttribute("value"); 
+
+        // Get new date 1 day prior to current date
         var newDate = await getDate(dateString, 1);
         await driver.findElement(By.xpath("//input[@id='id_date']")).clear();
         await driver.executeScript("arguments[0].value = arguments[1]", ele, newDate); 
@@ -347,12 +367,13 @@ async function getDate(dateString, daysPrior) {
         await new Promise(r => setTimeout(r, 2000));
         bodyText = await driver.findElement(By.tagName("Body")).getText();
         assert(bodyText.includes("Inventory Time in Field: 1 days 0 hours"));
+
         var date = new Date(newDate);
         var fullDate = date.toDateString();
         var rdbDate = fullDate.split(" ");
-        //FIX date Sep -> Sept. & other months
-        if (rdbDate[1] == "Sep") { rdbDate[1] = rdbDate[1] + "t"; }
-        rdbDate = rdbDate[1] + ". " + rdbDate[2] + ", " + rdbDate[3] + ",";
+
+        month = await fixMonthAbbr(rdbDate[1]);
+        rdbDate = month + " " + rdbDate[2] + ", " + rdbDate[3] + ",";
         assert(bodyText.includes("Deployment Recovery Date: " + rdbDate));
 
         // Re-add sewing Inventory to Build at the current date
@@ -370,7 +391,7 @@ async function getDate(dateString, daysPrior) {
         // Verify Total Time in Field and Current Deployment Time in Field: 0 days 0 hours
         await new Promise(r => setTimeout(r, 4000));
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
-// UNCOMMENT FOR DOCKER - history shows 27 days due to staging testing
+        // UNCOMMENT FOR DOCKER - history shows 27 days due to staging testing
         assert(bodyText.includes("Total Time in Field: 1 days 0 hours"));        
         assert(bodyText.includes("Current Deployment Time in Field: 0 days 0 hours"));
 
@@ -389,9 +410,9 @@ async function getDate(dateString, daysPrior) {
         var date = new Date(dateString);
         var fullDate = date.toDateString();
         var rdbDate = fullDate.split(" ");
-        //FIX date Sep -> Sept. & other months
-        if (rdbDate[1] == "Sep") { rdbDate[1] = rdbDate[1] + "t"; }
-        var string = rdbDate[1] + ". " + rdbDate[2] + ", " + rdbDate[3] + ",";
+
+        month = await fixMonthAbbr(rdbDate[1]);
+        var string = month + " " + rdbDate[2] + ", " + rdbDate[3] + ",";
         assert(bodyText.includes("Deployment To Field Date: " + string));
 
         // Close browser window
