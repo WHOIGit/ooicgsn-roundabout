@@ -24,14 +24,26 @@ from rest_flex_fields import FlexFieldsModelSerializer
 from ..models import Location
 
 
-class LocationSerializer(FlexFieldsModelSerializer):
-    parent = serializers.PrimaryKeyRelatedField(read_only=True)
-    #parent = DynamicRelationField('LocationSerializer', read_only=True)
-    #children = DynamicRelationField('LocationSerializer', read_only=True, many=True)
+class LocationSerializer(serializers.HyperlinkedModelSerializer, FlexFieldsModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name='api_v1:locations-detail',
+        lookup_field='pk',
+    )
+    parent = serializers.HyperlinkedRelatedField(
+        view_name='api_v1:locations-detail',
+        read_only=True,
+        lookup_field='pk',
+    )
+    children = serializers.HyperlinkedRelatedField(
+        view_name='api_v1:locations-detail',
+        many=True,
+        read_only=True,
+        lookup_field='pk',
+    )
 
     class Meta:
         model = Location
-        fields = ['id', 'name', 'parent', 'children', 'weight',
+        fields = ['id', 'url', 'name', 'parent', 'children', 'weight',
             'location_type', 'location_id', 'root_type', 'created_at',
         ]
 
