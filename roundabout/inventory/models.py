@@ -398,6 +398,7 @@ class Action(models.Model):
     RETIREBUILD = 'retirebuild'
     REVIEWAPPROVE = 'reviewapprove'
     EVENTAPPROVE = 'eventapprove'
+    CALCSVIMPORT = 'calcsvimport'
     ACTION_TYPES = (
         (ADD, 'Added to RDB'),
         (UPDATE, 'Details updated'),
@@ -425,6 +426,7 @@ class Action(models.Model):
         (RETIREBUILD, 'Retire Build'),
         (REVIEWAPPROVE, 'Reviewer approved Event'),
         (EVENTAPPROVE, 'Event Approved'),
+        (CALCSVIMPORT, 'Calibration CSV Uploaded'),
     )
     # object_type choices
     BUILD = 'build'
