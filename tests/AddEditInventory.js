@@ -251,7 +251,7 @@ var password;
 	await new Promise(r => setTimeout(r, 2000));  //linux docker
         await driver.findElement(By.css(".even a")).click();
         // 26 | click | id=action | 
-	await new Promise(r => setTimeout(r, 4000));  //circleci firefox
+	await new Promise(r => setTimeout(r, 6000));  //circleci firefox
         await driver.findElement(By.id("action")).click();
         // 27 | click | linkText=Location Change | 
         await driver.findElement(By.linkText("Location Change")).click();
@@ -312,7 +312,7 @@ var password;
         // 43 | click | id=action | 
 
         // Add subassembly item to valid parent
-        await new Promise(r => setTimeout(r, 4000));  //circleci
+        await new Promise(r => setTimeout(r, 6000));  //circleci
         await driver.findElement(By.id("action")).click();
         // 44 | click | linkText=Add Sub-Assembly | 
         await driver.findElement(By.linkText("Add Sub-Assembly")).click();
@@ -320,7 +320,7 @@ var password;
         await driver.wait(until.elementLocated(By.linkText("Add")));
         await driver.findElement(By.linkText("Add")).click();
         // 46 | click | id=action | 
-        await new Promise(r => setTimeout(r, 4000));  //circleci
+        await new Promise(r => setTimeout(r, 6000));  //circleci
         await driver.findElement(By.id("action")).click();
         // 47 | click | linkText=Add Sub-Assembly | 
 
@@ -367,7 +367,7 @@ var password;
 	    await new Promise(r => setTimeout(r, 2000));  //linux docker
         await driver.findElement(By.css(".even a")).click();
         // 43 | click | id=action |
-        await new Promise(r => setTimeout(r, 4000));  //circleci
+        await new Promise(r => setTimeout(r, 6000));  //circleci
         await driver.findElement(By.id("action")).click();
         // 52 | click | linkText=Add to Parent Assembly | 
         await driver.findElement(By.linkText("Add to Parent Assembly")).click();

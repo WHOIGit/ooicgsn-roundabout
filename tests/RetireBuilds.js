@@ -105,7 +105,7 @@ var password;
             await dropdown.findElement(By.xpath("//option[. = 'Exact']")).click();
         }
         // 23 | type | id=field-query_c_r0 | Lost
-        await driver.findElement(By.id("field-query_c_r0")).sendKeys("Test Child");
+        await driver.findElement(By.id("field-query_c_r0")).sendKeys("Test");
         // 24 | click | id=searchform-submit-button | 
         await driver.findElement(By.id("searchform-submit-button")).click();
         // 25 | click | css=.even a | 
@@ -115,6 +115,18 @@ var password;
         {
 	    await driver.findElement(By.css(".even:nth-child(1) a")).click();
 
+	    // RECOVER FROM FIELD, END DEPLOYMENT, AND RETIRE BUILD
+            await new Promise(r => setTimeout(r, 2000));
+	    await driver.findElement(By.id("action")).click(); 
+	    await driver.findElement(By.linkText("Recover from Field")).click();
+            await driver.findElement(By.css(".controls > .btn")).click(); 
+	    
+            await new Promise(r => setTimeout(r, 2000));
+            await driver.findElement(By.id("action")).click(); 
+	    await driver.findElement(By.linkText("End Deployment")).click();
+            await driver.findElement(By.css(".controls > .btn")).click(); 
+
+            await new Promise(r => setTimeout(r, 2000));
             await driver.findElement(By.linkText("Retire Build")).click();
         	// 20 | click | id=id_detail | 
 	    await new Promise(r => setTimeout(r, 2000));  //circleci firefox
@@ -126,7 +138,7 @@ var password;
 	    await new Promise(r => setTimeout(r, 2000));  //linux firefox
 	}
 	else
-	    console.log("Retire Builds Failed: Test Glider 1 Build not found");
+	    console.log("Retire Builds Failed: Build not found");
 
         // Close browser window
         driver.quit();
