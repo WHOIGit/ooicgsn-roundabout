@@ -40,7 +40,7 @@ labels = set_app_labels()
 # Create Deployment for Build
 class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
     model = Deployment
-    form_class = DeploymentForm
+    form_class = DeploymentStartForm
     context_object_name = 'deployment'
     template_name='builds/ajax_deployment_form.html'
 
@@ -119,6 +119,20 @@ class DeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
             context['action_type'] = None
 
         return context
+
+    def form_valid(self, form):
+        self.object = form.save()
+
+        if self.request.is_ajax():
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.build.id,
+                'object_type': self.object.build.get_object_type(),
+                'detail_path': self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response
 
     def get_success_url(self):
         return reverse('builds:ajax_builds_detail', args=(self.object.build.id,))

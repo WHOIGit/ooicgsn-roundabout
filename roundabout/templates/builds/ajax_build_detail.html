@@ -245,7 +245,12 @@
 
     {% if build.is_deployed %}
         <hr>
-
+        <div class="ajax-btn float-right">
+            <a href="#" data-update-url="{% url 'builds:ajax_deployment_update' current_deployment.id %}"
+                data-node-id="{{ current_deployment.id }}"
+                class="btn btn-primary btn-sm"
+                role="button">Edit Deployment Details</a>
+        </div>
         <h5>Current {{ label_deployments_app_singular }} Data</h5>
         <p>{{ label_deployments_app_singular }} Number: {{ current_deployment.deployment_number }}</p>
         <p>Final {{ label_deployments_app_singular }} Location: {{ current_deployment.deployed_location }}</p>

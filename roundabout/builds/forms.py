@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -173,10 +173,65 @@ class BuildSnapshotForm(forms.ModelForm):
 
 
 class DeploymentForm(forms.ModelForm):
+    #Add custom date field to allow user to update Deployment dates
+    deployment_start_date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": False,
+            }
+        ),
+        help_text='Set all date/times to UTC time zone.',
+    )
+    deployment_burnin_date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": False,
+            }
+        ),
+        help_text='Set all date/times to UTC time zone.',
+    )
+    deployment_to_field_date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": False,
+            }
+        ),
+        help_text='Set all date/times to UTC time zone.',
+    )
+    deployment_recovery_date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": False,
+            }
+        ),
+        help_text='Set all date/times to UTC time zone.',
+    )
+    deployment_retire_date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": False,
+            }
+        ),
+        help_text='Set all date/times to UTC time zone.',
+    )
 
     class Meta:
         model = Deployment
-        fields = ['location', 'deployment_number', 'build', 'deployed_location', 'cruise_deployed']
+        fields = [
+            'location', 'deployment_number', 'build', 'deployed_location', 'cruise_deployed', \
+            'deployment_start_date', 'deployment_burnin_date', 'deployment_to_field_date', \
+            'deployment_recovery_date', 'deployment_retire_date',
+        ]
 
         labels = {
             'location': 'Current Location',
@@ -189,7 +244,28 @@ class DeploymentForm(forms.ModelForm):
             'build': forms.HiddenInput(),
         }
 
-    # Add custom date field to allow user to pick date for the Action
+    def __init__(self, *args, **kwargs):
+        super(DeploymentForm, self).__init__(*args, **kwargs)
+        if self.instance.pk:
+            print(self.instance.current_status)
+            if not self.instance.deployment_start_date:
+                self.fields.pop('deployment_start_date')
+
+            if not self.instance.deployment_burnin_date:
+                self.fields.pop('deployment_burnin_date')
+
+            if not self.instance.deployment_to_field_date:
+                self.fields.pop('deployment_to_field_date')
+
+            if not self.instance.deployment_recovery_date:
+                self.fields.pop('deployment_recovery_date')
+
+            if not self.instance.deployment_retire_date:
+                self.fields.pop('deployment_retire_date')
+
+
+class DeploymentStartForm(forms.ModelForm):
+    #Add custom date field to allow user to pick date for the Action
     date = forms.DateTimeField( widget=DateTimePickerInput(
             options={
                 #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
@@ -201,6 +277,23 @@ class DeploymentForm(forms.ModelForm):
         initial=timezone.now,
         help_text='Set all date/times to UTC time zone.',
     )
+
+    class Meta:
+        model = Deployment
+        fields = [
+            'location', 'deployment_number', 'build', 'deployed_location', 'cruise_deployed',
+        ]
+
+        labels = {
+            'location': 'Current Location',
+            'deployment_number': '%s Number' % (labels['label_deployments_app_singular']),
+            'deployed_location': 'Final %s Location' % (labels['label_deployments_app_singular']),
+            'cruise_deployed': 'Cruise Deployed On',
+        }
+
+        widgets = {
+            'build': forms.HiddenInput(),
+        }
 
 
 class DeploymentActionBurninForm(forms.ModelForm):
