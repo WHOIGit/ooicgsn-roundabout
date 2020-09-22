@@ -64,53 +64,68 @@ class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
     def form_valid(self, form):
         cal_files = self.request.FILES.getlist('cal_csv')
         for cal_csv in cal_files:
-            cal_csv.seek(0)
-            reader = csv.DictReader(io.StringIO(cal_csv.read().decode('utf-8')))
-            headers = reader.fieldnames
-            coeff_val_sets = []
-            inv_serial = cal_csv.name.split('__')[0]
-            cal_date_string = cal_csv.name.split('__')[1][:8]
-            inventory_item = Inventory.objects.get(serial_number=inv_serial)
-            cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
-            csv_event = CalibrationEvent.objects.create(
-                calibration_date = cal_date_date,
-                inventory = inventory_item
-            )
-            for idx, row in enumerate(reader):
-                row_data = row.items()
-                for key, value in row_data:
-                    if key == 'name':
-                        calibration_name = value.strip()
-                        cal_name_item = CoefficientName.objects.get(
-                            calibration_name = calibration_name,
-                            coeff_name_event =  inventory_item.part.coefficient_name_events.first()
-                        )
-                    elif key == 'value':
-                        valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
-                        mock_valset_instance = SimpleNamespace(**valset_keys)
-                        raw_valset = str(value)
-                        if '[' in raw_valset:
-                            raw_valset = raw_valset[1:-1]
-                        if 'SheetRef' in raw_valset:
-                            raw_valset = ''
-                        validate_coeff_vals(mock_valset_instance, cal_name_item.value_set_type, raw_valset)
-                    elif key == 'notes':
-                        notes = value.strip()
-                        coeff_val_set = CoefficientValueSet(
-                            coefficient_name = cal_name_item,
-                            value_set = raw_valset,
-                            notes = notes
-                        )
-                        coeff_val_sets.append(coeff_val_set)
-            if form.cleaned_data['user_draft'].exists():
-                draft_users = form.cleaned_data['user_draft']
-                for user in draft_users:
-                    csv_event.user_draft.add(user)
-            for valset in coeff_val_sets:
-                valset.calibration_event = csv_event
-                valset.save()
-                parse_valid_coeff_vals(valset)
-            _create_action_history(csv_event, Action.CALCSVIMPORT, self.request.user)
+            ext = cal_csv.name[-3:]
+            if ext == 'ext':
+                continue
+            if ext == 'csv':
+                cal_csv.seek(0)
+                reader = csv.DictReader(io.StringIO(cal_csv.read().decode('utf-8')))
+                headers = reader.fieldnames
+                coeff_val_sets = []
+                inv_serial = cal_csv.name.split('__')[0]
+                cal_date_string = cal_csv.name.split('__')[1][:8]
+                inventory_item = Inventory.objects.get(serial_number=inv_serial)
+                cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
+                csv_event = CalibrationEvent.objects.create(
+                    calibration_date = cal_date_date,
+                    inventory = inventory_item
+                )
+                for idx, row in enumerate(reader):
+                    row_data = row.items()
+                    for key, value in row_data:
+                        if key == 'name':
+                            calibration_name = value.strip()
+                            cal_name_item = CoefficientName.objects.get(
+                                calibration_name = calibration_name,
+                                coeff_name_event =  inventory_item.part.coefficient_name_events.first()
+                            )
+                        elif key == 'value':
+                            valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
+                            mock_valset_instance = SimpleNamespace(**valset_keys)
+                            raw_valset = str(value)
+                            if '[' in raw_valset:
+                                raw_valset = raw_valset[1:-1]
+                            if 'SheetRef' in raw_valset:
+                                for file in cal_files:
+                                    file.seek(0)
+                                    file_extension = file.name[-3:]
+                                    if file_extension == 'ext':
+                                        cal_ext_split = file.name.split('__')
+                                        inv_ext_serial = cal_ext_split[0]
+                                        cal_ext_date = cal_ext_split[1]
+                                        cal_ext_name = cal_ext_split[2][:-4]
+                                        if (inv_ext_serial == inv_serial) and (cal_ext_date == cal_date_string) and (cal_ext_name == calibration_name):
+                                            reader = io.StringIO(file.read().decode('utf-8'))
+                                            contents = reader.getvalue()
+                                            raw_valset = contents
+                            validate_coeff_vals(mock_valset_instance, cal_name_item.value_set_type, raw_valset)
+                        elif key == 'notes':
+                            notes = value.strip()
+                            coeff_val_set = CoefficientValueSet(
+                                coefficient_name = cal_name_item,
+                                value_set = raw_valset,
+                                notes = notes
+                            )
+                            coeff_val_sets.append(coeff_val_set)
+                if form.cleaned_data['user_draft'].exists():
+                    draft_users = form.cleaned_data['user_draft']
+                    for user in draft_users:
+                        csv_event.user_draft.add(user)
+                for valset in coeff_val_sets:
+                    valset.calibration_event = csv_event
+                    valset.save()
+                    parse_valid_coeff_vals(valset)
+                _create_action_history(csv_event, Action.CALCSVIMPORT, self.request.user)
         return super(ImportCalibrationsUploadView, self).form_valid(form)
 
     def get_success_url(self):
