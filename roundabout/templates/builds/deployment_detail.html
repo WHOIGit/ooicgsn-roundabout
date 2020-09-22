@@ -66,6 +66,12 @@
         <p>Deployment Time in Field: {{ deployment.deployment_time_in_field|time_at_sea_display }}
     {% endif %}
 
+    {% if deployment.current_status != 'startdeployment' and deployment.current_status != 'deploymentburnin' %}
+        <p>Latitude: {{ deployment.latitude}}</p>
+        <p>Longitude: {{ deployment.longitude }}</p>
+        <p>Depth: {{ deployment.depth }} m</p>
+    {% endif %}
+
     <table class="table table-striped action-table">
         <thead>
           <th>Date</th>

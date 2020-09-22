@@ -122,6 +122,26 @@ class DeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
 
     def form_valid(self, form):
         self.object = form.save()
+        # Update Deployment Action items to match any date changes
+        actions = self.object.get_actions()
+        for action in actions:
+            print(action.action_type)
+            if action.action_type == Action.STARTDEPLOYMENT:
+                action.created_at = self.object.deployment_start_date
+
+            if action.action_type == Action.DEPLOYMENTBURNIN:
+                action.created_at = self.object.deployment_burnin_date
+
+            if action.action_type == Action.DEPLOYMENTTOFIELD:
+                action.created_at = self.object.deployment_to_field_date
+
+            if action.action_type == Action.DEPLOYMENTRECOVER:
+                action.created_at = self.object.deployment_recovery_date
+
+            if action.action_type == Action.DEPLOYMENTRETIRE:
+                action.created_at = self.object.deployment_retire_date
+
+            action.save()
 
         if self.request.is_ajax():
             data = {
