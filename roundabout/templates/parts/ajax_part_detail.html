@@ -291,9 +291,13 @@ $(document).ready(function() {
     let partType = '{{part_template.part_type}}';
     if (partType == 'Instrument') {
         $('#calibrations-section').show();
-        $('#configuration_constant-section').show();
     } else {
         $('#calibrations-section').hide();
+    }
+
+    if (partType == 'Instrument' || partType == 'Electrical') {
+        $('#configuration_constant-section').show();
+    } else {
         $('#configuration_constant-section').hide();
     }
 
