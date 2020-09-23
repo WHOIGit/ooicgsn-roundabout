@@ -103,12 +103,6 @@
                 {% if build.current_deployment.current_status == 'deploymenttofield' %}
 
                     <a class="dropdown-item" href="#"
-                        data-detail-url="{% url 'builds:ajax_deployment_action' 'deploymentdetails' build.current_deployment.id build.id %}"
-                        data-node-id="{{ build.id }}"
-                        data-location-id="{{ build.location.id}}"
-                        data-node-type="{{ node_type }}">Update {{ label_deployments_app_singular }} Details</a>
-
-                    <a class="dropdown-item" href="#"
                         data-detail-url="{% url 'builds:ajax_deployment_action' 'deploymentrecover' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"

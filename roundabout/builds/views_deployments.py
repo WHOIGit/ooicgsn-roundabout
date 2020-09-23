@@ -229,15 +229,6 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             self.object.depth = depth
             self.object.save()
 
-        # If Updating deployment, update Location and add Depth, Lat/Long to Action Record
-        if action_type == 'deploymentdetails':
-            self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
-            self.object.deployed_location = self.object.location
-            self.object.latitude = latitude
-            self.object.longitude = longitude
-            self.object.depth = depth
-            self.object.save()
-
         # Update Build location, create Action Record
         build = self.object.build
         build.detail = self.object.detail
@@ -289,9 +280,6 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             item.location = build.location
             item.save()
             _create_action_history(item, action_type, self.request.user, build, '', action_date)
-            #update Time at Sea if Recovered from Sea with Inventory model method
-            if action_type == Action.DEPLOYMENTRECOVER:
-                item.update_time_at_sea()
 
         response = HttpResponseRedirect(self.get_success_url())
 

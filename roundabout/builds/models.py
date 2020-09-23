@@ -117,12 +117,6 @@ class Build(models.Model):
             return True
         return False
 
-    # get the Total Time at Sea by adding historical sea time and current deployment sea time
-    def total_time_at_sea(self):
-        if self.current_deployment() and self.current_deployment().current_status == Action.DEPLOYMENTTOFIELD:
-            return self.time_at_sea + self.current_deployment().deployment_time_in_field
-        return self.time_at_sea
-
 
 class BuildAction(models.Model):
     BUILDADD = 'buildadd'

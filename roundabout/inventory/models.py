@@ -160,22 +160,6 @@ class Inventory(MPTTModel):
         except:
             return None
 
-    # get the most recent Deployment time in field, add this time delta to the time_at_sea column
-    def update_time_at_sea(self):
-        latest_time_at_sea = self.inventory_deployments.get_active_deployment().deployment_time_in_field
-        # add to existing Time at Sea duration
-        self.time_at_sea = self.time_at_sea + latest_time_at_sea
-        self.save()
-
-    # get the Total Time at Sea by adding historical sea time and current deployment sea time
-    def total_time_at_sea(self):
-        if self.current_deployment() and self.current_deployment().current_status == DeploymentBase.DEPLOYMENTTOFIELD:
-            current_deployment_time_at_sea = self.current_deployment().deployment_time_in_field
-            total_time_at_sea = self.time_at_sea + current_deployment_time_at_sea
-            return total_time_at_sea
-        else:
-            return self.time_at_sea
-
 
 class DeploymentBase(models.Model):
     STARTDEPLOYMENT = 'startdeployment'

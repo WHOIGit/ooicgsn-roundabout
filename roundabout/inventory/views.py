@@ -717,8 +717,6 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
             inventory_deployment.cruise_recovered = cruise
             inventory_deployment.deployment_recovery_date = action_date
             inventory_deployment.save()
-            # update time at sea after setting deployment recovery date
-            self.object.update_time_at_sea()
 
             # Find Build it was removed from
             old_build = self.object.get_latest_build()
@@ -737,8 +735,6 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 inventory_deployment.cruise_recovered = cruise
                 inventory_deployment.deployment_recovery_date = action_date
                 inventory_deployment.save()
-                # update time at sea after setting deployment recovery date
-                item.update_time_at_sea()
                 # Call the function to create an Action history chain for all child items
                 _create_action_history(item, action_type, self.request.user, self.object, '', action_date)
                 # Create Build Action record
