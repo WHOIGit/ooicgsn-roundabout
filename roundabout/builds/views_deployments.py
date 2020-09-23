@@ -124,7 +124,6 @@ class DeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         self.object = form.save()
         action_type = 'deploymentdetails'
         self.object.build.detail = '%s Details changed.' % (self.object.deployment_number)
-        self.object.build.update_time_in_field()
         self.object.build.save()
         # Create Build Action record for deployment
         build_record = _create_action_history(self.object.build, action_type, self.request.user,)
@@ -254,10 +253,6 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         build.save()
         # Create Build Action record for deployment
         build_record = _create_action_history(build, action_type, self.request.user, None, '', action_date)
-
-        #update Time at Sea if Recovered from Sea with Build model method
-        if action_type == 'deploymentrecover':
-            build.update_time_at_sea()
 
         """
         # Create automatic Snapshot when Deployed to Sea or Recovered

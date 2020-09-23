@@ -117,21 +117,6 @@ class Build(models.Model):
             return True
         return False
 
-    # get the most recent Deployment time in field, add this time delta to the time_at_sea column
-    def update_time_in_field(self):
-        deployments = self.deployments.all()
-        times = [dep.deployment_time_in_field for dep in deployments]
-        total_time_in_field = sum(times, datetime.timedelta())
-        self.time_at_sea = total_time_in_field
-        self.save()
-
-    # get the most recent Deployment timee in field, add this time delta to the time_at_sea column
-    def update_time_at_sea(self):
-        latest_time_at_sea = self.current_deployment().deployment_time_in_field
-        # add to existing Time at Sea duration
-        self.time_at_sea = self.time_at_sea + latest_time_at_sea
-        self.save()
-
     # get the Total Time at Sea by adding historical sea time and current deployment sea time
     def total_time_at_sea(self):
         if self.current_deployment() and self.current_deployment().current_status == Action.DEPLOYMENTTOFIELD:
