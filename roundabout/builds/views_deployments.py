@@ -124,6 +124,7 @@ class DeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         self.object = form.save()
         action_type = 'deploymentdetails'
         self.object.build.detail = '%s Details changed.' % (self.object.deployment_number)
+        self.object.build.update_time_in_field()
         self.object.build.save()
         # Create Build Action record for deployment
         build_record = _create_action_history(self.object.build, action_type, self.request.user,)

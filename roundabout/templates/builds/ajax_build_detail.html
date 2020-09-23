@@ -221,7 +221,7 @@
 
         <p>Current Location: {{ build.location }}</p>
 
-        <p>Total Time in Field: {{ build.total_time_at_sea|time_at_sea_display }}</p>
+        <p>Total Time in Field: {{ build.time_at_sea|time_at_sea_display }}</p>
 
         {% if percent_complete %}
             <h6>Percent Built</h6>

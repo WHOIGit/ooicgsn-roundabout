@@ -108,6 +108,14 @@ class Build(models.Model):
             return True
         return False
 
+    # get the most recent Deployment time in field, add this time delta to the time_at_sea column
+    def update_time_in_field(self):
+        deployments = self.deployments.all()
+        times = [dep.deployment_time_in_field for dep in deployments]
+        total_time_in_field = sum(times, datetime.timedelta())
+        self.time_at_sea = total_time_in_field
+        self.save()
+
     # get the most recent Deployment timee in field, add this time delta to the time_at_sea column
     def update_time_at_sea(self):
         latest_time_at_sea = self.current_deployment().deployment_time_in_field
