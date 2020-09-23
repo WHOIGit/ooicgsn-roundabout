@@ -272,12 +272,10 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
         calib_qs = CalibrationEvent.objects.all().annotate(date = F('calibration_date')).order_by('-date')
         config_qs = ConfigEvent.objects.all().annotate(date = F('configuration_date')).order_by('-date')
 
-        # they must be approved
-        #calib_qs = calib_qs.filter(approved=True)  # approval check for calibs happens later
-        #config_qs = config_qs.filter(approved=True) # commented for verbose output
-
-        # keep only configs that are associated with a deployment
-        config_qs = config_qs.exclude(deployment__isnull=True)
+        # keep only configs that are associated with a deployment and approved
+        # -- commented out for verbose output in build_zip() --
+        #config_qs = config_qs.filter(approved=True)
+        #config_qs = config_qs.exclude(deployment__isnull=True)
 
         # keep only configs where at least one ConfigValue has include_with_calibration=True
         include_with_calibs = ConfigValue.objects.filter(config_event=OuterRef('pk'), config_name__include_with_calibrations=True)
@@ -363,6 +361,8 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
                 if not configs_by_deployment: print('  FAIL: inventory confconst is empty', file=out)
                 for deployment_id,configs_qs in configs_by_deployment.items():
                     print('  Deployment: "{}" (id={})'.format(Deployment.objects.filter(id=deployment_id).first(),deployment_id), file=out)
+                    if deployment_id is None:
+                        print('    FAIL: conf/const do not have an assigned Deployment', file=out)
                     # check that inv conf/consts match part conf/consts
                     configs_avail = set()
                     approvals = dict()
