@@ -1684,8 +1684,8 @@ class InventoryHomeTestView(InventoryNavTreeMixin, TemplateView):
 class InventoryDeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
     model = InventoryDeployment
     form_class = InventoryDeploymentForm
-    context_object_name = 'deployment'
-    template_name='inventory/ajax_deployment_form.html'
+    context_object_name = 'inventory_deployment'
+    template_name='inventory/ajax_inventory_deployment_form.html'
 
     def get_context_data(self, **kwargs):
         context = super(InventoryDeploymentAjaxUpdateView, self).get_context_data(**kwargs)
@@ -1700,7 +1700,7 @@ class InventoryDeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, Updat
     def form_valid(self, form):
         self.object = form.save()
         action_type = 'deploymentdetails'
-        self.object.inventory.detail = '%s Details changed.' % (self.object.build.deployment_number)
+        self.object.inventory.detail = '%s Details changed.' % (self.object.deployment.deployment_number)
         self.object.inventory.save()
         # Create Build Action record for deployment
         action_record = _create_action_history(self.object.inventory, action_type, self.request.user,)
@@ -1729,8 +1729,8 @@ class InventoryDeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, Updat
         if self.request.is_ajax():
             data = {
                 'message': "Successfully submitted form data.",
-                'object_id': self.object.build.id,
-                'object_type': self.object.build.get_object_type(),
+                'object_id': self.object.inventory.id,
+                'object_type': self.object.inventory.get_object_type(),
                 'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
