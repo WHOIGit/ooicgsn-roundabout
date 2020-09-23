@@ -183,7 +183,7 @@
                         data-location-id="{{ inventory_item.location.id}}"
                         data-node-type="config_event}">Add Constants</a>
                 {% endif %}
-                
+
                 {% if part_has_configs and inventory_item.build.current_deployment %}
                     <a  id="add_conf_action"
                         class="dropdown-item"
@@ -279,7 +279,7 @@
     {% if inventory_item.build %}
         <p>Current {{ label_builds_app_singular }}: {{ inventory_item.build }}</p>
     {% endif %}
-    <p>Total Time in Field: {{ inventory_item.total_time_at_sea|time_at_sea_display }}</p>
+    <p>Total Time in Field: {{ inventory_item.time_at_sea|time_at_sea_display }}</p>
     {% if inventory_item.current_deployment %}
         <p>Current {{ label_deployments_app_singular }} Time in Field: {{ inventory_item.current_deployment.deployment_time_in_field|time_at_sea_display }}
     {% endif %}
