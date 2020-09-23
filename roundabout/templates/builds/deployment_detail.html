@@ -35,7 +35,12 @@
 </div>
 
 <div class="collapse mt-3" id="deployment-{{ deployment.id }}-{{ deployment_type }}">
-
+    <div class="ajax-btn float-right">
+        <a href="#" data-update-url="{% url 'builds:ajax_deployment_update' deployment.id %}"
+            data-node-id="{{ current_deployment.id }}"
+            class="btn btn-primary btn-sm"
+            role="button">Edit Deployment Details</a>
+    </div>
     <p>Build:
         <a href="{% url 'builds:builds_detail' deployment.build.id %}">{{ deployment.build }}</a>
     </p>

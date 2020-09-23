@@ -291,12 +291,12 @@ class Deployment(DeploymentBase):
     latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
                                     validators=[
                                         MaxValueValidator(90),
-                                        MinValueValidator(0)
+                                        MinValueValidator(-90)
                                     ])
     longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
                                     validators=[
-                                        MaxValueValidator(180),
-                                        MinValueValidator(0)
+                                        MaxValueValidator(80),
+                                        MinValueValidator(-180)
                                     ])
     depth = models.PositiveIntegerField(null=True, blank=True)
 

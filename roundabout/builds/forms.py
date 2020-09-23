@@ -228,9 +228,9 @@ class DeploymentForm(forms.ModelForm):
     class Meta:
         model = Deployment
         fields = [
-            'location', 'deployment_number', 'build', 'deployed_location', 'cruise_deployed', \
+            'deployment_number', 'build', 'deployed_location', 'cruise_deployed', 'cruise_recovered', \
             'deployment_start_date', 'deployment_burnin_date', 'deployment_to_field_date', \
-            'deployment_recovery_date', 'deployment_retire_date',
+            'deployment_recovery_date', 'deployment_retire_date', 'latitude', 'longitude', 'depth',
         ]
 
         labels = {
@@ -248,6 +248,13 @@ class DeploymentForm(forms.ModelForm):
         super(DeploymentForm, self).__init__(*args, **kwargs)
         if self.instance.pk:
             print(self.instance.current_status)
+            if self.instance.current_status == Action.STARTDEPLOYMENT or self.instance.current_status == Action.DEPLOYMENTBURNIN:
+                self.fields.pop('depth')
+                self.fields.pop('latitude')
+                self.fields.pop('longitude')
+                self.fields.pop('cruise_deployed')
+                self.fields.pop('cruise_recovered')
+
             if not self.instance.deployment_start_date:
                 self.fields.pop('deployment_start_date')
 
