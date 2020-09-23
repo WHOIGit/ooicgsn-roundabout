@@ -34,7 +34,7 @@ from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
-from .models import Inventory, Deployment, Action, DeploymentAction, InventorySnapshot, DeploymentSnapshot
+from .models import Inventory, Deployment, InventoryDeployment, Action, DeploymentAction, InventorySnapshot, DeploymentSnapshot
 from .forms import *
 from .utils import _create_action_history
 from roundabout.locations.models import Location
@@ -1681,47 +1681,14 @@ class InventoryHomeTestView(InventoryNavTreeMixin, TemplateView):
 
 ####################### Deployment views ########################
 
-# AJAX Views
-
-def load_deployment_navtree(request):
-    locations = Location.objects.exclude(root_type='Trash').prefetch_related('deployments')
-    return render(request, 'inventory/ajax_deployment_navtree.html', {'locations': locations})
-
-
-class DeploymentAjaxDetailView(LoginRequiredMixin, DetailView):
-    model = Deployment
-    context_object_name = 'deployment'
-    template_name='inventory/ajax_deployment_detail.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(DeploymentAjaxDetailView, self).get_context_data(**kwargs)
-        # Get percent complete info
-        if self.object.assembly:
-            total_parts = AssemblyPart.objects.filter(assembly=self.object.assembly).count()
-        else:
-            total_parts = AssemblyPart.objects.filter(assembly=self.object.build.assembly).count()
-
-        total_inventory = self.object.inventory.count()
-        percent_complete = round( (total_inventory / total_parts) * 100 )
-
-        # Get Lat/Long, Depth if Deployed
-        action_record = DeploymentAction.objects.filter(deployment=self.object).filter(action_type='deploy')
-
-        context.update({
-            'percent_complete': percent_complete,
-            'action_record': action_record,
-        })
-        return context
-
-
-class DeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
-    model = Deployment
-    form_class = DeploymentForm
+class InventoryDeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
+    model = InventoryDeployment
+    form_class = InventoryDeploymentForm
     context_object_name = 'deployment'
     template_name='inventory/ajax_deployment_form.html'
 
     def get_context_data(self, **kwargs):
-        context = super(DeploymentAjaxUpdateView, self).get_context_data(**kwargs)
+        context = super(InventoryDeploymentAjaxUpdateView, self).get_context_data(**kwargs)
 
         if 'action_type' in self.kwargs:
             context['action_type'] = self.kwargs['action_type']
@@ -1730,158 +1697,48 @@ class DeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
 
         return context
 
-    def get_success_url(self):
-        return reverse('deployments:ajax_deployment_detail', args=(self.object.id,))
-
-
-class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
-    model = Deployment
-    form_class = DeploymentForm
-    context_object_name = 'deployment'
-    template_name='inventory/ajax_deployment_form.html'
-
-    def get_initial(self):
-        #Returns the initial data to use for forms on this view.
-        initial = super(DeploymentAjaxCreateView, self).get_initial()
-        if 'current_location' in self.kwargs:
-            initial['location'] = self.kwargs['current_location']
-        return initial
-
-    def get_success_url(self):
-        return reverse('deployments:ajax_deployment_detail', args=(self.object.id,))
-
     def form_valid(self, form):
         self.object = form.save()
+        action_type = 'deploymentdetails'
+        self.object.inventory.detail = '%s Details changed.' % (self.object.build.deployment_number)
+        self.object.inventory.save()
+        # Create Build Action record for deployment
+        action_record = _create_action_history(self.object.inventory, action_type, self.request.user,)
 
-        # Get the date for the Action Record from the custom form field
-        action_date = form.cleaned_data['date']
-        action_record = DeploymentAction.objects.create(action_type='create', detail='Deployment created', location_id=self.object.location_id,
-                                              user_id=self.request.user.id, deployment_id=self.object.id, created_at=action_date)
+        # Update Deployment Action items to match any date changes
+        actions = self.object.get_actions()
+        for action in actions:
+            print(action.action_type)
+            if action.action_type == Action.STARTDEPLOYMENT:
+                action.created_at = self.object.deployment_start_date
 
-        response = HttpResponseRedirect(self.get_success_url())
+            if action.action_type == Action.DEPLOYMENTBURNIN:
+                action.created_at = self.object.deployment_burnin_date
+
+            if action.action_type == Action.DEPLOYMENTTOFIELD:
+                action.created_at = self.object.deployment_to_field_date
+
+            if action.action_type == Action.DEPLOYMENTRECOVER:
+                action.created_at = self.object.deployment_recovery_date
+
+            if action.action_type == Action.DEPLOYMENTRETIRE:
+                action.created_at = self.object.deployment_retire_date
+
+            action.save()
 
         if self.request.is_ajax():
-            print(form.cleaned_data)
             data = {
                 'message': "Successfully submitted form data.",
-                'object_id': self.object.id,
+                'object_id': self.object.build.id,
+                'object_type': self.object.build.get_object_type(),
+                'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
             return response
 
-
-class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
-
-    def get_context_data(self, **kwargs):
-        context = super(DeploymentAjaxActionView, self).get_context_data(**kwargs)
-
-        latest_action_record = DeploymentAction.objects.filter(deployment=self.object).first()
-
-        context.update({
-            'latest_action_record': latest_action_record
-        })
-        return context
-
-    def get_form_class(self):
-        ACTION_FORMS = {
-            "burnin" : DeploymentActionBurninForm,
-            "deploy" : DeploymentActionDeployForm,
-            "recover" : DeploymentActionRecoverForm,
-            "retire" : DeploymentActionRetireForm,
-        }
-        action_type = self.kwargs['action_type']
-        form_class_name = ACTION_FORMS[action_type]
-
-        return form_class_name
-
-    def form_valid(self, form):
-
-        action_type = self.kwargs['action_type']
-
-        # Set Detail and action_type_inventory variables
-        if action_type == 'burnin':
-            self.object.detail = 'Burn In initiated at %s. ' % (self.object.location)
-            action_type_inventory = 'deploymentburnin'
-
-        if action_type == 'deploy':
-            self.object.detail = 'Deployed to Sea: %s. ' % (self.object.final_location)
-            action_type_inventory = Action.DEPLOYMENTTOFIELD
-
-        if action_type == 'recover':
-            self.object.detail = 'Recovered from Sea to %s. ' % (self.object.location)
-            action_type_inventory = 'deploymentrecover'
-
-        if action_type == 'retire':
-            self.object.detail = 'Retired from service.'
-            action_type_inventory = 'removefromdeployment'
-
-        action_form = form.save()
-
-        # Get the date for the Action Record from the custom form field
-        action_date = form.cleaned_data['date']
-
-        # Create automatic Snapshot when Deployed to Sea or Recovered
-        if action_type == 'deploy' or action_type == 'recover':
-            # Create a Snapshot when Deployment is Deployed
-            deployment = self.object
-            base_location = Location.objects.get(root_type='Snapshots')
-            inventory_items = deployment.inventory.all()
-
-            snapshot = DeploymentSnapshot.objects.create(deployment=deployment,
-                                                         location=base_location,
-                                                         snapshot_location=deployment.location,
-                                                         notes=self.object.detail,
-                                                         created_at=action_date, )
-
-            # Now create Inventory Item Snapshots with make_tree_copy function for Deployment Snapshot
-            for item in inventory_items:
-                if item.is_root_node():
-                    make_tree_copy(item, base_location, snapshot, item.parent)
-
-        # If Deploying to Sea, add Depth, Lat/Long to Action Record
-        if action_type == 'deploy':
-            latitude = form.cleaned_data['latitude']
-            longitude = form.cleaned_data['longitude']
-            depth = form.cleaned_data['depth']
-            self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
-        else:
-            latitude = None
-            longitude = None
-            depth = None
-
-        action_record = DeploymentAction.objects.create(action_type=action_type, detail=self.object.detail, location_id=self.object.location_id,
-                                              user_id=self.request.user.id, deployment_id=self.object.id, created_at=action_date,
-                                              latitude=latitude, longitude=longitude, depth=depth)
-
-        # Get all Inventory items on Deployment, match location and add Action
-        inventory_items = Inventory.objects.filter(deployment_id=self.object.id)
-        for item in inventory_items:
-            item.location = action_form.location
-            item.save()
-
-            action_record = Action.objects.create(action_type=action_type_inventory, detail='', location_id=self.object.location_id,
-                                                  user_id=self.request.user.id, inventory_id=item.id, created_at=action_date)
-            action_detail = '%s, moved to %s. ' % (action_record.get_action_type_display(), self.object.location)
-            action_record.detail = action_detail
-            action_record.save()
-
-            #update Time at Sea if Recovered from Sea with model method
-            if action_type == 'recover':
-                item.update_time_at_sea()
-
-        response = HttpResponseRedirect(self.get_success_url())
-
-        if self.request.is_ajax():
-            print(form.cleaned_data)
-            data = {
-                'message': "Successfully submitted form data.",
-                'object_id': self.object.id,
-                'location_id': self.object.location.id,
-            }
-            return JsonResponse(data)
-        else:
-            return response
+    def get_success_url(self):
+        return reverse('inventory:ajax_inventory_detail', args=(self.object.inventory.id,))
 
 
 class DeploymentAjaxSnapshotCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
@@ -1935,20 +1792,6 @@ class DeploymentAjaxSnapshotCreateView(LoginRequiredMixin, AjaxFormMixin, Create
             return response
 
 
-class DeploymentAjaxDeleteView(DeleteView):
-    model = Deployment
-    template_name = 'inventory/ajax_deployment_confirm_delete.html'
-
-    def delete(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        data = {
-            'message': "Successfully submitted form data.",
-            'parent_id': self.object.location_id,
-        }
-        self.object.delete()
-        return JsonResponse(data)
-
-
 class DeploymentSnapshotAjaxDetailView(LoginRequiredMixin, DetailView):
     model = DeploymentSnapshot
     context_object_name = 'deployment_snapshot'
@@ -1967,82 +1810,3 @@ class DeploymentSnapshotAjaxDeleteView(DeleteView):
         }
         self.object.delete()
         return JsonResponse(data)
-
-
-# Deployment Base Views
-
-class DeploymentHomeView(LoginRequiredMixin, TemplateView):
-    model = Deployment
-    template_name = 'inventory/deployment_list.html'
-    context_object_name = 'deployments'
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        context = self.get_context_data(object=self.object)
-        return self.render_to_response(context)
-
-    def get_context_data(self, **kwargs):
-        context = super(DeploymentHomeView, self).get_context_data(**kwargs)
-        # Add Parts list to context to build navtree filter
-        context.update({
-            'node_type': 'deployments'
-        })
-        return context
-
-
-class DeploymentDetailView(LoginRequiredMixin, DetailView):
-    model = Deployment
-    template_name='inventory/deployment_detail.html'
-    context_object_name='deployment'
-    current_location = None
-
-    def get_context_data(self, **kwargs):
-        context = super(DeploymentDetailView, self).get_context_data(**kwargs)
-        # Add Parts list to context to build navtree filter
-        context.update({
-            'node_type': 'deployments'
-        })
-        return context
-
-
-class DeploymentCreateView(InventoryNavTreeMixin, CreateView):
-    model = Deployment
-    form_class = DeploymentForm
-    template_name='inventory/deployment_form.html'
-
-    def get_initial(self):
-        #Returns the initial data to use for forms on this view.
-        initial = super(DeploymentCreateView, self).get_initial()
-        if 'current_location' in self.kwargs:
-            initial['location'] = self.kwargs['current_location']
-        return initial
-
-    def get_success_url(self):
-        return reverse('deployments:deployment_detail', args=(self.object.id, self.object.location_id))
-
-
-class DeploymentUpdateView(InventoryNavTreeMixin, UpdateView):
-    model = Deployment
-    form_class = DeploymentForm
-    template_name='inventory/deployment_form.html'
-
-    def form_valid(self, form):
-        self.object = form.save()
-        inventory_items = Inventory.objects.filter(deployment_id=self.object.id).update(location_id=self.object.location_id)
-
-        return HttpResponseRedirect(self.get_success_url())
-
-
-    def get_success_url(self):
-        return reverse('deployments:deployment_detail', args=(self.object.id, self.object.location_id))
-
-
-class DeploymentDeleteView(DeleteView):
-    model = Deployment
-    success_url = reverse_lazy('deployments:deployment_list')
-
-
-class DeploymentDeployConfirmView(InventoryNavTreeMixin, DetailView):
-    model = Deployment
-    template_name = 'inventory/inventory_deployment_deploy_confirm.html'
-    context_object_name='deployment'
