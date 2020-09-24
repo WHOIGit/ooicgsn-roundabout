@@ -120,7 +120,8 @@ class DeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
 
         return context
 
-    def update_actions(self, obj_to_update=None, action_to_update=None):
+    # Custom class method to update action histories on Deployment updates
+    def _update_actions(self, obj_to_update=None, action_to_update=None):
         obj_to_copy = self.object
         actions_list = [
             Action.STARTDEPLOYMENT,
@@ -137,7 +138,6 @@ class DeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
             actions_list = []
             actions_list = [action_to_update]
 
-        print(actions_list)
         actions = obj_to_update.get_actions()
         actions = actions.filter(action_type__in=actions_list)
         for action in actions:
@@ -155,22 +155,19 @@ class DeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
 
             if action.action_type == Action.DEPLOYMENTRETIRE:
                 action.created_at = obj_to_copy.deployment_retire_date
-
             action.save()
-
         return actions
 
     def form_valid(self, form):
         action_type = 'deploymentdetails'
         previous_deployment = Deployment.objects.get(id=self.object.pk)
-        print(previous_deployment.deployment_start_date)
         self.object = form.save()
         self.object.build.detail = '%s Details changed.' % (self.object.deployment_number)
         self.object.build.save()
         # Create Build Action record for deployment
         build_record = _create_action_history(self.object.build, action_type, self.request.user,)
         # Update Deployment Action items to match any date changes
-        self.update_actions(self.object)
+        self._update_actions(self.object)
 
         # Check all Inventory deployments associated with this Deployment
         # If deployment_to_field_date OR deployment_recovery_date matches the Build Deployment,
@@ -178,32 +175,30 @@ class DeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         inventory_deployments = self.object.inventory_deployments.all()
 
         for inventory_deployment in inventory_deployments:
-            print(inventory_deployment.deployment_start_date.replace(second=0, microsecond=0))
-            print(previous_deployment.deployment_start_date.replace(second=0, microsecond=0))
             if inventory_deployment.deployment_start_date.replace(second=0, microsecond=0) == previous_deployment.deployment_start_date.replace(second=0, microsecond=0):
                 inventory_deployment.deployment_start_date = self.object.deployment_start_date
                 # Update Deployment Action items to match any date changes
-                self.update_actions(inventory_deployment, Action.STARTDEPLOYMENT)
+                self._update_actions(inventory_deployment, Action.STARTDEPLOYMENT)
 
             if inventory_deployment.deployment_burnin_date == previous_deployment.deployment_burnin_date:
                 inventory_deployment.deployment_burnin_date = self.object.deployment_burnin_date
                 # Update Deployment Action items to match any date changes
-                self.update_actions(inventory_deployment, Action.DEPLOYMENTBURNIN)
+                self._update_actions(inventory_deployment, Action.DEPLOYMENTBURNIN)
 
             if inventory_deployment.deployment_to_field_date == previous_deployment.deployment_to_field_date:
                 inventory_deployment.deployment_to_field_date = self.object.deployment_to_field_date
                 # Update Deployment Action items to match any date changes
-                self.update_actions(inventory_deployment, Action.DEPLOYMENTTOFIELD)
+                self._update_actions(inventory_deployment, Action.DEPLOYMENTTOFIELD)
 
             if inventory_deployment.deployment_recovery_date == previous_deployment.deployment_recovery_date:
                 inventory_deployment.deployment_recovery_date = self.object.deployment_recovery_date
                 # Update Deployment Action items to match any date changes
-                self.update_actions(inventory_deployment, Action.DEPLOYMENTRECOVER)
+                self._update_actions(inventory_deployment, Action.DEPLOYMENTRECOVER)
 
             if inventory_deployment.deployment_retire_date == previous_deployment.deployment_retire_date:
                 inventory_deployment.deployment_retire_date = self.object.deployment_retire_date
                 # Update Deployment Action items to match any date changes
-                self.update_actions(inventory_deployment, Action.DEPLOYMENTRETIRE)
+                self._update_actions(inventory_deployment, Action.DEPLOYMENTRETIRE)
 
             inventory_deployment.save()
 
