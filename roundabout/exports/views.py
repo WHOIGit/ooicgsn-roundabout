@@ -21,6 +21,7 @@
 # built-in Imports
 import csv as CSV
 import zipfile, io
+from sys import stdout
 from os.path import splitext, join
 import datetime as dt
 from itertools import chain
@@ -36,7 +37,7 @@ from django.db.models import F, OuterRef, Exists, QuerySet, Subquery
 from roundabout.calibrations.models import CalibrationEvent, CoefficientValueSet
 from roundabout.configs_constants.models import ConfigEvent, ConfigValue
 from roundabout.cruises.models import Cruise, Vessel
-from roundabout.inventory.models import Deployment
+from roundabout.inventory.models import Inventory,Deployment
 
 
 class HomeView(TemplateView):
@@ -271,7 +272,12 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
         calib_qs = CalibrationEvent.objects.all().annotate(date = F('calibration_date')).order_by('-date')
         config_qs = ConfigEvent.objects.all().annotate(date = F('configuration_date')).order_by('-date')
 
-        # keep configs where at least one ConfigValue has include_with_calibration=True
+        # keep only configs that are associated with a deployment and approved
+        # -- commented out for verbose output in build_zip() --
+        #config_qs = config_qs.filter(approved=True)
+        #config_qs = config_qs.exclude(deployment__isnull=True)
+
+        # keep only configs where at least one ConfigValue has include_with_calibration=True
         include_with_calibs = ConfigValue.objects.filter(config_event=OuterRef('pk'), config_name__include_with_calibrations=True)
         config_qs = config_qs.annotate(include=Exists(include_with_calibs)).filter(include=True)
 
@@ -282,78 +288,115 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
         for inst_id in instrument_IDs:
             inst_calib_qs = calib_qs.filter(inventory__id=inst_id)
             inst_config_qs = config_qs.filter(inventory__id=inst_id)
-            if inst_calib_qs.exists() and inst_config_qs.exists():
-                inst_qs = chain(inst_calib_qs,inst_config_qs)
-            elif inst_calib_qs.exists():
-                inst_qs = inst_calib_qs
-            else: # inst_config_qs.exists()
-                inst_qs = inst_config_qs
-            qs[inst_id] = inst_qs
+            configs_by_deployment = dict()
+            if inst_config_qs.exists(): # group by deployment
+                deployment_IDs = set(inst_config_qs.values_list('deployment__id',flat=True))
+                for dep_id in deployment_IDs:
+                    configs_by_deployment[dep_id] = inst_config_qs.filter(deployment__id=dep_id)
+            qs[inst_id] = dict(calibs=inst_calib_qs, configs_by_deployment=configs_by_deployment)
         return qs
 
     @classmethod
-    def build_zip(cls, zf, objs, subdir=None):
-        # objs here is a dict, not a real queryset.
-        # Each key is an inst_id,
-        # and each val is either (a) a queryset of CalibEvents,
-        #                        (b) a queryset of ConfigEvent, or
-        #                        (c) a list of CalibEvents and ConfigEvents
-        # for (c), vals are paired or "bundled" in a tuple bearing calib and/or config events
-        # (a) and (b) follow the same schema (as singlets)
-        for inv_objs in objs.values():
-            if isinstance(inv_objs,QuerySet):
+    def build_zip(cls, zf, objs, subdir=None, verbose='CalibrationsWithConfigs_exportlog.txt'):  # TODO~ PRODUCTION: change VERBOSE to None
+        # objs here is a dict-of-dicts, not a queryset.
+        # Each top-level key is an inst_id.
+        # Per inst_id there is (a) a "calibs" key containing a CalibrationEvent Queryset
+        #                      (b) a "configs_by_deployment" key containing a dict.
+        #                          Each sub-key here is a deployment_id, the value of which is a ConfigEvent Queryset
+        # If all calibs and configs are valid for an inst_id, then they are bundled and sent to write_csv().
+        # To be valid, the bundled inventory CCC fields must (1) include all the part's inventory CCC fields
+        #                                                    (2) be approved==True
+
+        # setting up printing to file option.
+        if isinstance(verbose,str):
+            if subdir: verbose = join(subdir,verbose)
+            out = io.StringIO()
+        else: out = stdout
+
+        for inv_id,inv_objs in objs.items():
+            # CCC events
+            calibs_qs = inv_objs['calibs']
+            configs_by_deployment = inv_objs['configs_by_deployment']
+
+            # PART VALUES TO CHECK AGAINST
+            the_inv = Inventory.objects.filter(id=inv_id)[0]
+            print('\nInv:', the_inv, '(id={})'.format(inv_id), file=out)
+            print('Inv calibs:', calibs_qs if calibs_qs.exists() else None, file=out)
+            print('Inv confconst', configs_by_deployment, file=out)
+
+            if not the_inv.assembly_part:
+                print('FAIL:',the_inv, 'does not have an associated assembly_part!', file=out)
+                continue
+            the_part = the_inv.assembly_part.part
+            calibs_to_match = set(the_part.coefficient_name_events.first().coefficient_names.all()) if the_part.coefficient_name_events.first() else set()
+            calibs_to_match = {field.calibration_name for field in calibs_to_match}
+            confconsts_to_match = set(the_part.config_name_events.first().config_names.filter(include_with_calibrations=True)) if the_part.config_name_events.first() else set()
+            confconsts_to_match = {field.name for field in confconsts_to_match}
+            print('Part:',the_part, '(id={})'.format(the_part.id), file=out)
+            print('Part calib fields     (REQUIRED):', calibs_to_match if calibs_to_match else '{}', file=out)
+            print('Part confconst fields (REQUIRED):', confconsts_to_match if confconsts_to_match else '{}', file=out)
+
+            if calibs_to_match and not confconsts_to_match:
+                print('MODE: "part has calibs ONLY"', file=out)
+                if not (calibs_qs and not configs_by_deployment):
+                    print('  WARNING: inventory contains configs/consts. They will be ignored.', file=out)
                 # one csv per object, all obj will be of same model.
-                for obj in inv_objs:
-                    bundle = (obj,None)
-                    cls.write_csv(zf, bundle, subdir)
+                for calib_evt in calibs_qs:
+                    # check that inv calibs match part calibs
+                    calibs_avail = {cv_set.coefficient_name.calibration_name for cv_set in calib_evt.coefficient_value_sets.all()}
+                    print('  <CalibrationEvent: {}>'.format(calib_evt), file=out)
+                    print('    calib approved:   {}'.format('PASS' if calib_evt.approved else 'FAIL'), file=out)
+                    print('    calib validation: {}'.format('PASS' if calibs_to_match.issubset(calibs_avail) else 'FAIL. Present={} Missing={}'.format(calibs_avail,calibs_to_match-calibs_avail)), file=out)
+                    if calibs_avail == calibs_to_match and calib_evt.approved:
+                        bundle = (calib_evt,None)
+                        csv_fname = cls.write_csv(zf, bundle, subdir)
+                        print('SUCCESS:', csv_fname, 'zipped!', file=out) if csv_fname else print('FAIL:', csv_fname,'is empty', file=out)
 
-            else: # theres a mix of CalibrationEvents and ConfigEvents.
-                # calibs carry forwards with each new config until the next calib.
-                # consts always carry forward.
-                # consecutive and trailing calibs need-not be bundled.
-                inv_objs =  sorted(inv_objs, # earliest objs first. if same-date, sort in calib, constant, config order
-                                   key=lambda x: (x.date,['calib','cnst','conf'].index(getattr(x,'config_type','calib'))))
+            elif not (calibs_to_match or confconsts_to_match):
+                print('FAIL: inv.assembly_part.part does not define any CCCs but inventory has some.', file=out)
+                continue
 
-                # TESTING #
-                #if inv_objs[0].inventory.serial_number == 'CGINS-CTDBPF-50001':
-                #    obj_type = [obj.config_values.all()[0].config_name.config_type if isinstance(obj,ConfigEvent) else 'CALIB' for obj in inv_objs]
-                #    dates = [obj.date.strftime('%Y-%m-%d') for obj in inv_objs]
-                #    TBDs = [obj.deployment.current_status if obj.deployment else 'NA' for obj in inv_objs]
-                #    x = list(zip(inv_objs,obj_type, dates, TBDs))
-                #    print(x)
+            else: # config events are expected as per the part definition
+                print('MODE: "part has confconsts"', file=out)
+                if not configs_by_deployment: print('  FAIL: inventory confconst is empty', file=out)
+                for deployment_id,configs_qs in configs_by_deployment.items():
+                    print('  Deployment: "{}" (id={})'.format(Deployment.objects.filter(id=deployment_id).first(),deployment_id), file=out)
+                    if deployment_id is None:
+                        print('    FAIL: conf/const do not have an assigned Deployment', file=out)
+                    # check that inv conf/consts match part conf/consts
+                    configs_avail = set()
+                    approvals = dict()
+                    for config_evt in configs_qs:
+                        configs_avail.update([cv.config_name.name for cv in config_evt.config_values.all()])
+                        approvals[config_evt] = config_evt.approved
+                    print('    conf/consts approved:  {}'.format('PASS' if all(approvals.values()) else 'FAIL. Approvals={}'.format(approvals)), file=out)
+                    print('    conf/const validation: {}'.format('PASS' if confconsts_to_match.issubset(configs_avail) else 'FAIL. Present={} Missing={}'.format(configs_avail, confconsts_to_match-configs_avail)), file=out)
 
-                bundled_objs = []
-                prev, calib, config, const = None, None, None, None
-                for obj in inv_objs:
-                    if isinstance(obj,CalibrationEvent):
-                        calib=obj
-                    elif isinstance(obj,ConfigEvent):
-                        if obj.config_type=='cnst':
-                            const=obj
-                        else: # it's a config.
-                            if obj.deployment: # ie not "TBD"
-                                config=obj
-                            else: continue # skip it if it's TBD, ie not "deployed".
+                    if not calibs_to_match:
+                        if calibs_qs:
+                            print('    WARNING: part does not specify any Calibs but inventory contains some. They will be ignored.', file=out)
+                        print('    calib approved/validation: N/A ', file=out)
+                        bundle = (None,*configs_qs)
+                    else:
+                        cc_date = max([evt.date for evt in configs_qs])
+                        calib_evt = calibs_qs.filter(date__lte=cc_date).order_by('-date','-id')[0]
+                        calibs_avail = {cv_set.coefficient_name.calibration_name for cv_set in calib_evt.coefficient_value_sets.all()}
+                        print('    calib selected: <CalibrationEvent: {}>'.format(calib_evt), file=out)
+                        print('    calib approved:   {}'.format('PASS' if calib_evt.approved else 'FAIL'), file=out)
+                        print('    calib validation: {}'.format('PASS' if calibs_to_match.issubset(calibs_avail) else 'FAIL. Present={} Missing={}'.format(calibs_avail, calibs_to_match-calibs_avail)), file=out)
+                        bundle = (calib_evt, *configs_qs)
 
-                    if obj==config:  # config obj's always trigger csv file-writes.
-                        bundled_objs.append( (calib,config,const) )
-                    elif obj == const:  # consts obj's always trigger csv file-writes.
-                        bundled_objs.append( (calib,const,config) )
-                    elif obj==calib and isinstance(prev,CalibrationEvent):
-                        # consecutive calibrations get their own csv's
-                        bundled_objs.append( (prev,None,const) )
-                    prev = obj  # note previous object
+                        if not calib_evt.approved: continue
+                        if not calibs_to_match.issubset(calibs_avail): continue
+                    if not all(approvals.values()): continue
+                    if not confconsts_to_match.issubset(configs_avail): continue
+                    csv_fname = cls.write_csv(zf, bundle, subdir)
+                    print('SUCCESS:', csv_fname, 'zipped!', file=out) if csv_fname else print('FAIL:', csv_fname, 'is empty', file=out)
 
-                # make sure not to skip an end-of-loop trailing Calibration
-                if isinstance(prev,CalibrationEvent):
-                    bundled_objs.append( (prev,None,const) )
-
-                # write bundles to zip as csv's
-                for bundle in reversed(bundled_objs):
-                    # reversed() invoked to record only the _final_ "same-day bundle", if multiple are present.
-                    # This works because in write_csv(), zf_safewrite() is set to mode='skip', which disallows the recording of duplicate filenames.
-                    # In this way, the ultimate "same-day file" is recorded first and any subsequent others are skipped.
-                    cls.write_csv(zf, bundle, subdir)
+        if isinstance(verbose,str):
+            print('\n',file=out) # final newline
+            zf.writestr(verbose,out.getvalue())
+            out.close()
 
 
     @classmethod
@@ -378,7 +421,7 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
                 csv_writer.writerows(rows)
                 for extra_fname, extra_content in aux_files:
                     if subdir: extra_fname = join(subdir, extra_fname)
-                    cls.zf_safewrite(zf, extra_fname, extra_content, mode='skip')
+                    cls.zf_safewrite(zf, extra_fname, extra_content, mode='count')
 
             elif isinstance(obj,ConfigEvent):
                 # Reference to Configs-Only Class
@@ -389,7 +432,10 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
         # write csv to zip
         if subdir: csv_fname = join(subdir, csv_fname)
         if has_content: # avoid blank files
-            cls.zf_safewrite(zf, csv_fname, csv_content.getvalue(), mode='skip')
+            cls.zf_safewrite(zf, csv_fname, csv_content.getvalue(), mode='count')
+            return csv_fname
+        else:
+            return None
 
 
 # Cruises CSV
@@ -547,6 +593,7 @@ class ExportCI(ZipExport):
         cruise_csv = CSV.writer(cruise_csv_content)
         ExportCruises.build_csv(  cruise_csv, cruises)
         zf.writestr(cruise_csv_fname,cruise_csv_content.getvalue())
+        cruise_csv_content.close()
 
         # Vessels csv
         vessels = Vessel.objects.all()
@@ -555,3 +602,4 @@ class ExportCI(ZipExport):
         vessel_csv = CSV.writer(vessel_csv_content)
         ExportVessels.build_csv(  vessel_csv, vessels)
         zf.writestr(vessel_csv_fname,vessel_csv_content.getvalue())
+        vessel_csv_content.close()
