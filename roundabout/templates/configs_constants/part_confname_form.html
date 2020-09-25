@@ -19,13 +19,28 @@
 # If not, see <http://www.gnu.org/licenses/>.
 -->
 <script type="text/javascript">
+    $(document).ready(function() {
         // Handles CoefficientValueSet form instance generation
         $('.conf_name-form tbody tr').formset({
             prefix: 'config_names',
             addText: 'Add Configurations/Constants',
-            deleteContainerClass: 'delete-here',
             deleteText: 'Remove'
         });
+
+        let formRows = $('.dynamic-form');
+        formRows.each(function() {
+            row = $(this);
+            let removeButtons = row.find('.delete-row');
+            let deprecated = row.find("[id$='deprecated']").attr('checked');
+            if (deprecated == 'checked') {
+                removeButtons.remove();
+            } 
+        });
+
+        $('.delete-row').on('click',function() {
+            alert('Warning: deleting Names will delete all downstream Defaults and Events');
+        });
+    });
 </script>
 
 {% load static i18n %}
@@ -69,6 +84,7 @@
                   <th>Name</th>
                   <th>Type</th>
                   <th>Export with Calibrations</th>
+                  <th>Deprecated</th>
               </thead>
               <tbody>
                 {{ part_confname_form.management_form }}
@@ -77,7 +93,7 @@
                       <td>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.name }}</td>
                       <td>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.config_type }}</td>
                       <td style = 'text-align: center;'>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.include_with_calibrations }}</td>
-                      <td class = 'delete-here'></td>
+                      <td style = 'text-align: center;'>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.deprecated }}</td>
                   </tr>
               {% endfor %}
               </tbody>
