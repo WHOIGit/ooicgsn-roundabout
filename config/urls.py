@@ -26,10 +26,6 @@ from django.contrib import admin
 from django.views.generic import TemplateView
 from django.views import defaults as default_views
 
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
 
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
@@ -60,14 +56,9 @@ urlpatterns = [
     path('export/', include('roundabout.exports.urls', namespace='export')),
     path('calibrations/', include('roundabout.calibrations.urls', namespace='calibrations')),
     path('configs_constants/', include('roundabout.configs_constants.urls', namespace='configs_constants')),
+    path('field_instances/', include('roundabout.field_instances.urls', namespace='field_instances')),
     # API urls
-    path('api/v1/', include('roundabout.inventory.api.urls')),
-    path('api/v1/', include('roundabout.locations.api.urls')),
-    path('api/v1/', include('roundabout.parts.api.urls')),
-    path('api/v1/', include('roundabout.assemblies.api.urls')),
-    # API JWT token paths
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/v1/', include('roundabout.core.api.urls', namespace='api_v1')),
     #Summernote WYSIWYG
     path('summernote/', include('django_summernote.urls')),
 ] + static(

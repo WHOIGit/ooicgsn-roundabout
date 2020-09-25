@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -19,14 +19,16 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter, SimpleRouter
-from .views import PartViewSet
+from django.urls import path
 
-# Create a router and register our viewsets with it.
-router = SimpleRouter()
-router.register(r'parts', PartViewSet )
+from . import views
 
+app_name = 'field_instances'
 urlpatterns = [
-    path('', include(router.urls) ),
+    path('sync-to-home/', view=views.FieldInstanceSyncToHomeView.as_view(), name='field_instance_sync_to_home'),
+    # CRUD views
+    path('', view=views.FieldInstanceListView.as_view(), name='field_instances_home'),
+    path('add/', view=views.FieldInstanceCreateView.as_view(), name='field_instances_add'),
+    path('edit/<int:pk>/', view=views.FieldInstanceUpdateView.as_view(), name='field_instances_update'),
+    path('delete/<int:pk>/', view=views.FieldInstanceDeleteView.as_view(), name='field_instances_delete'),
 ]

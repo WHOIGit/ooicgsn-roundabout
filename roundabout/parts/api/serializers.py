@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -20,10 +20,11 @@
 """
 
 from rest_framework import serializers
+from rest_flex_fields import FlexFieldsModelSerializer
 from ..models import Part, PartType
 
 
-class PartSerializer(serializers.ModelSerializer):
+class PartSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = Part
         fields = ('id', 'name', 'friendly_name', 'part_number', 'unit_cost', 'refurbishment_cost' )

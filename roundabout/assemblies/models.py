@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -118,8 +118,6 @@ class AssemblyPart(MPTTModel):
                             on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     note = models.TextField(blank=True)
     order = models.CharField(max_length=255, null=False, blank=True, db_index=True)
-
-    tracker = FieldTracker(fields=['part',])
 
     class MPTTMeta:
         order_insertion_by = ['order']

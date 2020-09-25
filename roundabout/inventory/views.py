@@ -525,7 +525,7 @@ class InventoryAjaxCreateBasicView(LoginRequiredMixin, AjaxFormMixin, CreateView
 
                 if default_value:
                     fieldvalue = FieldValue.objects.create(field=field, field_value=default_value.field_value,
-                                                                inventory=self.object, is_current=True, user=default_value.user)
+                                                           inventory=self.object, is_current=True, user=default_value.user)
 
         response = HttpResponseRedirect(self.get_success_url())
 

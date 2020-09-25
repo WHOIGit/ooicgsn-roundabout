@@ -84,13 +84,13 @@ class Inventory(MPTTModel):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     detail = models.TextField(blank=True)
-    test_result = models.NullBooleanField(blank=False, choices=TEST_RESULTS)
+    test_result = models.BooleanField(null=True, blank=False, choices=TEST_RESULTS)
     test_type = models.CharField(max_length=20, choices=TEST_TYPES, null=True, blank=True)
     flag = models.BooleanField(choices=FLAG_TYPES, blank=False, default=False)
     # Deprecated as of v1.5
     _time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
 
-    tracker = FieldTracker(fields=['location', 'parent', 'build'])
+    #tracker = FieldTracker(fields=['location', 'build'])
 
     class MPTTMeta:
         order_insertion_by = ['serial_number']

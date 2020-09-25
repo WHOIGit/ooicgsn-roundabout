@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -30,7 +30,6 @@ from types import SimpleNamespace
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
-from django.db import IntegrityError
 from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ValidationError
@@ -415,7 +414,7 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
 
     def get(self, request, *args, **kwargs):
         # Get the Assembly data from RDB API
-        request_url = 'https://rdb-demo.whoi.edu/api/v1/assemblies/13/'
+        request_url = 'https://ooi-cgrdb-staging.whoi.net/assemblies/859'
         assembly_request = requests.get(request_url, verify=False)
         new_assembly = assembly_request.json()
         # Get or create new parent Temp Assembly

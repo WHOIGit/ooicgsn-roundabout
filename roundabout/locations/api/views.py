@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -19,12 +19,14 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import generics, viewsets, filters
+from rest_framework import generics, filters, viewsets
+from rest_framework.permissions import IsAuthenticated
+
 from ..models import Location
 from .serializers import LocationSerializer
 
 
 class LocationViewSet(viewsets.ModelViewSet):
-
-    queryset = Location.objects.all()
     serializer_class = LocationSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = Location.objects.all()

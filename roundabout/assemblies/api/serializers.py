@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -20,43 +20,46 @@
 """
 
 from rest_framework import serializers
+from rest_flex_fields import FlexFieldsModelSerializer
 
-from ..models import Assembly, AssemblyPart, AssemblyType
+from ..models import Assembly, AssemblyPart, AssemblyType, AssemblyRevision
 from roundabout.parts.api.serializers import PartSerializer
+from roundabout.core.api.serializers import RecursiveFieldSerializer
 
 
-class AssemblyPartSerializer(serializers.ModelSerializer):
-    part = PartSerializer(read_only=True)
-
+class AssemblyPartSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = AssemblyPart
-        fields = ['id', 'part', 'parent', 'note', 'order' ]
+        fields = ['id', 'part', 'parent', 'children', 'note', ]
 
-    @staticmethod
-    def setup_eager_loading(queryset):
-        """ Perform necessary prefetching of data. """
-        queryset = queryset.select_related('part')
+        expandable_fields = {
+            'part': PartSerializer,
+            'parent': 'roundabout.assemblies.api.serializers.AssemblyPartSerializer',
+            'children': ('roundabout.assemblies.api.serializers.AssemblyPartSerializer', {'many': True})
+        }
 
-        return queryset
-
-
-class AssemblyTypeSerializer(serializers.ModelSerializer):
+class AssemblyTypeSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = AssemblyType
         fields = ['name']
 
 
-class AssemblySerializer(serializers.ModelSerializer):
-    assembly_parts = AssemblyPartSerializer(many=True, read_only=True)
-    assembly_type = AssemblyTypeSerializer(read_only=True)
+class AssemblyRevisionSerializer(FlexFieldsModelSerializer):
+    class Meta:
+        model = AssemblyRevision
+        fields = ['id', 'revision_code', 'revision_note', 'created_at', 'assembly', 'assembly_parts']
 
+        expandable_fields = {
+            'assembly': 'roundabout.assemblies.api.serializers.AssemblySerializer',
+            'assembly_parts': ('roundabout.assemblies.api.serializers.AssemblyPartSerializer', {'many': True})
+        }
+
+class AssemblySerializer(FlexFieldsModelSerializer):
     class Meta:
         model = Assembly
-        fields = ['id', 'name', 'assembly_number', 'description', 'assembly_type', 'assembly_parts' ]
+        fields = ['id', 'name', 'assembly_number', 'description', 'assembly_type', 'assembly_revisions' ]
 
-    @staticmethod
-    def setup_eager_loading(queryset):
-        """ Perform necessary prefetching of data. """
-        queryset = queryset.prefetch_related('assembly_parts')
-
-        return queryset
+        expandable_fields = {
+            'assembly_type': 'roundabout.assemblies.api.serializers.AssemblyTypeSerializer',
+            'assembly_revisions': ('roundabout.assemblies.api.serializers.AssemblyRevisionSerializer', {'many': True})
+        }

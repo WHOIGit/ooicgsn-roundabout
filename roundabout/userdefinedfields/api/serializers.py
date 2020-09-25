@@ -19,26 +19,27 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from django.db.models import Prefetch
-from rest_framework import generics, viewsets, filters
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import serializers
+from rest_flex_fields import FlexFieldsModelSerializer
 
-from ..models import Assembly, AssemblyRevision, AssemblyPart
-from .serializers import AssemblySerializer, AssemblyRevisionSerializer, AssemblyPartSerializer
-
-
-class AssemblyViewSet(viewsets.ModelViewSet):
-    serializer_class = AssemblySerializer
-    permission_classes = (IsAuthenticated,)
-    queryset = Assembly.objects.all()
+from ..models import *
+from roundabout.parts.api.serializers import PartSerializer
+from roundabout.inventory.api.serializers import InventorySerializer
 
 
-class AssemblyRevisionViewSet(viewsets.ModelViewSet):
-    serializer_class = AssemblyRevisionSerializer
-    permission_classes = (IsAuthenticated,)
-    queryset = AssemblyRevision.objects.all()
+class FieldSerializer(FlexFieldsModelSerializer):
+    class Meta:
+        model = Field
+        fields = '__all__'
 
-class AssemblyPartViewSet(viewsets.ModelViewSet):
-    serializer_class = AssemblyPartSerializer
-    permission_classes = (IsAuthenticated,)
-    queryset = AssemblyPart.objects.all()
+
+class FieldValueSerializer(FlexFieldsModelSerializer):
+    class Meta:
+        model = FieldValue
+        fields = '__all__'
+
+        expandable_fields = {
+            'field': FieldSerializer,
+            'part': PartSerializer,
+            'inventory': (InventorySerializer, {'many': True})
+        }
