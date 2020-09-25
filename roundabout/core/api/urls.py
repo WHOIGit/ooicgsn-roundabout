@@ -25,7 +25,7 @@ from roundabout.inventory.api.views import InventoryViewSet, ActionViewSet, Phot
 from roundabout.assemblies.api.views import AssemblyViewSet, AssemblyRevisionViewSet, AssemblyPartViewSet
 from roundabout.calibrations.api.views import CalibrationEventViewSet, CoefficientNameEventViewSet
 from roundabout.locations.api.views import LocationViewSet
-from roundabout.parts.api.views import PartViewSet
+from roundabout.parts.api.views import PartViewSet, PartTypeViewSet, RevisionViewSet, DocumentationViewSet
 from roundabout.userdefinedfields.api.views import FieldViewSet, FieldValueViewSet
 
 # Create a router and register our viewsets with it.
@@ -34,19 +34,22 @@ router.register(r'inventory', InventoryViewSet, 'inventory' )
 router.register(r'actions', ActionViewSet, 'actions' )
 router.register(r'photos', PhotoNoteViewSet, 'photos' )
 
-router.register(r'assemblies', AssemblyViewSet, 'assemblies' )
-router.register(r'assembly_revisions', AssemblyRevisionViewSet, 'assembly_revisions' )
-router.register(r'assembly_parts', AssemblyPartViewSet, 'assembly_parts' )
+router.register(r'assembly-templates/assemblies', AssemblyViewSet, 'assembly-templates/assemblies' )
+router.register(r'assembly-templates/assembly-revisions', AssemblyRevisionViewSet, 'assembly-templates/assembly-revisions' )
+router.register(r'assembly-templates/assembly-parts', AssemblyPartViewSet, 'assembly-templates/assembly-parts' )
 
-router.register(r'calibrations/calibration_events', CalibrationEventViewSet, 'calibrations/calibration_events' )
-router.register(r'calibrations/coefficent_name_events', CoefficientNameEventViewSet, 'calibrations/coefficent_name_events' )
+router.register(r'calibrations/calibration-events', CalibrationEventViewSet, 'calibrations/calibration-events' )
+router.register(r'calibrations/coefficent-name-events', CoefficientNameEventViewSet, 'calibrations/coefficent-name-events' )
 
 router.register(r'locations', LocationViewSet, 'locations' )
 
-router.register(r'parts', PartViewSet, 'parts' )
+router.register(r'part-templates/parts', PartViewSet, 'part-templates/parts' )
+router.register(r'part-templates/part-types', PartTypeViewSet, 'part-templates/part-types' )
+router.register(r'part-templates/revisions', RevisionViewSet, 'part-templates/revisions' )
+router.register(r'part-templates/documents', DocumentationViewSet, 'part-templates/documents' )
 
-router.register(r'userdefinedfields/fields', FieldViewSet, 'userdefinedfields/fields' )
-router.register(r'userdefinedfields/field-values', FieldValueViewSet, 'userdefinedfields/field-values' )
+router.register(r'userdefined-fields/fields', FieldViewSet, 'userdefined-fields/fields' )
+router.register(r'userdefined-fields/field-values', FieldValueViewSet, 'userdefined-fields/field-values' )
 
 app_name = 'api_v1'
 urlpatterns = [

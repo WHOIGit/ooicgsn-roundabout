@@ -133,7 +133,7 @@ pk_mappings: array that maps old_pk to new_pk for new objects
 def _sync_request_fields(request, field_instance):
     model = Field
     serializer = FieldSerializer
-    api_url = base_url + reverse('userdefinedfields/fields-list')
+    api_url = base_url + reverse('api_v1:userdefined-fields/fields-list')
     # Sync new objects, return the pk_mappings for new items
     pk_mappings = _sync_new_objects(field_instance, model, api_url, serializer)
     status = _sync_existing_objects(field_instance, model, api_url, serializer, pk_mappings)
@@ -185,7 +185,7 @@ def _sync_request_inventory(request, field_instance, pk_mappings):
 
     ##### SYNC INVENTORY #####
     #inventory_url = F"{base_url}/api/v1/inventory/"
-    inventory_url = base_url + reverse('inventory-list')
+    inventory_url = base_url + reverse('api_v1:inventory-list')
     print(inventory_url)
     # Get new items that were added, these need special handling
     new_inventory = Inventory.objects.filter(created_at__gte=field_instance.start_date).order_by('-parent')
@@ -236,7 +236,7 @@ def _sync_request_inventory(request, field_instance, pk_mappings):
             # serialize data for JSON request
             inventory_serializer = InventorySerializer(inv)
             inventory_dict = inventory_serializer.data
-            url = base_url + reverse('inventory-detail', kwargs={'pk': inv.id},)
+            url = base_url + reverse('api_v1:inventory-detail', kwargs={'pk': inv.id},)
             #url = F"{inventory_url}{inv.id}/"
             print(url)
             # Need to remap any Parent items that have new PKs
@@ -265,8 +265,8 @@ actions: queryset of Action objects
 pk_mappings: array that maps old_pk to new_pk for new objects
 """
 def _sync_request_actions(request, field_instance, obj, inventory_pk_mappings=None):
-    action_url = base_url + reverse('actions-list')
-    photo_url = base_url + reverse('photos-list')
+    action_url = base_url + reverse('api_v1:actions-list')
+    photo_url = base_url + reverse('api_v1:photos-list')
     # Get all actions for this object
     object_type = obj._meta.model_name
     actions = obj.actions.filter(object_type=object_type).filter(created_at__gte=field_instance.start_date)
@@ -306,7 +306,7 @@ inventory_item: Inventory object
 field_pk_mappings, inventory_pk_mappings: array that maps old_pk to new_pk for new objects
 """
 def _sync_request_field_values(request, field_instance, inventory_item, field_pk_mappings, inventory_pk_mappings=None):
-    field_value_url = base_url + reverse('userdefinedfields/field-values-list')
+    field_value_url = base_url + reverse('api_v1:userdefined-fields/field-values-list')
     # Get new field values that were added
     new_field_values = inventory_item.fieldvalues.filter(created_at__gte=field_instance.start_date)
     for fv in new_field_values:
@@ -328,7 +328,7 @@ def _sync_request_field_values(request, field_instance, inventory_item, field_pk
         # serialize data for JSON request
         fv_serializer = FieldValueSerializer(fv)
         fv_dict = fv_serializer.data
-        url = base_url + reverse('userdefinedfields/field-values-detail', kwargs={'pk': fv.id},)
+        url = base_url + reverse('api_v1:userdefinedfields/field-values-detail', kwargs={'pk': fv.id},)
         response = requests.post(field_value_url, json=fv_dict )
         print('Field Value RESPONSE:', response.text)
         print("Field Value CODE: ", response.status_code)

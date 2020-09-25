@@ -31,8 +31,8 @@ class LocationSerializer(serializers.HyperlinkedModelSerializer, FlexFieldsModel
     )
     parent = serializers.HyperlinkedRelatedField(
         view_name='api_v1:locations-detail',
-        read_only=True,
         lookup_field='pk',
+        queryset=Location.objects
     )
     children = serializers.HyperlinkedRelatedField(
         view_name='api_v1:locations-detail',

@@ -21,8 +21,14 @@
 
 from rest_framework import generics, viewsets, filters
 from rest_framework.permissions import IsAuthenticated
-from ..models import Part
-from .serializers import PartSerializer
+from ..models import Part, PartType, Revision, Documentation
+from .serializers import PartSerializer, PartTypeSerializer, RevisionSerializer, DocumentationSerializer
+
+
+class PartTypeViewSet(viewsets.ModelViewSet):
+    serializer_class = PartTypeSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = PartType.objects.all()
 
 
 class PartViewSet(viewsets.ModelViewSet):
@@ -30,5 +36,14 @@ class PartViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
     queryset = Part.objects.all()
 
-    search_fields = ['part_number']
-    filter_backends = (filters.SearchFilter,)
+
+class RevisionViewSet(viewsets.ModelViewSet):
+    serializer_class = RevisionSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = Revision.objects.all()
+
+
+class DocumentationViewSet(viewsets.ModelViewSet):
+    serializer_class = DocumentationSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = Documentation.objects.all()
