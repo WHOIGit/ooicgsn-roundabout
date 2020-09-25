@@ -23,25 +23,27 @@ from rest_framework import serializers
 from rest_flex_fields import FlexFieldsModelSerializer
 
 from ..models import Assembly, AssemblyPart, AssemblyType, AssemblyRevision
+from roundabout.parts.models import Part
 from roundabout.parts.api.serializers import PartSerializer
 from roundabout.core.api.serializers import RecursiveFieldSerializer
 
-
-class AssemblyPartSerializer(FlexFieldsModelSerializer):
-    class Meta:
-        model = AssemblyPart
-        fields = ['id', 'part', 'parent', 'children', 'note', ]
-
-        expandable_fields = {
-            'part': PartSerializer,
-            'parent': 'roundabout.assemblies.api.serializers.AssemblyPartSerializer',
-            'children': ('roundabout.assemblies.api.serializers.AssemblyPartSerializer', {'many': True})
-        }
+API_VERSION = 'api_v1'
 
 class AssemblyTypeSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = AssemblyType
         fields = ['name']
+
+
+class AssemblySerializer(FlexFieldsModelSerializer):
+    class Meta:
+        model = Assembly
+        fields = ['id', 'name', 'assembly_number', 'description', 'assembly_type', 'assembly_revisions' ]
+
+        expandable_fields = {
+            'assembly_type': 'roundabout.assemblies.api.serializers.AssemblyTypeSerializer',
+            'assembly_revisions': ('roundabout.assemblies.api.serializers.AssemblyRevisionSerializer', {'many': True})
+        }
 
 
 class AssemblyRevisionSerializer(FlexFieldsModelSerializer):
@@ -54,12 +56,35 @@ class AssemblyRevisionSerializer(FlexFieldsModelSerializer):
             'assembly_parts': ('roundabout.assemblies.api.serializers.AssemblyPartSerializer', {'many': True})
         }
 
-class AssemblySerializer(FlexFieldsModelSerializer):
+
+class AssemblyPartSerializer(FlexFieldsModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name = API_VERSION + ':assembly-templates/assembly-parts-detail',
+        lookup_field = 'pk',
+    )
+    parent = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':assembly-templates/assembly-parts-detail',
+        lookup_field = 'pk',
+        queryset = AssemblyPart.objects
+    )
+    children = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':assembly-templates/assembly-parts-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+    part = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':part-templates/parts-detail',
+        lookup_field = 'pk',
+        queryset = Part.objects
+    )
+
     class Meta:
-        model = Assembly
-        fields = ['id', 'name', 'assembly_number', 'description', 'assembly_type', 'assembly_revisions' ]
+        model = AssemblyPart
+        fields = ['id', 'url', 'part', 'parent', 'children', 'note', ]
 
         expandable_fields = {
-            'assembly_type': 'roundabout.assemblies.api.serializers.AssemblyTypeSerializer',
-            'assembly_revisions': ('roundabout.assemblies.api.serializers.AssemblyRevisionSerializer', {'many': True})
+            'part': PartSerializer,
+            'parent': 'roundabout.assemblies.api.serializers.AssemblyPartSerializer',
+            'children': ('roundabout.assemblies.api.serializers.AssemblyPartSerializer', {'many': True})
         }

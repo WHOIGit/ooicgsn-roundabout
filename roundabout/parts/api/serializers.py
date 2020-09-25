@@ -24,24 +24,25 @@ from rest_flex_fields import FlexFieldsModelSerializer
 from ..models import Part, PartType, Revision, Documentation
 
 API_VERSION = 'api_v1'
+
 class PartTypeSerializer(FlexFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name = API_VERSION + ':part-templates/part-types-detail',
         lookup_field = 'pk',
     )
     parent = serializers.HyperlinkedRelatedField(
-        view_name = 'api_v1:part-templates/part-types-detail',
+        view_name = API_VERSION + ':part-templates/part-types-detail',
         lookup_field = 'pk',
         queryset = PartType.objects
     )
     children = serializers.HyperlinkedRelatedField(
-        view_name = 'api_v1:part-templates/part-types-detail',
+        view_name = API_VERSION + ':part-templates/part-types-detail',
         many = True,
         read_only = True,
         lookup_field = 'pk',
     )
     parts = serializers.HyperlinkedRelatedField(
-        view_name = 'api_v1:part-templates/parts-detail',
+        view_name = API_VERSION +':part-templates/parts-detail',
         many = True,
         read_only = True,
         lookup_field = 'pk',
@@ -60,16 +61,16 @@ class PartTypeSerializer(FlexFieldsModelSerializer):
 
 class PartSerializer(FlexFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name = 'api_v1:part-templates/parts-detail',
+        view_name = API_VERSION + ':part-templates/parts-detail',
         lookup_field = 'pk',
     )
     part_type = serializers.HyperlinkedRelatedField(
-        view_name = 'api_v1:part-templates/part-types-detail',
+        view_name =  API_VERSION + ':part-templates/part-types-detail',
         lookup_field = 'pk',
         queryset = PartType.objects
     )
     revisions= serializers.HyperlinkedRelatedField(
-        view_name = 'api_v1:part-templates/revisions-detail',
+        view_name = API_VERSION + ':part-templates/revisions-detail',
         lookup_field = 'pk',
         many = True,
         read_only = True,
@@ -100,16 +101,16 @@ class PartSerializer(FlexFieldsModelSerializer):
 
 class RevisionSerializer(FlexFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name = 'api_v1:part-templates/revisions-detail',
+        view_name = API_VERSION + ':part-templates/revisions-detail',
         lookup_field = 'pk',
     )
     part = serializers.HyperlinkedRelatedField(
-        view_name = 'api_v1:part-templates/parts-detail',
+        view_name = API_VERSION + ':part-templates/parts-detail',
         lookup_field = 'pk',
         queryset = PartType.objects
     )
     documentation= serializers.HyperlinkedRelatedField(
-        view_name = 'api_v1:part-templates/documents-detail',
+        view_name = API_VERSION + ':part-templates/documents-detail',
         lookup_field = 'pk',
         many = True,
         read_only = True,
@@ -137,11 +138,11 @@ class RevisionSerializer(FlexFieldsModelSerializer):
 
 class DocumentationSerializer(FlexFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name = 'api_v1:part-templates/documents-detail',
+        view_name = API_VERSION + ':part-templates/documents-detail',
         lookup_field = 'pk',
     )
     revision = serializers.HyperlinkedRelatedField(
-        view_name = 'api_v1:part-templates/revisions-detail',
+        view_name = API_VERSION + ':part-templates/revisions-detail',
         lookup_field = 'pk',
         queryset = Revision.objects
     )

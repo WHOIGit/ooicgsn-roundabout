@@ -316,7 +316,7 @@ REST_FRAMEWORK = {
         'roundabout.core.api.renderers.BrowsableAPIRendererWithoutForms',
     ),
     'DEFAULT_PAGINATION_CLASS': 'drf_link_header_pagination.LinkHeaderPagination',
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE': 30,
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ]
