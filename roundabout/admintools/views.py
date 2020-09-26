@@ -414,25 +414,26 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
 
     def get(self, request, *args, **kwargs):
 
-        api_token = '7de11f0cd61a6d50899192c0d02a975b2b204c16'
+        api_token = '7cd558ee6880982d08669c08b7f92a505f0847fb'
         headers = {
             'Authorization': 'Token ' + api_token,
         }
         params = {'expand': 'assembly_type,assembly_revisions'}
         # Get the Assembly data from RDB API
-        request_url = 'https://rdb-testing.whoi.edu/assembly-templates/assembly/859/'
+        request_url = 'https://rdb-testing.whoi.edu/api/v1/assembly-templates/assemblies/30/'
         assembly_request = requests.get(request_url, params=params, headers=headers, verify=False)
         new_assembly = assembly_request.json()
         # Get or create new parent Temp Assembly
         assembly_obj, created = Assembly.objects.get_or_create(name=new_assembly['name'],
                                                                assembly_number=new_assembly['assembly_number'],
                                                                description=new_assembly['description'],)
+        print(assembly_obj)
         try:
             assembly_type = AssemblyType.objects.get(name=new_assembly['assembly_type']['name'])
         except AssemblyType.DoesNotExist:
             # No matching AssemblyType, add it from the API request data
             assembly_type = AssemblyType.objects.create(name=new_assembly['assembly_type']['name'])
-
+        print(assembly_type)
         assembly_obj.assembly_type = assembly_type
         assembly_obj.save()
 
@@ -444,22 +445,20 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
                 created_at=rev['created_at'],
                 assembly=assembly_obj,
             )
+            print(new_revision)
 
             for assembly_part_url in rev['assembly_parts']:
                 # Need to validate that the Part template exists
                 params = {'expand': 'part'}
                 assembly_part_request = requests.get(assembly_part_url, params=params, headers=headers, verify=False)
                 assembly_part = assembly_part_request.json()
-                print(assembly_part)
                 try:
                     part_obj = Part.objects.get(part_number=assembly_part['part']['part_number'])
                 except Part.DoesNotExist:
                     print('No matching part')
 
             #AssemblyPart._tree_manager.rebuild()
-
-
-        return HttpResponse('<h1>New Assembly Template Imported! - %s</h1><p>Errors count: %s</p><p>%s</p>' % (import_error, error_count, error_parts))
+        return HttpResponse('<h1>New Assembly Template Imported! - %s</h1>' % (assembly_obj))
 
 
 # Printer functionality
