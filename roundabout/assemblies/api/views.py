@@ -23,8 +23,8 @@ from django.db.models import Prefetch
 from rest_framework import generics, viewsets, filters
 from rest_framework.permissions import IsAuthenticated
 
-from ..models import Assembly, AssemblyRevision, AssemblyPart
-from .serializers import AssemblySerializer, AssemblyRevisionSerializer, AssemblyPartSerializer
+from ..models import Assembly, AssemblyRevision, AssemblyPart, AssemblyType
+from .serializers import AssemblySerializer, AssemblyRevisionSerializer, AssemblyPartSerializer, AssemblyTypeSerializer
 
 
 class AssemblyViewSet(viewsets.ModelViewSet):
@@ -33,10 +33,17 @@ class AssemblyViewSet(viewsets.ModelViewSet):
     queryset = Assembly.objects.all()
 
 
+class AssemblyTypeViewSet(viewsets.ModelViewSet):
+    serializer_class = AssemblyTypeSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = AssemblyType.objects.all()
+
+
 class AssemblyRevisionViewSet(viewsets.ModelViewSet):
     serializer_class = AssemblyRevisionSerializer
     permission_classes = (IsAuthenticated,)
     queryset = AssemblyRevision.objects.all()
+
 
 class AssemblyPartViewSet(viewsets.ModelViewSet):
     serializer_class = AssemblyPartSerializer

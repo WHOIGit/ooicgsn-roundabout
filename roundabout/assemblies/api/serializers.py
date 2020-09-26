@@ -30,15 +30,46 @@ from roundabout.core.api.serializers import RecursiveFieldSerializer
 API_VERSION = 'api_v1'
 
 class AssemblyTypeSerializer(FlexFieldsModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name = API_VERSION + ':assembly-templates/assembly-types-detail',
+        lookup_field = 'pk',
+    )
+    assemblies = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':assembly-templates/assemblies-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+
     class Meta:
         model = AssemblyType
-        fields = ['name']
+        fields = ['id', 'url', 'name', 'assemblies']
+
+        expandable_fields = {
+            'assemblies': ('roundabout.assemblies.api.serializers.AssemblySerializer', {'many': True})
+        }
 
 
 class AssemblySerializer(FlexFieldsModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name = API_VERSION + ':assembly-templates/assemblies-detail',
+        lookup_field = 'pk',
+    )
+    assembly_revisions = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':assembly-templates/assembly-revisions-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+    assembly_type = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':assembly-templates/assembly-types-detail',
+        lookup_field = 'pk',
+        queryset = AssemblyType.objects
+    )
+
     class Meta:
         model = Assembly
-        fields = ['id', 'name', 'assembly_number', 'description', 'assembly_type', 'assembly_revisions' ]
+        fields = ['id', 'url', 'name', 'assembly_number', 'description', 'assembly_type', 'assembly_revisions' ]
 
         expandable_fields = {
             'assembly_type': 'roundabout.assemblies.api.serializers.AssemblyTypeSerializer',
@@ -47,9 +78,25 @@ class AssemblySerializer(FlexFieldsModelSerializer):
 
 
 class AssemblyRevisionSerializer(FlexFieldsModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name = API_VERSION + ':assembly-templates/assembly-revisions-detail',
+        lookup_field = 'pk',
+    )
+    assembly_parts = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':assembly-templates/assembly-parts-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+    assembly = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':assembly-templates/assemblies-detail',
+        lookup_field = 'pk',
+        queryset = Assembly.objects
+    )
+
     class Meta:
         model = AssemblyRevision
-        fields = ['id', 'revision_code', 'revision_note', 'created_at', 'assembly', 'assembly_parts']
+        fields = ['id', 'url', 'revision_code', 'revision_note', 'created_at', 'assembly', 'assembly_parts']
 
         expandable_fields = {
             'assembly': 'roundabout.assemblies.api.serializers.AssemblySerializer',
@@ -73,6 +120,11 @@ class AssemblyPartSerializer(FlexFieldsModelSerializer):
         read_only = True,
         lookup_field = 'pk',
     )
+    assembly_revision = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':assembly-templates/assembly-revisions-detail',
+        lookup_field = 'pk',
+        queryset = Part.objects
+    )
     part = serializers.HyperlinkedRelatedField(
         view_name = API_VERSION + ':part-templates/parts-detail',
         lookup_field = 'pk',
@@ -81,10 +133,11 @@ class AssemblyPartSerializer(FlexFieldsModelSerializer):
 
     class Meta:
         model = AssemblyPart
-        fields = ['id', 'url', 'part', 'parent', 'children', 'note', ]
+        fields = ['id', 'url', 'assembly_revision', 'part', 'parent', 'children', 'note', ]
 
         expandable_fields = {
             'part': PartSerializer,
+            'assembly_revision': 'roundabout.assemblies.api.serializers.AssemblyRevisionSerializer',
             'parent': 'roundabout.assemblies.api.serializers.AssemblyPartSerializer',
             'children': ('roundabout.assemblies.api.serializers.AssemblyPartSerializer', {'many': True})
         }

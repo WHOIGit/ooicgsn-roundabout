@@ -22,7 +22,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter, SimpleRouter
 from roundabout.inventory.api.views import InventoryViewSet, ActionViewSet, PhotoNoteViewSet
-from roundabout.assemblies.api.views import AssemblyViewSet, AssemblyRevisionViewSet, AssemblyPartViewSet
+from roundabout.assemblies.api.views import AssemblyViewSet, AssemblyRevisionViewSet, AssemblyPartViewSet, AssemblyTypeViewSet
 from roundabout.calibrations.api.views import CalibrationEventViewSet, CoefficientNameEventViewSet
 from roundabout.locations.api.views import LocationViewSet
 from roundabout.parts.api.views import PartViewSet, PartTypeViewSet, RevisionViewSet, DocumentationViewSet
@@ -36,6 +36,7 @@ router.register(r'photos', PhotoNoteViewSet, 'photos' )
 
 router.register(r'assembly-templates/assemblies', AssemblyViewSet, 'assembly-templates/assemblies' )
 router.register(r'assembly-templates/assembly-revisions', AssemblyRevisionViewSet, 'assembly-templates/assembly-revisions' )
+router.register(r'assembly-templates/assembly-types', AssemblyTypeViewSet, 'assembly-templates/assembly-types' )
 router.register(r'assembly-templates/assembly-parts', AssemblyPartViewSet, 'assembly-templates/assembly-parts' )
 
 router.register(r'calibrations/calibration-events', CalibrationEventViewSet, 'calibrations/calibration-events' )
