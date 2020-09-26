@@ -42,7 +42,7 @@ from roundabout.userdefinedfields.models import FieldValue, Field
 from roundabout.inventory.models import Inventory, Action
 from roundabout.parts.models import Part, Revision
 from roundabout.locations.models import Location
-from roundabout.assemblies.models import AssemblyType, Assembly, AssemblyPart
+from roundabout.assemblies.models import AssemblyType, Assembly, AssemblyPart, AssemblyRevision
 from roundabout.assemblies.views import _make_tree_copy
 from roundabout.inventory.utils import _create_action_history
 from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
@@ -55,7 +55,7 @@ def trigger_error(request):
     division_by_zero = 1 / 0
 
 
-# CSV File Uploader for GitHub Calibration Coefficients 
+# CSV File Uploader for GitHub Calibration Coefficients
 class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
     form_class = ImportCalibrationForm
     template_name = 'admintools/import_calibrations_upload_form.html'
@@ -413,76 +413,51 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
     permission_required = 'assemblies.add_assembly'
 
     def get(self, request, *args, **kwargs):
+
+        api_token = '7de11f0cd61a6d50899192c0d02a975b2b204c16'
+        headers = {
+            'Authorization': 'Token ' + api_token,
+        }
+        params = {'expand': 'assembly_type,assembly_revisions'}
         # Get the Assembly data from RDB API
-        request_url = 'https://ooi-cgrdb-staging.whoi.net/assemblies/859'
-        assembly_request = requests.get(request_url, verify=False)
+        request_url = 'https://rdb-testing.whoi.edu/assembly-templates/assembly/859/'
+        assembly_request = requests.get(request_url, params=params, headers=headers, verify=False)
         new_assembly = assembly_request.json()
         # Get or create new parent Temp Assembly
-        temp_assembly_obj, created = TempImportAssembly.objects.get_or_create(name=new_assembly['name'],
-                                                                              assembly_number=new_assembly['assembly_number'],
-                                                                              description=new_assembly['description'],)
-        # If already exists, reset all the related items
-        error_count = 0
-        error_parts = []
-        if not created:
-            temp_assembly_obj.temp_assembly_parts.all().delete()
-
+        assembly_obj, created = Assembly.objects.get_or_create(name=new_assembly['name'],
+                                                               assembly_number=new_assembly['assembly_number'],
+                                                               description=new_assembly['description'],)
         try:
             assembly_type = AssemblyType.objects.get(name=new_assembly['assembly_type']['name'])
-            import_error = False
         except AssemblyType.DoesNotExist:
-            assembly_type = None
-            import_error = True
-            import_error_msg = 'Assembly Type does not exist in this RDB. Please add it, and try again.'
+            # No matching AssemblyType, add it from the API request data
+            assembly_type = AssemblyType.objects.create(name=new_assembly['assembly_type']['name'])
 
-        if not import_error:
-            # add Assembly Type to the parent object
-            temp_assembly_obj.assembly_type = assembly_type
-            temp_assembly_obj.save()
+        assembly_obj.assembly_type = assembly_type
+        assembly_obj.save()
 
-            # import all Assembly Parts to temp table
-            for assembly_part in new_assembly['assembly_parts']:
+        # Create all Revisions
+        for rev in new_assembly['assembly_revisions']:
+            new_revision = AssemblyRevision.objects.create(
+                revision_code=rev['revision_code'],
+                revision_note=rev['revision_note'],
+                created_at=rev['created_at'],
+                assembly=assembly_obj,
+            )
+
+            for assembly_part_url in rev['assembly_parts']:
                 # Need to validate that the Part template exists
+                params = {'expand': 'part'}
+                assembly_part_request = requests.get(assembly_part_url, params=params, headers=headers, verify=False)
+                assembly_part = assembly_part_request.json()
+                print(assembly_part)
                 try:
-                    part = Part.objects.get(part_number=assembly_part['part']['part_number'])
+                    part_obj = Part.objects.get(part_number=assembly_part['part']['part_number'])
                 except Part.DoesNotExist:
-                    part = None
-                    import_error = True
-                    error_count += 1
-                    error_parts.append(assembly_part['part']['part_number'])
-                    import_error_msg = 'Part Number does not exist in this RDB. Please add Part Template, and try again.'
+                    print('No matching part')
 
-                if not import_error:
-                    temp_assembly_part_obj = TempImportAssemblyPart(assembly=temp_assembly_obj,
-                                                                    part=part,
-                                                                    previous_id=assembly_part['id'],
-                                                                    previous_parent=assembly_part['parent'],
-                                                                    note=assembly_part['note'],
-                                                                    order=assembly_part['order'])
-                    temp_assembly_part_obj.save()
-                    print(temp_assembly_part_obj)
+            #AssemblyPart._tree_manager.rebuild()
 
-            # run through the temp Assembly Parts again to set the correct Parent structure for MPTT
-            for temp_assembly_part in temp_assembly_obj.temp_assembly_parts.all():
-                # Check if there's a previous_parent, if so we need to find the correct new object
-                if temp_assembly_part.previous_parent:
-                    parent_obj = TempImportAssemblyPart.objects.get(previous_id=temp_assembly_part.previous_parent)
-                    temp_assembly_part.parent = parent_obj
-                    temp_assembly_part.save()
-
-            # Rebuild the TempImportAssemblyPart MPTT tree to ensure correct structure for copying
-            TempImportAssemblyPart._tree_manager.rebuild()
-
-            # copy the Temp Assembly to real destination table
-            assembly_obj = Assembly(name=temp_assembly_obj.name,
-                                    assembly_type=temp_assembly_obj.assembly_type,
-                                    assembly_number=temp_assembly_obj.assembly_number,
-                                    description=temp_assembly_obj.description)
-            assembly_obj.save()
-
-            for ap in temp_assembly_obj.temp_assembly_parts.all():
-                if ap.is_root_node():
-                    _make_tree_copy(ap, assembly_obj, ap.parent)
 
         return HttpResponse('<h1>New Assembly Template Imported! - %s</h1><p>Errors count: %s</p><p>%s</p>' % (import_error, error_count, error_parts))
 
