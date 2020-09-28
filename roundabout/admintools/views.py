@@ -413,7 +413,6 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
     permission_required = 'assemblies.add_assembly'
 
     def get(self, request, *args, **kwargs):
-
         api_token = '7cd558ee6880982d08669c08b7f92a505f0847fb'
         headers = {
             'Authorization': 'Token ' + api_token,
@@ -448,14 +447,17 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
             print(new_revision)
 
             for assembly_part_url in rev['assembly_parts']:
-                # Need to validate that the Part template exists
                 params = {'expand': 'part'}
                 assembly_part_request = requests.get(assembly_part_url, params=params, headers=headers, verify=False)
                 assembly_part = assembly_part_request.json()
+                # Need to validate that the Part template exists before creating AssemblyPart
                 try:
                     part_obj = Part.objects.get(part_number=assembly_part['part']['part_number'])
                 except Part.DoesNotExist:
-                    print('No matching part')
+                    params = {'expand': 'revisions.documentation'}
+                    part_request = requests.get(assembly_part['part']['url'], params=params, headers=headers, verify=False)
+                    part_data = part_request.json()
+                    print(part_data)
 
             #AssemblyPart._tree_manager.rebuild()
         return HttpResponse('<h1>New Assembly Template Imported! - %s</h1>' % (assembly_obj))
@@ -479,6 +481,7 @@ class PrinterCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView)
 
     def get_success_url(self):
         return reverse('admintools:printers_home', )
+
 
 class PrinterUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Printer
