@@ -242,7 +242,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         return form_class_name
 
     def form_valid(self, form):
-
+        self.object = form.save()
         action_type = self.kwargs['action_type']
         action_date = form.cleaned_data['date']
         # Set Detail and action_type variables
@@ -252,20 +252,14 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         if action_type == Action.DEPLOYMENTTOFIELD:
             self.object.detail = '%s Deployed to Field: %s. ' % (self.object.deployment_number, self.object.location)
             self.object.deployment_to_field_date = action_date
+            self.object.deployed_location = self.object.location
         if action_type == Action.DEPLOYMENTRECOVER:
             self.object.detail = '%s Recovered to: %s. ' % (self.object.deployment_number, self.object.location)
             self.object.deployment_recovery_date = action_date
         if action_type == Action.DEPLOYMENTRETIRE:
             self.object.detail = '%s Ended.' % (self.object.deployment_number)
             self.object.deployment_retire_date = action_date
-
-        self.object = form.save()
-
-        # If Deploying to Sea, update Location and add Details Action record
-        if action_type == Action.DEPLOYMENTTOFIELD:
-            self.object.detail =  self.object.detail + '<br> Latitude: ' + str(self.object.latitude) + '<br> Longitude: ' + str(self.object.longitude) + '<br> Depth: ' + str(self.object.depth)
-            self.object.deployed_location = self.object.location
-            self.object.save()
+        self.object.save()
 
         # Update Build location, create Action Record
         build = self.object.build
