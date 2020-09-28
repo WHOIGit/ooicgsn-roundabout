@@ -120,6 +120,7 @@ class ConfigName(models.Model):
     name = models.CharField(max_length=255, unique=False, db_index=True)
     config_type = models.CharField(max_length=4, choices=CONFIG_TYPE, null=False, blank=False, default="cnst")
     created_at = models.DateTimeField(default=timezone.now)
+    deprecated = models.BooleanField(null=False, default=False)
     part = models.ForeignKey(Part, related_name='config_names', on_delete=models.CASCADE, null=True)
     include_with_calibrations = models.BooleanField(null=False, default=False)
     config_name_event = models.ForeignKey(ConfigNameEvent, related_name='config_names', on_delete=models.CASCADE, null=True)

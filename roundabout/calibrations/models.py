@@ -111,6 +111,7 @@ class CoefficientName(models.Model):
     calibration_name = models.CharField(max_length=255, unique=False, db_index=True)
     value_set_type = models.CharField(max_length=3, choices=VALUE_SET_TYPE, null=False, blank=False, default="sl")
     sigfig_override = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(20)], null=False, blank=True, default=3, help_text='Part-based default if sigfigs cannot be captured from input')
+    deprecated = models.BooleanField(null=False, default=False)
     created_at = models.DateTimeField(default=timezone.now)
     part = models.ForeignKey(Part, related_name='coefficient_names', on_delete=models.CASCADE, null=True)
     coeff_name_event = models.ForeignKey(CoefficientNameEvent, related_name='coefficient_names', on_delete=models.CASCADE, null=True)
