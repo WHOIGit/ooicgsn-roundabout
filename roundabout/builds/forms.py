@@ -270,7 +270,45 @@ class DeploymentForm(forms.ModelForm):
             if not self.instance.deployment_retire_date:
                 self.fields.pop('deployment_retire_date')
 
+    def clean_deployment_burnin_date(self):
+        deployment_start_date = self.cleaned_data.get('deployment_start_date')
+        deployment_burnin_date = self.cleaned_data.get('deployment_burnin_date')
 
+        if deployment_burnin_date < deployment_start_date:
+            raise forms.ValidationError('Deployment Cycle dates are invalid. Check that that dates are in correct order')
+        return deployment_burnin_date
+
+    def clean_deployment_to_field_date(self):
+        print(self.cleaned_data)
+        deployment_burnin_date = self.cleaned_data.get('deployment_burnin_date', None)
+        deployment_to_field_date = self.cleaned_data.get('deployment_to_field_date')
+
+        if deployment_burnin_date:
+            if deployment_to_field_date < deployment_burnin_date:
+                raise forms.ValidationError('Deployment Cycle dates are invalid. Check that that dates are in correct order')
+        return deployment_to_field_date
+
+    def clean_deployment_recovery_date(self):
+        print(self.cleaned_data)
+        deployment_to_field_date = self.cleaned_data.get('deployment_to_field_date', None)
+        deployment_recovery_date = self.cleaned_data.get('deployment_recovery_date')
+
+        if deployment_to_field_date:
+            if deployment_recovery_date < deployment_to_field_date:
+                raise forms.ValidationError('Deployment Cycle dates are invalid. Check that that dates are in correct order')
+        return deployment_recovery_date
+
+    def clean_deployment_retire_date(self):
+        print(self.cleaned_data)
+        deployment_recovery_date = self.cleaned_data.get('deployment_recovery_date', None)
+        deployment_retire_date = self.cleaned_data.get('deployment_retire_date')
+
+        if deployment_recovery_date:
+            if deployment_retire_date < deployment_recovery_date:
+                raise forms.ValidationError('Deployment Cycle dates are invalid. Check that that dates are in correct order')
+        return deployment_retire_date
+
+        
 class DeploymentStartForm(forms.ModelForm):
     #Add custom date field to allow user to pick date for the Action
     date = forms.DateTimeField( widget=DateTimePickerInput(
