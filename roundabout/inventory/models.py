@@ -284,7 +284,7 @@ class Deployment(DeploymentBase):
                                     ])
     longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
                                     validators=[
-                                        MaxValueValidator(80),
+                                        MaxValueValidator(180),
                                         MinValueValidator(-180)
                                     ])
     depth = models.PositiveIntegerField(null=True, blank=True)
