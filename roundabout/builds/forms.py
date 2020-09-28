@@ -332,7 +332,7 @@ class DeploymentActionDeployForm(forms.ModelForm):
 
     class Meta:
         model = Deployment
-        fields = ['location', 'cruise_deployed']
+        fields = ['location', 'cruise_deployed', 'latitude', 'longitude', 'depth']
         labels = {
             'location': '%s Location' % (labels['label_deployments_app_singular']),
             'cruise_deployed': 'Cruise Deployed On',
@@ -352,9 +352,9 @@ class DeploymentActionDeployForm(forms.ModelForm):
         help_text='Set all date/times to UTC time zone.',
     )
     # Add lat/long, depth fields for the Action record
-    latitude = forms.DecimalField(required=False)
-    longitude = forms.DecimalField(required=False)
-    depth = forms.IntegerField(label='Depth in Meters', min_value=0, required=False)
+    #latitude = forms.DecimalField(required=False)
+    #longitude = forms.DecimalField(required=False)
+    #depth = forms.IntegerField(label='Depth in Meters', min_value=0, required=False)
 
     def __init__(self, *args, **kwargs):
         super(DeploymentActionDeployForm, self).__init__(*args, **kwargs)

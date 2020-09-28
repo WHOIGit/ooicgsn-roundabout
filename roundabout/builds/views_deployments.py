@@ -246,40 +246,25 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         action_type = self.kwargs['action_type']
         action_date = form.cleaned_data['date']
         # Set Detail and action_type variables
-        if action_type == 'deploymentburnin':
+        if action_type == Action.DEPLOYMENTBURNIN:
             self.object.detail = '%s Burn In initiated at %s. ' % (self.object.deployment_number, self.object.location)
             self.object.deployment_burnin_date = action_date
-        if action_type == 'deploymenttofield':
+        if action_type == Action.DEPLOYMENTTOFIELD:
             self.object.detail = '%s Deployed to Field: %s. ' % (self.object.deployment_number, self.object.location)
             self.object.deployment_to_field_date = action_date
-        if action_type == 'deploymentrecover':
+        if action_type == Action.DEPLOYMENTRECOVER:
             self.object.detail = '%s Recovered to: %s. ' % (self.object.deployment_number, self.object.location)
             self.object.deployment_recovery_date = action_date
-        if action_type == 'deploymentretire':
+        if action_type == Action.DEPLOYMENTRETIRE:
             self.object.detail = '%s Ended.' % (self.object.deployment_number)
             self.object.deployment_retire_date = action_date
-        if action_type == 'deploymentdetails':
-            self.object.detail = '%s Details set.' % (self.object.deployment_number)
 
         self.object = form.save()
 
-        # If Deploying to Sea or Updating deployment, set Depth, Lat/Long
-        if action_type == 'deploymenttofield' or action_type == 'deploymentdetails':
-            latitude = form.cleaned_data['latitude']
-            longitude = form.cleaned_data['longitude']
-            depth = form.cleaned_data['depth']
-        else:
-            latitude = None
-            longitude = None
-            depth = None
-
         # If Deploying to Sea, update Location and add Details Action record
-        if action_type == 'deploymenttofield':
-            self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
+        if action_type == Action.DEPLOYMENTTOFIELD:
+            self.object.detail =  self.object.detail + '<br> Latitude: ' + str(self.object.latitude) + '<br> Longitude: ' + str(self.object.longitude) + '<br> Depth: ' + str(self.object.depth)
             self.object.deployed_location = self.object.location
-            self.object.latitude = latitude
-            self.object.longitude = longitude
-            self.object.depth = depth
             self.object.save()
 
         # Update Build location, create Action Record
