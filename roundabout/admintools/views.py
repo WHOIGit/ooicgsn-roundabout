@@ -428,13 +428,13 @@ def _api_import_assembly_parts_tree(root_part_url, new_revision, parent=None):
         part_obj = Part.objects.get(part_number=assembly_part_data['part']['part_number'])
     except Part.DoesNotExist:
         params = {'expand': 'part_type,revisions.documentation'}
-        part_request = requests.get(assembly_part['part']['url'], params=params, headers=headers, verify=False)
+        part_request = requests.get(assembly_part_data['part']['url'], params=params, headers=headers, verify=False)
         part_data = part_request.json()
         print(part_data)
         part_obj = Part.objects.create(
             name = part_data['name'],
             friendly_name = part_data['friendly_name'],
-            part_type = part_data['part_type']['id'],
+            part_type_id = part_data['part_type']['id'],
             part_number = part_data['part_number'],
             unit_cost = part_data['unit_cost'],
             refurbishment_cost = part_data['refurbishment_cost'],
@@ -515,7 +515,7 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
                 tree_created = _api_import_assembly_parts_tree(root_url, assembly_revision_obj)
 
             print(tree_created)
-            AssemblyPart._tree_manager.rebuild()
+            #AssemblyPart._tree_manager.rebuild()
         return HttpResponse('<h1>New Assembly Template Imported! - %s</h1>' % (assembly_obj))
 
 
