@@ -485,14 +485,22 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
     permission_required = 'assemblies.add_assembly'
 
     def get(self, request, *args, **kwargs):
-        api_token = '92e4efc1731d7ed2c31bf76c8d08ab2a34d3ce6d'
+        import_url = request.GET.get('import_url')
+        api_token = request.GET.get('api_token')
+        
+        if not import_url:
+            return HttpResponse("No import_url query paramater data")
+
+        if not api_token:
+            return HttpResponse("No api_token query paramater data")
+        #api_token = '92e4efc1731d7ed2c31bf76c8d08ab2a34d3ce6d'
         headers = {
             'Authorization': 'Token ' + api_token,
         }
         params = {'expand': 'assembly_type,assembly_revisions'}
         # Get the Assembly data from RDB API
-        request_url = 'https://rdb-demo.whoi.edu/api/v1/assembly-templates/assemblies/8/'
-        assembly_request = requests.get(request_url, params=params, headers=headers, verify=False)
+        #import_url = 'https://rdb-demo.whoi.edu/api/v1/assembly-templates/assemblies/8/'
+        assembly_request = requests.get(import_url, params=params, headers=headers, verify=False)
         new_assembly = assembly_request.json()
         # Get or create new parent Temp Assembly
         assembly_obj, created = Assembly.objects.get_or_create(name=new_assembly['name'],
