@@ -55,7 +55,7 @@ class PartTypeSerializer(FlexFieldsModelSerializer):
         expandable_fields = {
             'parent': 'roundabout.parts.api.serializers.PartTypeSerializer',
             'children': ('roundabout.parts.api.serializers.PartTypeSerializer', {'many': True}),
-            'parts': ('roundabout.parts.api.serializers.PartSerializer', {'many': True})
+            'parts': ('roundabout.userdefinedfields.api.serializers', {'many': True})
         }
 
 
@@ -71,6 +71,12 @@ class PartSerializer(FlexFieldsModelSerializer):
     )
     revisions= serializers.HyperlinkedRelatedField(
         view_name = API_VERSION + ':part-templates/revisions-detail',
+        lookup_field = 'pk',
+        many = True,
+        read_only = True,
+    )
+    user_defined_fields= serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':user-defined-fields/fields-detail',
         lookup_field = 'pk',
         many = True,
         read_only = True,
@@ -95,7 +101,8 @@ class PartSerializer(FlexFieldsModelSerializer):
 
         expandable_fields = {
             'part_type': 'roundabout.parts.api.serializers.PartTypeSerializer',
-            'revisions': ('roundabout.parts.api.serializers.RevisionSerializer', {'many': True})
+            'revisions': ('roundabout.parts.api.serializers.RevisionSerializer', {'many': True}),
+            'user_defined_fields': ('roundabout.userdefinedfields.api.serializers.FieldSerializer', {'many': True}),
         }
 
 

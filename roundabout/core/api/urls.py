@@ -49,8 +49,8 @@ router.register(r'part-templates/part-types', PartTypeViewSet, 'part-templates/p
 router.register(r'part-templates/revisions', RevisionViewSet, 'part-templates/revisions' )
 router.register(r'part-templates/documents', DocumentationViewSet, 'part-templates/documents' )
 
-router.register(r'userdefined-fields/fields', FieldViewSet, 'userdefined-fields/fields' )
-router.register(r'userdefined-fields/field-values', FieldValueViewSet, 'userdefined-fields/field-values' )
+router.register(r'user-defined-fields/fields', FieldViewSet, 'user-defined-fields/fields' )
+router.register(r'user-defined-fields/field-values', FieldValueViewSet, 'user-defined-fields/field-values' )
 
 app_name = 'api_v1'
 urlpatterns = [
