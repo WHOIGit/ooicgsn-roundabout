@@ -416,7 +416,7 @@ def _make_revision_tree_copy(root_part, new_revision, parent=None):
         _make_revision_tree_copy(child, new_revision, new_ap)
 
 def _api_import_assembly_parts_tree(root_part_url, new_revision, parent=None):
-    api_token = '7cd558ee6880982d08669c08b7f92a505f0847fb'
+    api_token = '92e4efc1731d7ed2c31bf76c8d08ab2a34d3ce6d'
     headers = {
         'Authorization': 'Token ' + api_token,
     }
@@ -431,10 +431,17 @@ def _api_import_assembly_parts_tree(root_part_url, new_revision, parent=None):
         part_request = requests.get(assembly_part_data['part']['url'], params=params, headers=headers, verify=False)
         part_data = part_request.json()
         print(part_data)
+
+        try:
+            part_type = PartType.objects.get(name=part_data['part_type']['name'])
+        except PartType.DoesNotExist:
+            # No matching AssemblyType, add it from the API request data
+            part_type = PartType.objects.create(name=part_data['part_type']['name'])
+
         part_obj = Part.objects.create(
             name = part_data['name'],
             friendly_name = part_data['friendly_name'],
-            part_type_id = part_data['part_type']['id'],
+            part_type = part_type,
             part_number = part_data['part_number'],
             unit_cost = part_data['unit_cost'],
             refurbishment_cost = part_data['refurbishment_cost'],
@@ -478,13 +485,13 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
     permission_required = 'assemblies.add_assembly'
 
     def get(self, request, *args, **kwargs):
-        api_token = '7cd558ee6880982d08669c08b7f92a505f0847fb'
+        api_token = '92e4efc1731d7ed2c31bf76c8d08ab2a34d3ce6d'
         headers = {
             'Authorization': 'Token ' + api_token,
         }
         params = {'expand': 'assembly_type,assembly_revisions'}
         # Get the Assembly data from RDB API
-        request_url = 'https://rdb-testing.whoi.edu/api/v1/assembly-templates/assemblies/31/'
+        request_url = 'https://rdb-demo.whoi.edu/api/v1/assembly-templates/assemblies/8/'
         assembly_request = requests.get(request_url, params=params, headers=headers, verify=False)
         new_assembly = assembly_request.json()
         # Get or create new parent Temp Assembly
