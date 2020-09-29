@@ -409,17 +409,7 @@ class ImportInventoryUploadSuccessView(TemplateView):
 # Import an existing Assembly template from a separate RDB instance
 # Makes a copy of the Assembly Revisiontree starting at "root_part",
 # move to new Revision, reparenting it to "parent"
-def _make_revision_tree_copy(root_part, new_revision, parent=None):
-    new_ap = AssemblyPart.objects.create(assembly_revision=new_revision, part=root_part.part, parent=parent, order=root_part.order)
-
-    for child in root_part.get_children():
-        _make_revision_tree_copy(child, new_revision, new_ap)
-
-def _api_import_assembly_parts_tree(root_part_url, new_revision, parent=None):
-    api_token = '92e4efc1731d7ed2c31bf76c8d08ab2a34d3ce6d'
-    headers = {
-        'Authorization': 'Token ' + api_token,
-    }
+def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent=None):
     params = {'expand': 'part'}
     assembly_part_request = requests.get(root_part_url, params=params, headers=headers, verify=False)
     assembly_part_data = assembly_part_request.json()
@@ -475,7 +465,7 @@ def _api_import_assembly_parts_tree(root_part_url, new_revision, parent=None):
     )
     # Loop through the tree
     for child_url in assembly_part_data['children']:
-        _api_import_assembly_parts_tree(child_url, new_revision, assembly_part_obj)
+        _api_import_assembly_parts_tree(headers, child_url, new_revision, assembly_part_obj)
 
     return True
 
@@ -487,7 +477,7 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
     def get(self, request, *args, **kwargs):
         import_url = request.GET.get('import_url')
         api_token = request.GET.get('api_token')
-        
+
         if not import_url:
             return HttpResponse("No import_url query paramater data")
 
@@ -527,7 +517,7 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
             print(assembly_revision_obj)
 
             for root_url in rev['assembly_parts_roots']:
-                tree_created = _api_import_assembly_parts_tree(root_url, assembly_revision_obj)
+                tree_created = _api_import_assembly_parts_tree(headers, root_url, assembly_revision_obj)
 
             print(tree_created)
             #AssemblyPart._tree_manager.rebuild()
