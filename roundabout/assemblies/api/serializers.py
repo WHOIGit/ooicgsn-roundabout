@@ -142,7 +142,7 @@ class AssemblyPartSerializer(FlexFieldsModelSerializer):
 
     class Meta:
         model = AssemblyPart
-        fields = ['id', 'url', 'assembly_revision', 'part', 'parent', 'children', 'note', ]
+        fields = ['id', 'url', 'assembly_revision', 'order', 'part', 'parent', 'children', 'note', ]
 
         expandable_fields = {
             'part': PartSerializer,

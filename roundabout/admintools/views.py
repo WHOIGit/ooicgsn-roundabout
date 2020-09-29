@@ -416,6 +416,10 @@ def _make_revision_tree_copy(root_part, new_revision, parent=None):
         _make_revision_tree_copy(child, new_revision, new_ap)
 
 def _api_import_assembly_parts_tree(root_part_url, new_revision, parent=None):
+    api_token = '7cd558ee6880982d08669c08b7f92a505f0847fb'
+    headers = {
+        'Authorization': 'Token ' + api_token,
+    }
     params = {'expand': 'part'}
     assembly_part_request = requests.get(root_part_url, params=params, headers=headers, verify=False)
     assembly_part_data = assembly_part_request.json()
@@ -456,8 +460,7 @@ def _api_import_assembly_parts_tree(root_part_url, new_revision, parent=None):
                 )
     # Now create the Assembly Part
     assembly_part_obj = AssemblyPart.objects.create(
-        assembly = assembly_obj,
-        assembly_revision = assembly_revision_obj,
+        assembly_revision = new_revision,
         part = part_obj,
         parent=parent,
         note = assembly_part_data['note'],
@@ -466,6 +469,7 @@ def _api_import_assembly_parts_tree(root_part_url, new_revision, parent=None):
     # Loop through the tree
     for child_url in assembly_part_data['children']:
         _api_import_assembly_parts_tree(child_url, new_revision, assembly_part_obj)
+
     return True
 
 
@@ -480,7 +484,7 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
         }
         params = {'expand': 'assembly_type,assembly_revisions'}
         # Get the Assembly data from RDB API
-        request_url = 'https://rdb-testing.whoi.edu/api/v1/assembly-templates/assemblies/30/'
+        request_url = 'https://rdb-testing.whoi.edu/api/v1/assembly-templates/assemblies/31/'
         assembly_request = requests.get(request_url, params=params, headers=headers, verify=False)
         new_assembly = assembly_request.json()
         # Get or create new parent Temp Assembly
@@ -508,8 +512,9 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
             print(assembly_revision_obj)
 
             for root_url in rev['assembly_parts_roots']:
-                _api_import_assembly_parts_tree(root_url, assembly_revision_obj)
+                tree_created = _api_import_assembly_parts_tree(root_url, assembly_revision_obj)
 
+            print(tree_created)
             AssemblyPart._tree_manager.rebuild()
         return HttpResponse('<h1>New Assembly Template Imported! - %s</h1>' % (assembly_obj))
 
