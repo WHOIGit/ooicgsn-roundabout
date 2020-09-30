@@ -252,7 +252,9 @@ class DeploymentForm(forms.ModelForm):
                 self.fields.pop('depth')
                 self.fields.pop('latitude')
                 self.fields.pop('longitude')
-                self.fields.pop('cruise_deployed')
+                self.fields.pop('cruise_recovered')
+
+            if self.instance.current_status == Action.DEPLOYMENTTOFIELD:
                 self.fields.pop('cruise_recovered')
 
             if not self.instance.deployment_start_date:
@@ -308,7 +310,7 @@ class DeploymentForm(forms.ModelForm):
                 raise forms.ValidationError('Deployment Cycle dates are invalid. Check that that dates are in correct order')
         return deployment_retire_date
 
-        
+
 class DeploymentStartForm(forms.ModelForm):
     #Add custom date field to allow user to pick date for the Action
     date = forms.DateTimeField( widget=DateTimePickerInput(
