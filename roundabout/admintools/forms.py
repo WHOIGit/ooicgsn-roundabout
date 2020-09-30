@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -39,6 +39,16 @@ from roundabout.users.models import User
 
 class ImportInventoryForm(forms.Form):
     document = forms.FileField()
+
+
+class ImportDeploymentsForm(forms.Form):
+    deployment_csv = forms.FileField(
+        widget=forms.ClearableFileInput(
+            attrs={
+                'multiple': True
+            }
+        )
+    )
 
 class ImportCalibrationForm(forms.Form):
     cal_csv = forms.FileField(
