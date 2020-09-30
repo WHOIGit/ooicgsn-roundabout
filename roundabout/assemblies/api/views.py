@@ -43,6 +43,8 @@ class AssemblyRevisionViewSet(viewsets.ModelViewSet):
     serializer_class = AssemblyRevisionSerializer
     permission_classes = (IsAuthenticated,)
     queryset = AssemblyRevision.objects.all()
+    queryset = AssemblyRevision.objects.prefetch_related(Prefetch('assembly_parts',
+        queryset=AssemblyPart.objects.order_by('-parent_id')))
 
 
 class AssemblyPartViewSet(viewsets.ModelViewSet):
