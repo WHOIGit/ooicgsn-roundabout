@@ -251,7 +251,7 @@ class CoefficientValueForm(forms.ModelForm):
 # Inputs: Part 
 class CalPartCopyForm(forms.Form):
     part_select = forms.ModelChoiceField(
-        queryset = Part.objects.filter(part_type__name='Instrument'),
+        queryset = Part.objects.filter(part_type__ccc_toggle=True),
         required=False,
         label = 'Copy Calibrations from Part'
     )
@@ -259,7 +259,7 @@ class CalPartCopyForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.part_id = kwargs.pop('part_id')
         super(CalPartCopyForm, self).__init__(*args, **kwargs)
-        self.fields['part_select'].queryset = Part.objects.filter(part_type__name='Instrument',coefficient_name_events__gt=0).exclude(id__in=str(self.part_id))
+        self.fields['part_select'].queryset = Part.objects.filter(part_type__ccc_toggle=True,coefficient_name_events__gt=0).exclude(id__in=str(self.part_id))
 
     def clean_part_select(self):
         part_select = self.cleaned_data.get('part_select')

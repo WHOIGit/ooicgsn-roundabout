@@ -290,7 +290,7 @@ class ConfigDefaultForm(forms.ModelForm):
 # Inputs: Part 
 class ConfPartCopyForm(forms.Form):
     from_part = forms.ModelChoiceField(
-        queryset = Part.objects.filter(part_type__name='Instrument'),
+        queryset = Part.objects.filter(part_type__ccc_toggle=True),
         required=False,
         label = 'Copy Configurations/Constants from Part'
     )
