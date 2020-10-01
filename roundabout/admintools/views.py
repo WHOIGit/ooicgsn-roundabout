@@ -40,7 +40,7 @@ from .forms import PrinterForm, ImportInventoryForm, ImportCalibrationForm
 from .models import *
 from roundabout.userdefinedfields.models import FieldValue, Field
 from roundabout.inventory.models import Inventory, Action
-from roundabout.parts.models import Part, Revision
+from roundabout.parts.models import Part, Revision, Documentation, PartType
 from roundabout.locations.models import Location
 from roundabout.assemblies.models import AssemblyType, Assembly, AssemblyPart, AssemblyRevision
 from roundabout.assemblies.views import _make_tree_copy
@@ -406,20 +406,90 @@ class ImportInventoryUploadSuccessView(TemplateView):
 
 # Assembly Template import tool
 # Import an existing Assembly template from a separate RDB instance
+# Makes a copy of the Assembly Revisiontree starting at "root_part",
+# move to new Revision, reparenting it to "parent"
+def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent=None):
+    params = {'expand': 'part'}
+    assembly_part_request = requests.get(root_part_url, params=params, headers=headers, verify=False)
+    assembly_part_data = assembly_part_request.json()
+    # Need to validate that the Part template exists before creating AssemblyPart
+    try:
+        part_obj = Part.objects.get(part_number=assembly_part_data['part']['part_number'])
+    except Part.DoesNotExist:
+        params = {'expand': 'part_type,revisions.documentation'}
+        part_request = requests.get(assembly_part_data['part']['url'], params=params, headers=headers, verify=False)
+        part_data = part_request.json()
+        print(part_data)
+
+        try:
+            part_type = PartType.objects.get(name=part_data['part_type']['name'])
+        except PartType.DoesNotExist:
+            # No matching AssemblyType, add it from the API request data
+            part_type = PartType.objects.create(name=part_data['part_type']['name'])
+
+        part_obj = Part.objects.create(
+            name = part_data['name'],
+            friendly_name = part_data['friendly_name'],
+            part_type = part_type,
+            part_number = part_data['part_number'],
+            unit_cost = part_data['unit_cost'],
+            refurbishment_cost = part_data['refurbishment_cost'],
+            note = part_data['note'],
+            cal_dec_places = part_data['cal_dec_places'],
+        )
+        # Create all Revisions objects for this Part
+        for revision in part_data['revisions']:
+            revision_obj = Revision.objects.create(
+                revision_code = revision['revision_code'],
+                unit_cost = revision['unit_cost'],
+                refurbishment_cost = revision['refurbishment_cost'],
+                created_at = revision['created_at'],
+                part = part_obj,
+            )
+            # Create all Documentation objects for this Revision
+            for doc in revision['documentation']:
+                doc_obj = Documentation.objects.create(
+                    name = doc['name'],
+                    doc_type = doc['doc_type'],
+                    doc_link =  doc['doc_link'],
+                    revision = revision_obj,
+                )
+    # Now create the Assembly Part
+    assembly_part_obj = AssemblyPart.objects.create(
+        assembly_revision = new_revision,
+        part = part_obj,
+        parent=parent,
+        note = assembly_part_data['note'],
+        order = assembly_part_data['order']
+    )
+    # Loop through the tree
+    for child_url in assembly_part_data['children']:
+        _api_import_assembly_parts_tree(headers, child_url, new_revision, assembly_part_obj)
+
+    return True
+
 
 # View to make API request to a separate RDB instance and copy an Assembly Template
 class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'assemblies.add_assembly'
 
     def get(self, request, *args, **kwargs):
-        api_token = '7cd558ee6880982d08669c08b7f92a505f0847fb'
+        import_url = request.GET.get('import_url')
+        api_token = request.GET.get('api_token')
+
+        if not import_url:
+            return HttpResponse("No import_url query paramater data")
+
+        if not api_token:
+            return HttpResponse("No api_token query paramater data")
+        #api_token = '92e4efc1731d7ed2c31bf76c8d08ab2a34d3ce6d'
         headers = {
             'Authorization': 'Token ' + api_token,
         }
         params = {'expand': 'assembly_type,assembly_revisions'}
         # Get the Assembly data from RDB API
-        request_url = 'https://rdb-testing.whoi.edu/api/v1/assembly-templates/assemblies/30/'
-        assembly_request = requests.get(request_url, params=params, headers=headers, verify=False)
+        #import_url = 'https://rdb-demo.whoi.edu/api/v1/assembly-templates/assemblies/8/'
+        assembly_request = requests.get(import_url, params=params, headers=headers, verify=False)
         new_assembly = assembly_request.json()
         # Get or create new parent Temp Assembly
         assembly_obj, created = Assembly.objects.get_or_create(name=new_assembly['name'],
@@ -437,27 +507,18 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
 
         # Create all Revisions
         for rev in new_assembly['assembly_revisions']:
-            new_revision = AssemblyRevision.objects.create(
-                revision_code=rev['revision_code'],
-                revision_note=rev['revision_note'],
-                created_at=rev['created_at'],
-                assembly=assembly_obj,
+            assembly_revision_obj = AssemblyRevision.objects.create(
+                revision_code = rev['revision_code'],
+                revision_note = rev['revision_note'],
+                created_at = rev['created_at'],
+                assembly = assembly_obj,
             )
-            print(new_revision)
+            print(assembly_revision_obj)
 
-            for assembly_part_url in rev['assembly_parts']:
-                params = {'expand': 'part'}
-                assembly_part_request = requests.get(assembly_part_url, params=params, headers=headers, verify=False)
-                assembly_part = assembly_part_request.json()
-                # Need to validate that the Part template exists before creating AssemblyPart
-                try:
-                    part_obj = Part.objects.get(part_number=assembly_part['part']['part_number'])
-                except Part.DoesNotExist:
-                    params = {'expand': 'revisions.documentation'}
-                    part_request = requests.get(assembly_part['part']['url'], params=params, headers=headers, verify=False)
-                    part_data = part_request.json()
-                    print(part_data)
+            for root_url in rev['assembly_parts_roots']:
+                tree_created = _api_import_assembly_parts_tree(headers, root_url, assembly_revision_obj)
 
+            print(tree_created)
             #AssemblyPart._tree_manager.rebuild()
         return HttpResponse('<h1>New Assembly Template Imported! - %s</h1>' % (assembly_obj))
 
