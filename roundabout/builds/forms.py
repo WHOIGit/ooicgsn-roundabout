@@ -252,7 +252,9 @@ class DeploymentForm(forms.ModelForm):
                 self.fields.pop('depth')
                 self.fields.pop('latitude')
                 self.fields.pop('longitude')
-                self.fields.pop('cruise_deployed')
+                self.fields.pop('cruise_recovered')
+
+            if self.instance.current_status == Action.DEPLOYMENTTOFIELD:
                 self.fields.pop('cruise_recovered')
 
             if not self.instance.deployment_start_date:
