@@ -40,12 +40,15 @@ class Vessel(models.Model):
     R2R = models.BooleanField(choices=BOOLEAN_CHOICES, null=True, default=True, blank=True)
     notes = models.TextField(null=False, blank=True)
 
-
     class Meta:
         ordering = ('vessel_name',)
 
     def __str__(self):
         return '%s %s' % (self.vessel_designation, self.vessel_name)
+
+    @property
+    def full_vessel_name(self):
+        return self.prefix + ' ' + self.vessel_name
 
 
 class Cruise(models.Model):
@@ -54,7 +57,7 @@ class Cruise(models.Model):
     vessel = models.ForeignKey(Vessel, related_name='cruises',
                                on_delete=models.SET_NULL, null=True)
     cruise_start_date = models.DateTimeField()
-    cruise_stop_date = models.DateTimeField()
+    cruise_stop_date = models.DateTimeField(null=True)
     notes = models.TextField(null=False, blank=True)
     location = TreeForeignKey(Location, related_name='cruises', verbose_name='Destination',
                               on_delete=models.SET_NULL, null=True, blank=True)

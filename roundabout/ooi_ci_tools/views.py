@@ -38,7 +38,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 
-from .forms import ImportDeploymentsForm, ImportVesselsForm
+from .forms import ImportDeploymentsForm, ImportVesselsForm, ImportCruisesForm
 from .models import *
 from roundabout.userdefinedfields.models import FieldValue, Field
 from roundabout.inventory.models import Inventory, Action
@@ -69,7 +69,6 @@ class ImportVesselsUploadView(LoginRequiredMixin, FormView):
 
         for row in reader:
             vessel_name = row['Vessel Name']
-            print(vessel_name)
             MMSI_number = None
             IMO_number = None
             length = None
@@ -80,10 +79,9 @@ class ImportVesselsUploadView(LoginRequiredMixin, FormView):
 
             if row['MMSI#']:
                 MMSI_number = int(re.sub('[^0-9]','', row['MMSI#']))
-                #MMSI_number = int(row['MMSI#'])
 
             if row['IMO#']:
-                IMO_number = int(row['IMO#'])
+                IMO_number = int(re.sub('[^0-9]','', row['IMO#']))
 
             if row['Length (m)']:
                 length = Decimal(row['Length (m)'])
@@ -130,10 +128,63 @@ class ImportVesselsUploadView(LoginRequiredMixin, FormView):
             else:
                 vessels_updated.append(vessel_obj)
 
-            print(vessels_created)
-            print(vessels_updated)
-
         return super(ImportVesselsUploadView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse('ooi_ci_tools:import_upload_success', )
+
+
+# Github CSV file importer for Cruises
+# If no matching Vessel in RDB based on vessel_name, one will be created
+class ImportCruisesUploadView(LoginRequiredMixin, FormView):
+    form_class = ImportCruisesForm
+    template_name = 'ooi_ci_tools/import_cruises_upload_form.html'
+
+    def form_valid(self, form):
+        csv_file = self.request.FILES['cruises_csv']
+        # Set up the Django file object for CSV DictReader
+        csv_file.seek(0)
+        reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+        # Get the column headers to save with parent TempImport object
+        headers = reader.fieldnames
+        # Set up data lists for returning results
+        cruises_created = []
+        cruises_updated = []
+
+        for row in reader:
+            cuid = row['CUID']
+            cruise_start_date = parser.parse(cruiseStartDateTime)
+            cruise_stop_date = parser.parse(cruiseStopDateTime)
+            vessel_obj = None
+            # parse out the vessel name to match its formatting from Vessel CSV
+            vessel_name_csv = row['ShipName']
+            if vessel_name_csv == 'N/A':
+                vessel_name_csv = None
+
+            if vessel_name_csv:
+                vessels = Vessel.objects.all()
+                for vessel in vessels:
+                    print(vessel.full_vessel_name)
+                    if vessel.full_vessel_name == vessel_name_csv:
+                        vessel_obj = vessel
+                        print('TRUE')
+                        break
+
+            # update or create Cruise object based on CUID field
+            cruise_obj, created = Cruise.objects.update_or_create(
+                CUID = cuid,
+                defaults = {
+                    'notes': row['notes'],
+                    'cruise_start_date': cruise_start_date,
+                    'cruise_stop_date': cruise_stop_date,
+                    'vessel': vessel_obj,
+                },
+            )
+
+            if created:
+                cruises_created.append(cruise_obj)
+            else:
+                cruises_updated.append(cruise_obj)
 
     def get_success_url(self):
         return reverse('ooi_ci_tools:import_upload_success', )

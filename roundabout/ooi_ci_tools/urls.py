@@ -29,6 +29,8 @@ urlpatterns = [
     path('import/deployments/upload/', view=views.ImportDeploymentsUploadView.as_view(), name='import_deployments_upload'),
     #Import Vessels
     path('import/vessels/upload/', view=views.ImportVesselsUploadView.as_view(), name='import_vessels_upload'),
+    #Import Vessels
+    path('import/cruises/upload/', view=views.ImportCruisesUploadView.as_view(), name='import_cruises_upload'),
     #Import Calibrations
     #path('import/calibrations/upload/', view=views.ImportCalibrationsUploadView.as_view(), name='import_calibrations_upload'),
     path('import/upload/success/', view=views.ImportUploadSuccessView.as_view(), name='import_upload_success'),
