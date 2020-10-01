@@ -39,6 +39,7 @@ import django_tables2 as tables
 from django_tables2 import SingleTableView
 from django_tables2.export.views import ExportMixin
 
+from roundabout.users.models import User
 from roundabout.parts.models import Part
 from roundabout.builds.models import Build
 from roundabout.inventory.models import Inventory, Action
@@ -148,20 +149,40 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
         return cards
 
     def get_queryset(self):
+        def userlist_Qkwarg(field,row):
+            approver_or_draft = field.split('__')[-3]
+            matching_user_IDs = User.objects.filter(**{'name__{}'.format(row['lookup']): row['query']}).values_list('id', flat=True)
+
+            if field.startswith('calibration_events__latest__'):
+                cals_with_matching_users__qs = CalibrationEvent.objects.filter(**{approver_or_draft+'__in':matching_user_IDs})
+                inv_latest_cal__subQ = Subquery(CalibrationEvent.objects.filter(inventory=OuterRef('pk')).values('pk')[:1])
+                all_inv_latest_cal_IDs = Inventory.objects.all().annotate(latest_calib=inv_latest_cal__subQ).values_list('latest_calib', flat=True)
+                latest_cals_with_matching_users = cals_with_matching_users__qs.filter(id__in=all_inv_latest_cal_IDs)
+                inventory_IDs_for__latest_cals_with_matching_users = latest_cals_with_matching_users.values_list('inventory__pk', flat=True)
+                Q_kwarg = {'id__in': inventory_IDs_for__latest_cals_with_matching_users}
+                return Q_kwarg
+
+            else:
+                calib_or_conf = field.split('__')[0]
+                Q_kwarg = { '{}__{}__in'.format(calib_or_conf,approver_or_draft) : matching_user_IDs }
+                return Q_kwarg
+
         def make_Qkwarg(field,row):
             select_ones = ['__latest__', '__last__', '__earliest__', '__first__']
             select_one = [s1 for s1 in select_ones if s1 in field]
             select_one = select_one[0] if select_one else None
 
-            select_somes = ['__any__','__all__']
-            select_some = [s1 for s1 in select_somes if s1 in field]
-            select_some = select_one[0] if select_one else None
-            # TODO a query system by which you can look into object lists and perform whatever is downstream on each
-            # __any__ returns true if any of the listed items match.
-            # this keyword functionality will have to carry over to displaying things in search-tables.
-            # TODO to account for any nesting of levels for this, we might have to make a recursive function 😬
+            userlist_cases = ['calibration_events__latest__user_approver__any__name',
+                              'calibration_events__latest__user_draft__any__name',
+                              'calibration_event__user_approver__any__name',
+                              'calibration_event__user_draft__any__name',
+                              'config_event__user_approver__any__name',
+                              'config_event__user_draft__any__name']
 
-            if not select_one:
+            if field in userlist_cases:
+                return userlist_Qkwarg(field,row)
+
+            elif not select_one:
                 # default
                 Q_kwarg = {'{field}__{lookup}'.format(field=field, lookup=row['lookup']): row['query']}
                 if field.endswith('__count'):
@@ -275,7 +296,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
             DATE_LOOKUP = ['date', 'year', 'iso_year', 'month', 'day', 'week',
                            'week_day', 'quarter', 'time', 'hour', 'minute', 'second'] +
                            ['exact', 'gt', 'gte', 'lt', 'lte', 'range'],
-            ITER_LOOKUP = ['in'],
+            ITER_LOOKUP=['in']+['icontains', 'exact'],
             EXACT_LOOKUP = ['exact'],
             BOOL_LOOKUP = ['exact','iexact'], )
         context['lookup_categories'] = json.dumps(lcats)
@@ -631,8 +652,8 @@ class CalibrationTableView(GenericSearchTableView):
                         dict(value="calibration_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
                         dict(value="coefficient_name__calibration_name", text="Coefficient Name", legal_lookup='STR_LOOKUP'),
                         dict(value="calibration_event__calibration_date", text="Calibration Event: Date", legal_lookup='DATE_LOOKUP'),
-#                        dict(value="calibration_event__user_approver__any__name", text="Calibration Event: Approvers", legal_lookup='???'), # TODO
-#                        dict(value="calibration_event__user_draft__any__name", text="Calibration Event: Reviewers", legal_lookup='???'), # TODO
+                        dict(value="calibration_event__user_approver__any__name", text="Calibration Event: Approvers", legal_lookup='ITER_LOOKUP'),
+                        dict(value="calibration_event__user_draft__any__name", text="Calibration Event: Reviewers", legal_lookup='ITER_LOOKUP'),
                         dict(value="calibration_event__approved", text="Calibration Event: Approved Flag", legal_lookup='BOOL_LOOKUP'),
                         dict(value="created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
                         dict(value="value_set", text="Value", legal_lookup='STR_LOOKUP'),
@@ -672,9 +693,9 @@ class ConfigConstTableView(GenericSearchTableView):
                         dict(value="config_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
                         dict(value="config_name__name", text="Config/Const Name", legal_lookup='STR_LOOKUP'),
                         dict(value="config_event__configuraton_date", text="Config/Const Event: Date", legal_lookup='DATE_LOOKUP'),
-#                        dict(value="config_event__user_approver__any__name", text="Config/Const Event: Approvers", legal_lookup='???'), # TODO
-#                        dict(value="config_event__draft_approver__any__name", text="Config/Const Event: Reviewers", legal_lookup='???'), # TODO
-                        dict(value="calibration_event__approved", text="Calibration Event: Approved Flag", legal_lookup='BOOL_LOOKUP'),
+                        dict(value="config_event__user_approver__any__name", text="Config/Const Event: Approvers", legal_lookup='ITER_LOOKUP'),
+                        dict(value="config_event__user_draft__any__name", text="Config/Const Event: Reviewers", legal_lookup='ITER_LOOKUP'),
+                        dict(value="config_event__approved", text="Config/Const Event: Approved Flag", legal_lookup='BOOL_LOOKUP'),
                         dict(value="created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
                         dict(value="config_value", text="Value", legal_lookup='STR_LOOKUP'),
                         dict(value="notes", text="Notes", legal_lookup='STR_LOOKUP'),

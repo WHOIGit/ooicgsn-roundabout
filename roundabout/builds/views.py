@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -479,9 +479,9 @@ class BuildAjaxSnapshotCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView)
         build_snapshot.build = build
         build_snapshot.deployment = build.current_deployment()
         if build.current_deployment():
-            build_snapshot.deployment_status = build.current_deployment().current_deployment_status()
+            build_snapshot.deployment_status = build.current_deployment().current_status
         build_snapshot.location = build.location
-        build_snapshot.time_at_sea = build.total_time_at_sea()
+        build_snapshot.time_at_sea = build.time_at_sea
         build_snapshot.save()
 
         for item in inventory_items:

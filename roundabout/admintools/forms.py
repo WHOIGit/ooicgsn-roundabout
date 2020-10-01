@@ -19,16 +19,117 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
+import csv
+import io
+import datetime
+from types import SimpleNamespace
+
 from django import forms
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
+
 
 from .models import Printer
+from roundabout.inventory.models import Inventory, Action
+from roundabout.inventory.utils import _create_action_history
+from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
+from roundabout.calibrations.forms import validate_coeff_vals, parse_valid_coeff_vals
+from roundabout.users.models import User
 
 
 class ImportInventoryForm(forms.Form):
     document = forms.FileField()
 
 class ImportCalibrationForm(forms.Form):
-    document = forms.FileField()
+    cal_csv = forms.FileField(
+        widget=forms.ClearableFileInput(
+            attrs={
+                'multiple': True
+            }
+        )
+    )
+    user_draft = forms.ModelMultipleChoiceField(
+        queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username'),
+        required=False,
+        label = 'Select Reviewers'
+    )
+
+    def clean_cal_csv(self):
+        cal_files = self.files.getlist('cal_csv')
+        for cal_csv in cal_files:
+            cal_csv.seek(0)
+            ext = cal_csv.name[-3:]
+            if ext == 'ext':
+                continue
+            if ext == 'csv':
+                reader = csv.DictReader(io.StringIO(cal_csv.read().decode('utf-8')))
+                headers = reader.fieldnames
+                try:
+                    inv_serial = cal_csv.name.split('__')[0]
+                    inventory_item = Inventory.objects.get(serial_number=inv_serial)
+                except:
+                    raise ValidationError(
+                        _('%(value)s: Unable to find Inventory item with this Serial Number'),
+                        params={'value': inv_serial},
+                    )
+                try:
+                    cal_date_string = cal_csv.name.split('__')[1][:8]
+                    cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
+                except:
+                    raise ValidationError(
+                        _('%(value)s: Unable to parse Calibration Date from Filename'),
+                        params={'value': cal_date_string},
+                    )
+                for idx, row in enumerate(reader):
+                    row_data = row.items()
+                    for key, value in row_data:
+                        if key == 'name':
+                            calibration_name = value.strip()
+                            try:
+                                cal_name_item = CoefficientName.objects.get(
+                                    calibration_name = calibration_name,
+                                    coeff_name_event =  inventory_item.part.coefficient_name_events.first()
+                                )
+                            except:
+                                raise ValidationError(
+                                    _('Row %(row)s, %(value)s: Unable to find Calibration item with this Name'),
+                                    params={'value': calibration_name, 'row': idx},
+                                )
+                        elif key == 'value':
+                            valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
+                            mock_valset_instance = SimpleNamespace(**valset_keys)
+                            try:
+                                raw_valset = str(value)
+                                if '[' in raw_valset:
+                                    raw_valset = raw_valset[1:-1]
+                                if 'SheetRef' in raw_valset:
+                                    for file in cal_files:
+                                        file.seek(0)
+                                        file_extension = file.name[-3:]
+                                        if file_extension == 'ext':
+                                            cal_ext_split = file.name.split('__')
+                                            inv_ext_serial = cal_ext_split[0]
+                                            cal_ext_date = cal_ext_split[1]
+                                            cal_ext_name = cal_ext_split[2][:-4]
+                                            if (inv_ext_serial == inv_serial) and (cal_ext_date == cal_date_string) and (cal_ext_name == calibration_name):
+                                                reader = io.StringIO(file.read().decode('utf-8'))
+                                                contents = reader.getvalue()
+                                                raw_valset = contents
+                            except:
+                                raise ValidationError(
+                                    _('Row %(row)s: Unable to parse Calibration Coefficient value(s)'),
+                                    params={'row': idx},
+                                )
+                            validate_coeff_vals(mock_valset_instance, cal_name_item.value_set_type, raw_valset)
+                        elif key == 'notes':
+                            try:
+                                notes = value.strip()
+                            except:
+                                raise ValidationError(
+                                    _('Row %(row)s: Unable to parse Calibration Coefficient note(s)'),
+                                    params={'row': idx},
+                                )
+        return cal_csv
 
 
 class PrinterForm(forms.ModelForm):
