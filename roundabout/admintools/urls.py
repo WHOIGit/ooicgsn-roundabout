@@ -26,8 +26,6 @@ from . import views
 app_name = 'admintools'
 urlpatterns = [
     path('sentry-debug/', views.trigger_error),
-    #Import Deployments
-    path('import/deployments/upload/', view=views.ImportDeploymentsUploadView.as_view(), name='import_deployments_upload'),
     #Import Calibrations
     path('import/calibrations/upload/', view=views.ImportCalibrationsUploadView.as_view(), name='import_calibrations_upload'),
     # Printers

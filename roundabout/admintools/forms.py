@@ -41,15 +41,6 @@ class ImportInventoryForm(forms.Form):
     document = forms.FileField()
 
 
-class ImportDeploymentsForm(forms.Form):
-    deployment_csv = forms.FileField(
-        widget=forms.ClearableFileInput(
-            attrs={
-                'multiple': True
-            }
-        )
-    )
-
 class ImportCalibrationForm(forms.Form):
     cal_csv = forms.FileField(
         widget=forms.ClearableFileInput(

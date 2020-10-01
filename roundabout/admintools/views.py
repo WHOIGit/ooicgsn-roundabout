@@ -36,7 +36,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 
-from .forms import PrinterForm, ImportInventoryForm, ImportCalibrationForm, ImportDeploymentsForm
+from .forms import PrinterForm, ImportInventoryForm, ImportCalibrationForm
 from .models import *
 from roundabout.userdefinedfields.models import FieldValue, Field
 from roundabout.inventory.models import Inventory, Action
@@ -129,43 +129,6 @@ class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
     def get_success_url(self):
         return reverse('admintools:import_inventory_upload_success', )
 
-
-# Github CSV file importer for Deployments
-# Ths will create a new Asembly Revision and Build for each Deployment
-class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
-    form_class = ImportDeploymentsForm
-    template_name = 'admintools/import_deployments_upload_form.html'
-
-    def form_valid(self, form):
-        csv_files = self.request.FILES.getlist('deployment_csv')
-        # Set up the Django file object for CSV DictReader
-        for csv_file in csv_files:
-            print(csv_file)
-            csv_file.seek(0)
-            reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
-            headers = reader.fieldnames
-            deployments = []
-            for row in reader:
-                if row['mooring.uid'] not in deployments:
-                    # get Assembly number from RefDes as that seems to be most consistent across CSVs
-                    ref_des = row['Reference Designator']
-                    assembly = ref_des.split('-')[0]
-                    # build data dict
-                    mooring_uid_dict = {'mooring.uid': row['mooring.uid'], 'assembly': assembly, 'rows': []}
-                    deployments.append(mooring_uid_dict)
-
-                deployment = next((deployment for deployment in deployments if deployment['mooring.uid']== row['mooring.uid']), False)
-                for key, value in row.items():
-                    deployment['rows'].append({key: value})
-
-            print(deployments[0])
-            for row in deployments[0]['rows']:
-                print(row)
-
-        return super(ImportDeploymentsUploadView, self).form_valid(form)
-
-    def get_success_url(self):
-        return reverse('admintools:import_inventory_upload_success', )
 
 # Bulk Inventory Import Functions
 # ------------------------------------------
