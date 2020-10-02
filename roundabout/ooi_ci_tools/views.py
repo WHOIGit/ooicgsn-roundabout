@@ -165,11 +165,14 @@ class ImportCruisesUploadView(LoginRequiredMixin, FormView):
                 vessels = Vessel.objects.all()
                 for vessel in vessels:
                     print(vessel.full_vessel_name)
-                    if vessel.full_vessel_name == vessel_name_csv:
+                    if vessel.full_vessel_name == vessel_name_csv or vessel.vessel_name == vessel_name_csv:
                         vessel_obj = vessel
                         print('TRUE')
                         break
-
+                # Create new Vessel obj if missing
+                if not vessel_obj:
+                    vessel_obj = Vessel.objects.create(vessel_name = vessel_name_csv)
+                    
             # update or create Cruise object based on CUID field
             cruise_obj, created = Cruise.objects.update_or_create(
                 CUID = cuid,
