@@ -13,7 +13,7 @@ class Vessel(models.Model):
         (True, 'Yes'), (False, 'No')
     )
     prefix = models.CharField(max_length=10, null=False, blank=True)
-    vessel_designation = models.CharField(max_length=10, default="R/V")
+    vessel_designation = models.CharField(max_length=10, null=False, blank=True)
     vessel_name = models.CharField(max_length=100)
     ICES_code = models.CharField(null=False, blank=True, max_length=4,
         validators=[MinLengthValidator(4)]
@@ -44,11 +44,11 @@ class Vessel(models.Model):
         ordering = ('vessel_name',)
 
     def __str__(self):
-        return '%s %s' % (self.vessel_designation, self.vessel_name)
+        return self.full_vessel_name
 
     @property
     def full_vessel_name(self):
-        return self.prefix + ' ' + self.vessel_name
+        return f'{self.vessel_designation} {self.vessel_name}'.strip()
 
 
 class Cruise(models.Model):
