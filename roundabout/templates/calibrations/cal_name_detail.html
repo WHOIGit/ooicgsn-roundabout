@@ -215,8 +215,8 @@
 
         // Toggle display of Constant functionality 
         let user_id = '{{ user.id }}'
-        let inv_part_type = '{{ part_template.part_type }}';
-        if (inv_part_type == 'Instrument') {
+        let ccc_toggle = '{{ part_template.part_type.ccc_toggle }}';
+        if (ccc_toggle == 'True') {
             $('#calibrations-section').show();
         } else {
             $('#calibrations-section').hide();

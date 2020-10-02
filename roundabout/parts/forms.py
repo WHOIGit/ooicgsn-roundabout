@@ -178,7 +178,8 @@ class PartTypeForm(forms.ModelForm):
 
     class Meta:
         model = PartType
-        fields = ['name', 'parent' ]
+        fields = ['name', 'parent', 'ccc_toggle' ]
         labels = {
-        'name': 'Part Type Name'
-    }
+            'name': 'Part Type Name',
+            'ccc_toggle': 'Enable Configs, Constants, and Calibration Coefficients'
+        }

@@ -215,8 +215,8 @@
 
         // // Toggle display of Constant functionality 
         let user_id = '{{ user.id }}'
-        let inv_part_type = '{{ part_template.part_type }}';
-        if (inv_part_type == 'Instrument' || inv_part_type == 'Electrical') {
+        let ccc_toggle = '{{ part_template.part_type.ccc_toggle }}';
+        if (ccc_toggle == 'True') {
             $('#configuration_constant-section').show();
         } else {
             $('#configuration_constant-section').hide();
