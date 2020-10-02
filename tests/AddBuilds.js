@@ -13,27 +13,6 @@ var myArgs = process.argv.slice(2);
 var user;
 var password;
 
-async function getDate(dateString, daysPrior) {
-    var date = dateString.split("/");
-    var month = date[0];
-    var day = date[1];
-    var year = date[2];
-    day = day - daysPrior;
-    if (day < 1) {
-        if (month == 3) {
-            day = day + 28;
-        }
-        else if ((month == 4) || (month == 6) || (month == 9) || (month == 11)) {
-            day = day + 30;
-        }
-        else {
-            day = day + 31;
-        }
-    }
-    var newDate = month + "/" + day.toString() + "/" + year;
-    return newDate;
-}
-
 async function fixMonthAbbr(month)
 {
     var abbr;
@@ -47,6 +26,19 @@ async function fixMonthAbbr(month)
 
     return abbr;
 }
+
+async function fixDayAbbr(day)
+{
+    var abbr;
+
+    if (day <= "09") 
+    { 
+       abbr = day.substring(1);
+    }
+
+    return abbr;
+}
+
 
 (async function addBuilds() {
 
@@ -241,7 +233,7 @@ async function fixMonthAbbr(month)
         // 6 | click | id=assemblyparts_5_builds_12_anchor | 
         await driver.findElement(By.linkText("Add")).click();
         
-        // DEPLOY BUILD
+        // DEPLOY BUILD - Tests Issue #137
 
         // Start Deployment->Initiate Burnin->Deploy Build
         // 10 | click | linkText=Start Deployment | 
@@ -280,8 +272,9 @@ async function fixMonthAbbr(month)
         var dateString = await ele.getAttribute("value");  //getText did not work
 
         // Get new date 2 days prior to current date
-        var newDate = await getDate(dateString, 2);
-
+        var d = new Date(dateString);
+        d.setDate(d.getDate() - 2);
+        var newDate = (d.getMonth() + 1) + "/" + d.getDate() + "/" + d.getFullYear() + " " + d.getHours() + ":" + d.getMinutes();
   
         await driver.findElement(By.xpath("//input[@id='id_date']")).clear();
         await driver.executeScript("arguments[0].value = arguments[1]", ele, newDate); 
@@ -351,7 +344,9 @@ async function fixMonthAbbr(month)
         var dateString = await ele.getAttribute("value"); 
 
         // Get new date 1 day prior to current date
-        var newDate = await getDate(dateString, 1);
+        var d = new Date(dateString);
+        d.setDate(d.getDate() - 1);
+        var newDate = (d.getMonth() + 1) + "/" + d.getDate() + "/" + d.getFullYear() + " " + d.getHours() + ":" + d.getMinutes();
         await driver.findElement(By.xpath("//input[@id='id_date']")).clear();
         await driver.executeScript("arguments[0].value = arguments[1]", ele, newDate); 
         // 43 | click | css=.controls > .btn-primary | 
@@ -373,7 +368,8 @@ async function fixMonthAbbr(month)
         var rdbDate = fullDate.split(" ");
 
         month = await fixMonthAbbr(rdbDate[1]);
-        rdbDate = month + " " + rdbDate[2] + ", " + rdbDate[3] + ",";
+	var day = await fixDayAbbr(rdbDate[2]);
+        rdbDate = month + " " + day + ", " + rdbDate[3] + ",";
         assert(bodyText.includes("Deployment Recovery Date: " + rdbDate));
 
         // Re-add sewing Inventory to Build at the current date
@@ -412,7 +408,8 @@ async function fixMonthAbbr(month)
         var rdbDate = fullDate.split(" ");
 
         month = await fixMonthAbbr(rdbDate[1]);
-        var string = month + " " + rdbDate[2] + ", " + rdbDate[3] + ",";
+	var day = await fixDayAbbr(rdbDate[2]);
+        var string = month + " " + day + ", " + rdbDate[3] + ",";
         assert(bodyText.includes("Deployment To Field Date: " + string));
 
         // Close browser window
