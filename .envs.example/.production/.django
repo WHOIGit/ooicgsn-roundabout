@@ -36,6 +36,13 @@ WEB_CONCURRENCY=4
 # ------------------------------------------------------------------------------
 REDIS_URL=redis://redis:6379/0
 
+# Celery
+# ------------------------------------------------------------------------------
+
+# Flower
+CELERY_FLOWER_USER=celeryusername
+CELERY_FLOWER_PASSWORD=celeryuserpassword
+
 # Roundabout Specific Django settings
 # ------------------------------------------------------------------------------
 
