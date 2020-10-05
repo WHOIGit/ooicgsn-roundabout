@@ -121,6 +121,7 @@ LOCAL_APPS = [
     'roundabout.field_instances',
     'roundabout.search',
     'roundabout.exports',
+    'roundabout.ooi_ci_tools',
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

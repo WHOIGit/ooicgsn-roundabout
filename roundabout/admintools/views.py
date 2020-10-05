@@ -130,6 +130,7 @@ class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
     def get_success_url(self):
         return reverse('admintools:import_inventory_upload_success', )
 
+
 # Bulk Inventory Import Functions
 # ------------------------------------------
 # Create a blank CSV template for user to download and populate
