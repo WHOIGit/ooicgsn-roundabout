@@ -1,7 +1,7 @@
 #
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -19,14 +19,14 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 
-version: '3.5'
+version: '3.7'
 
 volumes:
   local_postgres_data: {}
   local_postgres_data_backups: {}
 
 services:
-  django:
+  django: &django
     build:
       context: .
       dockerfile: ./compose/local/django/Dockerfile
@@ -35,7 +35,7 @@ services:
       - postgres
     volumes:
       - .:/app
-    env_file:   
+    env_file:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres
     ports:
@@ -67,6 +67,43 @@ services:
       - "5432:5432"
     networks:
       - roundabout-network
+
+  redis:
+    image: redis:6.0
+    restart: unless-stopped
+    networks:
+      - roundabout-network
+
+  celeryworker:
+    <<: *django
+    image: roundabout_local_celeryworker
+    #container_name: celeryworker
+    depends_on:
+      - redis
+      - postgres
+
+    ports: []
+    command: /start-celeryworker
+
+  celerybeat:
+    <<: *django
+    image: roundabout_local_celerybeat
+    #container_name: celerybeat
+    depends_on:
+      - redis
+      - postgres
+
+    ports: []
+    command: /start-celerybeat
+
+  flower:
+    <<: *django
+    image: roundabout_local_flower
+    #container_name: flower
+    ports:
+      - "5555:5555"
+    command: /start-flower
+
 
 networks:
   roundabout-network:
