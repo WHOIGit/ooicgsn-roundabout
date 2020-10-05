@@ -282,4 +282,4 @@ media/
 !static/css/jstree/dist/
 
 # Celery
-celery-schedule
+celerybeat-schedule
