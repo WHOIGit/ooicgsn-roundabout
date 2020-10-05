@@ -44,6 +44,9 @@ DJANGO_SU_NAME=admin
 DJANGO_SU_EMAIL=admin@example.com
 DJANGO_SU_PASSWORD=admin
 
+# Site Domain
+RDB_SITE_URL=https://yourdomain.com
+
 # Settings for RDB serial number generation functions
 # ------------------------------------------------------------------------------
 # Default pattern - "1, 2, 3, ... etc."

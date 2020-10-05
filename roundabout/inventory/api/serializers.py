@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -20,41 +20,86 @@
 """
 
 from rest_framework import serializers
+from rest_flex_fields import FlexFieldsModelSerializer
 
-from ..models import Inventory
+from ..models import Inventory, Action, PhotoNote
 from roundabout.locations.api.serializers import LocationSerializer
 from roundabout.parts.api.serializers import PartSerializer
+from roundabout.calibrations.api.serializers import CalibrationEventSerializer
 
 
-class InventorySerializer(serializers.ModelSerializer):
-    location = LocationSerializer(read_only=True)
-    part = PartSerializer(read_only=True)
+class PhotoNoteSerializer(FlexFieldsModelSerializer):
+    class Meta:
+        model = PhotoNote
+        fields = ['id', 'photo', 'inventory', 'action', 'user']
+
+
+class ActionSerializer(FlexFieldsModelSerializer):
+    class Meta:
+        model = Action
+        fields = [
+            'id', 'action_type', 'object_type', 'created_at', 'inventory', \
+            'location', 'deployment',  'inventory_deployment', 'deployment_type', \
+            'detail', 'user', 'build', 'parent', 'cruise', 'latitude', 'longitude', \
+            'depth', 'calibration_event', 'const_default_event', 'config_event', \
+            'config_default_event', 'photos',
+        ]
+
+        expandable_fields = {
+            'location': LocationSerializer,
+            'photos': (PhotoNoteSerializer, {'many': True}),
+        }
+
+
+
+class InventorySerializer(FlexFieldsModelSerializer):
     custom_fields = serializers.SerializerMethodField('get_custom_fields')
 
     class Meta:
         model = Inventory
-        fields = ['id', 'serial_number', 'part', 'location', 'custom_fields' ]
+        fields = [
+            'id', 'serial_number', 'old_serial_number', 'part', 'location', 'revision', \
+            'parent', 'children', 'build', 'assembly_part', 'assigned_destination_root', 'created_at', \
+            'updated_at', 'detail', 'test_result', 'test_type', 'flag', 'time_at_sea', 'custom_fields',
+            'calibration_events'
+        ]
+
+        expandable_fields = {
+            'location': LocationSerializer,
+            'part': PartSerializer,
+            'parent': 'roundabout.inventory.api.serializers.InventorySerializer',
+            'children': ('roundabout.inventory.api.serializers.InventorySerializer', {'many': True}),
+            'calibration_events': (CalibrationEventSerializer, {'many': True}),
+        }
 
     def get_custom_fields(self, obj):
         # Get this item's custom fields with most recent Values
+        custom_fields = None
+
         if obj.fieldvalues.exists():
             obj_custom_fields = obj.fieldvalues.filter(is_current=True).select_related('field')
-        else:
-            obj_custom_fields = None
-        # create initial empty dict
-        custom_fields = {}
+            # create initial empty dict
+            custom_fields = {}
 
-        if obj_custom_fields:
             for field in obj_custom_fields:
                 custom_fields[field.field.field_name] = field.field_value
+            return custom_fields
+        else:
+            return custom_fields
 
+    def get_children(self, obj):
+        # Get this item's children
+        custom_fields = None
+        if obj.children.exists():
+            custom_fields = [child.id for child in obj.children.all()]
         return custom_fields
 
-    @staticmethod
-    def setup_eager_loading(queryset):
-        """ Perform necessary prefetching of data. """
-        queryset = queryset.select_related('location').select_related('part')
 
-        queryset = queryset.prefetch_related('fieldvalues')
 
-        return queryset
+"""
+# Need a "sub-serializer" to handle self refernce MPTT tree structures
+class RecursiveField(serializers.Serializer):
+    def to_representation(self, value):
+        serializer = self.parent.parent.__class__(value, context=self.context)
+        return serializer.data
+"""

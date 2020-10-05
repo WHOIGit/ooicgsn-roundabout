@@ -1,5 +1,6 @@
 FROM ubuntu:18.04
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
+RUN apt-get update
 RUN apt-get install curl -y && apt-get install npm -y
 # Tools for Circleci debugging
 RUN apt-get install iputils-ping -y && apt-get install net-tools -y

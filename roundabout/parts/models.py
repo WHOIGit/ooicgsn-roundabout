@@ -34,6 +34,7 @@ from roundabout.userdefinedfields.models import Field
 
 class PartType(MPTTModel):
     name = models.CharField(max_length=255, unique=False)
+    ccc_toggle = models.BooleanField(null=False, default=False)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', on_delete=models.SET_NULL)
 
     class MPTTMeta:
