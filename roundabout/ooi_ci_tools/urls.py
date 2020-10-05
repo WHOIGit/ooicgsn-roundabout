@@ -34,4 +34,6 @@ urlpatterns = [
     #Import Calibrations
     #path('import/calibrations/upload/', view=views.ImportCalibrationsUploadView.as_view(), name='import_calibrations_upload'),
     path('import/upload/success/', view=views.ImportUploadSuccessView.as_view(), name='import_upload_success'),
+    #Import Calibrations
+    path('import/calibrations/upload/', view=views.ImportCalibrationsUploadView.as_view(), name='import_calibrations_upload'),
 ]
