@@ -21,14 +21,8 @@
 
 from rest_framework import generics, viewsets, filters
 from rest_framework.permissions import IsAuthenticated
-from ..models import Inventory, Action, PhotoNote
-from .serializers import InventorySerializer, ActionSerializer, PhotoNoteSerializer
-
-
-class ActionViewSet(viewsets.ModelViewSet):
-    serializer_class = ActionSerializer
-    permission_classes = (IsAuthenticated,)
-    queryset = Action.objects.all()
+from ..models import Inventory, InventoryDeployment, Action, PhotoNote
+from .serializers import InventorySerializer, InventoryDeploymentSerializer, ActionSerializer, PhotoNoteSerializer
 
 
 class InventoryViewSet(viewsets.ModelViewSet):
@@ -36,6 +30,17 @@ class InventoryViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
     queryset = Inventory.objects.all()
     filterset_fields = ('serial_number',)
+
+class InventoryDeploymentViewSet(viewsets.ModelViewSet):
+    serializer_class = InventoryDeploymentSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = InventoryDeployment.objects.all()
+
+
+class ActionViewSet(viewsets.ModelViewSet):
+    serializer_class = ActionSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = Action.objects.all()
 
 
 class PhotoNoteViewSet(viewsets.ModelViewSet):

@@ -22,11 +22,12 @@
 from rest_framework import serializers
 from rest_flex_fields import FlexFieldsModelSerializer
 
-from ..models import Inventory, Action, PhotoNote
+from ..models import Inventory, InventoryDeployment, Action, PhotoNote
 from roundabout.locations.api.serializers import LocationSerializer
 from roundabout.parts.api.serializers import PartSerializer
 from roundabout.calibrations.api.serializers import CalibrationEventSerializer
 
+API_VERSION = 'api_v1'
 
 class PhotoNoteSerializer(FlexFieldsModelSerializer):
     class Meta:
@@ -94,6 +95,38 @@ class InventorySerializer(FlexFieldsModelSerializer):
             custom_fields = [child.id for child in obj.children.all()]
         return custom_fields
 
+
+class InventoryDeploymentSerializer(FlexFieldsModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name =  API_VERSION + ':inventory-deployments-detail',
+        lookup_field='pk',
+    )
+    inventory = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':inventory-detail',
+        lookup_field = 'pk',
+        queryset = Inventory.objects
+    )
+
+    class Meta:
+        model = InventoryDeployment
+        fields = [
+            'id',
+            'url',
+            'deployment',
+            'inventory',
+            'cruise_deployed',
+            'cruise_recovered',
+            'deployment_start_date',
+            'deployment_burnin_date',
+            'deployment_to_field_date',
+            'deployment_recovery_date',
+            'deployment_retire_date',
+            'current_status',
+        ]
+
+        expandable_fields = {
+            'inventory': InventorySerializer,
+        }
 
 
 """
