@@ -78,15 +78,14 @@ async function fixDayAbbr(day)
     {
         await driver.get("http://localhost:8000/");   
         user = "admin";
-        password = "admin";
     }
     else
     {
         // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
         await driver.get("https://ooi-cgrdb-staging.whoi.net/");
         user = "jkoch";
-        password = "Automatedtests";
     }
+    password = "Automatedtests";
 
     // 2 | setWindowSize | 1304x834 | 
      await driver.manage().window().setRect({ width: 1304, height: 834 });
@@ -310,8 +309,14 @@ async function fixDayAbbr(day)
 
         //FIX date Sep -> Sept. & other months
         var month = await fixMonthAbbr(rdbDate[1]);
-        rdbDate = month + " " + rdbDate[2] + ", " + rdbDate[3] + ",";
-        assert(bodyText.includes("Deployment To Field Date: " + rdbDate));
+	day = await fixDayAbbr(rdbDate[2]);
+        rdbDate = month + " " + day + ", " + rdbDate[3] + ",";
+	try {
+	   assert(bodyText.includes("Deployment To Field Date: " + rdbDate));
+	}
+	catch (AssertionError) {
+           console.log("Assertion Error: Deployment To Field Date is  "+rdbDate);
+        }
 
         // Click Inventory and verify Deployment times
         // 33 | click | id=inventory_12_anchor | 
@@ -328,8 +333,14 @@ async function fixDayAbbr(day)
         var rdbDate = fullDate.split(" ");
 
         month = await fixMonthAbbr(rdbDate[1]);
-        rdbDate = month + " " + rdbDate[2] + ", " + rdbDate[3] + ",";
-        assert(bodyText.includes("Deployment To Field Date: " + rdbDate));
+	day = await fixDayAbbr(rdbDate[2]);
+        rdbDate = month + " " + day + ", " + rdbDate[3] + ",";
+	try {
+           assert(bodyText.includes("Deployment To Field Date: " + rdbDate));
+        }
+	catch (AssertionError) {
+           console.log("Assertion Error: Deployment To Field Date:  is  "+rdbDate);
+        }
         
         // Remove sewing Inventory from Build
         // 39 | click | id=action | 
@@ -370,7 +381,12 @@ async function fixDayAbbr(day)
         month = await fixMonthAbbr(rdbDate[1]);
 	var day = await fixDayAbbr(rdbDate[2]);
         rdbDate = month + " " + day + ", " + rdbDate[3] + ",";
-        assert(bodyText.includes("Deployment Recovery Date: " + rdbDate));
+	try {
+           assert(bodyText.includes("Deployment Recovery Date: " + rdbDate));
+	}
+	catch (AssertionError) {
+           console.log("Assertion Error: Deployment Recovery Date is  "+rdbDate);
+        }
 
         // Re-add sewing Inventory to Build at the current date
         // 47 | click | id=action | 

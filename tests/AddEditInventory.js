@@ -50,15 +50,14 @@ var password;
     {
         await driver.get("http://localhost:8000/");   
         user = "admin";
-        password = "admin";
     }
     else
     {
         // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
         await driver.get("https://ooi-cgrdb-staging.whoi.net/");
         user = "jkoch";
-        password = "Automatedtests";
     }
+    password = "Automatedtests";
 
     // 2 | setWindowSize | 1304x834 | 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
@@ -253,6 +252,7 @@ var password;
         // 26 | click | id=action | 
 	    await new Promise(r => setTimeout(r, 6000));  //circleci firefox
         await driver.findElement(By.id("action")).click();
+	await new Promise(r => setTimeout(r, 4000));
         // 27 | click | linkText=Location Change | 
         await driver.findElement(By.linkText("Location Change")).click();
         // 28 | select | id=id_location | label=---------
