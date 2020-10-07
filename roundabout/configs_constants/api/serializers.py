@@ -22,16 +22,16 @@
 from rest_framework import serializers
 from rest_flex_fields import FlexFieldsModelSerializer
 
-from ..models import CalibrationEvent, CoefficientValueSet, CoefficientName, CoefficientNameEvent, CoefficientValue
+from ..models import *
 from roundabout.parts.api.serializers import PartSerializer
 from roundabout.inventory.models import Inventory, Deployment
 from roundabout.parts.models import Part
 
 API_VERSION = 'api_v1'
 
-class CalibrationEventSerializer(FlexFieldsModelSerializer):
+class ConfigEventSerializer(FlexFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name = API_VERSION + ':calibrations/calibration-events-detail',
+        view_name = API_VERSION + ':configs-constants/config-events-detail',
         lookup_field = 'pk',
     )
     inventory = serializers.HyperlinkedRelatedField(
@@ -44,40 +44,41 @@ class CalibrationEventSerializer(FlexFieldsModelSerializer):
         lookup_field = 'pk',
         queryset = Deployment.objects
     )
-    coefficient_value_sets = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':calibrations/coefficent-value-sets-detail',
+    config_values = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':configs-constants/config-values-detail',
         many = True,
         read_only = True,
         lookup_field = 'pk',
     )
 
     class Meta:
-        model = CalibrationEvent
+        model = ConfigEvent
         fields = [
             'id',
             'url',
             'created_at',
             'updated_at',
-            'calibration_date',
+            'configuration_date',
             'user_draft',
             'user_approver',
             'inventory',
             'deployment',
             'approved',
             'detail',
-            'coefficient_value_sets'
+            'config_type',
+            'config_values',
         ]
 
         expandable_fields = {
-            'coefficient_value_sets': ('roundabout.calibrations.api.serializers.CoefficientValueSetSerializer', {'many': True}),
+            'config_values': ('roundabout.configs_constants.api.serializers.ConfigValueSerializer', {'many': True}),
             'inventory': 'roundabout.inventory.api.serializers.InventorySerializer',
             'deployment': 'roundabout.builds.api.serializers.DeploymentSerializer',
         }
 
 
-class CoefficientNameEventSerializer(FlexFieldsModelSerializer):
+class ConfigNameEventSerializer(FlexFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name = API_VERSION + ':calibrations/coefficent-name-events-detail',
+        view_name = API_VERSION + ':configs-constants/config-name-events-detail',
         lookup_field = 'pk',
     )
     part = serializers.HyperlinkedRelatedField(
@@ -85,15 +86,15 @@ class CoefficientNameEventSerializer(FlexFieldsModelSerializer):
         lookup_field = 'pk',
         queryset = Part.objects
     )
-    coefficient_names = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':calibrations/coefficent-names-detail',
+    config_names = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':configs-constants/config-names-detail',
         many = True,
         read_only = True,
         lookup_field = 'pk',
     )
 
     class Meta:
-        model = CoefficientNameEvent
+        model = ConfigNameEvent
         fields = [
             'id',
             'url',
@@ -104,27 +105,27 @@ class CoefficientNameEventSerializer(FlexFieldsModelSerializer):
             'part',
             'approved',
             'detail',
-            'coefficient_names'
+            'config_names'
         ]
 
         expandable_fields = {
             'part': 'roundabout.parts.api.serializers.PartSerializer',
-            'coefficient_names': ('roundabout.calibrations.api.serializers.CoefficientNameSerializer', {'many': True})
+            'config_names': ('roundabout.configs_constants.api.serializers.ConfigNameSerializer', {'many': True})
         }
 
 
-class CoefficientNameSerializer(FlexFieldsModelSerializer):
+class ConfigNameSerializer(FlexFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name = API_VERSION + ':calibrations/coefficent-names-detail',
+        view_name = API_VERSION + ':configs-constants/config-names-detail',
         lookup_field = 'pk',
     )
-    coeff_name_event = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':calibrations/coefficent-name-events-detail',
+    config_name_event = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':configs-constants/config-name-events-detail',
         lookup_field = 'pk',
-        queryset = CoefficientNameEvent.objects
+        queryset = ConfigNameEvent.objects
     )
-    coefficient_value_sets = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':calibrations/coefficent-value-sets-detail',
+    config_values = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':configs-constants/config-values-detail',
         many = True,
         read_only = True,
         lookup_field = 'pk',
@@ -136,23 +137,58 @@ class CoefficientNameSerializer(FlexFieldsModelSerializer):
     )
 
     class Meta:
-        model = CoefficientName
+        model = ConfigName
         fields = [
             'id',
             'url',
-            'calibration_name',
-            'value_set_type',
-            'sigfig_override',
+            'name',
+            'config_type',
             'created_at',
+            'deprecated',
             'part',
-            'coeff_name_event',
-            'coefficient_value_sets',
+            'include_with_calibrations',
+            'config_name_event',
+            'config_values',
         ]
 
         expandable_fields = {
-            'coeff_name_event': 'roundabout.calibrations.api.serializers.CoefficientNameEventSerializer',
+            'config_name_event': 'roundabout.configs_constants.api.serializers.ConfigNameEvent',
             'part': 'roundabout.parts.api.serializers.PartSerializer',
-            'coefficient_value_sets': ('roundabout.calibrations.api.serializers.CoefficientValueSetSerializer', {'many': True}),
+            'config_values': ('roundabout.configs_constants.api.serializers.ConfigValueSerializer', {'many': True}),
+        }
+
+
+class ConfigValueSerializer(FlexFieldsModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name = API_VERSION + ':configs-constants/config-values-detail',
+        lookup_field = 'pk',
+    )
+    config_name = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':configs-constants/config-names-detail',
+        lookup_field = 'pk',
+        queryset = ConfigName.objects
+    )
+    config_event = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':configs-constants/config-events-detail',
+        lookup_field = 'pk',
+        queryset = ConfigEvent.objects
+    )
+
+    class Meta:
+        model = ConfigValue
+        fields = [
+            'id',
+            'url',
+            'config_value',
+            'notes',
+            'created_at',
+            'config_name',
+            'config_event',
+        ]
+
+        expandable_fields = {
+            'config_name': 'roundabout.configs_constants.api.serializers.ConfigNameSerializer',
+            'config_event': 'roundabout.configs_constants.api.serializers.ConfigEventSerializer',
         }
 
 
