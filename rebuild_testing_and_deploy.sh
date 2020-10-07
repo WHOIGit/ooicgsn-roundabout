@@ -1,7 +1,8 @@
-"""
+#!/bin/bash
+
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -17,16 +18,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
-"""
 
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter, SimpleRouter
-from .views import AssemblyViewSet
 
-# Create a router and register our viewsets with it.
-router = SimpleRouter()
-router.register(r'assemblies', AssemblyViewSet, 'assemblies' )
+# Script to rebuild rdb-testing containers and run migrate/collectstatic to deploy
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-urlpatterns = [
-    path('', include(router.urls) ),
-]
+if [ -e production-testing-site.yml ]
+then
+    docker-compose -f production-testing-site.yml up -d --no-deps --build django_testing
+    docker-compose -f production-testing-site.yml run --rm django_testing python manage.py migrate
+    docker-compose -f production-testing-site.yml run --rm django_testing python manage.py collectstatic --noinput
+fi

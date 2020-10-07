@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -20,6 +20,7 @@
 """
 
 from django.db import models
+from django.utils import timezone
 from django.urls import reverse
 from mptt.models import MPTTModel, TreeForeignKey
 
@@ -47,6 +48,8 @@ class Location(MPTTModel):
     location_id = models.CharField(max_length=100, blank=True)
     weight = models.IntegerField(default=0, blank=True, null=True)
     root_type = models.CharField(max_length=20, choices=ROOT_TYPES, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class MPTTMeta:
         order_insertion_by = ['weight', 'name']

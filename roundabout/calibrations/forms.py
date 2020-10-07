@@ -167,12 +167,26 @@ class CoefficientValueSetForm(forms.ModelForm):
 class CoefficientNameForm(forms.ModelForm):
     class Meta:
         model = CoefficientName
-        fields = ['calibration_name', 'value_set_type', 'sigfig_override']
+        fields = ['calibration_name', 'value_set_type', 'sigfig_override', 'deprecated']
         labels = {
             'calibration_name': 'Name',
             'value_set_type': 'Type',
-            'sigfig_override': 'Significant Figures'
+            'sigfig_override': 'Significant Figures',
+            'deprecated': 'Deprecated'
         }
+        widgets = {
+            'deprecated': forms.CheckboxInput() 
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(CoefficientNameForm, self).__init__(*args, **kwargs)
+        if self.instance.deprecated:
+            self.fields['calibration_name'].widget.attrs.update(
+                {
+                    'readonly': True,
+                    'style': 'cursor: not-allowed; pointer-events: none; background-color: #d5dfed;'
+                }
+            )
 
     def clean_sigfig_override(self):
         raw_sigfig = self.cleaned_data.get('sigfig_override')
@@ -237,7 +251,7 @@ class CoefficientValueForm(forms.ModelForm):
 # Inputs: Part 
 class CalPartCopyForm(forms.Form):
     part_select = forms.ModelChoiceField(
-        queryset = Part.objects.filter(part_type__name='Instrument'),
+        queryset = Part.objects.filter(part_type__ccc_toggle=True),
         required=False,
         label = 'Copy Calibrations from Part'
     )
@@ -245,7 +259,7 @@ class CalPartCopyForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.part_id = kwargs.pop('part_id')
         super(CalPartCopyForm, self).__init__(*args, **kwargs)
-        self.fields['part_select'].queryset = Part.objects.filter(part_type__name='Instrument',coefficient_name_events__gt=0).exclude(id__in=str(self.part_id))
+        self.fields['part_select'].queryset = Part.objects.filter(part_type__ccc_toggle=True,coefficient_name_events__gt=0).exclude(id__in=str(self.part_id))
 
     def clean_part_select(self):
         part_select = self.cleaned_data.get('part_select')
@@ -278,7 +292,7 @@ PartCalNameFormset = inlineformset_factory(
     CoefficientNameEvent, 
     CoefficientName, 
     form=CoefficientNameForm, 
-    fields=('calibration_name', 'value_set_type', 'sigfig_override'), 
+    fields=('calibration_name', 'value_set_type', 'sigfig_override', 'deprecated'), 
     extra=1, 
     can_delete=True
 )
@@ -294,7 +308,7 @@ ValueSetValueFormset = inlineformset_factory(
 )
 
 # Validator for 1-D, comma-separated Coefficient value arrays
-def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
+def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0, filename = '', cal_name = ''):
     error_row_index = val_set_index + 1
     for idx, val in enumerate(coeff_1d_array):
         val = val.strip()
@@ -303,8 +317,8 @@ def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
             rounded_coeff_val = round(val)
         except:
             raise ValidationError(
-                _('Row: %(row)s, Column: %(column)s, %(value)s is an invalid Number. Please enter a valid Number (Digits + 1 optional decimal point).'),
-                params={'row': error_row_index, 'value': val, 'column': error_col_index},
+                _('File: %(filename)s, Calibration Name: %(cal_name)s, Row: %(row)s, Column: %(column)s, %(value)s is an invalid Number. Please enter a valid Number (Digits + 1 optional decimal point).'),
+                params={'row': error_row_index, 'value': val, 'column': error_col_index, 'filename': filename, 'cal_name': cal_name},
             )
         else:
             coeff_dec_places = rounded_coeff_val[::-1].find('.')
@@ -312,8 +326,8 @@ def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
                 assert coeff_dec_places <= valset_inst.cal_dec_places
             except:
                 raise ValidationError(
-                    _('Row: %(row)s, Column: %(column)s, %(value)s Exceeded Instrument %(dec_places)s-digit decimal place maximum.'),
-                    params={'row': error_row_index, 'dec_places': valset_inst.cal_dec_places, 'value': val, 'column': error_col_index},
+                    _('File: %(filename)s, Calibration Name: %(cal_name)s, Row: %(row)s, Column: %(column)s, %(value)s Exceeded Instrument %(dec_places)s-digit decimal place maximum.'),
+                    params={'row': error_row_index, 'dec_places': valset_inst.cal_dec_places, 'value': val, 'column': error_col_index, 'filename': filename, 'cal_name': cal_name},
                 )
             else:
                 try:
@@ -321,8 +335,8 @@ def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
                     assert len(digits_only) <= 20
                 except:
                     raise ValidationError(
-                        _('Row: %(row)s, Column: %(column)s, %(value)s Exceeded 20-digit max length'),
-                        params={'row': error_row_index, 'column': error_col_index, 'value': val},
+                        _('File: %(filename)s, Calibration Name: %(cal_name)s, Row: %(row)s, Column: %(column)s, %(value)s Exceeded 20-digit max length'),
+                        params={'row': error_row_index, 'column': error_col_index, 'value': val, 'filename': filename, 'cal_name': cal_name},
                     )
                 else:
                     continue
@@ -331,7 +345,7 @@ def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
 # Validator for Coefficient values within a CoefficientValueSet
 # Checks for numeric-type, part-based decimal place limit, number of digits limit
 # Displays array index/value of invalid input
-def validate_coeff_vals(valset_inst, set_type, coeff_val_set):  
+def validate_coeff_vals(valset_inst, set_type, coeff_val_set, filename = '', cal_name = ''):  
     if set_type == 'sl':
         try:
             coeff_batch = coeff_val_set.split(',')
@@ -341,7 +355,7 @@ def validate_coeff_vals(valset_inst, set_type, coeff_val_set):
                 _('More than 1 value associated with Single input type')
             )
         else:
-            validate_coeff_array(coeff_batch, valset_inst)
+            validate_coeff_array(coeff_batch, valset_inst, 0, filename, cal_name)
             return coeff_val_set
 
     elif set_type == '1d':
@@ -352,7 +366,7 @@ def validate_coeff_vals(valset_inst, set_type, coeff_val_set):
                 _('Unable to parse 1D array')
             )
         else:
-            validate_coeff_array(coeff_batch, valset_inst)
+            validate_coeff_array(coeff_batch, valset_inst, 0, filename, cal_name)
             return coeff_val_set
 
     elif set_type == '2d':
@@ -365,7 +379,7 @@ def validate_coeff_vals(valset_inst, set_type, coeff_val_set):
         else:
             for row_index, row_set in enumerate(coeff_2d_array):
                 coeff_1d_array = row_set.split(',')
-                validate_coeff_array(coeff_1d_array, valset_inst, row_index)
+                validate_coeff_array(coeff_1d_array, valset_inst, row_index, filename, cal_name)
     return coeff_val_set
 
 

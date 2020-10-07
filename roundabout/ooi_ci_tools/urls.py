@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -19,14 +19,19 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter, SimpleRouter
-from .views import InventoryViewSet
+from django.urls import path
 
-# Create a router and register our viewsets with it.
-router = SimpleRouter()
-router.register(r'inventory', InventoryViewSet, 'inventory' )
+from . import views
 
+app_name = 'ooi_ci_tools'
 urlpatterns = [
-    path('', include(router.urls) ),
+    #Import Deployments
+    path('import/deployments/upload/', view=views.ImportDeploymentsUploadView.as_view(), name='import_deployments_upload'),
+    #Import Vessels
+    path('import/vessels/upload/', view=views.ImportVesselsUploadView.as_view(), name='import_vessels_upload'),
+    #Import Vessels
+    path('import/cruises/upload/', view=views.ImportCruisesUploadView.as_view(), name='import_cruises_upload'),
+    #Import Calibrations
+    #path('import/calibrations/upload/', view=views.ImportCalibrationsUploadView.as_view(), name='import_calibrations_upload'),
+    path('import/upload/success/', view=views.ImportUploadSuccessView.as_view(), name='import_upload_success'),
 ]

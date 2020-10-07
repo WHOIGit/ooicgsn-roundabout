@@ -84,18 +84,27 @@ class Inventory(MPTTModel):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     detail = models.TextField(blank=True)
-    test_result = models.NullBooleanField(blank=False, choices=TEST_RESULTS)
+    test_result = models.BooleanField(null=True, blank=False, choices=TEST_RESULTS)
     test_type = models.CharField(max_length=20, choices=TEST_TYPES, null=True, blank=True)
     flag = models.BooleanField(choices=FLAG_TYPES, blank=False, default=False)
-    time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
+    # Deprecated as of v1.5
+    _time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
 
-    tracker = FieldTracker(fields=['location', 'parent', 'build'])
+    #tracker = FieldTracker(fields=['location', 'build'])
 
     class MPTTMeta:
         order_insertion_by = ['serial_number']
 
     def __str__(self):
         return self.serial_number
+
+    # get all Deployments "time in field", add them up for item's life total
+    @property
+    def time_at_sea(self):
+        deployments = self.inventory_deployments.all()
+        times = [dep.deployment_time_in_field for dep in deployments]
+        total_time_in_field = sum(times, datetime.timedelta())
+        return total_time_in_field
 
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
@@ -150,22 +159,6 @@ class Inventory(MPTTModel):
             return action.deployment
         except:
             return None
-
-    # get the most recent Deployment time in field, add this time delta to the time_at_sea column
-    def update_time_at_sea(self):
-        latest_time_at_sea = self.inventory_deployments.get_active_deployment().deployment_time_in_field
-        # add to existing Time at Sea duration
-        self.time_at_sea = self.time_at_sea + latest_time_at_sea
-        self.save()
-
-    # get the Total Time at Sea by adding historical sea time and current deployment sea time
-    def total_time_at_sea(self):
-        if self.current_deployment() and self.current_deployment().current_status == DeploymentBase.DEPLOYMENTTOFIELD:
-            current_deployment_time_at_sea = self.current_deployment().deployment_time_in_field
-            total_time_at_sea = self.time_at_sea + current_deployment_time_at_sea
-            return total_time_at_sea
-        else:
-            return self.time_at_sea
 
 
 class DeploymentBase(models.Model):
@@ -238,10 +231,6 @@ class DeploymentBase(models.Model):
             return time_on_deployment
         return timedelta(minutes=0)
 
-    def get_actions(self):
-        actions = self.build.actions.filter(object_type=Action.BUILD).filter(deployment=self)
-        return actions
-
     def deployment_progress_bar(self):
         deployment_progress_bar = None
         # Set variables for Deployment/Inventory Deployment Status bar in Bootstrap
@@ -291,12 +280,12 @@ class Deployment(DeploymentBase):
     latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
                                     validators=[
                                         MaxValueValidator(90),
-                                        MinValueValidator(0)
+                                        MinValueValidator(-90)
                                     ])
     longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
                                     validators=[
                                         MaxValueValidator(180),
-                                        MinValueValidator(0)
+                                        MinValueValidator(-180)
                                     ])
     depth = models.PositiveIntegerField(null=True, blank=True)
 
@@ -304,6 +293,10 @@ class Deployment(DeploymentBase):
         if self.deployed_location:
             return '%s - %s' % (self.deployment_number, self.deployed_location)
         return '%s - %s' % (self.deployment_number, self.location.name)
+
+    def get_actions(self):
+        actions = self.build.actions.filter(object_type=Action.BUILD).filter(deployment=self)
+        return actions
 
 
 class InventoryDeployment(DeploymentBase):
@@ -329,6 +322,10 @@ class InventoryDeployment(DeploymentBase):
             if deployment_percentage >= 99:
                 deployment_percentage = 100
             return deployment_percentage
+
+    def get_actions(self):
+        actions = self.inventory.actions.filter(object_type=Action.INVENTORY).filter(inventory_deployment=self)
+        return actions
 
 
 class DeploymentSnapshot(models.Model):

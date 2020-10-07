@@ -58,7 +58,8 @@ class Build(models.Model):
     updated_at = models.DateTimeField(default=timezone.now)
     detail = models.TextField(blank=True)
     is_deployed = models.BooleanField(default=False)
-    time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
+    # Deprecated in v1.5
+    _time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
     flag = models.BooleanField(choices=FLAG_TYPES, blank=False, default=False)
 
     tracker = FieldTracker(fields=['location',])
@@ -72,6 +73,14 @@ class Build(models.Model):
     @property
     def name(self):
         return self.assembly_revision.assembly.name
+
+    # get all Deployments "time in field", add them up for item's life total
+    @property
+    def time_at_sea(self):
+        deployments = self.deployments.all()
+        times = [dep.deployment_time_in_field for dep in deployments]
+        total_time_in_field = sum(times, datetime.timedelta())
+        return total_time_in_field
 
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
@@ -107,19 +116,6 @@ class Build(models.Model):
         if current_location != last_location:
             return True
         return False
-
-    # get the most recent Deployment timee in field, add this time delta to the time_at_sea column
-    def update_time_at_sea(self):
-        latest_time_at_sea = self.current_deployment().deployment_time_in_field
-        # add to existing Time at Sea duration
-        self.time_at_sea = self.time_at_sea + latest_time_at_sea
-        self.save()
-
-    # get the Total Time at Sea by adding historical sea time and current deployment sea time
-    def total_time_at_sea(self):
-        if self.current_deployment() and self.current_deployment().current_status == Action.DEPLOYMENTTOFIELD:
-            return self.time_at_sea + self.current_deployment().deployment_time_in_field
-        return self.time_at_sea
 
 
 class BuildAction(models.Model):
