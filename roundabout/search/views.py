@@ -21,34 +21,34 @@
 
 import json
 import operator
+from fnmatch import fnmatch
 from functools import reduce
 from urllib.parse import unquote
-from fnmatch import fnmatch
 
-from django.urls import reverse, reverse_lazy
-from django.utils.html import format_html, mark_safe
+import django_tables2 as tables
+from django.contrib.auth.mixins import LoginRequiredMixin
 #from django.template.defaultfilters import register
 #from django.shortcuts import render, get_object_or_404
 #from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 #from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, QueryDict
-from django.db.models import Q, F, Max, Min, Count, OuterRef, Subquery
+from django.db.models import Q, Count, OuterRef, Subquery
 from django.shortcuts import redirect
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-
-import django_tables2 as tables
+from django.urls import reverse
+from django.utils.html import mark_safe
 from django_tables2 import SingleTableView
-from django_tables2.export.views import ExportMixin
 
-from roundabout.users.models import User
-from roundabout.parts.models import Part
-from roundabout.builds.models import Build
-from roundabout.inventory.models import Inventory, Action
 from roundabout.assemblies.models import Assembly
-from roundabout.userdefinedfields.models import Field
+from roundabout.builds.models import Build
 from roundabout.calibrations.models import CalibrationEvent, CoefficientValueSet
 from roundabout.configs_constants.models import ConfigEvent, ConfigValue
+from roundabout.inventory.models import Inventory, Action
+from roundabout.parts.models import Part
+from roundabout.search.mixins import ExportStreamMixin
+from roundabout.userdefinedfields.models import Field
+from roundabout.users.models import User
+from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, ActionTable, CalibrationTable, \
+    ConfigConstTable, UDF_Column
 
-from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable,  ActionTable, CalibrationTable, ConfigConstTable, UDF_Column
 
 def rgetattr(obj, attr, *args):
     """Recursive getattr(), where attr is dot.separated"""
@@ -84,7 +84,7 @@ def searchbar_redirect(request):
     return resp
 
 
-class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
+class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableView):
     model = None
     table_class = None
     context_object_name = 'query_objs'
