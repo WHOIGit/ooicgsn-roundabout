@@ -70,7 +70,7 @@ class InventorySerializer(FlexFieldsModelSerializer):
             'part': PartSerializer,
             'parent': 'roundabout.inventory.api.serializers.InventorySerializer',
             'children': ('roundabout.inventory.api.serializers.InventorySerializer', {'many': True}),
-            'calibration_events': (CalibrationEventSerializer, {'many': True}),
+            'calibration_events': ('roundabout.calibrations.api.serializers.CalibrationEventSerializer', {'many': True}),
         }
 
     def get_custom_fields(self, obj):

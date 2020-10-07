@@ -21,8 +21,8 @@
 
 from rest_framework import generics, filters, viewsets
 from rest_framework.permissions import IsAuthenticated
-from ..models import CalibrationEvent, CoefficientNameEvent
-from .serializers import CalibrationEventSerializer, CoefficientNameEventSerializer
+from ..models import *
+from .serializers import *
 
 
 class CalibrationEventViewSet(viewsets.ModelViewSet):
@@ -35,3 +35,21 @@ class CoefficientNameEventViewSet(viewsets.ModelViewSet):
     serializer_class = CoefficientNameEventSerializer
     permission_classes = (IsAuthenticated,)
     queryset = CoefficientNameEvent.objects.all()
+
+
+class CoefficientNameViewSet(viewsets.ModelViewSet):
+    serializer_class = CoefficientNameSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = CoefficientName.objects.all()
+
+
+class CoefficientValueSetViewSet(viewsets.ModelViewSet):
+    serializer_class = CoefficientValueSetSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = CoefficientValueSet.objects.all()
+
+
+class CoefficientValueViewSet(viewsets.ModelViewSet):
+    serializer_class = CoefficientValueSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = CoefficientValue.objects.all()
