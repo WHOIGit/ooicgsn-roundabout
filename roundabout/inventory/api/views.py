@@ -31,6 +31,7 @@ class InventoryViewSet(viewsets.ModelViewSet):
     queryset = Inventory.objects.all()
     filterset_fields = ('serial_number',)
 
+
 class InventoryDeploymentViewSet(viewsets.ModelViewSet):
     serializer_class = InventoryDeploymentSerializer
     permission_classes = (IsAuthenticated,)

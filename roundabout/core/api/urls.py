@@ -26,6 +26,7 @@ from roundabout.assemblies.api.views import AssemblyViewSet, AssemblyRevisionVie
 from roundabout.calibrations.api.views import CalibrationEventViewSet, CoefficientNameEventViewSet
 from roundabout.locations.api.views import LocationViewSet
 from roundabout.builds.api.views import BuildViewSet, DeploymentViewSet
+from roundabout.cruises.api.views import CruiseViewSet, VesselViewSet
 from roundabout.parts.api.views import PartViewSet, PartTypeViewSet, RevisionViewSet, DocumentationViewSet
 from roundabout.userdefinedfields.api.views import FieldViewSet, FieldValueViewSet
 
@@ -38,6 +39,8 @@ router.register(r'photos', PhotoNoteViewSet, 'photos' )
 
 router.register(r'builds', BuildViewSet, 'builds' )
 router.register(r'deployments', DeploymentViewSet, 'deployments' )
+router.register(r'cruises', CruiseViewSet, 'cruises' )
+router.register(r'vessels', VesselViewSet, 'vessels' )
 
 router.register(r'assembly-templates/assemblies', AssemblyViewSet, 'assembly-templates/assemblies' )
 router.register(r'assembly-templates/assembly-revisions', AssemblyRevisionViewSet, 'assembly-templates/assembly-revisions' )
