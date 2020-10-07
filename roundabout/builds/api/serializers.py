@@ -26,6 +26,7 @@ from rest_flex_fields import FlexFieldsModelSerializer
 from ..models import Build
 from roundabout.inventory.models import Inventory, Deployment, Action
 from roundabout.locations.models import Location
+from roundabout.cruises.models import Cruise
 from roundabout.assemblies.models import Assembly, AssemblyRevision
 from roundabout.core.templatetags.common_tags import time_at_sea_display
 
@@ -116,6 +117,16 @@ class DeploymentSerializer(FlexFieldsModelSerializer):
         lookup_field = 'pk',
         queryset = Build.objects
     )
+    cruise_deployed = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':cruises-detail',
+        lookup_field = 'pk',
+        queryset = Cruise.objects
+    )
+    cruise_recovered = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':cruises-detail',
+        lookup_field = 'pk',
+        queryset = Cruise.objects
+    )
     location = serializers.HyperlinkedRelatedField(
         view_name = API_VERSION + ':locations-detail',
         lookup_field = 'pk',
@@ -153,6 +164,8 @@ class DeploymentSerializer(FlexFieldsModelSerializer):
 
         expandable_fields = {
             'build': BuildSerializer,
+            'cruise_deployed': 'roundabout.cruises.api.serializers.CruiseSerializer',
+            'cruise_recovered': 'roundabout.cruises.api.serializers.CruiseSerializer',
             'location': 'roundabout.locations.api.serializers.LocationSerializer',
             'deployed_location': 'roundabout.locations.api.serializers.LocationSerializer',
         }

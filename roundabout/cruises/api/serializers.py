@@ -59,6 +59,7 @@ class VesselSerializer(serializers.HyperlinkedModelSerializer, FlexFieldsModelSe
             'active',
             'R2R',
             'notes',
+            'cruises',
         ]
 
         expandable_fields = {
