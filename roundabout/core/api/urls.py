@@ -24,6 +24,7 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 from roundabout.inventory.api.views import InventoryViewSet, InventoryDeploymentViewSet, ActionViewSet, PhotoNoteViewSet
 from roundabout.assemblies.api.views import AssemblyViewSet, AssemblyRevisionViewSet, AssemblyPartViewSet, AssemblyTypeViewSet
 from roundabout.calibrations.api.views import *
+from roundabout.configs_constants.api.views import *
 from roundabout.locations.api.views import LocationViewSet
 from roundabout.builds.api.views import BuildViewSet, DeploymentViewSet
 from roundabout.cruises.api.views import CruiseViewSet, VesselViewSet
@@ -52,6 +53,15 @@ router.register(r'calibrations/coefficent-name-events', CoefficientNameEventView
 router.register(r'calibrations/coefficent-names', CoefficientNameViewSet, 'calibrations/coefficent-names' )
 router.register(r'calibrations/coefficent-value-sets', CoefficientValueSetViewSet, 'calibrations/coefficent-value-sets' )
 router.register(r'calibrations/coefficent-values', CoefficientValueViewSet, 'calibrations/coefficent-values' )
+
+router.register(r'configs-constants/config-events', ConfigEventViewSet, 'configs-constants/config-events' )
+router.register(r'configs-constants/config-name-events', ConfigNameEventViewSet, 'configs-constants/config-name-events' )
+router.register(r'configs-constants/config-names', ConfigNameViewSet, 'configs-constants/config-names' )
+router.register(r'configs-constants/config-values', ConfigValueViewSet, 'configs-constants/config-values' )
+router.register(r'configs-constants/const-default-events', ConstDefaultEventViewSet, 'configs-constants/const-default-events' )
+router.register(r'configs-constants/const-defaults', ConstDefaultViewSet, 'configs-constants/const-defaults' )
+router.register(r'configs-constants/config-default-events', ConfigDefaultEventViewSet, 'configs-constants/config-default-events' )
+router.register(r'configs-constants/config-defaults', ConfigDefaultViewSet, 'configs-constants/config-defaults' )
 
 router.register(r'locations', LocationViewSet, 'locations' )
 

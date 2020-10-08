@@ -25,31 +25,49 @@ from ..models import *
 from .serializers import *
 
 
-class CalibrationEventViewSet(viewsets.ModelViewSet):
-    serializer_class = CalibrationEventSerializer
+class ConfigEventViewSet(viewsets.ModelViewSet):
+    serializer_class = ConfigEventSerializer
     permission_classes = (IsAuthenticated,)
-    queryset = CalibrationEvent.objects.all()
+    queryset = ConfigEvent.objects.all()
 
 
-class CoefficientNameEventViewSet(viewsets.ModelViewSet):
-    serializer_class = CoefficientNameEventSerializer
+class ConfigNameEventViewSet(viewsets.ModelViewSet):
+    serializer_class = ConfigNameEventSerializer
     permission_classes = (IsAuthenticated,)
-    queryset = CoefficientNameEvent.objects.all()
+    queryset = ConfigNameEvent.objects.all()
 
 
-class CoefficientNameViewSet(viewsets.ModelViewSet):
-    serializer_class = CoefficientNameSerializer
+class ConfigNameViewSet(viewsets.ModelViewSet):
+    serializer_class = ConfigNameSerializer
     permission_classes = (IsAuthenticated,)
-    queryset = CoefficientName.objects.all()
+    queryset = ConfigName.objects.all()
 
 
-class CoefficientValueSetViewSet(viewsets.ModelViewSet):
-    serializer_class = CoefficientValueSetSerializer
+class ConfigValueViewSet(viewsets.ModelViewSet):
+    serializer_class = ConfigValueSerializer
     permission_classes = (IsAuthenticated,)
-    queryset = CoefficientValueSet.objects.all()
+    queryset = ConfigValue.objects.all()
 
 
-class CoefficientValueViewSet(viewsets.ModelViewSet):
-    serializer_class = CoefficientValueSerializer
+class ConstDefaultEventViewSet(viewsets.ModelViewSet):
+    serializer_class = ConstDefaultEventSerializer
     permission_classes = (IsAuthenticated,)
-    queryset = CoefficientValue.objects.all()
+    queryset = ConstDefaultEvent.objects.all()
+
+
+class ConstDefaultViewSet(viewsets.ModelViewSet):
+    serializer_class = ConstDefaultSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = ConstDefault.objects.all()
+
+
+class ConfigDefaultEventViewSet(viewsets.ModelViewSet):
+    serializer_class = ConfigDefaultEventSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = ConfigDefaultEvent.objects.all()
+
+
+class ConfigDefaultViewSet(viewsets.ModelViewSet):
+    serializer_class = ConfigDefaultSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = ConfigDefault.objects.all()

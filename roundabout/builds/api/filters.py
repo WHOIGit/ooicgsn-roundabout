@@ -25,8 +25,8 @@ from ..models import Build
 
 class BuildFilter(filters.FilterSet):
     build_number = filters.CharFilter(lookup_expr='icontains')
-    location__name = filters.CharFilter(field_name='location__name', lookup_expr='icontains')
-    assembly__name = filters.CharFilter(field_name='assembly__name', lookup_expr='icontains')
+    location_name = filters.CharFilter(field_name='location__name', lookup_expr='icontains')
+    assembly_name = filters.CharFilter(field_name='assembly__name', lookup_expr='icontains')
 
     class Meta:
         model = Build
