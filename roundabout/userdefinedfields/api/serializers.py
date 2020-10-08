@@ -25,6 +25,7 @@ from rest_flex_fields import FlexFieldsModelSerializer
 from ..models import *
 from roundabout.parts.models import Part
 from roundabout.inventory.models import Inventory
+from roundabout.users.models import User
 
 API_VERSION = 'api_v1'
 
@@ -96,6 +97,11 @@ class FieldValueSerializer(FlexFieldsModelSerializer):
         lookup_field = 'pk',
         queryset = Inventory.objects
     )
+    user = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':users-detail',
+        lookup_field = 'pk',
+        queryset = User.objects
+    )
     field_value = serializers.SerializerMethodField('get_field_value')
 
     class Meta:
@@ -118,6 +124,7 @@ class FieldValueSerializer(FlexFieldsModelSerializer):
             'field': 'roundabout.userdefinedfields.api.serializers.FieldSerializer',
             'part': 'roundabout.parts.api.serializers.PartSerializer',
             'inventory': 'roundabout.inventory.api.serializers.InventorySerializer',
+            'user': 'roundabout.users.api.serializers.UserSerializer',
         }
 
     def get_field_value(self, obj):

@@ -30,6 +30,7 @@ from roundabout.builds.api.views import BuildViewSet, DeploymentViewSet
 from roundabout.cruises.api.views import CruiseViewSet, VesselViewSet
 from roundabout.parts.api.views import PartViewSet, PartTypeViewSet, RevisionViewSet, DocumentationViewSet
 from roundabout.userdefinedfields.api.views import FieldViewSet, FieldValueViewSet
+from roundabout.users.api.views import UserViewSet
 
 # Create a router and register our viewsets with it.
 router = DefaultRouter()
@@ -72,6 +73,8 @@ router.register(r'part-templates/documents', DocumentationViewSet, 'part-templat
 
 router.register(r'user-defined-fields/fields', FieldViewSet, 'user-defined-fields/fields' )
 router.register(r'user-defined-fields/field-values', FieldValueViewSet, 'user-defined-fields/field-values' )
+
+router.register(r'users', UserViewSet, 'users' )
 
 app_name = 'api_v1'
 urlpatterns = [
