@@ -23,22 +23,23 @@ from rest_framework import serializers
 from rest_flex_fields import FlexFieldsModelSerializer
 from ..models import Location
 
+API_VERSION = 'api_v1'
 
 class LocationSerializer(serializers.HyperlinkedModelSerializer, FlexFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name='api_v1:locations-detail',
-        lookup_field='pk',
+        view_name = API_VERSION + ':locations-detail',
+        lookup_field = 'pk',
     )
     parent = serializers.HyperlinkedRelatedField(
-        view_name='api_v1:locations-detail',
-        lookup_field='pk',
-        queryset=Location.objects
+        view_name = API_VERSION + ':locations-detail',
+        lookup_field = 'pk',
+        queryset = Location.objects
     )
     children = serializers.HyperlinkedRelatedField(
-        view_name='api_v1:locations-detail',
-        many=True,
-        read_only=True,
-        lookup_field='pk',
+        view_name = API_VERSION + ':locations-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
     )
 
     class Meta:
