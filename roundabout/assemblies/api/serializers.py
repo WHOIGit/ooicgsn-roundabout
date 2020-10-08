@@ -139,10 +139,11 @@ class AssemblyPartSerializer(FlexFieldsModelSerializer):
         lookup_field = 'pk',
         queryset = Part.objects,
     )
+    part_name = serializers.CharField(source='order')
 
     class Meta:
         model = AssemblyPart
-        fields = ['id', 'url', 'assembly_revision', 'order', 'part', 'parent', 'children', 'note', ]
+        fields = ['id', 'url', 'assembly_revision', 'part_name', 'part', 'parent', 'children', 'note', ]
 
         expandable_fields = {
             'part': PartSerializer,

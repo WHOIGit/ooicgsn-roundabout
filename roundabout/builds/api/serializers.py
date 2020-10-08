@@ -24,7 +24,7 @@ from rest_framework.reverse import reverse
 from rest_flex_fields import FlexFieldsModelSerializer
 
 from ..models import Build
-from roundabout.inventory.models import Inventory, Deployment, Action
+from roundabout.inventory.models import Inventory, Deployment, InventoryDeployment, Action
 from roundabout.locations.models import Location
 from roundabout.cruises.models import Cruise
 from roundabout.assemblies.models import Assembly, AssemblyRevision
@@ -137,6 +137,12 @@ class DeploymentSerializer(FlexFieldsModelSerializer):
         lookup_field = 'pk',
         queryset = Location.objects
     )
+    inventory_deployments = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':inventory-deployments-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
     time_in_field = serializers.SerializerMethodField('get_time_in_field')
 
     class Meta:
@@ -159,7 +165,8 @@ class DeploymentSerializer(FlexFieldsModelSerializer):
             'latitude',
             'longitude',
             'depth',
-            'time_in_field'
+            'time_in_field',
+            'inventory_deployments'
         ]
 
         expandable_fields = {
@@ -168,6 +175,7 @@ class DeploymentSerializer(FlexFieldsModelSerializer):
             'cruise_recovered': 'roundabout.cruises.api.serializers.CruiseSerializer',
             'location': 'roundabout.locations.api.serializers.LocationSerializer',
             'deployed_location': 'roundabout.locations.api.serializers.LocationSerializer',
+            'inventory_deployments': ('roundabout.inventory.api.serializers.InventoryDeploymentSerializer', {'many': True}),
         }
 
     def get_time_in_field(self, obj):

@@ -89,6 +89,18 @@ class CruiseSerializer(serializers.HyperlinkedModelSerializer, FlexFieldsModelSe
         read_only = True,
         lookup_field = 'pk',
     )
+    inventorydeployments = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':inventory-deployments-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+    recovered_inventorydeployments = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':inventory-deployments-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
     location = serializers.HyperlinkedRelatedField(
         view_name = API_VERSION + ':locations-detail',
         lookup_field = 'pk',
@@ -109,6 +121,8 @@ class CruiseSerializer(serializers.HyperlinkedModelSerializer, FlexFieldsModelSe
             'location',
             'deployments',
             'recovered_deployments',
+            'inventorydeployments',
+            'recovered_inventorydeployments',
         ]
 
         expandable_fields = {
