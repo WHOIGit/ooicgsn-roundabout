@@ -62,3 +62,19 @@
   </form>
 </div>
 {% endblock %}
+
+
+{% block javascript %}
+<script>
+    $(document).ready(function() {
+
+        function update_status() {
+            $.getJSON("{% url 'ooi_ci_tools:upload_status' %}", function(r) {
+                console.log(r)
+                setTimeout(update_status, 1000);
+            });
+        }
+        update_status()
+    });
+</script>
+{% endblock javascript %}
