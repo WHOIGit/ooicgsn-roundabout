@@ -55,9 +55,17 @@ var password;
     {
         // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
         await driver.get("https://ooi-cgrdb-staging.whoi.net/");
-        user = "jkoch";
+        if (myArgs[2] == 'admin')
+        {
+           user = "admin";
+	   password = "admin";
+        }
+        else
+        {
+           user = "jkoch";
+           password = "Automatedtests";
+        }
     }
-    password = "Automatedtests";
 
     // 2 | setWindowSize | 1304x834 | 
     await driver.manage().window().setRect({ width: 1304, height: 834 });

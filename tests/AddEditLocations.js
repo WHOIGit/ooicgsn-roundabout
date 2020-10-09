@@ -7,6 +7,7 @@ const { Builder, By, Key, until, a, WebElement, promise, Capabilities } = requir
 const chrome = require('selenium-webdriver/chrome');
 const firefox = require('selenium-webdriver/firefox');
 const assert = require('assert');
+const fs = require('fs');
 
 var driver;
 var dropdown;
@@ -50,10 +51,19 @@ var password;
     // Step # | name | target | value
     if (myArgs[1] == 'headless')
     {
-        await driver.get("http://localhost:8000/");   
-        user = "admin";
-	password = "admin";
+        await driver.get("http://localhost:8000/");
+        if (myArgs[2] == 'admin')
+        {
+           user = "admin";
+	   password = "admin";
+        }
+        else
+        {
+           user = "jkoch";
+           password = "Automatedtests";
+        }
     }
+
     else
     {
         // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
@@ -110,7 +120,9 @@ var password;
         await driver.wait(until.elementLocated(By.linkText("Add Location")));
         await driver.findElement(By.linkText("Add Location")).click();
         // 17 | type | id=id_name | Test
-	await new Promise(r => setTimeout(r, 4000));  //this wait required - stale element
+	await new Promise(r => setTimeout(r, 6000));  //this wait required - stale element
+let encodedString = await driver.takeScreenshot();
+await fs.writeFileSync('sewing.png', encodedString, 'base64');      
         await driver.findElement(By.id("id_name")).sendKeys("Test");
         // 18 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();

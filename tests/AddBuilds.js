@@ -77,7 +77,16 @@ async function fixDayAbbr(day)
     if (myArgs[1] == 'headless')
     {
         await driver.get("http://localhost:8000/");   
-        user = "admin";
+        if (myArgs[2] == 'admin')
+        {
+           user = "admin";
+	   password = "admin";
+        }
+        else
+        {
+           user = "jkoch";
+           password = "Automatedtests";
+        }
     }
     else
     {
@@ -85,7 +94,6 @@ async function fixDayAbbr(day)
         await driver.get("https://ooi-cgrdb-staging.whoi.net/");
         user = "jkoch";
     }
-    password = "Automatedtests";
 
     // 2 | setWindowSize | 1304x834 | 
      await driver.manage().window().setRect({ width: 1304, height: 834 });
