@@ -269,7 +269,7 @@ class InventorySerializer(FlexFieldsModelSerializer):
             'children': ('roundabout.inventory.api.serializers.InventorySerializer', {'many': True}),
             'calibration_events': ('roundabout.calibrations.api.serializers.CalibrationEventSerializer', {'many': True}),
             'actions': ('roundabout.inventory.api.serializers.ActionSerializer', {'many': True}),
-            'fieldvalues': ('roundabout.userdefinedfields.api.serializers.FieldValueSerializer', {'many': True}),
+            'fieldvalues': ('roundabout.userdefinedfields.api.serializers.FieldValueSerializer', {'many': True, "omit": ["field.fieldvalues"]}),
             'inventory_deployments': ('roundabout.inventory.api.serializers.InventoryDeploymentSerializer', {'many': True}),
         }
 

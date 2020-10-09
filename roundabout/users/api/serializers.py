@@ -31,7 +31,12 @@ class UserSerializer(FlexFieldsModelSerializer):
         view_name = API_VERSION + ':users-detail',
         lookup_field = 'pk',
     )
-
+    actions = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':actions-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
     fieldvalues = serializers.HyperlinkedRelatedField(
         view_name = API_VERSION + ':user-defined-fields/field-values-detail',
         many = True,
@@ -50,11 +55,12 @@ class UserSerializer(FlexFieldsModelSerializer):
             'email',
             'last_login',
             'is_infield',
+            'actions',
             'fieldvalues',
         ]
 
         expandable_fields = {
             #'parts': ('roundabout.parts.api.serializers.PartSerializer', {'many': True}),
-            #'global_for_part_types': ('roundabout.parts.api.serializers.PartTypeSerializer', {'many': True}),
+            'actions': ('roundabout.inventory.api.serializers.ActionSerializer', {'many': True}),
             'fieldvalues': ('roundabout.userdefinedfields.api.serializers.FieldValueSerializer', {'many': True}),
         }

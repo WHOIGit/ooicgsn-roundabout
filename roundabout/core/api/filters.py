@@ -18,19 +18,7 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 """
-
 from django_filters import rest_framework as filters
 
-from ..models import Build
-from roundabout.core.api.filters import NumberInFilter
-
-
-class BuildFilter(filters.FilterSet):
-    build_number = filters.CharFilter(lookup_expr='icontains')
-    location__name = filters.CharFilter(field_name='location__name', lookup_expr='icontains')
-    assembly__name = filters.CharFilter(field_name='assembly__name', lookup_expr='icontains')
-    location__in = NumberInFilter(field_name='location', lookup_expr='in')
-
-    class Meta:
-        model = Build
-        fields = ['assembly', 'assembly_revision', 'is_deployed', 'inventory', 'location']
+class NumberInFilter(filters.BaseInFilter, filters.NumberFilter):
+    pass

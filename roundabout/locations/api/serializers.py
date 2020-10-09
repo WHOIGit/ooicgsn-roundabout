@@ -45,7 +45,7 @@ class LocationSerializer(serializers.HyperlinkedModelSerializer, FlexFieldsModel
     class Meta:
         model = Location
         fields = ['id', 'url', 'name', 'parent', 'children', 'weight',
-            'location_type', 'location_id', 'root_type', 'created_at',
+            'location_type', 'location_id', 'root_type', 'created_at', 'updated_at',
         ]
 
         expandable_fields = {
