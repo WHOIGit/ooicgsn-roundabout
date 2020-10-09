@@ -30,7 +30,7 @@ from types import SimpleNamespace
 from decimal import Decimal
 
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -244,6 +244,7 @@ class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
     form_class = ImportCalibrationForm
     template_name = 'ooi_ci_tools/import_calibrations_upload_form.html'
 
+
     def form_valid(self, form):
         cal_files = self.request.FILES.getlist('cal_csv')
         csv_files = []
@@ -275,4 +276,33 @@ def upload_status(request):
     return JsonResponse({
         'state': async_result.state,
         'info': info,
+    })
+
+def upload_metadata(request):
+    if request.method == "POST":
+        form = ImportCalibrationForm(request.POST, request.FILES)
+        if form.is_valid():
+            cal_files = request.FILES.getlist('cal_csv')
+            csv_files = []
+            ext_files = []
+            for file in cal_files:
+                ext = file.name[-3:]
+                if ext == 'ext':
+                    ext_files.append(file)
+                if ext == 'csv':
+                    csv_files.append(file)
+            cache.set('user', request.user, timeout=None)
+            cache.set('user_draft', form.cleaned_data['user_draft'], timeout=None)
+            cache.set('ext_files', ext_files, timeout=None)
+            cache.set('csv_files', csv_files, timeout=None)
+            job = parse_cal_files.delay()
+            print(job.task_id)
+            cache.set('import_task', job.task_id, timeout=None)
+            return redirect(reverse("ooi_ci_tools:import_calibrations_upload") + "?confirm=True")
+    else:
+        form = ImportCalibrationForm()
+
+    return render(request, 'ooi_ci_tools/import_calibrations_upload_form.html', {
+        "form": form,
+        'confirm': 'False'
     })
