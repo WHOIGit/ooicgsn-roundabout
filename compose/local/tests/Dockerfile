@@ -28,8 +28,11 @@ RUN wget https://chromedriver.storage.googleapis.com/85.0.4183.83/chromedriver_l
 RUN chmod +x /tests/RunAllTests-Chrome-Linux.bat
 RUN sed -i 's/\r//' /tests/RunAllTests-Chrome-Linux.bat
 
-RUN chmod +x /tests/Cleanup-Chrome-Linux.bat
-RUN sed -i 's/\r//' /tests/Cleanup-Chrome-Linux.bat
+RUN chmod +x /tests/Cleanup-Docker.bat
+RUN sed -i 's/\r//' /tests/Cleanup-Docker.bat
+
+RUN chmod +x /tests/Buildup-Docker.bat
+RUN sed -i 's/\r//' /tests/Buildup-Docker.bat
 
 #RUN chmod +x /tests/RunAllTests-Firefox-Linux.bat
 #RUN sed -i 's/\r//' /tests/RunAllTests-Firefox-Linux.bat
