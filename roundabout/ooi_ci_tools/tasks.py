@@ -44,13 +44,15 @@ from roundabout.cruises.models import Cruise, Vessel
 
 @shared_task(bind = True)
 def parse_cal_files(self):
-    self.update_state(state='PROGRESS', meta = {'key': 1,})
+    self.update_state(state='PROGRESS', meta = {'key': 'started',})
     user = cache.get('user')
     user_draft = cache.get('user_draft')
     ext_files = cache.get('ext_files')
     csv_files = cache.get('csv_files')
+    counter = 0
     for cal_csv in csv_files:
-        self.update_state(state='PROGRESS', meta = {'key': 1,})
+        counter+=1
+        self.update_state(state='PROGRESS', meta = {'progress': counter, 'total': len(cal_csv)})
         cal_csv_filename = cal_csv.name[:-4]
         cal_csv.seek(0)
         reader = csv.DictReader(io.StringIO(cal_csv.read().decode('utf-8')))

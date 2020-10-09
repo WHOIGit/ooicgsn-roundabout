@@ -68,8 +68,6 @@
 <script>
     $(document).ready(function() {
 
-        let confirm = '{{ confirm }}'
-
         function update_status() {
             $.getJSON("{% url 'ooi_ci_tools:upload_status' %}", function(r) {
                 console.log(r)

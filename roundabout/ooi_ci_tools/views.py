@@ -278,7 +278,7 @@ def upload_status(request):
         'info': info,
     })
 
-def upload_metadata(request):
+def import_calibrations(request):
     if request.method == "POST":
         form = ImportCalibrationForm(request.POST, request.FILES)
         if form.is_valid():
