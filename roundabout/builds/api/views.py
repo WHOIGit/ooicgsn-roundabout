@@ -22,20 +22,21 @@
 from rest_framework import generics, filters, viewsets
 from rest_framework.permissions import IsAuthenticated
 
+from roundabout.core.api.views import FlexModelViewSet
 from ..models import Build
 from roundabout.inventory.models import Deployment
 from .serializers import BuildSerializer, DeploymentSerializer
 from .filters import BuildFilter
 
 
-class BuildViewSet(viewsets.ModelViewSet):
+class BuildViewSet(FlexModelViewSet):
     queryset = Build.objects.all()
     serializer_class = BuildSerializer
     permission_classes = (IsAuthenticated,)
     filterset_class = BuildFilter
 
 
-class DeploymentViewSet(viewsets.ModelViewSet):
+class DeploymentViewSet(FlexModelViewSet):
     queryset = Deployment.objects.all()
     serializer_class = DeploymentSerializer
     permission_classes = (IsAuthenticated,)

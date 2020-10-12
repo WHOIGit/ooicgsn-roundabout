@@ -21,35 +21,43 @@
 
 from rest_framework import generics, filters, viewsets
 from rest_framework.permissions import IsAuthenticated
+
+from roundabout.core.api.views import FlexModelViewSet
 from ..models import *
 from .serializers import *
+from .filters import *
 
 
-class CalibrationEventViewSet(viewsets.ModelViewSet):
+class CalibrationEventViewSet(FlexModelViewSet):
     serializer_class = CalibrationEventSerializer
     permission_classes = (IsAuthenticated,)
     queryset = CalibrationEvent.objects.all()
+    filterset_class = CalibrationEventFilter
 
 
-class CoefficientNameEventViewSet(viewsets.ModelViewSet):
+class CoefficientNameEventViewSet(FlexModelViewSet):
     serializer_class = CoefficientNameEventSerializer
     permission_classes = (IsAuthenticated,)
     queryset = CoefficientNameEvent.objects.all()
+    filterset_class = CoefficientNameEventFilter
 
 
-class CoefficientNameViewSet(viewsets.ModelViewSet):
+class CoefficientNameViewSet(FlexModelViewSet):
     serializer_class = CoefficientNameSerializer
     permission_classes = (IsAuthenticated,)
     queryset = CoefficientName.objects.all()
+    filterset_class = CoefficientNameFilter
 
 
-class CoefficientValueSetViewSet(viewsets.ModelViewSet):
+class CoefficientValueSetViewSet(FlexModelViewSet):
     serializer_class = CoefficientValueSetSerializer
     permission_classes = (IsAuthenticated,)
     queryset = CoefficientValueSet.objects.all()
+    filterset_class = CoefficientValueSetFilter
 
 
-class CoefficientValueViewSet(viewsets.ModelViewSet):
+class CoefficientValueViewSet(FlexModelViewSet):
     serializer_class = CoefficientValueSerializer
     permission_classes = (IsAuthenticated,)
     queryset = CoefficientValue.objects.all()
+    filterset_class = CoefficientValueFilter

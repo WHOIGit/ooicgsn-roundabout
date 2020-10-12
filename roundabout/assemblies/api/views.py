@@ -28,20 +28,20 @@ from ..models import Assembly, AssemblyRevision, AssemblyPart, AssemblyType
 from .serializers import *
 from .filters import *
 
-class AssemblyViewSet(viewsets.ModelViewSet):
+class AssemblyViewSet(FlexModelViewSet):
     serializer_class = AssemblySerializer
     permission_classes = (IsAuthenticated,)
     queryset = Assembly.objects.all()
     filterset_class = AssemblyFilter
 
 
-class AssemblyTypeViewSet(viewsets.ModelViewSet):
+class AssemblyTypeViewSet(FlexModelViewSet):
     serializer_class = AssemblyTypeSerializer
     permission_classes = (IsAuthenticated,)
     queryset = AssemblyType.objects.all()
 
 
-class AssemblyRevisionViewSet(viewsets.ModelViewSet):
+class AssemblyRevisionViewSet(FlexModelViewSet):
     serializer_class = AssemblyRevisionSerializer
     permission_classes = (IsAuthenticated,)
     queryset = AssemblyRevision.objects.prefetch_related(

@@ -26,12 +26,25 @@ from ..models import CalibrationEvent, CoefficientValueSet, CoefficientName, Coe
 from roundabout.parts.api.serializers import PartSerializer
 from roundabout.inventory.models import Inventory, Deployment
 from roundabout.parts.models import Part
+from roundabout.users.models import User
 
 API_VERSION = 'api_v1'
 
 class CalibrationEventSerializer(FlexFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name = API_VERSION + ':calibrations/calibration-events-detail',
+        lookup_field = 'pk',
+    )
+    user_draft = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':users-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+    user_approver = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':users-detail',
+        many = True,
+        read_only = True,
         lookup_field = 'pk',
     )
     inventory = serializers.HyperlinkedRelatedField(
@@ -70,6 +83,8 @@ class CalibrationEventSerializer(FlexFieldsModelSerializer):
 
         expandable_fields = {
             'coefficient_value_sets': ('roundabout.calibrations.api.serializers.CoefficientValueSetSerializer', {'many': True}),
+            'user_draft': ('roundabout.users.api.serializers.UserSerializer', {'many': True}),
+            'user_approver': ('roundabout.users.api.serializers.UserSerializer', {'many': True}),
             'inventory': 'roundabout.inventory.api.serializers.InventorySerializer',
             'deployment': 'roundabout.builds.api.serializers.DeploymentSerializer',
         }
@@ -78,6 +93,18 @@ class CalibrationEventSerializer(FlexFieldsModelSerializer):
 class CoefficientNameEventSerializer(FlexFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name = API_VERSION + ':calibrations/coefficent-name-events-detail',
+        lookup_field = 'pk',
+    )
+    user_draft = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':users-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+    user_approver = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':users-detail',
+        many = True,
+        read_only = True,
         lookup_field = 'pk',
     )
     part = serializers.HyperlinkedRelatedField(
@@ -109,6 +136,8 @@ class CoefficientNameEventSerializer(FlexFieldsModelSerializer):
 
         expandable_fields = {
             'part': 'roundabout.parts.api.serializers.PartSerializer',
+            'user_draft': ('roundabout.users.api.serializers.UserSerializer', {'many': True}),
+            'user_approver': ('roundabout.users.api.serializers.UserSerializer', {'many': True}),
             'coefficient_names': ('roundabout.calibrations.api.serializers.CoefficientNameSerializer', {'many': True})
         }
 
