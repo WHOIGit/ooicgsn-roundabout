@@ -26,6 +26,10 @@ from roundabout.core.api.filters import NumberInFilter
 
 
 class BuildFilter(filters.FilterSet):
+    created_at = filters.DateFilter(lookup_expr='contains')
+    updated_at = filters.DateFilter(lookup_expr='contains')
+    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
+    updated_at_range = filters.DateFromToRangeFilter(field_name='updated_at')
     build_number = filters.CharFilter(lookup_expr='icontains')
     assembly__name = filters.CharFilter(field_name='assembly__name', lookup_expr='icontains')
     assembly__in = NumberInFilter(field_name='assembly', lookup_expr='in')
@@ -62,6 +66,12 @@ class DeploymentFilter(filters.FilterSet):
     deployed_location__name = filters.CharFilter(field_name='deployed_location__name', lookup_expr='icontains')
     deployed_location__in = NumberInFilter(field_name='deployed_location', lookup_expr='in')
     has_time_in_field = filters.BooleanFilter(field_name='time_at_sea', method='filter_time_in_field')
+    deployment_start_date = filters.DateFilter(lookup_expr='contains')
+    deployment_burnin_date = filters.DateFilter(lookup_expr='contains')
+    deployment_to_field_date = filters.DateFilter(lookup_expr='contains')
+    deployment_recovery_date = filters.DateFilter(lookup_expr='contains')
+    deployment_retire_date = filters.DateFilter(lookup_expr='contains')
+    deployment_year = filters.NumberFilter(field_name='deployment_to_field_date', lookup_expr='year')
 
     class Meta:
         model = Deployment
