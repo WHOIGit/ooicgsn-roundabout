@@ -21,34 +21,42 @@
 
 from django_filters import rest_framework as filters
 
-from ..models import Build
+from ..models import Assembly, AssemblyRevision, AssemblyPart
 from roundabout.core.api.filters import NumberInFilter
 
 
-class BuildFilter(filters.FilterSet):
-    build_number = filters.CharFilter(lookup_expr='icontains')
-    assembly__name = filters.CharFilter(field_name='assembly__name', lookup_expr='icontains')
-    assembly__in = NumberInFilter(field_name='assembly', lookup_expr='in')
-    assembly_revision__revision_code = filters.CharFilter(field_name='assembly_revision__revision_code', lookup_expr='icontains')
-    location__name = filters.CharFilter(field_name='location__name', lookup_expr='icontains')
-    location__in = NumberInFilter(field_name='location', lookup_expr='in')
-    has_time_in_field = filters.BooleanFilter(field_name='time_at_sea', method='filter_time_in_field')
+class AssemblyFilter(filters.FilterSet):
+    assembly_number = filters.CharFilter(lookup_expr='icontains')
+    name = filters.CharFilter(lookup_expr='icontains')
+    assembly_type__name = NumberInFilter(field_name='assembly_type__name', lookup_expr='icontains')
 
     class Meta:
-        model = Build
+        model = Assembly
         fields = [
-            'assembly',
-            'assembly_revision',
-            'is_deployed',
-            'inventory',
-            'location',
-            'flag',
+            'assembly_type',
+            'assembly_revisions',
         ]
 
-    def filter_time_in_field(self, queryset, name, value):
-        # construct the full lookup expression.
-        lookup = '__'.join([name, 'isnull'])
-        return queryset.filter(**{lookup: False})
 
-        # alternatively, you could opt to hardcode the lookup. e.g.,
-        # return queryset.filter(published_on__isnull=False)
+class AssemblyRevisionFilter(filters.FilterSet):
+    assembly__name = filters.CharFilter(field_name='assembly__name', lookup_expr='icontains')
+    revision_code = filters.CharFilter(lookup_expr='icontains')
+
+    class Meta:
+        model = AssemblyRevision
+        fields = [
+            'assembly',
+        ]
+
+
+class AssemblyPartFilter(filters.FilterSet):
+    assembly_revision__revision_code = filters.CharFilter(field_name='assembly_revision__revision_code', lookup_expr='icontains')
+    part__name = filters.CharFilter(field_name='part__name', lookup_expr='icontains')
+    part__number = filters.CharFilter(field_name='part__number', lookup_expr='icontains')
+
+    class Meta:
+        model = AssemblyPart
+        fields = [
+            'part',
+            'assembly_revision',
+        ]

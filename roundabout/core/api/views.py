@@ -18,15 +18,13 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 """
-from django_filters import rest_framework as filters
+
 from rest_framework import viewsets
 from rest_flex_fields import filter_backends as flex_filters
 
-# Flex Filter 
+# Flex Filter custom ModelViewSet to dynamically handle prefetch/select_related
+# query set up for related fields
 class FlexModelViewSet(viewsets.ModelViewSet):
     filter_backends = viewsets.ModelViewSet.filter_backends + [
         flex_filters.FlexFieldsFilterBackend,
     ]
-
-class NumberInFilter(filters.BaseInFilter, filters.NumberFilter):
-    pass

@@ -23,14 +23,16 @@ from django.db.models import Prefetch
 from rest_framework import generics, viewsets, filters
 from rest_framework.permissions import IsAuthenticated
 
+from roundabout.core.api.views import FlexModelViewSet
 from ..models import Assembly, AssemblyRevision, AssemblyPart, AssemblyType
-from .serializers import AssemblySerializer, AssemblyRevisionSerializer, AssemblyPartSerializer, AssemblyTypeSerializer
-
+from .serializers import *
+from .filters import *
 
 class AssemblyViewSet(viewsets.ModelViewSet):
     serializer_class = AssemblySerializer
     permission_classes = (IsAuthenticated,)
     queryset = Assembly.objects.all()
+    filterset_class = AssemblyFilter
 
 
 class AssemblyTypeViewSet(viewsets.ModelViewSet):
@@ -42,12 +44,14 @@ class AssemblyTypeViewSet(viewsets.ModelViewSet):
 class AssemblyRevisionViewSet(viewsets.ModelViewSet):
     serializer_class = AssemblyRevisionSerializer
     permission_classes = (IsAuthenticated,)
-    queryset = AssemblyRevision.objects.all()
-    queryset = AssemblyRevision.objects.prefetch_related(Prefetch('assembly_parts',
-        queryset=AssemblyPart.objects.order_by('-parent_id')))
+    queryset = AssemblyRevision.objects.prefetch_related(
+        Prefetch('assembly_parts', queryset=AssemblyPart.objects.order_by('-parent_id'))
+    )
+    filterset_class = AssemblyRevisionFilter
 
 
-class AssemblyPartViewSet(viewsets.ModelViewSet):
+class AssemblyPartViewSet(FlexModelViewSet):
     serializer_class = AssemblyPartSerializer
     permission_classes = (IsAuthenticated,)
     queryset = AssemblyPart.objects.all()
+    filterset_class = AssemblyPartFilter
