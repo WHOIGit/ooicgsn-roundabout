@@ -21,7 +21,7 @@
 
 from django_filters import rest_framework as filters
 
-from ..models import Build
+from ..models import *
 from roundabout.core.api.filters import NumberInFilter
 
 
@@ -52,3 +52,37 @@ class BuildFilter(filters.FilterSet):
 
         # alternatively, you could opt to hardcode the lookup. e.g.,
         # return queryset.filter(published_on__isnull=False)
+
+
+class DeploymentFilter(filters.FilterSet):
+    deployment_number = filters.CharFilter(lookup_expr='icontains')
+    build__build_number = filters.CharFilter(field_name='build__build_number', lookup_expr='icontains')
+    location__name = filters.CharFilter(field_name='location__name', lookup_expr='icontains')
+    location__in = NumberInFilter(field_name='location', lookup_expr='in')
+    deployed_location__name = filters.CharFilter(field_name='deployed_location__name', lookup_expr='icontains')
+    deployed_location__in = NumberInFilter(field_name='deployed_location', lookup_expr='in')
+    has_time_in_field = filters.BooleanFilter(field_name='time_at_sea', method='filter_time_in_field')
+
+    class Meta:
+        model = Deployment
+        fields = [
+            'deployment_number',
+            'build',
+            'cruise_deployed',
+            'cruise_recovered',
+            'current_status',
+            'location',
+            'deployed_location',
+            'latitude',
+            'longitude',
+            'depth',
+            'inventory_deployments'
+        ]
+
+        def filter_time_in_field(self, queryset, name, value):
+            # construct the full lookup expression.
+            lookup = '__'.join([name, 'isnull'])
+            return queryset.filter(**{lookup: False})
+
+            # alternatively, you could opt to hardcode the lookup. e.g.,
+            # return queryset.filter(published_on__isnull=False)

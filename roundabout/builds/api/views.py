@@ -26,7 +26,7 @@ from roundabout.core.api.views import FlexModelViewSet
 from ..models import Build
 from roundabout.inventory.models import Deployment
 from .serializers import BuildSerializer, DeploymentSerializer
-from .filters import BuildFilter
+from .filters import *
 
 
 class BuildViewSet(FlexModelViewSet):
@@ -40,3 +40,4 @@ class DeploymentViewSet(FlexModelViewSet):
     queryset = Deployment.objects.all()
     serializer_class = DeploymentSerializer
     permission_classes = (IsAuthenticated,)
+    filterset_class = DeploymentFilter
