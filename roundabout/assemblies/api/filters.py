@@ -28,7 +28,7 @@ from roundabout.core.api.filters import NumberInFilter
 class AssemblyFilter(filters.FilterSet):
     assembly_number = filters.CharFilter(lookup_expr='icontains')
     name = filters.CharFilter(lookup_expr='icontains')
-    assembly_type__name = NumberInFilter(field_name='assembly_type__name', lookup_expr='icontains')
+    assembly_type__name = filters.CharFilter(field_name='assembly_type__name', lookup_expr='icontains')
 
     class Meta:
         model = Assembly

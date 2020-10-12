@@ -28,7 +28,7 @@ from roundabout.core.api.filters import NumberInFilter
 class CalibrationEventFilter(filters.FilterSet):
     created_at = filters.DateFilter(lookup_expr='contains')
     updated_at = filters.DateFilter(lookup_expr='contains')
-    calibration_date = = filters.DateFilter(lookup_expr='contains')
+    calibration_date = filters.DateFilter(lookup_expr='contains')
     created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
     updated_at_range = filters.DateFromToRangeFilter(field_name='updated_at')
     calibration_date_range = filters.DateFromToRangeFilter(field_name='calibration_date')
@@ -97,7 +97,7 @@ class CoefficientValueFilter(filters.FilterSet):
     original_value = filters.CharFilter(lookup_expr='icontains')
     created_at = filters.DateFilter(lookup_expr='contains')
     created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
-    
+
     class Meta:
         model = CoefficientValue
         fields = [

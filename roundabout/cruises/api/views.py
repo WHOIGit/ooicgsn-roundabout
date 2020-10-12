@@ -22,17 +22,20 @@
 from rest_framework import generics, filters, viewsets
 from rest_framework.permissions import IsAuthenticated
 
+from roundabout.core.api.views import FlexModelViewSet
 from ..models import Cruise, Vessel
 from .serializers import CruiseSerializer, VesselSerializer
+from .filters import *
 
-
-class VesselViewSet(viewsets.ModelViewSet):
+class VesselViewSet(FlexModelViewSet):
     serializer_class = VesselSerializer
     permission_classes = (IsAuthenticated,)
     queryset = Vessel.objects.all()
+    filterset_class = VesselFilter
 
 
-class CruiseViewSet(viewsets.ModelViewSet):
+class CruiseViewSet(FlexModelViewSet):
     serializer_class = CruiseSerializer
     permission_classes = (IsAuthenticated,)
     queryset = Cruise.objects.all()
+    filterset_class = CruiseFilter
