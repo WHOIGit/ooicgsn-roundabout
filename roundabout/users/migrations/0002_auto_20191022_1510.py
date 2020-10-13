@@ -31,17 +31,21 @@ env = environ.Env()
 
 def generate_superuser(apps, schema_editor):
 
-    User = apps.get_model('auth', 'User')
+    User = apps.get_model('users', 'User')
     Group = apps.get_model('auth','Group')
 
     DJANGO_SU_NAME = env('DJANGO_SU_NAME')
     DJANGO_SU_EMAIL = env('DJANGO_SU_EMAIL')
     DJANGO_SU_PASSWORD = env('DJANGO_SU_PASSWORD')
 
-    superuser = User.objects.create_superuser(
+    superuser = User.objects.create(
         username=DJANGO_SU_NAME,
         email=DJANGO_SU_EMAIL,
-        password=DJANGO_SU_PASSWORD)
+        password=DJANGO_SU_PASSWORD,
+        is_superuser=True,
+        is_staff=True,
+        is_active=True,
+    )
 
     superuser.save()
 
