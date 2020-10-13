@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -26,9 +26,9 @@ Auto-generate default Part Types for start up
 from django.db import migrations
 from django.apps import apps
 
-PartType = apps.get_model('parts', 'PartType')
 
 def create_part_types(apps, schema_editor):
+    PartType = apps.get_model('parts', 'PartType')
     part_types = ['Cable', 'Electrical', 'Instrument', 'Mechanical']
 
     for part_type in part_types:
