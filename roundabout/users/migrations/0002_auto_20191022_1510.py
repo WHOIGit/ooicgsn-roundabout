@@ -26,6 +26,7 @@ from django.db import migrations
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.contrib.auth.management import create_permissions
+from django.contrib.auth.hashers import make_password
 
 env = environ.Env()
 
@@ -36,7 +37,7 @@ def generate_superuser(apps, schema_editor):
 
     DJANGO_SU_NAME = env('DJANGO_SU_NAME')
     DJANGO_SU_EMAIL = env('DJANGO_SU_EMAIL')
-    DJANGO_SU_PASSWORD = env('DJANGO_SU_PASSWORD')
+    DJANGO_SU_PASSWORD = make_password(env('DJANGO_SU_PASSWORD'))
 
     superuser = User.objects.create(
         username=DJANGO_SU_NAME,
