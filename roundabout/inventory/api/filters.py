@@ -1,0 +1,85 @@
+"""
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+"""
+
+from django_filters import rest_framework as filters
+
+from roundabout.core.api.filters import NumberInFilter
+from roundabout.assemblies.models import AssemblyPart
+from ..models import *
+
+
+class InventoryFilter(filters.FilterSet):
+    created_at = filters.DateFilter(lookup_expr='contains')
+    updated_at = filters.DateFilter(lookup_expr='contains')
+    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
+    updated_at_range = filters.DateFromToRangeFilter(field_name='updated_at')
+    serial_number = filters.CharFilter(lookup_expr='icontains')
+    old_serial_number = filters.CharFilter(lookup_expr='icontains')
+    field_value = filters.CharFilter(field_name='fieldvalues__field_value', lookup_expr='icontains')
+    on_build = filters.BooleanFilter(field_name='build', lookup_expr='isnull')
+    is_root = filters.BooleanFilter(field_name='parent', lookup_expr='isnull')
+    #is_deployed = filters.BooleanFilter(field_name='time_at_sea', method='filter_is_deployed')
+
+    class Meta:
+        model = Inventory
+        fields = [
+            'part',
+            'location',
+            'revision',
+            'parent',
+            'children',
+            'build',
+            'test_result',
+            'test_type',
+            'flag',
+        ]
+
+
+class ActionFilter(filters.FilterSet):
+    created_at = filters.DateFilter(lookup_expr='contains')
+    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
+    detail = filters.CharFilter(lookup_expr='icontains')
+
+    class Meta:
+        model = Action
+        fields = [
+            'action_type',
+            'object_type',
+            'inventory',
+            'location',
+            'deployment',
+            'inventory_deployment',
+            'deployment_type',
+            'detail',
+            'user',
+            'build',
+            'parent',
+            'cruise',
+            'latitude', 
+            'longitude',
+            'depth',
+            'calibration_event',
+            'const_default_event',
+            'config_event',
+            'config_default_event',
+            'coefficient_name_event',
+            'config_name_event',
+        ]

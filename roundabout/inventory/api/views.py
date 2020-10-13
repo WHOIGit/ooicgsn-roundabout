@@ -21,27 +21,30 @@
 
 from rest_framework import generics, viewsets, filters
 from rest_framework.permissions import IsAuthenticated
+
+from roundabout.core.api.views import FlexModelViewSet
 from ..models import Inventory, InventoryDeployment, Action, PhotoNote
 from .serializers import InventorySerializer, InventoryDeploymentSerializer, ActionSerializer, PhotoNoteSerializer
+from .filters import *
 
-
-class InventoryViewSet(viewsets.ModelViewSet):
+class InventoryViewSet(FlexModelViewSet):
     serializer_class = InventorySerializer
     permission_classes = (IsAuthenticated,)
     queryset = Inventory.objects.all()
-    filterset_fields = ('serial_number',)
+    filterset_class = InventoryFilter
 
 
-class InventoryDeploymentViewSet(viewsets.ModelViewSet):
+class InventoryDeploymentViewSet(FlexModelViewSet):
     serializer_class = InventoryDeploymentSerializer
     permission_classes = (IsAuthenticated,)
     queryset = InventoryDeployment.objects.all()
 
 
-class ActionViewSet(viewsets.ModelViewSet):
+class ActionViewSet(FlexModelViewSet):
     serializer_class = ActionSerializer
     permission_classes = (IsAuthenticated,)
     queryset = Action.objects.all()
+    filterset_class = ActionFilter
 
 
 class PhotoNoteViewSet(viewsets.ModelViewSet):
