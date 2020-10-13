@@ -39,7 +39,7 @@ def create_part_types(apps, schema_editor):
             tree_id=0,
             level=0,
         )
-    PartType.objects.rebuild()
+    PartType._tree_manager.rebuild()
 
 
 class Migration(migrations.Migration):
