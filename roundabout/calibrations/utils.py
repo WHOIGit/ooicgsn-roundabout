@@ -22,6 +22,12 @@
 def handle_reviewers(form):
     if form.instance.user_approver.exists():
         if form.cleaned_data['user_draft'].exists():
+            if form.instance.user_draft.exists():
+                model_revs = form.instance.user_draft.all()
+                form_revs = form.cleaned_data['user_draft'].all()
+                for user in model_revs:
+                    if user not in form_revs:
+                        form.instance.user_draft.remove(user)
             approvers = form.instance.user_approver.all()
             reviewers = form.cleaned_data['user_draft']
             for user in approvers:
@@ -37,6 +43,13 @@ def handle_reviewers(form):
                 form.instance.user_approver.remove(user)
     else:
         if form.cleaned_data['user_draft'].exists():
+            if form.instance.user_draft.exists():
+                model_revs = form.instance.user_draft.all()
+                form_revs = form.cleaned_data['user_draft'].all()
+                for user in model_revs:
+                    if user not in form_revs:
+                        form.instance.user_draft.remove(user)
+
             reviewers = form.cleaned_data['user_draft']
             for user in reviewers:
                 form.instance.user_draft.add(user)
