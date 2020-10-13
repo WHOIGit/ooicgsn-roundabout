@@ -25,40 +25,43 @@
 
 {% block content %}
 <div class="container">
-  <h2>Upload Github Calibrations</h2>
+    <h2>Upload Github Calibrations</h2>
 
-  <p>Use this tool to upload Calibration CSV's</p>
+    <p>Use this tool to upload Calibration CSV's</p>
 
-  <hr>
+    <hr>
 
-  <form class="form-horizontal" method="post" enctype="multipart/form-data" novalidate>
-    {% csrf_token %}
-    {{ form|crispy }}
+    <div class="progress">
+        <div class="progress-bar bg-info" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+    <form class="form-horizontal" method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        {{ form|crispy }}
 
-    <div class="row">
-        {% if form.errors %}
-            {% for field in form %}
-                {% for error in field.errors %}
+        <div class="row">
+            {% if form.errors %}
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger">
+                            <strong>{{ error|escape }}</strong>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
                     <div class="alert alert-danger">
                         <strong>{{ error|escape }}</strong>
                     </div>
                 {% endfor %}
-            {% endfor %}
-            {% for error in form.non_field_errors %}
-                <div class="alert alert-danger">
-                    <strong>{{ error|escape }}</strong>
-                </div>
-            {% endfor %}
-        {% endif %}
+            {% endif %}
 
 
-    </div>
+        </div>
 
-    <div class="control-group">
-      <div class="controls">
-        <button type="submit" class="btn btn-primary">Import</button>
-      </div>
-    </div>
+        <div class="control-group">
+            <div class="controls">
+                <button id = 'submit' type="submit" class="btn btn-primary">Import</button>
+            </div>
+        </div>
   </form>
 </div>
 {% endblock %}
@@ -68,14 +71,46 @@
 <script>
     $(document).ready(function() {
 
+        $('.progress').hide();
+        $('.progress')
+            .css('background-color','black')
+            .css('height', '30px')
+
+
+        let confirm = '{{ confirm }}';
+        
+        if (confirm == 'True') {
+            $('.progress').show();
+            $('.progress-bar')
+                .attr('aria-valuenow', 100)
+                .css('width', 100 + '%')
+                .removeClass('bg-info')
+                .addClass('bg-success')
+                .text('Validation Complete')
+        }
+
         function update_status() {
             $.getJSON("{% url 'ooi_ci_tools:upload_status' %}", function(r) {
-                console.log(r)
+                if (r.progress != null) {
+                    $('.progress').show();
+                    let current = r.progress.progress;
+                    let total = r.progress.total;
+                    let filename = r.progress.file;
+                    let percTotal = Math.round((current / total) * 100);
+                    $('.progress-bar')
+                        .attr('aria-valuenow', percTotal)
+                        .css('width', percTotal + '%')
+                        .text(percTotal + '%, ' + 'Validating File: ' + filename)
+                } else {
+                    $('.progress-bar').html("<i class = 'fas fa-spinner fa-spin'></i>")
+                }
                 setTimeout(update_status, 1000);
             });
         }
-        
-        update_status()
+
+        $('#submit').on('click', function() {
+            update_status();
+        });
     });
 </script>
 {% endblock javascript %}

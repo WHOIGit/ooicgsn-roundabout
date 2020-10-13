@@ -268,17 +268,19 @@ class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
 
 
 def upload_status(request):
-    import_task = cache.get('import_task')
-    if import_task is None:
-        return JsonResponse({ 'state': 'PENDING' })
-    async_result = AsyncResult(import_task)
-    info = getattr(async_result, 'info', '');
+    # import_task = cache.get('import_task')
+    # if import_task is None:
+    #     return JsonResponse({ 'state': 'PENDING' })
+    # async_result = AsyncResult(import_task)
+    # info = getattr(async_result, 'info', '');
+    result = cache.get('validation_progress')
+    cache.delete('validation_progress')
     return JsonResponse({
-        'state': async_result.state,
-        'info': info,
+        'progress': result,
     })
 
 def import_calibrations(request):
+    confirm = ""
     if request.method == "POST":
         form = ImportCalibrationForm(request.POST, request.FILES)
         if form.is_valid():
@@ -296,13 +298,12 @@ def import_calibrations(request):
             cache.set('ext_files', ext_files, timeout=None)
             cache.set('csv_files', csv_files, timeout=None)
             job = parse_cal_files.delay()
-            print(job.task_id)
             cache.set('import_task', job.task_id, timeout=None)
             return redirect(reverse("ooi_ci_tools:import_calibrations_upload") + "?confirm=True")
     else:
         form = ImportCalibrationForm()
-
+        confirm = request.GET.get("confirm")
     return render(request, 'ooi_ci_tools/import_calibrations_upload_form.html', {
         "form": form,
-        'confirm': 'False'
+        'confirm': confirm
     })
