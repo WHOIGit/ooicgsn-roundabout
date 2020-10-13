@@ -25,25 +25,41 @@ from roundabout.core.api.filters import NumberInFilter
 from ..models import *
 
 
-class LocationFilter(filters.FilterSet):
+class FieldFilter(filters.FilterSet):
     created_at = filters.DateFilter(lookup_expr='contains')
     updated_at = filters.DateFilter(lookup_expr='contains')
     created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
     updated_at_range = filters.DateFromToRangeFilter(field_name='updated_at')
-    name = filters.CharFilter(lookup_expr='icontains')
-    is_root = filters.BooleanFilter(field_name='parent', lookup_expr='isnull')
+    field_name = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
-        model = Location
+        model = Field
         fields = [
-            'parent',
-            'children',
-            'weight',
-            'location_type',
-            'location_id',
-            'root_type',
+            'field_type',
+            'field_default_value',
+            'global_for_part_types',
+            'created_at',
+            'updated_at',
+            'parts',
+        ]
+
+
+class FieldValueFilter(filters.FilterSet):
+    created_at = filters.DateFilter(lookup_expr='contains')
+    updated_at = filters.DateFilter(lookup_expr='contains')
+    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
+    updated_at_range = filters.DateFromToRangeFilter(field_name='updated_at')
+    field__field_name = filters.CharFilter(field_name='field_name', lookup_expr='icontains')
+    user__username = filters.CharFilter(field_name='user__username', lookup_expr='icontains')
+
+    class Meta:
+        model = FieldValue
+        fields = [
+            'field_value',
+            'field',
             'inventory',
-            'builds',
-            'deployments',
-            'deployed_deployments',
+            'part',
+            'user',
+            'is_current',
+            'is_default_value',
         ]

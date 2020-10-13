@@ -22,17 +22,21 @@
 from rest_framework import generics, filters, viewsets
 from rest_framework.permissions import IsAuthenticated
 
+from roundabout.core.api.views import FlexModelViewSet
 from ..models import *
 from .serializers import FieldSerializer, FieldValueSerializer
+from .filters import *
 
 
-class FieldViewSet(viewsets.ModelViewSet):
+class FieldViewSet(FlexModelViewSet):
     queryset = Field.objects.all()
     serializer_class = FieldSerializer
     permission_classes = (IsAuthenticated,)
+    filterset_class = FieldFilter
 
 
-class FieldValueViewSet(viewsets.ModelViewSet):
+class FieldValueViewSet(FlexModelViewSet):
     queryset = FieldValue.objects.all()
     serializer_class = FieldValueSerializer
     permission_classes = (IsAuthenticated,)
+    filterset_class = FieldValueFilter

@@ -56,6 +56,8 @@ class ActionFilter(filters.FilterSet):
     created_at = filters.DateFilter(lookup_expr='contains')
     created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
     detail = filters.CharFilter(lookup_expr='icontains')
+    inventory__serial_number = filters.CharFilter(field_name='inventory__serial_number', lookup_expr='icontains')
+    user__username = filters.CharFilter(field_name='user__username', lookup_expr='icontains')
 
     class Meta:
         model = Action
