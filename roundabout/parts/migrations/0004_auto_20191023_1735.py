@@ -25,11 +25,18 @@ Auto-generate default Part Types for start up
 """
 from django.db import migrations
 from django.apps import apps
+from mptt import register, managers
 
 
 def create_part_types(apps, schema_editor):
     PartType = apps.get_model('parts', 'PartType')
     part_types = ['Cable', 'Electrical', 'Instrument', 'Mechanical']
+
+    manager = managers.TreeManager()
+    manager.model = PartType
+
+    register(PartType)
+    manager.contribute_to_class(PartType, 'objects')
 
     for part_type in part_types:
         obj = PartType.objects.create(
@@ -39,7 +46,7 @@ def create_part_types(apps, schema_editor):
             tree_id=0,
             level=0,
         )
-    PartType._tree_manager.rebuild()
+    manager.rebuild()
 
 
 class Migration(migrations.Migration):
