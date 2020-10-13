@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -25,10 +25,18 @@ Auto-generate default Root locations for start up
 """
 from django.db import migrations
 from django.apps import apps
+from mptt import register, managers
 
-Location = apps.get_model('locations', 'Location')
 
 def create_root_locations(apps, schema_editor):
+    Location = apps.get_model('locations', 'Location')
+
+    manager = managers.TreeManager()
+    manager.model = Location
+
+    register(Location)
+    manager.contribute_to_class(Location, 'objects')
+
     land, created = Location.objects.get_or_create(name='Land')
     if created:
         land.root_type = 'Land'
