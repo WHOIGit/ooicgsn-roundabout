@@ -31,8 +31,7 @@ env = environ.Env()
 
 def generate_superuser(apps, schema_editor):
 
-    #User = apps.get_model('users', 'User')
-    User = get_user_model()
+    User = apps.get_model('auth', 'User')
     Group = apps.get_model('auth','Group')
 
     DJANGO_SU_NAME = env('DJANGO_SU_NAME')
