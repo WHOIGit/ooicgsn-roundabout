@@ -41,12 +41,7 @@ def create_part_types(apps, schema_editor):
     for part_type in part_types:
         obj = PartType.objects.create(
             name=part_type,
-            lft=0,
-            rght=0,
-            tree_id=0,
-            level=0,
         )
-    manager.rebuild()
 
 
 class Migration(migrations.Migration):

@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -27,11 +27,12 @@ from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.contrib.auth.management import create_permissions
 
-User = get_user_model()
-Group = apps.get_model('auth','Group')
 env = environ.Env()
 
 def generate_superuser(apps, schema_editor):
+
+    User = apps.get_model('users', 'User')
+    Group = apps.get_model('auth','Group')
 
     DJANGO_SU_NAME = env('DJANGO_SU_NAME')
     DJANGO_SU_EMAIL = env('DJANGO_SU_EMAIL')
