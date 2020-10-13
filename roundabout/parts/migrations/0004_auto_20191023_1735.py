@@ -32,7 +32,14 @@ def create_part_types(apps, schema_editor):
     part_types = ['Cable', 'Electrical', 'Instrument', 'Mechanical']
 
     for part_type in part_types:
-        obj, created = PartType.objects.get_or_create(name=part_type)
+        obj = PartType.objects.create(
+            name=part_type,
+            lft=0,
+            rght=0,
+            tree_id=0,
+            level=0,
+        )
+    PartType.objects.rebuild()
 
 
 class Migration(migrations.Migration):
