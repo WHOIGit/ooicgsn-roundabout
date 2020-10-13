@@ -247,6 +247,12 @@ class InventorySerializer(FlexFieldsModelSerializer):
         read_only = True,
         lookup_field = 'pk',
     )
+    calibration_events = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':calibrations/calibration-events-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
     time_in_field = serializers.SerializerMethodField('get_time_in_field')
 
     class Meta:

@@ -27,8 +27,8 @@ from ..models import *
 
 class UserFilter(filters.FilterSet):
     last_login = filters.DateFilter(lookup_expr='contains')
-    last_login_range = filters.DateFromToRangeFilter(field_name='created_at')
-    last_login_range = filters.DateFromToRangeFilter(field_name='updated_at')
+    last_login_range = filters.DateFromToRangeFilter(field_name='last_login')
+    last_login_range = filters.DateFromToRangeFilter(field_name='last_login')
     username = filters.CharFilter(lookup_expr='icontains')
     name = filters.CharFilter(lookup_expr='icontains')
     email = filters.CharFilter(lookup_expr='icontains')
@@ -38,6 +38,4 @@ class UserFilter(filters.FilterSet):
         fields = [
             'last_login',
             'is_infield',
-            'actions',
-            'fieldvalues',
         ]
