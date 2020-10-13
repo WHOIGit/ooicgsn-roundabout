@@ -38,6 +38,7 @@ class InventoryDeploymentViewSet(FlexModelViewSet):
     serializer_class = InventoryDeploymentSerializer
     permission_classes = (IsAuthenticated,)
     queryset = InventoryDeployment.objects.all()
+    filterset_class = InventoryDeploymentFilter
 
 
 class ActionViewSet(FlexModelViewSet):

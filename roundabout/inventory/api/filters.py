@@ -22,7 +22,6 @@
 from django_filters import rest_framework as filters
 
 from roundabout.core.api.filters import NumberInFilter
-from roundabout.assemblies.models import AssemblyPart
 from ..models import *
 
 
@@ -73,7 +72,7 @@ class ActionFilter(filters.FilterSet):
             'build',
             'parent',
             'cruise',
-            'latitude', 
+            'latitude',
             'longitude',
             'depth',
             'calibration_event',
@@ -82,4 +81,23 @@ class ActionFilter(filters.FilterSet):
             'config_default_event',
             'coefficient_name_event',
             'config_name_event',
+        ]
+
+
+class InventoryDeploymentFilter(filters.FilterSet):
+    deployment_start_date = filters.DateFilter(lookup_expr='contains')
+    deployment_burnin_date = filters.DateFilter(lookup_expr='contains')
+    deployment_to_field_date = filters.DateFilter(lookup_expr='contains')
+    deployment_recovery_date = filters.DateFilter(lookup_expr='contains')
+    deployment_retire_date = filters.DateFilter(lookup_expr='contains')
+    deployment_year = filters.NumberFilter(field_name='deployment_to_field_date', lookup_expr='year')
+
+    class Meta:
+        model = InventoryDeployment
+        fields = [
+            'deployment',
+            'inventory',
+            'cruise_deployed',
+            'cruise_recovered',
+            'current_status',
         ]
