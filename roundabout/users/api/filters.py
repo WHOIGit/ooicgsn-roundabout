@@ -19,17 +19,25 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import generics, filters, viewsets
-from rest_framework.permissions import IsAuthenticated
+from django_filters import rest_framework as filters
 
-from roundabout.core.api.views import FlexModelViewSet
+from roundabout.core.api.filters import NumberInFilter
 from ..models import *
-from .serializers import *
-from .filters import *
 
 
-class UserViewSet(FlexModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = (IsAuthenticated,)
-    filterset_class = UserFilter
+class UserFilter(filters.FilterSet):
+    last_login = filters.DateFilter(lookup_expr='contains')
+    last_login_range = filters.DateFromToRangeFilter(field_name='created_at')
+    last_login_range = filters.DateFromToRangeFilter(field_name='updated_at')
+    username = filters.CharFilter(lookup_expr='icontains')
+    name = filters.CharFilter(lookup_expr='icontains')
+    email = filters.CharFilter(lookup_expr='icontains')
+
+    class Meta:
+        model = User
+        fields = [
+            'last_login',
+            'is_infield',
+            'actions',
+            'fieldvalues',
+        ]
