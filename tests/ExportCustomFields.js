@@ -112,7 +112,20 @@ var password;
                 var clicked = await driver.findElement(By.xpath("//div[" + i + "]/label/input")).isSelected();
                 if (!clicked)
                 {
-                    await driver.findElement(By.xpath("//div[" + i + "]/label/input")).click();
+                    if (i == 1) {
+                        if ((await driver.findElement(By.xpath("//div/div/label")).getText() == "Computerized") ||
+                            (await driver.findElement(By.xpath("//div/div/label")).getText() == "Sewing Machine"))
+                        {
+                            await driver.findElement(By.xpath("//div[" + i + "]/label/input")).click();
+                        }
+                    }
+                    else {
+                        if ((await driver.findElement(By.xpath("//div/div[" + i + "]/label")).getText() == "Computerized")|
+                            (await driver.findElement(By.xpath("//div/div[" + i + "]/label")).getText() == "Sewing Machine"))
+                        {
+                            await driver.findElement(By.xpath("//div[" + i + "]/label/input")).click();
+                        }
+                    }
                 }
             }
             catch (e) {
