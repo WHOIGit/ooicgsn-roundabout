@@ -19,24 +19,12 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import generics, filters, viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import viewsets
+from rest_flex_fields import filter_backends as flex_filters
 
-from roundabout.core.api.views import FlexModelViewSet
-from ..models import *
-from .serializers import FieldSerializer, FieldValueSerializer
-from .filters import *
-
-
-class FieldViewSet(FlexModelViewSet):
-    queryset = Field.objects.all()
-    serializer_class = FieldSerializer
-    permission_classes = (IsAuthenticated,)
-    filterset_class = FieldFilter
-
-
-class FieldValueViewSet(FlexModelViewSet):
-    queryset = FieldValue.objects.all()
-    serializer_class = FieldValueSerializer
-    permission_classes = (IsAuthenticated,)
-    filterset_class = FieldValueFilter
+# Flex Filter custom ModelViewSet to dynamically handle prefetch/select_related
+# query set up for related fields
+class FlexModelViewSet(viewsets.ModelViewSet):
+    filter_backends = viewsets.ModelViewSet.filter_backends + [
+        flex_filters.FlexFieldsFilterBackend,
+    ]

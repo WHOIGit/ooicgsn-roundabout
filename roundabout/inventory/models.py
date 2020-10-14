@@ -303,7 +303,7 @@ class InventoryDeployment(DeploymentBase):
     deployment = models.ForeignKey(Deployment, related_name='inventory_deployments',
                                    on_delete=models.CASCADE, null=False)
     inventory = models.ForeignKey(Inventory, related_name='inventory_deployments',
-                                  on_delete=models.CASCADE, null=False)\
+                                  on_delete=models.CASCADE, null=False)
 
     objects = InventoryDeploymentQuerySet.as_manager()
 

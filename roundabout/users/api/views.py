@@ -19,39 +19,17 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from django.db.models import Prefetch
-from rest_framework import generics, viewsets, filters
+from rest_framework import generics, filters, viewsets
 from rest_framework.permissions import IsAuthenticated
 
 from roundabout.core.api.views import FlexModelViewSet
-from ..models import Assembly, AssemblyRevision, AssemblyPart, AssemblyType
+from ..models import *
 from .serializers import *
 from .filters import *
 
-class AssemblyViewSet(FlexModelViewSet):
-    serializer_class = AssemblySerializer
+
+class UserViewSet(FlexModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
     permission_classes = (IsAuthenticated,)
-    queryset = Assembly.objects.all()
-    filterset_class = AssemblyFilter
-
-
-class AssemblyTypeViewSet(FlexModelViewSet):
-    serializer_class = AssemblyTypeSerializer
-    permission_classes = (IsAuthenticated,)
-    queryset = AssemblyType.objects.all()
-
-
-class AssemblyRevisionViewSet(FlexModelViewSet):
-    serializer_class = AssemblyRevisionSerializer
-    permission_classes = (IsAuthenticated,)
-    queryset = AssemblyRevision.objects.prefetch_related(
-        Prefetch('assembly_parts', queryset=AssemblyPart.objects.order_by('-parent_id'))
-    )
-    filterset_class = AssemblyRevisionFilter
-
-
-class AssemblyPartViewSet(FlexModelViewSet):
-    serializer_class = AssemblyPartSerializer
-    permission_classes = (IsAuthenticated,)
-    queryset = AssemblyPart.objects.all()
-    filterset_class = AssemblyPartFilter
+    filterset_class = UserFilter
