@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -19,6 +19,7 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
+from factory.django import DjangoModelFactory
 import factory
 import random, string
 
@@ -33,7 +34,7 @@ def generate_part_number():
 
 
 # Factories
-class PartTypeFactory(factory.DjangoModelFactory):
+class PartTypeFactory(DjangoModelFactory):
     """
         Define Part Type Factory
     """
@@ -41,7 +42,7 @@ class PartTypeFactory(factory.DjangoModelFactory):
         model = PartType
 
 
-class PartFactory(factory.DjangoModelFactory):
+class PartFactory(DjangoModelFactory):
     """
         Define Part Factory
     """
@@ -54,7 +55,7 @@ class PartFactory(factory.DjangoModelFactory):
     part_type = factory.SubFactory(PartTypeFactory)
 
 
-class RevisionFactory(factory.DjangoModelFactory):
+class RevisionFactory(DjangoModelFactory):
     """
         Define Revision Factory
     """
@@ -64,7 +65,7 @@ class RevisionFactory(factory.DjangoModelFactory):
     part = factory.SubFactory(Part)
 
 
-class DocumentationFactory(factory.DjangoModelFactory):
+class DocumentationFactory(DjangoModelFactory):
     """
         Define Documentatione Factory
     """
