@@ -81,7 +81,6 @@ class BuildSerializer(serializers.HyperlinkedModelSerializer, FlexFieldsModelSer
             'build_notes',
             'created_at',
             'updated_at',
-            'detail',
             'is_deployed',
             'time_in_field',
             'flag',

@@ -260,7 +260,7 @@ class InventorySerializer(FlexFieldsModelSerializer):
         fields = [
             'id', 'url', 'serial_number', 'old_serial_number', 'part', 'location', 'revision', \
             'parent', 'children', 'build', 'assembly_part', 'assigned_destination_root', 'created_at', \
-            'updated_at', 'detail', 'test_result', 'test_type', 'flag', 'time_in_field',
+            'updated_at', 'test_result', 'test_type', 'flag', 'time_in_field',
             'calibration_events', 'actions', 'fieldvalues', 'inventory_deployments',
         ]
 
