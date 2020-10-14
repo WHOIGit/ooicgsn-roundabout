@@ -172,17 +172,17 @@ class CalibrationTable(SearchTable):
 class ConfigConstTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = ConfigEvent
-        fields = ['inventory__serial_number','inventory__part__name','configuration_date','deployment','approved','user_approver__all__name','user_draft__all__name']
-        base_shown_cols = ['inventory__serial_number','configuration_date','approved']
+        fields = ['inventory__serial_number','inventory__part__name','config_type','configuration_date','deployment','approved','user_approver__all__name','user_draft__all__name']
+        base_shown_cols = ['inventory__serial_number','configuration_date','config_type','approved']
 
     inventory__serial_number = Column(verbose_name='Inventory SN', attrs={'style':'white-space: nowrap;'},
             linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('inventory__pk')]))
     inventory__part__name = Column(verbose_name='Part',
             linkify=dict(viewname="parts:parts_detail", args=[tables.A('inventory__part__pk')]))
+    config_type = Column(verbose_name='Type')
     configuration_date = DateColumn(verbose_name='Event Date', format='Y-m-d',
             linkify=dict(viewname="exports:configconst", args=[tables.A('pk')])
             )
-
     user_approver__all__name = ManyToManyColumn(verbose_name='Approvers', accessor='user_approver', transform=lambda x: x.name, default='')
     user_draft__all__name = ManyToManyColumn(verbose_name='Reviewers', accessor='user_draft', transform=lambda x: x.name, default='')
 
