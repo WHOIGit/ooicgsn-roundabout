@@ -33,9 +33,12 @@ class InventoryFilter(filters.FilterSet):
     serial_number = filters.CharFilter(lookup_expr='icontains')
     old_serial_number = filters.CharFilter(lookup_expr='icontains')
     field_value = filters.CharFilter(field_name='fieldvalues__field_value', lookup_expr='icontains')
-    is_on_build = filters.BooleanFilter(field_name='build', lookup_expr='isnull')
+    build__isnull = filters.BooleanFilter(field_name='build', lookup_expr='isnull')
+    parent__isnull = filters.BooleanFilter(field_name='parent', lookup_expr='isnull')
+    children__isnull = filters.BooleanFilter(field_name='children', lookup_expr='isnull')
     is_root = filters.BooleanFilter(field_name='parent', lookup_expr='isnull')
     has_children = filters.BooleanFilter(field_name='children', lookup_expr='isnull', exclude=True)
+
     #is_deployed = filters.BooleanFilter(field_name='time_at_sea', method='filter_is_deployed')
 
     class Meta:
