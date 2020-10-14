@@ -29,17 +29,21 @@ import datetime
 from types import SimpleNamespace
 from decimal import Decimal
 
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.shortcuts import render, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.core.cache import cache
+from celery.result import AsyncResult
 
 
-from .forms import ImportDeploymentsForm, ImportVesselsForm, ImportCruisesForm
+from .forms import ImportDeploymentsForm, ImportVesselsForm, ImportCruisesForm, ImportCalibrationForm
 from .models import *
+from .tasks import parse_cal_files
+
 from roundabout.userdefinedfields.models import FieldValue, Field
 from roundabout.inventory.models import Inventory, Action
 from roundabout.parts.models import Part, Revision, Documentation, PartType
@@ -233,3 +237,73 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
 
 class ImportUploadSuccessView(TemplateView):
     template_name = "ooi_ci_tools/import_upload_success.html"
+
+
+# CSV File Uploader for GitHub Calibration Coefficients
+class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
+    form_class = ImportCalibrationForm
+    template_name = 'ooi_ci_tools/import_calibrations_upload_form.html'
+
+
+    def form_valid(self, form):
+        cal_files = self.request.FILES.getlist('cal_csv')
+        csv_files = []
+        ext_files = []
+        for file in cal_files:
+            ext = file.name[-3:]
+            if ext == 'ext':
+                ext_files.append(file)
+            if ext == 'csv':
+                csv_files.append(file)
+        cache.set('user', self.request.user, timeout=None)
+        cache.set('user_draft', form.cleaned_data['user_draft'], timeout=None)
+        cache.set('ext_files', ext_files, timeout=None)
+        cache.set('csv_files', csv_files, timeout=None)
+        job = parse_cal_files.delay()
+        cache.set('import_task', job.task_id, timeout=None)
+        return super(ImportCalibrationsUploadView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse('ooi_ci_tools:import_upload_success', )
+
+
+def upload_status(request):
+    # import_task = cache.get('import_task')
+    # if import_task is None:
+    #     return JsonResponse({ 'state': 'PENDING' })
+    # async_result = AsyncResult(import_task)
+    # info = getattr(async_result, 'info', '');
+    result = cache.get('validation_progress')
+    cache.delete('validation_progress')
+    return JsonResponse({
+        'progress': result,
+    })
+
+def import_calibrations(request):
+    confirm = ""
+    if request.method == "POST":
+        form = ImportCalibrationForm(request.POST, request.FILES)
+        if form.is_valid():
+            cal_files = request.FILES.getlist('cal_csv')
+            csv_files = []
+            ext_files = []
+            for file in cal_files:
+                ext = file.name[-3:]
+                if ext == 'ext':
+                    ext_files.append(file)
+                if ext == 'csv':
+                    csv_files.append(file)
+            cache.set('user', request.user, timeout=None)
+            cache.set('user_draft', form.cleaned_data['user_draft'], timeout=None)
+            cache.set('ext_files', ext_files, timeout=None)
+            cache.set('csv_files', csv_files, timeout=None)
+            job = parse_cal_files.delay()
+            cache.set('import_task', job.task_id, timeout=None)
+            return redirect(reverse("ooi_ci_tools:import_calibrations_upload") + "?confirm=True")
+    else:
+        form = ImportCalibrationForm()
+        confirm = request.GET.get("confirm")
+    return render(request, 'ooi_ci_tools/import_calibrations_upload_form.html', {
+        "form": form,
+        'confirm': confirm
+    })

@@ -385,3 +385,6 @@ CELERY_TASK_TIME_LIMIT = 5 * 60
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-soft-time-limit
 # TODO: set to whatever value is adequate in your circumstances
 CELERY_TASK_SOFT_TIME_LIMIT = 60
+# https://docs.celeryproject.org/en/latest/userguide/configuration.html#std-setting-task_track_started
+# Report task state updates
+CELERY_TASK_TRACK_STARTED = True

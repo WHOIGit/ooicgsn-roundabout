@@ -438,7 +438,8 @@ def parse_valid_coeff_vals(value_set_instance):
         for val_set_index, val_set in enumerate(coeff_2d_array):
             coeff_1d_array = val_set.split(',')
             parsed_batch = parse_coeff_1d_array(coeff_1d_array, value_set_instance, val_set_index)
-            CoefficientValue.objects.bulk_create(parsed_batch)
+            val_array.extend(parsed_batch)
+        CoefficientValue.objects.bulk_create(val_array)
     return value_set_instance
 
 
