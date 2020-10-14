@@ -60,21 +60,25 @@ class ConstDefaultEventViewSet(FlexModelViewSet):
     serializer_class = ConstDefaultEventSerializer
     permission_classes = (IsAuthenticated,)
     queryset = ConstDefaultEvent.objects.all()
+    filterset_class = ConstDefaultEventFilter
 
 
 class ConstDefaultViewSet(FlexModelViewSet):
     serializer_class = ConstDefaultSerializer
     permission_classes = (IsAuthenticated,)
     queryset = ConstDefault.objects.all()
+    filterset_class = ConstDefaultFilter
 
 
 class ConfigDefaultEventViewSet(FlexModelViewSet):
     serializer_class = ConfigDefaultEventSerializer
     permission_classes = (IsAuthenticated,)
     queryset = ConfigDefaultEvent.objects.all()
+    filterset_class = ConfigDefaultEventFilter
 
 
 class ConfigDefaultViewSet(FlexModelViewSet):
     serializer_class = ConfigDefaultSerializer
     permission_classes = (IsAuthenticated,)
     queryset = ConfigDefault.objects.all()
+    filterset_class = ConfigDefaultFilter

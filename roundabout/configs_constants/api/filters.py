@@ -96,3 +96,64 @@ class ConfigValueFilter(filters.FilterSet):
             'config_name',
             'config_event',
         ]
+
+
+class ConstDefaultEventFilter(filters.FilterSet):
+    created_at = filters.DateFilter(lookup_expr='contains')
+    updated_at = filters.DateFilter(lookup_expr='contains')
+    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
+    updated_at_range = filters.DateFromToRangeFilter(field_name='updated_at')
+
+    class Meta:
+        model = ConstDefaultEvent
+        fields = [
+            'user_draft',
+            'user_approver',
+            'inventory',
+            'approved',
+            'detail',
+            'constant_defaults',
+        ]
+
+
+class ConstDefaultFilter(filters.FilterSet):
+    default_value = filters.CharFilter(lookup_expr='icontains')
+    created_at = filters.DateFilter(lookup_expr='contains')
+    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
+
+    class Meta:
+        model = ConstDefault
+        fields = [
+            'config_name',
+        ]
+
+
+class ConfigDefaultEventFilter(filters.FilterSet):
+    created_at = filters.DateFilter(lookup_expr='contains')
+    updated_at = filters.DateFilter(lookup_expr='contains')
+    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
+    updated_at_range = filters.DateFromToRangeFilter(field_name='updated_at')
+
+    class Meta:
+        model = ConfigDefaultEvent
+        fields = [
+            'user_draft',
+            'user_approver',
+            'assembly_part',
+            'approved',
+            'detail',
+            'config_defaults',
+        ]
+
+
+class ConfigDefaultFilter(filters.FilterSet):
+    default_value = filters.CharFilter(lookup_expr='icontains')
+    created_at = filters.DateFilter(lookup_expr='contains')
+    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
+
+    class Meta:
+        model = ConfigDefault
+        fields = [
+            'config_name',
+            'conf_def_event',
+        ]
