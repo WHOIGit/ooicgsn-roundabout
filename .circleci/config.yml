@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
-#  
+#
 
 workflows:
   version: 2
@@ -29,6 +29,7 @@ workflows:
             only:
               - develop
               - automated_tests
+              - release-*
 
 version: 2
 jobs:
@@ -77,7 +78,7 @@ jobs:
           name: Running Automated tests
           command: >-
             docker-compose -f local.yml run --rm tests \
-               sh -c "until curl -Is http://localhost:8000; do echo 'sleeping'; sleep 10; done  && 
+               sh -c "until curl -Is http://localhost:8000; do echo 'sleeping'; sleep 10; done  &&
                   google-chrome --version && chromedriver --version &&
                   nodejs -v &&
                   ./RunAllTests-Chrome-Linux.bat"
