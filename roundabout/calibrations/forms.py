@@ -312,16 +312,16 @@ def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
                 assert coeff_dec_places <= valset_inst.cal_dec_places
             except:
                 raise ValidationError(
-                    _('Row: %(row)s, Column: %(column)s, %(value)s Exceeded Instrument %(dec_places)s-digit decimal place maximum.'),
+                    _('Row: %(row)s, Column: %(column)s, %(value)s Exceeded %(dec_places)s-digit decimal place maximum.'),
                     params={'row': error_row_index, 'dec_places': valset_inst.cal_dec_places, 'value': val, 'column': error_col_index},
                 )
             else:
                 try:
                     digits_only = rounded_coeff_val.replace('-','').replace('.','')
-                    assert len(digits_only) <= 20
+                    assert len(digits_only) <= 32
                 except:
                     raise ValidationError(
-                        _('Row: %(row)s, Column: %(column)s, %(value)s Exceeded 20-digit max length'),
+                        _('Row: %(row)s, Column: %(column)s, %(value)s Exceeded 32-digit max length'),
                         params={'row': error_row_index, 'column': error_col_index, 'value': val},
                     )
                 else:
