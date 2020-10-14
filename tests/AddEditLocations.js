@@ -48,30 +48,18 @@ var password;
 	console.log('Error: Missing Arguments');
     }
 
-    // Step # | name | target | value
-    if (myArgs[1] == 'headless')
+   if (myArgs[2] == 'admin')
     {
         await driver.get("http://localhost:8000/");
-        if (myArgs[2] == 'admin')
-        {
-           user = "admin";
-	   password = "admin";
-        }
-        else
-        {
-           user = "jkoch";
-           password = "Automatedtests";
-        }
+        user = "admin";
+        password = "admin";
     }
-
     else
     {
-        // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
         await driver.get("https://ooi-cgrdb-staging.whoi.net/");
         user = "jkoch";
-	password = "Automatedtests";
+        password = "Automatedtests";
     }
-    
 
     // 2 | setWindowSize | 1304x834 | 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
@@ -117,12 +105,12 @@ var password;
 
         // Add location with non-unique name
         // 16 | click | linkText=Add Location |
-        await driver.wait(until.elementLocated(By.linkText("Add Location")));
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Add Location")).click();
         // 17 | type | id=id_name | Test
-	await new Promise(r => setTimeout(r, 6000));  //this wait required - stale element
-let encodedString = await driver.takeScreenshot();
-await fs.writeFileSync('sewing.png', encodedString, 'base64');      
+	await new Promise(r => setTimeout(r, 4000));  //this wait required - stale element
+	//let encodedString = await driver.takeScreenshot();
+	//await fs.writeFileSync('/tests/sewing.png', encodedString, 'base64');      
         await driver.findElement(By.id("id_name")).sendKeys("Test");
         // 18 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();

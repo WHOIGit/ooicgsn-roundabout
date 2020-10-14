@@ -35,6 +35,10 @@ async function fixDayAbbr(day)
     { 
        abbr = day.substring(1);
     }
+    else
+    {
+       abbr = day;
+    }
 
     return abbr;
 }
@@ -72,27 +76,17 @@ async function fixDayAbbr(day)
 	console.log('Error: Missing Arguments');
     }
 
-    // Step # | name | target | value
-    // Step # | name | target | value
-    if (myArgs[1] == 'headless')
+   if (myArgs[2] == 'admin')
     {
-        await driver.get("http://localhost:8000/");   
-        if (myArgs[2] == 'admin')
-        {
-           user = "admin";
-	   password = "admin";
-        }
-        else
-        {
-           user = "jkoch";
-           password = "Automatedtests";
-        }
+        await driver.get("http://localhost:8000/");
+        user = "admin";
+        password = "admin";
     }
     else
     {
-        // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
         await driver.get("https://ooi-cgrdb-staging.whoi.net/");
         user = "jkoch";
+        password = "Automatedtests";
     }
 
     // 2 | setWindowSize | 1304x834 | 
@@ -302,8 +296,9 @@ async function fixDayAbbr(day)
 
         // Click Deployments Tab and verify Deployment To Field Date: is 2 days prior 
         // 31 | click | id=deployments-tab |
-        await driver.findElement(By.id("deployments-tab")).click();
-        await new Promise(r => setTimeout(r, 2000));
+	await driver.findElement(By.linkText("Deployments")).click();
+        //await driver.findElement(By.id("deployments-tab")).click();
+        await new Promise(r => setTimeout(r, 4000));
         // 32 | click | css=.collapsed > .fa |  0 
         await driver.findElement(By.css(".collapsed > .fa")).click();
         await new Promise(r => setTimeout(r, 2000));
@@ -328,6 +323,7 @@ async function fixDayAbbr(day)
 
         // Click Inventory and verify Deployment times
         // 33 | click | id=inventory_12_anchor | 
+	await new Promise(r => setTimeout(r, 6000));
         await driver.findElement(By.partialLinkText("sewing - 1232")).click();
         // 34 | click | id=deployments-tab | 
         await new Promise(r => setTimeout(r, 2000));
@@ -398,7 +394,8 @@ async function fixDayAbbr(day)
 
         // Re-add sewing Inventory to Build at the current date
         // 47 | click | id=action | 
-        await driver.findElement(By.linkText("sewing - 1232")).click();
+	await new Promise(r => setTimeout(r, 6000));
+        await driver.findElement(By.partialLinkText("sewing - 1232")).click();
         await new Promise(r => setTimeout(r, 2000));
         // 6 | click | id=assemblyparts_5_builds_12_anchor | 
         await driver.findElement(By.linkText("Add")).click();

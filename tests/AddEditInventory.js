@@ -45,26 +45,17 @@ var password;
 	console.log('Error: Missing Arguments');
     }
 
-    // Step # | name | target | value
-    if (myArgs[1] == 'headless')
+   if (myArgs[2] == 'admin')
     {
-        await driver.get("http://localhost:8000/");   
-        if (myArgs[2] == 'admin')
-        {
-           user = "admin";
-	   password = "admin";
-        }
-        else
-        {
-           user = "jkoch";
-           password = "Automatedtests";
-        }
+        await driver.get("http://localhost:8000/");
+        user = "admin";
+        password = "admin";
     }
     else
     {
-        // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
         await driver.get("https://ooi-cgrdb-staging.whoi.net/");
         user = "jkoch";
+        password = "Automatedtests";
     }
 
     // 2 | setWindowSize | 1304x834 | 
@@ -94,7 +85,7 @@ var password;
 
         // Add Inventory with unique serial number and non null template, revision code, and location
         await driver.findElement(By.linkText("Inventory")).click();
-        await new Promise(r => setTimeout(r, 4000)); // Inventory tree takes awhile to load (firefox)
+        await new Promise(r => setTimeout(r, 6000)); // Inventory tree takes awhile to load
         // 4 | click | linkText=Add Inventory | 
         await driver.wait(until.elementLocated(By.linkText("Add Inventory")));
         await driver.findElement(By.linkText("Add Inventory")).click();
@@ -176,7 +167,7 @@ var password;
         // 23 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
-        await new Promise(r => setTimeout(r, 4000));  //linux docker
+        await new Promise(r => setTimeout(r, 6000));  //linux docker
         assert(await driver.findElement(By.css("#div_id_serial_number .ajax-error")).getText() == "Inventory with this Serial number already exists.");
 
     // EDIT INVENTORY TEST
@@ -401,7 +392,7 @@ var password;
         // 57 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
-	    await new Promise(r => setTimeout(r, 2000));
+	    await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.id("action")).click();
         // 44 | click | linkText=Add Sub-Assembly | 
         await driver.findElement(By.linkText("Edit Inventory Details")).click();
@@ -424,7 +415,7 @@ var password;
         // 60 | click | css=.controls > .btn-primary | 
 	    await new Promise(r => setTimeout(r, 2000)); //circleci
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-        await new Promise(r => setTimeout(r, 4000)); //circleci
+        await new Promise(r => setTimeout(r, 6000)); //circleci
         assert(await driver.findElement(By.css("#div_id_revision .ajax-error")).getText() == "This field is required.");
         assert(await driver.findElement(By.css("#div_id_serial_number .ajax-error")).getText() == "Inventory with this Serial number already exists.");
 

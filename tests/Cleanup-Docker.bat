@@ -6,25 +6,25 @@ set -e
 echo Running Chrome Tests
 
 
-val=$(node RetireBuilds.js chrome headless)
+val=$(node RetireBuilds.js chrome headless admin)
 echo $val
 if [[ "$val" == *"failed."* ]]; then
   exit 1
 fi
 
-val=$(node DeleteAssemblies.js chrome headless)
+val=$(node DeleteAssemblies.js chrome headless admin)
 echo $val
 if [[ "$val" == *"failed."* ]]; then
   exit 1
 fi
 
-val=$(node DeleteParts.js chrome headless)
+val=$(node DeleteParts.js chrome headless admin)
 echo $val
 if [[ "$val" == *"failed."* ]]; then
   exit 1
 fi
 
-val=$(node DeleteLocations.js chrome headless)
+val=$(node DeleteLocations.js chrome headless admin)
 echo $val
 if [[ "$val" == *"failed."* ]]; then
   exit 1

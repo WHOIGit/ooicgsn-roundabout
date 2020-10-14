@@ -45,26 +45,18 @@ var password;
     else {
 	console.log('Error: Missing Arguments');
     }
-    // Step # | name | target | value
-    if (myArgs[1] == 'headless')
+
+   if (myArgs[2] == 'admin')
     {
-        await driver.get("http://localhost:8000/");   
-        if (myArgs[2] == 'admin')
-        {
-           user = "admin";
-	   password = "admin";
-        }
-        else
-        {
-           user = "jkoch";
-           password = "Automatedtests";
-        }
+        await driver.get("http://localhost:8000/");
+        user = "admin";
+        password = "admin";
     }
     else
     {
-        // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
         await driver.get("https://ooi-cgrdb-staging.whoi.net/");
         user = "jkoch";
+        password = "Automatedtests";
     }
 
     // 2 | setWindowSize | 1304x834 | 
@@ -118,7 +110,7 @@ var password;
         while (true) {
             try {
                 var clicked = await driver.findElement(By.xpath("//div[" + i + "]/label/input")).isSelected();
-                if (clicked)
+                if (!clicked)
                 {
                     await driver.findElement(By.xpath("//div[" + i + "]/label/input")).click();
                 }
@@ -220,7 +212,11 @@ var password;
             try {
                 var clicked = await driver.findElement(By.xpath("//div[" + i + "]/label/input")).isSelected();
                 if (!clicked) {
-                    await driver.findElement(By.xpath("//div[" + i + "]/label/input")).click();
+		    if ((await driver.findElement(By.xpath("//div/div[i]/label")).getText() == "Computerized") ||
+			(await driver.findElement(By.xpath("//div/div[i]/label")).getText() == "Sewing Machine"))
+                    {
+                       await driver.findElement(By.xpath("//div[" + i + "]/label/input")).click();
+                    }
                 }
             }
             catch (e) {
@@ -230,11 +226,11 @@ var password;
         }
         // 18 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
+	await new Promise(r => setTimeout(r, 4000));   //takes a while when db is fully populated
 
         // Search for and Export Part Items and verify "Condition" Custom Field is exported
         // 3 | click | id=searchbar-query | 
-        await driver.findElement(By.id("searchbar-query")).click();
-        await driver.findElement(By.id("searchbar-modelselect")).click()
+        await driver.findElement(By.id("searchbar-query")).sendKeys("Disk Drive");
         // 8 | select | id=searchbar-modelselect | label=Part Templates
         {
             const dropdown = await driver.findElement(By.id("searchbar-modelselect"))
@@ -260,7 +256,7 @@ var password;
 
 	    if (myArgs[1] == 'headless')
 	    {
-	    	var rdb_inv = process.cwd()+"//RDB_Part.csv";
+	    	var rdb_inv = process.cwd()+"/RDB_Part.csv";
 	    }
 	    else
 	    {
@@ -296,27 +292,25 @@ var password;
                     console.log("Condition Custom Field matches for Part Template: ", part_num, ".");
                 }
                 else {
-                    throw new error("Condition Custom Field does not match for Part Number: " + part_num + ".");
+                    throw new Error("Condition Custom Field does not match for Part Number: " + part_num + ".");
                 }
                 part_num_found = true;
             }
         }
         if (!part_num_found)
         {
-            throw new error(part_num+" not found.");
+            throw new Error(part_num+" not found.");
         }
 
-        // Search for and Export Inventory Items
+        // // Search for Disk Drive 
         // 3 | click | id=searchbar-query | 
-        await driver.findElement(By.id("searchbar-query")).click();
-        await driver.findElement(By.id("searchbar-modelselect")).click()
+        await driver.findElement(By.id("searchbar-query")).sendKeys("Disk Drive");
         // 8 | select | id=searchbar-modelselect | label=Part Templates
         {
             const dropdown = await driver.findElement(By.id("searchbar-modelselect"))
             await dropdown.findElement(By.xpath("//option[. = 'Inventory']")).click()
         }
-        // Search for Disk Drive - export all inventory fails 
-        await driver.findElement(By.id("searchbar-query")).sendKeys("Disk Drive");
+        
         // 5 | click | css=.btn:nth-child(1) | 
         await driver.findElement(By.css(".btn:nth-child(1)")).click()
 
@@ -327,7 +321,7 @@ var password;
         await driver.findElement(By.linkText("All (Include Hidden Columns)")).click();
 
         if (myArgs[1] == 'headless') {
-            var rdb_inv = process.cwd() + "//RDB_Inventory.csv";
+            var rdb_inv = process.cwd() + "/RDB_Inventory.csv";
         }
         else {
             const execSync = require('child_process').execSync;
@@ -361,13 +355,13 @@ var password;
                     console.log("Condition Custom Field matches for Inventory:", Serial_Number, ".");
                 }
                 else {
-                    throw new error("Condition Custom Field does not match for Inventory:" + Serial_Number + ".");
+                    throw new Error("Condition Custom Field does not match for Inventory:" + Serial_Number + ".");
                 }
                 serial_num_found = true;
             }
         }
         if (!serial_num_found) {
-            throw new error(Serial_Number + " not found.");
+            throw new Error(Serial_Number + " not found.");
         }
 	    
         // Close browser window
