@@ -295,7 +295,7 @@ class Deployment(DeploymentBase):
         return '%s - %s' % (self.deployment_number, self.location.name)
 
     def get_actions(self):
-        actions = self.build.actions.filter(object_type=Action.BUILD).filter(deployment=self)
+        actions = self.actions.filter(object_type=Action.BUILD)
         return actions
 
 

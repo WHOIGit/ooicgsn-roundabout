@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -54,7 +54,8 @@ class LocationsAjaxDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super(LocationsAjaxDetailView, self).get_context_data(**kwargs)
 
-        deployments = Deployment.objects.filter(deployed_location=self.object).order_by('build__assembly', '-created_at')
+        deployments = self.object.deployed_deployments.order_by('build__assembly', '-deployment_start_date') \
+                                                      .select_related('build__assembly')
 
         context.update({
             'deployments': deployments
