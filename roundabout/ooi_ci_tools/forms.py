@@ -47,13 +47,52 @@ class ImportDeploymentsForm(forms.Form):
         required=False
     )
 
+    def clean_deployments_csv(self):
+        deployments_csv = self.files.getlist('deployments_csv')
+        counter = 0
+        for csv_file in deployments_csv:
+            counter += 1
+            filename = csv_file.name[:-4]
+            cache.set('validation_progress',{
+                'progress': counter,
+                'total': len(deployments_csv),
+                'file': filename
+            })
+        return deployments_csv
+
 
 class ImportVesselsForm(forms.Form):
     vessels_csv = forms.FileField(required=False)
 
+    def clean_vessels_csv(self):
+        vessels_csv = self.files.getlist('vessels_csv')
+        counter = 0
+        for csv_file in vessels_csv:
+            counter += 1
+            filename = csv_file.name[:-4]
+            cache.set('validation_progress',{
+                'progress': counter,
+                'total': len(vessels_csv),
+                'file': filename
+            })
+        return vessels_csv
+
 
 class ImportCruisesForm(forms.Form):
     cruises_csv = forms.FileField(required=False)
+
+    def clean_cruises_csv(self):
+        cruises_csv = self.files.getlist('cruises_csv')
+        counter = 0
+        for csv_file in cruises_csv:
+            counter += 1
+            filename = csv_file.name[:-4]
+            cache.set('validation_progress',{
+                'progress': counter,
+                'total': len(cruises_csv),
+                'file': filename
+            })
+        return cruises_csv
 
 
 
@@ -141,7 +180,7 @@ def validate_cal_files(csv_files,ext_files):
 
 
 class ImportCalibrationForm(forms.Form):
-    cal_csv = forms.FileField(
+    calibration_csv = forms.FileField(
         widget=forms.ClearableFileInput(
             attrs={
                 'multiple': True
@@ -155,7 +194,7 @@ class ImportCalibrationForm(forms.Form):
         label = 'Select Reviewers'
     )
 
-    def clean_cal_csv(self):
+    def clean_calibration_csv(self):
         cal_files = self.files.getlist('cal_csv')
         csv_files = []
         ext_files = []
