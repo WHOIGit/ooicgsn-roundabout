@@ -339,7 +339,7 @@ var password;
         await driver.wait(until.elementLocated(By.linkText("Add New Sub-Assembly")));
         await driver.findElement(By.linkText("Add New Sub-Assembly")).click();
         // 29 | click | css=.controls > .btn-primary | 
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.css(".controls > .btn-primary")).click();
         await new Promise(r => setTimeout(r, 2000));
         // Add sub assembly part with null selection part type
@@ -359,7 +359,7 @@ var password;
         assert(await driver.findElement(By.css("#div_id_part .ajax-error")).getText() == "This field is required.");
 
         // 34 | click | id=id_part | 
-        await driver.wait(until.elementLocated(By.id("id_part")));
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_part")).click();
         // 35 | select | id=id_part | label=Wheel Template
         {
@@ -367,6 +367,7 @@ var password;
             await dropdown.findElement(By.xpath("//option[. = 'Wheel Template']")).click();
         }
         // 36 | click | css=.controls > .btn-primary | 
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css(".controls > .btn-primary")).click();
         await new Promise(r => setTimeout(r, 4000));
 

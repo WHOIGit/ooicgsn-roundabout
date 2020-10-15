@@ -492,12 +492,13 @@ var password;
         await driver.wait(until.elementLocated(By.linkText("Revision: B")));
         await driver.findElement(By.linkText("Revision: B")).click();
         // 49 | click | linkText=Edit Revision | 
-        await driver.wait(until.elementLocated(By.linkText("Edit Revision")));
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Edit Revision")).click();
         // 50 | type | id=id_created_at |  
         //await driver.wait(until.elementLocated(By.id("id_revision_code"))); //StaleElementReferenceError, use timeout
         await new Promise(r => setTimeout(r, 6000));
         await driver.findElement(By.id("id_revision_code")).clear();
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_revision_code")).sendKeys("   ");
         await driver.findElement(By.id("id_created_at")).click();
         await driver.findElement(By.id("id_created_at")).clear(); 

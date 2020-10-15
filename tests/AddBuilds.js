@@ -244,6 +244,7 @@ async function fixDayAbbr(day)
         await driver.findElement(By.id("action")).click(); 
         await driver.findElement(By.linkText("Start Deployment")).click();
         // 12 | type | id=id_deployment_number | 7
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_deployment_number")).sendKeys("7");
         // 14 | select | id=id_deployed_location | label=Test
         {

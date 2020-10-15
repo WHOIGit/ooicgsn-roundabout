@@ -47,23 +47,15 @@ var password;
         console.log('Error: Missing Arguments');
     }
 
-    // Step # | name | target | value
-    // Step # | name | target | value
-    if (myArgs[1] == 'headless') {
+    if (myArgs[2] == 'admin') {
         await driver.get("http://localhost:8000/");
-        if (myArgs[2] == 'admin') {
-            user = "admin";
-            password = "admin";
-        }
-        else {
-            user = "jkoch";
-            password = "Automatedtests";
-        }
+        user = "admin";
+        password = "admin";
     }
     else {
-        // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
         await driver.get("https://ooi-cgrdb-staging.whoi.net/");
         user = "jkoch";
+        password = "Automatedtests";
     }
 
     // 2 | setWindowSize | 1304x834 | 
@@ -189,7 +181,7 @@ var password;
 
         // 46 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-        await new Promise(r => setTimeout(r, 4000));
+        await new Promise(r => setTimeout(r, 2000));
         // 47 | click | css=.list-group:nth-child(1) > .list-group-item > .collapsed > .fa | 
         await driver.findElement(By.css(".list-group:nth-child(1) > .list-group-item > .collapsed > .fa")).click();
         await new Promise(r => setTimeout(r, 2000));
@@ -199,7 +191,7 @@ var password;
 
         // 51 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-        await new Promise(r => setTimeout(r, 4000));
+        await new Promise(r => setTimeout(r, 2000));
         // 52 | click | css=.list-group:nth-child(1) > .list-group-item > .collapsed > .fa | 
         await driver.findElement(By.css(".list-group:nth-child(1) > .list-group-item > .collapsed > .fa")).click();
 
@@ -335,7 +327,72 @@ var password;
             console.log("Constants and Configs Error: Configuration History tab visible when no configs are defined.");
         }
         catch (NoSuchElementException) { } 
-        
+       
+        //Create Constant Value (on a Deployed Build) and Search for Name, Value, Date, Reviewers, Approval Flag
+        await driver.findElement(By.id("action")).click()
+        // 8 | click | id=add_const_action | 
+        await driver.findElement(By.id("add_const_action")).click()
+        // 9 | addSelection | id=id_user_draft | label=admin
+        {
+            const dropdown = await driver.findElement(By.id("id_user_draft"))
+            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click()
+        }
+        // 13 | click | css=.controls > .btn-primary | 
+        await driver.findElement(By.css(".controls > .btn-primary")).click()
+        await new Promise(r => setTimeout(r, 2000));
+  
+        // 16 | select | id=searchbar-modelselect | label=-- Configs/Constants
+        await driver.findElement(By.id("searchbar-modelselect")).sendKeys("-- Configs/Constants");
+        // 18 | click | css=.btn-outline-primary:nth-child(1) | 
+        await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click()
+        await new Promise(r => setTimeout(r, 2000));
+        // 19 | click | id=field-select_c_r0 |
+
+        // Name
+        await driver.findElement(By.id("field-select_c_r0")).click()
+        // 20 | select | id=field-select_c_r0 | label=Inventory: Name
+        {
+            const dropdown = await driver.findElement(By.id("field-select_c_r0"))
+            await dropdown.findElement(By.xpath("//option[. = 'Config/Const Name']")).click()
+        }
+        // 23 | type | id=field-query_c_r0 | scnst
+        await driver.findElement(By.id("field-query_c_r0")).sendKeys("scnst1")
+        // 24 | click | id=qfield-lookup_c_r0 | 
+        {
+            const dropdown = await driver.findElement(By.id("qfield-lookup_c_r0"))
+            await dropdown.findElement(By.xpath("//option[. = 'Exact']")).click()
+        }
+        // 27 | click | id=searchform-submit-button | 
+        await driver.findElement(By.id("searchform-submit-button")).click()
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.partialLinkText("1232"));
+
+        // Value
+        // 35 | select | id=field-select_c_r0 | label=Value
+        {
+            const dropdown = await driver.findElement(By.id("field-select_c_r0"))
+            await dropdown.findElement(By.xpath("//option[. = 'Value']")).click()
+        }
+        await driver.findElement(By.id("field-query_c_r0")).clear();
+        // 39 | type | id=field-query_c_r0 | 657
+        await driver.findElement(By.id("field-query_c_r0")).sendKeys("657")
+        // 40 | click | id=searchform-submit-button | 
+        await driver.findElement(By.id("searchform-submit-button")).click()
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.partialLinkText("1232"));
+
+        //Approved Flag
+        {
+            const dropdown = await driver.findElement(By.id("field-select_c_r0"))
+            await dropdown.findElement(By.xpath("//option[. = 'Config/Const Event: Approved Flag']")).click()
+        }
+        await driver.findElement(By.id("field-query_c_r0")).clear();
+        // 39 | type | id=field-query_c_r0 | 657
+        await driver.findElement(By.id("field-query_c_r0")).sendKeys("False")
+        // 40 | click | id=searchform-submit-button | 
+        await driver.findElement(By.id("searchform-submit-button")).click()
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.partialLinkText("1232"));
 
         // Close browser window
         driver.quit();
