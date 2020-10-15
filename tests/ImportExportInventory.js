@@ -45,16 +45,15 @@ var password;
     else {
 	console.log('Error: Missing Arguments');
     }
-    // Step # | name | target | value
-    if (myArgs[1] == 'headless')
+
+   if (myArgs[2] == 'admin')
     {
-        await driver.get("http://localhost:8000/");   
+        await driver.get("http://localhost:8000/");
         user = "admin";
         password = "admin";
     }
     else
     {
-        // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
         await driver.get("https://ooi-cgrdb-staging.whoi.net/");
         user = "jkoch";
         password = "Automatedtests";
