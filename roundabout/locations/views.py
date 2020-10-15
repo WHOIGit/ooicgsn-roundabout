@@ -74,7 +74,7 @@ class LocationsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxF
     def form_valid(self, form):
         self.object = form.save()
         # Rebuild the Location MPTT tree
-        Location._tree_manager.rebuild()
+        #Location._tree_manager.rebuild()
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
@@ -103,7 +103,7 @@ class LocationsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxF
     def form_valid(self, form):
         self.object = form.save()
         # Rebuild the Location MPTT tree
-        Location._tree_manager.rebuild()
+        #Location._tree_manager.rebuild()
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
