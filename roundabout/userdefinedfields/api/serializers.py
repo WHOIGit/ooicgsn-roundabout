@@ -23,23 +23,109 @@ from rest_framework import serializers
 from rest_flex_fields import FlexFieldsModelSerializer
 
 from ..models import *
-from roundabout.parts.api.serializers import PartSerializer
-from roundabout.inventory.api.serializers import InventorySerializer
+from roundabout.parts.models import Part
+from roundabout.inventory.models import Inventory
+from roundabout.users.models import User
 
+API_VERSION = 'api_v1'
 
 class FieldSerializer(FlexFieldsModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name = API_VERSION + ':user-defined-fields/fields-detail',
+        lookup_field = 'pk',
+    )
+    fieldvalues = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':user-defined-fields/field-values-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+    parts = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':part-templates/parts-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+    global_for_part_types = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':part-templates/part-types-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+
     class Meta:
         model = Field
-        fields = '__all__'
+        fields = [
+            'id',
+            'url',
+            'field_name',
+            'field_description',
+            'field_type',
+            'field_default_value',
+            'choice_field_options',
+            'global_for_part_types',
+            'created_at',
+            'updated_at',
+            'parts',
+            'fieldvalues',
+        ]
+
+        expandable_fields = {
+            'parts': ('roundabout.parts.api.serializers.PartSerializer', {'many': True}),
+            'global_for_part_types': ('roundabout.parts.api.serializers.PartTypeSerializer', {'many': True}),
+            'fieldvalues': ('roundabout.userdefinedfields.api.serializers.FieldValueSerializer', {'many': True}),
+        }
 
 
 class FieldValueSerializer(FlexFieldsModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name = API_VERSION + ':user-defined-fields/field-values-detail',
+        lookup_field = 'pk',
+    )
+    field = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':user-defined-fields/fields-detail',
+        lookup_field = 'pk',
+        queryset = Field.objects
+    )
+    part = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':part-templates/parts-detail',
+        lookup_field = 'pk',
+        queryset = Part.objects
+    )
+    inventory = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':inventory-detail',
+        lookup_field = 'pk',
+        queryset = Inventory.objects
+    )
+    user = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':users-detail',
+        lookup_field = 'pk',
+        queryset = User.objects
+    )
+    field_value = serializers.SerializerMethodField('get_field_value')
+
     class Meta:
         model = FieldValue
-        fields = '__all__'
+        fields = [
+            'id',
+            'url',
+            'field_value',
+            'field',
+            'inventory',
+            'part',
+            'created_at',
+            'updated_at',
+            'user',
+            'is_current',
+            'is_default_value',
+        ]
 
         expandable_fields = {
-            'field': FieldSerializer,
-            'part': PartSerializer,
-            'inventory': (InventorySerializer, {'many': True})
+            'field': 'roundabout.userdefinedfields.api.serializers.FieldSerializer',
+            'part': 'roundabout.parts.api.serializers.PartSerializer',
+            'inventory': 'roundabout.inventory.api.serializers.InventorySerializer',
+            'user': 'roundabout.users.api.serializers.UserSerializer',
         }
+
+    def get_field_value(self, obj):
+        return obj.get_field_value

@@ -21,29 +21,35 @@
 
 from rest_framework import generics, viewsets, filters
 from rest_framework.permissions import IsAuthenticated
+
+from roundabout.core.api.views import FlexModelViewSet
 from ..models import Part, PartType, Revision, Documentation
 from .serializers import PartSerializer, PartTypeSerializer, RevisionSerializer, DocumentationSerializer
+from .filters import *
 
-
-class PartTypeViewSet(viewsets.ModelViewSet):
+class PartTypeViewSet(FlexModelViewSet):
     serializer_class = PartTypeSerializer
     permission_classes = (IsAuthenticated,)
     queryset = PartType.objects.all()
+    filterset_class = PartTypeFilter
 
 
-class PartViewSet(viewsets.ModelViewSet):
+class PartViewSet(FlexModelViewSet):
     serializer_class = PartSerializer
     permission_classes = (IsAuthenticated,)
     queryset = Part.objects.all()
+    filterset_class = PartFilter
 
 
-class RevisionViewSet(viewsets.ModelViewSet):
+class RevisionViewSet(FlexModelViewSet):
     serializer_class = RevisionSerializer
     permission_classes = (IsAuthenticated,)
     queryset = Revision.objects.all()
+    filterset_class = RevisionFilter
 
 
-class DocumentationViewSet(viewsets.ModelViewSet):
+class DocumentationViewSet(FlexModelViewSet):
     serializer_class = DocumentationSerializer
     permission_classes = (IsAuthenticated,)
     queryset = Documentation.objects.all()
+    filterset_class = DocumentationFilter

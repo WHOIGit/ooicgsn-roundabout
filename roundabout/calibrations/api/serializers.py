@@ -24,12 +24,51 @@ from rest_flex_fields import FlexFieldsModelSerializer
 
 from ..models import CalibrationEvent, CoefficientValueSet, CoefficientName, CoefficientNameEvent, CoefficientValue
 from roundabout.parts.api.serializers import PartSerializer
+from roundabout.inventory.models import Inventory, Deployment
+from roundabout.parts.models import Part
+from roundabout.users.models import User
+
+API_VERSION = 'api_v1'
 
 class CalibrationEventSerializer(FlexFieldsModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name = API_VERSION + ':calibrations/calibration-events-detail',
+        lookup_field = 'pk',
+    )
+    user_draft = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':users-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+    user_approver = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':users-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+    inventory = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':inventory-detail',
+        lookup_field = 'pk',
+        queryset = Inventory.objects
+    )
+    deployment = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':deployment-detail',
+        lookup_field = 'pk',
+        queryset = Deployment.objects
+    )
+    coefficient_value_sets = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':calibrations/coefficent-value-sets-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+
     class Meta:
         model = CalibrationEvent
         fields = [
             'id',
+            'url',
             'created_at',
             'updated_at',
             'calibration_date',
@@ -43,15 +82,48 @@ class CalibrationEventSerializer(FlexFieldsModelSerializer):
         ]
 
         expandable_fields = {
-            'coefficient_value_sets': ('roundabout.calibrations.api.serializers.CoefficientValueSetSerializer', {'many': True})
+            'coefficient_value_sets': ('roundabout.calibrations.api.serializers.CoefficientValueSetSerializer', {'many': True}),
+            'user_draft': ('roundabout.users.api.serializers.UserSerializer', {'many': True}),
+            'user_approver': ('roundabout.users.api.serializers.UserSerializer', {'many': True}),
+            'inventory': 'roundabout.inventory.api.serializers.InventorySerializer',
+            'deployment': 'roundabout.builds.api.serializers.DeploymentSerializer',
         }
 
 
 class CoefficientNameEventSerializer(FlexFieldsModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name = API_VERSION + ':calibrations/coefficent-name-events-detail',
+        lookup_field = 'pk',
+    )
+    user_draft = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':users-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+    user_approver = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':users-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+    part = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':part-templates/parts-detail',
+        lookup_field = 'pk',
+        queryset = Part.objects
+    )
+    coefficient_names = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':calibrations/coefficent-names-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+
     class Meta:
         model = CoefficientNameEvent
         fields = [
             'id',
+            'url',
             'created_at',
             'updated_at',
             'user_draft',
@@ -63,30 +135,83 @@ class CoefficientNameEventSerializer(FlexFieldsModelSerializer):
         ]
 
         expandable_fields = {
-            'part': PartSerializer,
+            'part': 'roundabout.parts.api.serializers.PartSerializer',
+            'user_draft': ('roundabout.users.api.serializers.UserSerializer', {'many': True}),
+            'user_approver': ('roundabout.users.api.serializers.UserSerializer', {'many': True}),
             'coefficient_names': ('roundabout.calibrations.api.serializers.CoefficientNameSerializer', {'many': True})
         }
 
 
 class CoefficientNameSerializer(FlexFieldsModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name = API_VERSION + ':calibrations/coefficent-names-detail',
+        lookup_field = 'pk',
+    )
+    coeff_name_event = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':calibrations/coefficent-name-events-detail',
+        lookup_field = 'pk',
+        queryset = CoefficientNameEvent.objects
+    )
+    coefficient_value_sets = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':calibrations/coefficent-value-sets-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+    part = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':part-templates/parts-detail',
+        lookup_field = 'pk',
+        queryset = Part.objects
+    )
+
     class Meta:
         model = CoefficientName
         fields = [
             'id',
+            'url',
             'calibration_name',
             'value_set_type',
             'sigfig_override',
             'created_at',
             'part',
             'coeff_name_event',
+            'coefficient_value_sets',
         ]
+
+        expandable_fields = {
+            'coeff_name_event': 'roundabout.calibrations.api.serializers.CoefficientNameEventSerializer',
+            'part': 'roundabout.parts.api.serializers.PartSerializer',
+            'coefficient_value_sets': ('roundabout.calibrations.api.serializers.CoefficientValueSetSerializer', {'many': True}),
+        }
 
 
 class CoefficientValueSetSerializer(FlexFieldsModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name = API_VERSION + ':calibrations/coefficent-value-sets-detail',
+        lookup_field = 'pk',
+    )
+    calibration_event = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':calibrations/calibration-events-detail',
+        lookup_field = 'pk',
+        queryset = CalibrationEvent.objects
+    )
+    coefficient_name = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':calibrations/coefficent-names-detail',
+        lookup_field = 'pk',
+        queryset = CoefficientName.objects
+    )
+    coefficient_values = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':calibrations/coefficent-values-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+
     class Meta:
         model = CoefficientValueSet
         fields = [
             'id',
+            'url',
             'value_set',
             'notes',
             'created_at',
@@ -103,10 +228,21 @@ class CoefficientValueSetSerializer(FlexFieldsModelSerializer):
 
 
 class CoefficientValueSerializer(FlexFieldsModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name = API_VERSION + ':calibrations/coefficent-values-detail',
+        lookup_field = 'pk',
+    )
+    coeff_value_set = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':calibrations/coefficent-value-sets-detail',
+        lookup_field = 'pk',
+        queryset = CoefficientValueSet.objects
+    )
+
     class Meta:
         model = CoefficientValue
         fields = [
             'id',
+            'url',
             'value',
             'original_value',
             'notation_format',
@@ -115,3 +251,7 @@ class CoefficientValueSerializer(FlexFieldsModelSerializer):
             'created_at',
             'coeff_value_set',
         ]
+
+        expandable_fields = {
+            'coeff_value_set': 'roundabout.calibrations.api.serializers.CoefficientValueSetSerializer',
+        }

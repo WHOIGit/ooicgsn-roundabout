@@ -22,56 +22,267 @@
 from rest_framework import serializers
 from rest_flex_fields import FlexFieldsModelSerializer
 
-from ..models import Inventory, Action, PhotoNote
+from ..models import Inventory, InventoryDeployment, Deployment, Action, PhotoNote
+from roundabout.users.models import User
+from roundabout.locations.models import Location
+from roundabout.parts.models import Part, Revision
+from roundabout.assemblies.models import AssemblyPart
+from roundabout.builds.models import Build
+from roundabout.cruises.models import Cruise
+from roundabout.calibrations.models import CalibrationEvent, CoefficientNameEvent
+from roundabout.configs_constants.models import ConstDefaultEvent, ConfigEvent, ConfigDefaultEvent, ConfigNameEvent
+
 from roundabout.locations.api.serializers import LocationSerializer
 from roundabout.parts.api.serializers import PartSerializer
 from roundabout.calibrations.api.serializers import CalibrationEventSerializer
+from roundabout.core.templatetags.common_tags import time_at_sea_display
 
+API_VERSION = 'api_v1'
 
 class PhotoNoteSerializer(FlexFieldsModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name = API_VERSION + ':photos-detail',
+        lookup_field = 'pk',
+    )
+    inventory = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':inventory-detail',
+        lookup_field = 'pk',
+        queryset = Inventory.objects
+    )
+    action = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':actions-detail',
+        lookup_field = 'pk',
+        queryset = Action.objects
+    )
+    user = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':users-detail',
+        lookup_field = 'pk',
+        queryset = User.objects
+    )
+
     class Meta:
         model = PhotoNote
-        fields = ['id', 'photo', 'inventory', 'action', 'user']
-
-
-class ActionSerializer(FlexFieldsModelSerializer):
-    class Meta:
-        model = Action
-        fields = [
-            'id', 'action_type', 'object_type', 'created_at', 'inventory', \
-            'location', 'deployment',  'inventory_deployment', 'deployment_type', \
-            'detail', 'user', 'build', 'parent', 'cruise', 'latitude', 'longitude', \
-            'depth', 'calibration_event', 'const_default_event', 'config_event', \
-            'config_default_event', 'photos',
-        ]
+        fields = ['id', 'url', 'photo', 'inventory', 'action', 'user']
 
         expandable_fields = {
-            'location': LocationSerializer,
-            'photos': (PhotoNoteSerializer, {'many': True}),
+            'inventory': 'roundabout.inventory.api.serializers.InventorySerializer',
+            'action': 'roundabout.inventory.api.serializers.ActionSerializer',
+            'user': 'roundabout.users.api.serializers.UserSerializer',
         }
 
 
+class ActionSerializer(FlexFieldsModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name = API_VERSION + ':actions-detail',
+        lookup_field = 'pk',
+    )
+    inventory = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':inventory-detail',
+        lookup_field = 'pk',
+        queryset = Inventory.objects
+    )
+    location = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':locations-detail',
+        lookup_field = 'pk',
+        queryset = Location.objects
+    )
+    deployment = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':deployments-detail',
+        lookup_field = 'pk',
+        queryset = Deployment.objects
+    )
+    inventory_deployment = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':inventory-deployments-detail',
+        lookup_field = 'pk',
+        queryset = InventoryDeployment.objects
+    )
+    user = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':users-detail',
+        lookup_field = 'pk',
+        queryset = User.objects
+    )
+    build = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':builds-detail',
+        lookup_field = 'pk',
+        queryset = Build.objects
+    )
+    parent = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':inventory-detail',
+        lookup_field = 'pk',
+        queryset = Inventory.objects
+    )
+    cruise = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':cruises-detail',
+        lookup_field = 'pk',
+        queryset = Cruise.objects
+    )
+    calibration_event = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':calibrations/calibration-events-detail',
+        lookup_field = 'pk',
+        queryset = CalibrationEvent.objects
+    )
+    coefficient_name_event = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':calibrations/coefficent-name-events-detail',
+        lookup_field = 'pk',
+        queryset = CoefficientNameEvent.objects
+    )
+    const_default_event = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':configs-constants/const-default-events-detail',
+        lookup_field = 'pk',
+        queryset = ConstDefaultEvent.objects
+    )
+    config_event = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':configs-constants/config-events-detail',
+        lookup_field = 'pk',
+        queryset = ConfigEvent.objects
+    )
+    config_default_event = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':configs-constants/config-default-events-detail',
+        lookup_field = 'pk',
+        queryset = ConfigDefaultEvent.objects
+    )
+    config_name_event = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':configs-constants/config-name-events-detail',
+        lookup_field = 'pk',
+        queryset = ConfigNameEvent.objects
+    )
+    photos = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':photos-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+
+    class Meta:
+        model = Action
+        fields = [
+            'id', 'url', 'action_type', 'object_type', 'created_at', 'inventory', \
+            'location', 'deployment',  'inventory_deployment', 'deployment_type', \
+            'detail', 'user', 'build', 'parent', 'cruise', 'latitude', 'longitude', \
+            'depth', 'calibration_event', 'const_default_event', 'config_event', \
+            'config_default_event', 'coefficient_name_event', 'config_name_event', 'photos',
+        ]
+
+        expandable_fields = {
+            'inventory': 'roundabout.inventory.api.serializers.InventorySerializer',
+            'deployment': 'roundabout.builds.api.serializers.DeploymentSerializer',
+            'inventory_deployment': 'roundabout.inventory.api.serializers.InventoryDeploymentSerializer',
+            'location': LocationSerializer,
+            'user': 'roundabout.users.api.serializers.UserSerializer',
+            'build': 'roundabout.builds.api.serializers.BuildSerializer',
+            'parent': 'roundabout.inventory.api.serializers.InventorySerializer',
+            'cruise': 'roundabout.cruises.api.serializers.CruiseSerializer',
+            'calibration_event': 'roundabout.calibrations.api.serializers.CalibrationEventSerializer',
+            'coefficient_name_event': 'roundabout.calibrations.api.serializers.CoefficientNameEventSerializer',
+            'const_default_event': 'roundabout.configs_constants.api.serializers.ConstDefaultEventSerializer',
+            'config_event': 'roundabout.configs_constants.api.serializers.ConfigEventSerializer',
+            'config_default_event': 'roundabout.configs_constants.api.serializers.ConfigDefaultEventSerializer',
+            'config_name_event': 'roundabout.configs_constants.api.serializers.ConfigNameEventSerializer',
+            'photos': ('roundabout.users.api.serializers.PhotoNoteSerializer', {'many': True}),
+        }
+
 
 class InventorySerializer(FlexFieldsModelSerializer):
-    custom_fields = serializers.SerializerMethodField('get_custom_fields')
+    #custom_fields = serializers.SerializerMethodField('get_custom_fields')
+    url = serializers.HyperlinkedIdentityField(
+        view_name = API_VERSION + ':inventory-detail',
+        lookup_field = 'pk',
+    )
+    location = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':locations-detail',
+        lookup_field = 'pk',
+        queryset = Location.objects
+    )
+    part = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':part-templates/parts-detail',
+        lookup_field = 'pk',
+        queryset = Part.objects
+    )
+    revision = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':part-templates/revisions-detail',
+        lookup_field = 'pk',
+        queryset = Revision.objects
+    )
+    parent = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':inventory-detail',
+        lookup_field = 'pk',
+        queryset = Inventory.objects
+    )
+    children = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':inventory-detail',
+        lookup_field = 'pk',
+        many = True,
+        read_only = True,
+    )
+    build = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':builds-detail',
+        lookup_field = 'pk',
+        queryset = Build.objects
+    )
+    assembly_part = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':assembly-templates/assembly-parts-detail',
+        lookup_field = 'pk',
+        queryset = AssemblyPart.objects
+    )
+    assigned_destination_root = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':inventory-detail',
+        lookup_field = 'pk',
+        queryset = Inventory.objects
+    )
+    actions = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':actions-detail',
+        lookup_field = 'pk',
+        many = True,
+        read_only = True,
+    )
+    fieldvalues = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':user-defined-fields/field-values-detail',
+        lookup_field = 'pk',
+        many = True,
+        read_only = True,
+    )
+    inventory_deployments = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':inventory-deployments-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+    calibration_events = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':calibrations/calibration-events-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+    time_in_field = serializers.SerializerMethodField('get_time_in_field')
 
     class Meta:
         model = Inventory
         fields = [
-            'id', 'serial_number', 'old_serial_number', 'part', 'location', 'revision', \
+            'id', 'url', 'serial_number', 'old_serial_number', 'part', 'location', 'revision', \
             'parent', 'children', 'build', 'assembly_part', 'assigned_destination_root', 'created_at', \
-            'updated_at', 'detail', 'test_result', 'test_type', 'flag', 'time_at_sea', 'custom_fields',
-            'calibration_events'
+            'updated_at', 'test_result', 'test_type', 'flag', 'time_in_field',
+            'calibration_events', 'actions', 'fieldvalues', 'inventory_deployments',
         ]
 
         expandable_fields = {
-            'location': LocationSerializer,
-            'part': PartSerializer,
+            'location': 'roundabout.locations.api.serializers.LocationSerializer',
+            'part': 'roundabout.parts.api.serializers.PartSerializer',
+            'revision': 'roundabout.parts.api.serializers.RevisionSerializer',
             'parent': 'roundabout.inventory.api.serializers.InventorySerializer',
+            'build': 'roundabout.builds.api.serializers.BuildSerializer',
+            'assembly_part': 'roundabout.assemblies.api.serializers.AssemblyPartSerializer',
+            'assigned_destination_root': 'roundabout.inventory.api.serializers.InventorySerializer',
             'children': ('roundabout.inventory.api.serializers.InventorySerializer', {'many': True}),
-            'calibration_events': (CalibrationEventSerializer, {'many': True}),
+            'calibration_events': ('roundabout.calibrations.api.serializers.CalibrationEventSerializer', {'many': True}),
+            'actions': ('roundabout.inventory.api.serializers.ActionSerializer', {'many': True}),
+            'fieldvalues': ('roundabout.userdefinedfields.api.serializers.FieldValueSerializer', {'many': True, "omit": ["field.fieldvalues"]}),
+            'inventory_deployments': ('roundabout.inventory.api.serializers.InventoryDeploymentSerializer', {'many': True}),
         }
 
+    def get_time_in_field(self, obj):
+        return time_at_sea_display(obj.time_at_sea)
+
+    """
     def get_custom_fields(self, obj):
         # Get this item's custom fields with most recent Values
         custom_fields = None
@@ -86,14 +297,62 @@ class InventorySerializer(FlexFieldsModelSerializer):
             return custom_fields
         else:
             return custom_fields
+    """
 
-    def get_children(self, obj):
-        # Get this item's children
-        custom_fields = None
-        if obj.children.exists():
-            custom_fields = [child.id for child in obj.children.all()]
-        return custom_fields
+class InventoryDeploymentSerializer(FlexFieldsModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name =  API_VERSION + ':inventory-deployments-detail',
+        lookup_field='pk',
+    )
+    inventory = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':inventory-detail',
+        lookup_field = 'pk',
+        queryset = Inventory.objects
+    )
+    deployment = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':deployments-detail',
+        lookup_field = 'pk',
+        queryset = Deployment.objects
+    )
+    cruise_deployed = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':cruises-detail',
+        lookup_field = 'pk',
+        queryset = Cruise.objects
+    )
+    cruise_recovered = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':cruises-detail',
+        lookup_field = 'pk',
+        queryset = Cruise.objects
+    )
+    time_in_field = serializers.SerializerMethodField('get_time_in_field')
 
+    class Meta:
+        model = InventoryDeployment
+        fields = [
+            'id',
+            'url',
+            'deployment',
+            'inventory',
+            'cruise_deployed',
+            'cruise_recovered',
+            'deployment_start_date',
+            'deployment_burnin_date',
+            'deployment_to_field_date',
+            'deployment_recovery_date',
+            'deployment_retire_date',
+            'current_status',
+            'time_in_field',
+        ]
+
+        expandable_fields = {
+            'inventory': 'roundabout.inventory.api.serializers.InventorySerializer',
+            'deployment': 'roundabout.builds.api.serializers.DeploymentSerializer',
+            'cruise_deployed': 'roundabout.cruises.api.serializers.CruiseSerializer',
+            'cruise_recovered': 'roundabout.cruises.api.serializers.CruiseSerializer',
+        }
+
+    def get_time_in_field(self, obj):
+        return time_at_sea_display(obj.deployment_time_in_field)
 
 
 """

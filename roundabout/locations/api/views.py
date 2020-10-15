@@ -22,11 +22,14 @@
 from rest_framework import generics, filters, viewsets
 from rest_framework.permissions import IsAuthenticated
 
+from roundabout.core.api.views import FlexModelViewSet
 from ..models import Location
 from .serializers import LocationSerializer
+from .filters import *
 
 
-class LocationViewSet(viewsets.ModelViewSet):
+class LocationViewSet(FlexModelViewSet):
     serializer_class = LocationSerializer
     permission_classes = (IsAuthenticated,)
     queryset = Location.objects.all()
+    filterset_class = LocationFilter
