@@ -324,7 +324,7 @@ var password;
         // Verify the absence of the Calibration Tab, the above tests verifys the presence of the Constants Default Tab
         try {
             await driver.findElement(By.linkText("Configuration History"));
-            console.log("Constants and Configs Error: Configuration History tab visible when no configs are defined.");
+            console.log("Constants Error: Configuration History tab visible when no configs are defined.");
         }
         catch (NoSuchElementException) { } 
        
@@ -332,14 +332,26 @@ var password;
         await driver.findElement(By.id("action")).click()
         // 8 | click | id=add_const_action | 
         await driver.findElement(By.id("add_const_action")).click()
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.id("id_deployment")).sendKeys("7 - Test");
         // 9 | addSelection | id=id_user_draft | label=admin
         {
             const dropdown = await driver.findElement(By.id("id_user_draft"))
             await dropdown.findElement(By.xpath("//option[. = 'admin']")).click()
         }
+
         // 13 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click()
         await new Promise(r => setTimeout(r, 2000));
+
+        //Verify link name on Constant History tab is not TBD anymore
+        await driver.findElement(By.linkText("Constant History")).click();
+        try {
+            await driver.findElement(By.partialLinkText("TBD"));
+            console.log("Constants Error: Configuration History tab link has TBD in name.");
+        }
+        catch (NoSuchElementException) { }
+
   
         // 16 | select | id=searchbar-modelselect | label=-- Configs/Constants
         await driver.findElement(By.id("searchbar-modelselect")).sendKeys("-- Configs/Constants");

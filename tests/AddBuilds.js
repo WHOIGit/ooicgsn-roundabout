@@ -297,6 +297,7 @@ async function fixDayAbbr(day)
 
         // Click Deployments Tab and verify Deployment To Field Date: is 2 days prior 
         // 31 | click | id=deployments-tab |
+	await new Promise(r => setTimeout(r, 4000));
 	await driver.findElement(By.linkText("Deployments")).click();
         //await driver.findElement(By.id("deployments-tab")).click();
         await new Promise(r => setTimeout(r, 4000));
@@ -327,8 +328,8 @@ async function fixDayAbbr(day)
 	await new Promise(r => setTimeout(r, 6000));
         await driver.findElement(By.partialLinkText("sewing - 1232")).click();
         // 34 | click | id=deployments-tab | 
-        await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.id("deployments-tab")).click();
+        await new Promise(r => setTimeout(r, 4000));
+        await driver.findElement(By.linkText("Deployments")).click();
         await new Promise(r => setTimeout(r, 2000));
         // 35 | click | css=.list-group-item > .collapsed > .fa | 
         await driver.findElement(By.css(".list-group-item > .collapsed > .fa")).click(); 
@@ -370,8 +371,8 @@ async function fixDayAbbr(day)
 
         // Verify date is 1 day prior on Deployments tab
         // 45 | click | id=deployments-tab | 
-        await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.id("deployments-tab")).click();
+	await new Promise(r => setTimeout(r, 4000));
+        await driver.findElement(By.linkText("Deployments")).click();
         await new Promise(r => setTimeout(r, 2000));
         // 46 | click | css=.list-group-item > .collapsed > .fa | 
         await driver.findElement(By.css(".list-group-item > .collapsed > .fa")).click();
@@ -414,7 +415,8 @@ async function fixDayAbbr(day)
         assert(bodyText.includes("Current Deployment Time in Field: 0 days 0 hours"));
 
         // 53 | click | id=deployments-tab | 
-        await driver.findElement(By.id("deployments-tab")).click();
+        await new Promise(r => setTimeout(r, 4000));
+        await driver.findElement(By.linkText("Deployments")).click();
         // 54 | click | css=.list-group-item:nth-child(1) > .collapsed > .fa | 
         //await driver.findElement(By.css(".list-group-item > .collapsed > .fa")).click();
 	// Sometimes the Retired Deployment is the first one on the list for Inventory, so expand both
