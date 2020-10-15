@@ -62,7 +62,7 @@ def parse_cal_files(self):
         cal_date_string = cal_csv.name.split('__')[1][:8]
         inventory_item = Inventory.objects.get(serial_number=inv_serial)
         cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
-        csv_event = CalibrationEvent.objects.create(
+        csv_event, created = CalibrationEvent.objects.get_or_create(
             calibration_date = cal_date_date,
             inventory = inventory_item
         )
@@ -90,18 +90,30 @@ def parse_cal_files(self):
                         raw_valset = contents
                 elif key == 'notes':
                     notes = value.strip()
-                    coeff_val_set = CoefficientValueSet(
-                        coefficient_name = cal_name_item,
-                        value_set = raw_valset,
-                        notes = notes
-                    )
+                    coeff_val_set = {
+                        'coefficient_name': cal_name_item,
+                        'value_set': raw_valset,
+                        'notes': notes
+                    }
                     coeff_val_sets.append(coeff_val_set)
         if user_draft.exists():
             draft_users = user_draft
             for user in draft_users:
                 csv_event.user_draft.add(user)
         for valset in coeff_val_sets:
-            valset.calibration_event = csv_event
-            valset.save()
-            parse_valid_coeff_vals(valset)
+            valset['calibration_event'] = csv_event
+            coeff_val_set, created = CoefficientValueSet.objects.update_or_create(
+                coefficient_name = valset['coefficient_name'],
+                calibration_event = valset['calibration_event'],
+                defaults = {
+                    'value_set': valset['value_set'],
+                    'notes': valset['notes'],
+                }
+            )
+
+            parse_valid_coeff_vals(coeff_val_set)
         _create_action_history(csv_event, Action.CALCSVIMPORT, user)
+    cache.delete('user')
+    cache.delete('user_draft')
+    cache.delete('ext_files')
+    cache.delete('csv_files')

@@ -195,7 +195,7 @@ class ImportCalibrationForm(forms.Form):
     )
 
     def clean_calibration_csv(self):
-        cal_files = self.files.getlist('cal_csv')
+        cal_files = self.files.getlist('calibration_csv')
         csv_files = []
         ext_files = []
         for file in cal_files:

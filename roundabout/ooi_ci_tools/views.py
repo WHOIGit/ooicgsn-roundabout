@@ -422,7 +422,7 @@ def import_csv(request):
         dep_form = ImportDeploymentsForm(request.POST, request.FILES)
         cruises_form = ImportCruisesForm(request.POST, request.FILES)
         vessels_form = ImportVesselsForm(request.POST, request.FILES)
-        cal_files = request.FILES.getlist('cal_csv')
+        cal_files = request.FILES.getlist('calibration_csv')
         dep_files = request.FILES.getlist('deployments_csv')
         cruises_file = request.FILES.getlist('cruises_csv')
         vessels_file = request.FILES.getlist('vessels_csv')
