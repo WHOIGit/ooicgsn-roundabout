@@ -279,31 +279,201 @@ def upload_status(request):
         'progress': result,
     })
 
-def import_calibrations(request):
+def import_deployments(csv_files):
+    if len(csv_files) >= 1:
+        for csv_file in csv_files:
+            print(csv_file)
+            csv_file.seek(0)
+            reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+            headers = reader.fieldnames
+            deployments = []
+            for row in reader:
+                if row['mooring.uid'] not in deployments:
+                    # get Assembly number from RefDes as that seems to be most consistent across CSVs
+                    ref_des = row['Reference Designator']
+                    assembly = ref_des.split('-')[0]
+                    # build data dict
+                    mooring_uid_dict = {'mooring.uid': row['mooring.uid'], 'assembly': assembly, 'rows': []}
+                    deployments.append(mooring_uid_dict)
+
+                deployment = next((deployment for deployment in deployments if deployment['mooring.uid']== row['mooring.uid']), False)
+                for key, value in row.items():
+                    deployment['rows'].append({key: value})
+
+            print(deployments[0])
+            for row in deployments[0]['rows']:
+                print(row)
+        return reverse('ooi_ci_tools:import_upload_success', )
+
+def import_cruises(csv_file):
+    if len(csv_file) >= 1:
+        # Set up the Django file object for CSV DictReader
+        csv_file.seek(0)
+        reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+        # Get the column headers to save with parent TempImport object
+        headers = reader.fieldnames
+        # Set up data lists for returning results
+        cruises_created = []
+        cruises_updated = []
+
+        for row in reader:
+            cuid = row['CUID']
+            cruise_start_date = parser.parse(row['cruiseStartDateTime']).date()
+            cruise_stop_date = parser.parse(row['cruiseStopDateTime']).date()
+            vessel_obj = None
+            # parse out the vessel name to match its formatting from Vessel CSV
+            vessel_name_csv = row['ShipName'].strip()
+            if vessel_name_csv == 'N/A':
+                vessel_name_csv = None
+
+            if vessel_name_csv:
+                vessels = Vessel.objects.all()
+                for vessel in vessels:
+                    if vessel.full_vessel_name == vessel_name_csv:
+                        vessel_obj = vessel
+                        break
+                # Create new Vessel obj if missing
+                if not vessel_obj:
+                    vessel_obj = Vessel.objects.create(vessel_name = vessel_name_csv)
+
+            # update or create Cruise object based on CUID field
+            cruise_obj, created = Cruise.objects.update_or_create(
+                CUID = cuid,
+                defaults = {
+                    'notes': row['notes'],
+                    'cruise_start_date': cruise_start_date,
+                    'cruise_stop_date': cruise_stop_date,
+                    'vessel': vessel_obj,
+                },
+            )
+
+            if created:
+                cruises_created.append(cruise_obj)
+            else:
+                cruises_updated.append(cruise_obj)
+        return reverse('ooi_ci_tools:import_upload_success', )
+
+
+def import_vessels(csv_file):
+    if len(csv_file) >= 1:
+        # Set up the Django file object for CSV DictReader
+        csv_file.seek(0)
+        reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+        # Get the column headers to save with parent TempImport object
+        headers = reader.fieldnames
+        # Set up data lists for returning results
+        vessels_created = []
+        vessels_updated = []
+
+        for row in reader:
+            vessel_name = row['Vessel Name']
+            MMSI_number = None
+            IMO_number = None
+            length = None
+            max_speed = None
+            max_draft = None
+            active = re.sub(r'[()]', '', row['Active'])
+            R2R = row['R2R']
+
+            if row['MMSI#']:
+                MMSI_number = int(re.sub('[^0-9]','', row['MMSI#']))
+
+            if row['IMO#']:
+                IMO_number = int(re.sub('[^0-9]','', row['IMO#']))
+
+            if row['Length (m)']:
+                length = Decimal(row['Length (m)'])
+
+            if row['Max Speed (m/s)']:
+                max_speed = Decimal(row['Max Draft (m)'])
+
+            if row['Max Draft (m)']:
+                max_draft = Decimal(row['Max Draft (m)'])
+
+            if active:
+                if active == 'Y':
+                    active = True
+                else:
+                    active = False
+            if R2R:
+                if R2R == 'Y':
+                    R2R = True
+                else:
+                    R2R = False
+
+            # update or create Vessel object based on vessel_name field
+            vessel_obj, created = Vessel.objects.update_or_create(
+                vessel_name = vessel_name,
+                defaults = {
+                    'prefix': row['Prefix'],
+                    'vessel_designation': row['Vessel Designation'],
+                    'ICES_code': row['ICES Code'],
+                    'operator': row['Operator'],
+                    'call_sign': row['Call Sign'],
+                    'MMSI_number': MMSI_number,
+                    'IMO_number': IMO_number,
+                    'length': length,
+                    'max_speed': max_speed,
+                    'max_draft': max_draft,
+                    'designation': row['Designation'],
+                    'active': active,
+                    'R2R': R2R,
+                },
+            )
+
+            if created:
+                vessels_created.append(vessel_obj)
+            else:
+                vessels_updated.append(vessel_obj)
+        return reverse('ooi_ci_tools:import_upload_success', )
+
+def import_calibrations(cal_files, user, user_draft):
+    csv_files = []
+    ext_files = []
+    for file in cal_files:
+        ext = file.name[-3:]
+        if ext == 'ext':
+            ext_files.append(file)
+        if ext == 'csv':
+            csv_files.append(file)
+    cache.set('user', user, timeout=None)
+    cache.set('user_draft', user_draft, timeout=None)
+    cache.set('ext_files', ext_files, timeout=None)
+    cache.set('csv_files', csv_files, timeout=None)
+    job = parse_cal_files.delay()
+    cache.set('import_task', job.task_id, timeout=None)
+    return redirect(reverse("ooi_ci_tools:import_csv") + "?confirm=True")
+
+
+def import_csv(request):
     confirm = ""
     if request.method == "POST":
         form = ImportCalibrationForm(request.POST, request.FILES)
+        dep_form = ImportDeploymentsForm(request.POST, request.FILES)
+        cruises_form = ImportCruisesForm(request.POST, request.FILES)
+        vessels_form = ImportVesselsForm(request.POST, request.FILES)
         if form.is_valid():
             cal_files = request.FILES.getlist('cal_csv')
-            csv_files = []
-            ext_files = []
-            for file in cal_files:
-                ext = file.name[-3:]
-                if ext == 'ext':
-                    ext_files.append(file)
-                if ext == 'csv':
-                    csv_files.append(file)
-            cache.set('user', request.user, timeout=None)
-            cache.set('user_draft', form.cleaned_data['user_draft'], timeout=None)
-            cache.set('ext_files', ext_files, timeout=None)
-            cache.set('csv_files', csv_files, timeout=None)
-            job = parse_cal_files.delay()
-            cache.set('import_task', job.task_id, timeout=None)
-            return redirect(reverse("ooi_ci_tools:import_calibrations_upload") + "?confirm=True")
+            import_calibrations(cal_files, request.user, form.cleaned_data['user_draft'])
+        if dep_form.is_valid():
+            csv_files = request.FILES.getlist('deployments_csv')
+            import_deployments(csv_files)
+        if cruises_form.is_valid():
+            csv_file = request.FILES.getlist('cruises_csv')
+            import_cruises(csv_file)
+        if vessels_form.is_valid():
+            csv_file = request.FILES.getlist('vessels_csv')
+            import_vessels(csv_file)
     else:
         form = ImportCalibrationForm()
+        dep_form = ImportDeploymentsForm()
+        cruises_form = ImportCruisesForm()
+        vessels_form = ImportVesselsForm()
         confirm = request.GET.get("confirm")
     return render(request, 'ooi_ci_tools/import_calibrations_upload_form.html', {
         "form": form,
+        'dep_form': dep_form,
+        'cruises_form': cruises_form,
+        'vessels_form': vessels_form,
         'confirm': confirm
     })

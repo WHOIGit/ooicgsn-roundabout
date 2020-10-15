@@ -385,3 +385,6 @@ CELERY_TASK_SOFT_TIME_LIMIT = 60
 # https://docs.celeryproject.org/en/latest/userguide/configuration.html#std-setting-task_track_started
 # Report task state updates
 CELERY_TASK_TRACK_STARTED = True
+# https://docs.djangoproject.com/en/3.1/ref/settings/#file-upload-max-memory-size
+# 100mb (in bytes)
+FILE_UPLOAD_MAX_MEMORY_SIZE = 100000000

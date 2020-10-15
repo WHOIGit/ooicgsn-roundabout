@@ -43,16 +43,17 @@ class ImportDeploymentsForm(forms.Form):
             attrs={
                 'multiple': True
             }
-        )
+        ),
+        required=False
     )
 
 
 class ImportVesselsForm(forms.Form):
-    vessels_csv = forms.FileField()
+    vessels_csv = forms.FileField(required=False)
 
 
 class ImportCruisesForm(forms.Form):
-    cruises_csv = forms.FileField()
+    cruises_csv = forms.FileField(required=False)
 
 
 
@@ -145,7 +146,8 @@ class ImportCalibrationForm(forms.Form):
             attrs={
                 'multiple': True
             }
-        )
+        ),
+        required = False
     )
     user_draft = forms.ModelMultipleChoiceField(
         queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username'),

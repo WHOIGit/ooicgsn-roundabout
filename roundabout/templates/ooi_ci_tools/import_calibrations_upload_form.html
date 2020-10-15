@@ -57,6 +57,63 @@
 
         </div>
 
+        {{ dep_form|crispy }}
+
+        <div class="row">
+            {% if dep_form.errors %}
+                {% for field in dep_form %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger">
+                            <strong>{{ error|escape }}</strong>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in dep_form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        {{ cruises_form|crispy }}
+
+        <div class="row">
+            {% if cruises_form.errors %}
+                {% for field in cruises_form %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger">
+                            <strong>{{ error|escape }}</strong>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in cruises_form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        {{ vessels_form|crispy }}
+
+        <div class="row">
+            {% if vessels_form.errors %}
+                {% for field in vessels_form %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger">
+                            <strong>{{ error|escape }}</strong>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in vessels_form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
         <div class="control-group">
             <div class="controls">
                 <button id = 'submit' type="submit" class="btn btn-primary">Import</button>
@@ -91,6 +148,7 @@
 
         function update_status() {
             $.getJSON("{% url 'ooi_ci_tools:upload_status' %}", function(r) {
+                $('#submit').attr('disabled', true);
                 if (r.progress != null) {
                     $('.progress').show();
                     let current = r.progress.progress;
@@ -102,7 +160,7 @@
                         .css('width', percTotal + '%')
                         .text(percTotal + '%, ' + 'Validating File: ' + filename)
                 } else {
-                    $('.progress-bar').html("<i class = 'fas fa-spinner fa-spin'></i>")
+                    $('.progress-bar').html("<i class = 'fas fa-spinner fa-spin'></i>");
                 }
                 setTimeout(update_status, 1000);
             });
