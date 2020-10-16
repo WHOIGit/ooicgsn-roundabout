@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -54,7 +54,8 @@ class LocationsAjaxDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super(LocationsAjaxDetailView, self).get_context_data(**kwargs)
 
-        deployments = Deployment.objects.filter(deployed_location=self.object).order_by('build__assembly', '-created_at')
+        deployments = self.object.deployed_deployments.order_by('build__assembly', '-deployment_start_date') \
+                                                      .select_related('build__assembly')
 
         context.update({
             'deployments': deployments
@@ -73,7 +74,7 @@ class LocationsAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxF
     def form_valid(self, form):
         self.object = form.save()
         # Rebuild the Location MPTT tree
-        Location._tree_manager.rebuild()
+        #Location._tree_manager.rebuild()
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
@@ -102,7 +103,7 @@ class LocationsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxF
     def form_valid(self, form):
         self.object = form.save()
         # Rebuild the Location MPTT tree
-        Location._tree_manager.rebuild()
+        #Location._tree_manager.rebuild()
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
