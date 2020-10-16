@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -20,6 +20,7 @@
 """
 
 import factory
+from factory.django import DjangoModelFactory
 from random import randint
 
 from roundabout.inventory.models import Inventory, Deployment
@@ -33,7 +34,7 @@ def generate_serial_number():
 
 
 # Factories
-class DeploymentFactory(factory.DjangoModelFactory):
+class DeploymentFactory(DjangoModelFactory):
     """
         Define Deployment Factory
     """
@@ -41,7 +42,7 @@ class DeploymentFactory(factory.DjangoModelFactory):
         model = Deployment
 
 
-class InventoryFactory(factory.DjangoModelFactory):
+class InventoryFactory(DjangoModelFactory):
     """
         Define Inventory Factory
     """

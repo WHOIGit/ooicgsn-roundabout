@@ -45,16 +45,15 @@ var password;
     else {
 	console.log('Error: Missing Arguments');
     }
-    // Step # | name | target | value
-    if (myArgs[1] == 'headless')
+
+   if (myArgs[2] == 'admin')
     {
-        await driver.get("http://localhost:8000/");   
+        await driver.get("http://localhost:8000/");
         user = "admin";
         password = "admin";
     }
     else
     {
-        // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
         await driver.get("https://ooi-cgrdb-staging.whoi.net/");
         user = "jkoch";
         password = "Automatedtests";
@@ -300,12 +299,12 @@ var password;
 
         // Add top level part with non null part type and part template
         // 15 | click | id=action | 
-        await new Promise(r => setTimeout(r, 2000));  //linux docker
+        await new Promise(r => setTimeout(r, 4000));  //linux docker
         await driver.findElement(By.id("action")).click();
         // 16 | click | linkText=Add Top Level Part | 
         await driver.findElement(By.linkText("Add Top Level Part")).click();
         // 18 | click | css=.controls > .btn-primary | 
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.css(".controls > .btn-primary")).click();
         // 19 | select | id=id_part_type | label=-- Cable
         {
@@ -334,13 +333,13 @@ var password;
 
         // Add sub assembly part with non null selection
         // 27 | click | id=action | 
-        await new Promise(r => setTimeout(r, 2000));  //circleci
+        await new Promise(r => setTimeout(r, 6000));  //circleci
         await driver.findElement(By.id("action")).click();
         // 28 | click | linkText=Add New Sub-Assembly | 
         await driver.wait(until.elementLocated(By.linkText("Add New Sub-Assembly")));
         await driver.findElement(By.linkText("Add New Sub-Assembly")).click();
         // 29 | click | css=.controls > .btn-primary | 
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.css(".controls > .btn-primary")).click();
         await new Promise(r => setTimeout(r, 2000));
         // Add sub assembly part with null selection part type
@@ -360,7 +359,7 @@ var password;
         assert(await driver.findElement(By.css("#div_id_part .ajax-error")).getText() == "This field is required.");
 
         // 34 | click | id=id_part | 
-        await driver.wait(until.elementLocated(By.id("id_part")));
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_part")).click();
         // 35 | select | id=id_part | label=Wheel Template
         {
@@ -368,6 +367,7 @@ var password;
             await dropdown.findElement(By.xpath("//option[. = 'Wheel Template']")).click();
         }
         // 36 | click | css=.controls > .btn-primary | 
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css(".controls > .btn-primary")).click();
         await new Promise(r => setTimeout(r, 4000));
 

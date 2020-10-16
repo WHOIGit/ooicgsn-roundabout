@@ -21,6 +21,7 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter, SimpleRouter
+from rest_framework.authtoken.views import *
 from roundabout.inventory.api.views import InventoryViewSet, InventoryDeploymentViewSet, ActionViewSet, PhotoNoteViewSet
 from roundabout.assemblies.api.views import AssemblyViewSet, AssemblyRevisionViewSet, AssemblyPartViewSet, AssemblyTypeViewSet
 from roundabout.calibrations.api.views import *
@@ -79,4 +80,5 @@ router.register(r'users', UserViewSet, 'users' )
 app_name = 'api_v1'
 urlpatterns = [
     path('', include(router.urls) ),
+    path('api-token-auth/', obtain_auth_token)
 ]

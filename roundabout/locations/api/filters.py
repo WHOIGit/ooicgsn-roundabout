@@ -32,6 +32,7 @@ class LocationFilter(filters.FilterSet):
     updated_at_range = filters.DateFromToRangeFilter(field_name='updated_at')
     name = filters.CharFilter(lookup_expr='icontains')
     is_root = filters.BooleanFilter(field_name='parent', lookup_expr='isnull')
+    has_children = filters.BooleanFilter(field_name='children', lookup_expr='isnull', exclude=True)
 
     class Meta:
         model = Location
