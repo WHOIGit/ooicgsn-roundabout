@@ -68,13 +68,13 @@ def searchbar_redirect(request):
             if fnmatch(query.strip(),'????-??-??'):
                 query = query.strip()
                 getstr = '?f=.0.calibration_event__calibration_date&l=.0.exact&q=.0.{query}'
-            else: getstr = '?f=.0.calibration_event__inventory__serial_number&f=.0.calibration_event__inventory__part__name&f=.0.coefficient_name__calibration_name&f=.0.calibration_event__user_approver__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
+            else: getstr = '?f=.0.calibration_event__inventory__serial_number&f=.0.calibration_event__inventory__part__name&f=.0.coefficient_name__calibration_name&f=.0.calibration_event__user_approver__any__name&f=.0.calibration_event__user_draft__any__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
         elif model == 'configconsts':
             if fnmatch(query.strip(), '????-??-??'):
                 query = query.strip()
                 getstr = '?f=.0.config_event__configuration_date&l=.0.exact&q=.0.{query}'
             else:
-                getstr = '?f=.0.config_event__inventory__serial_number&f=.0.config_event__inventory__part__name&f=.0.config_name__name&f=.0.config_event__user_approver__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
+                getstr = '?f=.0.config_event__inventory__serial_number&f=.0.config_event__inventory__part__name&f=.0.config_name__name&f=.0.config_event__user_approver__any__name&f=.0.config_event__user_draft__any__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
         elif model=='part':         getstr = '?f=.0.part_number&f=.0.name&f=.0.friendly_name&l=.0.icontains&q=.0.{query}'
         elif model == 'build':      getstr = '?f=.0.build_number&f=.0.assembly__name&f=.0.assembly__assembly_type__name&f=.0.assembly__description&f=.0.build_notes&f=.0.location__name&l=.0.icontains&q=.0.{query}'
         elif model == 'assembly':   getstr = '?f=.0.assembly_number&f=.0.name&f=.0.assembly_type__name&f=.0.description&l=.0.icontains&q=.0.{query}'
