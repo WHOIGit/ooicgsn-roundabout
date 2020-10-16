@@ -83,7 +83,6 @@ jobs:
                   nodejs -v &&
                   ./RunAllTests-Chrome-Linux.bat"
 
-
       - run:
           name: Stopping Docker application
           command: >-
