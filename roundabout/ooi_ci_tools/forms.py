@@ -21,8 +21,14 @@
 
 import csv
 import io
+import json
+import re
+import requests
+from dateutil import parser
 import datetime
 from types import SimpleNamespace
+from decimal import Decimal
+
 
 from django import forms
 from django.core.exceptions import ValidationError
@@ -31,6 +37,7 @@ from django.core.cache import cache
 
 
 from roundabout.inventory.models import Inventory, Action
+from roundabout.cruises.models import Cruise, Vessel
 from roundabout.inventory.utils import _create_action_history
 from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
 from roundabout.calibrations.forms import validate_coeff_vals, parse_valid_coeff_vals
@@ -58,6 +65,46 @@ class ImportDeploymentsForm(forms.Form):
                 'total': len(deployments_csv),
                 'file': filename
             })
+            try:
+                csv_file.seek(0)
+                reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+                headers = reader.fieldnames
+            except:
+                raise ValidationError(
+                    _('File: %(filename)s: Unable to decode file headers'),
+                    params={'filename': filename},
+                )
+            deployments = []
+            for row in reader:
+                try:
+                    mooring_id = row['mooring.uid']
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse Mooring UID'),
+                        params={'filename': filename},
+                    )
+                if mooring_id not in deployments:
+                    # get Assembly number from RefDes as that seems to be most consistent across CSVs
+                    try:
+                        ref_des = row['Reference Designator']
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Unable to parse Reference Designator'),
+                            params={'filename': filename},
+                        )
+                    try:
+                        assembly = ref_des.split('-')[0]
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Unable to parse Assembly from Reference Designator'),
+                            params={'filename': filename},
+                        )
+                    # build data dict
+                    mooring_uid_dict = {'mooring.uid': row['mooring.uid'], 'assembly': assembly, 'rows': []}
+                    deployments.append(mooring_uid_dict)
+                deployment = next((deployment for deployment in deployments if deployment['mooring.uid']== row['mooring.uid']), False)
+                for key, value in row.items():
+                    deployment['rows'].append({key: value})
         return deployments_csv
 
 
@@ -68,13 +115,90 @@ class ImportVesselsForm(forms.Form):
         vessels_csv = self.files.getlist('vessels_csv')
         counter = 0
         for csv_file in vessels_csv:
-            counter += 1
-            filename = csv_file.name[:-4]
-            cache.set('validation_progress',{
-                'progress': counter,
-                'total': len(vessels_csv),
-                'file': filename
-            })
+            try:
+                csv_file.seek(0)
+                filename = csv_file.name[:-4]
+                reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+                headers = reader.fieldnames
+                total_rows = len(list(reader))
+            except:
+                raise ValidationError(
+                    _('File: %(filename)s: Unable to decode file headers'),
+                    params={'filename': filename},
+                )
+            for row in reader:
+                counter += 1
+                cache.set('validation_progress',{
+                    'progress': counter,
+                    'total': total_rows,
+                    'file': filename
+                })
+                try:
+                    vessel_name = row['Vessel Name']
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse Vessel Name'),
+                        params={'filename': filename},
+                    )
+                MMSI_number = None
+                IMO_number = None
+                length = None
+                max_speed = None
+                max_draft = None
+                try:
+                    active = re.sub(r'[()]', '', row['Active'])
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse Active'),
+                        params={'filename': filename},
+                    )
+                try:
+                    R2R = row['R2R']
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse R2R'),
+                        params={'filename': filename},
+                    )
+                try:
+                    if row['MMSI#']:
+                        MMSI_number = int(re.sub('[^0-9]','', row['MMSI#']))
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse MMSI'),
+                        params={'filename': filename},
+                    )
+                try:
+                    if row['IMO#']:
+                        IMO_number = int(re.sub('[^0-9]','', row['IMO#']))
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse IMO'),
+                        params={'filename': filename},
+                    )
+                try:
+                    if row['Length (m)']:
+                        length = Decimal(row['Length (m)'])
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse Lenth (m)'),
+                        params={'filename': filename},
+                    )
+                try:
+                    if row['Max Speed (m/s)']:
+                        max_speed = Decimal(row['Max Draft (m)'])
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse Max Speed (m/s)'),
+                        params={'filename': filename},
+                    )
+                try:
+                    if row['Max Draft (m)']:
+                        max_draft = Decimal(row['Max Draft (m)'])
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse Max Draft (m)'),
+                        params={'filename': filename},
+                    )
         return vessels_csv
 
 
@@ -83,15 +207,59 @@ class ImportCruisesForm(forms.Form):
 
     def clean_cruises_csv(self):
         cruises_csv = self.files.getlist('cruises_csv')
-        counter = 0
         for csv_file in cruises_csv:
-            counter += 1
             filename = csv_file.name[:-4]
-            cache.set('validation_progress',{
-                'progress': counter,
-                'total': len(cruises_csv),
-                'file': filename
-            })
+            counter = 0
+            try:
+                csv_file.seek(0)
+                reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+                headers = reader.fieldnames
+                total_rows = len(list(reader))
+            except:
+                raise ValidationError(
+                    _('File: %(filename)s: Unable to decode file headers'),
+                    params={'filename': filename},
+                )
+            for row in reader:
+                counter += 1
+                cache.set('validation_progress',{
+                    'progress': counter,
+                    'total': total_rows,
+                    'file': filename
+                })
+                try:
+                    cuid = row['CUID']
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse CUID'),
+                        params={'filename': filename},
+                    )
+                try:
+                    cruise_start_date = parser.parse(row['cruiseStartDateTime']).date()
+                    cruise_stop_date = parser.parse(row['cruiseStopDateTime']).date()
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse Cruise Start/Stop Dates'),
+                        params={'filename': filename},
+                    )
+                try:
+                    vessel_obj = None
+                    # parse out the vessel name to match its formatting from Vessel CSV
+                    vessel_name_csv = row['ShipName'].strip()
+                    if vessel_name_csv == 'N/A':
+                        vessel_name_csv = None
+
+                    if vessel_name_csv:
+                        vessels = Vessel.objects.all()
+                        for vessel in vessels:
+                            if vessel.full_vessel_name == vessel_name_csv:
+                                vessel_obj = vessel
+                                pass
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse Vessel Name'),
+                        params={'filename': filename},
+                    )     
         return cruises_csv
 
 

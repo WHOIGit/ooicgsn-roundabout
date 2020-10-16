@@ -117,3 +117,157 @@ def parse_cal_files(self):
     cache.delete('user_draft')
     cache.delete('ext_files')
     cache.delete('csv_files')
+
+
+
+@shared_task(bind=True)
+def parse_cruise_files(self):
+    cruises_files = cache.get('cruises_files')
+    for csv_file in cruises_files:
+        # Set up the Django file object for CSV DictReader
+        csv_file.seek(0)
+        reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+        # Get the column headers to save with parent TempImport object
+        headers = reader.fieldnames
+        # Set up data lists for returning results
+        cruises_created = []
+        cruises_updated = []
+
+        for row in reader:
+            cuid = row['CUID']
+            cruise_start_date = parser.parse(row['cruiseStartDateTime']).date()
+            cruise_stop_date = parser.parse(row['cruiseStopDateTime']).date()
+            vessel_obj = None
+            # parse out the vessel name to match its formatting from Vessel CSV
+            vessel_name_csv = row['ShipName'].strip()
+            if vessel_name_csv == 'N/A':
+                vessel_name_csv = None
+
+            if vessel_name_csv:
+                vessels = Vessel.objects.all()
+                for vessel in vessels:
+                    if vessel.full_vessel_name == vessel_name_csv:
+                        vessel_obj = vessel
+                        break
+                # Create new Vessel obj if missing
+                if not vessel_obj:
+                    vessel_obj = Vessel.objects.create(vessel_name = vessel_name_csv)
+
+            # update or create Cruise object based on CUID field
+            cruise_obj, created = Cruise.objects.update_or_create(
+                CUID = cuid,
+                defaults = {
+                    'notes': row['notes'],
+                    'cruise_start_date': cruise_start_date,
+                    'cruise_stop_date': cruise_stop_date,
+                    'vessel': vessel_obj,
+                },
+            )
+
+            if created:
+                cruises_created.append(cruise_obj)
+            else:
+                cruises_updated.append(cruise_obj)
+    cache.delete('cruises_files')
+
+
+@shared_task(bind=True)
+def parse_vessel_files(self):
+    vessels_files = cache.get('vessels_files')
+    for csv_file in vessels_files:
+        # Set up the Django file object for CSV DictReader
+        csv_file.seek(0)
+        reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+        # Get the column headers to save with parent TempImport object
+        headers = reader.fieldnames
+        # Set up data lists for returning results
+        vessels_created = []
+        vessels_updated = []
+        for row in reader:
+            vessel_name = row['Vessel Name']
+            MMSI_number = None
+            IMO_number = None
+            length = None
+            max_speed = None
+            max_draft = None
+            active = re.sub(r'[()]', '', row['Active'])
+            R2R = row['R2R']
+
+            if row['MMSI#']:
+                MMSI_number = int(re.sub('[^0-9]','', row['MMSI#']))
+
+            if row['IMO#']:
+                IMO_number = int(re.sub('[^0-9]','', row['IMO#']))
+
+            if row['Length (m)']:
+                length = Decimal(row['Length (m)'])
+
+            if row['Max Speed (m/s)']:
+                max_speed = Decimal(row['Max Draft (m)'])
+
+            if row['Max Draft (m)']:
+                max_draft = Decimal(row['Max Draft (m)'])
+
+            if active:
+                if active == 'Y':
+                    active = True
+                else:
+                    active = False
+            if R2R:
+                if R2R == 'Y':
+                    R2R = True
+                else:
+                    R2R = False
+
+                # update or create Vessel object based on vessel_name field
+                vessel_obj, created = Vessel.objects.update_or_create(
+                    vessel_name = vessel_name,
+                    defaults = {
+                        'prefix': row['Prefix'],
+                        'vessel_designation': row['Vessel Designation'],
+                        'ICES_code': row['ICES Code'],
+                        'operator': row['Operator'],
+                        'call_sign': row['Call Sign'],
+                        'MMSI_number': MMSI_number,
+                        'IMO_number': IMO_number,
+                        'length': length,
+                        'max_speed': max_speed,
+                        'max_draft': max_draft,
+                        'designation': row['Designation'],
+                        'active': active,
+                        'R2R': R2R,
+                    },
+                )
+
+                if created:
+                    vessels_created.append(vessel_obj)
+                else:
+                    vessels_updated.append(vessel_obj)
+    cache.delete('vessels_files')
+
+@shared_task(bind=True)
+def parse_deployment_files(self):
+    csv_files = cache.get('csv_files')
+    for csv_file in csv_files:
+        print(csv_file)
+        csv_file.seek(0)
+        reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+        headers = reader.fieldnames
+        deployments = []
+        for row in reader:
+            if row['mooring.uid'] not in deployments:
+                # get Assembly number from RefDes as that seems to be most consistent across CSVs
+                ref_des = row['Reference Designator']
+                assembly = ref_des.split('-')[0]
+                # build data dict
+                mooring_uid_dict = {'mooring.uid': row['mooring.uid'], 'assembly': assembly, 'rows': []}
+                deployments.append(mooring_uid_dict)
+
+            deployment = next((deployment for deployment in deployments if deployment['mooring.uid']== row['mooring.uid']), False)
+            for key, value in row.items():
+                deployment['rows'].append({key: value})
+
+        print(deployments[0])
+        for row in deployments[0]['rows']:
+            print(row)
+    cache.delete('csv_files')
