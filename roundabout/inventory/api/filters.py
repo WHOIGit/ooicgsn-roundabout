@@ -28,10 +28,12 @@ from ..models import *
 class InventoryFilter(filters.FilterSet):
     created_at = filters.DateFilter(lookup_expr='contains')
     updated_at = filters.DateFilter(lookup_expr='contains')
-    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
-    updated_at_range = filters.DateFromToRangeFilter(field_name='updated_at')
+    created_at__range = filters.DateFromToRangeFilter(field_name='created_at')
+    updated_at__range = filters.DateFromToRangeFilter(field_name='updated_at')
     serial_number = filters.CharFilter(lookup_expr='icontains')
     old_serial_number = filters.CharFilter(lookup_expr='icontains')
+    part__name = filters.CharFilter(field_name='part__name', lookup_expr='icontains')
+    part__number = filters.CharFilter(field_name='part__part_number', lookup_expr='icontains')
     field_value = filters.CharFilter(field_name='fieldvalues__field_value', lookup_expr='icontains')
     build__isnull = filters.BooleanFilter(field_name='build', lookup_expr='isnull')
     parent__isnull = filters.BooleanFilter(field_name='parent', lookup_expr='isnull')
@@ -60,7 +62,7 @@ class InventoryFilter(filters.FilterSet):
 
 class ActionFilter(filters.FilterSet):
     created_at = filters.DateFilter(lookup_expr='contains')
-    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
+    created_at__range = filters.DateFromToRangeFilter(field_name='created_at')
     detail = filters.CharFilter(lookup_expr='icontains')
     inventory__serial_number = filters.CharFilter(field_name='inventory__serial_number', lookup_expr='icontains')
     user__username = filters.CharFilter(field_name='user__username', lookup_expr='icontains')

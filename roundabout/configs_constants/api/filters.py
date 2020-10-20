@@ -29,8 +29,8 @@ class ConfigEventFilter(filters.FilterSet):
     created_at = filters.DateFilter(lookup_expr='contains')
     updated_at = filters.DateFilter(lookup_expr='contains')
     configuration_date = filters.DateFilter(lookup_expr='contains')
-    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
-    updated_at_range = filters.DateFromToRangeFilter(field_name='updated_at')
+    created_at__range = filters.DateFromToRangeFilter(field_name='created_at')
+    updated_at__range = filters.DateFromToRangeFilter(field_name='updated_at')
     configuration_date_range = filters.DateFromToRangeFilter(field_name='configuration_date')
 
     class Meta:
@@ -50,8 +50,8 @@ class ConfigEventFilter(filters.FilterSet):
 class ConfigNameEventFilter(filters.FilterSet):
     created_at = filters.DateFilter(lookup_expr='contains')
     updated_at = filters.DateFilter(lookup_expr='contains')
-    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
-    updated_at_range = filters.DateFromToRangeFilter(field_name='updated_at')
+    created_at__range = filters.DateFromToRangeFilter(field_name='created_at')
+    updated_at__range = filters.DateFromToRangeFilter(field_name='updated_at')
 
     class Meta:
         model = ConfigNameEvent
@@ -68,7 +68,7 @@ class ConfigNameEventFilter(filters.FilterSet):
 class ConfigNameFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr='icontains')
     created_at = filters.DateFilter(lookup_expr='contains')
-    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
+    created_at__range = filters.DateFromToRangeFilter(field_name='created_at')
 
     class Meta:
         model = ConfigName
@@ -87,7 +87,7 @@ class ConfigNameFilter(filters.FilterSet):
 class ConfigValueFilter(filters.FilterSet):
     config_value = filters.CharFilter(lookup_expr='icontains')
     created_at = filters.DateFilter(lookup_expr='contains')
-    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
+    created_at__range = filters.DateFromToRangeFilter(field_name='created_at')
 
     class Meta:
         model = ConfigValue
@@ -101,8 +101,8 @@ class ConfigValueFilter(filters.FilterSet):
 class ConstDefaultEventFilter(filters.FilterSet):
     created_at = filters.DateFilter(lookup_expr='contains')
     updated_at = filters.DateFilter(lookup_expr='contains')
-    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
-    updated_at_range = filters.DateFromToRangeFilter(field_name='updated_at')
+    created_at__range = filters.DateFromToRangeFilter(field_name='created_at')
+    updated_at__range = filters.DateFromToRangeFilter(field_name='updated_at')
 
     class Meta:
         model = ConstDefaultEvent
@@ -119,7 +119,7 @@ class ConstDefaultEventFilter(filters.FilterSet):
 class ConstDefaultFilter(filters.FilterSet):
     default_value = filters.CharFilter(lookup_expr='icontains')
     created_at = filters.DateFilter(lookup_expr='contains')
-    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
+    created_at__range = filters.DateFromToRangeFilter(field_name='created_at')
 
     class Meta:
         model = ConstDefault
@@ -131,8 +131,8 @@ class ConstDefaultFilter(filters.FilterSet):
 class ConfigDefaultEventFilter(filters.FilterSet):
     created_at = filters.DateFilter(lookup_expr='contains')
     updated_at = filters.DateFilter(lookup_expr='contains')
-    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
-    updated_at_range = filters.DateFromToRangeFilter(field_name='updated_at')
+    created_at__range = filters.DateFromToRangeFilter(field_name='created_at')
+    updated_at__range = filters.DateFromToRangeFilter(field_name='updated_at')
 
     class Meta:
         model = ConfigDefaultEvent
@@ -149,7 +149,7 @@ class ConfigDefaultEventFilter(filters.FilterSet):
 class ConfigDefaultFilter(filters.FilterSet):
     default_value = filters.CharFilter(lookup_expr='icontains')
     created_at = filters.DateFilter(lookup_expr='contains')
-    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
+    created_at__range = filters.DateFromToRangeFilter(field_name='created_at')
 
     class Meta:
         model = ConfigDefault

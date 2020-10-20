@@ -28,8 +28,8 @@ from ..models import *
 class FieldFilter(filters.FilterSet):
     created_at = filters.DateFilter(lookup_expr='contains')
     updated_at = filters.DateFilter(lookup_expr='contains')
-    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
-    updated_at_range = filters.DateFromToRangeFilter(field_name='updated_at')
+    created_at__range = filters.DateFromToRangeFilter(field_name='created_at')
+    updated_at__range = filters.DateFromToRangeFilter(field_name='updated_at')
     field_name = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
@@ -47,8 +47,8 @@ class FieldFilter(filters.FilterSet):
 class FieldValueFilter(filters.FilterSet):
     created_at = filters.DateFilter(lookup_expr='contains')
     updated_at = filters.DateFilter(lookup_expr='contains')
-    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
-    updated_at_range = filters.DateFromToRangeFilter(field_name='updated_at')
+    created_at__range = filters.DateFromToRangeFilter(field_name='created_at')
+    updated_at__range = filters.DateFromToRangeFilter(field_name='updated_at')
     field__field_name = filters.CharFilter(field_name='field_name', lookup_expr='icontains')
     user__username = filters.CharFilter(field_name='user__username', lookup_expr='icontains')
 
