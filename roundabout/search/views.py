@@ -115,6 +115,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
             secret_rows_ANDed =[]
             for row_id in row_IDs:
                 row_items = [(v,t) for c,r,v,t in card_things if r==row_id]
+                print(row_items)
                 fields = [v for v,t in row_items if t=='f']
                 lookup = [v for v,t in row_items if t=='l']
                 query = [v for v,t in row_items if t=='q']
@@ -655,7 +656,7 @@ class CalibrationTableView(GenericSearchTableView):
                         dict(value="calibration_event__user_approver__any__name", text="Calibration Event: Approvers", legal_lookup='ITER_LOOKUP'),
                         dict(value="calibration_event__user_draft__any__name", text="Calibration Event: Reviewers", legal_lookup='ITER_LOOKUP'),
                         dict(value="calibration_event__approved", text="Calibration Event: Approved Flag", legal_lookup='BOOL_LOOKUP'),
-                        dict(value="created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
+                        #dict(value="calibration_event__created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
                         dict(value="value_set", text="Value", legal_lookup='STR_LOOKUP'),
                         dict(value="notes", text="Notes", legal_lookup='STR_LOOKUP'),
                         #dict(value="calibration_event__is_current", text="Latest Only", legal_lookup='BOOL_LOOKUP'),
@@ -692,11 +693,11 @@ class ConfigConstTableView(GenericSearchTableView):
         avail_fields = [dict(value="config_event__inventory__serial_number", text="Inventory: SN", legal_lookup='STR_LOOKUP'),
                         dict(value="config_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
                         dict(value="config_name__name", text="Config/Const Name", legal_lookup='STR_LOOKUP'),
-                        dict(value="config_event__configuraton_date", text="Config/Const Event: Date", legal_lookup='DATE_LOOKUP'),
+                        dict(value="config_event__configuration_date", text="Config/Const Event: Date", legal_lookup='DATE_LOOKUP'),
                         dict(value="config_event__user_approver__any__name", text="Config/Const Event: Approvers", legal_lookup='ITER_LOOKUP'),
                         dict(value="config_event__user_draft__any__name", text="Config/Const Event: Reviewers", legal_lookup='ITER_LOOKUP'),
                         dict(value="config_event__approved", text="Config/Const Event: Approved Flag", legal_lookup='BOOL_LOOKUP'),
-                        dict(value="created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
+                        #dict(value="config_event__created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
                         dict(value="config_value", text="Value", legal_lookup='STR_LOOKUP'),
                         dict(value="notes", text="Notes", legal_lookup='STR_LOOKUP'),
                         ]
