@@ -20,16 +20,13 @@
 """
 
 from django.db import models
-from django.core.validators import MinValueValidator, DecimalValidator, MaxValueValidator, RegexValidator, MaxLengthValidator
 from django.utils import timezone
-from roundabout.parts.models import Part
-from roundabout.inventory.models import Inventory, Deployment, DeploymentAction, Action
+
 from roundabout.assemblies.models import AssemblyPart
+from roundabout.inventory.models import Inventory, Deployment, DeploymentAction, Action
+from roundabout.parts.models import Part
 from roundabout.users.models import User
-from decimal import Decimal
-from sigfig import round
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
+
 
 # Tracks Configuration and Constant event history across Inventory Parts
 class ConfigEvent(models.Model):
@@ -141,7 +138,7 @@ class ConfigValue(models.Model):
     config_event = models.ForeignKey(ConfigEvent, related_name='config_values', on_delete=models.CASCADE, null=True)
     def config_value_with_export_formatting(self):
         if ',' in self.config_value:
-            return '"[{}]"'.format(self.config_value)
+            return '[{}]'.format(self.config_value)
         else:
             return self.config_value
 
