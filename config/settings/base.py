@@ -25,8 +25,6 @@ Base settings to build other settings files upon.
 
 import environ
 
-from datetime import timedelta
-
 ROOT_DIR = environ.Path(__file__) - 3  # (roundabout/config/settings/base.py - 3 = roundabout/)
 APPS_DIR = ROOT_DIR.path('roundabout')
 
@@ -309,7 +307,10 @@ REST_FRAMEWORK = {
     # When you enable API versioning, the request.version attribute will contain a string
     # that corresponds to the version requested in the incoming client request.
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+
+    ],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
@@ -382,3 +383,6 @@ CELERY_TASK_TIME_LIMIT = 5 * 60
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-soft-time-limit
 # TODO: set to whatever value is adequate in your circumstances
 CELERY_TASK_SOFT_TIME_LIMIT = 60
+# https://docs.celeryproject.org/en/latest/userguide/configuration.html#std-setting-task_track_started
+# Report task state updates
+CELERY_TASK_TRACK_STARTED = True

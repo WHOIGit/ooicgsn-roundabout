@@ -20,19 +20,32 @@
 """
 
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter, SimpleRouter
-from roundabout.inventory.api.views import InventoryViewSet, ActionViewSet, PhotoNoteViewSet
-from roundabout.assemblies.api.views import AssemblyViewSet, AssemblyRevisionViewSet, AssemblyPartViewSet, AssemblyTypeViewSet
-from roundabout.calibrations.api.views import CalibrationEventViewSet, CoefficientNameEventViewSet
+from rest_framework.authtoken.views import *
+from rest_framework.routers import DefaultRouter
+
+from roundabout.assemblies.api.views import AssemblyViewSet, AssemblyRevisionViewSet, AssemblyPartViewSet, \
+    AssemblyTypeViewSet
+from roundabout.builds.api.views import BuildViewSet, DeploymentViewSet
+from roundabout.calibrations.api.views import *
+from roundabout.configs_constants.api.views import *
+from roundabout.cruises.api.views import CruiseViewSet, VesselViewSet
+from roundabout.inventory.api.views import InventoryViewSet, InventoryDeploymentViewSet, ActionViewSet, PhotoNoteViewSet
 from roundabout.locations.api.views import LocationViewSet
 from roundabout.parts.api.views import PartViewSet, PartTypeViewSet, RevisionViewSet, DocumentationViewSet
 from roundabout.userdefinedfields.api.views import FieldViewSet, FieldValueViewSet
+from roundabout.users.api.views import UserViewSet
 
 # Create a router and register our viewsets with it.
 router = DefaultRouter()
 router.register(r'inventory', InventoryViewSet, 'inventory' )
+router.register(r'inventory-deployments', InventoryDeploymentViewSet, 'inventory-deployments' )
 router.register(r'actions', ActionViewSet, 'actions' )
 router.register(r'photos', PhotoNoteViewSet, 'photos' )
+
+router.register(r'builds', BuildViewSet, 'builds' )
+router.register(r'deployments', DeploymentViewSet, 'deployments' )
+router.register(r'cruises', CruiseViewSet, 'cruises' )
+router.register(r'vessels', VesselViewSet, 'vessels' )
 
 router.register(r'assembly-templates/assemblies', AssemblyViewSet, 'assembly-templates/assemblies' )
 router.register(r'assembly-templates/assembly-revisions', AssemblyRevisionViewSet, 'assembly-templates/assembly-revisions' )
@@ -41,6 +54,18 @@ router.register(r'assembly-templates/assembly-parts', AssemblyPartViewSet, 'asse
 
 router.register(r'calibrations/calibration-events', CalibrationEventViewSet, 'calibrations/calibration-events' )
 router.register(r'calibrations/coefficent-name-events', CoefficientNameEventViewSet, 'calibrations/coefficent-name-events' )
+router.register(r'calibrations/coefficent-names', CoefficientNameViewSet, 'calibrations/coefficent-names' )
+router.register(r'calibrations/coefficent-value-sets', CoefficientValueSetViewSet, 'calibrations/coefficent-value-sets' )
+router.register(r'calibrations/coefficent-values', CoefficientValueViewSet, 'calibrations/coefficent-values' )
+
+router.register(r'configs-constants/config-events', ConfigEventViewSet, 'configs-constants/config-events' )
+router.register(r'configs-constants/config-name-events', ConfigNameEventViewSet, 'configs-constants/config-name-events' )
+router.register(r'configs-constants/config-names', ConfigNameViewSet, 'configs-constants/config-names' )
+router.register(r'configs-constants/config-values', ConfigValueViewSet, 'configs-constants/config-values' )
+router.register(r'configs-constants/const-default-events', ConstDefaultEventViewSet, 'configs-constants/const-default-events' )
+router.register(r'configs-constants/const-defaults', ConstDefaultViewSet, 'configs-constants/const-defaults' )
+router.register(r'configs-constants/config-default-events', ConfigDefaultEventViewSet, 'configs-constants/config-default-events' )
+router.register(r'configs-constants/config-defaults', ConfigDefaultViewSet, 'configs-constants/config-defaults' )
 
 router.register(r'locations', LocationViewSet, 'locations' )
 
@@ -52,7 +77,10 @@ router.register(r'part-templates/documents', DocumentationViewSet, 'part-templat
 router.register(r'user-defined-fields/fields', FieldViewSet, 'user-defined-fields/fields' )
 router.register(r'user-defined-fields/field-values', FieldValueViewSet, 'user-defined-fields/field-values' )
 
+router.register(r'users', UserViewSet, 'users' )
+
 app_name = 'api_v1'
 urlpatterns = [
     path('', include(router.urls) ),
+    path('api-token-auth/', obtain_auth_token)
 ]

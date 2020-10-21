@@ -19,8 +19,9 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import serializers
 from rest_flex_fields import FlexFieldsModelSerializer
+from rest_framework import serializers
+
 from ..models import Part, PartType, Revision, Documentation
 
 API_VERSION = 'api_v1'
@@ -81,6 +82,18 @@ class PartSerializer(FlexFieldsModelSerializer):
         many = True,
         read_only = True,
     )
+    coefficient_name_events= serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':calibrations/coefficent-name-events-detail',
+        lookup_field = 'pk',
+        many = True,
+        read_only = True,
+    )
+    coefficient_names= serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':calibrations/coefficent-names-detail',
+        lookup_field = 'pk',
+        many = True,
+        read_only = True,
+    )
 
     class Meta:
         model = Part
@@ -97,12 +110,16 @@ class PartSerializer(FlexFieldsModelSerializer):
             'note',
             'user_defined_fields',
             'cal_dec_places',
+            'coefficient_name_events',
+            'coefficient_names',
         ]
 
         expandable_fields = {
             'part_type': 'roundabout.parts.api.serializers.PartTypeSerializer',
             'revisions': ('roundabout.parts.api.serializers.RevisionSerializer', {'many': True}),
             'user_defined_fields': ('roundabout.userdefinedfields.api.serializers.FieldSerializer', {'many': True}),
+            'coefficient_name_events': ('roundabout.calibrations.api.serializers.CoefficientNameEventSerializer', {'many': True}),
+            'coefficient_names': ('roundabout.calibrations.api.serializers.CoefficientNameSerializer', {'many': True}),
         }
 
 

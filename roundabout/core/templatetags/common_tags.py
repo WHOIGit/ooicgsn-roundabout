@@ -18,7 +18,6 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 """
-import random
 from django import template
 from django.contrib.auth.models import Group
 
@@ -38,7 +37,10 @@ def get_model_name(value):
 @register.filter(name='has_group')
 def has_group(user, group_name):
     group =  Group.objects.get(name=group_name)
-    return group in user.groups.all()
+    try:
+        return group in user.groups.all()
+    except:
+        return None
 
 
 # Custom filter to get dictionary values by key

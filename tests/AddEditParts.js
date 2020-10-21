@@ -46,16 +46,14 @@ var password;
 	console.log('Error: Missing Arguments');
     }
 
-    // Step # | name | target | value
-    if (myArgs[1] == 'headless')
+   if (myArgs[2] == 'admin')
     {
-        await driver.get("http://localhost:8000/");   
+        await driver.get("http://localhost:8000/");
         user = "admin";
         password = "admin";
     }
     else
     {
-        // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
         await driver.get("https://ooi-cgrdb-staging.whoi.net/");
         user = "jkoch";
         password = "Automatedtests";
@@ -220,14 +218,13 @@ var password;
 
         // Create new Template Revision with cost or refurbishment cost with greater than 2 decimal places.
         // 21 | click | id=action | 
-        await driver.wait(until.elementLocated(By.id("action")));
+        await new Promise(r => setTimeout(r, 2000)); 
         await driver.findElement(By.id("action")).click();
         // 22 | click | linkText=Create New Revision |
-        await driver.wait(until.elementLocated(By.linkText("Create New Revision")));
+        await new Promise(r => setTimeout(r, 2000)); 
         await driver.findElement(By.linkText("Create New Revision")).click();
         // 23 | type | id=id_revision_code | B
-	    await new Promise(r => setTimeout(r, 4000));   //linux firefox
-        // await driver.wait(until.elementLocated(By.id("id_revision_code")), 2000);  //linux firefox stale element
+	await new Promise(r => setTimeout(r, 4000));   //docker element not interactable
         await driver.findElement(By.id("id_revision_code")).sendKeys("B");
         // 24 | type | id=id_unit_cost | 3.000
         await driver.findElement(By.id("id_unit_cost")).clear();
@@ -267,11 +264,11 @@ var password;
 
         // Add template with null Part Number, name, type or revision code.
         // 40 | click | linkText=Add Part Template | 
-        await driver.wait(until.elementLocated(By.linkText("Add Part Template")));
+        await new Promise(r => setTimeout(r, 2000));   
         await driver.findElement(By.linkText("Add Part Template")).click();
         // 41 | click | id=id_part_number |         
         // 43 | click | css=.controls > .btn | 
-        await new Promise(r => setTimeout(r, 2000));   //circleci
+        await new Promise(r => setTimeout(r, 4000));   //circleci
         await driver.findElement(By.css(".controls > .btn")).click();
         await driver.wait(until.elementLocated(By.css("#div_id_part_number .ajax-error")));
         // 44 | verifyText | css=#div_id_part_number .ajax-error This field is required.
@@ -299,6 +296,7 @@ var password;
         dropdown = await driver.findElement(By.id("id_part_type"));
         await dropdown.findElement(By.xpath("//option[. = ' Sewing Machine']")).click();
         // 53 | click | css=.controls > .btn | 
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css(".controls > .btn")).click();
         await driver.wait(until.elementLocated(By.css("#div_id_part_number .ajax-error")));
         // 54 | verifyText | css=#div_id_part_number .ajax-error | Part with this Part number already exists.
@@ -436,7 +434,7 @@ var password;
         // 29 | click | linkText=Create New Revision | 
         await driver.findElement(By.linkText("Create New Revision")).click();
         // 30 | type | id=id_revision_code | B
-	await new Promise(r => setTimeout(r, 4000));
+	await new Promise(r => setTimeout(r, 6000));
         //await driver.wait(until.elementLocated(By.id("id_revision_code")), 2000); // linux firefox stale element
         await driver.findElement(By.id("id_revision_code")).sendKeys("B");
         // 31 | click | id=div_id_created_at | 
@@ -494,12 +492,13 @@ var password;
         await driver.wait(until.elementLocated(By.linkText("Revision: B")));
         await driver.findElement(By.linkText("Revision: B")).click();
         // 49 | click | linkText=Edit Revision | 
-        await driver.wait(until.elementLocated(By.linkText("Edit Revision")));
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Edit Revision")).click();
         // 50 | type | id=id_created_at |  
         //await driver.wait(until.elementLocated(By.id("id_revision_code"))); //StaleElementReferenceError, use timeout
-        await new Promise(r => setTimeout(r, 4000));
+        await new Promise(r => setTimeout(r, 6000));
         await driver.findElement(By.id("id_revision_code")).clear();
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_revision_code")).sendKeys("   ");
         await driver.findElement(By.id("id_created_at")).click();
         await driver.findElement(By.id("id_created_at")).clear(); 

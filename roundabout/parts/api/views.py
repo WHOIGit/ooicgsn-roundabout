@@ -19,31 +19,36 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import generics, viewsets, filters
 from rest_framework.permissions import IsAuthenticated
-from ..models import Part, PartType, Revision, Documentation
+
+from roundabout.core.api.views import FlexModelViewSet
+from .filters import *
 from .serializers import PartSerializer, PartTypeSerializer, RevisionSerializer, DocumentationSerializer
 
 
-class PartTypeViewSet(viewsets.ModelViewSet):
+class PartTypeViewSet(FlexModelViewSet):
     serializer_class = PartTypeSerializer
     permission_classes = (IsAuthenticated,)
     queryset = PartType.objects.all()
+    filterset_class = PartTypeFilter
 
 
-class PartViewSet(viewsets.ModelViewSet):
+class PartViewSet(FlexModelViewSet):
     serializer_class = PartSerializer
     permission_classes = (IsAuthenticated,)
     queryset = Part.objects.all()
+    filterset_class = PartFilter
 
 
-class RevisionViewSet(viewsets.ModelViewSet):
+class RevisionViewSet(FlexModelViewSet):
     serializer_class = RevisionSerializer
     permission_classes = (IsAuthenticated,)
     queryset = Revision.objects.all()
+    filterset_class = RevisionFilter
 
 
-class DocumentationViewSet(viewsets.ModelViewSet):
+class DocumentationViewSet(FlexModelViewSet):
     serializer_class = DocumentationSerializer
     permission_classes = (IsAuthenticated,)
     queryset = Documentation.objects.all()
+    filterset_class = DocumentationFilter
