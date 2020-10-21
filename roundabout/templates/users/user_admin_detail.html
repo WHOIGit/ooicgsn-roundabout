@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -38,6 +38,8 @@
 
       <p>User Role: {{ user.groups.all|join:", "|title }}</p>
 
+      <p>Active: {{ user.is_active }}</p>
+
       <p>Last Login: {{ user.last_login }}</p>
 
     </div>
@@ -49,7 +51,13 @@
   <div class="col-sm-12">
     <a href="{% url 'users:user_admin_update' user.id %}" class="btn btn-primary" role="button">Edit</a>
     <a href="{% url 'users:user_admin_change_password' user.id %}" class="btn btn-primary" role="button">Change Password</a>
-    <a href="{% url 'users:user_admin_delete' user.id %}" role="button" class="btn btn-danger ml-3">Delete</a>
+
+    {% if user.is_active %}
+        <a href="{% url 'users:user_admin_suspend' user.id %}" role="button" class="btn btn-danger ml-3"><i class="fa fa-ban"></i> Suspend User</a>
+    {% else %}
+        <a href="{% url 'users:user_admin_activate' user.id %}" role="button" class="btn btn-success ml-3"><i class="fas fa-user-plus"></i>Activate User</a>
+    {% endif %}
+    <a href="{% url 'users:user_admin_delete' user.id %}" role="button" class="btn btn-danger"><i class="fa fa-trash"></i> Delete</a>
 
     <!-- Your Stuff: Custom user template urls -->
   </div>

@@ -103,6 +103,7 @@ class FieldValueSerializer(FlexFieldsModelSerializer):
         queryset = User.objects
     )
     field_value = serializers.SerializerMethodField('get_field_value')
+    field_name = serializers.SerializerMethodField('get_field_name')
 
     class Meta:
         model = FieldValue
@@ -110,6 +111,7 @@ class FieldValueSerializer(FlexFieldsModelSerializer):
             'id',
             'url',
             'field_value',
+            'field_name',
             'field',
             'inventory',
             'part',
@@ -129,3 +131,6 @@ class FieldValueSerializer(FlexFieldsModelSerializer):
 
     def get_field_value(self, obj):
         return obj.get_field_value
+
+    def get_field_name(self, obj):
+        return obj.field.field_name
