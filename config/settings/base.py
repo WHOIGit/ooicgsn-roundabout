@@ -319,7 +319,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
-        'roundabout.core.api.renderers.BrowsableAPIRendererWithoutForms',
+        'roundabout.core.api.renderers.CustomBrowsableAPIRenderer',
     ),
     'DEFAULT_PAGINATION_CLASS': 'drf_link_header_pagination.LinkHeaderPagination',
     'PAGE_SIZE': 30,
