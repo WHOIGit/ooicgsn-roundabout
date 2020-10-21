@@ -35,6 +35,7 @@ class InventoryFilter(filters.FilterSet):
     part__name = filters.CharFilter(field_name='part__name', lookup_expr='icontains')
     part__number = filters.CharFilter(field_name='part__part_number', lookup_expr='icontains')
     field_value = filters.CharFilter(field_name='fieldvalues__field_value', lookup_expr='icontains')
+    field_name = filters.CharFilter(field_name='fieldvalues__field__field_name', lookup_expr='icontains')
     build__isnull = filters.BooleanFilter(field_name='build', lookup_expr='isnull')
     parent__isnull = filters.BooleanFilter(field_name='parent', lookup_expr='isnull')
     children__isnull = filters.BooleanFilter(field_name='children', lookup_expr='isnull')
