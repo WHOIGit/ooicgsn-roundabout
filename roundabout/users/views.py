@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -21,11 +21,13 @@
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
-from django.views.generic import DetailView, ListView, RedirectView, UpdateView, CreateView, FormView, DeleteView
+from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, FormView, DeleteView
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.forms import AdminPasswordChangeForm
+from rest_framework.authtoken.models import Token
 
 from .forms import UserAdminCreateForm, UserAdminUpdateForm
 User = get_user_model()
@@ -37,6 +39,15 @@ class UserDetailView(LoginRequiredMixin, DetailView):
     slug_field = "username"
     slug_url_kwarg = "username"
 
+    def get_context_data(self, **kwargs):
+        context = super(UserDetailView, self).get_context_data(**kwargs)
+
+        token, created = Token.objects.get_or_create(user=self.object)
+        print(token)
+        context.update({
+            'token': token.key,
+        })
+        return context
 
 user_detail_view = UserDetailView.as_view()
 
@@ -143,3 +154,16 @@ class UserAdminDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteVie
     template_name='users/user_confirm_delete.html'
     success_url = reverse_lazy('users:list')
     permission_required = 'users.add_user'
+
+
+# Views for API Token management
+
+class UserTokenResetView(RedirectView):
+    permanent = False
+    query_string = True
+
+    def get_redirect_url(self, *args, **kwargs):
+        user = get_object_or_404(User, pk=kwargs['pk'])
+        Token.objects.get(user=user).delete()
+        new_token = Token.objects.create(user=user)
+        return reverse('users:detail', args=(user.username, ))

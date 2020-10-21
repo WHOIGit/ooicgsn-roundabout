@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -34,10 +34,19 @@
       {% if object.name %}
         <p>{{ object.name }}</p>
       {% endif %}
+       <p>User Role: {{ user.groups.all|join:", "|title }}</p>
+      {% if token %}
+          <p>API Token: {{ token }}
+              <a href="{% url 'users:token-reset' user.id %}"
+                 class="btn btn-primary btn-sm ml-2"
+                 role="button"><i class="fa fa-redo"></i> Reset Token </a>
+           </p>
+      {% endif %}
     </div>
   </div>
 
 {% if object == request.user %}
+<hr>
 <!-- Action buttons -->
 <div class="row">
 
