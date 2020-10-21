@@ -156,8 +156,36 @@ class UserAdminDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteVie
     permission_required = 'users.add_user'
 
 
-# Views for API Token management
+# View to Suspend User by deactivating them
+class UserAdminSuspendView(RedirectView):
+    permanent = False
+    query_string = True
 
+    def get_redirect_url(self, *args, **kwargs):
+        user = get_object_or_404(User, pk=kwargs['pk'])
+        user.is_active = False
+        user.save()
+        # Remove API token if it exists
+        try:
+            Token.objects.get(user=user).delete()
+        except Token.DoesNotExist:
+            pass
+        return reverse('users:user_admin_detail', args=(self.kwargs['pk'], ))
+
+
+# View to Activate User who has been suspended
+class UserAdminActivateView(RedirectView):
+    permanent = False
+    query_string = True
+
+    def get_redirect_url(self, *args, **kwargs):
+        user = get_object_or_404(User, pk=kwargs['pk'])
+        user.is_active = True
+        user.save()
+        return reverse('users:user_admin_detail', args=(self.kwargs['pk'], ))
+
+
+# View for API Token reset
 class UserTokenResetView(RedirectView):
     permanent = False
     query_string = True

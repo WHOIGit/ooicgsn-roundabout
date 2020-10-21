@@ -36,6 +36,8 @@ urlpatterns = [
     path('admin/edit/<int:pk>/', view=views.UserAdminUpdateView.as_view(), name='user_admin_update'),
     path('admin/edit/password/<int:pk>/', view=views.UserAdminPasswordChangeView.as_view(), name='user_admin_change_password'),
     path('admin/delete/<int:pk>/', view=views.UserAdminDeleteView.as_view(), name='user_admin_delete'),
+    path('admin/suspend/<int:pk>/', view=views.UserAdminSuspendView.as_view(), name='user_admin_suspend'),
+    path('admin/activate/<int:pk>/', view=views.UserAdminActivateView.as_view(), name='user_admin_activate'),
     # Base User paths from Allauth
     path("", view=user_list_view, name="list"),
     path("~redirect/", view=user_redirect_view, name="redirect"),
