@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -36,9 +36,13 @@ urlpatterns = [
     path('admin/edit/<int:pk>/', view=views.UserAdminUpdateView.as_view(), name='user_admin_update'),
     path('admin/edit/password/<int:pk>/', view=views.UserAdminPasswordChangeView.as_view(), name='user_admin_change_password'),
     path('admin/delete/<int:pk>/', view=views.UserAdminDeleteView.as_view(), name='user_admin_delete'),
+    path('admin/suspend/<int:pk>/', view=views.UserAdminSuspendView.as_view(), name='user_admin_suspend'),
+    path('admin/activate/<int:pk>/', view=views.UserAdminActivateView.as_view(), name='user_admin_activate'),
     # Base User paths from Allauth
     path("", view=user_list_view, name="list"),
     path("~redirect/", view=user_redirect_view, name="redirect"),
     path("~update/", view=user_update_view, name="update"),
     path("<str:username>/", view=user_detail_view, name="detail"),
+    # Token management views
+    path("token-reset/<int:pk>/", view=views.UserTokenResetView.as_view(), name="token-reset"),
 ]

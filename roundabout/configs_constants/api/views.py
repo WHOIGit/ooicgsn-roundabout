@@ -21,53 +21,64 @@
 
 from rest_framework import generics, filters, viewsets
 from rest_framework.permissions import IsAuthenticated
+
+from roundabout.core.api.views import FlexModelViewSet
 from ..models import *
 from .serializers import *
+from .filters import *
 
 
-class ConfigEventViewSet(viewsets.ModelViewSet):
+class ConfigEventViewSet(FlexModelViewSet):
     serializer_class = ConfigEventSerializer
     permission_classes = (IsAuthenticated,)
     queryset = ConfigEvent.objects.all()
+    filterset_class = ConfigEventFilter
 
 
-class ConfigNameEventViewSet(viewsets.ModelViewSet):
+class ConfigNameEventViewSet(FlexModelViewSet):
     serializer_class = ConfigNameEventSerializer
     permission_classes = (IsAuthenticated,)
     queryset = ConfigNameEvent.objects.all()
+    filterset_class = ConfigNameEventFilter
 
 
-class ConfigNameViewSet(viewsets.ModelViewSet):
+class ConfigNameViewSet(FlexModelViewSet):
     serializer_class = ConfigNameSerializer
     permission_classes = (IsAuthenticated,)
     queryset = ConfigName.objects.all()
+    filterset_class = ConfigNameFilter
 
 
-class ConfigValueViewSet(viewsets.ModelViewSet):
+class ConfigValueViewSet(FlexModelViewSet):
     serializer_class = ConfigValueSerializer
     permission_classes = (IsAuthenticated,)
     queryset = ConfigValue.objects.all()
+    filterset_class = ConfigValueFilter
 
 
-class ConstDefaultEventViewSet(viewsets.ModelViewSet):
+class ConstDefaultEventViewSet(FlexModelViewSet):
     serializer_class = ConstDefaultEventSerializer
     permission_classes = (IsAuthenticated,)
     queryset = ConstDefaultEvent.objects.all()
+    filterset_class = ConstDefaultEventFilter
 
 
-class ConstDefaultViewSet(viewsets.ModelViewSet):
+class ConstDefaultViewSet(FlexModelViewSet):
     serializer_class = ConstDefaultSerializer
     permission_classes = (IsAuthenticated,)
     queryset = ConstDefault.objects.all()
+    filterset_class = ConstDefaultFilter
 
 
-class ConfigDefaultEventViewSet(viewsets.ModelViewSet):
+class ConfigDefaultEventViewSet(FlexModelViewSet):
     serializer_class = ConfigDefaultEventSerializer
     permission_classes = (IsAuthenticated,)
     queryset = ConfigDefaultEvent.objects.all()
+    filterset_class = ConfigDefaultEventFilter
 
 
-class ConfigDefaultViewSet(viewsets.ModelViewSet):
+class ConfigDefaultViewSet(FlexModelViewSet):
     serializer_class = ConfigDefaultSerializer
     permission_classes = (IsAuthenticated,)
     queryset = ConfigDefault.objects.all()
+    filterset_class = ConfigDefaultFilter
