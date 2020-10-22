@@ -31,11 +31,7 @@
                         aria-expanded="false" 
                         aria-controls="conf_event-{{ event.id }}"
                     >
-                        {% if event.deployment.build.is_deployed %}
-                            {{ event.get_latest_deployment_date }}
-                        {% else %}
-                            TBD
-                        {% endif %}
+                        {{ event.get_latest_deployment_date }}
                         -- {{ event.deployment }} ({{ event.deployment.build.actions.first }})
                     </a>
                     <a  data-toggle="collapse" 
