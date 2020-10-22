@@ -280,3 +280,6 @@ media/
 .envs/*
 !.envs.example/
 !static/css/jstree/dist/
+
+# Celery
+celerybeat-schedule
