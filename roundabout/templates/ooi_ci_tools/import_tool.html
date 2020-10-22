@@ -38,81 +38,11 @@
         {% csrf_token %}
         {{ form|crispy }}
 
-        <div class="row">
-            {% if form.errors %}
-                {% for field in form %}
-                    {% for error in field.errors %}
-                        <div class="alert alert-danger">
-                            <strong>{{ error|escape }}</strong>
-                        </div>
-                    {% endfor %}
-                {% endfor %}
-                {% for error in form.non_field_errors %}
-                    <div class="alert alert-danger">
-                        <strong>{{ error|escape }}</strong>
-                    </div>
-                {% endfor %}
-            {% endif %}
-
-
-        </div>
-
         {{ dep_form|crispy }}
-
-        <div class="row">
-            {% if dep_form.errors %}
-                {% for field in dep_form %}
-                    {% for error in field.errors %}
-                        <div class="alert alert-danger">
-                            <strong>{{ error|escape }}</strong>
-                        </div>
-                    {% endfor %}
-                {% endfor %}
-                {% for error in dep_form.non_field_errors %}
-                    <div class="alert alert-danger">
-                        <strong>{{ error|escape }}</strong>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        </div>
 
         {{ cruises_form|crispy }}
 
-        <div class="row">
-            {% if cruises_form.errors %}
-                {% for field in cruises_form %}
-                    {% for error in field.errors %}
-                        <div class="alert alert-danger">
-                            <strong>{{ error|escape }}</strong>
-                        </div>
-                    {% endfor %}
-                {% endfor %}
-                {% for error in cruises_form.non_field_errors %}
-                    <div class="alert alert-danger">
-                        <strong>{{ error|escape }}</strong>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        </div>
-
         {{ vessels_form|crispy }}
-
-        <div class="row">
-            {% if vessels_form.errors %}
-                {% for field in vessels_form %}
-                    {% for error in field.errors %}
-                        <div class="alert alert-danger">
-                            <strong>{{ error|escape }}</strong>
-                        </div>
-                    {% endfor %}
-                {% endfor %}
-                {% for error in vessels_form.non_field_errors %}
-                    <div class="alert alert-danger">
-                        <strong>{{ error|escape }}</strong>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        </div>
 
         <div class="control-group">
             <div class="controls">

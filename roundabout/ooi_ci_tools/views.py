@@ -252,18 +252,23 @@ def upload_status(request):
         'progress': result,
     })
 
+# Deployment CSV Importer
 def import_deployments(csv_files):
     cache.set('csv_files',csv_files, timeout=None)
     job = parse_deployment_files.delay()
 
+
+# Cruise CSV Importer
 def import_cruises(cruises_files):
     cache.set('cruises_files', cruises_files, timeout=None)
     job = parse_cruise_files.delay()
-        
+
+# Vessel CSV Importer 
 def import_vessels(vessels_files):
     cache.set('vessels_files', vessels_files, timeout=None)
     job = parse_vessel_files.delay()
-        
+
+# Calibration CSV Importer   
 def import_calibrations(cal_files, user, user_draft):
     csv_files = []
     ext_files = []
@@ -280,6 +285,8 @@ def import_calibrations(cal_files, user, user_draft):
     job = parse_cal_files.delay()
     cache.set('import_task', job.task_id, timeout=None)
 
+# CSV Importer View
+# Activates parsing tasks based on files selected
 def import_csv(request):
     confirm = ""
     if request.method == "POST":

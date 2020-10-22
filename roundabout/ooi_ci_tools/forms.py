@@ -109,30 +109,36 @@ class ImportDeploymentsForm(forms.Form):
 
 
 class ImportVesselsForm(forms.Form):
-    vessels_csv = forms.FileField(required=False)
+    vessels_csv = forms.FileField(
+        widget=forms.ClearableFileInput(
+            attrs={
+                'multiple': True
+            }
+        ),
+        required=False
+    )
 
     def clean_vessels_csv(self):
         vessels_csv = self.files.getlist('vessels_csv')
         counter = 0
         for csv_file in vessels_csv:
+            counter += 1
+            filename = csv_file.name[:-4]
+            cache.set('validation_progress',{
+                'progress': counter,
+                'total': len(vessels_csv),
+                'file': filename
+            })
             try:
                 csv_file.seek(0)
-                filename = csv_file.name[:-4]
                 reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
                 headers = reader.fieldnames
-                total_rows = len(list(reader))
             except:
                 raise ValidationError(
                     _('File: %(filename)s: Unable to decode file headers'),
                     params={'filename': filename},
                 )
             for row in reader:
-                counter += 1
-                cache.set('validation_progress',{
-                    'progress': counter,
-                    'total': total_rows,
-                    'file': filename
-                })
                 try:
                     vessel_name = row['Vessel Name']
                 except:
@@ -160,40 +166,35 @@ class ImportVesselsForm(forms.Form):
                         params={'filename': filename},
                     )
                 try:
-                    if row['MMSI#']:
-                        MMSI_number = int(re.sub('[^0-9]','', row['MMSI#']))
+                    MMSI_number = int(re.sub('[^0-9]','', row['MMSI#']))
                 except:
                     raise ValidationError(
                         _('File: %(filename)s: Unable to parse MMSI'),
                         params={'filename': filename},
                     )
                 try:
-                    if row['IMO#']:
-                        IMO_number = int(re.sub('[^0-9]','', row['IMO#']))
+                    IMO_number = int(re.sub('[^0-9]','', row['IMO#']))
                 except:
                     raise ValidationError(
                         _('File: %(filename)s: Unable to parse IMO'),
                         params={'filename': filename},
                     )
                 try:
-                    if row['Length (m)']:
-                        length = Decimal(row['Length (m)'])
+                    length = Decimal(row['Length (m)'])
                 except:
                     raise ValidationError(
                         _('File: %(filename)s: Unable to parse Lenth (m)'),
                         params={'filename': filename},
                     )
                 try:
-                    if row['Max Speed (m/s)']:
-                        max_speed = Decimal(row['Max Draft (m)'])
+                    max_speed = Decimal(row['Max Draft (m)'])
                 except:
                     raise ValidationError(
                         _('File: %(filename)s: Unable to parse Max Speed (m/s)'),
                         params={'filename': filename},
                     )
                 try:
-                    if row['Max Draft (m)']:
-                        max_draft = Decimal(row['Max Draft (m)'])
+                    max_draft = Decimal(row['Max Draft (m)'])
                 except:
                     raise ValidationError(
                         _('File: %(filename)s: Unable to parse Max Draft (m)'),
@@ -203,30 +204,36 @@ class ImportVesselsForm(forms.Form):
 
 
 class ImportCruisesForm(forms.Form):
-    cruises_csv = forms.FileField(required=False)
+    cruises_csv = forms.FileField(
+        widget=forms.ClearableFileInput(
+            attrs={
+                'multiple': True
+            }
+        ),
+        required=False
+    )
 
     def clean_cruises_csv(self):
         cruises_csv = self.files.getlist('cruises_csv')
+        counter = 0
         for csv_file in cruises_csv:
             filename = csv_file.name[:-4]
-            counter = 0
+            counter += 1
+            cache.set('validation_progress',{
+                'progress': counter,
+                'total': len(cruises_csv),
+                'file': filename
+            })
             try:
                 csv_file.seek(0)
                 reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
                 headers = reader.fieldnames
-                total_rows = len(list(reader))
             except:
                 raise ValidationError(
                     _('File: %(filename)s: Unable to decode file headers'),
                     params={'filename': filename},
                 )
             for row in reader:
-                counter += 1
-                cache.set('validation_progress',{
-                    'progress': counter,
-                    'total': total_rows,
-                    'file': filename
-                })
                 try:
                     cuid = row['CUID']
                 except:
@@ -243,18 +250,7 @@ class ImportCruisesForm(forms.Form):
                         params={'filename': filename},
                     )
                 try:
-                    vessel_obj = None
-                    # parse out the vessel name to match its formatting from Vessel CSV
                     vessel_name_csv = row['ShipName'].strip()
-                    if vessel_name_csv == 'N/A':
-                        vessel_name_csv = None
-
-                    if vessel_name_csv:
-                        vessels = Vessel.objects.all()
-                        for vessel in vessels:
-                            if vessel.full_vessel_name == vessel_name_csv:
-                                vessel_obj = vessel
-                                pass
                 except:
                     raise ValidationError(
                         _('File: %(filename)s: Unable to parse Vessel Name'),
