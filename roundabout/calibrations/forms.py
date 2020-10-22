@@ -19,17 +19,18 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
+from bootstrap_datepicker_plus import DatePickerInput
 from django import forms
-from .models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientValue, CoefficientNameEvent
+from django.core.exceptions import ValidationError
+from django.forms.models import inlineformset_factory
+from django.utils.translation import gettext_lazy as _
+from sigfig import round
+
 from roundabout.inventory.models import Inventory
 from roundabout.parts.models import Part
 from roundabout.users.models import User
-from decimal import Decimal
-from django.forms.models import inlineformset_factory, BaseInlineFormSet
-from bootstrap_datepicker_plus import DatePickerInput
-from sigfig import round
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
+from .models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientValue, CoefficientNameEvent
+
 
 # Event form
 # Inputs: Effective Date and Approval

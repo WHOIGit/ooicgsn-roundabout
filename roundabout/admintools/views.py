@@ -20,34 +20,28 @@
 """
 
 import csv
-import io
-import json
-import requests
-from dateutil import parser
 import datetime
+import io
 from types import SimpleNamespace
 
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
-from django.urls import reverse, reverse_lazy
-from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
+import requests
+from dateutil import parser
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
+from django.http import HttpResponse
+from django.urls import reverse, reverse_lazy
+from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, \
+    TemplateView, FormView
 
-
+from roundabout.assemblies.models import Assembly, AssemblyPart, AssemblyRevision
+from roundabout.calibrations.forms import parse_valid_coeff_vals
+from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
+from roundabout.inventory.models import Inventory, Action
+from roundabout.inventory.utils import _create_action_history
+from roundabout.locations.models import Location
+from roundabout.parts.models import Revision, Documentation, PartType
+from roundabout.userdefinedfields.models import FieldValue, Field
 from .forms import PrinterForm, ImportInventoryForm, ImportCalibrationForm
 from .models import *
-from roundabout.userdefinedfields.models import FieldValue, Field
-from roundabout.inventory.models import Inventory, Action
-from roundabout.parts.models import Part, Revision, Documentation, PartType
-from roundabout.locations.models import Location
-from roundabout.assemblies.models import AssemblyType, Assembly, AssemblyPart, AssemblyRevision
-from roundabout.assemblies.views import _make_tree_copy
-from roundabout.inventory.utils import _create_action_history
-from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
-from roundabout.calibrations.forms import validate_coeff_vals, parse_valid_coeff_vals
-from roundabout.users.models import User
 
 
 # Test URL for Sentry.io logging

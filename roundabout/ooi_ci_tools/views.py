@@ -21,38 +21,20 @@
 
 import csv
 import io
-import json
 import re
-import requests
-from dateutil import parser
-import datetime
-from types import SimpleNamespace
 from decimal import Decimal
 
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.shortcuts import render, redirect
-from django.urls import reverse, reverse_lazy
-from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
+from dateutil import parser
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.cache import cache
-from celery.result import AsyncResult
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.views.generic import TemplateView, FormView
 
-
-from .forms import ImportDeploymentsForm, ImportVesselsForm, ImportCruisesForm, ImportCalibrationForm
-from .models import *
-from .tasks import parse_cal_files
-
-from roundabout.userdefinedfields.models import FieldValue, Field
-from roundabout.inventory.models import Inventory, Action
-from roundabout.parts.models import Part, Revision, Documentation, PartType
-from roundabout.assemblies.models import AssemblyType, Assembly, AssemblyPart, AssemblyRevision
-from roundabout.inventory.utils import _create_action_history
-from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
-from roundabout.calibrations.forms import validate_coeff_vals, parse_valid_coeff_vals
-from roundabout.users.models import User
 from roundabout.cruises.models import Cruise, Vessel
+from .forms import ImportDeploymentsForm, ImportVesselsForm, ImportCruisesForm, ImportCalibrationForm
+from .tasks import parse_cal_files
 
 
 # Github CSV file importer for Vessels

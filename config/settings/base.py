@@ -25,8 +25,6 @@ Base settings to build other settings files upon.
 
 import environ
 
-from datetime import timedelta
-
 ROOT_DIR = environ.Path(__file__) - 3  # (roundabout/config/settings/base.py - 3 = roundabout/)
 APPS_DIR = ROOT_DIR.path('roundabout')
 
