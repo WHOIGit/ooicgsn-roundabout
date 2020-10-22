@@ -21,34 +21,34 @@
 
 import json
 import operator
+from fnmatch import fnmatch
 from functools import reduce
 from urllib.parse import unquote
-from fnmatch import fnmatch
 
-from django.urls import reverse, reverse_lazy
-from django.utils.html import format_html, mark_safe
+import django_tables2 as tables
+from django.contrib.auth.mixins import LoginRequiredMixin
 #from django.template.defaultfilters import register
 #from django.shortcuts import render, get_object_or_404
 #from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 #from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, QueryDict
-from django.db.models import Q, F, Max, Min, Count, OuterRef, Subquery
+from django.db.models import Q, Count, OuterRef, Subquery
 from django.shortcuts import redirect
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-
-import django_tables2 as tables
+from django.urls import reverse
+from django.utils.html import mark_safe
 from django_tables2 import SingleTableView
-from django_tables2.export.views import ExportMixin
 
-from roundabout.users.models import User
-from roundabout.parts.models import Part
-from roundabout.builds.models import Build
-from roundabout.inventory.models import Inventory, Action
 from roundabout.assemblies.models import Assembly
-from roundabout.userdefinedfields.models import Field
+from roundabout.builds.models import Build
 from roundabout.calibrations.models import CalibrationEvent, CoefficientValueSet
 from roundabout.configs_constants.models import ConfigEvent, ConfigValue
+from roundabout.inventory.models import Inventory, Action
+from roundabout.parts.models import Part
+from roundabout.search.mixins import ExportStreamMixin
+from roundabout.userdefinedfields.models import Field
+from roundabout.users.models import User
+from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, ActionTable, CalibrationTable, \
+    ConfigConstTable, UDF_Column
 
-from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable,  ActionTable, CalibrationTable, ConfigConstTable, UDF_Column
 
 def rgetattr(obj, attr, *args):
     """Recursive getattr(), where attr is dot.separated"""
@@ -68,13 +68,13 @@ def searchbar_redirect(request):
             if fnmatch(query.strip(),'????-??-??'):
                 query = query.strip()
                 getstr = '?f=.0.calibration_event__calibration_date&l=.0.exact&q=.0.{query}'
-            else: getstr = '?f=.0.calibration_event__inventory__serial_number&f=.0.calibration_event__inventory__part__name&f=.0.coefficient_name__calibration_name&f=.0.calibration_event__user_approver__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
+            else: getstr = '?f=.0.calibration_event__inventory__serial_number&f=.0.calibration_event__inventory__part__name&f=.0.coefficient_name__calibration_name&f=.0.calibration_event__user_approver__any__name&f=.0.calibration_event__user_draft__any__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
         elif model == 'configconsts':
             if fnmatch(query.strip(), '????-??-??'):
                 query = query.strip()
                 getstr = '?f=.0.config_event__configuration_date&l=.0.exact&q=.0.{query}'
             else:
-                getstr = '?f=.0.config_event__inventory__serial_number&f=.0.config_event__inventory__part__name&f=.0.config_name__name&f=.0.config_event__user_approver__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
+                getstr = '?f=.0.config_event__inventory__serial_number&f=.0.config_event__inventory__part__name&f=.0.config_name__name&f=.0.config_event__user_approver__any__name&f=.0.config_event__user_draft__any__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
         elif model=='part':         getstr = '?f=.0.part_number&f=.0.name&f=.0.friendly_name&l=.0.icontains&q=.0.{query}'
         elif model == 'build':      getstr = '?f=.0.build_number&f=.0.assembly__name&f=.0.assembly__assembly_type__name&f=.0.assembly__description&f=.0.build_notes&f=.0.location__name&l=.0.icontains&q=.0.{query}'
         elif model == 'assembly':   getstr = '?f=.0.assembly_number&f=.0.name&f=.0.assembly_type__name&f=.0.description&l=.0.icontains&q=.0.{query}'
@@ -84,7 +84,7 @@ def searchbar_redirect(request):
     return resp
 
 
-class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
+class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableView):
     model = None
     table_class = None
     context_object_name = 'query_objs'
@@ -115,6 +115,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
             secret_rows_ANDed =[]
             for row_id in row_IDs:
                 row_items = [(v,t) for c,r,v,t in card_things if r==row_id]
+                print(row_items)
                 fields = [v for v,t in row_items if t=='f']
                 lookup = [v for v,t in row_items if t=='l']
                 query = [v for v,t in row_items if t=='q']
@@ -655,7 +656,7 @@ class CalibrationTableView(GenericSearchTableView):
                         dict(value="calibration_event__user_approver__any__name", text="Calibration Event: Approvers", legal_lookup='ITER_LOOKUP'),
                         dict(value="calibration_event__user_draft__any__name", text="Calibration Event: Reviewers", legal_lookup='ITER_LOOKUP'),
                         dict(value="calibration_event__approved", text="Calibration Event: Approved Flag", legal_lookup='BOOL_LOOKUP'),
-                        dict(value="created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
+                        #dict(value="calibration_event__created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
                         dict(value="value_set", text="Value", legal_lookup='STR_LOOKUP'),
                         dict(value="notes", text="Notes", legal_lookup='STR_LOOKUP'),
                         #dict(value="calibration_event__is_current", text="Latest Only", legal_lookup='BOOL_LOOKUP'),
@@ -692,11 +693,11 @@ class ConfigConstTableView(GenericSearchTableView):
         avail_fields = [dict(value="config_event__inventory__serial_number", text="Inventory: SN", legal_lookup='STR_LOOKUP'),
                         dict(value="config_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
                         dict(value="config_name__name", text="Config/Const Name", legal_lookup='STR_LOOKUP'),
-                        dict(value="config_event__configuraton_date", text="Config/Const Event: Date", legal_lookup='DATE_LOOKUP'),
+                        dict(value="config_event__configuration_date", text="Config/Const Event: Date", legal_lookup='DATE_LOOKUP'),
                         dict(value="config_event__user_approver__any__name", text="Config/Const Event: Approvers", legal_lookup='ITER_LOOKUP'),
                         dict(value="config_event__user_draft__any__name", text="Config/Const Event: Reviewers", legal_lookup='ITER_LOOKUP'),
                         dict(value="config_event__approved", text="Config/Const Event: Approved Flag", legal_lookup='BOOL_LOOKUP'),
-                        dict(value="created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
+                        #dict(value="config_event__created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
                         dict(value="config_value", text="Value", legal_lookup='STR_LOOKUP'),
                         dict(value="notes", text="Notes", legal_lookup='STR_LOOKUP'),
                         ]

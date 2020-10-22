@@ -19,21 +19,19 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from django.utils.html import format_html, mark_safe
-from django.urls import reverse
-from django.db.models import Count
-
 import django_tables2 as tables
-from django_tables2.columns import Column, DateColumn, DateTimeColumn, BooleanColumn, ManyToManyColumn
+from django.urls import reverse
+from django.utils.html import format_html
+from django_tables2.columns import Column, DateColumn, DateTimeColumn, ManyToManyColumn
 from django_tables2_column_shifter.tables import ColumnShiftTable
 
-from roundabout.parts.models import Part
-from roundabout.builds.models import Build
-from roundabout.inventory.models import Inventory, Action
 from roundabout.assemblies.models import Assembly
-from roundabout.userdefinedfields.models import Field
+from roundabout.builds.models import Build
 from roundabout.calibrations.models import CalibrationEvent
 from roundabout.configs_constants.models import ConfigEvent
+from roundabout.inventory.models import Inventory, Action
+from roundabout.parts.models import Part
+
 
 class UDF_Column(ManyToManyColumn):
     prefix = 'udf-'
@@ -148,7 +146,7 @@ class ActionTable(SearchTable):
 class CalibrationTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = CalibrationEvent
-        fields = ['inventory__serial_number','inventory__part__name','calibration_date','deployment','approved','user_approver__all__name','user_draft__all__name']
+        fields = ['inventory__serial_number','inventory__part__name','calibration_date','deployment','approved','user_approver__all__name','user_draft__all__name','created_at']
         base_shown_cols = ['inventory__serial_number','calibration_date','approved']
 
     inventory__serial_number = Column(verbose_name='Inventory SN', attrs={'style':'white-space: nowrap;'},
@@ -167,22 +165,23 @@ class CalibrationTable(SearchTable):
             accessor='coefficient_value_sets', transform=lambda x: format_html('<b>{}:</b> [{}]<br>'.format(x.coefficient_name,x.notes)) if x.notes else '', separator='\n')
 
     detail = Column(verbose_name='CalibrationEvent Note', accessor='detail')
+    created_at = DateTimeColumn(verbose_name='Date Entered', accessor='created_at', format='Y-m-d H:i')
 
 
 class ConfigConstTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = ConfigEvent
-        fields = ['inventory__serial_number','inventory__part__name','configuration_date','deployment','approved','user_approver__all__name','user_draft__all__name']
-        base_shown_cols = ['inventory__serial_number','configuration_date','approved']
+        fields = ['inventory__serial_number','inventory__part__name','config_type','configuration_date','deployment','approved','user_approver__all__name','user_draft__all__name','created_at']
+        base_shown_cols = ['inventory__serial_number','configuration_date','config_type','approved']
 
     inventory__serial_number = Column(verbose_name='Inventory SN', attrs={'style':'white-space: nowrap;'},
             linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('inventory__pk')]))
     inventory__part__name = Column(verbose_name='Part',
             linkify=dict(viewname="parts:parts_detail", args=[tables.A('inventory__part__pk')]))
+    config_type = Column(verbose_name='Type')
     configuration_date = DateColumn(verbose_name='Event Date', format='Y-m-d',
             linkify=dict(viewname="exports:configconst", args=[tables.A('pk')])
             )
-
     user_approver__all__name = ManyToManyColumn(verbose_name='Approvers', accessor='user_approver', transform=lambda x: x.name, default='')
     user_draft__all__name = ManyToManyColumn(verbose_name='Reviewers', accessor='user_draft', transform=lambda x: x.name, default='')
 
@@ -192,4 +191,5 @@ class ConfigConstTable(SearchTable):
             accessor='config_values', transform=lambda x: format_html('<b>{}:</b> [{}]<br>'.format(x.config_name,x.notes)) if x.notes else '', separator='\n')
 
     detail = Column(verbose_name='ConfigEvent Note', accessor='detail')
+    created_at = DateTimeColumn(verbose_name='Date Entered', accessor='created_at', format='Y-m-d H:i')
 
