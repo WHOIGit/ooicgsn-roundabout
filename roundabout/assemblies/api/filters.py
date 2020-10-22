@@ -52,7 +52,7 @@ class AssemblyRevisionFilter(filters.FilterSet):
 class AssemblyPartFilter(filters.FilterSet):
     assembly_revision__revision_code = filters.CharFilter(field_name='assembly_revision__revision_code', lookup_expr='icontains')
     part__name = filters.CharFilter(field_name='part__name', lookup_expr='icontains')
-    part__number = filters.CharFilter(field_name='part__number', lookup_expr='icontains')
+    part__number = filters.CharFilter(field_name='part__part_number', lookup_expr='icontains')
     is_root = filters.BooleanFilter(field_name='parent', lookup_expr='isnull')
     has_children = filters.BooleanFilter(field_name='children', lookup_expr='isnull', exclude=True)
 

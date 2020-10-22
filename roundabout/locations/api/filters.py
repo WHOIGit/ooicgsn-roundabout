@@ -28,8 +28,8 @@ from ..models import *
 class LocationFilter(filters.FilterSet):
     created_at = filters.DateFilter(lookup_expr='contains')
     updated_at = filters.DateFilter(lookup_expr='contains')
-    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
-    updated_at_range = filters.DateFromToRangeFilter(field_name='updated_at')
+    created_at__range = filters.DateFromToRangeFilter(field_name='created_at')
+    updated_at__range = filters.DateFromToRangeFilter(field_name='updated_at')
     name = filters.CharFilter(lookup_expr='icontains')
     is_root = filters.BooleanFilter(field_name='parent', lookup_expr='isnull')
     has_children = filters.BooleanFilter(field_name='children', lookup_expr='isnull', exclude=True)
