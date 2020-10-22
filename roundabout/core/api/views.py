@@ -19,8 +19,9 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import viewsets
 from rest_flex_fields import filter_backends as flex_filters
+from rest_framework import viewsets
+
 
 # Flex Filter custom ModelViewSet to dynamically handle prefetch/select_related
 # query set up for related fields

@@ -19,13 +19,13 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import generics, viewsets, filters
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
 from roundabout.core.api.views import FlexModelViewSet
-from ..models import Inventory, InventoryDeployment, Action, PhotoNote
-from .serializers import InventorySerializer, InventoryDeploymentSerializer, ActionSerializer, PhotoNoteSerializer
 from .filters import *
+from .serializers import InventorySerializer, InventoryDeploymentSerializer, ActionSerializer, PhotoNoteSerializer
+
 
 class InventoryViewSet(FlexModelViewSet):
     serializer_class = InventorySerializer

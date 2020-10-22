@@ -20,7 +20,9 @@
 """
 
 from factory.django import DjangoModelFactory
+
 from roundabout.locations.models import Location
+
 
 class LocationFactory(DjangoModelFactory):
     """

@@ -21,8 +21,8 @@
 
 from django_filters import rest_framework as filters
 
-from ..models import *
 from roundabout.core.api.filters import NumberInFilter
+from ..models import *
 
 
 class BuildFilter(filters.FilterSet):

@@ -20,13 +20,12 @@
 """
 
 from django.db.models import Prefetch
-from rest_framework import generics, viewsets, filters
 from rest_framework.permissions import IsAuthenticated
 
 from roundabout.core.api.views import FlexModelViewSet
-from ..models import Assembly, AssemblyRevision, AssemblyPart, AssemblyType
-from .serializers import *
 from .filters import *
+from .serializers import *
+
 
 class AssemblyViewSet(FlexModelViewSet):
     serializer_class = AssemblySerializer

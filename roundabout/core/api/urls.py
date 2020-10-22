@@ -20,15 +20,17 @@
 """
 
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter, SimpleRouter
 from rest_framework.authtoken.views import *
-from roundabout.inventory.api.views import InventoryViewSet, InventoryDeploymentViewSet, ActionViewSet, PhotoNoteViewSet
-from roundabout.assemblies.api.views import AssemblyViewSet, AssemblyRevisionViewSet, AssemblyPartViewSet, AssemblyTypeViewSet
+from rest_framework.routers import DefaultRouter
+
+from roundabout.assemblies.api.views import AssemblyViewSet, AssemblyRevisionViewSet, AssemblyPartViewSet, \
+    AssemblyTypeViewSet
+from roundabout.builds.api.views import BuildViewSet, DeploymentViewSet
 from roundabout.calibrations.api.views import *
 from roundabout.configs_constants.api.views import *
-from roundabout.locations.api.views import LocationViewSet
-from roundabout.builds.api.views import BuildViewSet, DeploymentViewSet
 from roundabout.cruises.api.views import CruiseViewSet, VesselViewSet
+from roundabout.inventory.api.views import InventoryViewSet, InventoryDeploymentViewSet, ActionViewSet, PhotoNoteViewSet
+from roundabout.locations.api.views import LocationViewSet
 from roundabout.parts.api.views import PartViewSet, PartTypeViewSet, RevisionViewSet, DocumentationViewSet
 from roundabout.userdefinedfields.api.views import FieldViewSet, FieldValueViewSet
 from roundabout.users.api.views import UserViewSet

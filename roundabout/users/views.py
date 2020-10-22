@@ -20,16 +20,17 @@
 """
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import AdminPasswordChangeForm
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
-from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, FormView, DeleteView
-from django.http import HttpResponseRedirect, HttpResponse
-from django.contrib.auth.hashers import make_password, check_password
-from django.contrib.auth.forms import AdminPasswordChangeForm
+from django.views.generic import DetailView, ListView, RedirectView, UpdateView, CreateView, FormView, DeleteView
 from rest_framework.authtoken.models import Token
 
 from .forms import UserAdminCreateForm, UserAdminUpdateForm
+
 User = get_user_model()
 
 

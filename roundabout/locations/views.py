@@ -19,19 +19,18 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
-from django.views.generic import DetailView, CreateView, ListView, RedirectView, \
-                                 UpdateView, DeleteView, TemplateView, FormView
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-
-from .forms import LocationForm, LocationDeleteForm
-from .models import Location
-from roundabout.inventory.models import Deployment, Action
-from roundabout.builds.models import BuildAction
+from django.views.generic import DetailView, CreateView, UpdateView, DeleteView, TemplateView, FormView
 
 from common.util.mixins import AjaxFormMixin
+from roundabout.builds.models import BuildAction
+from roundabout.inventory.models import Action
+from .forms import LocationForm, LocationDeleteForm
+from .models import Location
+
 
 # AJAX functions for Forms and Navtree
 # ------------------------------------------------------------------------------
