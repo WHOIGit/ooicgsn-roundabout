@@ -19,13 +19,15 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from factory.django import DjangoModelFactory
+import random
+import string
+
 import factory
-import random, string
+from factory.django import DjangoModelFactory
+from faker import Faker
 
 from roundabout.parts.models import Part, PartType, Documentation, Revision
 
-from faker import Faker
 fake = Faker()
 
 # Generate random Part Numbers in the correct format

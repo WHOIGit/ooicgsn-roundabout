@@ -19,26 +19,24 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os
 import datetime
+import os
 from datetime import timedelta
 
-from django.db import models
-from django.contrib.postgres.fields import JSONField
+from django.core.validators import MaxValueValidator, MinValueValidator, FileExtensionValidator
 from django.urls import reverse
 from django.utils import timezone
-from django.core.validators import MaxValueValidator, MinValueValidator, FileExtensionValidator
-from model_utils import FieldTracker
 from mptt.models import MPTTModel, TreeForeignKey
 
-from .managers import *
-from roundabout.locations.models import Location
-from roundabout.parts.models import Part, Revision
 from roundabout.assemblies.models import Assembly, AssemblyPart
-from roundabout.cruises.models import Cruise
-from roundabout.users.models import User
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
+from roundabout.cruises.models import Cruise
+from roundabout.locations.models import Location
+from roundabout.parts.models import Part, Revision
+from roundabout.users.models import User
+from .managers import *
+
 labels = set_app_labels()
 
 # Private functions for use in Models

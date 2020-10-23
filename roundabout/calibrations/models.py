@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -19,16 +19,13 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from django.core.validators import MinValueValidator, DecimalValidator, MaxValueValidator, RegexValidator, MaxLengthValidator
 from django.utils import timezone
-from roundabout.parts.models import Part
+
 from roundabout.inventory.models import Inventory, Deployment, Action
+from roundabout.parts.models import Part
 from roundabout.users.models import User
-from decimal import Decimal
-from sigfig import round
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
 
 
 # Tracks Calibration Coefficient event history across Inventory Parts
@@ -53,7 +50,7 @@ class CalibrationEvent(models.Model):
     deployment = models.ForeignKey(Deployment, related_name='calibration_events', on_delete=models.CASCADE, null=True)
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
     detail = models.TextField(blank=True)
-    
+
     def get_actions(self):
         return self.actions.filter(object_type=Action.CALEVENT)
 
@@ -62,7 +59,7 @@ class CalibrationEvent(models.Model):
 
     def get_sorted_approvers(self):
         return self.user_approver.all().order_by('username')
-    
+
 
 # Tracks Coefficient Name Event history across Parts
 class CoefficientNameEvent(models.Model):
@@ -132,7 +129,7 @@ class CoefficientValueSet(models.Model):
     calibration_event = models.ForeignKey(CalibrationEvent, related_name='coefficient_value_sets', on_delete=models.CASCADE, null=True)
     def value_set_with_export_formatting(self):
         if self.coefficient_name.value_set_type == '1d':
-            return '"[{}]"'.format(self.value_set)
+            return '[{}]'.format(self.value_set)
         elif self.coefficient_name.value_set_type == '2d':
             return 'SheetRef:{}'.format(self.coefficient_name)
         else:  # self.coefficient_name.value_set_type == 'sl'

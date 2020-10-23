@@ -19,14 +19,12 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import serializers
 from rest_flex_fields import FlexFieldsModelSerializer
+from rest_framework import serializers
 
-from ..models import CalibrationEvent, CoefficientValueSet, CoefficientName, CoefficientNameEvent, CoefficientValue
-from roundabout.parts.api.serializers import PartSerializer
 from roundabout.inventory.models import Inventory, Deployment
 from roundabout.parts.models import Part
-from roundabout.users.models import User
+from ..models import CalibrationEvent, CoefficientValueSet, CoefficientName, CoefficientNameEvent, CoefficientValue
 
 API_VERSION = 'api_v1'
 

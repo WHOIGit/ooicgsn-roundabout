@@ -22,7 +22,6 @@
 from django_filters import rest_framework as filters
 
 from ..models import Assembly, AssemblyRevision, AssemblyPart
-from roundabout.core.api.filters import NumberInFilter
 
 
 class AssemblyFilter(filters.FilterSet):

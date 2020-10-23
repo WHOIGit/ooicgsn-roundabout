@@ -19,28 +19,19 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from celery import shared_task
-
 import csv
-import io
-import json
-import re
-import requests
-from dateutil import parser
 import datetime
+import io
 from types import SimpleNamespace
-from decimal import Decimal
+
+from celery import shared_task
 from django.core.cache import cache
 
-from roundabout.userdefinedfields.models import FieldValue, Field
-from roundabout.inventory.models import Inventory, Action
-from roundabout.parts.models import Part, Revision, Documentation, PartType
-from roundabout.assemblies.models import AssemblyType, Assembly, AssemblyPart, AssemblyRevision
-from roundabout.inventory.utils import _create_action_history
+from roundabout.calibrations.forms import parse_valid_coeff_vals
 from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
-from roundabout.calibrations.forms import validate_coeff_vals, parse_valid_coeff_vals
-from roundabout.users.models import User
-from roundabout.cruises.models import Cruise, Vessel
+from roundabout.inventory.models import Inventory, Action
+from roundabout.inventory.utils import _create_action_history
+
 
 @shared_task(bind = True)
 def parse_cal_files(self):

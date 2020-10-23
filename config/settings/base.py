@@ -25,8 +25,6 @@ Base settings to build other settings files upon.
 
 import environ
 
-from datetime import timedelta
-
 ROOT_DIR = environ.Path(__file__) - 3  # (roundabout/config/settings/base.py - 3 = roundabout/)
 APPS_DIR = ROOT_DIR.path('roundabout')
 
@@ -319,7 +317,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
-        'roundabout.core.api.renderers.BrowsableAPIRendererWithoutForms',
+        'roundabout.core.api.renderers.CustomBrowsableAPIRenderer',
     ),
     'DEFAULT_PAGINATION_CLASS': 'drf_link_header_pagination.LinkHeaderPagination',
     'PAGE_SIZE': 30,
