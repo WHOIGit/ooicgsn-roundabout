@@ -19,16 +19,16 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
+from rest_flex_fields import FlexFieldsModelSerializer
 from rest_framework import serializers
 from rest_framework.reverse import reverse
-from rest_flex_fields import FlexFieldsModelSerializer
 
-from ..models import Build
-from roundabout.inventory.models import Inventory, Deployment, InventoryDeployment, Action
-from roundabout.locations.models import Location
-from roundabout.cruises.models import Cruise
 from roundabout.assemblies.models import Assembly, AssemblyRevision
 from roundabout.core.templatetags.common_tags import time_at_sea_display
+from roundabout.cruises.models import Cruise
+from roundabout.inventory.models import Deployment
+from roundabout.locations.models import Location
+from ..models import Build
 
 API_VERSION = 'api_v1'
 

@@ -19,23 +19,20 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import serializers
 from rest_flex_fields import FlexFieldsModelSerializer
+from rest_framework import serializers
 
-from ..models import Inventory, InventoryDeployment, Deployment, Action, PhotoNote
-from roundabout.users.models import User
-from roundabout.locations.models import Location
-from roundabout.parts.models import Part, Revision
 from roundabout.assemblies.models import AssemblyPart
 from roundabout.builds.models import Build
-from roundabout.cruises.models import Cruise
 from roundabout.calibrations.models import CalibrationEvent, CoefficientNameEvent
 from roundabout.configs_constants.models import ConstDefaultEvent, ConfigEvent, ConfigDefaultEvent, ConfigNameEvent
-
-from roundabout.locations.api.serializers import LocationSerializer
-from roundabout.parts.api.serializers import PartSerializer
-from roundabout.calibrations.api.serializers import CalibrationEventSerializer
 from roundabout.core.templatetags.common_tags import time_at_sea_display
+from roundabout.cruises.models import Cruise
+from roundabout.locations.api.serializers import LocationSerializer
+from roundabout.locations.models import Location
+from roundabout.parts.models import Part, Revision
+from roundabout.users.models import User
+from ..models import Inventory, InventoryDeployment, Deployment, Action, PhotoNote
 
 API_VERSION = 'api_v1'
 

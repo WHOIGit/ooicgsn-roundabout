@@ -20,20 +20,18 @@
 """
 
 import csv
-import io
 import datetime
+import io
 from types import SimpleNamespace
 
 from django import forms
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-from django.core.cache import cache
 
-
-from roundabout.inventory.models import Inventory, Action
-from roundabout.inventory.utils import _create_action_history
-from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
-from roundabout.calibrations.forms import validate_coeff_vals, parse_valid_coeff_vals
+from roundabout.calibrations.forms import validate_coeff_vals
+from roundabout.calibrations.models import CoefficientName
+from roundabout.inventory.models import Inventory
 from roundabout.users.models import User
 
 

@@ -21,7 +21,6 @@
 
 from django_filters import rest_framework as filters
 
-from roundabout.core.api.filters import NumberInFilter
 from ..models import *
 
 
@@ -52,7 +51,7 @@ class RevisionFilter(filters.FilterSet):
     part__name = filters.CharFilter(field_name='part__name', lookup_expr='icontains')
     part__part_number = filters.CharFilter(field_name='part__part_number', lookup_expr='icontains')
     created_at = filters.DateFilter(lookup_expr='contains')
-    created_at_range = filters.DateFromToRangeFilter(field_name='created_at')
+    created_at__range = filters.DateFromToRangeFilter(field_name='created_at')
     unit_cost = filters.NumberFilter()
     unit_cost__gt = filters.NumberFilter(field_name='unit_cost', lookup_expr='gt')
     unit_cost__lt = filters.NumberFilter(field_name='unit_cost', lookup_expr='lt')

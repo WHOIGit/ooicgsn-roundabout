@@ -19,13 +19,13 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import serializers
 from rest_flex_fields import FlexFieldsModelSerializer
+from rest_framework import serializers
 
-from ..models import *
-from roundabout.parts.models import Part
 from roundabout.inventory.models import Inventory
+from roundabout.parts.models import Part
 from roundabout.users.models import User
+from ..models import *
 
 API_VERSION = 'api_v1'
 
@@ -103,6 +103,7 @@ class FieldValueSerializer(FlexFieldsModelSerializer):
         queryset = User.objects
     )
     field_value = serializers.SerializerMethodField('get_field_value')
+    field_name = serializers.SerializerMethodField('get_field_name')
 
     class Meta:
         model = FieldValue
@@ -110,6 +111,7 @@ class FieldValueSerializer(FlexFieldsModelSerializer):
             'id',
             'url',
             'field_value',
+            'field_name',
             'field',
             'inventory',
             'part',
@@ -129,3 +131,6 @@ class FieldValueSerializer(FlexFieldsModelSerializer):
 
     def get_field_value(self, obj):
         return obj.get_field_value
+
+    def get_field_name(self, obj):
+        return obj.field.field_name
