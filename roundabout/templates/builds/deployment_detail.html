@@ -35,7 +35,12 @@
 </div>
 
 <div class="collapse mt-3" id="deployment-{{ deployment.id }}-{{ deployment_type }}">
-
+    <div class="ajax-btn float-right">
+        <a href="#" data-update-url="{% url 'builds:ajax_deployment_update' deployment.id %}"
+            data-node-id="{{ current_deployment.id }}"
+            class="btn btn-primary btn-sm"
+            role="button">Edit Deployment Details</a>
+    </div>
     <p>Build:
         <a href="{% url 'builds:builds_detail' deployment.build.id %}">{{ deployment.build }}</a>
     </p>
@@ -46,7 +51,7 @@
         <p>{{ label_deployments_app_singular }} To Field Date: {{ deployment.deployment_to_field_date }}</p>
     {% endif %}
 
-    {% if deployment.deployment_to_field_date %}
+    {% if deployment.deployment_recovery_date %}
         <p>{{ label_deployments_app_singular }} Recovery Date: {{ deployment.deployment_recovery_date }}</p>
     {% endif %}
 
@@ -64,6 +69,12 @@
 
     {% if deployment.deployment_time_in_field %}
         <p>Deployment Time in Field: {{ deployment.deployment_time_in_field|time_at_sea_display }}
+    {% endif %}
+
+    {% if deployment.current_status != 'startdeployment' and deployment.current_status != 'deploymentburnin' %}
+        <p>Latitude: {{ deployment.latitude}}</p>
+        <p>Longitude: {{ deployment.longitude }}</p>
+        <p>Depth: {{ deployment.depth }} m</p>
     {% endif %}
 
     <table class="table table-striped action-table">

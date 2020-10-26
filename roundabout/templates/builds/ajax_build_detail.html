@@ -103,12 +103,6 @@
                 {% if build.current_deployment.current_status == 'deploymenttofield' %}
 
                     <a class="dropdown-item" href="#"
-                        data-detail-url="{% url 'builds:ajax_deployment_action' 'deploymentdetails' build.current_deployment.id build.id %}"
-                        data-node-id="{{ build.id }}"
-                        data-location-id="{{ build.location.id}}"
-                        data-node-type="{{ node_type }}">Update {{ label_deployments_app_singular }} Details</a>
-
-                    <a class="dropdown-item" href="#"
                         data-detail-url="{% url 'builds:ajax_deployment_action' 'deploymentrecover' build.current_deployment.id build.id %}"
                         data-node-id="{{ build.id }}"
                         data-location-id="{{ build.location.id}}"
@@ -221,7 +215,7 @@
 
         <p>Current Location: {{ build.location }}</p>
 
-        <p>Total Time in Field: {{ build.total_time_at_sea|time_at_sea_display }}</p>
+        <p>Total Time in Field: {{ build.time_at_sea|time_at_sea_display }}</p>
 
         {% if percent_complete %}
             <h6>Percent Built</h6>
@@ -245,7 +239,12 @@
 
     {% if build.is_deployed %}
         <hr>
-
+        <div class="ajax-btn float-right">
+            <a href="#" data-update-url="{% url 'builds:ajax_deployment_update' current_deployment.id %}"
+                data-node-id="{{ current_deployment.id }}"
+                class="btn btn-primary btn-sm"
+                role="button">Edit Deployment Details</a>
+        </div>
         <h5>Current {{ label_deployments_app_singular }} Data</h5>
         <p>{{ label_deployments_app_singular }} Number: {{ current_deployment.deployment_number }}</p>
         <p>Final {{ label_deployments_app_singular }} Location: {{ current_deployment.deployed_location }}</p>
@@ -272,8 +271,8 @@
 
         </div>
 
-        {% if current_deployment.get_deploytosea_details %}
-            <p>{{ label_deployments_app_singular }} Date: {{ current_deployment.deployment_to_field_date|date:"n/j/y H:i" }}</p>
+        {% if current_deployment.current_status != 'startdeployment' and current_deployment.current_status != 'deploymentburnin' %}
+            <p>{{ label_deployments_app_singular }} to Field Date: {{ current_deployment.deployment_to_field_date|date:"n/j/y H:i" }}</p>
             <p>Latitude: {{ current_deployment.latitude}}</p>
             <p>Longitude: {{ current_deployment.longitude }}</p>
             <p>Depth: {{ current_deployment.depth }} m</p>

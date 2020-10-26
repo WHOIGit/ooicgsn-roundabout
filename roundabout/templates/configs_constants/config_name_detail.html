@@ -213,7 +213,7 @@
         // // Toggle display of Constant functionality 
         let user_id = '{{ user.id }}'
         let inv_part_type = '{{ part_template.part_type }}';
-        if (inv_part_type == 'Instrument') {
+        if (inv_part_type == 'Instrument' || inv_part_type == 'Electrical') {
             $('#configuration_constant-section').show();
         } else {
             $('#configuration_constant-section').hide();

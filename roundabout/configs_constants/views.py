@@ -355,11 +355,13 @@ class EventConfigNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         form.fields['user_draft'].required = True
+        part_type = Part.objects.get(id=part_id).part_type.name
         part_confname_form = PartConfigNameFormset(
             instance=self.object
         )
         part_conf_copy_form = ConfPartCopyForm(
-            part_id = part_id
+            part_id = part_id,
+            part_type=part_type
         )
 
         return self.render_to_response(
@@ -375,13 +377,15 @@ class EventConfigNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
+        part_type = Part.objects.get(id=self.kwargs['pk']).part_type.name
         part_confname_form = PartConfigNameFormset(
             self.request.POST,
             instance=self.object
         )
         part_conf_copy_form = ConfPartCopyForm(
             self.request.POST,
-            part_id = self.kwargs['pk']
+            part_id = self.kwargs['pk'],
+            part_type=part_type
         )
         if (form.is_valid() and part_confname_form.is_valid() and part_conf_copy_form.is_valid()):
             return self.form_valid(form, part_confname_form, part_conf_copy_form)
@@ -459,6 +463,7 @@ class EventConfigNameUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFor
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         part_id = self.object.part.id
+        part_type = self.object.part.part_type.name
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         form.fields['user_draft'].required = False
@@ -466,7 +471,8 @@ class EventConfigNameUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFor
             instance=self.object
         )
         part_conf_copy_form = ConfPartCopyForm(
-            part_id = part_id
+            part_id = part_id,
+            part_type=part_type
         )
 
         return self.render_to_response(
@@ -482,13 +488,16 @@ class EventConfigNameUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFor
         self.object = self.get_object()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
+        part_id = self.object.part.id
+        part_type = self.object.part.part_type.name
         part_confname_form = PartConfigNameFormset(
             self.request.POST,
             instance=self.object
         )
         part_conf_copy_form = ConfPartCopyForm(
             self.request.POST,
-            part_id = self.object.part.id
+            part_id = part_id,
+            part_type=part_type
         )
         if (form.is_valid() and part_confname_form.is_valid() and part_conf_copy_form.is_valid()):
             return self.form_valid(form, part_confname_form, part_conf_copy_form)
