@@ -50,7 +50,6 @@ urlpatterns = [
     path('locations/', include('roundabout.locations.urls', namespace='locations')),
     path('parts/', include('roundabout.parts.urls', namespace='parts')),
     path('inventory/', include('roundabout.inventory.urls', namespace='inventory')),
-    path('deployments/', include('roundabout.inventory.urls_deployment', namespace='deployments')),
     path('admintools/', include('roundabout.admintools.urls', namespace='admintools')),
     path('userdefinedfields/', include('roundabout.userdefinedfields.urls', namespace='userdefinedfields')),
     path('assemblies/', include('roundabout.assemblies.urls', namespace='assemblies')),

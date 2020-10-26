@@ -40,7 +40,7 @@ labels = set_app_labels()
 # Create Deployment for Build
 class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
     model = Deployment
-    form_class = DeploymentForm
+    form_class = DeploymentStartForm
     context_object_name = 'deployment'
     template_name='builds/ajax_deployment_form.html'
 
@@ -120,6 +120,99 @@ class DeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
 
         return context
 
+    # Custom class method to update action histories on Deployment updates
+    def _update_actions(self, obj_to_update=None, action_to_update=None):
+        obj_to_copy = self.object
+        actions_list = [
+            Action.STARTDEPLOYMENT,
+            Action.DEPLOYMENTBURNIN,
+            Action.DEPLOYMENTTOFIELD,
+            Action.DEPLOYMENTRECOVER,
+            Action.DEPLOYMENTRETIRE,
+        ]
+
+        if not obj_to_update:
+            obj_to_update = self.object
+
+        if action_to_update:
+            actions_list = []
+            actions_list = [action_to_update]
+
+        actions = obj_to_update.get_actions()
+        actions = actions.filter(action_type__in=actions_list)
+        for action in actions:
+            if action.action_type == Action.STARTDEPLOYMENT:
+                action.created_at = obj_to_copy.deployment_start_date
+
+            if action.action_type == Action.DEPLOYMENTBURNIN:
+                action.created_at = obj_to_copy.deployment_burnin_date
+
+            if action.action_type == Action.DEPLOYMENTTOFIELD:
+                action.created_at = obj_to_copy.deployment_to_field_date
+
+            if action.action_type == Action.DEPLOYMENTRECOVER:
+                action.created_at = obj_to_copy.deployment_recovery_date
+
+            if action.action_type == Action.DEPLOYMENTRETIRE:
+                action.created_at = obj_to_copy.deployment_retire_date
+            action.save()
+        return actions
+
+    def form_valid(self, form):
+        action_type = 'deploymentdetails'
+        previous_deployment = Deployment.objects.get(id=self.object.pk)
+        self.object = form.save()
+        self.object.build.detail = '%s Details changed.' % (self.object.deployment_number)
+        self.object.build.save()
+        # Create Build Action record for deployment
+        build_record = _create_action_history(self.object.build, action_type, self.request.user,)
+        # Update Deployment Action items to match any date changes
+        self._update_actions(self.object)
+
+        # Check all Inventory deployments associated with this Deployment
+        # If deployment_to_field_date OR deployment_recovery_date matches the Build Deployment,
+        # need to update those Inventory Deployments
+        inventory_deployments = self.object.inventory_deployments.all()
+
+        for inventory_deployment in inventory_deployments:
+            if inventory_deployment.deployment_start_date.replace(second=0, microsecond=0) == previous_deployment.deployment_start_date.replace(second=0, microsecond=0):
+                inventory_deployment.deployment_start_date = self.object.deployment_start_date
+                # Update Deployment Action items to match any date changes
+                self._update_actions(inventory_deployment, Action.STARTDEPLOYMENT)
+
+            if inventory_deployment.deployment_burnin_date == previous_deployment.deployment_burnin_date:
+                inventory_deployment.deployment_burnin_date = self.object.deployment_burnin_date
+                # Update Deployment Action items to match any date changes
+                self._update_actions(inventory_deployment, Action.DEPLOYMENTBURNIN)
+
+            if inventory_deployment.deployment_to_field_date == previous_deployment.deployment_to_field_date:
+                inventory_deployment.deployment_to_field_date = self.object.deployment_to_field_date
+                # Update Deployment Action items to match any date changes
+                self._update_actions(inventory_deployment, Action.DEPLOYMENTTOFIELD)
+
+            if inventory_deployment.deployment_recovery_date == previous_deployment.deployment_recovery_date:
+                inventory_deployment.deployment_recovery_date = self.object.deployment_recovery_date
+                # Update Deployment Action items to match any date changes
+                self._update_actions(inventory_deployment, Action.DEPLOYMENTRECOVER)
+
+            if inventory_deployment.deployment_retire_date == previous_deployment.deployment_retire_date:
+                inventory_deployment.deployment_retire_date = self.object.deployment_retire_date
+                # Update Deployment Action items to match any date changes
+                self._update_actions(inventory_deployment, Action.DEPLOYMENTRETIRE)
+
+            inventory_deployment.save()
+
+        if self.request.is_ajax():
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.build.id,
+                'object_type': self.object.build.get_object_type(),
+                'detail_path': self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
     def get_success_url(self):
         return reverse('builds:ajax_builds_detail', args=(self.object.build.id,))
 
@@ -149,54 +242,24 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         return form_class_name
 
     def form_valid(self, form):
-
+        self.object = form.save()
         action_type = self.kwargs['action_type']
         action_date = form.cleaned_data['date']
         # Set Detail and action_type variables
-        if action_type == 'deploymentburnin':
+        if action_type == Action.DEPLOYMENTBURNIN:
             self.object.detail = '%s Burn In initiated at %s. ' % (self.object.deployment_number, self.object.location)
             self.object.deployment_burnin_date = action_date
-        if action_type == 'deploymenttofield':
+        if action_type == Action.DEPLOYMENTTOFIELD:
             self.object.detail = '%s Deployed to Field: %s. ' % (self.object.deployment_number, self.object.location)
             self.object.deployment_to_field_date = action_date
-        if action_type == 'deploymentrecover':
+            self.object.deployed_location = self.object.location
+        if action_type == Action.DEPLOYMENTRECOVER:
             self.object.detail = '%s Recovered to: %s. ' % (self.object.deployment_number, self.object.location)
             self.object.deployment_recovery_date = action_date
-        if action_type == 'deploymentretire':
+        if action_type == Action.DEPLOYMENTRETIRE:
             self.object.detail = '%s Ended.' % (self.object.deployment_number)
             self.object.deployment_retire_date = action_date
-        if action_type == 'deploymentdetails':
-            self.object.detail = '%s Details set.' % (self.object.deployment_number)
-
-        self.object = form.save()
-
-        # If Deploying to Sea or Updating deployment, set Depth, Lat/Long
-        if action_type == 'deploymenttofield' or action_type == 'deploymentdetails':
-            latitude = form.cleaned_data['latitude']
-            longitude = form.cleaned_data['longitude']
-            depth = form.cleaned_data['depth']
-        else:
-            latitude = None
-            longitude = None
-            depth = None
-
-        # If Deploying to Sea, update Location and add Details Action record
-        if action_type == 'deploymenttofield':
-            self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
-            self.object.deployed_location = self.object.location
-            self.object.latitude = latitude
-            self.object.longitude = longitude
-            self.object.depth = depth
-            self.object.save()
-
-        # If Updating deployment, update Location and add Depth, Lat/Long to Action Record
-        if action_type == 'deploymentdetails':
-            self.object.detail =  self.object.detail + '<br> Latitude: ' + str(latitude) + '<br> Longitude: ' + str(longitude) + '<br> Depth: ' + str(depth)
-            self.object.deployed_location = self.object.location
-            self.object.latitude = latitude
-            self.object.longitude = longitude
-            self.object.depth = depth
-            self.object.save()
+        self.object.save()
 
         # Update Build location, create Action Record
         build = self.object.build
@@ -213,10 +276,6 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         build.save()
         # Create Build Action record for deployment
         build_record = _create_action_history(build, action_type, self.request.user, None, '', action_date)
-
-        #update Time at Sea if Recovered from Sea with Build model method
-        if action_type == 'deploymentrecover':
-            build.update_time_at_sea()
 
         """
         # Create automatic Snapshot when Deployed to Sea or Recovered
@@ -253,9 +312,6 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             item.location = build.location
             item.save()
             _create_action_history(item, action_type, self.request.user, build, '', action_date)
-            #update Time at Sea if Recovered from Sea with Inventory model method
-            if action_type == Action.DEPLOYMENTRECOVER:
-                item.update_time_at_sea()
 
         response = HttpResponseRedirect(self.get_success_url())
 
