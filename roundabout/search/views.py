@@ -380,7 +380,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
 class InventoryTableView(GenericSearchTableView):
     model = Inventory
     table_class = InventoryTable
-    query_prefetch = ['fieldvalues', 'fieldvalues__field', 'part', 'location', 'actions', 'actions__user', 'actions__location']
+    query_prefetch = ['fieldvalues', 'fieldvalues__field', 'part', 'actions', 'actions__user', 'actions__location']
     avail_udf = set()
     choice_fields = {'actions__latest__action_type': Action.ACTION_TYPES}
 
@@ -546,7 +546,7 @@ class PartTableView(GenericSearchTableView):
 class BuildTableView(GenericSearchTableView):
     model = Build
     table_class = BuildTable
-    query_prefetch = ['assembly','assembly__assembly_type','location','actions','actions__user']
+    query_prefetch = ['assembly','assembly__assembly_type','actions','actions__user']
     choice_fields = {'actions__latest__action_type': Action.ACTION_TYPES}
 
     @staticmethod
