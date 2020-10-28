@@ -19,11 +19,11 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import serializers
 from rest_flex_fields import FlexFieldsModelSerializer
+from rest_framework import serializers
 
-from ..models import Vessel, Cruise
 from roundabout.locations.models import Location
+from ..models import Vessel, Cruise
 
 API_VERSION = 'api_v1'
 

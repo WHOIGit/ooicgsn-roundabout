@@ -19,13 +19,11 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import generics, filters, viewsets
 from rest_framework.permissions import IsAuthenticated
 
 from roundabout.core.api.views import FlexModelViewSet
-from ..models import *
-from .serializers import *
 from .filters import *
+from .serializers import *
 
 
 class ConfigEventViewSet(FlexModelViewSet):

@@ -19,13 +19,15 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
+from random import randint
+
 import factory
 from factory.django import DjangoModelFactory
-from random import randint
 
 from roundabout.inventory.models import Inventory, Deployment
 from roundabout.locations.tests.factories import LocationFactory
 from roundabout.parts.tests.factories import PartFactory
+
 
 # Generate random Part Numbers in the correct format
 def generate_serial_number():

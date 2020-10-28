@@ -18,7 +18,6 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 """
-import random
 from django import template
 from django.contrib.auth.models import Group
 

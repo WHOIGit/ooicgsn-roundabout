@@ -20,15 +20,17 @@
 """
 
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter, SimpleRouter
 from rest_framework.authtoken.views import *
-from roundabout.inventory.api.views import InventoryViewSet, InventoryDeploymentViewSet, ActionViewSet, PhotoNoteViewSet
-from roundabout.assemblies.api.views import AssemblyViewSet, AssemblyRevisionViewSet, AssemblyPartViewSet, AssemblyTypeViewSet
+from rest_framework.routers import DefaultRouter
+
+from roundabout.assemblies.api.views import AssemblyViewSet, AssemblyRevisionViewSet, AssemblyPartViewSet, \
+    AssemblyTypeViewSet
+from roundabout.builds.api.views import BuildViewSet, DeploymentViewSet
 from roundabout.calibrations.api.views import *
 from roundabout.configs_constants.api.views import *
-from roundabout.locations.api.views import LocationViewSet
-from roundabout.builds.api.views import BuildViewSet, DeploymentViewSet
 from roundabout.cruises.api.views import CruiseViewSet, VesselViewSet
+from roundabout.inventory.api.views import InventoryViewSet, InventoryDeploymentViewSet, ActionViewSet, PhotoNoteViewSet
+from roundabout.locations.api.views import LocationViewSet
 from roundabout.parts.api.views import PartViewSet, PartTypeViewSet, RevisionViewSet, DocumentationViewSet
 from roundabout.userdefinedfields.api.views import FieldViewSet, FieldValueViewSet
 from roundabout.users.api.views import UserViewSet
@@ -37,13 +39,18 @@ from roundabout.users.api.views import UserViewSet
 router = DefaultRouter()
 router.register(r'inventory', InventoryViewSet, 'inventory' )
 router.register(r'inventory-deployments', InventoryDeploymentViewSet, 'inventory-deployments' )
-router.register(r'actions', ActionViewSet, 'actions' )
-router.register(r'photos', PhotoNoteViewSet, 'photos' )
 
 router.register(r'builds', BuildViewSet, 'builds' )
 router.register(r'deployments', DeploymentViewSet, 'deployments' )
 router.register(r'cruises', CruiseViewSet, 'cruises' )
 router.register(r'vessels', VesselViewSet, 'vessels' )
+
+router.register(r'locations', LocationViewSet, 'locations' )
+
+router.register(r'part-templates/parts', PartViewSet, 'part-templates/parts' )
+router.register(r'part-templates/part-types', PartTypeViewSet, 'part-templates/part-types' )
+router.register(r'part-templates/revisions', RevisionViewSet, 'part-templates/revisions' )
+router.register(r'part-templates/documents', DocumentationViewSet, 'part-templates/documents' )
 
 router.register(r'assembly-templates/assemblies', AssemblyViewSet, 'assembly-templates/assemblies' )
 router.register(r'assembly-templates/assembly-revisions', AssemblyRevisionViewSet, 'assembly-templates/assembly-revisions' )
@@ -65,12 +72,8 @@ router.register(r'configs-constants/const-defaults', ConstDefaultViewSet, 'confi
 router.register(r'configs-constants/config-default-events', ConfigDefaultEventViewSet, 'configs-constants/config-default-events' )
 router.register(r'configs-constants/config-defaults', ConfigDefaultViewSet, 'configs-constants/config-defaults' )
 
-router.register(r'locations', LocationViewSet, 'locations' )
-
-router.register(r'part-templates/parts', PartViewSet, 'part-templates/parts' )
-router.register(r'part-templates/part-types', PartTypeViewSet, 'part-templates/part-types' )
-router.register(r'part-templates/revisions', RevisionViewSet, 'part-templates/revisions' )
-router.register(r'part-templates/documents', DocumentationViewSet, 'part-templates/documents' )
+router.register(r'actions', ActionViewSet, 'actions' )
+router.register(r'photos', PhotoNoteViewSet, 'photos' )
 
 router.register(r'user-defined-fields/fields', FieldViewSet, 'user-defined-fields/fields' )
 router.register(r'user-defined-fields/field-values', FieldValueViewSet, 'user-defined-fields/field-values' )

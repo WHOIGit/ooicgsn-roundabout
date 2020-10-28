@@ -20,24 +20,24 @@
 """
 # built-in Imports
 import csv as CSV
-import zipfile, io
-from sys import stdout
-from os.path import splitext, join
 import datetime as dt
-from itertools import chain
+import io
 import warnings
+import zipfile
+from os.path import splitext, join
+from sys import stdout
 
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import F, OuterRef, Exists
+from django.http import HttpResponse
 # Django Imports
 from django.views.generic import TemplateView, DetailView, ListView
-from django.http import HttpResponse
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import F, OuterRef, Exists, QuerySet, Subquery
 
 # Roundabout Imports
-from roundabout.calibrations.models import CalibrationEvent, CoefficientValueSet
+from roundabout.calibrations.models import CalibrationEvent
 from roundabout.configs_constants.models import ConfigEvent, ConfigValue
 from roundabout.cruises.models import Cruise, Vessel
-from roundabout.inventory.models import Inventory,Deployment
+from roundabout.inventory.models import Inventory, Deployment
 
 
 class HomeView(TemplateView):
@@ -55,8 +55,6 @@ class ExportCalibrationEvent(DetailView,LoginRequiredMixin):
     context_object_name = 'cal_event'
 
     def render_to_response(self, context, **response_kwargs):
-        #TODO gotta fetch any ConfigEvents with "export-with-calibrations" rollup flag
-        # AHEAD of this calibration but BEFORE next calibration an include ConfigValues from those in csv
         cal = context.get(self.context_object_name)  # getting object from context
         fname = '{}__{}.csv'.format(cal.inventory.serial_number, cal.calibration_date.strftime('%Y%m%d'))
 
@@ -199,6 +197,10 @@ class ExportCalibrationEvents(ZipExport):
         else:
             serial_label = ''
 
+        # hotfix issue 211
+        if 'OPTAA' in cal.inventory.part.name:
+            serial_label = 'ACS-'+serial_label
+
         aux_files = []
         rows = []
         for coeff in cal.coefficient_value_sets.all():
@@ -247,6 +249,10 @@ class ExportConfigEvents(ZipExport):
             serial_label = serial_label_qs[0].field_value
         else:
             serial_label = ''
+
+        # hotfix issue 211
+        if 'OPTAA' in confconst.inventory.part.name:
+            serial_label = 'ACS-'+serial_label
 
         rows = []
         for confconst_val in confconst.config_values.all():
@@ -360,9 +366,14 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
                 print('MODE: "part has confconsts"', file=out)
                 if not configs_by_deployment: print('  FAIL: inventory confconst is empty', file=out)
                 for deployment_id,configs_qs in configs_by_deployment.items():
-                    print('  Deployment: "{}" (id={})'.format(Deployment.objects.filter(id=deployment_id).first(),deployment_id), file=out)
+                    depl = Deployment.objects.filter(id=deployment_id).first()
+                    depl_date = depl.deployment_to_field_date if depl else None
+                    if depl_date: depl_date = depl_date.strftime('%Y-%m-%d')
+                    print('  Deployment: "{}" (id={}, to-field={})'.format(depl,deployment_id,depl_date), file=out)
                     if deployment_id is None:
                         print('    FAIL: conf/const do not have an assigned Deployment', file=out)
+                    elif depl_date is None:
+                        print('    FAIL: conf/const Deployment missing to-field date', file=out)
                     # check that inv conf/consts match part conf/consts
                     configs_avail = set()
                     approvals = dict()
@@ -388,6 +399,8 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
 
                         if not calib_evt.approved: continue
                         if not calibs_to_match.issubset(calibs_avail): continue
+                    if deployment_id is None: continue
+                    if depl_date is None: continue
                     if not all(approvals.values()): continue
                     if not confconsts_to_match.issubset(configs_avail): continue
                     csv_fname = cls.write_csv(zf, bundle, subdir)
@@ -402,16 +415,14 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
     @classmethod
     def write_csv(cls, zf, bundle, subdir=None):
         fname_obj = bundle[1] or bundle[0] # new config/const are found in bundle[1]
-        csv_fname = '{}__{}.csv'.format(fname_obj.inventory.serial_number, fname_obj.date.strftime('%Y%m%d'))
+        try: fname_date = fname_obj.deployment.deployment_to_field_date.strftime("%Y%m%d")
+        except AttributeError: fname_date = fname_obj.date.strftime('%Y%m%d')
+        csv_fname = '{}__{}.csv'.format(fname_obj.inventory.serial_number, fname_date)
         csv_content = io.StringIO()
         csv_writer = CSV.writer(csv_content)
         header = ['serial', 'name', 'value', 'notes']
         has_content = None
         csv_writer.writerow(header)
-
-        # skip csv if not all events are approved
-        approvals = [obj.approved for obj in bundle if obj is not None]
-        if not all(approvals): return
 
         for obj in bundle:
             if isinstance(obj,CalibrationEvent):

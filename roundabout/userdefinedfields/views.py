@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -92,7 +92,7 @@ class UserDefinedFieldUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Up
                     if self.object.field_default_value:
                         for item in part.inventory.all():
                             try:
-                                currentvalue = item.fieldvalues.filter(field=self.object).latest(field_name='created_at')
+                                currentvalue = item.fieldvalues.filter(field=self.object).latest()
                             except FieldValue.DoesNotExist:
                                 currentvalue = None
 
