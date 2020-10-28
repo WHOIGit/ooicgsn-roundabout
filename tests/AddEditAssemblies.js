@@ -497,11 +497,11 @@ var password;
             const dropdown = await driver.findElement(By.id("id_part_type"));
             await dropdown.findElement(By.xpath("//option[. = '-- Sewing Machine']")).click();
         }
-        await driver.wait(until.elementLocated(By.id("id_part")));
         await driver.findElement(By.id("id_part")).click();
         // 35 | select | id=id_part | label=Wheel Template
         {
             const dropdown = await driver.findElement(By.id("id_part"));
+	    await new Promise(r => setTimeout(r, 2000));  //1.6 stale element
             await dropdown.findElement(By.xpath("//option[. = 'Pin Template']")).click();
         }
         await driver.findElement(By.css(".controls > .btn-primary")).click();

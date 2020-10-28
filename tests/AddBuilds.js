@@ -153,8 +153,6 @@ async function fixDayAbbr(day)
 	   console.log("Wait 2 seconds for New Build1.");
 	}
 
-/* TEMP - COMMENT OUT UNTIL SIDNEY FIXES!!!!
-
         // Verify Build is created in Test Location
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click(); // search button
         // 20 | click | id=field-select_c_r0 | 
@@ -177,7 +175,7 @@ async function fixDayAbbr(day)
         // 25 | click | css=.even a | 
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.xpath("//p[contains(.,'1 items match your search!')]"));
-*/
+
         // Add build with null assembly template, assembly revision, build number or location
         await driver.findElement(By.linkText("Builds")).click();
 	while ((await driver.findElements(By.linkText("Create New Build"))).length == 0) //1.6
