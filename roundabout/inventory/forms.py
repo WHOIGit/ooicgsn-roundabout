@@ -126,7 +126,7 @@ class InventoryForm(forms.ModelForm):
 
                     #Check if this inventory object has values for these fields, set initial values if true
                     try:
-                        fieldvalue = self.instance.fieldvalues.filter(field_id=field.id).latest(field_name='created_at')
+                        fieldvalue = self.instance.fieldvalues.filter(field_id=field.id).latest()
                     except FieldValue.DoesNotExist:
                         fieldvalue = None
 

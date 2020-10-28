@@ -119,6 +119,8 @@ class AssemblyPart(MPTTModel):
     note = models.TextField(blank=True)
     order = models.CharField(max_length=255, null=False, blank=True, db_index=True)
 
+    tracker = FieldTracker(fields=['part',])
+
     class MPTTMeta:
         order_insertion_by = ['order']
 
