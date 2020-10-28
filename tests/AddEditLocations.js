@@ -56,7 +56,8 @@ var password;
     }
     else
     {
-        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+//        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+        await driver.get("https://rdb-testing.whoi.edu/");
         user = "jkoch";
         password = "Automatedtests";
     }
@@ -94,10 +95,18 @@ var password;
         // 11 | click | linkText=Locations | 
         await driver.findElement(By.linkText("Locations")).click();
         // 12 | click | linkText=Add Location | 
-        await new Promise(r => setTimeout(r, 2000));
+//        await new Promise(r => setTimeout(r, 6000));
+	while ((await driver.findElements(By.linkText("Add Location"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Location1.");
+	}
         await driver.findElement(By.linkText("Add Location")).click();
-        //TO DO: ADD WAIT - next stmt only works stepping in debugger
-        await driver.wait(until.elementLocated(By.id("id_name")));
+	while ((await driver.findElements(By.id("id_name"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Location1.");
+	}
         // 14 | type | id=id_name | Test
         await driver.findElement(By.id("id_name")).sendKeys("Test");
         // 15 | click | css=.controls > .btn | 
@@ -105,22 +114,36 @@ var password;
 
         // Add location with non-unique name
         // 16 | click | linkText=Add Location |
-	await new Promise(r => setTimeout(r, 2000));
+//	await new Promise(r => setTimeout(r, 6000)); //add for 1.6 testing
+	while ((await driver.findElements(By.linkText("Edit Location"))).length == 0) //Edit button appears after element created
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Location2.");
+	}
         await driver.findElement(By.linkText("Add Location")).click();
         // 17 | type | id=id_name | Test
-	await new Promise(r => setTimeout(r, 4000));  //this wait required - stale element
+	while ((await driver.findElements(By.id("id_name"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Location2.");
+	}
 	//let encodedString = await driver.takeScreenshot();
-	//await fs.writeFileSync('/tests/sewing.png', encodedString, 'base64');      
+	//await fs.writeFileSync('/tests/screen.png', encodedString, 'base64');      
         await driver.findElement(By.id("id_name")).sendKeys("Test");
         // 18 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
         // Rename to unique name for test automation
-        await new Promise(r => setTimeout(r, 2000));
+//        await new Promise(r => setTimeout(r, 6000));
+	while ((await driver.findElements(By.linkText("Test"))).length == 0) 
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Edit Location1.");
+	}
         await driver.findElement(By.linkText("Test")).click();
-        await driver.wait(until.elementLocated(By.linkText("Edit Location")), 2000);
+	await new Promise(r => setTimeout(r, 6000));
         await driver.findElement(By.linkText("Edit Location")).click();
-        await new Promise(r => setTimeout(r, 2000)); //circleci
+        await new Promise(r => setTimeout(r, 2000));
         // 12 | type | id=id_name | Test
         await driver.findElement(By.id("id_name")).clear();
         await driver.findElement(By.id("id_name")).sendKeys("Test1");
@@ -129,11 +152,14 @@ var password;
 
         // Add child location with unique name
         // 19 | click | linkText=Add Location |
-	await new Promise(r => setTimeout(r, 2000));
-        //await driver.wait(until.elementLocated(By.linkText("Add Location")), 2000); //failing w10 cmd
+//	await new Promise(r => setTimeout(r, 6000));
+	while ((await driver.findElements(By.linkText("Edit Location"))).length == 0) //Edit button appears after element created
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Location3.");
+	}
         await driver.findElement(By.linkText("Add Location")).click();
-        // 20 | type | id=id_name | Test Child
-        await driver.wait(until.elementLocated(By.id("id_name")));
+        await new Promise(r => setTimeout(r, 6000));
         await driver.findElement(By.id("id_name")).sendKeys("Test Child");
         // 21 | select | id=id_parent | label=Test from dropdown
         dropdown = await driver.findElement(By.id("id_parent"));
@@ -143,11 +169,19 @@ var password;
 
         // Add child location with name in parent group
         // 26 | click | linkText=Add Location |
-	await new Promise(r => setTimeout(r, 2000));
-        await driver.wait(until.elementLocated(By.linkText("Add Location")));
+//	await new Promise(r => setTimeout(r, 6000));
+	while ((await driver.findElements(By.linkText("Edit Location"))).length == 0) //Edit button appears after element created
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Location4.");
+	}
         await driver.findElement(By.linkText("Add Location")).click();
         // 27 | type | id=id_name | Test Child
-        await driver.wait(until.elementLocated(By.id("id_name")), 40000);
+   	while ((await driver.findElements(By.id("id_name"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Location4.");
+	}
         await driver.wait(until.elementLocated(By.id("id_name")));
         await driver.findElement(By.id("id_name")).sendKeys("Test Child");
         // 21 | select | id=id_parent | label=Test from dropdown
@@ -159,87 +193,63 @@ var password;
 
         // EDIT LOCATIONS TEST
 
-        // Rename location with unique name
-        // Timeout needed here to avoid staleelementreferenceerror (ajax) when not running in debugger
-        await new Promise(r => setTimeout(r, 4000));
-        await driver.findElement(By.linkText("Test")).click();
-        // 6 | click | linkText=Edit Location | 
-        await driver.wait(until.elementLocated(By.linkText("Edit Location")));
-        await driver.findElement(By.linkText("Edit Location")).click();
-        // 8 | type | id=id_name | Test1
-        await driver.wait(until.elementLocated(By.id("id_name")));
-        await driver.findElement(By.id("id_name")).clear();
-        await driver.findElement(By.id("id_name")).sendKeys("Test1");
-        // 9 | click | css=.controls > .btn | 
-        await driver.findElement(By.css(".controls > .btn")).click();
-
-        // Rename location with non-unique name
-        // 10 | click | linkText=Edit Location |
-        await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.linkText("Edit Location")).click();
-        await driver.wait(until.elementLocated(By.id("id_name")));
-        // 12 | type | id=id_name | Test
-        await driver.findElement(By.id("id_name")).clear();
-        await driver.findElement(By.id("id_name")).sendKeys("Test");
-        // 14 | click | css=.controls > .btn | 
-        await driver.findElement(By.css(".controls > .btn")).click();
-        await new Promise(r => setTimeout(r, 2000));
-
         // Child location renamed with name unique to parent group
-        await new Promise(r => setTimeout(r, 2000));   // needed extra wait
+//        await new Promise(r => setTimeout(r, 6000));
+	while ((await driver.findElements(By.linkText("Test Child"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Edit Location2.");
+	}
         await driver.findElement(By.linkText("Test Child")).click();
-        await new Promise(r => setTimeout(r, 2000));   //only wait works here
+        await new Promise(r => setTimeout(r, 6000));
+
         // 17 | click | linkText=Edit Location | 
         await driver.findElement(By.linkText("Edit Location")).click();
         // 18 | click | id=id_name | 
-        await driver.wait(until.elementLocated(By.id("id_name")));
+	while ((await driver.findElements(By.id("id_name"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Edit Location2.");
+	}
         // 19 | type | id=id_name | Test Child1
         await driver.findElement(By.id("id_name")).clear();
         await driver.findElement(By.id("id_name")).sendKeys("Test Child1");
         // 20 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
-        // Child location renamed with name existing in parent group
-        await new Promise(r => setTimeout(r, 2000));
-        // 21 | click | linkText=Edit Location |
-        await driver.findElement(By.linkText("Edit Location")).click();
-        await driver.wait(until.elementLocated(By.id("id_name")));
-        // 23 | type | id=id_name | Test Child
-        await driver.findElement(By.id("id_name")).clear();
-        await driver.findElement(By.id("id_name")).sendKeys("Test Child");
-        // 24 | click | css=.controls > .btn | 
-        await driver.findElement(By.css(".controls > .btn")).click();
-
-        // // Rename to unique name for test automation
-        await new Promise(r => setTimeout(r, 2000));
-        // 21 | click | linkText=Edit Location |
-        await driver.findElement(By.linkText("Edit Location")).click();
-        await driver.wait(until.elementLocated(By.id("id_name")));
-        // 23 | type | id=id_name | Test Child
-        await driver.findElement(By.id("id_name")).clear();
-        await driver.findElement(By.id("id_name")).sendKeys("Test Child1");
-        // 24 | click | css=.controls > .btn | 
-        await driver.findElement(By.css(".controls > .btn")).click();
 
         //Child location parent changed to itself
         // 25 | click | linkText=Edit Location |
-        await new Promise(r => setTimeout(r, 2000));
+//        await new Promise(r => setTimeout(r, 8000)); //increase for 1.6 testing
+	while ((await driver.findElements(By.linkText("Test Child1"))).length == 0) 
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Edit Location3.");
+	}
         await driver.findElement(By.linkText("Test Child")).click();
-        await driver.wait(until.elementLocated(By.linkText("Edit Location")));
+        await new Promise(r => setTimeout(r, 4000));  
+	while ((await driver.findElements(By.linkText("Edit Location"))).length == 0) 
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Edit Location4.");
+	}
+
         await driver.findElement(By.linkText("Edit Location")).click();
         // 26 | click | id=id_parent | 
-        await driver.wait(until.elementLocated(By.id("id_parent")));
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_parent")).click();
         // 27 | select | id=id_parent | label=--- Test Child
         {
             dropdown = await driver.findElement(By.id("id_parent"));
+	    await new Promise(r => setTimeout(r, 2000));
             await dropdown.findElement(By.xpath("//option[. = '--- Test Child']")).click();
         }
-        // 28 | click | id=id_parent | 
-        await driver.findElement(By.id("id_parent")).click();
         // 29 | click | css=.controls > .btn | 
+	//let encodedString = await driver.takeScreenshot();
+	//await fs.writeFileSync('/tests/screen.png', encodedString, 'base64');     
         await driver.findElement(By.css(".controls > .btn")).click();
-        await new Promise(r => setTimeout(r, 2000));
+
+        await new Promise(r => setTimeout(r, 6000));
 
         //Verify warning message: Location Parent cannot be self
         try {

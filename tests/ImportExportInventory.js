@@ -54,7 +54,8 @@ var password;
     }
     else
     {
-        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+//        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+        await driver.get("https://rdb-testing.whoi.edu/");
         user = "jkoch";
         password = "Automatedtests";
     }
@@ -91,9 +92,17 @@ var password;
         await driver.findElement(By.id("navbarAdmintools")).click();
          // 4 | click | linkText=Custom Fields | 
         await driver.findElement(By.linkText("Custom Fields")).click();
-        // 5 | click | linkText=Add Custom Field | 
+	while ((await driver.findElements(By.linkText("Add Custom Field"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Custom Field.");
+	}
         await driver.findElement(By.linkText("Add Custom Field")).click();
-       // 6 | click | id=id_field_name | 
+	while ((await driver.findElements(By.id("id_field_name"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Custom Field1.");
+	}
         await driver.findElement(By.id("id_field_name")).click();
         // 7 | type | id=id_field_name | Condition
         await driver.findElement(By.id("id_field_name")).sendKeys("Condition");
@@ -137,11 +146,22 @@ var password;
 	        var filename = process.cwd()+"\\inventory-import-successful.csv";
 	}
 
+	while ((await driver.findElements(By.id("id_document"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Bulk Upload.");
+	}
+
         // 6 | type | id=id_document | C:\fakepath\inventory-import-successful.csv
         await driver.findElement(By.id("id_document")).sendKeys(filename);
         // 7 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
         // 8 | click | linkText=Import Valid! Click here to complete | 
+	while ((await driver.findElements(By.partialLinkText("Click here"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Preview Import.");
+	}
         await driver.findElement(By.linkText("Import Valid! Click here to complete")).click();
         // 9 | click | id=navbarAdmintools | 
 
@@ -158,6 +178,12 @@ var password;
 	else
 	{
 	        filename = process.cwd()+"\\inventory-import-unsuccessful.csv";
+	}
+
+	while ((await driver.findElements(By.id("id_document"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Bulk Upload1.");
 	}
 
         // 12 | type | id=id_document | C:\fakepath\inventory-import-unsuccessful.csv
@@ -181,6 +207,11 @@ var password;
         await driver.findElement(By.css(".btn:nth-child(1)")).click()
 
         // Downloads to Downloads Folder
+	while ((await driver.findElements(By.id("search--download-csv-button"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Search Download CSV.");
+	}
         // 10 | click | id=search--download-csv-button |
         await driver.findElement(By.id("search--download-csv-button")).click();
         // 11 | click | linkText=All (Include Hidden Columns) | 

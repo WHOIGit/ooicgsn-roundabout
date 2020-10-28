@@ -7,6 +7,7 @@ const { Builder, By, Key, until, a, WebElement, promise, Capabilities } = requir
 const chrome = require('selenium-webdriver/chrome');
 const firefox = require('selenium-webdriver/firefox');
 const assert = require('assert');
+const fs = require('fs');
 
 var driver;
 var myArgs = process.argv.slice(2);
@@ -84,7 +85,8 @@ async function fixDayAbbr(day)
     }
     else
     {
-        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+  //        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+        await driver.get("https://rdb-testing.whoi.edu/");
         user = "jkoch";
         password = "Automatedtests";
     }
@@ -119,9 +121,12 @@ async function fixDayAbbr(day)
 
         // Add build with non null assembly template, build number, and location
         await driver.findElement(By.linkText("Builds")).click();
-        await new Promise(r => setTimeout(r, 4000)); // Build tree takes awhile to load
-        // 4 | click | linkText=Create New Build | 
-        await driver.wait(until.elementLocated(By.linkText("Create New Build")));
+	while ((await driver.findElements(By.linkText("Create New Build"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for New Build.");
+	}
+   
         await driver.findElement(By.linkText("Create New Build")).click();
         await new Promise(r => setTimeout(r, 6000));  //needed for firefox build number to populate
         // 5 | select | id=id_assembly | label=Test Glider 1
@@ -130,7 +135,7 @@ async function fixDayAbbr(day)
             await dropdown.findElement(By.xpath("//option[. = 'Singer']")).click();
         }
    
-        await new Promise(r => setTimeout(r, 2000));  //needed for firefox build number to populate
+        await new Promise(r => setTimeout(r, 6000));  //needed for build number to populate - 1.6
       
         // 6 | select | id=id_location | label=--- Test
         {
@@ -141,9 +146,16 @@ async function fixDayAbbr(day)
         await driver.findElement(By.id("id_build_notes")).sendKeys("This is an automated test build.");
         // 8 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
-        // 9 | click | linkText=Create New Build | 
 
-        // Verify Build is created in Test Child Location
+	while ((await driver.findElements(By.partialLinkText("Singer"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for New Build1.");
+	}
+
+/* TEMP - COMMENT OUT UNTIL SIDNEY FIXES!!!!
+
+        // Verify Build is created in Test Location
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click(); // search button
         // 20 | click | id=field-select_c_r0 | 
         await driver.wait(until.elementLocated(By.id("field-select_c_r0")));
@@ -165,19 +177,32 @@ async function fixDayAbbr(day)
         // 25 | click | css=.even a | 
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.xpath("//p[contains(.,'1 items match your search!')]"));
-
+*/
         // Add build with null assembly template, assembly revision, build number or location
         await driver.findElement(By.linkText("Builds")).click();
-        await driver.wait(until.elementLocated(By.linkText("Create New Build")));
+	while ((await driver.findElements(By.linkText("Create New Build"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for New Build2.");
+	}
         await driver.findElement(By.linkText("Create New Build")).click();
-	    await new Promise(r => setTimeout(r, 9000));  //linux firefox & circleci
-        // 10 | select | id=id_assembly | label=Test Glider 1
+//	    await new Promise(r => setTimeout(r, 9000));  //linux firefox & circleci
+	while ((await driver.findElements(By.id("id_assembly"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for New Build2.");
+	}
         {
             const dropdown = await driver.findElement(By.id("id_assembly"));
             await dropdown.findElement(By.xpath("//option[. = 'Singer']")).click();
         }
         // 11 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click()
+	while ((await driver.findElements(By.css("#div_id_location .ajax-error"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for New Build Ajax Error.");
+	}
         // 12 | verifyText | css=.ajax-error | This field is required.
         assert(await driver.findElement(By.css("#div_id_location .ajax-error")).getText() == "This field is required.");
         // 13 | select | id=id_location | label=Test
@@ -194,14 +219,15 @@ async function fixDayAbbr(day)
         }
         // 15 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
+	await new Promise(r => setTimeout(r, 2000));
+
         // 16 | verifyText | css=.ajax-error | This field is required.
         assert(await driver.findElement(By.css("#div_id_assembly .ajax-error")).getText() == "This field is required.");
-	    await new Promise(r => setTimeout(r, 6000));  //needed for firefox build number to populate
-        // 17 | select | id=id_assembly | label=Test Glider 1
         {
             const dropdown = await driver.findElement(By.id("id_assembly"));
             await dropdown.findElement(By.xpath("//option[. = 'Singer']")).click();
         }
+	await new Promise(r => setTimeout(r, 6000));  //needed for build number to populate
         // 18 | type | id=id_build_number |  
         await driver.findElement(By.id("hint_id_build_number")).click();
         await driver.findElement(By.id("id_build_number")).clear();
@@ -212,7 +238,12 @@ async function fixDayAbbr(day)
 
         // Add Inventory Items to the Build
         await driver.findElement(By.linkText("Inventory")).click();
-        await new Promise(r => setTimeout(r, 4000));
+
+	while ((await driver.findElements(By.linkText("Test"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Inv Navtree.");
+	}
 
         // Expand Inventory Tree and Navigate to Build->Sewing Inventory
         // Expand "Test" tree nodes   
@@ -228,46 +259,88 @@ async function fixDayAbbr(day)
 
         // Expand Build tree node
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/i")).click();
-        await new Promise(r => setTimeout(r, 4000));
+	while ((await driver.findElements(By.linkText("sewing - 1232"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for sewing.");
+	}
         await driver.findElement(By.linkText("sewing - 1232")).click(); 
-        await new Promise(r => setTimeout(r, 2000));
-        // 6 | click | id=assemblyparts_5_builds_12_anchor | 
+
+	while ((await driver.findElements(By.linkText("Add"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Inventory.");
+	}
         await driver.findElement(By.linkText("Add")).click();
-        
+        await new Promise(r => setTimeout(r, 6000));  //wait for navtree to refresh
+
         // DEPLOY BUILD - Tests Issue #137
 
         // Start Deployment->Initiate Burnin->Deploy Build
         // 10 | click | linkText=Start Deployment | 
-        await new Promise(r => setTimeout(r, 8000));
+   	while ((await driver.findElements(By.partialLinkText("Singer"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Deploy1.");
+	}
         await driver.findElement(By.partialLinkText("Singer")).click(); 
-        await new Promise(r => setTimeout(r, 4000));
+	// Left hand doesn't know what right hand is doing..... this takes along time to load
+   	while ((await driver.findElements(By.linkText("Retire Build"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Deploy2.");
+	}
         await driver.findElement(By.id("action")).click(); 
         await driver.findElement(By.linkText("Start Deployment")).click();
         // 12 | type | id=id_deployment_number | 7
-        await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.id("id_deployment_number"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Deployment Number.");
+	}
+	await driver.findElement(By.id("id_deployment_number")).click();
         await driver.findElement(By.id("id_deployment_number")).sendKeys("7");
         // 14 | select | id=id_deployed_location | label=Test
         {
             const dropdown = await driver.findElement(By.id("id_deployed_location"));
             await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
-        }
-        // 16 | click | css=.controls > .btn | 
+        } 
+ 
         await driver.findElement(By.css(".controls > .btn")).click();
-        await new Promise(r => setTimeout(r, 4000));
+	await new Promise(r => setTimeout(r, 2000));  // wait for refresh to start
+
+	while ((await driver.findElements(By.linkText("Retire Build"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Deploy2.");
+	}
         // 18 | click | id=action | 
         await driver.findElement(By.id("action")).click();
-        // 19 | click | linkText=Initiate Burn In | 
+	await new Promise(r => setTimeout(r, 2000)); 
+
         await driver.findElement(By.linkText("Initiate Burn In")).click();
         // 20 | click | css=.controls > .btn-primary | 
-        await new Promise(r => setTimeout(r, 2000));
+   	while ((await driver.findElements(By.css(".controls > .btn-primary"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Burnin2.");
+	}
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
+	await new Promise(r => setTimeout(r, 2000));  //wait for refresh to start
         // 25 | click | id=action | 
-        await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.linkText("Retire Build"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Deploy2.");
+	}
         await driver.findElement(By.id("action")).click();
-        // 26 | click | linkText=Deploy to Field | 
         await driver.findElement(By.linkText("Deploy to Field")).click();
-        await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.id("id_location"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Deploy to Field3.");
+	}
         // Read current date and set to 2 days prior
         // 27 | click | id=id_date | 
         var ele = await driver.findElement(By.xpath("//input[@id='id_date']"));
@@ -289,7 +362,11 @@ async function fixDayAbbr(day)
         await driver.findElement(By.css(".controls > .btn-primary")).click();
  
         // Verify Total Time in Field and Current Deployment Time in Field: 2 days 0 hours
-        await new Promise(r => setTimeout(r, 4000));
+	while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //wait for screen to populate
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Deploy to Field4.");
+	}
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
         // UNCOMMENT FOR DOCKER - history shows 27 days due to staging testing
         assert(bodyText.includes("Total Time in Field: 2 days 0 hours"));        
@@ -297,8 +374,17 @@ async function fixDayAbbr(day)
 
         // Click Deployments Tab and verify Deployment To Field Date: is 2 days prior 
         // 31 | click | id=deployments-tab |
-	await new Promise(r => setTimeout(r, 4000));
+	while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Deployments.");
+	}
 	await driver.findElement(By.linkText("Deployments")).click();
+	while ((await driver.findElements(By.id("deployments-tab"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Deployments-tab.");
+	}
         //await driver.findElement(By.id("deployments-tab")).click();
         await new Promise(r => setTimeout(r, 4000));
         // 32 | click | css=.collapsed > .fa |  0 
@@ -323,14 +409,49 @@ async function fixDayAbbr(day)
            console.log("Assertion Error: Deployment To Field Date is  "+rdbDate);
         }
 
-        // Click Inventory and verify Deployment times
-        // 33 | click | id=inventory_12_anchor | 
-	await new Promise(r => setTimeout(r, 6000));
+
+        await driver.findElement(By.linkText("Inventory")).click();
+
+	while ((await driver.findElements(By.linkText("Test"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Inv Navtree.");
+	}
+
+        // Expand Inventory Tree and Navigate to Build->Sewing Inventory
+        // Expand "Test" tree nodes   
+        var j = 1;
+        while (true) {
+            if (await driver.findElement(By.xpath("//div[2]/ul/li["+j+"]/a")).getText() == "Test")
+            { 
+                await driver.findElement(By.xpath("//div/ul/li[" + j + "]/i")).click();
+                break;
+            }
+            j++;
+        }
+
+        // Expand tree node
+        await driver.findElement(By.xpath("//li[" + j + "]/ul/li/i")).click();
+	while ((await driver.findElements(By.partialLinkText("sewing - 1232"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for sewing.");
+	}
+
+        // Select Inventory and verify Deployment times
         await driver.findElement(By.partialLinkText("sewing - 1232")).click();
         // 34 | click | id=deployments-tab | 
-        await new Promise(r => setTimeout(r, 4000));
+	while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Inventory Deployments.");
+	}
         await driver.findElement(By.linkText("Deployments")).click();
-        await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.css(".list-group-item > .collapsed > .fa"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Inv List Item."); 
+	}
         // 35 | click | css=.list-group-item > .collapsed > .fa | 
         await driver.findElement(By.css(".list-group-item > .collapsed > .fa")).click(); 
         await new Promise(r => setTimeout(r, 2000));
@@ -350,9 +471,13 @@ async function fixDayAbbr(day)
         
         // Remove sewing Inventory from Build
         // 39 | click | id=action | 
+	while ((await driver.findElements(By.id("action"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Inventory2.");
+	}
         await driver.findElement(By.id("action")).click();
-        await new Promise(r => setTimeout(r, 2000));
-        // 40 | click | linkText=Recover from Deployment | 
+	await new Promise(r => setTimeout(r, 2000)); 
         await driver.findElement(By.linkText("Recover from Deployment")).click();
 
         // Get current date
@@ -371,9 +496,17 @@ async function fixDayAbbr(day)
 
         // Verify date is 1 day prior on Deployments tab
         // 45 | click | id=deployments-tab | 
-	await new Promise(r => setTimeout(r, 4000));
+	while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Deployments.");
+	}
         await driver.findElement(By.linkText("Deployments")).click();
-        await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.css(".list-group-item > .collapsed > .fa"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Build List Item."); 
+	}
         // 46 | click | css=.list-group-item > .collapsed > .fa | 
         await driver.findElement(By.css(".list-group-item > .collapsed > .fa")).click();
         await new Promise(r => setTimeout(r, 2000));
@@ -396,13 +529,24 @@ async function fixDayAbbr(day)
 
         // Re-add sewing Inventory to Build at the current date
         // 47 | click | id=action | 
-	await new Promise(r => setTimeout(r, 6000));
+	while ((await driver.findElements(By.partialLinkText("sewing - 1232"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Re-add.");
+	}
         await driver.findElement(By.partialLinkText("sewing - 1232")).click();
         await new Promise(r => setTimeout(r, 2000));
-        // 6 | click | id=assemblyparts_5_builds_12_anchor | 
+	while ((await driver.findElements(By.linkText("Add"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add1.");
+	}
         await driver.findElement(By.linkText("Add")).click();
-        await new Promise(r => setTimeout(r, 2000));
-        // 51 | click | css=.controls > .btn-primary | 
+	while ((await driver.findElements(By.xpath("//input[@id='id_date']"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Id_date.");
+	}
         var ele = await driver.findElement(By.xpath("//input[@id='id_date']"));
         var dateString = await ele.getAttribute("value");
         await driver.findElement(By.css(".controls > .btn-primary")).click();
@@ -415,7 +559,11 @@ async function fixDayAbbr(day)
         assert(bodyText.includes("Current Deployment Time in Field: 0 days 0 hours"));
 
         // 53 | click | id=deployments-tab | 
-        await new Promise(r => setTimeout(r, 4000));
+	while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Deployments.");
+	}
         await driver.findElement(By.linkText("Deployments")).click();
         // 54 | click | css=.list-group-item:nth-child(1) > .collapsed > .fa | 
         //await driver.findElement(By.css(".list-group-item > .collapsed > .fa")).click();

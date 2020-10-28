@@ -53,7 +53,8 @@ var password;
     }
     else
     {
-        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+ //        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+        await driver.get("https://rdb-testing.whoi.edu/");
         user = "jkoch";
         password = "Automatedtests";
     }

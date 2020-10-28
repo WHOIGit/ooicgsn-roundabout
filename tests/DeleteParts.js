@@ -52,7 +52,8 @@ var password;
     }
     else
     {
-        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+//        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+        await driver.get("https://rdb-testing.whoi.edu/");
         user = "jkoch";
         password = "Automatedtests";
     }
@@ -104,7 +105,7 @@ var password;
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 8000));  //circleci firefox keeps failing here
+            await new Promise(r => setTimeout(r, 8000));  
    	    //let encodedString = await driver.takeScreenshot();
             //await fs.writeFileSync('./sewing.png', encodedString, 'base64');
 	    //await driver.navigate().refresh();  //this did not work
@@ -112,6 +113,31 @@ var password;
 	}
 	else
 	    console.log("Delete Parts failed: Sewing Template not found");
+
+	await new Promise(r => setTimeout(r, 4000)); 
+
+        // If Edit Parts failed, this part will be left behind
+        await driver.findElement(By.id("navbarTemplates")).click();
+        // 8 | click | linkText=Parts | 
+        await driver.findElement(By.linkText("Parts")).click();
+        // 9 | click | id=searchbar-query | 
+        await driver.findElement(By.id("searchbar-query")).click();
+        // 10 | type | id=searchbar-query | Sewing Template
+        await driver.findElement(By.id("searchbar-query")).sendKeys("Sewing Template");
+        // 11 | click | css=.btn-outline-primary:nth-child(1) | 
+        await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
+        // 12 | click | linkText=1232 | 
+        await new Promise(r => setTimeout(r, 2000));
+
+	if ((await driver.findElements(By.linkText("789-456-123"))).length != 0)
+	{
+            await driver.findElement(By.linkText("789-456-123")).click();
+            // 13 | click | linkText=Delete | 
+            await driver.findElement(By.linkText("Delete")).click();
+            // 14 | click | css=.btn-danger | 
+            await new Promise(r => setTimeout(r, 8000));
+            await driver.findElement(By.css(".btn-danger")).click();
+	}
 
         // 7 | click | id=navbarTemplates | 
         await driver.findElement(By.id("navbarTemplates")).click();
@@ -132,13 +158,13 @@ var password;
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 8000));  //circleci firefox
+            await new Promise(r => setTimeout(r, 8000)); 
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
 	    console.log("Delete Parts failed: Wheel Template not found");
 
-	await new Promise(r => setTimeout(r, 4000));  //circleci firefox
+	await new Promise(r => setTimeout(r, 4000)); 
 
         // 7 | click | id=navbarTemplates | 
         await driver.findElement(By.id("navbarTemplates")).click();

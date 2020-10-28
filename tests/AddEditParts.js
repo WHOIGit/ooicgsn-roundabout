@@ -7,6 +7,7 @@ const { Builder, By, Key, until, a, WebElement, promise, Capabilities } = requir
 const chrome = require('selenium-webdriver/chrome');
 const firefox = require('selenium-webdriver/firefox');
 const assert = require('assert');
+const fs = require('fs');
 
 var driver;
 var dropdown;
@@ -54,7 +55,8 @@ var password;
     }
     else
     {
-        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+//        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+        await driver.get("https://rdb-testing.whoi.edu/");
         user = "jkoch";
         password = "Automatedtests";
     }
@@ -102,7 +104,7 @@ var password;
 
         // Add a Part Type with a name
         // 5 | click | linkText=Add Part Type | 
-	await new Promise(r => setTimeout(r, 2000));   //circleci firefox
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Add Part Type")).click();
         // 7 | type | id=id_name | Sewing Machine
         await driver.findElement(By.id("id_name")).sendKeys("Sewing Machine");
@@ -111,7 +113,7 @@ var password;
 
         // Add Part Type with null name
         // 9 | click | linkText=Add Part Type | 
-	await new Promise(r => setTimeout(r, 2000));   //linux firefox
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Add Part Type")).click();
         // 10 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
@@ -127,11 +129,17 @@ var password;
         await driver.wait(until.elementLocated(By.linkText("Parts")));
         await driver.findElement(By.linkText("Parts")).click();
         // 15 | click | linkText=Add Part Template | 
-        await new Promise(r => setTimeout(r, 4000));   //linux firefox keeps hanging here
+//        await new Promise(r => setTimeout(r, 6000));
+	while ((await driver.findElements(By.linkText("Add Part Template"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Part Template1.");
+	}
+
         await driver.findElement(By.linkText("Add Part Template")).click();
         /*Get the text after ajax call*/
         // 16 | type | id=id_part_number | 123-456-789
-        await driver.wait(until.elementLocated(By.id("id_part_number")));
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_part_number")).sendKeys("123-456-789");
         // 17 | type | id=id_name | Sewing Template
         await driver.findElement(By.id("id_name")).sendKeys("Sewing Template");
@@ -145,7 +153,7 @@ var password;
         }
         // 20 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 6000));
 
         var obj = await driver.findElements(By.xpath("//*[text()='Part with this Part number already exists.']"));	
 	if (obj.length != 0)
@@ -159,11 +167,16 @@ var password;
         await driver.wait(until.elementLocated(By.linkText("Parts")));
         await driver.findElement(By.linkText("Parts")).click();
         // 15 | click | linkText=Add Part Template | 
-        await new Promise(r => setTimeout(r, 4000));   //linux firefox keeps hanging here
+//        await new Promise(r => setTimeout(r, 4000));
+	while ((await driver.findElements(By.linkText("Add Part Template"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Part Template2.");
+	}
         await driver.findElement(By.linkText("Add Part Template")).click();
         /*Get the text after ajax call*/
         // 16 | type | id=id_part_number | 123-456-789
-        await driver.wait(until.elementLocated(By.id("id_part_number")));
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_part_number")).sendKeys("555-456-789");
         // 17 | type | id=id_name | Sewing Template
         await driver.findElement(By.id("id_name")).sendKeys("Wheel Template");
@@ -177,7 +190,7 @@ var password;
         }
         // 20 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 6000));
 
         var obj = await driver.findElements(By.xpath("//*[text()='Part with this Part number already exists.']"));	
 	if (obj.length != 0)
@@ -190,11 +203,17 @@ var password;
         await driver.wait(until.elementLocated(By.linkText("Parts")));
         await driver.findElement(By.linkText("Parts")).click();
         // 15 | click | linkText=Add Part Template | 
-        await new Promise(r => setTimeout(r, 4000));   //linux firefox keeps hanging here
+//        await new Promise(r => setTimeout(r, 4000));
+	while ((await driver.findElements(By.linkText("Add Part Template"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Part Template3.");
+	}
+
         await driver.findElement(By.linkText("Add Part Template")).click();
         /*Get the text after ajax call*/
         // 16 | type | id=id_part_number | 123-456-789
-        await driver.wait(until.elementLocated(By.id("id_part_number")));
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_part_number")).sendKeys("666-456-789");
         // 17 | type | id=id_name | Sewing Template
         await driver.findElement(By.id("id_name")).sendKeys("Pin Template");
@@ -217,14 +236,25 @@ var password;
 	}
 
         // Create new Template Revision with cost or refurbishment cost with greater than 2 decimal places.
+	while ((await driver.findElements(By.id("action"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Part Template3.");
+	}
         // 21 | click | id=action | 
-        await new Promise(r => setTimeout(r, 2000)); 
         await driver.findElement(By.id("action")).click();
+
         // 22 | click | linkText=Create New Revision |
         await new Promise(r => setTimeout(r, 2000)); 
         await driver.findElement(By.linkText("Create New Revision")).click();
         // 23 | type | id=id_revision_code | B
-	await new Promise(r => setTimeout(r, 4000));   //docker element not interactable
+//	await new Promise(r => setTimeout(r, 4000));   //docker element not interactable
+	while ((await driver.findElements(By.id("id_revision_code"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Create New Revision1.");
+	}
+	await new Promise(r => setTimeout(r, 2000));   //docker element not interactable
         await driver.findElement(By.id("id_revision_code")).sendKeys("B");
         // 24 | type | id=id_unit_cost | 3.000
         await driver.findElement(By.id("id_unit_cost")).clear();
@@ -234,6 +264,7 @@ var password;
         await driver.findElement(By.id("id_refurbishment_cost")).sendKeys("4.000");
         // 26 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
+	await new Promise(r => setTimeout(r, 2000));
 
         await driver.wait(until.elementLocated(By.css("#div_id_unit_cost .ajax-error")));
         // 27 | verifyText | css=#div_id_unit_cost .ajax-error | Ensure that there are no more than 2 decimal places.
@@ -244,7 +275,9 @@ var password;
         await driver.findElement(By.id("id_unit_cost")).clear();
         await driver.findElement(By.id("id_unit_cost")).sendKeys("9999999999.00");
         // 30 | click | css=.controls > .btn | 
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css(".controls > .btn")).click();
+	await new Promise(r => setTimeout(r, 2000));
         await driver.wait(until.elementLocated(By.css("#div_id_unit_cost .ajax-error")));
         // 31 | verifyText | css=#div_id_unit_cost .ajax-error | Ensure that there are no more 9 digits in total.
         assert(await driver.findElement(By.css("#div_id_unit_cost .ajax-error")).getText() == "Ensure that there are no more than 9 digits in total.");
@@ -254,25 +287,34 @@ var password;
         await driver.findElement(By.id("id_unit_cost")).clear();
         await driver.findElement(By.id("id_unit_cost")).sendKeys("3.00");
         await driver.switchTo().frame(0);
-        // 35 | selectFrame | relative=parent | 
         await driver.switchTo().defaultContent();
         // 36 | type | id=id_refurbishment_cost | 3.74
         await driver.findElement(By.id("id_refurbishment_cost")).clear();
         await driver.findElement(By.id("id_refurbishment_cost")).sendKeys("3.74");
         // 37 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
+//        await new Promise(r => setTimeout(r, 6000)); 
+	while ((await driver.findElements(By.id("action"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Revision2.");
+	}
 
         // Add template with null Part Number, name, type or revision code.
         // 40 | click | linkText=Add Part Template | 
-        await new Promise(r => setTimeout(r, 2000));   
         await driver.findElement(By.linkText("Add Part Template")).click();
-        // 41 | click | id=id_part_number |         
-        // 43 | click | css=.controls > .btn | 
-        await new Promise(r => setTimeout(r, 4000));   //circleci
+//        await new Promise(r => setTimeout(r, 4000));
+	while ((await driver.findElements(By.css(".controls > .btn"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Null Part Number.");
+	}
         await driver.findElement(By.css(".controls > .btn")).click();
+	await new Promise(r => setTimeout(r, 2000));
+
         await driver.wait(until.elementLocated(By.css("#div_id_part_number .ajax-error")));
         // 44 | verifyText | css=#div_id_part_number .ajax-error This field is required.
- 	await new Promise(r => setTimeout(r, 2000));   //circleci
+ 	await new Promise(r => setTimeout(r, 2000));
         assert(await driver.findElement(By.css("#div_id_part_number .ajax-error")).getText() == "This field is required.");
         // 45 | verifyText | css=#div_id_name .ajax-error | This field is required.
         assert(await driver.findElement(By.css("#div_id_name .ajax-error")).getText() == "This field is required.");
@@ -295,9 +337,9 @@ var password;
         // 52 | select | id=id_part_type | label=Sewing Machine
         dropdown = await driver.findElement(By.id("id_part_type"));
         await dropdown.findElement(By.xpath("//option[. = ' Sewing Machine']")).click();
-        // 53 | click | css=.controls > .btn | 
 	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css(".controls > .btn")).click();
+	await new Promise(r => setTimeout(r, 2000));
         await driver.wait(until.elementLocated(By.css("#div_id_part_number .ajax-error")));
         // 54 | verifyText | css=#div_id_part_number .ajax-error | Part with this Part number already exists.
         assert(await driver.findElement(By.css("#div_id_part_number .ajax-error")).getText() == "Part with this Part number already exists.");
@@ -313,7 +355,7 @@ var password;
         await driver.findElement(By.linkText("Edit Part Types")).click();
         // 5 | click | css=tr:nth-child(1) .btn-primary | 
         // Get the index to the row Sewing Machine is displayed on screen
-        await new Promise(r => setTimeout(r, 2000));  //until element located not working here
+        await new Promise(r => setTimeout(r, 2000)); 
 
 	if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Sewing Machine']"))).length != 0)
 	{
@@ -410,14 +452,26 @@ var password;
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 22 | click | linkText=123-456-789 | 
         await driver.findElement(By.linkText("123-456-789")).click();
-        // 23 | click | id=action | 
-        await driver.wait(until.elementLocated(By.id("action")));
+
+//        await new Promise(r => setTimeout(r, 20000)); // 1.6
+	while ((await driver.findElements(By.id("action"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Search1.");
+	}
+
         await driver.findElement(By.id("action")).click();
+
         // 24 | click | linkText=Edit Part Template | 
-	    await new Promise(r => setTimeout(r, 2000));
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Edit Part Template")).click();
         // 25 | type | id=id_part_number | 789-456-123
-        await new Promise(r => setTimeout(r, 2000));  //circleci
+//        await new Promise(r => setTimeout(r, 6000));
+	while ((await driver.findElements(By.id("id_part_number"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Edit Part Template3.");
+	}
         await driver.findElement(By.id("id_part_number")).clear();
         await driver.findElement(By.id("id_part_number")).sendKeys("789-456-123");
         // 26 | select | id=id_part_type | label=Computerized
@@ -427,31 +481,51 @@ var password;
         await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.css(".controls > .btn")).click();
 
+//        await new Promise(r => setTimeout(r, 20000));   //1.6 - update screen hasn't gone away after 14 seconds, try 20 sec!
+	while ((await driver.findElements(By.id("action"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Edit Part Template4.");
+	}  
+
         // Add revision
         // 28 | click | id=action | 
-        await driver.wait(until.elementLocated(By.id("action")));
         await driver.findElement(By.id("action")).click();
+//	await new Promise(r => setTimeout(r, 4000));
+	while ((await driver.findElements(By.linkText("Create New Revision"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Create New Revision2.");
+	}  
         // 29 | click | linkText=Create New Revision | 
         await driver.findElement(By.linkText("Create New Revision")).click();
         // 30 | type | id=id_revision_code | B
 	await new Promise(r => setTimeout(r, 6000));
-        //await driver.wait(until.elementLocated(By.id("id_revision_code")), 2000); // linux firefox stale element
         await driver.findElement(By.id("id_revision_code")).sendKeys("B");
-        // 31 | click | id=div_id_created_at | 
-        await driver.findElement(By.id("div_id_created_at")).click();
-        // 32 | click | css=.controls > .btn | 
+	await new Promise(r => setTimeout(r, 4000)); 
         await driver.findElement(By.css(".controls > .btn")).click();
+
+//	await new Promise(r => setTimeout(r, 8000)); 
+	while ((await driver.findElements(By.id("action"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for New Revision2.");
+	}
 
         // Change template to null Part Number, name, or type
         // 33 | click | id=action | 
-        await driver.wait(until.elementLocated(By.id("action")));
         await driver.findElement(By.id("action")).click();
         // 34 | click | linkText=Edit Part Template | 
         await driver.findElement(By.linkText("Edit Part Template")).click();
         // 35 | type | id=id_part_number |   
-        await new Promise(r => setTimeout(r, 2000));  //circleci - stale element
+//        await new Promise(r => setTimeout(r, 6000)); 
+	while ((await driver.findElements(By.id("id_part_number"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Edit Part Template5.");
+	}
+        await driver.findElement(By.id("id_part_number")).click();  //stale element
         await driver.findElement(By.id("id_part_number")).clear();
-	await new Promise(r => setTimeout(r, 2000));  //circleci
         await driver.findElement(By.id("id_part_number")).sendKeys("  ");
         // 36 | type | id=id_name |   
         await driver.findElement(By.id("id_name")).clear();
@@ -461,6 +535,7 @@ var password;
         await dropdown.findElement(By.xpath("//option[. = '---------']")).click();
         // 38 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
+	await new Promise(r => setTimeout(r, 2000));
         // 39 | verifyText | css=#div_id_part_number .ajax-error | This field is required.
         await driver.wait(until.elementLocated(By.css("#div_id_part_number .ajax-error")));
         assert(await driver.findElement(By.css("#div_id_part_number .ajax-error")).getText() == "This field is required.");
@@ -468,7 +543,7 @@ var password;
         assert(await driver.findElement(By.css("#div_id_part_type .ajax-error")).getText() == "This field is required.");
 
         // 40 | type | id=id_part_number | 1232
-        await driver.wait(until.elementLocated(By.id("id_part_number")));
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_part_number")).clear();
         await driver.findElement(By.id("id_part_number")).sendKeys("1232");
         // 43 | type | id=id_name | Sewing Template
@@ -476,10 +551,9 @@ var password;
         // 46 | select | id=id_part_type | label=--- Sewing Machine
         dropdown = await driver.findElement(By.id("id_part_type"));
         await dropdown.findElement(By.xpath("//option[. = ' Sewing Machine']")).click();
-        // 47 | click | css=.controls > .btn | 
-        await new Promise(r => setTimeout(r, 2000));  //circleci
-        await driver.findElement(By.css(".controls > .btn")).click();
         await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.css(".controls > .btn")).click();
+        await new Promise(r => setTimeout(r, 6000));
 
         var obj = await driver.findElements(By.xpath("//*[text()='Part with this Part number already exists.']"));	
 	if (obj.length != 0)
@@ -489,21 +563,32 @@ var password;
 
         // Edit revision with null code and invalid date
         // 48 | click | linkText=Revision: B | 
-        await driver.wait(until.elementLocated(By.linkText("Revision: B")));
         await driver.findElement(By.linkText("Revision: B")).click();
         // 49 | click | linkText=Edit Revision | 
-        await new Promise(r => setTimeout(r, 2000));
+//        await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.linkText("Edit Revision"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Edit Revision3.");
+	}
         await driver.findElement(By.linkText("Edit Revision")).click();
         // 50 | type | id=id_created_at |  
-        //await driver.wait(until.elementLocated(By.id("id_revision_code"))); //StaleElementReferenceError, use timeout
-        await new Promise(r => setTimeout(r, 6000));
+//        await new Promise(r => setTimeout(r, 6000));
+	while ((await driver.findElements(By.id("id_revision_code"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Edit Revision4.");
+	}
+	await driver.findElement(By.id("id_revision_code")).click();  //stale element
         await driver.findElement(By.id("id_revision_code")).clear();
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_revision_code")).sendKeys("   ");
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_created_at")).click();
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_created_at")).clear(); 
-//        await driver.findElement(By.css(".glyphicon-trash")).click();  doesn't work
-//        await driver.findElement(By.id("id_created_at")).sendKeys("0000"); doesn't work - gets converted to a valid date
+        // await driver.findElement(By.css(".glyphicon-trash")).click();  doesn't work
+        // await driver.findElement(By.id("id_created_at")).sendKeys("0000"); doesn't work - gets converted to a valid date
 
         // Change unit cost or refurbishment cost to value with greater than 2 decimal places
         // 56 | type | id=id_unit_cost | 3.000
@@ -514,10 +599,10 @@ var password;
         await driver.findElement(By.id("id_refurbishment_cost")).sendKeys("3.560");
         // 58 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
-        await driver.wait(until.elementLocated(By.css(".ajax-error")));
+	await new Promise(r => setTimeout(r, 6000));
         assert(await driver.findElement(By.css(".ajax-error")).getText() == "This field is required.");
         // 53 | type | id=id_created_at | 1
- //       assert(await driver.findElement(By.css(".ajax-error")).getText() == "Enter a valid date/time.");
+        // assert(await driver.findElement(By.css(".ajax-error")).getText() == "Enter a valid date/time.");
         // 59 | verifyText | css=#div_id_unit_cost .ajax-error | Ensure that there are no more than 2 decimal places.
         assert(await driver.findElement(By.css("#div_id_unit_cost .ajax-error")).getText() == "Ensure that there are no more than 2 decimal places.");
         // 60 | verifyText | css=#div_id_refurbishment_cost .ajax-error | Ensure that there are no more than 2 decimal places.

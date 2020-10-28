@@ -53,7 +53,8 @@ var password;
         password = "admin";
     }
     else {
-        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+//        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+        await driver.get("https://rdb-testing.whoi.edu/");
         user = "jkoch";
         password = "Automatedtests";
     }
@@ -164,7 +165,7 @@ var password;
         // 30 | click | css=.controls > .btn-primary |
         await driver.findElement(By.css(".controls > .btn-primary")).click();
         // 31 | click | css=.list-group:nth-child(1) > .list-group-item > .collapsed > .fa |
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.css(".list-group:nth-child(1) > .list-group-item > .collapsed > .fa")).click()
 
         // 36 | click | linkText=Edit Configurations / Constants |
@@ -181,7 +182,9 @@ var password;
 
         // 46 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 20000));
+	//let encodedString = await driver.takeScreenshot();
+	//await fs.writeFileSync('/tests/sewing.png', encodedString, 'base64');       
         // 47 | click | css=.list-group:nth-child(1) > .list-group-item > .collapsed > .fa | 
         await driver.findElement(By.css(".list-group:nth-child(1) > .list-group-item > .collapsed > .fa")).click();
         await new Promise(r => setTimeout(r, 2000));
@@ -191,9 +194,9 @@ var password;
 
         // 51 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 20000));   
         // 52 | click | css=.list-group:nth-child(1) > .list-group-item > .collapsed > .fa | 
-        await driver.findElement(By.css(".list-group:nth-child(1) > .list-group-item > .collapsed > .fa")).click();
+        await driver.findElement(By.css(".list-group:nth-child(1) > .list-group-item > .collapsed > .fa")).click(); //stale element
 
         // Verify Approvers; blank, Reviewers: admin
         await new Promise(r => setTimeout(r, 2000));
@@ -342,7 +345,7 @@ var password;
 
         // 13 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click()
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 4000));
 
         //Verify link name on Constant History tab is not TBD anymore
         await driver.findElement(By.linkText("Constant History")).click();

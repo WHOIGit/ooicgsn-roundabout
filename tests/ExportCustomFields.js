@@ -54,7 +54,8 @@ var password;
     }
     else
     {
-        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+ //        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+        await driver.get("https://rdb-testing.whoi.edu/");
         user = "jkoch";
         password = "Automatedtests";
     }
@@ -92,6 +93,13 @@ var password;
         await driver.findElement(By.id("navbarAdmintools")).click();
          // 4 | click | linkText=Custom Fields | 
         await driver.findElement(By.linkText("Custom Fields")).click();
+
+	while ((await driver.findElements(By.linkText("Add Custom Field"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Edit Custom Field.");
+	}
+
         if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Condition']"))).length != 0) {
             var i = 1;
             while (true) {
@@ -143,12 +151,16 @@ var password;
         await driver.wait(until.elementLocated(By.linkText("Parts")));
         await driver.findElement(By.linkText("Parts")).click();
         // 15 | click | linkText=Add Part Template | 
-        await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.linkText("Add Part Template"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Part Template1.");
+	}
         await driver.findElement(By.linkText("Add Part Template")).click();
         /*Get the text after ajax call*/
         // 16 | type | id=id_part_number |
         var part_num = "100-259-785";
-        await driver.wait(until.elementLocated(By.id("id_part_number")));
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_part_number")).sendKeys(part_num);
         // 17 | type | id=id_name | Computerized
         await driver.findElement(By.id("id_name")).sendKeys("Disk Drive");
@@ -162,7 +174,7 @@ var password;
         }
         // 20 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
-        await new Promise(r => setTimeout(r, 2000));
+	await new Promise(r => setTimeout(r, 2000));
 
         var obj = await driver.findElements(By.xpath("//*[text()='Part with this Part number already exists.']"));
         if (obj.length != 0) {
@@ -171,11 +183,18 @@ var password;
 
         // Create Inventory with Part Template above
         await driver.findElement(By.linkText("Inventory")).click();
-        await new Promise(r => setTimeout(r, 4000)); // Inventory tree takes awhile to load
-        // 4 | click | linkText=Add Inventory | 
-        await driver.wait(until.elementLocated(By.linkText("Add Inventory")));
+	while ((await driver.findElements(By.linkText("Add Inventory"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Inventory1.");
+	}
+       
         await driver.findElement(By.linkText("Add Inventory")).click();
-        await driver.wait(until.elementLocated(By.id("id_part_type")));
+ 	while ((await driver.findElements(By.id("id_part_type"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Inventory2.");
+	}
         // 5 | select | id=id_part_type | label=-- Sewing Machine
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
@@ -185,6 +204,7 @@ var password;
         {
             await new Promise(r => setTimeout(r, 2000));
             const dropdown = await driver.findElement(By.id("id_part"));
+	    await new Promise(r => setTimeout(r, 2000)); //New for 1.6 - This field blanked back out without timeout
             await dropdown.findElement(By.xpath("//option[. = 'Disk Drive']")).click();
         }
         // 7 | select | id=id_location | label=Test
@@ -199,6 +219,12 @@ var password;
         var Serial_Number = await driver.findElement(By.id("id_serial_number")).getAttribute("value");
         // 10 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
+
+	while ((await driver.findElements(By.partialLinkText("drive"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Inventory3.");
+	}
        
         // Now, check all Global Types for the Custom Field
 
@@ -206,6 +232,13 @@ var password;
         await driver.findElement(By.id("navbarAdmintools")).click();
         // 4 | click | linkText=Custom Fields | 
         await driver.findElement(By.linkText("Custom Fields")).click();
+
+	while ((await driver.findElements(By.linkText("Add Custom Field"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Edit Custom Field.");
+	}
+
         if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Condition']"))).length != 0) {
             var i = 1;
             while (true) {
@@ -218,7 +251,6 @@ var password;
         }
         else
             console.log("Export Custom Fields failed: Condition Custom Field not found");
-
 
         var i = 1;
         while (true) {
@@ -239,7 +271,12 @@ var password;
         }
         // 18 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
-	await new Promise(r => setTimeout(r, 4000));   //takes a while when db is fully populated
+//	await new Promise(r => setTimeout(r, 4000));   //takes a while when db is fully populated
+	while ((await driver.findElements(By.linkText("Add Custom Field"))).length == 0) //???
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Edit Custom Field.");
+	}
 
         // Search for and Export Part Items and verify "Condition" Custom Field is exported
         // 3 | click | id=searchbar-query | 
@@ -326,6 +363,12 @@ var password;
         
         // 5 | click | css=.btn:nth-child(1) | 
         await driver.findElement(By.css(".btn:nth-child(1)")).click()
+
+	while ((await driver.findElements(By.id("search--download-csv-button"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Search2.");
+	}
 
         // Downloads to Downloads Folder
         // 10 | click | id=search--download-csv-button |
