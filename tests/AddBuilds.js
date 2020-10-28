@@ -550,7 +550,13 @@ async function fixDayAbbr(day)
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
         // Verify Total Time in Field and Current Deployment Time in Field: 0 days 0 hours
-        await new Promise(r => setTimeout(r, 4000));
+	while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //wait for screen to populate
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Deploy to Re-add2.");
+	}
+let encodedString = await driver.takeScreenshot();
+await fs.writeFileSync('/tests/bscreen.png', encodedString, 'base64');      
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
         // UNCOMMENT FOR DOCKER - history shows 27 days due to staging testing
         assert(bodyText.includes("Total Time in Field: 1 days 0 hours"));        
