@@ -113,25 +113,31 @@ var password;
         else
             console.log("Export Custom Fields failed: Condition Custom Field not found");
 
- 
+        //Uncheck all
         var i = 1;
         while (true) {
             try {
-                var clicked = await driver.findElement(By.xpath("//div[" + i + "]/label/input")).isSelected();
-                if (!clicked)
+                if (i == 1) {
+                    var clicked = await driver.findElement(By.xpath("//div[6]/div/div/input")).isSelected();
+                }
+                else {
+                    //var clicked = await driver.findElement(By.xpath("//div[" + i + "]/label/input")).isSelected();  //pre 1.6
+                    var clicked = await driver.findElement(By.xpath("//div[" + i + "]/input")).isSelected();  //1.6 code change
+                }
+                if (clicked)
                 {
                     if (i == 1) {
                         if ((await driver.findElement(By.xpath("//div/div/label")).getText() == "Computerized") ||
                             (await driver.findElement(By.xpath("//div/div/label")).getText() == "Sewing Machine"))
                         {
-                            await driver.findElement(By.xpath("//div[" + i + "]/label/input")).click();
+                            await driver.findElement(By.xpath("//div[6]/div/div/input")).click();
                         }
                     }
                     else {
                         if ((await driver.findElement(By.xpath("//div/div[" + i + "]/label")).getText() == "Computerized")|
                             (await driver.findElement(By.xpath("//div/div[" + i + "]/label")).getText() == "Sewing Machine"))
                         {
-                            await driver.findElement(By.xpath("//div[" + i + "]/label/input")).click();
+                            await driver.findElement(By.xpath("//div[" + i + "]/input")).click();
                         }
                     }
                 }
@@ -252,15 +258,33 @@ var password;
         else
             console.log("Export Custom Fields failed: Condition Custom Field not found");
 
+        // Check all
         var i = 1;
         while (true) {
             try {
-                var clicked = await driver.findElement(By.xpath("//div[" + i + "]/label/input")).isSelected();
-                if (!clicked) {
-		    if ((await driver.findElement(By.xpath("//div/div[i]/label")).getText() == "Computerized") ||
-			(await driver.findElement(By.xpath("//div/div[i]/label")).getText() == "Sewing Machine"))
-                    {
-                       await driver.findElement(By.xpath("//div[" + i + "]/label/input")).click();
+                if (i == 1)
+                {
+                    var clicked = await driver.findElement(By.xpath("//div[6]/div/div/input")).isSelected();
+                }
+                else
+                {
+                    //var clicked = await driver.findElement(By.xpath("//div[" + i + "]/label/input")).isSelected();  //pre 1.6
+                    var clicked = await driver.findElement(By.xpath("//div[" + i + "]/input")).isSelected();
+                }
+
+                if (!clicked)
+                {
+                    if (i == 1) {
+                        if ((await driver.findElement(By.xpath("//div/div/label")).getText() == "Computerized") ||
+                            (await driver.findElement(By.xpath("//div/div/label")).getText() == "Sewing Machine")) {
+                            await driver.findElement(By.xpath("//div[6]/div/div/input")).click();
+                        }
+                    }
+                    else {
+                        if ((await driver.findElement(By.xpath("//div/div[" + i + "]/label")).getText() == "Computerized") |
+                            (await driver.findElement(By.xpath("//div/div[" + i + "]/label")).getText() == "Sewing Machine")) {
+                            await driver.findElement(By.xpath("//div[" + i + "]/input")).click();
+                        }
                     }
                 }
             }
