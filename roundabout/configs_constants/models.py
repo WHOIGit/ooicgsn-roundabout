@@ -59,11 +59,11 @@ class ConfigEvent(models.Model):
         return self.actions.filter(object_type=Action.CONFEVENT)
 
     def get_latest_deployment_date(self):
-        if self.deployment:
+        try:
             deploy_record = self.deployment.deployment_to_field_date
-            if deploy_record:
-                return deploy_record.strftime("%m/%d/%Y")
-        return 'TBD'
+            return deploy_record.strftime("%m/%d/%Y")
+        except:
+            return 'TBD'
 
     def get_sorted_reviewers(self):
         return self.user_draft.all().order_by('username')
