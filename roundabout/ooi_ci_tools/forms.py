@@ -41,6 +41,7 @@ from roundabout.cruises.models import Cruise, Vessel
 from roundabout.inventory.utils import _create_action_history
 from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
 from roundabout.calibrations.forms import validate_coeff_vals, parse_valid_coeff_vals
+from roundabout.configs_constants.models import ConfigName
 from roundabout.users.models import User
 
 
@@ -152,7 +153,7 @@ class ImportVesselsForm(forms.Form):
                 max_speed = None
                 max_draft = None
                 try:
-                    active = re.sub(r'[()]', '', row['Active'])
+                    active = row['Active']
                 except:
                     raise ValidationError(
                         _('File: %(filename)s: Unable to parse Active'),
@@ -166,35 +167,35 @@ class ImportVesselsForm(forms.Form):
                         params={'filename': filename},
                     )
                 try:
-                    MMSI_number = int(re.sub('[^0-9]','', row['MMSI#']))
+                    MMSI_number = row['MMSI#']
                 except:
                     raise ValidationError(
                         _('File: %(filename)s: Unable to parse MMSI'),
                         params={'filename': filename},
                     )
                 try:
-                    IMO_number = int(re.sub('[^0-9]','', row['IMO#']))
+                    IMO_number = row['IMO#']
                 except:
                     raise ValidationError(
                         _('File: %(filename)s: Unable to parse IMO'),
                         params={'filename': filename},
                     )
                 try:
-                    length = Decimal(row['Length (m)'])
+                    length = row['Length (m)']
                 except:
                     raise ValidationError(
                         _('File: %(filename)s: Unable to parse Lenth (m)'),
                         params={'filename': filename},
                     )
                 try:
-                    max_speed = Decimal(row['Max Draft (m)'])
+                    max_speed = row['Max Draft (m)']
                 except:
                     raise ValidationError(
                         _('File: %(filename)s: Unable to parse Max Speed (m/s)'),
                         params={'filename': filename},
                     )
                 try:
-                    max_draft = Decimal(row['Max Draft (m)'])
+                    max_draft = row['Max Draft (m)']
                 except:
                     raise ValidationError(
                         _('File: %(filename)s: Unable to parse Max Draft (m)'),
@@ -281,66 +282,83 @@ def validate_cal_files(csv_files,ext_files):
                 _('File: %(filename)s, %(value)s: Unable to find Inventory item with this Serial Number'),
                 params={'value': inv_serial, 'filename': cal_csv.name},
             )
-        try:
-            cal_date_string = cal_csv.name.split('__')[1][:8]
-            cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, %(value)s: Unable to parse Calibration Date from Filename'),
-                params={'value': cal_date_string, 'filename': cal_csv.name},
-            )
+        config_types = []
         for idx, row in enumerate(reader):
             row_data = row.items()
             for key, value in row_data:
                 if key == 'name':
-                    calibration_name = value.strip()
+                    config_name = value.strip()
                     try:
-                        cal_name_item = CoefficientName.objects.get(
-                            calibration_name = calibration_name,
-                            coeff_name_event =  inventory_item.part.coefficient_name_events.first()
+                        config_name_item = ConfigName.objects.get(
+                            name = config_name,
+                            config_name_event = inventory_item.part.config_name_events.first()
                         )
-                    except:
-                        raise ValidationError(
-                            _('File: %(filename)s, Calibration Name: %(value)s, Row %(row)s: Unable to find Calibration item with this Name'),
-                            params={'value': calibration_name, 'row': idx, 'filename': cal_csv.name},
-                        )
-                elif key == 'value':
-                    valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
-                    mock_valset_instance = SimpleNamespace(**valset_keys)
-                    try:
-                        raw_valset = str(value)
-                    except:
-                        raise ValidationError(
-                            _('File: %(filename)s, Calibration Name: %(value)s, Row %(row)s, %(value)s: Unable to parse Calibration Coefficient value(s)'),
-                            params={'value': calibration_name,'row': idx, 'filename': cal_csv.name},
-                        )
-                    if '[' in raw_valset:
-                        raw_valset = raw_valset[1:-1]
-                    if 'SheetRef' in raw_valset:
-                        ext_finder_filename = "__".join((cal_csv_filename,calibration_name))
+                    except ConfigName.DoesNotExist:
+                        config_name_item = None
+                    if config_name_item:
+                        config_types.append(config_name_item.config_type)
+        config_types = list(set(config_types))
+        if not config_types:
+            try:
+                cal_date_string = cal_csv.name.split('__')[1][:8]
+                cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
+            except:
+                raise ValidationError(
+                    _('File: %(filename)s, %(value)s: Unable to parse Calibration Date from Filename'),
+                    params={'value': cal_date_string, 'filename': cal_csv.name},
+                )
+            for idx, row in enumerate(reader):
+                row_data = row.items()
+                for key, value in row_data:
+                    if key == 'name':
+                        calibration_name = value.strip()
                         try:
-                            ref_file = [file for file in ext_files if ext_finder_filename in file.name][0]
-                            assert len(ref_file) > 0
+                            cal_name_item = CoefficientName.objects.get(
+                                calibration_name = calibration_name,
+                                coeff_name_event =  inventory_item.part.coefficient_name_events.first()
+                            )
                         except:
                             raise ValidationError(
-                                _('File: %(filename)s, Calibration Name: %(value)s, Row %(row)s: No associated .ext file selected'),
+                                _('File: %(filename)s, Calibration Name: %(value)s, Row %(row)s: Unable to find Calibration item with this Name'),
                                 params={'value': calibration_name, 'row': idx, 'filename': cal_csv.name},
                             )
-                        ref_file.seek(0)
-                        reader = io.StringIO(ref_file.read().decode('utf-8'))
-                        contents = reader.getvalue()
-                        raw_valset = contents
-                        validate_coeff_vals(mock_valset_instance, cal_name_item.value_set_type, raw_valset, filename = ref_file.name, cal_name = calibration_name)
-                    else:
-                        validate_coeff_vals(mock_valset_instance, cal_name_item.value_set_type, raw_valset, filename = cal_csv.name, cal_name = calibration_name)
-                elif key == 'notes':
-                    try:
-                        notes = value.strip()
-                    except:
-                        raise ValidationError(
-                            _('File: %(filename)s, Calibration Name: %(value)s, Row %(row)s: Unable to parse Calibration Coefficient note(s)'),
-                            params={'value': calibration_name, 'row': idx, 'filename': cal_csv.name},
-                        )
+                    elif key == 'value':
+                        valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
+                        mock_valset_instance = SimpleNamespace(**valset_keys)
+                        try:
+                            raw_valset = str(value)
+                        except:
+                            raise ValidationError(
+                                _('File: %(filename)s, Calibration Name: %(value)s, Row %(row)s, %(value)s: Unable to parse Calibration Coefficient value(s)'),
+                                params={'value': calibration_name,'row': idx, 'filename': cal_csv.name},
+                            )
+                        if '[' in raw_valset:
+                            raw_valset = raw_valset[1:-1]
+                        if 'SheetRef' in raw_valset:
+                            ext_finder_filename = "__".join((cal_csv_filename,calibration_name))
+                            try:
+                                ref_file = [file for file in ext_files if ext_finder_filename in file.name][0]
+                                assert len(ref_file) > 0
+                            except:
+                                raise ValidationError(
+                                    _('File: %(filename)s, Calibration Name: %(value)s, Row %(row)s: No associated .ext file selected'),
+                                    params={'value': calibration_name, 'row': idx, 'filename': cal_csv.name},
+                                )
+                            ref_file.seek(0)
+                            reader = io.StringIO(ref_file.read().decode('utf-8'))
+                            contents = reader.getvalue()
+                            raw_valset = contents
+                            validate_coeff_vals(mock_valset_instance, cal_name_item.value_set_type, raw_valset, filename = ref_file.name, cal_name = calibration_name)
+                        else:
+                            validate_coeff_vals(mock_valset_instance, cal_name_item.value_set_type, raw_valset, filename = cal_csv.name, cal_name = calibration_name)
+                    elif key == 'notes':
+                        try:
+                            notes = value.strip()
+                        except:
+                            raise ValidationError(
+                                _('File: %(filename)s, Calibration Name: %(value)s, Row %(row)s: Unable to parse Calibration Coefficient note(s)'),
+                                params={'value': calibration_name, 'row': idx, 'filename': cal_csv.name},
+                            )
 
 
 class ImportCalibrationForm(forms.Form):
