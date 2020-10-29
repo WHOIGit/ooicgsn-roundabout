@@ -107,40 +107,52 @@ var password;
 	}
         // Create Calibrations for Part Template
         await driver.findElement(By.linkText("Create Calibrations")).click();
+
+	// 1.6 Behavior of this screen is so tweeky. Values set are cleared before .btn-primary
+	// pushed. Doesn't happen stepping through the debugger. Fields MUST be set in this order!
+
+	while ((await driver.findElements(By.id("id_user_draft"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Row.");
+	} 
+        {
+            const dropdown = await driver.findElement(By.id("id_user_draft"));
+            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click();
+        }
+
+let encodedString = await driver.takeScreenshot();
+await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');    
+      
+        // 24 | click | linkText=Add Configurations/Constants | 
+        await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).sendKeys("Single");
+        await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); 
+
+        await new Promise(r => setTimeout(r, 2000));
+
 	while ((await driver.findElements(By.linkText("Add Calibration"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Add Calib.");
 	}
-       await driver.findElement(By.linkText("Add Calibration")).click();
-	while ((await driver.findElements(By.id("id_coefficient_names-1-sigfig_override"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Row.");
-	} 
-let encodedString = await driver.takeScreenshot();
-await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');          
-        // 24 | click | linkText=Add Configurations/Constants | 
+        await driver.findElement(By.linkText("Add Calibration")).click();
 
-	// 1.6 Behavior of this screen is so tweeky. Values set get cleared before .btn-primary
-	// pushed. Doesn't happen stepping through the debugger. Set name last. Build got into a funny
-	// state - had to clean & rebuild everything.
-        await driver.findElement(By.id("id_coefficient_names-1-sigfig_override")).sendKeys("20"); 
-        await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).sendKeys("Single");
-        await driver.findElement(By.id("id_coefficient_names-1-value_set_type")).sendKeys("2-Dimensional Array");     
-        await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); 
-        await driver.findElement(By.id("id_coefficient_names-1-calibration_name")).sendKeys("scalib2")
-
-        await new Promise(r => setTimeout(r, 2000));
-        // 21 | addSelection | id=id_user_draft | label=admin
-        {
-            const dropdown = await driver.findElement(By.id("id_user_draft"));
-            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click();
-        }
+        await driver.findElement(By.id("id_coefficient_names-1-value_set_type")).click();
+        await driver.findElement(By.id("id_coefficient_names-1-value_set_type")).sendKeys("2-Dimensional Array");
+        await driver.findElement(By.id("id_coefficient_names-1-calibration_name")).click();
+        await driver.findElement(By.id("id_coefficient_names-1-calibration_name")).sendKeys("scalib2");
+        await driver.findElement(By.id("id_coefficient_names-1-sigfig_override")).click(); 
+        await driver.findElement(By.id("id_coefficient_names-1-sigfig_override")).sendKeys("20"); //no such element but found it above...
+   
 	await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); //have to set again
+
+	await driver.findElement(By.id("id_user_draft")).sendKeys("admin");  //this gets unchecked
 encodedString = await driver.takeScreenshot();
 await fs.writeFileSync('/tests/ccscreen1.png', encodedString, 'base64');    
-        await driver.findElement(By.css(".controls > .btn-primary")).click()
+        await driver.findElement(By.css(".controls > .btn-primary")).click();
+encodedString = await driver.takeScreenshot();
+await fs.writeFileSync('/tests/ccscreen2.png', encodedString, 'base64');    
 	while ((await driver.findElements(By.id("action"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
@@ -307,6 +319,11 @@ await fs.writeFileSync('/tests/ccscreen1.png', encodedString, 'base64');
 	   console.log("Wait 2 seconds for Metadata.");
 	}
         await driver.findElement(By.linkText("Edit Coefficient Metadata")).click();
+	while ((await driver.findElements(By.id("id_coefficient_values-0-sigfig"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Edit.");
+	}
         await driver.findElement(By.id("id_coefficient_values-0-sigfig")).clear();
         await driver.findElement(By.id("id_coefficient_values-0-sigfig")).sendKeys("19");
         await driver.findElement(By.id("id_coefficient_values-0-notation_format")).sendKeys("Scientific");
