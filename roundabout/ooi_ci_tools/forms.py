@@ -36,7 +36,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from roundabout.inventory.models import Inventory, Action
+from roundabout.inventory.models import Inventory, Action, Deployment
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.inventory.utils import _create_action_history
 from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent

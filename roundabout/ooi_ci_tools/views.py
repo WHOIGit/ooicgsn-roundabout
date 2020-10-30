@@ -269,7 +269,7 @@ def import_calibrations(cal_files, user, user_draft):
     cache.set('import_task', job.task_id, timeout=None)
 
 # CSV Importer View
-# Activates parsing tasks based on files selected
+# Activates parsing tasks based on selected files
 def import_csv(request):
     confirm = ""
     if request.method == "POST":

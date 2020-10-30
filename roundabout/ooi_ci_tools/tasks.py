@@ -68,26 +68,30 @@ def parse_cal_files(self):
         cal_date_string = cal_csv.name.split('__')[1][:8]
         inventory_item = Inventory.objects.get(serial_number=inv_serial)
         cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
+        try:
+            deployment = Deployment.objects.get(
+                deployment_to_field_date__year=cal_date_date.year,
+                deployment_to_field_date__month=cal_date_date.month,
+                deployment_to_field_date__day=cal_date_date.day,
+            )
+        except Deployment.DoesNotExist:
+            deployment = None
         conf_event, created = ConfigEvent.objects.get_or_create(
             configuration_date = cal_date_date,
             inventory = inventory_item,
-            config_type = 'conf'
+            config_type = 'conf',
+            deployment = deployment
         )
         cnst_event, created = ConfigEvent.objects.get_or_create(
             configuration_date = cal_date_date,
             inventory = inventory_item,
-            config_type = 'cnst'
+            config_type = 'cnst',
+            deployment = deployment
         )
         csv_event, created = CalibrationEvent.objects.get_or_create(
             calibration_date = cal_date_date,
             inventory = inventory_item
         )
-        try:
-            deployment = Deployment.objects.get(
-                deployment_to_field_date = cal_date_date
-            )
-        except Deployment.DoesNotExist:
-            deployment = None
         for idx, row in enumerate(reader):
             row_data = row.items()
             for key, value in row_data:
@@ -171,7 +175,6 @@ def parse_cal_files(self):
                 coeff_val_set, created = ConfigValue.objects.update_or_create(
                     config_name = valset['config_name'],
                     config_event = valset['config_event'],
-                    deployment = deployment,
                     defaults = {
                         'config_value': valset['config_value'],
                         'notes': valset['notes'],
@@ -186,7 +189,6 @@ def parse_cal_files(self):
                 const_val_set, created = ConfigValue.objects.update_or_create(
                     config_name = valset['config_name'],
                     config_event = valset['config_event'],
-                    deployment = deployment,
                     defaults = {
                         'config_value': valset['config_value'],
                         'notes': valset['notes'],
