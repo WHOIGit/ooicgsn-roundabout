@@ -108,7 +108,7 @@ var password;
         // Create Calibrations for Part Template
         await driver.findElement(By.linkText("Create Calibrations")).click();
 
-	// 1.6 Behavior of this screen is so tweeky. Values set are cleared before .btn-primary
+	// 1.6 Behavior of this screen is so tweeky!!! Values set are cleared before .btn-primary
 	// pushed. Doesn't happen stepping through the debugger. Fields MUST be set in this order!
 
 	while ((await driver.findElements(By.id("id_user_draft"))).length == 0)
@@ -116,10 +116,6 @@ var password;
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Add Row.");
 	} 
-        {
-            const dropdown = await driver.findElement(By.id("id_user_draft"));
-            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click();
-        }
 
 let encodedString = await driver.takeScreenshot();
 await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');    
@@ -130,12 +126,8 @@ await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');
 
         await new Promise(r => setTimeout(r, 2000));
 
-	while ((await driver.findElements(By.linkText("Add Calibration"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Calib.");
-	}
         await driver.findElement(By.linkText("Add Calibration")).click();
+        await new Promise(r => setTimeout(r, 2000)); 
 
         await driver.findElement(By.id("id_coefficient_names-1-value_set_type")).click();
         await driver.findElement(By.id("id_coefficient_names-1-value_set_type")).sendKeys("2-Dimensional Array");
@@ -147,7 +139,7 @@ await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');
 	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); //have to set again
 
-	await driver.findElement(By.id("id_user_draft")).sendKeys("admin");  //this gets unchecked
+	await driver.findElement(By.id("id_user_draft")).sendKeys("admin");  //dropdown doesn't work, this gets unchecked
 encodedString = await driver.takeScreenshot();
 await fs.writeFileSync('/tests/ccscreen1.png', encodedString, 'base64');    
         await driver.findElement(By.css(".controls > .btn-primary")).click();
@@ -250,7 +242,8 @@ await fs.writeFileSync('/tests/ccscreen2.png', encodedString, 'base64');
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Add Coef.");
 	}
-        await driver.findElement(By.id("add_coefficient_action")).click()
+        await driver.findElement(By.id("add_coefficient_action")).click();
+
 	while ((await driver.findElements(By.id("id_user_draft"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));

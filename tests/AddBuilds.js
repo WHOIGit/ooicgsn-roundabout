@@ -232,6 +232,11 @@ async function fixDayAbbr(day)
         // 19 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
         // 20 | verifyText | css=.ajax-error | This field is required.
+	while ((await driver.findElements(By.css("#div_id_build_number .ajax-error"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for New Build Ajax Error2.");
+	}
         assert(await driver.findElement(By.css("#div_id_build_number .ajax-error")).getText() == "This field is required.");
 
         // Add Inventory Items to the Build

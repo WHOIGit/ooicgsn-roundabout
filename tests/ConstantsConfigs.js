@@ -201,9 +201,13 @@ var password;
         await driver.findElement(By.linkText("Edit Configurations / Constants")).click();
 
         // 40 | type | id=id_config_names-0-name | conf12
-        await new Promise(r => setTimeout(r, 4000));
+   	while ((await driver.findElements(By.id("id_config_names-3-name"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Config Name.");
+	}
         await driver.findElement(By.id("id_config_names-3-name")).clear();
-        await driver.findElement(By.id("id_config_names-3-name")).sendKeys("sconf12");
+        await driver.findElement(By.id("id_config_names-3-name")).sendKeys("sconf12"); //stale element
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_config_names-1-name")).clear();
         await driver.findElement(By.id("id_config_names-1-name")).sendKeys("scnst12");
@@ -227,8 +231,11 @@ var password;
 	}
         // 48 | click | linkText=Edit Configurations / Constants | 
         await driver.findElement(By.linkText("Edit Configurations / Constants")).click();
-        await new Promise(r => setTimeout(r, 2000));
-
+   	while ((await driver.findElements(By.css(".controls > .btn-primary"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Btn-primary.");
+	}
         // 51 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 

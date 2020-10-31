@@ -384,7 +384,11 @@ var password;
         // 48 | type | id=searchbar-query | pioneer inshore deck assembly
         await driver.findElement(By.id("searchbar-query")).sendKeys("singer");
         // 49 | click | css=.btn-outline-primary:nth-child(1) | 
-        await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.xpath("//p[contains(.,'NONE')]"))).length == 0) 
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Xpath.");
+	}
         await driver.findElement(By.xpath("//p[contains(.,'NONE')]"));
             
         // Add valid child to parent assembly

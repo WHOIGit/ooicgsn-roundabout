@@ -125,6 +125,11 @@ var password;
 	      console.log("Wait 2 seconds for Search2.");
 	   }
 	    await driver.findElement(By.id("action")).click(); 
+	    while ((await driver.findElements(By.linkText("Recover from Field"))).length == 0)
+	   {
+	      await new Promise(r => setTimeout(r, 2000));
+	      console.log("Wait 2 seconds for Recover from Field.");
+	   }
 	    await driver.findElement(By.linkText("Recover from Field")).click();
             await driver.findElement(By.css(".controls > .btn")).click(); 
 	    

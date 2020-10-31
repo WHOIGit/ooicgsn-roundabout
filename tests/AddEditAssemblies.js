@@ -221,13 +221,20 @@ var password;
 	}     
         // 35 | click | linkText=Test Assembly | 
         await driver.findElement(By.linkText("Test Assembly")).click();
-        // 36 | click | id=action | 
-        await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.id("action"))).length == 0) 
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Action.");
+	}     
         await driver.findElement(By.id("action")).click();
         await driver.wait(until.elementLocated(By.linkText("Copy Assembly Template")));
         await driver.findElement(By.linkText("Copy Assembly Template")).click();
         // 38 | type | id=id_name | Test Assembly 3
-        await new Promise(r => setTimeout(r, 2000));
+        while ((await driver.findElements(By.id("id_name"))).length == 0) 
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Name.");
+	}     
         await driver.findElement(By.id("id_name")).sendKeys("Test Assembly 3");
         // 39 | select | id=id_assembly_type | label=Electric
         {
@@ -291,7 +298,7 @@ var password;
 	}   
         await driver.findElement(By.linkText("Test Assembly 3")).click();
         // 54 | click | id=action | 
-	while ((await driver.findElements(By.id("action"))).length == 0) // 1.6
+	while ((await driver.findElements(By.id("action"))).length == 0) 
 	{
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Create Revision3.");
@@ -300,7 +307,11 @@ var password;
         // 55 | click | linkText=Copy Assembly Template | 
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Copy Assembly Template")).click();
-        await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.id("id_assembly_type"))).length == 0) 
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Assembly Type.");
+	} 
         // 56 | select | id=id_assembly_type | label=Electric
         {
             const dropdown = await driver.findElement(By.id("id_assembly_type"));
@@ -309,7 +320,11 @@ var password;
         // 57 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
         // Verify assembly name required error
-        await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.css("#div_id_name .ajax-error"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Ajax Error.");
+	} 
         assert(await driver.findElement(By.css("#div_id_name .ajax-error")).getText() == "This field is required.");
 
         // EDIT ASSEMBLIES TEST
@@ -343,17 +358,21 @@ var password;
         // Create a Revision of an Assembly Template
         // 10 | click | id=action | 
 //        await new Promise(r => setTimeout(r, 6000));
-	while ((await driver.findElements(By.id("action"))).length == 0) // 1.6
+	while ((await driver.findElements(By.id("action"))).length == 0) 
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Create Revision3.");
+	   console.log("Wait 2 seconds for Create Revision4.");
 	} 
         await driver.findElement(By.id("action")).click();
         // 11 | click | linkText=Create New Revision | 
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Create New Revision")).click();
         // 12 | click | css=.controls > .btn | 
-        await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.id("id_revision_code"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Revision.");
+	} 
         // 13 | type | id=id_revision_code | B
         await driver.findElement(By.id("id_revision_code")).sendKeys("B");
         // 14 | click | css=.controls > .btn | 
@@ -362,7 +381,7 @@ var password;
         // Add top level part with non null part type and part template
         // 15 | click | id=action | 
 //        await new Promise(r => setTimeout(r, 6000));
-	while ((await driver.findElements(By.id("action"))).length == 0) // 1.6
+	while ((await driver.findElements(By.id("action"))).length == 0) 
 	{
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Add Top Level Part.");
@@ -404,7 +423,7 @@ var password;
         // 26 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 //        await new Promise(r => setTimeout(r, 6000));
-	while ((await driver.findElements(By.id("action"))).length == 0) // 1.6
+	while ((await driver.findElements(By.id("action"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Add SubAssembly.");
@@ -417,7 +436,11 @@ var password;
         await driver.findElement(By.linkText("Add New Sub-Assembly")).click();
         await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-        await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.css("#div_id_part .ajax-error"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Ajax Error.");
+	} 
         // Add sub assembly part with null selection part type
         assert(await driver.findElement(By.css("#div_id_part .ajax-error")).getText() == "This field is required.");
 
@@ -430,7 +453,11 @@ var password;
         }
      
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-        await new Promise(r => setTimeout(r, 2000));
+        while ((await driver.findElements(By.css("#div_id_part .ajax-error"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Ajax Error.");
+	} 
         // Add sub assembly part with null selection part template
         assert(await driver.findElement(By.css("#div_id_part .ajax-error")).getText() == "This field is required.");
 

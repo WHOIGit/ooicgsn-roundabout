@@ -581,11 +581,8 @@ var password;
 	}
 	await driver.findElement(By.id("id_revision_code")).click();  //stale element
         await driver.findElement(By.id("id_revision_code")).clear();
-        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_revision_code")).sendKeys("   ");
-	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_created_at")).click();
-	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_created_at")).clear(); 
         // await driver.findElement(By.css(".glyphicon-trash")).click();  doesn't work
         // await driver.findElement(By.id("id_created_at")).sendKeys("0000"); doesn't work - gets converted to a valid date

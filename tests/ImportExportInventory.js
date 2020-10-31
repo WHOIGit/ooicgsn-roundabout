@@ -239,6 +239,8 @@ var password;
         	username = username.replace(/[\n\r]+/g, '');
         	var rdb_inv = "C:\\Users\\" + username + "\\Downloads\\RDB_Inventory.csv";
 	}
+
+	await new Promise(r => setTimeout(r, 6000));  //wait for file download
      	
         var csv = fs.readFileSync(rdb_inv,'utf8');
         var data = $.csv.toArrays(csv);
