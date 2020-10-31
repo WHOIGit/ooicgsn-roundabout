@@ -122,7 +122,8 @@ await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');
       
         // 24 | click | linkText=Add Configurations/Constants | 
         await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).sendKeys("Single");
-        await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); 
+	await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).click();
+        await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); //circleci not interactable
 
         await new Promise(r => setTimeout(r, 2000));
 
