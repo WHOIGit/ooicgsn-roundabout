@@ -310,7 +310,7 @@ await fs.writeFileSync('/tests/ccscreen2.png', encodedString, 'base64');
 	while ((await driver.findElements(By.id("calibration-template-tab"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Ta2.");
+	   console.log("Wait 2 seconds for Tab2.");
 	}
         await driver.findElement(By.id("calibration-template-tab")).click()
 	while ((await driver.findElements(By.css("#calibration-template .collapsed > .fa"))).length == 0)
@@ -371,14 +371,15 @@ await fs.writeFileSync('/tests/ccscreen2.png', encodedString, 'base64');
 	{
             try 
 	    {
-                await driver.findElement(By.css(".controls > .btn-primary"));
+                await driver.findElement(By.css(".controls > .btn-primary")).click();
+		break;
             }
             catch (StaleElementReferenceException) 
 	    {
                 console.log("Stale Element .controls > .btn-primary");
             }
         }
-        await driver.findElement(By.css(".controls > .btn-primary")).click();  // circleci stale element
+//        await driver.findElement(By.css(".controls > .btn-primary")).click();  // circleci stale element
    	while ((await driver.findElements(By.linkText("Calibrations"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
