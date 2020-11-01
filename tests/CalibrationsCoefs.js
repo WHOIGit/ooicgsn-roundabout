@@ -355,7 +355,18 @@ await fs.writeFileSync('/tests/ccscreen2.png', encodedString, 'base64');
             await dropdown.findElement(By.xpath("//option[. = 'admin']")).click();
         }
         await driver.findElement(By.id("id_part_select")).sendKeys(" Sewing Template");
-        await driver.findElement(By.css(".controls > .btn-primary")).click()
+        for (var j = 0; j < 5; j++) 
+	{
+            try 
+	    {
+                var ele = await driver.findElement(By.css(".controls > .btn-primary"));
+            }
+            catch (StaleElementReferenceException) 
+	    {
+                console.log("Stale Element");
+            }
+        }
+        await driver.findElement(By.css(".controls > .btn-primary")).click();  // circleci stale element
    	while ((await driver.findElements(By.linkText("Calibrations"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
