@@ -121,11 +121,13 @@ let encodedString = await driver.takeScreenshot();
 await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');    
       
         // 24 | click | linkText=Add Configurations/Constants | 
-        await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).sendKeys("Single");
+//        await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).sendKeys("Single");
         for (var j = 0; j < 5; j++) 
 	{
             try 
 	    {
+        	await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).clear();
+        	await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).sendKeys("Single");
 		await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).clear();
                 await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); //circleci stale element
             }
