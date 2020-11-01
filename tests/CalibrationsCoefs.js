@@ -122,8 +122,18 @@ await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');
       
         // 24 | click | linkText=Add Configurations/Constants | 
         await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).sendKeys("Single");
-	await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).click();
-        await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); //circleci not interactable
+        for (var j = 0; j < 5; j++) 
+	{
+            try 
+	    {
+                await driver.findElement(By.id("id_coefficient_names-0-calibration_name"));
+            }
+            catch (StaleElementReferenceException) 
+	    {
+                console.log("Stale Element id_coefficient_names-0-calibration_name");
+            }
+        }
+        await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); //circleci stale element
 
         await new Promise(r => setTimeout(r, 2000));
 
@@ -171,7 +181,7 @@ await fs.writeFileSync('/tests/ccscreen2.png', encodedString, 'base64');
 	while ((await driver.findElements(By.id("action"))).length == 0) //after page update
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Action.");
+	   console.log("Wait 2 seconds for Action2.");
 	}
         await driver.findElement(By.id("searchbar-query")).sendKeys("disk drive");
         await driver.findElement(By.id("searchbar-modelselect")).sendKeys("Part Templates");
@@ -186,7 +196,7 @@ await fs.writeFileSync('/tests/ccscreen2.png', encodedString, 'base64');
 	while ((await driver.findElements(By.id("action"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Action.");
+	   console.log("Wait 2 seconds for Action3.");
 	}
         await driver.findElement(By.id("action")).click();
         await driver.findElement(By.linkText("Edit Part Template")).click();
@@ -234,7 +244,7 @@ await fs.writeFileSync('/tests/ccscreen2.png', encodedString, 'base64');
 	while ((await driver.findElements(By.id("action"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Action.");
+	   console.log("Wait 2 seconds for Action4.");
 	}
         await driver.findElement(By.id("action")).click()
         // 35 | click | id=add_constdefault_action |
@@ -298,7 +308,7 @@ await fs.writeFileSync('/tests/ccscreen2.png', encodedString, 'base64');
 	while ((await driver.findElements(By.id("calibration-template-tab"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Tab.");
+	   console.log("Wait 2 seconds for Ta2.");
 	}
         await driver.findElement(By.id("calibration-template-tab")).click()
 	while ((await driver.findElements(By.css("#calibration-template .collapsed > .fa"))).length == 0)
@@ -325,7 +335,7 @@ await fs.writeFileSync('/tests/ccscreen2.png', encodedString, 'base64');
    	while ((await driver.findElements(By.id("action"))).length == 0)  //after page update
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Action.");
+	   console.log("Wait 2 seconds for Action5.");
 	}
 
         // Copy Calibrations from one Part Template to Another - Issue #146
@@ -359,11 +369,11 @@ await fs.writeFileSync('/tests/ccscreen2.png', encodedString, 'base64');
 	{
             try 
 	    {
-                var ele = await driver.findElement(By.css(".controls > .btn-primary"));
+                await driver.findElement(By.css(".controls > .btn-primary"));
             }
             catch (StaleElementReferenceException) 
 	    {
-                console.log("Stale Element");
+                console.log("Stale Element .controls > .btn-primary");
             }
         }
         await driver.findElement(By.css(".controls > .btn-primary")).click();  // circleci stale element
@@ -414,7 +424,7 @@ await fs.writeFileSync('/tests/ccscreen2.png', encodedString, 'base64');
 	while ((await driver.findElements(By.id("calibration-template-tab"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Tab.");
+	   console.log("Wait 2 seconds for Tab3.");
 	}
         await driver.findElement(By.id("calibration-template-tab")).click()
 	while ((await driver.findElements(By.css("#calibration-template .collapsed > .fa"))).length == 0)
