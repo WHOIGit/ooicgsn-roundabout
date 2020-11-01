@@ -126,14 +126,13 @@ await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');
 	{
             try 
 	    {
-                await driver.findElement(By.id("id_coefficient_names-0-calibration_name"));
+                await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); //circleci stale element
             }
             catch (StaleElementReferenceException) 
 	    {
-                console.log("Stale Element id_coefficient_names-0-calibration_name");
+                console.log("Stale Element id_coefficient_names-0-calibration_name. Try again...");
             }
         }
-        await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); //circleci stale element
 
         await new Promise(r => setTimeout(r, 2000));
 
