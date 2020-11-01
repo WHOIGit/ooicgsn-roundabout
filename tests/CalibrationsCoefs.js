@@ -125,9 +125,10 @@ await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');
 	{
             try 
 	    {
+        	await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).clear();
         	await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).sendKeys("Single");  //circleci stale element
+		await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).clear();
                 await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); //circleci stale element
-		break;
             }
             catch (StaleElementReferenceException) 
 	    {
@@ -148,6 +149,7 @@ await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');
         await driver.findElement(By.id("id_coefficient_names-1-sigfig_override")).sendKeys("20"); //no such element but found it above...
    
 	await new Promise(r => setTimeout(r, 2000));
+	await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).clear();
         await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); //have to set again
 
 	await driver.findElement(By.id("id_user_draft")).sendKeys("admin");  //dropdown doesn't work, this gets unchecked
