@@ -121,19 +121,17 @@ let encodedString = await driver.takeScreenshot();
 await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');    
       
         // 24 | click | linkText=Add Configurations/Constants | 
-//        await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).sendKeys("Single");
         for (var j = 0; j < 5; j++) 
 	{
             try 
 	    {
-        	await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).clear();
-        	await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).sendKeys("Single");
-		await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).clear();
+        	await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).sendKeys("Single");  //circleci stale element
                 await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); //circleci stale element
+		break;
             }
             catch (StaleElementReferenceException) 
 	    {
-                console.log("Stale Element id_coefficient_names-0-calibration_name. Try again...");
+                console.log("Stale Element id_coefficient_names-0. Try again...");
             }
         }
 
@@ -371,7 +369,7 @@ await fs.writeFileSync('/tests/ccscreen2.png', encodedString, 'base64');
 	{
             try 
 	    {
-                await driver.findElement(By.css(".controls > .btn-primary")).click();
+                await driver.findElement(By.css(".controls > .btn-primary")).click(); // circleci stale element
 		break;
             }
             catch (StaleElementReferenceException) 
@@ -379,7 +377,6 @@ await fs.writeFileSync('/tests/ccscreen2.png', encodedString, 'base64');
                 console.log("Stale Element .controls > .btn-primary");
             }
         }
-//        await driver.findElement(By.css(".controls > .btn-primary")).click();  // circleci stale element
    	while ((await driver.findElements(By.linkText("Calibrations"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
