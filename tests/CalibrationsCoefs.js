@@ -126,6 +126,7 @@ await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');
 	{
             try 
 	    {
+		await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).clear();
                 await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); //circleci stale element
             }
             catch (StaleElementReferenceException) 
