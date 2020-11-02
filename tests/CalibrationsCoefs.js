@@ -363,22 +363,23 @@ var password;
 	   console.log("Wait 2 seconds for User.");
 	}
         {
-            const dropdown = await driver.findElement(By.id("id_user_draft"));
-            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click();
+//            const dropdown = await driver.findElement(By.id("id_user_draft"));
+//            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click()
         }
         await driver.findElement(By.id("id_part_select")).sendKeys(" Sewing Template");
+	await driver.findElement(By.id("id_user_draft")).sendKeys("admin");
         for (var j = 0; j < 5; j++) 
 	{
             try 
 	    {
-                await driver.findElement(By.css(".controls > .btn-primary")).click(); // circleci stale element
-		break;
+                await driver.findElement(By.css(".controls > .btn-primary")); // circleci stale element
             }
             catch (StaleElementReferenceException) 
 	    {
                 console.log("Stale Element .controls > .btn-primary");
             }
         }
+	await driver.findElement(By.css(".controls > .btn-primary")).click();
    	while ((await driver.findElements(By.linkText("Calibrations"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
