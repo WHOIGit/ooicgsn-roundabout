@@ -116,9 +116,6 @@ var password;
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Add Row.");
 	} 
-
-//let encodedString = await driver.takeScreenshot();
-//await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');    
       
         // 24 | click | linkText=Add Configurations/Constants | 
         for (var j = 0; j < 5; j++) 
@@ -153,11 +150,10 @@ var password;
         await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); //have to set again
 
 	await driver.findElement(By.id("id_user_draft")).sendKeys("admin");  //dropdown doesn't work, this gets unchecked
-//encodedString = await driver.takeScreenshot();
-//await fs.writeFileSync('/tests/ccscreen1.png', encodedString, 'base64');    
+	//encodedString = await driver.takeScreenshot();
+	//await fs.writeFileSync('./ccscreen1.png', encodedString, 'base64');    
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-//encodedString = await driver.takeScreenshot();
-//await fs.writeFileSync('/tests/ccscreen2.png', encodedString, 'base64');    
+
 	while ((await driver.findElements(By.id("action"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
@@ -362,33 +358,15 @@ var password;
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for User.");
 	}
+	// This screen is so tweeky! Works 2/3 times. Add some waits.
         {
             const dropdown = await driver.findElement(By.id("id_part_select"));
             await dropdown.findElement(By.xpath("//option[. = 'Sewing Template']")).click();
         }
+	await new Promise(r => setTimeout(r, 2000));
         
         await driver.findElement(By.id("id_user_draft")).sendKeys("admin");
-
-        var part = await (await driver.findElement(By.id("id_part_select"))).getText();
-        console.log(part);
-        var user = await driver.findElement(By.id("id_user_draft")).getText();
-        console.log(user);
-        var selected = await driver.findElement(By.id("id_user_draft")).isSelected();
-        console.log(selected);
-
-
-/*        for (var j = 0; j < 5; j++) 
-	{
-            try 
-	    {
-                await driver.findElement(By.css(".controls > .btn-primary")); // circleci stale element
-            }
-            catch (StaleElementReferenceException) 
-	    {
-                console.log("Stale Element .controls > .btn-primary");
-            }
-        }
-*/
+	await new Promise(r => setTimeout(r, 2000));
 
 	await driver.findElement(By.css(".controls > .btn-primary")).click();
 

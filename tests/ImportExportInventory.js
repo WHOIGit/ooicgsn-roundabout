@@ -240,8 +240,12 @@ var password;
         	var rdb_inv = "C:\\Users\\" + username + "\\Downloads\\RDB_Inventory.csv";
 	}
 
-	await new Promise(r => setTimeout(r, 6000));  //wait for file download
-     	
+	while (!fs.existsSync(file)) // wait for file download
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for File Download.");
+	}    	
+
         var csv = fs.readFileSync(rdb_inv,'utf8');
         var data = $.csv.toArrays(csv);
         for (var i = 0, len = data[0].length; i < len; i++) {

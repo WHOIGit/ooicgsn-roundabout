@@ -97,17 +97,18 @@ var password;
         // 11 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 12 | click | linkText=1232 | 
-        await new Promise(r => setTimeout(r, 2000));
 
-	if ((await driver.findElements(By.linkText("1232"))).length != 0)
+	await new Promise(r => setTimeout(r, 4000));
+
+	if ((await driver.findElements(By.css(".even > .searchcol-part_number > a"))).length != 0)
 	{
-            await driver.findElement(By.linkText("1232")).click();
+            await driver.findElement(By.css(".even > .searchcol-part_number > a")).click();
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 8000));  
+	    await new Promise(r => setTimeout(r, 8000));  // wait for .btn-danger caused stale element
    	    //let encodedString = await driver.takeScreenshot();
-            //await fs.writeFileSync('./sewing.png', encodedString, 'base64');
+            //await fs.writeFileSync('./pscreen.png', encodedString, 'base64');
 	    //await driver.navigate().refresh();  //this did not work
             await driver.findElement(By.css(".btn-danger")).click();
 	}
@@ -116,28 +117,7 @@ var password;
 
 	await new Promise(r => setTimeout(r, 4000)); 
 
-        // If Edit Parts failed, this part will be left behind
-        await driver.findElement(By.id("navbarTemplates")).click();
-        // 8 | click | linkText=Parts | 
-        await driver.findElement(By.linkText("Parts")).click();
-        // 9 | click | id=searchbar-query | 
-        await driver.findElement(By.id("searchbar-query")).click();
-        // 10 | type | id=searchbar-query | Sewing Template
-        await driver.findElement(By.id("searchbar-query")).sendKeys("Sewing Template");
-        // 11 | click | css=.btn-outline-primary:nth-child(1) | 
-        await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
-        // 12 | click | linkText=1232 | 
-        await new Promise(r => setTimeout(r, 2000));
 
-	if ((await driver.findElements(By.linkText("789-456-123"))).length != 0)
-	{
-            await driver.findElement(By.linkText("789-456-123")).click();
-            // 13 | click | linkText=Delete | 
-            await driver.findElement(By.linkText("Delete")).click();
-            // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 8000));
-            await driver.findElement(By.css(".btn-danger")).click();
-	}
 
         // 7 | click | id=navbarTemplates | 
         await driver.findElement(By.id("navbarTemplates")).click();
@@ -158,7 +138,7 @@ var password;
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 8000)); 
+	    await new Promise(r => setTimeout(r, 8000));  // wait for .btn-danger caused stale element
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
@@ -185,7 +165,7 @@ var password;
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 8000)); 
+	    await new Promise(r => setTimeout(r, 8000));  // wait for .btn-danger caused stale element
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
@@ -211,7 +191,7 @@ var password;
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 8000)); 
+            await new Promise(r => setTimeout(r, 8000));  // wait for .btn-danger caused stale element
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
@@ -283,7 +263,7 @@ var password;
 
 
         // Close browser window
-    driver.quit();
+        driver.quit();
 
     }
     catch (e) {
