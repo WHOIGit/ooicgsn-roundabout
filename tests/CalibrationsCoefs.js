@@ -125,7 +125,7 @@ await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');
 	{
             try 
 	    {
-        	await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).clear();
+        	await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).clear();  //break out of the loop doesn't work here
         	await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).sendKeys("Single");  //circleci stale element
 		await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).clear();
                 await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); //circleci stale element
