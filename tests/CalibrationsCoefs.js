@@ -353,11 +353,9 @@ var password;
 	   console.log("Wait 2 seconds for Create Calib.");
 	}
         await driver.findElement(By.linkText("Create Calibrations")).click();
-	while ((await driver.findElements(By.id("id_user_draft"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for User.");
-	}
+
+	await new Promise(r => setTimeout(r, 4000)); // a wait for field present on screen causes weird behavior, use timeout.
+
 	// This screen is so tweeky! Works 2/3 times. Add some waits.
         {
             const dropdown = await driver.findElement(By.id("id_part_select"));
