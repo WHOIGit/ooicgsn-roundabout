@@ -240,7 +240,7 @@ var password;
         	var rdb_inv = "C:\\Users\\" + username + "\\Downloads\\RDB_Inventory.csv";
 	}
 
-	while (!fs.existsSync(file)) // wait for file download
+	while (!fs.existsSync(rdb_inv)) // wait for file download
 	{
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for File Download.");
