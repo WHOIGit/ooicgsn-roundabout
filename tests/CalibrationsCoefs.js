@@ -377,7 +377,7 @@ var password;
         console.log(selected);
 
 
-        for (var j = 0; j < 5; j++) 
+/*        for (var j = 0; j < 5; j++) 
 	{
             try 
 	    {
@@ -388,6 +388,7 @@ var password;
                 console.log("Stale Element .controls > .btn-primary");
             }
         }
+*/
 
 	await driver.findElement(By.css(".controls > .btn-primary")).click();
 
