@@ -81,7 +81,7 @@ jobs:
                sh -c "until curl -Is http://localhost:8000; do echo 'sleeping'; sleep 10; done  &&
                   google-chrome --version && chromedriver --version &&
                   nodejs -v &&
-                  ./RunAllTests-Chrome-Linux.bat && sleep 360"
+                  ./RunAllTests-Chrome-Linux.bat && node CalibrationsCoefs.js chrome headless admin"
 
       - run:
           name: Stopping Docker application
