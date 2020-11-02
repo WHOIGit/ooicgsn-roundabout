@@ -363,11 +363,20 @@ var password;
 	   console.log("Wait 2 seconds for User.");
 	}
         {
-//            const dropdown = await driver.findElement(By.id("id_user_draft"));
-//            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click()
+            const dropdown = await driver.findElement(By.id("id_part_select"));
+            await dropdown.findElement(By.xpath("//option[. = 'Sewing Template']")).click();
         }
-        await driver.findElement(By.id("id_part_select")).sendKeys(" Sewing Template");
-	await driver.findElement(By.id("id_user_draft")).sendKeys("admin");
+        
+        await driver.findElement(By.id("id_user_draft")).sendKeys("admin");
+
+        var part = await (await driver.findElement(By.id("id_part_select"))).getText();
+        console.log(part);
+        var user = await driver.findElement(By.id("id_user_draft")).getText();
+        console.log(user);
+        var selected = await driver.findElement(By.id("id_user_draft")).isSelected();
+        console.log(selected);
+
+
         for (var j = 0; j < 5; j++) 
 	{
             try 
@@ -379,7 +388,9 @@ var password;
                 console.log("Stale Element .controls > .btn-primary");
             }
         }
+
 	await driver.findElement(By.css(".controls > .btn-primary")).click();
+
    	while ((await driver.findElements(By.linkText("Calibrations"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
