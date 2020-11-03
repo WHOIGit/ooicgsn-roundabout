@@ -110,7 +110,7 @@ var password;
 
 	// 1.6 Behavior of this screen is so tweeky!!! Values set are cleared before .btn-primary
 	// pushed. Doesn't happen stepping through the debugger. Fields MUST be set in this order!
-
+	// Wait on a link, not a field, or a Stale Element error will be thrown
 	while ((await driver.findElements(By.linkText("Add Calibration"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
@@ -118,21 +118,6 @@ var password;
 	} 
       
         // 24 | click | linkText=Add Configurations/Constants | 
-/*        for (var j = 0; j < 5; j++) 
-	{
-            try 
-	    {
-        	await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).clear();  //break out of the loop doesn't work here
-        	await driver.findElement(By.id("id_coefficient_names-0-value_set_type")).sendKeys("Single");  //circleci stale element
-		await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).clear();
-                await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); //circleci stale element
-            }
-            catch (StaleElementReferenceException) 
-	    {
-                console.log("Stale Element id_coefficient_names-0. Try again...");
-            }
-        }
-*/
         await new Promise(r => setTimeout(r, 2000));
 
         await driver.findElement(By.linkText("Add Calibration")).click();
@@ -143,11 +128,11 @@ var password;
         await driver.findElement(By.id("id_coefficient_names-1-calibration_name")).click();
         await driver.findElement(By.id("id_coefficient_names-1-calibration_name")).sendKeys("scalib2");
         await driver.findElement(By.id("id_coefficient_names-1-sigfig_override")).click(); 
-        await driver.findElement(By.id("id_coefficient_names-1-sigfig_override")).sendKeys("20"); //no such element but found it above...
+        await driver.findElement(By.id("id_coefficient_names-1-sigfig_override")).sendKeys("20");
    
 	await new Promise(r => setTimeout(r, 2000));
 	await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).clear();
-        await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); //have to set again
+        await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1");
 
 	await driver.findElement(By.id("id_user_draft")).sendKeys("admin");  //dropdown doesn't work, this gets unchecked
 	await driver.findElement(By.id("id_user_draft")).sendKeys(user);  //dropdown doesn't work, this gets unchecked
