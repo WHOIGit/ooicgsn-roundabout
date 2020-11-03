@@ -174,7 +174,8 @@ var password;
         // 21 | addSelection | id=id_user_draft | label=admin
         {
             const dropdown = await driver.findElement(By.id("id_user_draft"));
-            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click();
+//            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click();
+            await dropdown.findElement(By.xpath("//option[. = '" + user + "']")).click();
         }
         await new Promise(r => setTimeout(r, 4000));
 
@@ -200,12 +201,14 @@ var password;
 	}
         await driver.findElement(By.linkText("Edit Configurations / Constants")).click();
 
-        // 40 | type | id=id_config_names-0-name | conf12
-   	while ((await driver.findElements(By.id("id_config_names-3-name"))).length == 0)
+        // Causing Stale Element
+/*	while ((await driver.findElements(By.id("id_config_names-3-name"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Config Name.");
-	}
+	} */
+	await new Promise(r => setTimeout(r, 4000));
+
         await driver.findElement(By.id("id_config_names-3-name")).clear();
         await driver.findElement(By.id("id_config_names-3-name")).sendKeys("sconf12"); //stale element
         await new Promise(r => setTimeout(r, 2000));
@@ -231,19 +234,21 @@ var password;
 	}
         // 48 | click | linkText=Edit Configurations / Constants | 
         await driver.findElement(By.linkText("Edit Configurations / Constants")).click();
-   	while ((await driver.findElements(By.css(".controls > .btn-primary"))).length == 0)
+/*   	while ((await driver.findElements(By.css(".controls > .btn-primary"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Btn-primary.");
-	}
+	}*/
+	await new Promise(r => setTimeout(r, 6000));   //stale element
         // 51 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
-   	while ((await driver.findElements(By.css(".list-group:nth-child(1) > .list-group-item > .collapsed > .fa"))).length == 0)
+/*   	while ((await driver.findElements(By.css(".list-group:nth-child(1) > .list-group-item > .collapsed > .fa"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Link3.");
-	}
+	} */
+	await new Promise(r => setTimeout(r, 6000));
         // 52 | click | css=.list-group:nth-child(1) > .list-group-item > .collapsed > .fa | 
         await driver.findElement(By.css(".list-group:nth-child(1) > .list-group-item > .collapsed > .fa")).click(); //stale element
 
@@ -251,7 +256,8 @@ var password;
         await new Promise(r => setTimeout(r, 2000));
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
         assert(bodyText.includes("Approvers:"));        
-        assert(bodyText.includes("Reviewers: admin"));
+//        assert(bodyText.includes("Reviewers: admin"));
+        assert(bodyText.includes("Reviewers: " + user));
 
        
         // UPDATE CONSTANT & CONFIG DEFAULTS - ISSUE#133
@@ -300,7 +306,8 @@ var password;
         // 14 | addSelection | id=id_user_draft | label=admin
         {
             const dropdown = await driver.findElement(By.id("id_user_draft"))
-            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click()
+//            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click()
+            await dropdown.findElement(By.xpath("//option[. = '" + user + "']")).click();
         }
 
         // 16 | type | id=id_config_defaults-0-default_value | 1
@@ -374,7 +381,8 @@ var password;
         // 36 | addSelection | id=id_user_draft | label=admin
         {
             const dropdown = await driver.findElement(By.id("id_user_draft"))
-            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click()
+//            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click()
+            await dropdown.findElement(By.xpath("//option[. = '" + user + "']")).click();
         }
         // 38 | type | id=id_constant_defaults-0-default_value | 1
         await driver.findElement(By.id("id_constant_defaults-0-default_value")).sendKeys("657")
@@ -442,7 +450,8 @@ var password;
         // 9 | addSelection | id=id_user_draft | label=admin
         {
             const dropdown = await driver.findElement(By.id("id_user_draft"))
-            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click()
+//            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click()
+            await dropdown.findElement(By.xpath("//option[. = '" + user + "']")).click();
         }
 
         // 13 | click | css=.controls > .btn-primary | 

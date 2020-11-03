@@ -131,14 +131,12 @@ var password;
         // 18 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
-        // Rename to unique name for test automation
-	while ((await driver.findElements(By.linkText("Test"))).length == 0) 
+        // Rename Test to unique name for test automation
+	while ((await driver.findElements(By.linkText("Edit Location"))).length == 0) 
 	{
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Edit Location1.");
 	}
-        await driver.findElement(By.linkText("Test")).click();
-	await new Promise(r => setTimeout(r, 6000));
         await driver.findElement(By.linkText("Edit Location")).click();
         await new Promise(r => setTimeout(r, 2000));
         // 12 | type | id=id_name | Test
@@ -186,17 +184,9 @@ var password;
         // 24 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
-
         // EDIT LOCATIONS TEST
 
-        // Child location renamed with name unique to parent group
-	while ((await driver.findElements(By.linkText("Test Child"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Edit Location2.");
-	}
-        await driver.findElement(By.linkText("Test Child")).click();
-	
+        // Test Child location renamed with name unique to parent group	
 	while ((await driver.findElements(By.linkText("Edit Location"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));

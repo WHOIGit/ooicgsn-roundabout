@@ -150,6 +150,7 @@ var password;
         await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1"); //have to set again
 
 	await driver.findElement(By.id("id_user_draft")).sendKeys("admin");  //dropdown doesn't work, this gets unchecked
+	await driver.findElement(By.id("id_user_draft")).sendKeys(user);  //dropdown doesn't work, this gets unchecked
 	//encodedString = await driver.takeScreenshot();
 	//await fs.writeFileSync('./ccscreen1.png', encodedString, 'base64');    
         await driver.findElement(By.css(".controls > .btn-primary")).click();
@@ -261,7 +262,8 @@ var password;
         // 36 | addSelection | id=id_user_draft | label=admin
         {
             const dropdown = await driver.findElement(By.id("id_user_draft"))
-            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click()
+//            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click()
+ 	    await dropdown.findElement(By.xpath("//option[. = '" + user + "']")).click();
         }
         // 38 | type | id=id_constant_defaults-0-default_value | 1
         await driver.findElement(By.id("id_coefficient_value_sets-0-value_set")).sendKeys("55")
@@ -363,7 +365,8 @@ var password;
         }
 	await new Promise(r => setTimeout(r, 2000));
         
-        await driver.findElement(By.id("id_user_draft")).sendKeys("admin");
+//        await driver.findElement(By.id("id_user_draft")).sendKeys("admin");
+	await driver.findElement(By.id("id_user_draft")).sendKeys(user);
 	await new Promise(r => setTimeout(r, 2000));
 
 	await driver.findElement(By.css(".controls > .btn-primary")).click();

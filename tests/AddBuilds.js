@@ -128,14 +128,14 @@ async function fixDayAbbr(day)
 	}
    
         await driver.findElement(By.linkText("Create New Build")).click();
-        await new Promise(r => setTimeout(r, 6000));  //needed for firefox build number to populate
+        await new Promise(r => setTimeout(r, 6000));  //needed for build number to populate - 1.6
         // 5 | select | id=id_assembly | label=Test Glider 1
         {
             const dropdown = await driver.findElement(By.id("id_assembly"));
             await dropdown.findElement(By.xpath("//option[. = 'Singer']")).click();
         }
    
-        await new Promise(r => setTimeout(r, 6000));  //needed for build number to populate - 1.6
+        await new Promise(r => setTimeout(r, 6000));  //needed for build number to populate
       
         // 6 | select | id=id_location | label=--- Test
         {
@@ -560,8 +560,8 @@ async function fixDayAbbr(day)
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Deploy to Re-add2.");
 	}
-let encodedString = await driver.takeScreenshot();
-await fs.writeFileSync('/tests/bscreen.png', encodedString, 'base64');      
+	//let encodedString = await driver.takeScreenshot();
+	//await fs.writeFileSync('/tests/bscreen.png', encodedString, 'base64');      
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
         // UNCOMMENT FOR DOCKER - history shows 27 days due to staging testing
         assert(bodyText.includes("Total Time in Field: 1 days 0 hours"));        
