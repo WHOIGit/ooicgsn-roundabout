@@ -111,14 +111,14 @@ var password;
 	// 1.6 Behavior of this screen is so tweeky!!! Values set are cleared before .btn-primary
 	// pushed. Doesn't happen stepping through the debugger. Fields MUST be set in this order!
 
-	while ((await driver.findElements(By.id("id_user_draft"))).length == 0)
+	while ((await driver.findElements(By.linkText("Add Calibration"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Row.");
+	   console.log("Wait 2 seconds for Add.");
 	} 
       
         // 24 | click | linkText=Add Configurations/Constants | 
-        for (var j = 0; j < 5; j++) 
+/*        for (var j = 0; j < 5; j++) 
 	{
             try 
 	    {
@@ -132,7 +132,7 @@ var password;
                 console.log("Stale Element id_coefficient_names-0. Try again...");
             }
         }
-
+*/
         await new Promise(r => setTimeout(r, 2000));
 
         await driver.findElement(By.linkText("Add Calibration")).click();
