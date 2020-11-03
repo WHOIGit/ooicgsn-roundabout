@@ -359,6 +359,27 @@ def validate_cal_files(csv_files,ext_files):
                                 _('File: %(filename)s, Calibration Name: %(value)s, Row %(row)s: Unable to parse Calibration Coefficient note(s)'),
                                 params={'value': calibration_name, 'row': idx, 'filename': cal_csv.name},
                             )
+        else:
+            try:
+                cal_date_string = cal_csv.name.split('__')[1][:8]
+                cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
+            except:
+                raise ValidationError(
+                    _('File: %(filename)s, %(value)s: Unable to parse Deployment Date from Filename'),
+                    params={'value': cal_date_string, 'filename': cal_csv.name},
+                )
+            try:
+                deployment = Deployment.objects.filter(
+                    deployment_to_field_date__year=cal_date_date.year,
+                    deployment_to_field_date__month=cal_date_date.month,
+                    deployment_to_field_date__day=cal_date_date.day,
+                )
+                assert len(deployment) < 2
+            except:
+                raise ValidationError(
+                    _('File: %(filename)s, %(value)s: More than one existing Deployment associated with File Deployment Date'),
+                    params={'value': cal_date_string, 'filename': cal_csv.name},
+                )
 
 
 class ImportCalibrationForm(forms.Form):
