@@ -354,7 +354,7 @@ var password;
 	}
         await driver.findElement(By.linkText("Create Calibrations")).click();
 
-	await new Promise(r => setTimeout(r, 4000)); // a wait for field present on screen causes weird behavior, use timeout.
+	await new Promise(r => setTimeout(r, 4000)); // a wait for field present on screen causes fields not set, use timeout.
 
 	// This screen is so tweeky! Works 2/3 times. Add some waits.
         {
