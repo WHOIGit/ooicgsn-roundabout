@@ -34,7 +34,8 @@ from django.views.generic import TemplateView, FormView
 
 from roundabout.cruises.models import Cruise, Vessel
 from .forms import ImportDeploymentsForm, ImportVesselsForm, ImportCruisesForm, ImportCalibrationForm
-from .tasks import parse_cal_files
+from .models import *
+from .tasks import parse_cal_files, parse_cruise_files, parse_vessel_files, parse_deployment_files
 
 
 # Github CSV file importer for Vessels
@@ -221,33 +222,6 @@ class ImportUploadSuccessView(TemplateView):
     template_name = "ooi_ci_tools/import_upload_success.html"
 
 
-# CSV File Uploader for GitHub Calibration Coefficients
-class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
-    form_class = ImportCalibrationForm
-    template_name = 'ooi_ci_tools/import_calibrations_upload_form.html'
-
-
-    def form_valid(self, form):
-        cal_files = self.request.FILES.getlist('cal_csv')
-        csv_files = []
-        ext_files = []
-        for file in cal_files:
-            ext = file.name[-3:]
-            if ext == 'ext':
-                ext_files.append(file)
-            if ext == 'csv':
-                csv_files.append(file)
-        cache.set('user', self.request.user, timeout=None)
-        cache.set('user_draft', form.cleaned_data['user_draft'], timeout=None)
-        cache.set('ext_files', ext_files, timeout=None)
-        cache.set('csv_files', csv_files, timeout=None)
-        job = parse_cal_files.delay()
-        cache.set('import_task', job.task_id, timeout=None)
-        return super(ImportCalibrationsUploadView, self).form_valid(form)
-
-    def get_success_url(self):
-        return reverse('ooi_ci_tools:import_upload_success', )
-
 
 def upload_status(request):
     # import_task = cache.get('import_task')
@@ -261,31 +235,74 @@ def upload_status(request):
         'progress': result,
     })
 
-def import_calibrations(request):
+# Deployment CSV Importer
+def import_deployments(csv_files):
+    cache.set('csv_files',csv_files, timeout=None)
+    job = parse_deployment_files.delay()
+
+
+# Cruise CSV Importer
+def import_cruises(cruises_files):
+    cache.set('cruises_files', cruises_files, timeout=None)
+    job = parse_cruise_files.delay()
+
+# Vessel CSV Importer 
+def import_vessels(vessels_files):
+    cache.set('vessels_files', vessels_files, timeout=None)
+    job = parse_vessel_files.delay()
+
+# Calibration CSV Importer   
+def import_calibrations(cal_files, user, user_draft):
+    csv_files = []
+    ext_files = []
+    for file in cal_files:
+        ext = file.name[-3:]
+        if ext == 'ext':
+            ext_files.append(file)
+        if ext == 'csv':
+            csv_files.append(file)
+    cache.set('user', user, timeout=None)
+    cache.set('user_draft', user_draft, timeout=None)
+    cache.set('ext_files', ext_files, timeout=None)
+    cache.set('csv_files', csv_files, timeout=None)
+    job = parse_cal_files.delay()
+    cache.set('import_task', job.task_id, timeout=None)
+
+# CSV Importer View
+# Activates parsing tasks based on selected files
+def import_csv(request):
     confirm = ""
     if request.method == "POST":
-        form = ImportCalibrationForm(request.POST, request.FILES)
-        if form.is_valid():
-            cal_files = request.FILES.getlist('cal_csv')
-            csv_files = []
-            ext_files = []
-            for file in cal_files:
-                ext = file.name[-3:]
-                if ext == 'ext':
-                    ext_files.append(file)
-                if ext == 'csv':
-                    csv_files.append(file)
-            cache.set('user', request.user, timeout=None)
-            cache.set('user_draft', form.cleaned_data['user_draft'], timeout=None)
-            cache.set('ext_files', ext_files, timeout=None)
-            cache.set('csv_files', csv_files, timeout=None)
-            job = parse_cal_files.delay()
-            cache.set('import_task', job.task_id, timeout=None)
-            return redirect(reverse("ooi_ci_tools:import_calibrations_upload") + "?confirm=True")
+        cal_form = ImportCalibrationForm(request.POST, request.FILES)
+        dep_form = ImportDeploymentsForm(request.POST, request.FILES)
+        cruises_form = ImportCruisesForm(request.POST, request.FILES)
+        vessels_form = ImportVesselsForm(request.POST, request.FILES)
+        cal_files = request.FILES.getlist('calibration_csv')
+        dep_files = request.FILES.getlist('deployments_csv')
+        cruises_file = request.FILES.getlist('cruises_csv')
+        vessels_file = request.FILES.getlist('vessels_csv')
+        if cal_form.is_valid() and len(cal_files) >= 1:
+            import_calibrations(cal_files, request.user, cal_form.cleaned_data['user_draft'])
+            return redirect(reverse("ooi_ci_tools:import_csv") + "?confirm=True")
+        if dep_form.is_valid() and len(dep_files) >= 1:
+            import_deployments(dep_files)
+            return redirect(reverse("ooi_ci_tools:import_csv") + "?confirm=True")
+        if cruises_form.is_valid() and len(cruises_file) >= 1:
+            import_cruises(cruises_file)
+            return redirect(reverse("ooi_ci_tools:import_csv") + "?confirm=True")
+        if vessels_form.is_valid() and len(vessels_file) >= 1:
+            import_vessels(vessels_file)
+            return redirect(reverse("ooi_ci_tools:import_csv") + "?confirm=True")
     else:
-        form = ImportCalibrationForm()
+        cal_form = ImportCalibrationForm()
+        dep_form = ImportDeploymentsForm()
+        cruises_form = ImportCruisesForm()
+        vessels_form = ImportVesselsForm()
         confirm = request.GET.get("confirm")
-    return render(request, 'ooi_ci_tools/import_calibrations_upload_form.html', {
-        "form": form,
+    return render(request, 'ooi_ci_tools/import_tool.html', {
+        "form": cal_form,
+        'dep_form': dep_form,
+        'cruises_form': cruises_form,
+        'vessels_form': vessels_form,
         'confirm': confirm
     })
