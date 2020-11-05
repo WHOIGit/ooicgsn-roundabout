@@ -71,6 +71,12 @@ if [[ "$val" == *"failed."* ]]; then
   exit 1
 fi
 
+val=$(node DeleteCruise.js chrome headless admin)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
 val=$(node DeleteAssemblies.js chrome headless admin)
 echo $val
 if [[ "$val" == *"failed."* ]]; then

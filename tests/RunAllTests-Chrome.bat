@@ -10,6 +10,7 @@ cmd /c node ExportCustomFields.js chrome >> RoundAboutTesting.log
 cmd /c node ExportCruise.js chrome >> RoundAboutTesting.log
 cmd /c node AddBuilds.js chrome >> RoundAboutTesting.log
 cmd /c node RetireBuilds.js chrome >> RoundAboutTesting.log
+cmd /c node DeleteCruise.js chrome >> RoundAboutTesting.log
 cmd /c node DeleteAssemblies.js chrome >> RoundAboutTesting.log
 cmd /c node DeleteParts.js chrome >> RoundAboutTesting.log
 cmd /c node DeleteLocations.js chrome >> RoundAboutTesting.log
