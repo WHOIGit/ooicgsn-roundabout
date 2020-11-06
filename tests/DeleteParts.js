@@ -52,7 +52,8 @@ var password;
     }
     else
     {
-        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+//        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+        await driver.get("https://rdb-testing.whoi.edu/");
         user = "jkoch";
         password = "Automatedtests";
     }
@@ -96,22 +97,27 @@ var password;
         // 11 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 12 | click | linkText=1232 | 
-        await new Promise(r => setTimeout(r, 2000));
 
-	if ((await driver.findElements(By.linkText("1232"))).length != 0)
+	await new Promise(r => setTimeout(r, 4000));
+
+	if ((await driver.findElements(By.css(".even > .searchcol-part_number > a"))).length != 0)
 	{
-            await driver.findElement(By.linkText("1232")).click();
+            await driver.findElement(By.css(".even > .searchcol-part_number > a")).click();
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 8000));  //circleci firefox keeps failing here
+	    await new Promise(r => setTimeout(r, 8000));  // wait for .btn-danger caused stale element
    	    //let encodedString = await driver.takeScreenshot();
-            //await fs.writeFileSync('./sewing.png', encodedString, 'base64');
+            //await fs.writeFileSync('./pscreen.png', encodedString, 'base64');
 	    //await driver.navigate().refresh();  //this did not work
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
 	    console.log("Delete Parts failed: Sewing Template not found");
+
+	await new Promise(r => setTimeout(r, 4000)); 
+
+
 
         // 7 | click | id=navbarTemplates | 
         await driver.findElement(By.id("navbarTemplates")).click();
@@ -132,13 +138,13 @@ var password;
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 8000));  //circleci firefox
+	    await new Promise(r => setTimeout(r, 8000));  // wait for .btn-danger caused stale element
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
 	    console.log("Delete Parts failed: Wheel Template not found");
 
-	await new Promise(r => setTimeout(r, 4000));  //circleci firefox
+	await new Promise(r => setTimeout(r, 4000)); 
 
         // 7 | click | id=navbarTemplates | 
         await driver.findElement(By.id("navbarTemplates")).click();
@@ -159,7 +165,7 @@ var password;
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 8000)); 
+	    await new Promise(r => setTimeout(r, 8000));  // wait for .btn-danger caused stale element
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
@@ -185,7 +191,7 @@ var password;
             // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
             // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 8000)); 
+            await new Promise(r => setTimeout(r, 8000));  // wait for .btn-danger caused stale element
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
@@ -257,7 +263,7 @@ var password;
 
 
         // Close browser window
-    driver.quit();
+        driver.quit();
 
     }
     catch (e) {
