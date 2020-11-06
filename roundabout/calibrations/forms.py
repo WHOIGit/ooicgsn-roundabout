@@ -336,7 +336,7 @@ def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0, filenam
                     assert len(digits_only) <= 32
                 except:
                     raise ValidationError(
-                        _('File: %(filename)s, Calibration Name: %(cal_name)s, Row: %(row)s, Column: %(column)s, %(value)s Exceeded 20-digit max length'),
+                        _('File: %(filename)s, Calibration Name: %(cal_name)s, Row: %(row)s, Column: %(column)s, %(value)s Exceeded 32-digit max length'),
                         params={'row': error_row_index, 'column': error_col_index, 'value': val, 'filename': filename, 'cal_name': cal_name},
                     )
                 else:
