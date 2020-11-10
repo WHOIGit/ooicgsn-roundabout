@@ -296,8 +296,12 @@ var password;
         // 27 | click | linkText=Location Change | 
         await driver.findElement(By.linkText("Location Change")).click();
         // 28 | select | id=id_location | label=---------
+	while ((await driver.findElements(By.id("id_location"))).length == 0) 
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Location.");
+	}
         {
-            await new Promise(r => setTimeout(r, 2000));
             const dropdown = await driver.findElement(By.id("id_location"));
             await dropdown.findElement(By.xpath("//option[. = '---------']")).click();
         }

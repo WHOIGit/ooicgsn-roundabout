@@ -116,7 +116,7 @@ var password;
             await driver.findElement(By.css(".btn-danger")).click();
         }
         else
-            console.log("Delete Vessel failed: Maui Princess not found");       
+            console.log("Delete Vessel failed: Maui Princess not found.");       
 
         // Delete Cruise
         while ((await driver.findElements(By.linkText("Cruises"))).length == 0) {
@@ -124,21 +124,23 @@ var password;
             console.log("Wait 2 seconds for Cruises.");
         }
         await driver.findElement(By.linkText("Cruises")).click()
-        while ((await driver.findElements(By.linkText("MAUI"))).length == 0) {
-            await new Promise(r => setTimeout(r, 2000));
-            console.log("Wait 2 seconds for Select Cruise.");
-        }
-        await driver.findElement(By.linkText("MAUI")).click();
-        while ((await driver.findElements(By.linkText("Delete"))).length == 0) {
-            await new Promise(r => setTimeout(r, 2000));
-            console.log("Wait 2 seconds for Delete Cruise.");
-        }
-        await driver.findElement(By.linkText("Delete")).click();
-        while ((await driver.findElements(By.css(".btn-danger"))).length == 0) {
-            await new Promise(r => setTimeout(r, 2000));
-            console.log("Wait 2 seconds for Confirm.");
-        }
-        await driver.findElement(By.css(".btn-danger")).click();
+	await new Promise(r => setTimeout(r, 4000));
+        if ((await driver.findElements(By.linkText("MAUI"))).length != 0) {
+            
+           await driver.findElement(By.linkText("MAUI")).click();
+           while ((await driver.findElements(By.linkText("Delete"))).length == 0) {
+               await new Promise(r => setTimeout(r, 2000));
+               console.log("Wait 2 seconds for Delete Cruise.");
+           }
+           await driver.findElement(By.linkText("Delete")).click();
+           while ((await driver.findElements(By.css(".btn-danger"))).length == 0) {
+               await new Promise(r => setTimeout(r, 2000));
+               console.log("Wait 2 seconds for Confirm.");
+           }
+           await driver.findElement(By.css(".btn-danger")).click();
+  	}
+        else
+            console.log("Delete Cruise failed: Maui Cruise not found.");       
  
 
         // Close browser window

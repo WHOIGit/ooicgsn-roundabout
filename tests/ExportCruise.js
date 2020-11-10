@@ -84,7 +84,7 @@ var password;
         await driver.findElement(By.id("id_password")).sendKeys(password);
         await driver.findElement(By.css(".primaryAction")).click();
 
-        // EXPORT CRUISE/VESSEL TEST
+        // EXPORT CRUISE/VESSEL TEST - Tests Issue #174
 
         // Add a Vessel
         await driver.findElement(By.linkText("Cruises")).click()

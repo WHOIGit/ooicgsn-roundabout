@@ -217,7 +217,11 @@ async function fixDayAbbr(day)
         }
         // 15 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
-	await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.css("#div_id_assembly .ajax-error"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for New Build Assembly Ajax Error.");
+	}
 
         // 16 | verifyText | css=.ajax-error | This field is required.
         assert(await driver.findElement(By.css("#div_id_assembly .ajax-error")).getText() == "This field is required.");

@@ -471,7 +471,12 @@ var password;
         }
 	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-        await new Promise(r => setTimeout(r, 8000));  //1.6
+//        await new Promise(r => setTimeout(r, 8000));  //1.6
+	while ((await driver.findElements(By.linkText("Sewing Template"))).length == 0) // displayed after above command completes
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Wheel Subassembly.");
+	} 
 
         if ((await driver.findElements(By.xpath("//div/div/ul/li[*]/a[text()='Electrics']"))).length != 0) {
             // Expand Revision B and Sewing Template

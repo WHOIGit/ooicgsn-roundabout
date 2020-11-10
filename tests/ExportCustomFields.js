@@ -157,16 +157,20 @@ var password;
         await driver.wait(until.elementLocated(By.linkText("Parts")));
         await driver.findElement(By.linkText("Parts")).click();
         // 15 | click | linkText=Add Part Template | 
-	    while ((await driver.findElements(By.linkText("Add Part Template"))).length == 0) // 1.6
-	    {
-	       await new Promise(r => setTimeout(r, 2000));
-	     console.log("Wait 2 seconds for Add Part Template1.");
-	    }
+	while ((await driver.findElements(By.linkText("Add Part Template"))).length == 0) // 1.6
+	{
+	  await new Promise(r => setTimeout(r, 2000));
+	  console.log("Wait 2 seconds for Add Part Template1.");
+	}
         await driver.findElement(By.linkText("Add Part Template")).click();
         /*Get the text after ajax call*/
         // 16 | type | id=id_part_number |
         var part_num = "100-259-785";
-        await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.id("id_part_number"))).length == 0) // 1.6
+	{
+	  await new Promise(r => setTimeout(r, 2000));
+	  console.log("Wait 2 seconds for Part Number.");
+	}
         await driver.findElement(By.id("id_part_number")).sendKeys(part_num);
         // 17 | type | id=id_name | Computerized
         await driver.findElement(By.id("id_name")).sendKeys("Disk Drive");
