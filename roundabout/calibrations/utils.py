@@ -19,6 +19,9 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
+from roundabout.calibrations.models import CalibrationEvent
+from roundabout.configs_constants.models import ConfigEvent, ConfigDefaultEvent, ConstDefaultEvent
+
 def handle_reviewers(form):
     if form.instance.user_approver.exists():
         if form.cleaned_data['user_draft'].exists():
@@ -53,3 +56,18 @@ def handle_reviewers(form):
             reviewers = form.cleaned_data['user_draft']
             for user in reviewers:
                 form.instance.user_draft.add(user)
+
+
+def check_events():
+    for event in CalibrationEvent.objects.all():
+        if not event.coefficient_value_sets.exists():
+            event.delete()
+    for event in ConfigEvent.objects.all():
+        if not event.config_values.exists():
+            event.delete()
+    for event in ConfigDefaultEvent.objects.all():
+        if not event.config_defaults.exists():
+            event.delete()
+    for event in ConstDefaultEvent.objects.all():
+        if not event.constant_defaults.exists():
+            event.delete()
