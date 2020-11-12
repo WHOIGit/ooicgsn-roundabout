@@ -207,7 +207,7 @@ var password;
         // 6 | select | id=id_part | label=Wheel Template
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await new Promise(r => setTimeout(r, 2000)); //New for 1.6 - This field blanked back out without timeout
+            await new Promise(r => setTimeout(r, 4000)); //New for 1.6 - This field blanked back out without timeout
             await dropdown.findElement(By.xpath("//option[. = 'Wheel Template']")).click();
         }
         // 7 | select | id=id_location | label=--- Lost
@@ -220,10 +220,13 @@ var password;
         // 8 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
+let encodedString = await driver.takeScreenshot();
+await fs.writeFileSync('/tests/iscreen.png', encodedString, 'base64');    
+
 	while ((await driver.findElements(By.id("action"))).length == 0) // Inventory tree takes awhile to load
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Inventory4.");
+	   console.log("Wait 2 seconds for Add Inventory5.");
 	}
 
         // 9 | click | linkText=Add Inventory | 
@@ -231,7 +234,7 @@ var password;
 	while ((await driver.findElements(By.id("id_part_type"))).length == 0) // Inventory tree takes awhile to load
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Inventory5.");
+	   console.log("Wait 2 seconds for Add Inventory6.");
 	}
         // 10 | select | id=id_part_type | label=-- Sewing Machine
         {
@@ -474,7 +477,6 @@ var password;
         await new Promise(r => setTimeout(r, 2000));
         // 57 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-
 	while ((await driver.findElements(By.id("action"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));

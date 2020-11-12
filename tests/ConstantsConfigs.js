@@ -316,6 +316,8 @@ var password;
 	   console.log("Wait 2 seconds for Add CC Default.");
 	}
         await driver.findElement(By.id("add_configdefault_action")).click()
+	await new Promise(r => setTimeout(r, 2000));
+
         // 14 | addSelection | id=id_user_draft | label=admin
         {
             const dropdown = await driver.findElement(By.id("id_user_draft"))

@@ -8,6 +8,7 @@ const chrome = require('selenium-webdriver/chrome');
 const firefox = require('selenium-webdriver/firefox');
 const assert = require('assert');
 const { exception } = require('console');
+const fs = require('fs');
 
 var driver;
 var myArgs = process.argv.slice(2);
@@ -214,7 +215,7 @@ var password;
         {
             await new Promise(r => setTimeout(r, 2000));
             const dropdown = await driver.findElement(By.id("id_part"));
-	    await new Promise(r => setTimeout(r, 2000)); //New for 1.6 - This field blanked back out without timeout
+	    await new Promise(r => setTimeout(r, 4000)); //New for 1.6 - This field blanked back out without timeout
             await dropdown.findElement(By.xpath("//option[. = 'Disk Drive']")).click();
         }
         // 7 | select | id=id_location | label=Test
@@ -225,15 +226,16 @@ var password;
         }
         // 8 | storeValue | id=id_serial_number | Serial_Number
         // Stores the value of the Serial Number assigned
-        await new Promise(r => setTimeout(r, 2000));
+	await new Promise(r => setTimeout(r, 6000));  //wait here for revision & serial number to automatically fill in
         var Serial_Number = await driver.findElement(By.id("id_serial_number")).getAttribute("value");
-        // 10 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
 	    while ((await driver.findElements(By.partialLinkText("drive"))).length == 0) // 1.6
 	    {
 	       await new Promise(r => setTimeout(r, 2000));
 	       console.log("Wait 2 seconds for Add Inventory3.");
+	       //let encodedString = await driver.takeScreenshot();
+	       //await fs.writeFileSync('/tests/escreen.png', encodedString, 'base64');      
 	    }
        
         // Now, check all Global Types for the Custom Field
@@ -324,7 +326,6 @@ var password;
         await driver.findElement(By.linkText("All (Include Hidden Columns)")).click();
 
         // Read RDB_Part.csv and verify Condition Custom Field
-        var fs = require('fs');
         const jsdom = require("jsdom");
         const { JSDOM } = jsdom;
         const { window } = new JSDOM(`...`);
@@ -435,7 +436,6 @@ var password;
 
         // Check if Serial Number and Custom Field in exported data matches created Assembly.
         //Find the created serial number and verify condition matches
-	    var Serial_Number;
         var serial_num_found = false;
         for (var j = 1, elen = exported_data.length; j < elen; j++) {
             if (Serial_Number == exported_data[j][eserial_num_index]) {
