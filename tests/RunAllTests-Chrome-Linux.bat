@@ -101,4 +101,10 @@ if [[ "$val" == *"failed."* ]]; then
   exit 1
 fi
 
+val=$(node DeleteUser.js chrome headless admin)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
 exit 0

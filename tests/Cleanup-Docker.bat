@@ -15,4 +15,6 @@ node DeleteParts.js chrome headless admin
 
 node DeleteLocations.js chrome headless admin
 
+node DeleteUser.js chrome headless admin
+
 exit 0
