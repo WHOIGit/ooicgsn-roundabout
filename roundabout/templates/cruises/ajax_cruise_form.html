@@ -60,8 +60,13 @@
         <div class="controls">
           {% if cruise.id %}
               <button type="submit" class="btn btn-primary">Update Cruise</button>
+              <input class="btn btn-light cancel-btn"
+                 type="button" value="Cancel"
+                 data-detail-url="{% url 'cruises:ajax_cruises_detail' cruise.id %}"
+                 data-node-id="{{ build.id }}" />
           {% else %}
               <button type="submit" class="btn btn-primary">Add Cruise</button>
+              <a class="btn btn-light btn-cancel" href="{% url 'cruises:cruises_home' %}">Cancel</a>
           {% endif %}
         </div>
       </div>
