@@ -26,6 +26,27 @@
     <div id="content-container" class="container p-none">
         <div class="side-p">
             <h3>Are you sure?</h3>
+            {% if object.cruises.exists %}
+                <div class="alert alert-danger" role="alert">
+                    <h5>Warning! This Vessel is currently assigned for the following Cruises:</h5>
+
+                    <ul class="list-group list-group-flush">
+
+                        {% for cruise in object.cruises.all %}
+
+                            <li class="list-group-item">
+                                <a href="{% url 'cruises:cruises_detail' cruise.id %}"
+                                   class="btn btn-primary btn-sm float-right"
+                                   role="button">View</a>
+                                Cruise: {{ cruise }}
+
+                            </li>
+
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
             <p>You're about to delete {{ object }}. Please confirm.</p>
             <form action="" method="post">
                 {% csrf_token %}
