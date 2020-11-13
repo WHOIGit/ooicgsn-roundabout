@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -19,14 +19,13 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter, SimpleRouter
-from .views import AssemblyViewSet
+from django import forms
 
-# Create a router and register our viewsets with it.
-router = SimpleRouter()
-router.register(r'assemblies', AssemblyViewSet, 'assemblies' )
+from .models import FieldInstance
 
-urlpatterns = [
-    path('', include(router.urls) ),
-]
+
+class FieldInstanceForm(forms.ModelForm):
+
+    class Meta:
+        model = FieldInstance
+        fields = '__all__'

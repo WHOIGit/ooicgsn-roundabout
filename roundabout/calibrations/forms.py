@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -31,11 +31,11 @@ from sigfig import round
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-# Event form 
+# Event form
 # Inputs: Effective Date and Approval
 class CalibrationEventForm(forms.ModelForm):
     class Meta:
-        model = CalibrationEvent 
+        model = CalibrationEvent
         fields = ['calibration_date','user_draft']
         labels = {
             'calibration_date': 'Calibration Date',
@@ -44,7 +44,7 @@ class CalibrationEventForm(forms.ModelForm):
         widgets = {
             'calibration_date': DatePickerInput(
                 options={
-                    "format": "MM/DD/YYYY", 
+                    "format": "MM/DD/YYYY",
                     "showClose": True,
                     "showClear": True,
                     "showTodayButton": True,
@@ -61,7 +61,7 @@ class CalibrationEventForm(forms.ModelForm):
         user_draft = self.cleaned_data.get('user_draft')
         return user_draft
 
-    def save(self, commit = True): 
+    def save(self, commit = True):
         event = super(CalibrationEventForm, self).save(commit = False)
         if commit:
             event.save()
@@ -73,11 +73,11 @@ class CalibrationEventForm(forms.ModelForm):
             return event
 
 
-# CoefficientName Event form 
-# Inputs: Reviewers 
+# CoefficientName Event form
+# Inputs: Reviewers
 class CoefficientNameEventForm(forms.ModelForm):
     class Meta:
-        model = CoefficientNameEvent 
+        model = CoefficientNameEvent
         fields = ['user_draft']
         labels = {
             'user_draft': 'Reviewers'
@@ -94,7 +94,7 @@ class CoefficientNameEventForm(forms.ModelForm):
         user_draft = self.cleaned_data.get('user_draft')
         return user_draft
 
-    def save(self, commit = True): 
+    def save(self, commit = True):
         event = super(CoefficientNameEventForm, self).save(commit = False)
         if commit:
             event.save()
@@ -104,11 +104,11 @@ class CoefficientNameEventForm(forms.ModelForm):
                     event.user_approver.remove(user)
             event.save()
             return event
-         
+
 
 
 # CoefficientValueSet form
-# Inputs: Coefficient values and notes per Part Calibration 
+# Inputs: Coefficient values and notes per Part Calibration
 class CoefficientValueSetForm(forms.ModelForm):
     class Meta:
         model = CoefficientValueSet
@@ -154,7 +154,7 @@ class CoefficientValueSetForm(forms.ModelForm):
         else:
             return validate_coeff_vals(self.instance, set_type, raw_set)
 
-    def save(self, commit = True): 
+    def save(self, commit = True):
         value_set = super(CoefficientValueSetForm, self).save(commit = False)
         if commit:
             value_set.save()
@@ -167,12 +167,26 @@ class CoefficientValueSetForm(forms.ModelForm):
 class CoefficientNameForm(forms.ModelForm):
     class Meta:
         model = CoefficientName
-        fields = ['calibration_name', 'value_set_type', 'sigfig_override']
+        fields = ['calibration_name', 'value_set_type', 'sigfig_override', 'deprecated']
         labels = {
             'calibration_name': 'Name',
             'value_set_type': 'Type',
-            'sigfig_override': 'Significant Figures'
+            'sigfig_override': 'Significant Figures',
+            'deprecated': 'Deprecated'
         }
+        widgets = {
+            'deprecated': forms.CheckboxInput()
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(CoefficientNameForm, self).__init__(*args, **kwargs)
+        if self.instance.deprecated:
+            self.fields['calibration_name'].widget.attrs.update(
+                {
+                    'readonly': True,
+                    'style': 'cursor: not-allowed; pointer-events: none; background-color: #d5dfed;'
+                }
+            )
 
     def clean_sigfig_override(self):
         raw_sigfig = self.cleaned_data.get('sigfig_override')
@@ -222,11 +236,11 @@ class CoefficientValueForm(forms.ModelForm):
         orig_val = self.cleaned_data.get('original_value')
         return orig_val
 
-    def save(self, commit = True): 
+    def save(self, commit = True):
         coeff_val_inst = super(CoefficientValueForm, self).save(commit = False)
         coeff_val_inst.value = round(
-            coeff_val_inst.original_value, 
-            sigfigs = coeff_val_inst.sigfig, 
+            coeff_val_inst.original_value,
+            sigfigs = coeff_val_inst.sigfig,
             notation = coeff_val_inst.notation_format
         )
         coeff_val_inst.save()
@@ -234,10 +248,10 @@ class CoefficientValueForm(forms.ModelForm):
 
 
 # Calibration Copy Form
-# Inputs: Part 
+# Inputs: Part
 class CalPartCopyForm(forms.Form):
     part_select = forms.ModelChoiceField(
-        queryset = Part.objects.filter(part_type__name='Instrument'),
+        queryset = Part.objects.filter(part_type__ccc_toggle=True),
         required=False,
         label = 'Copy Calibrations from Part'
     )
@@ -245,7 +259,7 @@ class CalPartCopyForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.part_id = kwargs.pop('part_id')
         super(CalPartCopyForm, self).__init__(*args, **kwargs)
-        self.fields['part_select'].queryset = Part.objects.filter(part_type__name='Instrument',coefficient_name_events__gt=0).exclude(id__in=str(self.part_id))
+        self.fields['part_select'].queryset = Part.objects.filter(part_type__ccc_toggle=True,coefficient_name_events__gt=0).exclude(id__in=str(self.part_id))
 
     def clean_part_select(self):
         part_select = self.cleaned_data.get('part_select')
@@ -265,36 +279,36 @@ class CalPartCopyForm(forms.Form):
 
 # Coefficient ValueSet form instance generator for CalibrationEvents
 EventValueSetFormset = inlineformset_factory(
-    CalibrationEvent, 
-    CoefficientValueSet, 
+    CalibrationEvent,
+    CoefficientValueSet,
     form=CoefficientValueSetForm,
-    fields=('coefficient_name', 'value_set', 'notes'), 
-    extra=0, 
+    fields=('coefficient_name', 'value_set', 'notes'),
+    extra=0,
     can_delete=True
 )
 
 # Coefficient Name form instance generator for Parts
 PartCalNameFormset = inlineformset_factory(
-    CoefficientNameEvent, 
-    CoefficientName, 
-    form=CoefficientNameForm, 
-    fields=('calibration_name', 'value_set_type', 'sigfig_override'), 
-    extra=1, 
+    CoefficientNameEvent,
+    CoefficientName,
+    form=CoefficientNameForm,
+    fields=('calibration_name', 'value_set_type', 'sigfig_override', 'deprecated'),
+    extra=1,
     can_delete=True
 )
 
 # Coefficient Value form instance generator for CoefficientValueSets
 ValueSetValueFormset = inlineformset_factory(
-    CoefficientValueSet, 
-    CoefficientValue, 
+    CoefficientValueSet,
+    CoefficientValue,
     form=CoefficientValueForm,
-    fields=('original_value', 'sigfig', 'notation_format'), 
-    extra=0, 
+    fields=('original_value', 'sigfig', 'notation_format'),
+    extra=0,
     can_delete=True
 )
 
 # Validator for 1-D, comma-separated Coefficient value arrays
-def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
+def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0, filename = '', cal_name = ''):
     error_row_index = val_set_index + 1
     for idx, val in enumerate(coeff_1d_array):
         val = val.strip()
@@ -303,8 +317,8 @@ def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
             rounded_coeff_val = round(val)
         except:
             raise ValidationError(
-                _('Row: %(row)s, Column: %(column)s, %(value)s is an invalid Number. Please enter a valid Number (Digits + 1 optional decimal point).'),
-                params={'row': error_row_index, 'value': val, 'column': error_col_index},
+                _('File: %(filename)s, Calibration Name: %(cal_name)s, Row: %(row)s, Column: %(column)s, %(value)s is an invalid Number. Please enter a valid Number (Digits + 1 optional decimal point).'),
+                params={'row': error_row_index, 'value': val, 'column': error_col_index, 'filename': filename, 'cal_name': cal_name},
             )
         else:
             coeff_dec_places = rounded_coeff_val[::-1].find('.')
@@ -312,8 +326,8 @@ def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
                 assert coeff_dec_places <= valset_inst.cal_dec_places
             except:
                 raise ValidationError(
-                    _('Row: %(row)s, Column: %(column)s, %(value)s Exceeded %(dec_places)s-digit decimal place maximum.'),
-                    params={'row': error_row_index, 'dec_places': valset_inst.cal_dec_places, 'value': val, 'column': error_col_index},
+                    _('File: %(filename)s, Calibration Name: %(cal_name)s, Row: %(row)s, Column: %(column)s, %(value)s Exceeded Instrument %(dec_places)s-digit decimal place maximum.'),
+                    params={'row': error_row_index, 'dec_places': valset_inst.cal_dec_places, 'value': val, 'column': error_col_index, 'filename': filename, 'cal_name': cal_name},
                 )
             else:
                 try:
@@ -321,8 +335,8 @@ def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
                     assert len(digits_only) <= 32
                 except:
                     raise ValidationError(
-                        _('Row: %(row)s, Column: %(column)s, %(value)s Exceeded 32-digit max length'),
-                        params={'row': error_row_index, 'column': error_col_index, 'value': val},
+                        _('File: %(filename)s, Calibration Name: %(cal_name)s, Row: %(row)s, Column: %(column)s, %(value)s Exceeded 32-digit max length'),
+                        params={'row': error_row_index, 'column': error_col_index, 'value': val, 'filename': filename, 'cal_name': cal_name},
                     )
                 else:
                     continue
@@ -331,7 +345,7 @@ def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0):
 # Validator for Coefficient values within a CoefficientValueSet
 # Checks for numeric-type, part-based decimal place limit, number of digits limit
 # Displays array index/value of invalid input
-def validate_coeff_vals(valset_inst, set_type, coeff_val_set):  
+def validate_coeff_vals(valset_inst, set_type, coeff_val_set, filename = '', cal_name = ''):
     if set_type == 'sl':
         try:
             coeff_batch = coeff_val_set.split(',')
@@ -341,7 +355,7 @@ def validate_coeff_vals(valset_inst, set_type, coeff_val_set):
                 _('More than 1 value associated with Single input type')
             )
         else:
-            validate_coeff_array(coeff_batch, valset_inst)
+            validate_coeff_array(coeff_batch, valset_inst, 0, filename, cal_name)
             return coeff_val_set
 
     elif set_type == '1d':
@@ -352,7 +366,7 @@ def validate_coeff_vals(valset_inst, set_type, coeff_val_set):
                 _('Unable to parse 1D array')
             )
         else:
-            validate_coeff_array(coeff_batch, valset_inst)
+            validate_coeff_array(coeff_batch, valset_inst, 0, filename, cal_name)
             return coeff_val_set
 
     elif set_type == '2d':
@@ -365,7 +379,7 @@ def validate_coeff_vals(valset_inst, set_type, coeff_val_set):
         else:
             for row_index, row_set in enumerate(coeff_2d_array):
                 coeff_1d_array = row_set.split(',')
-                validate_coeff_array(coeff_1d_array, valset_inst, row_index)
+                validate_coeff_array(coeff_1d_array, valset_inst, row_index, filename, cal_name)
     return coeff_val_set
 
 
@@ -376,7 +390,7 @@ def find_notation(val):
     if ( 'e' in val ):
         notation = 'sci'
     return notation
-   
+
 
 # Parses Coefficient Value significant digits
 def find_sigfigs(val):
@@ -395,7 +409,7 @@ def parse_coeff_1d_array(coeff_1d_array, value_set_instance, row_index = 0):
         notation = find_notation(val)
         sigfig = find_sigfigs(val)
         coeff_val_obj = CoefficientValue(
-            coeff_value_set = value_set_instance, 
+            coeff_value_set = value_set_instance,
             value = val,
             original_value = val,
             notation_format = notation,
@@ -461,5 +475,5 @@ def validate_part_select(to_part, from_part):
         raise ValidationError(
             _('Duplicate Calibration Names exist between Parts. Please select Part with unique Calibration Names.')
         )
-    else: 
+    else:
         pass

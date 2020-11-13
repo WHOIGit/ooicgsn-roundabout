@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -20,10 +20,34 @@
 """
 
 from rest_framework import serializers
+from rest_flex_fields import FlexFieldsModelSerializer
 from ..models import Location
 
 
-class LocationSerializer(serializers.ModelSerializer):
+class LocationSerializer(serializers.HyperlinkedModelSerializer, FlexFieldsModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name='api_v1:locations-detail',
+        lookup_field='pk',
+    )
+    parent = serializers.HyperlinkedRelatedField(
+        view_name='api_v1:locations-detail',
+        lookup_field='pk',
+        queryset=Location.objects
+    )
+    children = serializers.HyperlinkedRelatedField(
+        view_name='api_v1:locations-detail',
+        many=True,
+        read_only=True,
+        lookup_field='pk',
+    )
+
     class Meta:
         model = Location
-        fields = ('id', 'name', 'location_type', 'location_id', )
+        fields = ['id', 'url', 'name', 'parent', 'children', 'weight',
+            'location_type', 'location_id', 'root_type', 'created_at',
+        ]
+
+        expandable_fields = {
+            'parent': 'roundabout.locations.api.serializers.LocationSerializer',
+            'children': ('roundabout.locations.api.serializers.LocationSerializer', {'many': True})
+        }

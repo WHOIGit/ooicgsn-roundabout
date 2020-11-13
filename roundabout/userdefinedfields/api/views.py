@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -19,14 +19,20 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter, SimpleRouter
-from .views import LocationViewSet
+from rest_framework import generics, filters, viewsets
+from rest_framework.permissions import IsAuthenticated
 
-# Create a router and register our viewsets with it.
-router = SimpleRouter()
-router.register(r'locations', LocationViewSet )
+from ..models import *
+from .serializers import FieldSerializer, FieldValueSerializer
 
-urlpatterns = [
-    path('', include(router.urls) ),
-]
+
+class FieldViewSet(viewsets.ModelViewSet):
+    queryset = Field.objects.all()
+    serializer_class = FieldSerializer
+    permission_classes = (IsAuthenticated,)
+
+
+class FieldValueViewSet(viewsets.ModelViewSet):
+    queryset = FieldValue.objects.all()
+    serializer_class = FieldValueSerializer
+    permission_classes = (IsAuthenticated,)

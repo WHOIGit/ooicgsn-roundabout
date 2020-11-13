@@ -91,6 +91,18 @@ def validate_part_number(request):
     return JsonResponse(data)
 
 
+# Function to check if CCC Names are enabled for Part Type
+def check_ccc_enabled(request):
+    part_type_id = request.GET.get('part_type_id')
+    part_type = PartType.objects.get(id=part_type_id)
+
+
+    data = {
+        'ccc_toggle': part_type.ccc_toggle,
+    }
+    return JsonResponse(data)
+
+
 # Part Template Views
 
 def load_parts_navtree(request):

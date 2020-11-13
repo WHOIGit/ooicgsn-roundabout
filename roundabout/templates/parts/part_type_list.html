@@ -36,6 +36,7 @@
   <table class="table table-striped table-hover">
       <thead>
         <th>Name/description</th>
+        <th>Configs, Constants, and Calibrations Enabled</th>
         <th>&nbsp;</th>
 
       </thead>
@@ -47,6 +48,7 @@
             {% else %}
                 <td>{{ part_type.name }}</td>
             {% endif %}
+            <td>{{ part_type.ccc_toggle }}</td>
               <td class="text-right">
                   <a href="{% url 'parts:parts_type_update' part_type.id %}" role="button" class="btn btn-primary btn-sm">Edit</a>
                   <a href="{% url 'parts:parts_type_delete' part_type.id %}" role="button" class="btn btn-danger btn-sm">Delete</a>
