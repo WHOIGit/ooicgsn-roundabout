@@ -35,7 +35,23 @@
             if (deprecated == 'checked') {
                 removeButtons.remove();
             } 
+            if (removeButtons.length > 1) {
+                removeButtons.map((idx, button) => {
+                    if (idx != 0) {
+                        button.remove()
+                    }
+                })
+            }
         });
+
+        let formAddRows = $('.dynamic-form-add');
+        if (formAddRows.length > 1) {
+            formAddRows.map((idx, button) => {
+                if (idx != 0) {
+                    button.remove()
+                }
+            })
+        }
 
         $('.delete-row').on('click',function() {
             alert('Warning: deleting Names will delete all downstream Defaults and Events');
