@@ -36,8 +36,8 @@ class Vessel(models.Model):
         validators=[MinValueValidator(Decimal('0.01'))],
     )
     designation = models.CharField(max_length=10, null=False, blank=True)
-    active = models.BooleanField(choices=BOOLEAN_CHOICES, null=True, default=True)
-    R2R = models.BooleanField(choices=BOOLEAN_CHOICES, null=True, default=True, blank=True)
+    active = models.BooleanField(choices=BOOLEAN_CHOICES, null=True, blank=True)
+    R2R = models.BooleanField(choices=BOOLEAN_CHOICES, null=True, blank=True)
     notes = models.TextField(null=False, blank=True)
 
     class Meta:

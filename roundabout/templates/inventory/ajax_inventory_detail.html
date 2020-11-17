@@ -200,7 +200,7 @@
     </div>
 
 
-    <p>Serial Number: {{ inventory_item.serial_number }}<br>
+    <p>
         <a class="btn btn-outline-info btn-sm" data-toggle="collapse" href="#collapseBarCode" role="button" aria-expanded="false" aria-controls="collapseBarCode">
           Print Barcode
         </a>
@@ -264,42 +264,93 @@
       </div>
     </div>
 
-    {% if inventory_item.old_serial_number %}
-        <p>Old Serial Number: {{ inventory_item.old_serial_number }}</p>
-    {% endif %}
-    {% if inventory_item.whoi_number %}
-        <p>WHOI Number: {{ inventory_item.whoi_number }}</p>
-    {% endif %}
-    {% if inventory_item.ooi_property_number %}
-        <p>OOI Property Number: {{ inventory_item.ooi_property_number }}</p>
-    {% endif %}
-    <p>Part Number: {{ inventory_item.part.part_number }}</p>
-    <p>Revision: {{ inventory_item.revision.revision_code }}</p>
-    <p>Current Location: {{ inventory_item.location.name }}</p>
-    {% if inventory_item.build %}
-        <p>Current {{ label_builds_app_singular }}: {{ inventory_item.build }}</p>
-    {% endif %}
-    <p>Total Time in Field: {{ inventory_item.time_at_sea|time_at_sea_display }}</p>
-    {% if inventory_item.current_deployment %}
-        <p>Current {{ label_deployments_app_singular }} Time in Field: {{ inventory_item.current_deployment.deployment_time_in_field|time_at_sea_display }}
-    {% endif %}
+    <table class="table item-data-table">
+        <tbody>
+            <tr>
+                <th>Serial Number</th>
+                <td>{{ inventory_item.serial_number }}</td>
+            </tr>
+            {% if inventory_item.old_serial_number %}
+            <tr>
+                <th>Old Serial Number</th>
+                <td>{{ inventory_item.old_serial_number }}</td>
+            </tr>
+            {% endif %}
+            {% if inventory_item.whoi_number %}
+            <tr>
+                <th>WHOI Number</th>
+                <td>{{ inventory_item.whoi_number }}</td>
+            </tr>
+            {% endif %}
+            {% if inventory_item.ooi_property_number %}
+            <tr>
+                <th>OOI Property Number</th>
+                <td> {{ inventory_item.ooi_property_number }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <th>Part Number</th>
+                <td>
+                    <a href="{% url 'parts:parts_detail' inventory_item.part.id  %}">
+                      {{ inventory_item.part.part_number }} | Revision: {{ inventory_item.revision.revision_code }}
+                    </a>
+                    <a class="btn btn-sm btn-link" href="{% url 'parts:parts_detail' inventory_item.part.id  %}">
+                        <i class="fas fa-link"></i>
+                    </a>
+                </td>
+            </tr>
+            {% if inventory_item.build %}
+            <tr>
+                <th>Current {{ label_builds_app_singular }}</th>
+                <td>
+                    <a href="{% url 'builds:builds_detail' inventory_item.build.id  %}">
+                        {{ inventory_item.build }}
+                    </a>
+                    <a class="btn btn-sm btn-link" href="{% url 'builds:builds_detail' inventory_item.build.id  %}">
+                        <i class="fas fa-link"></i>
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <th>{{ label_assemblies_app_singular }} Part Assigned</th>
+                <td>
+                    <a href="{% url 'assemblies:assemblypart_detail' inventory_item.assembly_part_id  %}">
+                        {{ inventory_item.assembly_part }}
+                    </a>
+                    <a class="btn btn-sm btn-link" href="{% url 'assemblies:assemblypart_detail' inventory_item.assembly_part_id  %}">
+                        <i class="fas fa-link"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endif %}
+            <tr>
+                <th>Current Location</th>
+                <td>
+                    <a href="{% url 'locations:locations_detail' inventory_item.location_id  %}">
+                        {{ inventory_item.location.name }}
+                    </a>
+                    <a class="btn btn-sm btn-link" href="{% url 'locations:locations_detail' inventory_item.location_id  %}">
+                        <i class="fas fa-link"></i>
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <th>Total Time in Field</th>
+                <td>
+                    {{ inventory_item.time_at_sea|time_at_sea_display }}
+                </td>
+            </tr>
+            {% if inventory_item.current_deployment %}
+            <tr>
+                <th>Current {{ label_deployments_app_singular }} Time in Field</th>
+                <td>
+                    {{ inventory_item.current_deployment.deployment_time_in_field|time_at_sea_display }}
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
 
-    {% if inventory_item.parent %}
-    <p class="ajax-detail-link">Parent Assembly:
-        {% recursetree inventory_item.get_ancestors %}
-
-                {% if node.is_child_node %}&#187;{% endif %}
-                <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' node.id %}"
-                            data-node-id="{{ node.id }}"
-                            data-node-type="{{ node.get_object_type }}">
-                            {{ node.part.name }} - {{ node.serial_number }}</a>
-                {% if not node.is_leaf_node %}
-                    {{ children }}
-                {% endif %}
-
-        {% endrecursetree %}
-    </p>
-    {% endif %}
     <hr>
     {% if inventory_item.flag %}
     <div class="float-right ajax-detail-link"><a href="#" data-detail-url="{% url 'inventory:ajax_inventory_action' 'flag' inventory_item.id %}" role="button" class="btn btn-danger">FLAGGED</a></div>
@@ -488,12 +539,13 @@
                       <li>
 
                             {% if node.id == inventory_item.assembly_part_id %}
-                                 <span class="text-primary">
+                                <a href="{% url 'assemblies:assemblypart_detail' inventory_item.assembly_part_id  %}">
+                                     {{ node.part.name }}
+                                </a>
                             {% else %}
-                                <span>
+                                {{ node.part.name }}
                             {% endif %}
-                                    {{ node.part.name }}
-                                </span>
+
                             {% if node.id == inventory_item.assembly_part_id %}
                                 <span class="badge badge-primary badge-pill">Destination</span>
                             {% endif %}
