@@ -270,6 +270,7 @@
                     <th>{{ label_deployments_app_singular }} Number</th>
                     <td>{{ current_deployment.deployment_number }}</td>
                 </tr>
+                {% if current_deployment.deployed_location %}
                 <tr>
                     <th>Final {{ label_deployments_app_singular }} Location</th>
                     <td>
@@ -281,6 +282,7 @@
                         </a>
                     </td>
                 </tr>
+                {% endif %}
                 {% if current_deployment.cruise_deployed %}
                 <tr>
                     <th>Cruise Deployed On</th>
