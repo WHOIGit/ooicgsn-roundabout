@@ -28,8 +28,8 @@
           {% csrf_token %}
           <input class="btn btn-link cancel-btn"
                  type="button" value="Cancel"
-                 data-detail-url="{% url 'inventory:ajax_inventory_detail' object.inventory.id %}"/>
-          <input data-detail-url="{% url 'inventory:ajax_inventory_detail' object.inventory.id %}" class="btn btn-danger" type="submit" value="Confirm"/>
+                 data-detail-url="{% url 'inventory:ajax_inventory_detail' event_template.inventory.id %}"/>
+          <input data-detail-url="{% url 'inventory:ajax_inventory_detail' event_template.inventory.id %}" class="btn btn-danger" type="submit" value="Confirm"/>
       </form>
   </div>
 </div>
