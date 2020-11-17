@@ -29,7 +29,7 @@ workflows:
             only:
               - develop
               - automated_tests
-              - release-1.6
+              - /release-.*/
 
 version: 2
 jobs:
