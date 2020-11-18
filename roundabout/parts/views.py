@@ -858,9 +858,8 @@ class PartsTypeDeleteView(LoginRequiredMixin, PermissionRequiredMixin, FormView)
                 part.part_type = new_part_type
                 part.save()
 
-        # Delete the Location object
+        # Delete the Part Type object
         part_type_to_delete.delete()
-        print(self.get_success_url())
         return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):

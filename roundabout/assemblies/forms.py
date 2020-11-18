@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -21,6 +21,7 @@
 from pprint import pprint
 
 from django import forms
+from django.shortcuts import get_object_or_404
 from django.forms.models import inlineformset_factory
 from django.core.exceptions import ValidationError
 
@@ -164,3 +165,22 @@ class AssemblyTypeForm(forms.ModelForm):
         labels = {
             'name': '%s Type Name' % (labels['label_assemblies_app_singular']),
         }
+
+
+"""
+Custom Deletion form for AssemblyType
+User needs to be able to choose a new AssemblyType for existing Assemblies or they
+disappear from tree nav
+"""
+class AssemblyTypeDeleteForm(forms.Form):
+    new_assembly_type = forms.ModelChoiceField(label='Select new Assembly Type', queryset=AssemblyType.objects.all())
+
+    def __init__(self, *args, **kwargs):
+        assembly_type_pk= kwargs.pop('pk')
+        assembly_type_to_delete = get_object_or_404(AssemblyType, id=assembly_type_pk)
+
+        super(AssemblyTypeDeleteForm, self).__init__(*args, **kwargs)
+        # Check if this PartType has IPart Templates, remove new field if false
+        if not assembly_type_to_delete.assemblies.exists():
+            self.fields['new_assembly_type'].required = False
+            self.fields['new_assembly_type'].widget = forms.HiddenInput()
