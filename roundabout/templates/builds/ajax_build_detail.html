@@ -24,6 +24,9 @@
 {% load mptt_tags %}
 
 <div class="card-header" data-object-id="{{ build.id }}">
+    {% if build.flag %}
+        <div class="float-right ajax-detail-link"><a href="#" data-detail-url="{% url 'builds:ajax_builds_action' 'flag' build.id %}" role="button" class="btn btn-danger">FLAGGED</a></div>
+    {% endif %}
     <h3>{{ build }}</h3>
 </div>
 
@@ -123,7 +126,7 @@
       </div>
     </div>
 
-    <p>{{ label_builds_app_singular }} Number: {{ build.build_number }}<br>
+    <p>
         <a class="btn btn-outline-info btn-sm" data-toggle="collapse" href="#collapseBarCode" role="button" aria-expanded="false" aria-controls="collapseBarCode">
           Print Barcode
         </a>
@@ -187,58 +190,65 @@
       </div>
     </div>
 
-    <p>{{ label_assemblies_app_singular }} Template: {{ build.assembly }}</p>
+    <table class="table item-data-table">
+        <tbody>
+            <tr>
+                <th>{{ label_builds_app_singular }} Number</th>
+                <td>{{ build.build_number }}</td>
+            </tr>
+            <tr>
+                <th>{{ label_assemblies_app_singular }} Template</th>
+                <td>
+                    <a href="{% url 'assemblies:assemblyrevision_detail' build.assembly_id  %}">
+                        {{ build.assembly }} | Revision: {{ build.assembly_revision.revision_code }}
+                    </a>
+                    <a class="btn btn-sm btn-link" href="{% url 'assemblies:assemblyrevision_detail' build.assembly_id  %}">
+                        <i class="fas fa-link"></i>
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <th>{{ label_assemblies_app_singular }} Type</th>
+                <td>{{ build.assembly.assembly_type }}</td>
+            </tr>
+            {% if build.build_notes %}
+            <tr>
+                <th>{{ label_builds_app_singular }} Notes</th>
+                <td>{{ build.build_notes }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <th>Current Location</th>
+                <td>
+                    <a href="{% url 'locations:locations_detail' build.location_id  %}">
+                        {{ build.location }}
+                    </a>
+                    <a class="btn btn-sm btn-link" href="{% url 'locations:locations_detail' build.location_id  %}">
+                        <i class="fas fa-link"></i>
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <th>Total Time in Field</th>
+                <td>{{ build.time_at_sea|time_at_sea_display }}</td>
+            </tr>
+        </tbody>
+    </table>
 
-    <p>{{ label_assemblies_app_singular }} Revision: {{ build.assembly_revision.revision_code }}</p>
+    {% if percent_complete %}
+        <h6>Percent Built</h6>
 
-    <p>{{ label_assemblies_app_singular }} Type: {{ build.assembly.assembly_type }}</p>
-
-    <p>{{ label_builds_app_singular }} Notes: {{ build.build_notes }}</p>
-
-    <hr>
-    <div id="build-status">
-        <!--
-        <div id="build-progress" class="float-right">
-            <h6>Percent Built</h6>
-            <div class="progress progress-bar-vertical ">
-                <div class="progress-bar" role="progressbar" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100" style="height: 30%;">
-                  30%
-                </div>
-            </div>
+        <div class="progress" style="height: 20px;">
+            {% if percent_complete == 0 %} {{ percent_complete }}% {% endif %}
+          <div class="progress-bar progress-bar-striped bg-info" role="progressbar" style="width: {{ percent_complete }}%;" aria-valuenow="{{ percent_complete }}" aria-valuemin="0" aria-valuemax="100">
+              <span>{{ percent_complete }}%</span>
+          </div>
         </div>
-    -->
-        <h5>{{ label_builds_app_singular }} Status</h5>
-
-        {% if build.flag %}
-        <div class="float-right ajax-detail-link"><a href="#" data-detail-url="{% url 'builds:ajax_builds_action' 'flag' build.id %}" role="button" class="btn btn-danger">FLAGGED</a></div>
-        {% endif %}
-
-        <p>Current Location: {{ build.location }}</p>
-
-        <p>Total Time in Field: {{ build.time_at_sea|time_at_sea_display }}</p>
-
-        {% if percent_complete %}
-            <h6>Percent Built</h6>
-
-            <div class="progress" style="height: 20px;">
-                {% if percent_complete == 0 %} {{ percent_complete }}% {% endif %}
-              <div class="progress-bar progress-bar-striped bg-info" role="progressbar" style="width: {{ percent_complete }}%;" aria-valuenow="{{ percent_complete }}" aria-valuemin="0" aria-valuemax="100">
-                  <span>{{ percent_complete }}%</span>
-              </div>
-            </div>
-        {% endif %}
-
-
-
-
-    </div>
-
-
-
+    {% endif %}
 
 
     {% if build.is_deployed %}
-        <hr>
+        <hr class="my-4">
         <div class="ajax-btn float-right">
             <a href="#" data-update-url="{% url 'builds:ajax_deployment_update' current_deployment.id %}"
                 data-node-id="{{ current_deployment.id }}"
@@ -246,37 +256,88 @@
                 role="button">Edit Deployment Details</a>
         </div>
         <h5>Current {{ label_deployments_app_singular }} Data</h5>
-        <p>{{ label_deployments_app_singular }} Number: {{ current_deployment.deployment_number }}</p>
-        <p>Final {{ label_deployments_app_singular }} Location: {{ current_deployment.deployed_location }}</p>
-        {% if current_deployment.cruise_deployed %}
-            <p>Cruise Deployed On:
-                <a href="{% url 'cruises:cruises_detail' current_deployment.cruise_deployed.id %}">{{ current_deployment.cruise_deployed }}</a>
-            </p>
-        {% endif %}
-        {% if current_deployment.cruise_recovered %}
-            <p>Cruise Recovered On:
-                <a href="{% url 'cruises:cruises_detail' current_deployment.cruise_recovered.id %}">{{ current_deployment.cruise_recovered }}</a>
-            </p>
-        {% endif %}
-
-        <p class="ajax-detail-link">Current {{ label_deployments_app_singular }} Time in Field: {{ current_deployment.deployment_time_in_field|time_at_sea_display }}
-
         <h6>{{ label_deployments_app_singular }} Status</h6>
 
         <div class="progress mb-3" style="height: 20px;">
-
             <div class="progress-bar {{ current_deployment.deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ current_deployment.deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ current_deployment.deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
                 <span>{{ current_deployment.deployment_progress_bar|get_item:'status_label' }}</span>
             </div>
-
         </div>
 
-        {% if current_deployment.current_status != 'startdeployment' and current_deployment.current_status != 'deploymentburnin' %}
-            <p>{{ label_deployments_app_singular }} to Field Date: {{ current_deployment.deployment_to_field_date|date:"n/j/y H:i" }}</p>
-            <p>Latitude: {{ current_deployment.latitude}}</p>
-            <p>Longitude: {{ current_deployment.longitude }}</p>
-            <p>Depth: {{ current_deployment.depth }} m</p>
-        {% endif %}
+        <table class="table item-data-table">
+            <tbody>
+                <tr>
+                    <th>{{ label_deployments_app_singular }} Number</th>
+                    <td>{{ current_deployment.deployment_number }}</td>
+                </tr>
+                {% if current_deployment.deployed_location %}
+                <tr>
+                    <th>Final {{ label_deployments_app_singular }} Location</th>
+                    <td>
+                        <a href="{% url 'locations:locations_detail' current_deployment.deployed_location_id  %}">
+                            {{ current_deployment.deployed_location }}
+                        </a>
+                        <a class="btn btn-sm btn-link" href="{% url 'locations:locations_detail' current_deployment.deployed_location_id  %}">
+                            <i class="fas fa-link"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endif %}
+                {% if current_deployment.cruise_deployed %}
+                <tr>
+                    <th>Cruise Deployed On</th>
+                    <td>
+                        <a href="{% url 'cruises:cruises_detail' current_deployment.cruise_deployed_id %}">
+                            {{ current_deployment.cruise_deployed }}
+                        </a>
+                        <a class="btn btn-sm btn-link" href="{% url 'cruises:cruises_detail' current_deployment.cruise_deployed_id %}">
+                            <i class="fas fa-link"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endif %}
+                {% if current_deployment.cruise_recovered %}
+                <tr>
+                    <th>Cruise Recovered On</th>
+                    <td>
+                        <a href="{% url 'cruises:cruises_detail' current_deployment.cruise_recovered.id %}">
+                            {{ current_deployment.cruise_recovered }}
+                        </a>
+                        <a class="btn btn-sm btn-link" href="{% url 'cruises:cruises_detail' current_deployment.cruise_recovered.id %}">
+                            <i class="fas fa-link"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <th>Current {{ label_deployments_app_singular }} Time in Field</th>
+                    <td>{{ current_deployment.deployment_time_in_field|time_at_sea_display }}</td>
+                </tr>
+                {% if current_deployment.current_status != 'startdeployment' and current_deployment.current_status != 'deploymentburnin' %}
+                <tr>
+                    <th>{{ label_deployments_app_singular }} to Field Date</th>
+                    <td>{{ current_deployment.deployment_to_field_date|date:"n/j/y H:i" }}</td>
+                </tr>
+                {% if current_deployment.latitude %}
+                <tr>
+                    <th>Latitude</th>
+                    <td>{{ current_deployment.latitude }} &deg; N </td>
+                </tr>
+                {% endif %}
+                {% if current_deployment.longitude %}
+                <tr>
+                    <th>Longitude</th>
+                    <td>{{ current_deployment.longitude }} &deg; E </td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <th>Depth</th>
+                    <td>{{ current_deployment.depth }} m</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
     {% endif %}
 
     <hr>

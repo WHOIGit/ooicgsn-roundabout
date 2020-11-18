@@ -269,6 +269,11 @@ a.wh {
     white-space: nowrap;
 }
 
+.item-data-table th {
+    width: 28%;
+    color: #666;
+}
+
 /* Template Mode styling for apps that are considered Templates */
 .template #detail-view {
     border-color: #28a745;
@@ -293,7 +298,6 @@ a.wh {
 
 footer {
     background-color: white;
-    color: white;
 }
 
 /* Table Header Ordering */

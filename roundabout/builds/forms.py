@@ -238,6 +238,8 @@ class DeploymentForm(forms.ModelForm):
             'deployment_number': '%s Number' % (labels['label_deployments_app_singular']),
             'deployed_location': 'Final %s Location' % (labels['label_deployments_app_singular']),
             'cruise_deployed': 'Cruise Deployed On',
+            'latitude': 'Latitude (+/- degrees N)',
+            'longitude': 'Longitude (+/-  degrees E)',
         }
 
         widgets = {

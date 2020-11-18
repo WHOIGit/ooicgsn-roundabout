@@ -19,7 +19,7 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView
@@ -231,19 +231,21 @@ class EventValueSetDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteVie
     permission_required = 'calibrations.add_calibrationevent'
     redirect_field_name = 'home'
 
-    def delete(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        data = {
-            'message': "Successfully submitted form data.",
-            'parent_id': self.object.inventory.id,
-            'parent_type': 'part_type',
-            'object_type': self.object.get_object_type(),
-        }
-        self.object.delete()
-        return JsonResponse(data)
-
     def get_success_url(self):
-        return reverse_lazy('inventory:ajax_inventory_detail', args=(self.object.inventory.id, ))
+        return reverse('inventory:ajax_inventory_detail', args=(self.object.inventory.id,))
+
+
+def event_delete_view(request, pk):
+    evt = CalibrationEvent.objects.get(id=pk)
+    inv_id = evt.inventory.id
+    if request.method == "POST":
+        evt.delete()
+        return HttpResponseRedirect(reverse('inventory:ajax_inventory_detail', args=(inv_id,)))
+        
+    return render(request, 'calibrations/event_delete.html', {
+        "event_template": evt,
+        'request': request
+    })
 
 
 

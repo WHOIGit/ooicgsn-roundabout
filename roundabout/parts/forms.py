@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -23,11 +23,13 @@ import datetime
 import re
 
 from django import forms
+from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 from django.forms.models import inlineformset_factory
 from django.template.defaultfilters import slugify
 from django_summernote.widgets import SummernoteWidget
 from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
+from mptt.forms import TreeNodeChoiceField
 
 from .models import Part, PartType, Documentation, Revision
 from roundabout.locations.models import Location
@@ -183,3 +185,22 @@ class PartTypeForm(forms.ModelForm):
             'name': 'Part Type Name',
             'ccc_toggle': 'Enable Configs, Constants, and Calibration Coefficients'
         }
+
+
+"""
+Custom Deletion form for PartType
+User needs to be able to choose a new PartType for existing Part Templates or they
+disappear from tree nav
+"""
+class PartTypeDeleteForm(forms.Form):
+    new_part_type = TreeNodeChoiceField(label='Select new Part Type', queryset=PartType.objects.all())
+
+    def __init__(self, *args, **kwargs):
+        part_type_pk= kwargs.pop('pk')
+        part_type_to_delete = get_object_or_404(PartType, id=part_type_pk)
+
+        super(PartTypeDeleteForm, self).__init__(*args, **kwargs)
+        # Check if this PartType has IPart Templates, remove new field if false
+        if not part_type_to_delete.parts.exists():
+            self.fields['new_part_type'].required = False
+            self.fields['new_part_type'].widget = forms.HiddenInput()

@@ -74,7 +74,7 @@ class ImportVesselsUploadView(LoginRequiredMixin, FormView):
                 length = Decimal(row['Length (m)'])
 
             if row['Max Speed (m/s)']:
-                max_speed = Decimal(row['Max Draft (m)'])
+                max_speed = Decimal(row['Max Speed (m/s)'])
 
             if row['Max Draft (m)']:
                 max_draft = Decimal(row['Max Draft (m)'])
@@ -140,8 +140,8 @@ class ImportCruisesUploadView(LoginRequiredMixin, FormView):
 
         for row in reader:
             cuid = row['CUID']
-            cruise_start_date = parser.parse(row['cruiseStartDateTime']).date()
-            cruise_stop_date = parser.parse(row['cruiseStopDateTime']).date()
+            cruise_start_date = parser.parse(row['cruiseStartDateTime'])
+            cruise_stop_date = parser.parse(row['cruiseStopDateTime'])
             vessel_obj = None
             # parse out the vessel name to match its formatting from Vessel CSV
             vessel_name_csv = row['ShipName'].strip()
@@ -246,12 +246,12 @@ def import_cruises(cruises_files):
     cache.set('cruises_files', cruises_files, timeout=None)
     job = parse_cruise_files.delay()
 
-# Vessel CSV Importer 
+# Vessel CSV Importer
 def import_vessels(vessels_files):
     cache.set('vessels_files', vessels_files, timeout=None)
     job = parse_vessel_files.delay()
 
-# Calibration CSV Importer   
+# Calibration CSV Importer
 def import_calibrations(cal_files, user, user_draft):
     csv_files = []
     ext_files = []
