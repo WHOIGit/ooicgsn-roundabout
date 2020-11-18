@@ -287,7 +287,7 @@ def parse_vessel_files(self):
                 length = Decimal(row['Length (m)'])
 
             if row['Max Speed (m/s)']:
-                max_speed = Decimal(row['Max Draft (m)'])
+                max_speed = Decimal(row['Max Speed (m/s)'])
 
             if row['Max Draft (m)']:
                 max_draft = Decimal(row['Max Draft (m)'])
