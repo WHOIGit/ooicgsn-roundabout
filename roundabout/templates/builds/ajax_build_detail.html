@@ -318,14 +318,18 @@
                     <th>{{ label_deployments_app_singular }} to Field Date</th>
                     <td>{{ current_deployment.deployment_to_field_date|date:"n/j/y H:i" }}</td>
                 </tr>
+                {% if current_deployment.latitude %}
                 <tr>
                     <th>Latitude</th>
-                    <td>{{ current_deployment.latitude }} &deg; </td>
+                    <td>{{ current_deployment.latitude }} &deg; N </td>
                 </tr>
+                {% endif %}
+                {% if current_deployment.longitude %}
                 <tr>
                     <th>Longitude</th>
-                    <td>{{ current_deployment.longitude }} &deg; </td>
+                    <td>{{ current_deployment.longitude }} &deg; E </td>
                 </tr>
+                {% endif %}
                 <tr>
                     <th>Depth</th>
                     <td>{{ current_deployment.depth }} m</td>
