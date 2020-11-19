@@ -28,4 +28,7 @@ then
     docker-compose -f production-testing-site.yml up -d --no-deps --build django_testing
     docker-compose -f production-testing-site.yml run --rm django_testing python manage.py migrate
     docker-compose -f production-testing-site.yml run --rm django_testing python manage.py collectstatic --noinput
+    docker-compose -f production-testing-site.yml up -d --no-deps --build celeryworker
+    docker-compose -f production-testing-site.yml up -d --no-deps --build celerybeat
+    docker-compose -f production-testing-site.yml up -d --no-deps --build flower
 fi
