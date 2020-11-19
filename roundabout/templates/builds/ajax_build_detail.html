@@ -316,7 +316,7 @@
                 {% if current_deployment.current_status != 'startdeployment' and current_deployment.current_status != 'deploymentburnin' %}
                 <tr>
                     <th>{{ label_deployments_app_singular }} to Field Date</th>
-                    <td>{{ current_deployment.deployment_to_field_date|date:"n/j/y H:i" }}</td>
+                    <td>{{ current_deployment.deployment_to_field_date|date:"n/j/Y H:i" }}</td>
                 </tr>
                 {% if current_deployment.latitude %}
                 <tr>

@@ -22,7 +22,7 @@
 {% load common_tags %}
 
 <a class="collapsed" data-toggle="collapse" href="#deployment-{{ inventory_deployment.id }}" aria-expanded="false" aria-controls="deployment-{{ inventory_deployment.id }}">
-    {{ inventory_deployment.deployment.build.build_number }} - {{ label_deployments_app_singular }}: {{ inventory_deployment.deployment }}
+    {{ inventory_deployment.deployment.build }} - {{ label_deployments_app_singular }}: {{ inventory_deployment.deployment }}
 </a>
 
 <a data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ inventory_deployment.id }}" aria-controls="deployment-{{ inventory_deployment.id }}" aria-expanded="false" role="button">
@@ -37,40 +37,71 @@
 </div>
 
 <div class="collapse mt-3" id="deployment-{{ inventory_deployment.id }}">
-    <div class="ajax-btn float-right">
-        <a href="#" data-update-url="{% url 'inventory:ajax_inventory_deployment_update' inventory_deployment.id %}"
-            data-node-id="{{ current_deployment.id }}"
-            class="btn btn-primary btn-sm"
-            role="button">Edit Deployment Details</a>
-    </div>
 
-    <p>Build:
-        <a href="{% url 'builds:builds_detail' inventory_deployment.deployment.build.id %}">{{ inventory_deployment.deployment.build }}</a>
-    </p>
-
-    <p>{{ label_deployments_app_singular }} Location: {{ inventory_deployment.deployment.deployed_location }}</p>
-
-    {% if inventory_deployment.deployment_to_field_date %}
-        <p>{{ label_deployments_app_singular }} To Field Date: {{ inventory_deployment.deployment_to_field_date }}</p>
-    {% endif %}
-
-    {% if inventory_deployment.deployment_recovery_date %}
-        <p>{{ label_deployments_app_singular }} Recovery Date: {{ inventory_deployment.deployment_recovery_date }}</p>
-    {% endif %}
-
-    {% if inventory_deployment.cruise_deployed %}
-        <p>Cruise Deployed On:
-            <a href="{% url 'cruises:cruises_detail' inventory_deployment.cruise_deployed.id %}">{{ inventory_deployment.cruise_deployed}}</a>
-        </p>
-    {% endif %}
-
-    {% if inventory_deployment.cruise_recovered %}
-        <p>Cruise Recovered On:
-            <a href="{% url 'cruises:cruises_detail' inventory_deployment.cruise_recovered.id %}">{{ inventory_deployment.cruise_recovered }}</a>
-        </p>
-    {% endif %}
+    <table class="table item-data-table">
+        <tbody>
+            <tr>
+                <th>{{ label_builds_app_singular }}</th>
+                <td>
+                    <a href="{% url 'builds:builds_detail' inventory_deployment.deployment.build.id %}">{{ inventory_deployment.deployment.build }}</a>
+                    <a class="btn btn-sm btn-link" href="{% url 'builds:builds_detail' inventory_deployment.deployment.build.id  %}">
+                        <i class="fas fa-link"></i>
+                    </a>
+                    <div class="ajax-btn float-right">
+                        <a href="#" data-update-url="{% url 'inventory:ajax_inventory_deployment_update' inventory_deployment.id %}"
+                            data-node-id="{{ inventory_deployment.id }}"
+                            class="btn btn-primary btn-sm"
+                            role="button">Edit Inventory Deployment Details</a>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <th>{{ label_deployments_app_singular }} Location</th>
+                <td>
+                    <a href="{% url 'locations:locations_detail' inventory_deployment.deployment.deployed_location.id %}">{{ inventory_deployment.deployment.deployed_location }}</a>
+                    <a class="btn btn-sm btn-link" href="{% url 'locations:locations_detail' inventory_deployment.deployment.deployed_location.id %}">
+                        <i class="fas fa-link"></i>
+                    </a>
+                </td>
+            </tr>
+            {% if inventory_deployment.deployment_to_field_date %}
+            <tr>
+                <th>{{ label_deployments_app_singular }} to Field Date</th>
+                <td>{{ inventory_deployment.deployment_to_field_date|date:"n/j/Y H:i" }}</td>
+            </tr>
+            {% endif %}
+            {% if inventory_deployment.deployment_recovery_date %}
+            <tr>
+                <th>{{ label_deployments_app_singular }} Recovery Date</th>
+                <td>{{ inventory_deployment.deployment_recovery_date|date:"n/j/Y H:i" }}</td>
+            </tr>
+            {% endif %}
+            {% if inventory_deployment.cruise_deployed %}
+            <tr>
+                <th>Cruise Deployed On</th>
+                <td>
+                    <a href="{% url 'cruises:cruises_detail' inventory_deployment.cruise_deployed.id %}">{{ inventory_deployment.cruise_deployed }}</a>
+                    <a class="btn btn-sm btn-link" href="{% url 'cruises:cruises_detail' inventory_deployment.cruise_deployed.id %}">
+                        <i class="fas fa-link"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endif %}
+            {% if inventory_deployment.cruise_recovered %}
+            <tr>
+                <th>Cruise Recovered On</th>
+                <td>
+                    <a href="{% url 'cruises:cruises_detail' inventory_deployment.cruise_recovered.id %}">{{ inventory_deployment.cruise_recovered }}</a>
+                    <a class="btn btn-sm btn-link" href="{% url 'cruises:cruises_detail' inventory_deployment.cruise_recovered.id %}">
+                        <i class="fas fa-link"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
     <hr>
-    <p><strong>Item's Time on Deployment vs. Total {{ label_builds_app_singular }} Deployment Time</strong></p>
+    <p><strong>Inventory Item's Time on Deployment vs. Total {{ label_builds_app_singular }} Deployment Time</strong></p>
     <p>Parent Build's Current Deployment Status ({{ inventory_deployment.deployment.deployment_number }}):<br>
         <div class="progress" style="height: 20px;">
             <div class="progress-bar {{ inventory_deployment.deployment.deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ inventory_deployment.deployment.deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ inventory_deployment.deployment.deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
@@ -79,13 +110,25 @@
         </div>
     </p>
 
-    {% if inventory_deployment.deployment_to_field_date %}
-        <p>Inventory Time in Field: {{ inventory_deployment.deployment_time_in_field|time_at_sea_display }}</p>
-        {% if inventory_deployment.deployment.deployment_time_in_field %}
-            <p>Total Build Deployment Time in Field: {{ inventory_deployment.deployment.deployment_time_in_field|time_at_sea_display }}</p>
-        {% endif %}
+    <table class="table item-data-table">
+        <tbody>
+            {% if inventory_deployment.deployment_to_field_date %}
+            <tr>
+                <th>Inventory Time in Field</th>
+                <td>{{ inventory_deployment.deployment_time_in_field|time_at_sea_display }}</td>
+            </tr>
+            {% endif %}
+            {% if inventory_deployment.deployment.deployment_time_in_field %}
+            <tr>
+                <th>Total Build Deployment Time in Field</th>
+                <td>{{ inventory_deployment.deployment.deployment_time_in_field|time_at_sea_display }}</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
 
-	    <div id="deployment-percent-{{ inventory_deployment.id }}"></div>
+    {% if inventory_deployment.deployment_to_field_date %}
+        <div id="deployment-percent-{{ inventory_deployment.id }}"></div>
     {% endif %}
 
     <table class="table table-striped action-table">

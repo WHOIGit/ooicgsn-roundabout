@@ -21,7 +21,7 @@
 {% load common_tags %}
 
 <a class="collapsed" data-toggle="collapse" href="#deployment-{{ deployment.id }}-{{ deployment_type }}" aria-expanded="false" aria-controls="deployment-{{ deployment.id }}-{{ deployment_type }}">
-    {{ deployment.build.build_number }} - {{ label_deployments_app_singular }}: {{ deployment }}
+    {{ deployment.build }} - {{ label_deployments_app_singular }}: {{ deployment }}
 </a>
 
 <a data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ deployment.id }}-{{ deployment_type }}" aria-controls="deployment-{{ deployment.id }}-{{ deployment_type }}" aria-expanded="false" role="button">
@@ -35,47 +35,89 @@
 </div>
 
 <div class="collapse mt-3" id="deployment-{{ deployment.id }}-{{ deployment_type }}">
-    <div class="ajax-btn float-right">
-        <a href="#" data-update-url="{% url 'builds:ajax_deployment_update' deployment.id %}"
-            data-node-id="{{ current_deployment.id }}"
-            class="btn btn-primary btn-sm"
-            role="button">Edit Deployment Details</a>
-    </div>
-    <p>Build:
-        <a href="{% url 'builds:builds_detail' deployment.build.id %}">{{ deployment.build }}</a>
-    </p>
 
-    <p>{{ label_deployments_app_singular }} Location: {{ deployment.deployed_location }}</p>
-
-    {% if deployment.deployment_to_field_date %}
-        <p>{{ label_deployments_app_singular }} To Field Date: {{ deployment.deployment_to_field_date }}</p>
-    {% endif %}
-
-    {% if deployment.deployment_recovery_date %}
-        <p>{{ label_deployments_app_singular }} Recovery Date: {{ deployment.deployment_recovery_date }}</p>
-    {% endif %}
-
-    {% if deployment.cruise_deployed %}
-        <p>Cruise Deployed On:
-            <a href="{% url 'cruises:cruises_detail' deployment.cruise_deployed.id %}">{{ deployment.cruise_deployed }}</a>
-        </p>
-    {% endif %}
-
-    {% if deployment.cruise_recovered %}
-        <p>Cruise Recovered On:
-            <a href="{% url 'cruises:cruises_detail' deployment.cruise_recovered.id %}">{{ deployment.cruise_recovered }}</a>
-        </p>
-    {% endif %}
-
-    {% if deployment.deployment_time_in_field %}
-        <p>Deployment Time in Field: {{ deployment.deployment_time_in_field|time_at_sea_display }}
-    {% endif %}
-
-    {% if deployment.current_status != 'startdeployment' and deployment.current_status != 'deploymentburnin' %}
-        <p>Latitude: {{ deployment.latitude}}</p>
-        <p>Longitude: {{ deployment.longitude }}</p>
-        <p>Depth: {{ deployment.depth }} m</p>
-    {% endif %}
+    <table class="table item-data-table">
+        <tbody>
+            <tr>
+                <th>{{ label_builds_app_singular }}</th>
+                <td>
+                    <a href="{% url 'builds:builds_detail' deployment.build.id %}">{{ deployment.build }}</a>
+                    <a class="btn btn-sm btn-link" href="{% url 'builds:builds_detail' deployment.build.id  %}">
+                        <i class="fas fa-link"></i>
+                    </a>
+                    <div class="ajax-btn float-right">
+                        <a href="#" data-update-url="{% url 'builds:ajax_deployment_update' deployment.id %}"
+                            data-node-id="{{ current_deployment.id }}"
+                            class="btn btn-primary btn-sm"
+                            role="button">Edit Deployment Details</a>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <th>{{ label_deployments_app_singular }} Location</th>
+                <td>
+                    <a href="{% url 'locations:locations_detail' deployment.deployed_location.id %}">{{ deployment.deployed_location }}</a>
+                    <a class="btn btn-sm btn-link" href="{% url 'locations:locations_detail' deployment.deployed_location.id %}">
+                        <i class="fas fa-link"></i>
+                    </a>
+                </td>
+            </tr>
+            {% if deployment.deployment_to_field_date %}
+            <tr>
+                <th>{{ label_deployments_app_singular }} to Field Date</th>
+                <td>{{ deployment.deployment_to_field_date|date:"n/j/Y H:i" }}</td>
+            </tr>
+            {% endif %}
+            {% if deployment.deployment_recovery_date %}
+            <tr>
+                <th>{{ label_deployments_app_singular }} Recovery Date</th>
+                <td>{{ deployment.deployment_recovery_date|date:"n/j/Y H:i" }}</td>
+            </tr>
+            {% endif %}
+            {% if deployment.cruise_deployed %}
+            <tr>
+                <th>Cruise Deployed On</th>
+                <td>
+                    <a href="{% url 'cruises:cruises_detail' deployment.cruise_deployed.id %}">{{ deployment.cruise_deployed }}</a>
+                    <a class="btn btn-sm btn-link" href="{% url 'cruises:cruises_detail' deployment.cruise_deployed.id %}">
+                        <i class="fas fa-link"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endif %}
+            {% if deployment.cruise_recovered %}
+            <tr>
+                <th>Cruise Recovered On</th>
+                <td>
+                    <a href="{% url 'cruises:cruises_detail' deployment.cruise_recovered.id %}">{{ deployment.cruise_recovered }}</a>
+                    <a class="btn btn-sm btn-link" href="{% url 'cruises:cruises_detail' deployment.cruise_recovered.id %}">
+                        <i class="fas fa-link"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endif %}
+            {% if deployment.deployment_time_in_field %}
+            <tr>
+                <th>{{ label_deployments_app_singular }} Time in Field</th>
+                <td>{{ deployment.deployment_time_in_field|time_at_sea_display }}</td>
+            </tr>
+            {% endif %}
+            {% if deployment.current_status != 'startdeployment' and deployment.current_status != 'deploymentburnin' %}
+            <tr>
+                <th>Latitude</th>
+                <td>{{ deployment.latitude }} &deg; N</td>
+            </tr>
+            <tr>
+                <th>Longitude</th>
+                <td>{{ deployment.longitude }} &deg; E</td>
+            </tr>
+            <tr>
+                <th>Depth</th>
+                <td>{{ deployment.depth }} m</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
 
     <table class="table table-striped action-table">
         <thead>
