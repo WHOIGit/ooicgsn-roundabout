@@ -106,4 +106,5 @@ class DeploymentOmsCustomFilter(filters.FilterSet):
         fields = [
             'deployment_number',
             'build_number',
+            'build',
         ]

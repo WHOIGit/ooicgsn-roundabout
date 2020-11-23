@@ -28,6 +28,8 @@ from roundabout.core.templatetags.common_tags import time_at_sea_display
 from roundabout.cruises.models import Cruise
 from roundabout.inventory.models import Deployment
 from roundabout.locations.models import Location
+from roundabout.configs_constants.models import ConfigEvent
+from roundabout.calibrations.models import CalibrationEvent
 from ..models import Build
 
 API_VERSION = 'api_v1'
@@ -193,7 +195,6 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
             'build_id',
             'build_number',
             'deployment_id',
-            'build_id',
             'deployment_number',
             'current_status',
             'assembly_parts',
@@ -214,14 +215,29 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
             # Use the InventoryDeployment related model to get historical list of Inventory items
             # on each Deployment
             inventory_dep_qs = obj.inventory_deployments.all()
-            assembly_parts = list()
+            assembly_parts = []
 
             for inv in inventory_dep_qs:
+                # get all config_events for this Inventory/Deployment
+                configuration_values = []
+                config_events = ConfigEvent.objects.filter(inventory=inv.inventory).filter(deployment=inv.deployment)
+                if config_events:
+                    for event in config_events:
+                        for value in event.config_values.all():
+                            print(value.config_value, value.config_name.name)
+                            configuration_values.append({
+                                'name': value.config_name.name,
+                                'value': value.config_value
+                            })
+
+                # create object to populate the "assembly_part" list
                 item_obj = {
                     'assembly_part_id': inv.assembly_part_id,
                     'inventory_id': inv.inventory_id,
+                    'inventory_serial_number': inv.inventory.serial_number,
                     'part_name': inv.inventory.part.name,
-                    'parent_assembly_part_id': inv.assembly_part.parent_id if inv.assembly_part else None
+                    'parent_assembly_part_id': inv.assembly_part.parent_id if inv.assembly_part else None,
+                    'configuration_values': configuration_values,
                 }
                 assembly_parts.append(item_obj)
 
