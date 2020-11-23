@@ -88,19 +88,28 @@ var password;
 
 	 // Delete Technician & Inventory Role Users
         await driver.findElement(By.linkText("Users")).click()
-        await driver.findElement(By.linkText("inv")).click()
-        await driver.findElement(By.linkText("Delete")).click()
-        await driver.findElement(By.css(".btn-danger")).click()
-        if ((await driver.findElements(By.linkText("inv"))).length != 0) {
-            throw new Error("Failed to delete inv user.");
-        }
 
-        await driver.findElement(By.linkText("tech")).click()
-        await driver.findElement(By.linkText("Delete")).click()
-        await driver.findElement(By.css(".btn-danger")).click()
-        if ((await driver.findElements(By.linkText("tech"))).length != 0) {
-            throw new Error("Failed to delete tech user.");
+        if ((await driver.findElements(By.linkText("inv"))).length != 0) {
+           await driver.findElement(By.linkText("inv")).click()
+           await driver.findElement(By.linkText("Delete")).click()
+           await driver.findElement(By.css(".btn-danger")).click()
+           if ((await driver.findElements(By.linkText("inv"))).length != 0) {
+               throw new Error("Failed to delete inv user.");
+           }
         }
+	else
+	    console.log("Delete User failed: inv not found");
+
+        if ((await driver.findElements(By.linkText("tech"))).length != 0) {
+           await driver.findElement(By.linkText("tech")).click()
+           await driver.findElement(By.linkText("Delete")).click()
+           await driver.findElement(By.css(".btn-danger")).click()
+           if ((await driver.findElements(By.linkText("tech"))).length != 0) {
+               throw new Error("Failed to delete tech user.");
+           }
+        }
+	else
+	    console.log("Delete User failed: tech not found");
 
         // Close browser window
         driver.quit();

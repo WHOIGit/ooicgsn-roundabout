@@ -217,6 +217,7 @@ var password;
             // Space needed before Test
             await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
         }
+	await new Promise(r => setTimeout(r, 2000));
         // 8 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
@@ -244,7 +245,7 @@ await fs.writeFileSync('/tests/iscreen.png', encodedString, 'base64');
         // 11 | select | id=id_part | label=Pin Template
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await new Promise(r => setTimeout(r, 2000)); //New for 1.6 - This field blanked back out without timeout
+            await new Promise(r => setTimeout(r, 4000)); //New for 1.6 - This field blanked back out without timeout
             await dropdown.findElement(By.xpath("//option[. = 'Pin Template']")).click();
         }
         // 12 | select | id=id_location | label=Test
@@ -254,6 +255,8 @@ await fs.writeFileSync('/tests/iscreen.png', encodedString, 'base64');
             // Space needed before Test
             await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
         }
+encodedString = await driver.takeScreenshot();
+await fs.writeFileSync('/tests/iscreen1.png', encodedString, 'base64');    
         // 13 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 	await new Promise(r => setTimeout(r, 8000));

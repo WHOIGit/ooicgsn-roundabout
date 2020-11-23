@@ -341,18 +341,18 @@ var password;
 	}
         await driver.findElement(By.linkText("Create Calibrations")).click();
 
-	await new Promise(r => setTimeout(r, 4000)); // a wait for field present on screen causes fields not set, use timeout.
+	await new Promise(r => setTimeout(r, 6000)); // a wait for field present on screen causes fields not set, use timeout.
 
 	// This screen is so tweeky! Works 2/3 times. Add some waits.
         {
             const dropdown = await driver.findElement(By.id("id_part_select"));
             await dropdown.findElement(By.xpath("//option[. = 'Sewing Template']")).click();
         }
-	await new Promise(r => setTimeout(r, 2000));
+	await new Promise(r => setTimeout(r, 4000));
         
 //        await driver.findElement(By.id("id_user_draft")).sendKeys("admin");
 	await driver.findElement(By.id("id_user_draft")).sendKeys(user);
-	await new Promise(r => setTimeout(r, 2000));
+	await new Promise(r => setTimeout(r, 4000));
 
 	await driver.findElement(By.css(".controls > .btn-primary")).click();
 
@@ -363,6 +363,9 @@ var password;
 	}
         await driver.findElement(By.linkText("Calibrations")).click()
         await new Promise(r => setTimeout(r, 4000));
+
+let encodedString = await driver.takeScreenshot();
+await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');    
         // Verify values added in the History
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
         assert(bodyText.includes("scalib1"));

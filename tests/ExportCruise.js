@@ -117,6 +117,8 @@ var password;
         await driver.findElement(By.id("id_max_speed")).sendKeys("99.9")
         await driver.findElement(By.id("id_max_draft")).sendKeys(".1")
         await driver.findElement(By.id("id_designation")).sendKeys("5")
+        await driver.findElement(By.id("id_active")).sendKeys("Yes")
+        await driver.findElement(By.id("id_R2R")).sendKeys("Yes")
         await driver.findElement(By.id("id_notes")).sendKeys("Deep water vessel.")
         await driver.findElement(By.css(".btn-primary")).click()
 
