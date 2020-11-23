@@ -331,7 +331,7 @@ def parse_vessel_files(self):
 
 @shared_task(bind=True)
 def parse_deployment_files(self):
-    csv_files = cache.get('csv_files')
+    csv_files = cache.get('dep_files')
     for csv_file in csv_files:
         print(csv_file)
         csv_file.seek(0)
@@ -354,4 +354,4 @@ def parse_deployment_files(self):
         print(deployments[0])
         for row in deployments[0]['rows']:
             print(row)
-    cache.delete('csv_files')
+    cache.delete('dep_files')
