@@ -24,7 +24,7 @@ django-cors-headers==3.5.0
 coreapi==2.3.3  # https://github.com/core-api/python-client
 django-filter==2.4.0
 djangorestframework-link-header-pagination==0.1.1
-drf-flex-fields==0.8.6
+drf-flex-fields==0.8.8
 
 # Your custom requirements go here
 django-mptt==0.11.0

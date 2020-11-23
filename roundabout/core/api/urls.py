@@ -25,7 +25,7 @@ from rest_framework.routers import DefaultRouter
 
 from roundabout.assemblies.api.views import AssemblyViewSet, AssemblyRevisionViewSet, AssemblyPartViewSet, \
     AssemblyTypeViewSet
-from roundabout.builds.api.views import BuildViewSet, DeploymentViewSet
+from roundabout.builds.api.views import BuildViewSet, DeploymentViewSet, DeploymentOmsCustomViewSet
 from roundabout.calibrations.api.views import *
 from roundabout.configs_constants.api.views import *
 from roundabout.cruises.api.views import CruiseViewSet, VesselViewSet
@@ -42,6 +42,7 @@ router.register(r'inventory-deployments', InventoryDeploymentViewSet, 'inventory
 
 router.register(r'builds', BuildViewSet, 'builds' )
 router.register(r'deployments', DeploymentViewSet, 'deployments' )
+router.register(r'oms-builds', DeploymentOmsCustomViewSet, 'oms-builds' )
 router.register(r'cruises', CruiseViewSet, 'cruises' )
 router.register(r'vessels', VesselViewSet, 'vessels' )
 

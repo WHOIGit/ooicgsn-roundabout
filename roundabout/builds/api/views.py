@@ -23,7 +23,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from roundabout.core.api.views import FlexModelViewSet
 from .filters import *
-from .serializers import BuildSerializer, DeploymentSerializer
+from .serializers import BuildSerializer, DeploymentSerializer, DeploymentOmsCustomSerializer
 
 
 class BuildViewSet(FlexModelViewSet):
@@ -38,3 +38,10 @@ class DeploymentViewSet(FlexModelViewSet):
     serializer_class = DeploymentSerializer
     permission_classes = (IsAuthenticated,)
     filterset_class = DeploymentFilter
+
+
+class DeploymentOmsCustomViewSet(FlexModelViewSet):
+    queryset = Deployment.objects.all()
+    serializer_class = DeploymentOmsCustomSerializer
+    permission_classes = (IsAuthenticated,)
+    filterset_class = DeploymentOmsCustomFilter

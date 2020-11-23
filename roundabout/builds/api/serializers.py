@@ -179,3 +179,22 @@ class DeploymentSerializer(FlexFieldsModelSerializer):
 
     def get_time_in_field(self, obj):
         return time_at_sea_display(obj.deployment_time_in_field)
+
+
+class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
+    deployment_id = serializers.IntegerField(source='id')
+    build_id = serializers.SerializerMethodField('get_build_id')
+
+    class Meta:
+        model = Deployment
+        fields = [
+            'deployment_id',
+            'build_id',
+            'deployment_number',
+            'current_status',
+        ]
+
+    def get_build_id(self, obj):
+        if obj.build:
+            return obj.build.id
+        return None

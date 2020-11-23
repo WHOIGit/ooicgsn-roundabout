@@ -96,3 +96,14 @@ class DeploymentFilter(filters.FilterSet):
 
             # alternatively, you could opt to hardcode the lookup. e.g.,
             # return queryset.filter(published_on__isnull=False)
+
+
+class DeploymentOmsCustomFilter(filters.FilterSet):
+    deployment_number = filters.CharFilter(lookup_expr='icontains')
+    build_number = filters.CharFilter(field_name='build__build_number', lookup_expr='icontains')
+    class Meta:
+        model = Deployment
+        fields = [
+            'deployment_number',
+            'build_number',
+        ]
