@@ -4,58 +4,28 @@ set -e
 
 # Runs all Roundabout Selenium Webdriver automated tests in linux Docker container to build up the test database.
 
-val=$(node AddEditLocations.js chrome headless admin)
-echo $val 
-if [[ "$val" == *"failed."* ]]; then
-  exit 1
-fi
+node AddEditLocations.js chrome headless admin
 
-val=$(node AddEditParts.js chrome headless admin )
-echo $val
-if [[ "$val" == *"failed."* ]]; then
-  exit 1
-fi
+node AddEditParts.js chrome headless admin 
 
-val=$(node AddEditAssemblies.js chrome headless admin )
-echo $val
-if [[ "$val" == *"failed."* ]]; then
-  exit 1
-fi
+node AddEditAssemblies.js chrome headless admin 
 
-val=$(node AddEditInventory.js chrome headless admin )
-echo $val
-if [[ "$val" == *"failed."* ]]; then
-  exit 1
-fi
+node AddEditInventory.js chrome headless admin
 
-val=$(node ImportExportInventory.js chrome headless admin )
-echo $val
-if [[ "$val" == *"failed."* ]]; then
-  exit 1
-fi
+node ImportExportInventory.js chrome headless admin
 
-val=$(node ExportCustomFields.js chrome headless admin )
-echo $val
-if [[ "$val" == *"failed."* ]]; then
-  exit 1
-fi
+node ExportCustomFields.js chrome headless admin
 
-val=$(node AddBuilds.js chrome headless admin )
-echo $val
-if [[ "$val" == *"failed."* ]]; then
-  exit 1
-fi
+node ExportCruise.js chrome headless admin
 
-val=$(node ConstantsConfigs.js chrome headless admin )
-echo $val
-if [[ "$val" == *"failed."* ]]; then
-  exit 1
-fi
+node AddBuilds.js chrome headless admin 
 
-val=$(node CalibrationsCoefs.js chrome headless admin )
-echo $val
-if [[ "$val" == *"failed."* ]]; then
-  exit 1
-fi
+node ConstantsConfigs.js chrome headless admin
+
+node CalibrationsCoefs.js chrome headless admin
+
+node UploadCsv.js chrome headless admin
+
+node AdminUser.js chrome headless admin
 
 exit 0

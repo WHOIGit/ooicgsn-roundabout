@@ -217,7 +217,11 @@ async function fixDayAbbr(day)
         }
         // 15 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
-	await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.css("#div_id_assembly .ajax-error"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for New Build Assembly Ajax Error.");
+	}
 
         // 16 | verifyText | css=.ajax-error | This field is required.
         assert(await driver.findElement(By.css("#div_id_assembly .ajax-error")).getText() == "This field is required.");
@@ -372,8 +376,8 @@ async function fixDayAbbr(day)
 	}
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
         // UNCOMMENT FOR DOCKER - history shows 27 days due to staging testing
-        assert(bodyText.includes("Total Time in Field: 2 days 0 hours"));        
-        assert(bodyText.includes("Current Deployment Time in Field: 2 days 0 hours"));
+	// Total Time in Field and Current Deployment Time in Field
+        assert(bodyText.includes("2 days 0 hours"));        
 
         // Click Deployments Tab and verify Deployment To Field Date: is 2 days prior 
         // 31 | click | id=deployments-tab |
@@ -564,8 +568,10 @@ async function fixDayAbbr(day)
 	//await fs.writeFileSync('/tests/bscreen.png', encodedString, 'base64');      
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
         // UNCOMMENT FOR DOCKER - history shows 27 days due to staging testing
-        assert(bodyText.includes("Total Time in Field: 1 days 0 hours"));        
-        assert(bodyText.includes("Current Deployment Time in Field: 0 days 0 hours"));
+	// Total Time in Field
+        assert(bodyText.includes("1 days 0 hours"));
+	// Current Deployment Time in Field
+        assert(bodyText.includes("0 days 0 hours"));
 
         // 53 | click | id=deployments-tab | 
 	while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //1.6

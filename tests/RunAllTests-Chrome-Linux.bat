@@ -41,6 +41,12 @@ if [[ "$val" == *"failed."* ]]; then
   exit 1
 fi
 
+val=$(node ExportCruise.js chrome headless admin)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
 val=$(node AddBuilds.js chrome headless admin)
 echo $val
 if [[ "$val" == *"failed."* ]]; then
@@ -59,7 +65,25 @@ if [[ "$val" == *"failed."* ]]; then
   exit 1
 fi
 
+val=$(node UploadCsv.js chrome headless admin )
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node AdminUser.js chrome headless admin )
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
 val=$(node RetireBuilds.js chrome headless admin)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node DeleteCruise.js chrome headless admin)
 echo $val
 if [[ "$val" == *"failed."* ]]; then
   exit 1
@@ -78,6 +102,12 @@ if [[ "$val" == *"failed."* ]]; then
 fi
 
 val=$(node DeleteLocations.js chrome headless admin)
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node DeleteUser.js chrome headless admin)
 echo $val
 if [[ "$val" == *"failed."* ]]; then
   exit 1
