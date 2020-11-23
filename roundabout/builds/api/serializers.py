@@ -233,10 +233,10 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
                 # create object to populate the "assembly_part" list
                 item_obj = {
                     'assembly_part_id': inv.assembly_part_id,
-                    'inventory_id': inv.inventory_id,
-                    'inventory_serial_number': inv.inventory.serial_number,
                     'part_name': inv.inventory.part.name,
                     'parent_assembly_part_id': inv.assembly_part.parent_id if inv.assembly_part else None,
+                    'inventory_id': inv.inventory_id,
+                    'inventory_serial_number': inv.inventory.serial_number,
                     'configuration_values': configuration_values,
                 }
                 assembly_parts.append(item_obj)
