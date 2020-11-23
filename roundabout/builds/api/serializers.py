@@ -184,17 +184,49 @@ class DeploymentSerializer(FlexFieldsModelSerializer):
 class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
     deployment_id = serializers.IntegerField(source='id')
     build_id = serializers.SerializerMethodField('get_build_id')
+    build_number = serializers.SerializerMethodField('get_build_number')
+    assembly_parts = serializers.SerializerMethodField('get_assembly_parts')
 
     class Meta:
         model = Deployment
         fields = [
+            'build_id',
+            'build_number',
             'deployment_id',
             'build_id',
             'deployment_number',
             'current_status',
+            'assembly_parts',
         ]
 
     def get_build_id(self, obj):
         if obj.build:
             return obj.build.id
         return None
+
+    def get_build_number(self, obj):
+        if obj.build:
+            return obj.build.build_number
+        return None
+
+    def get_assembly_parts(self, obj):
+        try:
+            # Use the InventoryDeployment related model to get historical list of Inventory items
+            # on each Deployment
+            inventory_dep_qs = obj.inventory_deployments.all()
+            assembly_parts = list()
+
+            for inv in inventory_dep_qs:
+                item_obj = {
+                    'assembly_part_id': inv.assembly_part_id,
+                    'inventory_id': inv.inventory_id,
+                    'part_name': inv.inventory.part.name,
+                    'parent_assembly_part_id': inv.assembly_part.parent_id if inv.assembly_part else None
+                }
+                assembly_parts.append(item_obj)
+
+            return assembly_parts
+
+        except Exception as e:
+            print(e)
+            return None
