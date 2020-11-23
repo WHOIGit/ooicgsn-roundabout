@@ -207,7 +207,7 @@ var password;
         // 6 | select | id=id_part | label=Wheel Template
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await new Promise(r => setTimeout(r, 2000)); //New for 1.6 - This field blanked back out without timeout
+            await new Promise(r => setTimeout(r, 4000)); //New for 1.6 - This field blanked back out without timeout
             await dropdown.findElement(By.xpath("//option[. = 'Wheel Template']")).click();
         }
         // 7 | select | id=id_location | label=--- Lost
@@ -217,13 +217,17 @@ var password;
             // Space needed before Test
             await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
         }
+	await new Promise(r => setTimeout(r, 2000));
         // 8 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
+
+let encodedString = await driver.takeScreenshot();
+await fs.writeFileSync('/tests/iscreen.png', encodedString, 'base64');    
 
 	while ((await driver.findElements(By.id("action"))).length == 0) // Inventory tree takes awhile to load
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Inventory4.");
+	   console.log("Wait 2 seconds for Add Inventory5.");
 	}
 
         // 9 | click | linkText=Add Inventory | 
@@ -231,7 +235,7 @@ var password;
 	while ((await driver.findElements(By.id("id_part_type"))).length == 0) // Inventory tree takes awhile to load
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Inventory5.");
+	   console.log("Wait 2 seconds for Add Inventory6.");
 	}
         // 10 | select | id=id_part_type | label=-- Sewing Machine
         {
@@ -241,7 +245,7 @@ var password;
         // 11 | select | id=id_part | label=Pin Template
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await new Promise(r => setTimeout(r, 2000)); //New for 1.6 - This field blanked back out without timeout
+            await new Promise(r => setTimeout(r, 4000)); //New for 1.6 - This field blanked back out without timeout
             await dropdown.findElement(By.xpath("//option[. = 'Pin Template']")).click();
         }
         // 12 | select | id=id_location | label=Test
@@ -251,6 +255,8 @@ var password;
             // Space needed before Test
             await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
         }
+encodedString = await driver.takeScreenshot();
+await fs.writeFileSync('/tests/iscreen1.png', encodedString, 'base64');    
         // 13 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 	await new Promise(r => setTimeout(r, 8000));
@@ -296,8 +302,12 @@ var password;
         // 27 | click | linkText=Location Change | 
         await driver.findElement(By.linkText("Location Change")).click();
         // 28 | select | id=id_location | label=---------
+	while ((await driver.findElements(By.id("id_location"))).length == 0) 
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Location.");
+	}
         {
-            await new Promise(r => setTimeout(r, 2000));
             const dropdown = await driver.findElement(By.id("id_location"));
             await dropdown.findElement(By.xpath("//option[. = '---------']")).click();
         }
@@ -470,7 +480,6 @@ var password;
         await new Promise(r => setTimeout(r, 2000));
         // 57 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-
 	while ((await driver.findElements(By.id("action"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
