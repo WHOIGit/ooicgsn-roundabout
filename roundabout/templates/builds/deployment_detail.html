@@ -53,6 +53,7 @@
                     </div>
                 </td>
             </tr>
+            {% if deployment.deployed_location %}
             <tr>
                 <th>{{ label_deployments_app_singular }} Location</th>
                 <td>
@@ -62,6 +63,7 @@
                     </a>
                 </td>
             </tr>
+            {% endif %}
             {% if deployment.deployment_to_field_date %}
             <tr>
                 <th>{{ label_deployments_app_singular }} to Field Date</th>

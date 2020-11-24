@@ -139,14 +139,21 @@ class AssemblyPartSerializer(FlexFieldsModelSerializer):
         queryset = Part.objects,
     )
     part_name = serializers.CharField(source='order')
+    config_default_events = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':configs-constants/config-default-events-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
 
     class Meta:
         model = AssemblyPart
-        fields = ['id', 'url', 'assembly_revision', 'part_name', 'part', 'parent', 'children', 'note', ]
+        fields = ['id', 'url', 'assembly_revision', 'part_name', 'part', 'parent', 'children', 'note', 'config_default_events' ]
 
         expandable_fields = {
             'part': PartSerializer,
             'assembly_revision': 'roundabout.assemblies.api.serializers.AssemblyRevisionSerializer',
             'parent': 'roundabout.assemblies.api.serializers.AssemblyPartSerializer',
-            'children': ('roundabout.assemblies.api.serializers.AssemblyPartSerializer', {'many': True})
+            'children': ('roundabout.assemblies.api.serializers.AssemblyPartSerializer', {'many': True}),
+            'config_default_events': ('roundabout.configs_constants.api.serializers.ConfigDefaultEventSerializer', {'many': True}),
         }
