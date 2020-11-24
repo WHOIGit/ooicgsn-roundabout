@@ -31,15 +31,15 @@ fi
 
 val=$(node ImportExportInventory.js chrome headless admin)
 echo $val
-#if [[ "$val" == *"failed."* ]]; then
-#  exit 1
-#fi
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
 
 val=$(node ExportCustomFields.js chrome headless admin)
 echo $val
-#if [[ "$val" == *"failed."* ]]; then
-#  exit 1
-#fi
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
 
 val=$(node ExportCruise.js chrome headless admin)
 echo $val
@@ -65,11 +65,11 @@ if [[ "$val" == *"failed."* ]]; then
   exit 1
 fi
 
-val=$(node UploadCsv.js chrome headless admin )
-echo $val
-if [[ "$val" == *"failed."* ]]; then
-  exit 1
-fi
+#val=$(node UploadCsv.js chrome headless admin )
+#echo $val
+#if [[ "$val" == *"failed."* ]]; then
+#  exit 1
+#fi
 
 val=$(node AdminUser.js chrome headless admin )
 echo $val
