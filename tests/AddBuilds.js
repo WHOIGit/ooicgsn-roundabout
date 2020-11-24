@@ -319,7 +319,7 @@ async function fixDayAbbr(day)
 	while ((await driver.findElements(By.linkText("Retire Build"))).length == 0) //1.6
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Deploy2.");
+	   console.log("Wait 2 seconds for Deploy3.");
 	}
         // 18 | click | id=action | 
         await driver.findElement(By.id("action")).click();
@@ -339,7 +339,7 @@ async function fixDayAbbr(day)
 	while ((await driver.findElements(By.linkText("Retire Build"))).length == 0) //1.6
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Deploy2.");
+	   console.log("Wait 2 seconds for Deploy4.");
 	}
         await driver.findElement(By.id("action")).click();
         await driver.findElement(By.linkText("Deploy to Field")).click();
@@ -399,7 +399,8 @@ async function fixDayAbbr(day)
         await new Promise(r => setTimeout(r, 2000));
         // Verify Deployment Times in the Deployments Tab
         bodyText = await driver.findElement(By.tagName("Body")).getText();
-        assert(bodyText.includes("Deployment Time in Field: 2 days 0 hours"));
+	// Deployment Time in Field
+        assert(bodyText.includes("2 days 0 hours"));
 
         var date = new Date(newDate);
         var fullDate = date.toDateString();
@@ -410,7 +411,7 @@ async function fixDayAbbr(day)
 	day = await fixDayAbbr(rdbDate[2]);
         rdbDate = month + " " + day + ", " + rdbDate[3] + ",";
 	try {
-	   assert(bodyText.includes("Deployment To Field Date: " + rdbDate));
+	   assert(bodyText.includes(rdbDate));
 	}
 	catch (AssertionError) {
            console.log("Assertion Error: Deployment To Field Date is  "+rdbDate);
@@ -463,14 +464,15 @@ async function fixDayAbbr(day)
         await driver.findElement(By.css(".list-group-item > .collapsed > .fa")).click(); 
         await new Promise(r => setTimeout(r, 2000));
         bodyText = await driver.findElement(By.tagName("Body")).getText();
-        assert(bodyText.includes("Inventory Time in Field: 2 days 0 hours"));    
+	// Inventory Time in Field
+        assert(bodyText.includes("2 days 0 hours"));    
         var rdbDate = fullDate.split(" ");
 
         month = await fixMonthAbbr(rdbDate[1]);
 	day = await fixDayAbbr(rdbDate[2]);
         rdbDate = month + " " + day + ", " + rdbDate[3] + ",";
 	try {
-           assert(bodyText.includes("Deployment To Field Date: " + rdbDate));
+           assert(bodyText.includes(rdbDate));
         }
 	catch (AssertionError) {
            console.log("Assertion Error: Deployment To Field Date:  is  "+rdbDate);
@@ -518,7 +520,8 @@ async function fixDayAbbr(day)
         await driver.findElement(By.css(".list-group-item > .collapsed > .fa")).click();
         await new Promise(r => setTimeout(r, 2000));
         bodyText = await driver.findElement(By.tagName("Body")).getText();
-        assert(bodyText.includes("Inventory Time in Field: 1 days 0 hours"));
+	// Inventory Time in Field
+        assert(bodyText.includes("1 days 0 hours"));
 
         var date = new Date(newDate);
         var fullDate = date.toDateString();
@@ -528,7 +531,7 @@ async function fixDayAbbr(day)
 	var day = await fixDayAbbr(rdbDate[2]);
         rdbDate = month + " " + day + ", " + rdbDate[3] + ",";
 	try {
-           assert(bodyText.includes("Deployment Recovery Date: " + rdbDate));
+           assert(bodyText.includes(rdbDate));
 	}
 	catch (AssertionError) {
            console.log("Assertion Error: Deployment Recovery Date is  "+rdbDate);
@@ -571,7 +574,7 @@ async function fixDayAbbr(day)
 	// Total Time in Field
         assert(bodyText.includes("1 days 0 hours"));
 	// Current Deployment Time in Field
-        assert(bodyText.includes("0 days 0 hours"));
+       assert(bodyText.includes("0 days 0 hours"));
 
         // 53 | click | id=deployments-tab | 
 	while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //1.6
@@ -588,16 +591,12 @@ async function fixDayAbbr(day)
 
         await new Promise(r => setTimeout(r, 2000));
         bodyText = await driver.findElement(By.tagName("Body")).getText();
-        assert(bodyText.includes("Inventory Time in Field: 0 days 0 hours"));
+	// Inventory Time in Field
+        assert(bodyText.includes("0 days 0 hours"));
 
         var date = new Date(dateString);
-        var fullDate = date.toDateString();
-        var rdbDate = fullDate.split(" ");
-
-        month = await fixMonthAbbr(rdbDate[1]);
-	var day = await fixDayAbbr(rdbDate[2]);
-        var string = month + " " + day + ", " + rdbDate[3] + ",";
-        assert(bodyText.includes("Deployment To Field Date: " + string));
+	// Deployment to Field Date
+        assert(bodyText.includes(dateString));
 
         // Close browser window
         driver.quit();
