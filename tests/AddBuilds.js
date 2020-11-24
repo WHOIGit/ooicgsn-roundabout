@@ -403,18 +403,11 @@ async function fixDayAbbr(day)
         assert(bodyText.includes("2 days 0 hours"));
 
         var date = new Date(newDate);
-        var fullDate = date.toDateString();
-        var rdbDate = fullDate.split(" ");
-
-        //FIX date Sep -> Sept. & other months
-        var month = await fixMonthAbbr(rdbDate[1]);
-	day = await fixDayAbbr(rdbDate[2]);
-        rdbDate = month + " " + day + ", " + rdbDate[3] + ",";
 	try {
-	   assert(bodyText.includes(rdbDate));
+	   assert(bodyText.includes(newDate));
 	}
 	catch (AssertionError) {
-           console.log("Assertion Error: Deployment To Field Date is  "+rdbDate);
+           console.log("Assertion Error: Deployment To Field Date is  "+ newDate);
         }
 
 
@@ -465,17 +458,13 @@ async function fixDayAbbr(day)
         await new Promise(r => setTimeout(r, 2000));
         bodyText = await driver.findElement(By.tagName("Body")).getText();
 	// Inventory Time in Field
-        assert(bodyText.includes("2 days 0 hours"));    
-        var rdbDate = fullDate.split(" ");
-
-        month = await fixMonthAbbr(rdbDate[1]);
-	day = await fixDayAbbr(rdbDate[2]);
-        rdbDate = month + " " + day + ", " + rdbDate[3] + ",";
+        assert(bodyText.includes("2 days 0 hours"));
+    
 	try {
-           assert(bodyText.includes(rdbDate));
+           assert(bodyText.includes(newDate));
         }
 	catch (AssertionError) {
-           console.log("Assertion Error: Deployment To Field Date:  is  "+rdbDate);
+           console.log("Assertion Error: Deployment To Field Date:  is  "+ newDate);
         }
         
         // Remove sewing Inventory from Build
@@ -523,18 +512,11 @@ async function fixDayAbbr(day)
 	// Inventory Time in Field
         assert(bodyText.includes("1 days 0 hours"));
 
-        var date = new Date(newDate);
-        var fullDate = date.toDateString();
-        var rdbDate = fullDate.split(" ");
-
-        month = await fixMonthAbbr(rdbDate[1]);
-	var day = await fixDayAbbr(rdbDate[2]);
-        rdbDate = month + " " + day + ", " + rdbDate[3] + ",";
 	try {
-           assert(bodyText.includes(rdbDate));
+           assert(bodyText.includes(newDate));
 	}
 	catch (AssertionError) {
-           console.log("Assertion Error: Deployment Recovery Date is  "+rdbDate);
+           console.log("Assertion Error: Deployment Recovery Date is  "+ newDate);
         }
 
         // Re-add sewing Inventory to Build at the current date
@@ -594,7 +576,6 @@ async function fixDayAbbr(day)
 	// Inventory Time in Field
         assert(bodyText.includes("0 days 0 hours"));
 
-        var date = new Date(dateString);
 	// Deployment to Field Date
         assert(bodyText.includes(dateString));
 
