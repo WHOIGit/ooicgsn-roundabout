@@ -20,23 +20,16 @@
 """
 
 
-import datetime
-from types import SimpleNamespace
-
 import csv
+import datetime
 import io
 import re
 from decimal import Decimal
-
-from dateutil import parser
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.cache import cache
-from django.http import JsonResponse
-from django.shortcuts import render, redirect
-from django.urls import reverse
-from django.views.generic import TemplateView, FormView
+from types import SimpleNamespace
 
 from celery import shared_task
+from dateutil import parser
+from django.core.cache import cache
 
 from roundabout.calibrations.forms import parse_valid_coeff_vals
 from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
@@ -303,30 +296,30 @@ def parse_vessel_files(self):
                 else:
                     R2R = False
 
-                # update or create Vessel object based on vessel_name field
-                vessel_obj, created = Vessel.objects.update_or_create(
-                    vessel_name = vessel_name,
-                    defaults = {
-                        'prefix': row['Prefix'],
-                        'vessel_designation': row['Vessel Designation'],
-                        'ICES_code': row['ICES Code'],
-                        'operator': row['Operator'],
-                        'call_sign': row['Call Sign'],
-                        'MMSI_number': MMSI_number,
-                        'IMO_number': IMO_number,
-                        'length': length,
-                        'max_speed': max_speed,
-                        'max_draft': max_draft,
-                        'designation': row['Designation'],
-                        'active': active,
-                        'R2R': R2R,
-                    },
-                )
+            # update or create Vessel object based on vessel_name field
+            vessel_obj, created = Vessel.objects.update_or_create(
+                vessel_name = vessel_name,
+                defaults = {
+                    'prefix': row['Prefix'],
+                    'vessel_designation': row['Vessel Designation'],
+                    'ICES_code': row['ICES Code'],
+                    'operator': row['Operator'],
+                    'call_sign': row['Call Sign'],
+                    'MMSI_number': MMSI_number,
+                    'IMO_number': IMO_number,
+                    'length': length,
+                    'max_speed': max_speed,
+                    'max_draft': max_draft,
+                    'designation': row['Designation'],
+                    'active': active,
+                    'R2R': R2R,
+                },
+            )
 
-                if created:
-                    vessels_created.append(vessel_obj)
-                else:
-                    vessels_updated.append(vessel_obj)
+            if created:
+                vessels_created.append(vessel_obj)
+            else:
+                vessels_updated.append(vessel_obj)
     cache.delete('vessels_files')
 
 @shared_task(bind=True)
