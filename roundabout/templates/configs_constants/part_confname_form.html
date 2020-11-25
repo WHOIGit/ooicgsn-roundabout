@@ -29,15 +29,32 @@
 
         let formRows = $('.dynamic-form');
         formRows.each(function() {
-            row = $(this);
+            let row = $(this);
             let removeButtons = row.find('.delete-row');
             let deprecated = row.find("[id$='deprecated']").attr('checked');
             if (deprecated == 'checked') {
                 removeButtons.remove();
             } 
+            if (removeButtons.length > 1) {
+                removeButtons.map((idx, button) => {
+                    if (idx != 0) {
+                        button.remove()
+                    }
+                })
+            }
         });
 
-        $('.delete-row').on('click',function() {
+        let formAddRows = $('.dynamic-form-add');
+        if (formAddRows.length > 1) {
+            formAddRows.map((idx, button) => {
+                if (idx != 0) {
+                    button.remove()
+                }
+            })
+        }
+
+        $('.delete-row').on('click',function(e) {
+            e.preventDefault()
             alert('Warning: deleting Names will delete all downstream Defaults and Events');
         });
     });
