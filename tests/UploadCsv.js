@@ -84,6 +84,13 @@ var filename;
         await driver.findElement(By.css(".primaryAction")).click();
 
         // UPLOAD CSV TEST
+        var fs = require('fs');
+        const jsdom = require("jsdom");
+        const { JSDOM } = jsdom;
+        const { window } = new JSDOM(`...`);
+        var $ = require('jquery')(window);
+        $.csv = require('jquery-csv');
+        var data;
 
 	    // Import Cruise CSV
         await driver.findElement(By.id("navbarAdmintools")).click()
@@ -118,14 +125,6 @@ var filename;
         await driver.findElement(By.linkText("Export Cruises")).click()
 
         // Access Downloaded Cruise file
-        var fs = require('fs');
-        const jsdom = require("jsdom");
-        const { JSDOM } = jsdom;
-        const { window } = new JSDOM(`...`);
-        var $ = require('jquery')(window);
-        $.csv = require('jquery-csv');
-        var data;
-
         if (myArgs[1] == 'headless') {
             // Docker/Circleci puts file in the current dir
             var rdb_cruise = process.cwd() + "//CruiseInformation.csv";
@@ -169,7 +168,6 @@ var filename;
             }
 
         }
-
 
         // Import Vessel CSV
         // My file has been modified from the asset mgmt. file - fix mara s. marian invalid char in mmsi field
@@ -250,6 +248,34 @@ var filename;
         }
 
         // Upload Calibration CSV
+
+
+	// Set Manufacturer Serial Number in the Pin Inventory needed for UploadCsv test
+   /*     await driver.findElement(By.id("searchbar-query")).sendKeys("Pin Template");
+        // 8 | select | id=searchbar-modelselect | label=Part Templates
+        {
+            const dropdown = await driver.findElement(By.id("searchbar-modelselect"))
+            await dropdown.findElement(By.xpath("//option[. = 'Inventory']")).click()
+        }
+        await driver.findElement(By.css(".btn:nth-child(1)")).click()
+	while ((await driver.findElements(By.css(".even a"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Search1.");
+	}
+        await driver.findElement(By.css(".even a")).click();
+	while ((await driver.findElements(By.id("action"))).length == 0) 
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Search2.");
+	}
+        await driver.findElement(By.id("action")).click();
+	await new Promise(r => setTimeout(r, 4000));
+        await driver.findElement(By.linkText("Edit Inventory Details")).click();
+	await driver.findElement(By.id("id_udffield_2")).sendKeys("20004");
+	await driver.findElement(By.css(".controls > .btn-primary")).click(); */
+
+        // Upload Calibration CSV
         await driver.findElement(By.id("navbarAdmintools")).click()
         await driver.findElement(By.linkText("Upload GitHub CSVs")).click()
         if (myArgs[1] == 'headless') {
@@ -287,6 +313,7 @@ var filename;
             var rdb_calib = process.cwd() + "//CalibrationEvents.zip"
             var rdb_path = process.cwd();
             var rdb_unzip = process.cwd() + "//3604-00131-00001-20004__20160510.csv"
+            var rdb_ext = process.cwd() + "//3604-00131-00001-20004__20160510__scalib2.ext"
         }
         else {
             // Windows command line puts file in the User's default Downloads dir
@@ -296,6 +323,7 @@ var filename;
             var rdb_calib = "C:\\Users\\" + username + "\\Downloads\\CalibrationEvents.zip";
             var rdb_path = "C:\\Users\\" + username + "\\Downloads";
             var rdb_unzip = "C:\\Users\\" + username + "\\Downloads\\3604-00131-00001-20004__20160510.csv";
+            var rdb_ext = "C:\\Users\\" + username + "\\Downloads\\3604-00131-00001-20004__20160510__scalib2.ext"
         }
 
         while (!fs.existsSync(rdb_calib)) // wait for file download
@@ -305,7 +333,6 @@ var filename;
         }
 
         // Unzip file
-        // const zlib = require('zlib');
         const unzipper = require('unzipper')
 
         // await and promise required to work
@@ -315,9 +342,32 @@ var filename;
         var upload = fs.readFileSync(filename, 'utf8');
         var exported = fs.readFileSync(rdb_unzip, 'utf8');
 
-        if (!exported.includes(upload)) {
-            console.log("Exported Calibration does not match imported.")
+        // First imported value is type single, second imported value is type 2D array - read it's value from referenced .ext file
+        var uploaded_data = $.csv.toArrays(upload);
+        var exported_data = $.csv.toArrays(exported);
+
+        var single_str = uploaded_data[1];
+        for (var j = 0, lth = single_str.length; j < lth; j++) {
+            if (!(exported.includes(single_str[j]))) {
+                console.log("Calibration Export Missing: " + single_str + " at index:  " + j + "  " + single_str[j]);
+                break;
+            }
         }
+
+        if (uploaded_data[2][0] != exported_data[2][0])
+            console.log("Calibration Export Missing: Serial Number " + uploaded_data[2]);
+        if (uploaded_data[2][1] != exported_data[2][1])
+            console.log("Calibration Export Missing: Name " + uploaded_data[2]);
+        if (uploaded_data[2][3] != exported_data[2][3])
+            console.log("Calibration Export Missing: Notes " + uploaded_data[2]);
+        if (exported_data[2][2] != "SheetRef:scalib2")
+            console.log("Calibration Export Missing: 2 Dimensional Array Ext File Reference " + exported_data[2][2]);
+
+        // Open and read the Ext file
+        var ext_data = fs.readFileSync(rdb_ext, 'utf8');
+        if (!ext_data.includes(uploaded_data[2][2]))
+            console.log("Calibration Export Missing: 2 Dimensional Array Value");
+
 
         // Upload Deployment CSV
         
