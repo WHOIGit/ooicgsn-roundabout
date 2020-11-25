@@ -87,7 +87,7 @@ var password;
 
         // IMPORT INVENTORY TEST
 
-        // Create a Custom Field
+        // Create a Custom Field "Condition", used for Bulk Upload Inventory
         // 10 | click | id=navbarAdminTools |
         await driver.findElement(By.id("navbarAdmintools")).click();
          // 4 | click | linkText=Custom Fields | 
@@ -104,21 +104,15 @@ var password;
 	   console.log("Wait 2 seconds for Add Custom Field1.");
 	}
         await driver.findElement(By.id("id_field_name")).click();
-        // 7 | type | id=id_field_name | Condition
         await driver.findElement(By.id("id_field_name")).sendKeys("Condition");
-        // 8 | click | id=id_field_description | 
         await driver.findElement(By.id("id_field_description")).click();
-        // 9 | type | id=id_field_description | Inventory Condition
         await driver.findElement(By.id("id_field_description")).sendKeys("Inventory Condition");
-        // 10 | click | id=id_field_type | 
         await driver.findElement(By.id("id_field_type")).click();
         // 11 | select | id=id_field_type | label=Dropdown Field
          {
             const dropdown = await driver.findElement(By.id("id_field_type"));
             await dropdown.findElement(By.xpath("//option[. = 'Dropdown Field']")).click();
          }
-
-        // 13 | click | id=id_choice_field_options | 
         await driver.findElement(By.id("id_choice_field_options")).click();
         // 14 | type | id=id_choice_field_options | New|New\nGood|Good\nFair|Fair\nJunk|Junk
         await driver.findElement(By.id("id_choice_field_options")).sendKeys("New|New\nGood|Good\nFair|Fair\nJunk|Junk");
@@ -128,6 +122,28 @@ var password;
         await driver.findElement(By.id("id_field_default_value")).sendKeys("Good");
         // 17 | click | id=id_global_for_part_types_6 | 
 //      await driver.findElement(By.id("id_global_for_part_types_6")).click();
+        // 18 | click | css=.btn-primary | 
+        await driver.findElement(By.css(".btn-primary")).click();
+
+        // Create a Custom Field "Manufacturer Serial Number", required for Upload Github Calibration Csv 
+        await driver.findElement(By.linkText("Add Custom Field")).click();
+	while ((await driver.findElements(By.id("id_field_name"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Custom Field1.");
+	}
+        await driver.findElement(By.id("id_field_name")).click();
+        await driver.findElement(By.id("id_field_name")).sendKeys("Manufacturer Serial Number");
+        await driver.findElement(By.id("id_field_description")).click();
+        await driver.findElement(By.id("id_field_description")).sendKeys("Required for Github Csv");
+        await driver.findElement(By.id("id_field_type")).click();
+         {
+            const dropdown = await driver.findElement(By.id("id_field_type"));
+            await dropdown.findElement(By.xpath("//option[. = 'Text Field']")).click();
+         }
+
+        await driver.findElement(By.id("id_field_default_value")).sendKeys("20004");
+      	await driver.findElement(By.id("id_global_for_part_types_6")).click();  //sewing machine 
         // 18 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
 

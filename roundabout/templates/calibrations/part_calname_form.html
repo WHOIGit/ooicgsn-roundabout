@@ -29,7 +29,7 @@
 
         let formRows = $('.dynamic-form');
         formRows.each(function() {
-            row = $(this);
+            let row = $(this);
             let removeButtons = row.find('.delete-row');
             let deprecated = row.find("[id$='deprecated']").attr('checked');
             if (deprecated == 'checked') {
@@ -53,7 +53,7 @@
             })
         }
 
-        $('.delete-row').on('click',function() {
+        $('.delete-row').on('click',function(e) {
             alert('Warning: deleting Names will delete all downstream Defaults and Events');
         });
     });

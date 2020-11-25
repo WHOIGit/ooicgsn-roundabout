@@ -102,46 +102,46 @@ var password;
         await driver.findElement(By.linkText("Edit Vessel List")).click()
         await new Promise(r => setTimeout(r, 2000));
 
-        // Get the row Maui Princess is in
-        if ((await driver.findElements(By.xpath("//tr[*]/td[3][text()='Maui Princess']"))).length != 0) {
-            var i = 1;
-            while (true) {
-                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td[3]")).getText()) == "Maui Princess") {
-                    break;
-                }
-                i++;
+        // Delete all Vessels
+        while ((await driver.findElements(By.css("tr:nth-child(" + 1 + ") .btn-danger"))).length != 0) {
+            await driver.findElement(By.css("tr:nth-child(" + 1 + ") .btn-danger")).click();
+            while ((await driver.findElements(By.css(".btn-danger"))).length == 0) {
+                await new Promise(r => setTimeout(r, 2000));
+                console.log("Wait 2 seconds for Confirm.");
             }
-            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
-            // 6 | click | css=.btn-danger | 
             await driver.findElement(By.css(".btn-danger")).click();
-        }
-        else
-            console.log("Delete Vessel failed: Maui Princess not found.");       
-
-        // Delete Cruise
-        while ((await driver.findElements(By.linkText("Cruises"))).length == 0) {
             await new Promise(r => setTimeout(r, 2000));
+        }
+ 
+	console.log("All Vessels Deleted.");
+
+        // Delete All Cruises
+        while ((await driver.findElements(By.linkText("Cruises"))).length == 0) {
+            await new Promise(r => setTimeout(r, 4000));
             console.log("Wait 2 seconds for Cruises.");
         }
         await driver.findElement(By.linkText("Cruises")).click()
 	await new Promise(r => setTimeout(r, 4000));
-        if ((await driver.findElements(By.linkText("MAUI"))).length != 0) {
-            
-           await driver.findElement(By.linkText("MAUI")).click();
-           while ((await driver.findElements(By.linkText("Delete"))).length == 0) {
-               await new Promise(r => setTimeout(r, 2000));
-               console.log("Wait 2 seconds for Delete Cruise.");
-           }
-           await driver.findElement(By.linkText("Delete")).click();
-           while ((await driver.findElements(By.css(".btn-danger"))).length == 0) {
-               await new Promise(r => setTimeout(r, 2000));
-               console.log("Wait 2 seconds for Confirm.");
-           }
-           await driver.findElement(By.css(".btn-danger")).click();
-  	}
-        else
-            console.log("Delete Cruise failed: Maui Cruise not found.");       
- 
+
+	// Circleci times out deleting all cruises, just delete one cruise
+//        while ((await driver.findElements(By.xpath("//li/ul/li/a"))).length != 0) {
+            await driver.findElement(By.xpath("//li/ul/li/a")).click();
+
+            while ((await driver.findElements(By.linkText("Delete"))).length == 0) {
+                await new Promise(r => setTimeout(r, 2000));
+                console.log("Wait 2 seconds for Delete Cruise.");
+            }
+            await driver.findElement(By.linkText("Delete")).click();
+
+            while ((await driver.findElements(By.css(".btn-danger"))).length == 0) {
+                await new Promise(r => setTimeout(r, 2000));
+                console.log("Wait 2 seconds for Confirm.");
+            }
+            await driver.findElement(By.css(".btn-danger")).click();
+            await new Promise(r => setTimeout(r, 4000));
+//        }
+
+	console.log("All Cruises Deleted.");
 
         // Close browser window
         driver.quit();
