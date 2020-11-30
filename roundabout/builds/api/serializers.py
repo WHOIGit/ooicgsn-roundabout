@@ -214,7 +214,7 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
         try:
             # Use the InventoryDeployment related model to get historical list of Inventory items
             # on each Deployment
-            inventory_dep_qs = obj.inventory_deployments.all()
+            inventory_dep_qs = obj.inventory_deployments.exclude(current_status=Deployment.DEPLOYMENTRETIRE)
             assembly_parts = []
 
             for inv in inventory_dep_qs:
