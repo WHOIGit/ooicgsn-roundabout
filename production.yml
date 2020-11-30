@@ -34,7 +34,7 @@ services:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
     image: roundabout_production_django
-    container_name: django
+    #container_name: django
     depends_on:
       - postgres
       - redis
@@ -93,8 +93,6 @@ services:
   flower:
     <<: *django
     image: roundabout_production_flower
-    ports:
-      - "5555:5555"
     command: /start-flower
 
   nginx:
