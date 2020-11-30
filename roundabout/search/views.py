@@ -99,6 +99,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
         queries = self.request.GET.getlist('q')
         negas = self.request.GET.getlist('n')
 
+        # the +['t'] corresponds to the t of "... for c,r,v,t in ..." below
         fields = [unquote(f).split('.',2)+['f'] for f in fields]
         lookups = [unquote(l).split('.',2)+['l'] for l in lookups]
         queries = [unquote(q).split('.',2)+['q'] for q in queries]
@@ -121,17 +122,24 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
                 query = [v for v,t in row_items if t=='q']
                 nega = [v for v,t in row_items if t=='n']
                 try:
-                    assert len(fields) >=1
-                    assert len(lookup)==1
-                    assert len(query)==1 and query[0]
+                    assert len(fields) >= 1
+                    assert len(lookup) == 1
+                    assert len(query) == 1
                     assert len(nega) <= 1
+                    lookup,query = lookup[0],query[0]
                 except AssertionError:
                     continue #skip
 
+                if lookup == 'isnull':
+                    query = True if query == 'True' else False
+
+                if query == '' and lookup not in ['exact','iexact']:
+                    continue #skip empty
+
                 row = dict( #row_id=row_id,
                     fields=fields,
-                    lookup=lookup[0],
-                    query=query[0],
+                    lookup=lookup,
+                    query=query,
                     nega=bool(nega),
                     multi=len(fields) > 1)
                 rows.append(row)
@@ -221,6 +229,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
 
                 Q_kwarg = {'id__in': matched_model_IDs}
                 return Q_kwarg
+
         cards = self.get_search_cards()
 
         final_Qs = []
@@ -287,7 +296,8 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
         avail_lookups = [dict(value='icontains',text='Contains'),
                          dict(value='exact',    text='Exact'),
                          dict(value='gte',      text='>='),
-                         dict(value='lte',      text='<='),]
+                         dict(value='lte',      text='<='),
+                         dict(value='isnull',   text='Is-Null')]
         context['avail_lookups'] = json.dumps(avail_lookups)
 
         lcats = dict(
@@ -300,6 +310,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
             ITER_LOOKUP=['in']+['icontains', 'exact'],
             EXACT_LOOKUP = ['exact'],
             BOOL_LOOKUP = ['exact','iexact'], )
+        lcats = {k:v+['isnull'] for k,v in lcats.items()}
         context['lookup_categories'] = json.dumps(lcats)
 
         avail_fields_sans_col_args = self.get_avail_fields()
