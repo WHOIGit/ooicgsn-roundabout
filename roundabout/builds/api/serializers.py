@@ -224,11 +224,21 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
                 if config_events:
                     for event in config_events:
                         for value in event.config_values.all():
-                            print(value.config_value, value.config_name.name)
                             configuration_values.append({
                                 'name': value.config_name.name,
                                 'value': value.config_value
                             })
+
+                # get all custom_fields for this Inventory/Deployment
+                custom_fields = []
+                if inv.inventory.fieldvalues.exists():
+                    inv_custom_fields = inv.inventory.fieldvalues.filter(is_current=True).select_related('field')
+                    # create initial empty dict
+                    for field in inv_custom_fields:
+                        custom_fields.append({
+                            'name': field.field.field_name,
+                            'value': field.field_value,
+                        })
 
                 # create object to populate the "assembly_part" list
                 item_obj = {
@@ -238,6 +248,7 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
                     'inventory_id': inv.inventory_id,
                     'inventory_serial_number': inv.inventory.serial_number,
                     'configuration_values': configuration_values,
+                    'custom_fields': custom_fields,
                 }
                 assembly_parts.append(item_obj)
 
