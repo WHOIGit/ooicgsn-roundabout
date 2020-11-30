@@ -127,21 +127,30 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
                     assert len(query) == 1
                     assert len(nega) <= 1
                     lookup,query = lookup[0],query[0]
+                    multi_bool = len(fields) > 1
                 except AssertionError:
                     continue #skip
 
+                # Searching for Null/None field values
                 if lookup == 'isnull':
                     query = True if query == 'True' else False
 
+                # querying for empty strings
                 if query == '' and lookup not in ['exact','iexact']:
                     continue #skip empty
+
+                # hack: implicitly search for usernames in addition to a user's name
+                for f in fields[:]:
+                    if 'user__name' in f:
+                        extra_f = f.replace('user__name','user__username')
+                        fields.append(extra_f)
 
                 row = dict( #row_id=row_id,
                     fields=fields,
                     lookup=lookup,
                     query=query,
                     nega=bool(nega),
-                    multi=len(fields) > 1)
+                    multi=multi_bool)
                 rows.append(row)
 
                 # choice field hack
