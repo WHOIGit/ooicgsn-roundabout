@@ -19,39 +19,36 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import generics, viewsets, filters
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from ..models import Inventory, Action, PhotoNote
-from .serializers import InventorySerializer, ActionSerializer, PhotoNoteSerializer
+
+from roundabout.core.api.views import FlexModelViewSet
+from .filters import *
+from .serializers import InventorySerializer, InventoryDeploymentSerializer, ActionSerializer, PhotoNoteSerializer
 
 
-class ActionViewSet(viewsets.ModelViewSet):
-    serializer_class = ActionSerializer
-    permission_classes = (IsAuthenticated,)
-    queryset = Action.objects.all()
-
-
-class InventoryViewSet(viewsets.ModelViewSet):
+class InventoryViewSet(FlexModelViewSet):
     serializer_class = InventorySerializer
     permission_classes = (IsAuthenticated,)
     queryset = Inventory.objects.all()
-    filterset_fields = ('serial_number',)
+    filterset_class = InventoryFilter
+
+
+class InventoryDeploymentViewSet(FlexModelViewSet):
+    serializer_class = InventoryDeploymentSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = InventoryDeployment.objects.all()
+    filterset_class = InventoryDeploymentFilter
+
+
+class ActionViewSet(FlexModelViewSet):
+    serializer_class = ActionSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = Action.objects.all()
+    filterset_class = ActionFilter
 
 
 class PhotoNoteViewSet(viewsets.ModelViewSet):
     serializer_class = PhotoNoteSerializer
     permission_classes = (IsAuthenticated,)
     queryset = PhotoNote.objects.all()
-
-"""
-class InventoryFullTextViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = InventoryFullTextSerializer
-    #filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['serial_number',]
-
-    def get_queryset(self):
-        queryset = Inventory.objects.all()
-        # Set up eager loading to avoid N+1 selects
-        queryset = self.get_serializer_class().setup_eager_loading(queryset)
-        return queryset
-"""

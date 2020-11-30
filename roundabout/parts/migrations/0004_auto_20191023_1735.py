@@ -24,7 +24,6 @@
 Auto-generate default Part Types for start up
 """
 from django.db import migrations
-from django.apps import apps
 from mptt import register, managers
 
 

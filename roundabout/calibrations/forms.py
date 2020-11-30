@@ -19,17 +19,18 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
+from bootstrap_datepicker_plus import DatePickerInput
 from django import forms
-from .models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientValue, CoefficientNameEvent
+from django.core.exceptions import ValidationError
+from django.forms.models import inlineformset_factory
+from django.utils.translation import gettext_lazy as _
+from sigfig import round
+
 from roundabout.inventory.models import Inventory
 from roundabout.parts.models import Part
 from roundabout.users.models import User
-from decimal import Decimal
-from django.forms.models import inlineformset_factory, BaseInlineFormSet
-from bootstrap_datepicker_plus import DatePickerInput
-from sigfig import round
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
+from .models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientValue, CoefficientNameEvent
+
 
 # Event form
 # Inputs: Effective Date and Approval
@@ -438,7 +439,8 @@ def parse_valid_coeff_vals(value_set_instance):
         for val_set_index, val_set in enumerate(coeff_2d_array):
             coeff_1d_array = val_set.split(',')
             parsed_batch = parse_coeff_1d_array(coeff_1d_array, value_set_instance, val_set_index)
-            CoefficientValue.objects.bulk_create(parsed_batch)
+            val_array.extend(parsed_batch)
+        CoefficientValue.objects.bulk_create(val_array)
     return value_set_instance
 
 

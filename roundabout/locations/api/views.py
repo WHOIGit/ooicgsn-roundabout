@@ -19,14 +19,15 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import generics, filters, viewsets
 from rest_framework.permissions import IsAuthenticated
 
-from ..models import Location
+from roundabout.core.api.views import FlexModelViewSet
+from .filters import *
 from .serializers import LocationSerializer
 
 
-class LocationViewSet(viewsets.ModelViewSet):
+class LocationViewSet(FlexModelViewSet):
     serializer_class = LocationSerializer
     permission_classes = (IsAuthenticated,)
     queryset = Location.objects.all()
+    filterset_class = LocationFilter

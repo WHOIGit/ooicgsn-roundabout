@@ -562,7 +562,7 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
                     field_id = int(field_keys[2])
                     #Check if this inventory object has value for this field
                     try:
-                        currentvalue = self.object.fieldvalues.filter(field_id=field_id).latest(field_name='created_at')
+                        currentvalue = self.object.fieldvalues.filter(field_id=field_id).latest()
                     except FieldValue.DoesNotExist:
                         currentvalue = None
 

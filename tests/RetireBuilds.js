@@ -45,17 +45,16 @@ var password;
 	console.log('Error: Missing Arguments');
     }
 
-    // Step # | name | target | value
-    if (myArgs[1] == 'headless')
+   if (myArgs[2] == 'admin')
     {
-        await driver.get("http://localhost:8000/");   
+        await driver.get("http://localhost:8000/");
         user = "admin";
         password = "admin";
     }
     else
     {
-        // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
-        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+//        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+        await driver.get("https://rdb-testing.whoi.edu/");
         user = "jkoch";
         password = "Automatedtests";
     }
@@ -91,8 +90,11 @@ var password;
         // Retire Builds added during the Add Builds test.
         await driver.findElement(By.linkText("Builds")).click();
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click(); // search button
-        // 20 | click | id=field-select_c_r0 | 
-        await driver.wait(until.elementLocated(By.id("field-select_c_r0")));
+	while ((await driver.findElements(By.id("field-select_c_r0"))).length == 0)
+        {
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Search1.");
+	}
         await driver.findElement(By.id("field-select_c_r0")).click();
         // 21 | select | id=field-select_c_r0 | label=Location
         {
@@ -105,28 +107,61 @@ var password;
             await dropdown.findElement(By.xpath("//option[. = 'Exact']")).click();
         }
         // 23 | type | id=field-query_c_r0 | Lost
-        await driver.findElement(By.id("field-query_c_r0")).sendKeys("Test Child");
+        await driver.findElement(By.id("field-query_c_r0")).sendKeys("Test");
         // 24 | click | id=searchform-submit-button | 
         await driver.findElement(By.id("searchform-submit-button")).click();
         // 25 | click | css=.even a | 
-        await new Promise(r => setTimeout(r, 4000));  //circleci firefox
+
+	await new Promise(r => setTimeout(r, 8000));
 
         if ((await driver.findElements(By.css(".even:nth-child(1) a"))).length != 0)
         {
 	    await driver.findElement(By.css(".even:nth-child(1) a")).click();
 
+	    // RECOVER FROM FIELD, END DEPLOYMENT, AND RETIRE BUILD
+	    while ((await driver.findElements(By.id("action"))).length == 0)
+	   {
+	      await new Promise(r => setTimeout(r, 2000));
+	      console.log("Wait 2 seconds for Search2.");
+	   }
+	    await driver.findElement(By.id("action")).click(); 
+	    while ((await driver.findElements(By.linkText("Recover from Field"))).length == 0)
+	   {
+	      await new Promise(r => setTimeout(r, 2000));
+	      console.log("Wait 2 seconds for Recover from Field.");
+	   }
+	    await driver.findElement(By.linkText("Recover from Field")).click();
+            await driver.findElement(By.css(".controls > .btn")).click(); 
+	    
+	    while ((await driver.findElements(By.id("action"))).length == 0)
+	   {
+	      await new Promise(r => setTimeout(r, 2000));
+	      console.log("Wait 2 seconds for Search2.");
+	   }
+            await driver.findElement(By.id("action")).click(); 
+	    await driver.findElement(By.linkText("End Deployment")).click();
+            await driver.findElement(By.css(".controls > .btn")).click(); 
+
+	    while ((await driver.findElements(By.linkText("Retire Build"))).length == 0)
+	    {
+	      await new Promise(r => setTimeout(r, 2000));
+	      console.log("Wait 2 seconds for End Deployment.");
+	    }
             await driver.findElement(By.linkText("Retire Build")).click();
         	// 20 | click | id=id_detail | 
-	    await new Promise(r => setTimeout(r, 2000));  //circleci firefox
+	    while ((await driver.findElements(By.id("id_detail"))).length == 0)
+	    {
+	      await new Promise(r => setTimeout(r, 2000));
+	      console.log("Wait 2 seconds for Retire Build.");
+	    }
             await driver.findElement(By.id("id_detail")).click();
             // 21 | type | id=id_detail | Retiring for automated testing.
             await driver.findElement(By.id("id_detail")).sendKeys("Retiring for automated testing.");
             // 22 | click | css=.controls > .btn | 
             await driver.findElement(By.css(".controls > .btn")).click(); 
-	    await new Promise(r => setTimeout(r, 2000));  //linux firefox
 	}
 	else
-	    console.log("Retire Builds Failed: Test Glider 1 Build not found");
+	    console.log("Retire Builds Failed: Build not found");
 
         // Close browser window
         driver.quit();

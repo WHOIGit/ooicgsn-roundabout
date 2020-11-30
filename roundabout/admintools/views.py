@@ -20,40 +20,87 @@
 """
 
 import csv
-import io
-import json
-import requests
-from dateutil import parser
 import datetime
+import io
 from types import SimpleNamespace
 
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
-from django.urls import reverse, reverse_lazy
-from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
+import requests
+from dateutil import parser
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
+from django.http import HttpResponse
+from django.urls import reverse, reverse_lazy
+from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, \
+    TemplateView, FormView
 
-
+from roundabout.assemblies.models import Assembly, AssemblyPart, AssemblyRevision
+from roundabout.calibrations.forms import parse_valid_coeff_vals
+from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
+from roundabout.inventory.models import Inventory, Action
+from roundabout.inventory.utils import _create_action_history
+from roundabout.locations.models import Location
+from roundabout.parts.models import Revision, Documentation, PartType
+from roundabout.userdefinedfields.models import FieldValue, Field
 from .forms import PrinterForm, ImportInventoryForm, ImportCalibrationForm
 from .models import *
-from roundabout.userdefinedfields.models import FieldValue, Field
-from roundabout.inventory.models import Inventory, Action
-from roundabout.parts.models import Part, Revision, Documentation, PartType
-from roundabout.locations.models import Location
-from roundabout.assemblies.models import AssemblyType, Assembly, AssemblyPart, AssemblyRevision
-from roundabout.assemblies.views import _make_tree_copy
-from roundabout.inventory.utils import _create_action_history
-from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
-from roundabout.calibrations.forms import validate_coeff_vals, parse_valid_coeff_vals
-from roundabout.users.models import User
 
 
 # Test URL for Sentry.io logging
 def trigger_error(request):
     division_by_zero = 1 / 0
 
+def parse_cal_file(self,form,cal_csv,ext_files):
+    cal_csv_filename = cal_csv.name[:-4]
+    cal_csv.seek(0)
+    reader = csv.DictReader(io.StringIO(cal_csv.read().decode('utf-8')))
+    headers = reader.fieldnames
+    coeff_val_sets = []
+    inv_serial = cal_csv.name.split('__')[0]
+    cal_date_string = cal_csv.name.split('__')[1][:8]
+    inventory_item = Inventory.objects.get(serial_number=inv_serial)
+    cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
+    csv_event = CalibrationEvent.objects.create(
+        calibration_date = cal_date_date,
+        inventory = inventory_item
+    )
+    for idx, row in enumerate(reader):
+        row_data = row.items()
+        for key, value in row_data:
+            if key == 'name':
+                calibration_name = value.strip()
+                cal_name_item = CoefficientName.objects.get(
+                    calibration_name = calibration_name,
+                    coeff_name_event =  inventory_item.part.coefficient_name_events.first()
+                )
+            elif key == 'value':
+                valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
+                mock_valset_instance = SimpleNamespace(**valset_keys)
+                raw_valset = str(value)
+                if '[' in raw_valset:
+                    raw_valset = raw_valset[1:-1]
+                if 'SheetRef' in raw_valset:
+                    ext_finder_filename = "__".join((cal_csv_filename,calibration_name))
+                    ref_file = [file for file in ext_files if ext_finder_filename in file.name][0]
+                    ref_file.seek(0)
+                    reader = io.StringIO(ref_file.read().decode('utf-8'))
+                    contents = reader.getvalue()
+                    raw_valset = contents
+            elif key == 'notes':
+                notes = value.strip()
+                coeff_val_set = CoefficientValueSet(
+                    coefficient_name = cal_name_item,
+                    value_set = raw_valset,
+                    notes = notes
+                )
+                coeff_val_sets.append(coeff_val_set)
+    if form.cleaned_data['user_draft'].exists():
+        draft_users = form.cleaned_data['user_draft']
+        for user in draft_users:
+            csv_event.user_draft.add(user)
+    for valset in coeff_val_sets:
+        valset.calibration_event = csv_event
+        valset.save()
+        parse_valid_coeff_vals(valset)
+    _create_action_history(csv_event, Action.CALCSVIMPORT, self.request.user)
 
 # CSV File Uploader for GitHub Calibration Coefficients
 class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
@@ -71,63 +118,12 @@ class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
             if ext == 'csv':
                 csv_files.append(file)
         for cal_csv in csv_files:
-            cal_csv_filename = cal_csv.name[:-4]
-            cal_csv.seek(0)
-            reader = csv.DictReader(io.StringIO(cal_csv.read().decode('utf-8')))
-            headers = reader.fieldnames
-            coeff_val_sets = []
-            inv_serial = cal_csv.name.split('__')[0]
-            cal_date_string = cal_csv.name.split('__')[1][:8]
-            inventory_item = Inventory.objects.get(serial_number=inv_serial)
-            cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
-            csv_event = CalibrationEvent.objects.create(
-                calibration_date = cal_date_date,
-                inventory = inventory_item
-            )
-            for idx, row in enumerate(reader):
-                row_data = row.items()
-                for key, value in row_data:
-                    if key == 'name':
-                        calibration_name = value.strip()
-                        cal_name_item = CoefficientName.objects.get(
-                            calibration_name = calibration_name,
-                            coeff_name_event =  inventory_item.part.coefficient_name_events.first()
-                        )
-                    elif key == 'value':
-                        valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
-                        mock_valset_instance = SimpleNamespace(**valset_keys)
-                        raw_valset = str(value)
-                        if '[' in raw_valset:
-                            raw_valset = raw_valset[1:-1]
-                        if 'SheetRef' in raw_valset:
-                            ext_finder_filename = "__".join((cal_csv_filename,calibration_name))
-                            ref_file = [file for file in ext_files if ext_finder_filename in file.name][0]
-                            ref_file.seek(0)
-                            reader = io.StringIO(ref_file.read().decode('utf-8'))
-                            contents = reader.getvalue()
-                            raw_valset = contents
-                        validate_coeff_vals(mock_valset_instance, cal_name_item.value_set_type, raw_valset)
-                    elif key == 'notes':
-                        notes = value.strip()
-                        coeff_val_set = CoefficientValueSet(
-                            coefficient_name = cal_name_item,
-                            value_set = raw_valset,
-                            notes = notes
-                        )
-                        coeff_val_sets.append(coeff_val_set)
-            if form.cleaned_data['user_draft'].exists():
-                draft_users = form.cleaned_data['user_draft']
-                for user in draft_users:
-                    csv_event.user_draft.add(user)
-            for valset in coeff_val_sets:
-                valset.calibration_event = csv_event
-                valset.save()
-                parse_valid_coeff_vals(valset)
-            _create_action_history(csv_event, Action.CALCSVIMPORT, self.request.user)
+            parse_cal_file(self,form,cal_csv,ext_files)
         return super(ImportCalibrationsUploadView, self).form_valid(form)
 
     def get_success_url(self):
         return reverse('admintools:import_inventory_upload_success', )
+
 
 # Bulk Inventory Import Functions
 # ------------------------------------------

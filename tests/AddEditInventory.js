@@ -7,6 +7,7 @@ const { Builder, By, Key, until, a, WebElement, promise, Capabilities } = requir
 const chrome = require('selenium-webdriver/chrome');
 const firefox = require('selenium-webdriver/firefox');
 const assert = require('assert');
+const fs = require('fs');
 
 var driver;
 var myArgs = process.argv.slice(2);
@@ -45,17 +46,16 @@ var password;
 	console.log('Error: Missing Arguments');
     }
 
-    // Step # | name | target | value
-    if (myArgs[1] == 'headless')
+   if (myArgs[2] == 'admin')
     {
-        await driver.get("http://localhost:8000/");   
+        await driver.get("http://localhost:8000/");
         user = "admin";
         password = "admin";
     }
     else
     {
-        // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
-        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+//        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+        await driver.get("https://rdb-testing.whoi.edu/");
         user = "jkoch";
         password = "Automatedtests";
     }
@@ -87,11 +87,20 @@ var password;
 
         // Add Inventory with unique serial number and non null template, revision code, and location
         await driver.findElement(By.linkText("Inventory")).click();
-        await new Promise(r => setTimeout(r, 4000)); // Inventory tree takes awhile to load (firefox)
+	while ((await driver.findElements(By.linkText("Add Inventory"))).length == 0) // Inventory tree takes awhile to load
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Inventory.");
+	}
         // 4 | click | linkText=Add Inventory | 
-        await driver.wait(until.elementLocated(By.linkText("Add Inventory")));
         await driver.findElement(By.linkText("Add Inventory")).click();
-        await driver.wait(until.elementLocated(By.id("id_part_type")));
+
+	while ((await driver.findElements(By.id("id_part_type"))).length == 0) // Inventory tree takes awhile to load
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Inventory1.");
+	}
+
         // 5 | select | id=id_part_type | label=-- Sewing Machine
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
@@ -99,8 +108,8 @@ var password;
         }
         // 6 | select | id=id_part | label=Sewing Template
         {
-            await driver.wait(until.elementLocated(By.id("id_part")));
             const dropdown = await driver.findElement(By.id("id_part"));
+            await new Promise(r => setTimeout(r, 2000)); //New for 1.6 - This field blanked back out without timeout
             await dropdown.findElement(By.xpath("//option[. = 'Sewing Template']")).click();
         }
         // 7 | select | id=id_location | label=Test
@@ -109,25 +118,30 @@ var password;
             // There's a space before Test in the option dropdown
             await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
         }
+
         // 8 | storeValue | id=id_serial_number | Serial_Number
         // Stores the value of the Serial Number assigned
-	await new Promise(r => setTimeout(r, 2000)); //circleci
+	await new Promise(r => setTimeout(r, 2000)); 
         var Serial_Number = await driver.findElement(By.id("id_serial_number")).getAttribute("value");
-        // 10 | click | css=.controls > .btn | 
+	//let encodedString = await driver.takeScreenshot();
+	//await fs.writeFileSync('/tests/iscreen.png', encodedString, 'base64');      
         await driver.findElement(By.css(".controls > .btn")).click();
+	while ((await driver.findElements(By.id("action"))).length == 0) // Inventory tree takes awhile to load
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Inventory2.");
+	}
 
         // Add Inventory with blank part type, template, revision, and location
         // 11 | click | linkText=Add Inventory | 
-        await new Promise(r => setTimeout(r, 4000)); // Inventory tree takes awhile to load
         await driver.findElement(By.linkText("Add Inventory")).click();
+	await new Promise(r => setTimeout(r, 6000)); 
         // 12 | click | id=id_part_type | 
-        await driver.wait(until.elementLocated(By.id("id_part_type")));
         await driver.findElement(By.id("id_part_type")).click();
         // 13 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
-        await driver.wait(until.elementLocated(By.css("#div_id_part .ajax-error")));
+	await new Promise(r => setTimeout(r, 4000)); //1.6
         // Wait for bug fix for blank part type error
-        //assert(await driver.findElement(By.css("#div_id_part .ajax-error")).getText() == "This field is required.");
         assert(await driver.findElement(By.css("#div_id_part .ajax-error")).getText() == "This field is required.");
         assert(await driver.findElement(By.css("#div_id_revision .ajax-error")).getText() == "This field is required.");
         assert(await driver.findElement(By.css("#div_id_location .ajax-error")).getText() == "This field is required.");
@@ -136,7 +150,6 @@ var password;
         // 14 | click | id=id_part |
         await driver.findElement(By.id("id_part")).click();
         // 15 | select | id=id_part_type | label=-- Sewing Machine
-        await driver.wait(until.elementLocated(By.id("id_part_type")));
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
             await dropdown.findElement(By.xpath("//option[. = '-- Sewing Machine']")).click();
@@ -148,15 +161,15 @@ var password;
         }
         // 17 | select | id=id_part | label=Sewing Template
         {
-            await driver.wait(until.elementLocated(By.id("id_part")));
             const dropdown = await driver.findElement(By.id("id_part"));
+            await new Promise(r => setTimeout(r, 2000)); //New for 1.6 - This field blanked back out without timeout
             await dropdown.findElement(By.xpath("//option[. = 'Sewing Template']")).click();
         }
         // Add Inventory item with non unique serial number
         // 18 | click | id=hint_id_serial_number | 
         await driver.findElement(By.id("hint_id_serial_number")).click();
         // 19 | click | id=id_serial_number | 
-	await new Promise(r => setTimeout(r, 2000)); //circleci
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_serial_number")).click();
         // 20 | type | id=id_serial_number | [Serial_Number]
         // Uses stored serial number assigned above
@@ -164,12 +177,8 @@ var password;
         await driver.findElement(By.id("id_serial_number")).sendKeys(Serial_Number);
         // 21 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
-        // 22 | select | id=id_location | label=Test
 
-        // 23 | click | css=.controls > .btn | 
-        await driver.findElement(By.css(".controls > .btn")).click();
-
-        await new Promise(r => setTimeout(r, 4000));  //linux docker
+        await new Promise(r => setTimeout(r, 8000));
         assert(await driver.findElement(By.css("#div_id_serial_number .ajax-error")).getText() == "Inventory with this Serial number already exists.");
 
     // EDIT INVENTORY TEST
@@ -177,9 +186,19 @@ var password;
        // Add Inventories
         await driver.findElement(By.linkText("Inventory")).click();
         // 4 | click | linkText=Add Inventory | 
-        await new Promise(r => setTimeout(r, 4000)); // Inventory tree takes awhile to load
+	while ((await driver.findElements(By.linkText("Add Inventory"))).length == 0) 
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Inventory3.");
+	}
+
         await driver.findElement(By.linkText("Add Inventory")).click();
-        await driver.wait(until.elementLocated(By.id("id_part_type")));
+	while ((await driver.findElements(By.id("id_part_type"))).length == 0) 
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Inventory4.");
+	}
+
         // 5 | select | id=id_part_type | label=-- Sewing Machine
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
@@ -187,8 +206,8 @@ var password;
         }
         // 6 | select | id=id_part | label=Wheel Template
         {
-            await new Promise(r => setTimeout(r, 2000));  //only thing that works here
             const dropdown = await driver.findElement(By.id("id_part"));
+            await new Promise(r => setTimeout(r, 2000)); //New for 1.6 - This field blanked back out without timeout
             await dropdown.findElement(By.xpath("//option[. = 'Wheel Template']")).click();
         }
         // 7 | select | id=id_location | label=--- Lost
@@ -201,11 +220,19 @@ var password;
         // 8 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
+	while ((await driver.findElements(By.id("action"))).length == 0) // Inventory tree takes awhile to load
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Inventory4.");
+	}
 
         // 9 | click | linkText=Add Inventory | 
-        await new Promise(r => setTimeout(r, 4000)); // Inventory tree takes awhile to load
         await driver.findElement(By.linkText("Add Inventory")).click();
-        await driver.wait(until.elementLocated(By.id("id_part_type")));
+	while ((await driver.findElements(By.id("id_part_type"))).length == 0) // Inventory tree takes awhile to load
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Inventory5.");
+	}
         // 10 | select | id=id_part_type | label=-- Sewing Machine
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
@@ -213,25 +240,25 @@ var password;
         }
         // 11 | select | id=id_part | label=Pin Template
         {
-            await new Promise(r => setTimeout(r, 2000));
             const dropdown = await driver.findElement(By.id("id_part"));
+            await new Promise(r => setTimeout(r, 2000)); //New for 1.6 - This field blanked back out without timeout
             await dropdown.findElement(By.xpath("//option[. = 'Pin Template']")).click();
         }
         // 12 | select | id=id_location | label=Test
         {
+	    await new Promise(r => setTimeout(r, 2000));
             const dropdown = await driver.findElement(By.id("id_location"));
             // Space needed before Test
             await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
         }
         // 13 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
+	await new Promise(r => setTimeout(r, 8000));
 
         // Update location with null location
-        // 19 | click | css=.btn-outline-primary:nth-child(1) | 
-	await new Promise(r => setTimeout(r, 2000));
+        // 19 | click | css=.btn-outline-primary:nth-child(1) | 	    
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click(); // search button
         // 20 | click | id=field-select_c_r0 | 
-        await driver.wait(until.elementLocated(By.id("field-select_c_r0")));
         await driver.findElement(By.id("field-select_c_r0")).click();
         // 21 | select | id=field-select_c_r0 | label=Location
         {
@@ -247,28 +274,39 @@ var password;
         await driver.findElement(By.id("field-query_c_r0")).sendKeys("Test");
         // 24 | click | id=searchform-submit-button | 
         await driver.findElement(By.id("searchform-submit-button")).click();
+
         // 25 | click | css=.even a | 
-	await new Promise(r => setTimeout(r, 2000));  //linux docker
+//	await new Promise(r => setTimeout(r, 6000));
+	while ((await driver.findElements(By.css(".even a"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Search1.");
+	}
         await driver.findElement(By.css(".even a")).click();
         // 26 | click | id=action | 
-	await new Promise(r => setTimeout(r, 4000));  //circleci firefox
+
+	while ((await driver.findElements(By.id("action"))).length == 0) 
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Search2.");
+	}
         await driver.findElement(By.id("action")).click();
+
+	await new Promise(r => setTimeout(r, 4000));
         // 27 | click | linkText=Location Change | 
         await driver.findElement(By.linkText("Location Change")).click();
         // 28 | select | id=id_location | label=---------
         {
-            await new Promise(r => setTimeout(r, 2000));  //increase wait
+            await new Promise(r => setTimeout(r, 2000));
             const dropdown = await driver.findElement(By.id("id_location"));
             await dropdown.findElement(By.xpath("//option[. = '---------']")).click();
         }
-        // 29 | click | css=.controls > .btn-primary | 
         await new Promise(r => setTimeout(r, 2000));
 
-	    var element = driver.findElement(By.css(".controls > .btn-primary"));
-	    await driver.executeScript("arguments[0].click();", element);
-	    //await driver.findElement(By.css(".controls > .btn-primary")).click();	//linux elementnotinteractable error
-
-        await new Promise(r => setTimeout(r, 2000));
+	var element = driver.findElement(By.css(".controls > .btn-primary"));
+	await driver.executeScript("arguments[0].click();", element);
+	//await driver.findElement(By.css(".controls > .btn-primary")).click();	//linux elementnotinteractable error	
+	await new Promise(r => setTimeout(r, 6000));
         assert(await driver.findElement(By.css("#div_id_location .ajax-error")).getText() == "This field is required.");
 
         // Update location with non null location
@@ -278,12 +316,12 @@ var password;
             const dropdown = await driver.findElement(By.id("id_location"));
             await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
         }
-        // 31 | click | css=.controls > .btn-primary | 
-	await new Promise(r => setTimeout(r, 2000)); //circleci
+	await new Promise(r => setTimeout(r, 2000));
 	await driver.findElement(By.css(".controls > .btn-primary")).click();
+	await new Promise(r => setTimeout(r, 6000));
+
         // 32 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();  //Search button
-        await driver.wait(until.elementLocated(By.id("field-select_c_r0")));
         // 33 | select | id=field-select_c_r0 | label=Location
         {
             const dropdown = await driver.findElement(By.id("field-select_c_r0"));
@@ -306,21 +344,38 @@ var password;
         await driver.findElement(By.id("searchbar-query")).sendKeys("Sewing Template");
         // 41 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
-        // 42 | click | css=.even a | 
-	await new Promise(r => setTimeout(r, 2000));  //linux docker
+     
+//	await new Promise(r => setTimeout(r, 6000));
+	while ((await driver.findElements(By.css(".even a"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Search3.");
+	}
         await driver.findElement(By.css(".even a")).click();
-        // 43 | click | id=action | 
 
         // Add subassembly item to valid parent
-        await new Promise(r => setTimeout(r, 4000));  //circleci
+	while ((await driver.findElements(By.id("action"))).length == 0) 
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Search4.");
+	}
         await driver.findElement(By.id("action")).click();
         // 44 | click | linkText=Add Sub-Assembly | 
         await driver.findElement(By.linkText("Add Sub-Assembly")).click();
         // 45 | click | linkText=Add | 
-        await driver.wait(until.elementLocated(By.linkText("Add")));
+	while ((await driver.findElements(By.linkText("Add"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add SubAssembly.");
+	}
         await driver.findElement(By.linkText("Add")).click();
         // 46 | click | id=action | 
-        await new Promise(r => setTimeout(r, 4000));  //circleci
+
+	while ((await driver.findElements(By.id("action"))).length == 0) 
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Sub-Assembly.");
+	}
         await driver.findElement(By.id("action")).click();
         // 47 | click | linkText=Add Sub-Assembly | 
 
@@ -329,13 +384,16 @@ var password;
         // 48 | type | id=searchbar-query | pioneer inshore deck assembly
         await driver.findElement(By.id("searchbar-query")).sendKeys("singer");
         // 49 | click | css=.btn-outline-primary:nth-child(1) | 
-        await new Promise(r => setTimeout(r, 2000));  //circleci
+	while ((await driver.findElements(By.xpath("//p[contains(.,'NONE')]"))).length == 0) 
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Xpath.");
+	}
         await driver.findElement(By.xpath("//p[contains(.,'NONE')]"));
             
         // Add valid child to parent assembly
         await driver.findElement(By.id("searchbar-query")).clear();
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();  //Search button
-        await driver.wait(until.elementLocated(By.id("field-select_c_r0")));
         // 33 | select | id=field-select_c_r0 | label=Location
         {
             const dropdown = await driver.findElement(By.id("field-select_c_r0"));
@@ -363,61 +421,120 @@ var password;
         // 36 | type | id=field-query_c_r1 | Pin
         await driver.findElement(By.id("field-query_c_r1")).sendKeys("Pin");
         await driver.findElement(By.id("searchform-submit-button")).click();
+
         // 42 | click | css=.even a | 
-	    await new Promise(r => setTimeout(r, 2000));  //linux docker
+//	await new Promise(r => setTimeout(r, 8000));  //1.6
+	while ((await driver.findElements(By.css(".even a"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Search5.");
+	}
+       // 43 | click | id=action | 
         await driver.findElement(By.css(".even a")).click();
+
         // 43 | click | id=action |
-        await new Promise(r => setTimeout(r, 4000));  //circleci
+	while ((await driver.findElements(By.id("action"))).length == 0) 
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Search6.");
+	}
         await driver.findElement(By.id("action")).click();
         // 52 | click | linkText=Add to Parent Assembly | 
         await driver.findElement(By.linkText("Add to Parent Assembly")).click();
         // 53 | click | linkText=Add | 
-        await driver.wait(until.elementLocated(By.linkText("Add")));
+	while ((await driver.findElements(By.linkText("Add"))).length == 0) //1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add SubAssembly.");
+	}
         await driver.findElement(By.linkText("Add")).click();
 
         // Edit item details with null revision code and update serial number
-        await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.id("action"))).length == 0) 
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add to Parent.");
+	}
         await driver.findElement(By.id("action")).click();
         // 55 | click | linkText=Edit Inventory Details | 
-	await new Promise(r => setTimeout(r, 2000)); 
+	await new Promise(r => setTimeout(r, 8000)); 
         await driver.findElement(By.linkText("Edit Inventory Details")).click();
-        await driver.wait(until.elementLocated(By.id("hint_id_serial_number")));
+	await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.id("hint_id_serial_number")).click();
-        await new Promise(r => setTimeout(r, 8000));  // circleci firefox
+        await new Promise(r => setTimeout(r, 8000)); 
         await driver.findElement(By.id("id_serial_number")).clear();
         // 56 | type | id=id_serial_number | 3604-00131-00001-20004
-        await new Promise(r => setTimeout(r, 2000));  // circleci
+        await new Promise(r => setTimeout(r, 2000));
+        // Note: Serial number can be found in the Trash Bin if Inventory not deleted when Build or Part is deleted
         await driver.findElement(By.id("id_serial_number")).sendKeys("3604-00131-00001-20004");
-        await new Promise(r => setTimeout(r, 2000));  // circleci
+        await new Promise(r => setTimeout(r, 2000));
         // 57 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
-	await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.id("action"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Search7.");
+	}
         await driver.findElement(By.id("action")).click();
+
         // 44 | click | linkText=Add Sub-Assembly | 
         await driver.findElement(By.linkText("Edit Inventory Details")).click();
         // 58 | select | id=id_revision | label=---------
         {
-	    await new Promise(r => setTimeout(r, 2000)); //circleci - stale element
+	    await new Promise(r => setTimeout(r, 6000)); //circleci - stale element
             const dropdown = await driver.findElement(By.id("id_revision"));
-	    await new Promise(r => setTimeout(r, 2000));  // circleci
+	    await new Promise(r => setTimeout(r, 2000));
             await dropdown.findElement(By.xpath("//option[. = '---------']")).click();
         }
 
-	// Edit item with duplicate serial number
-	await new Promise(r => setTimeout(r, 2000)); //circleci
-        await driver.wait(until.elementLocated(By.id("hint_id_serial_number")));
+	    // Edit item with duplicate serial number
+	await new Promise(r => setTimeout(r, 2000));
+  
         await driver.findElement(By.id("hint_id_serial_number")).click();
-	await new Promise(r => setTimeout(r, 2000)); //circleci
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_serial_number")).clear();
-	await new Promise(r => setTimeout(r, 4000)); //circleci
+	await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.id("id_serial_number")).sendKeys("555-456-789-20001");
         // 60 | click | css=.controls > .btn-primary | 
-	await new Promise(r => setTimeout(r, 2000)); //circleci
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-        await new Promise(r => setTimeout(r, 4000)); //circleci
+        await new Promise(r => setTimeout(r, 8000));
         assert(await driver.findElement(By.css("#div_id_revision .ajax-error")).getText() == "This field is required.");
         assert(await driver.findElement(By.css("#div_id_serial_number .ajax-error")).getText() == "Inventory with this Serial number already exists.");
+
+	await new Promise(r => setTimeout(r, 2000));        
+	// Assign Destination to Sewing Inventory - tests Issue #143
+        await driver.findElement(By.partialLinkText("sewing")).click();
+
+	while ((await driver.findElements(By.id("action"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Click Navtree.");
+	}   
+        // 9 | click | id=action | 
+        await driver.findElement(By.id("action")).click();
+
+        // 10 | click | linkText=Assign Destination | 
+        await driver.findElement(By.linkText("Assign Destination")).click();
+        // 11 | click | css=.btn > b | 
+	await new Promise(r => setTimeout(r, 6000));    
+        await driver.findElement(By.css(".btn > b")).click();
+        // 12 | click | linkText=Select | 
+	await new Promise(r => setTimeout(r, 2000));    
+        await driver.findElement(By.linkText("Select")).click();
+        // 13 | click | id=destination-tab | 
+//	await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.id("destination-tab"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Assign Desination.");
+	}   
+        await driver.findElement(By.id("destination-tab")).click();
+        await new Promise(r => setTimeout(r, 4000));
+
+        var bodyText = await driver.findElement(By.tagName("Body")).getText();
+        assert(bodyText.includes("Revision B - Singer"));     //Verify the Destination is assigned on the Destination tab
 
         // Close browser window
         driver.quit();

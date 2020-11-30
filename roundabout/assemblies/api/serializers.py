@@ -19,14 +19,13 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
+from rest_flex_fields import FlexFieldsModelSerializer
 from rest_framework import serializers
 from rest_framework.reverse import reverse
-from rest_flex_fields import FlexFieldsModelSerializer
 
-from ..models import Assembly, AssemblyPart, AssemblyType, AssemblyRevision
-from roundabout.parts.models import Part
 from roundabout.parts.api.serializers import PartSerializer
-from roundabout.core.api.serializers import RecursiveFieldSerializer
+from roundabout.parts.models import Part
+from ..models import Assembly, AssemblyPart, AssemblyType, AssemblyRevision
 
 API_VERSION = 'api_v1'
 
@@ -139,14 +138,22 @@ class AssemblyPartSerializer(FlexFieldsModelSerializer):
         lookup_field = 'pk',
         queryset = Part.objects,
     )
+    part_name = serializers.CharField(source='order')
+    config_default_events = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':configs-constants/config-default-events-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
 
     class Meta:
         model = AssemblyPart
-        fields = ['id', 'url', 'assembly_revision', 'order', 'part', 'parent', 'children', 'note', ]
+        fields = ['id', 'url', 'assembly_revision', 'part_name', 'part', 'parent', 'children', 'note', 'config_default_events' ]
 
         expandable_fields = {
             'part': PartSerializer,
             'assembly_revision': 'roundabout.assemblies.api.serializers.AssemblyRevisionSerializer',
             'parent': 'roundabout.assemblies.api.serializers.AssemblyPartSerializer',
-            'children': ('roundabout.assemblies.api.serializers.AssemblyPartSerializer', {'many': True})
+            'children': ('roundabout.assemblies.api.serializers.AssemblyPartSerializer', {'many': True}),
+            'config_default_events': ('roundabout.configs_constants.api.serializers.ConfigDefaultEventSerializer', {'many': True}),
         }
