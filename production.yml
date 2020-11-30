@@ -93,8 +93,6 @@ services:
   flower:
     <<: *django
     image: roundabout_production_flower
-    ports:
-      - "5555:5555"
     command: /start-flower
 
   nginx:
