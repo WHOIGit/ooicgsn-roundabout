@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -24,8 +24,6 @@ Base settings to build other settings files upon.
 """
 
 import environ
-
-from datetime import timedelta
 
 ROOT_DIR = environ.Path(__file__) - 3  # (roundabout/config/settings/base.py - 3 = roundabout/)
 APPS_DIR = ROOT_DIR.path('roundabout')
@@ -75,7 +73,6 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # APPS
 # ------------------------------------------------------------------------------
 DJANGO_APPS = [
-    'whitenoise.runserver_nostatic',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -91,6 +88,7 @@ THIRD_PARTY_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+    'django_celery_beat',
     'rest_framework',
     'mptt', # Tree structures in database
     'django_summernote', #WYSIWYG
@@ -98,6 +96,9 @@ THIRD_PARTY_APPS = [
     'import_export', # simple model import/export using admin interface
     'django_tables2', # interactive tables views
     'django_tables2_column_shifter', # show/hide tables2 columns
+    'django_filters', #filters for API searching
+    'rest_framework.authtoken',
+    'rest_flex_fields',
 ]
 LOCAL_APPS = [
     'roundabout.users.apps.UsersAppConfig',
@@ -114,8 +115,10 @@ LOCAL_APPS = [
     'roundabout.cruises',
     'roundabout.calibrations',
     'roundabout.configs_constants',
+    'roundabout.field_instances',
     'roundabout.search',
     'roundabout.exports',
+    'roundabout.ooi_ci_tools',
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -172,14 +175,17 @@ AUTH_PASSWORD_VALIDATORS = [
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#middleware
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.common.BrokenLinkEmailsMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 # STATIC
@@ -301,12 +307,31 @@ REST_FRAMEWORK = {
     # When you enable API versioning, the request.version attribute will contain a string
     # that corresponds to the version requested in the incoming client request.
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+
+    ],
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     ),
-    #'DEFAULT_PERMISSION_CLASSES': [
-    #    'rest_framework.permissions.IsAuthenticated',
-    #]
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'roundabout.core.api.renderers.CustomBrowsableAPIRenderer',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'drf_link_header_pagination.LinkHeaderPagination',
+    'PAGE_SIZE': 30,
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '1000/day'
+    }
 }
 
 # Summernote CONFIGURATION
@@ -341,34 +366,31 @@ SUMMERNOTE_CONFIG = {
     },
 }
 
-# Simple JWT authentication settings
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
-
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': env('DJANGO_SECRET_KEY'),
-    'VERIFYING_KEY': None,
-    'AUDIENCE': None,
-    'ISSUER': None,
-
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-    'TOKEN_TYPE_CLAIM': 'token_type',
-
-    'JTI_CLAIM': 'jti',
-
-    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
-    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
-    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
-}
-
 # import-export settings
 IMPORT_EXPORT_USE_TRANSACTIONS = True
 # Allow for larger CoefficientValue formset handling
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
+
+# Celery Settings
+if USE_TZ:
+    # http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-timezone
+    CELERY_TIMEZONE = TIME_ZONE
+# http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-broker_url
+CELERY_BROKER_URL = env("CELERY_BROKER_URL")
+# http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-result_backend
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+# http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-accept_content
+CELERY_ACCEPT_CONTENT = ["json"]
+# http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-task_serializer
+CELERY_TASK_SERIALIZER = "json"
+# http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-result_serializer
+CELERY_RESULT_SERIALIZER = "json"
+# http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-time-limit
+# TODO: set to whatever value is adequate in your circumstances
+CELERY_TASK_TIME_LIMIT = 5 * 60
+# http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-soft-time-limit
+# TODO: set to whatever value is adequate in your circumstances
+CELERY_TASK_SOFT_TIME_LIMIT = 60
+# https://docs.celeryproject.org/en/latest/userguide/configuration.html#std-setting-task_track_started
+# Report task state updates
+CELERY_TASK_TRACK_STARTED = True

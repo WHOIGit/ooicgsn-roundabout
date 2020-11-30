@@ -19,11 +19,27 @@
 # If not, see <http://www.gnu.org/licenses/>.
 -->
 <script type="text/javascript">
+    $(document).ready(function() {
     // Handles CoefficientValueSet form instance generation
-    $('.calibration-form tbody tr').formset({
-        prefix: 'coefficient_names',
-        addText: 'Add Calibration',
-        deleteText: 'Remove'
+        $('.calibration-form tbody tr').formset({
+            prefix: 'coefficient_names',
+            addText: 'Add Calibration',
+            deleteText: 'Remove'
+        });
+
+        let formRows = $('.dynamic-form');
+        formRows.each(function() {
+            row = $(this);
+            let removeButtons = row.find('.delete-row');
+            let deprecated = row.find("[id$='deprecated']").attr('checked');
+            if (deprecated == 'checked') {
+                removeButtons.remove();
+            } 
+        });
+
+        $('.delete-row').on('click',function() {
+            alert('Warning: deleting Names will delete all downstream Defaults and Events');
+        });
     });
 </script>
 
@@ -68,6 +84,7 @@
                   <th>Name</th>
                   <th>Type</th>
                   <th>Significant Figures</th>
+                  <th>Deprecated</th>
               </thead>
               <tbody>
                 {{ part_calname_form.management_form }}
@@ -76,6 +93,7 @@
                       <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.calibration_name }}</td>
                       <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.value_set_type }}</td>
                       <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.sigfig_override }} <small class = 'form-text text-muted'>{{cal.sigfig_override.help_text}}</small></td>
+                      <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.deprecated }}</td>
                   </tr>
                 {% endfor %}
               </tbody>

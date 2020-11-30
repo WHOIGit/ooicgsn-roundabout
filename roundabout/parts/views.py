@@ -91,6 +91,18 @@ def validate_part_number(request):
     return JsonResponse(data)
 
 
+# Function to check if CCC Names are enabled for Part Type
+def check_ccc_enabled(request):
+    part_type_id = request.GET.get('part_type_id')
+    part_type = PartType.objects.get(id=part_type_id)
+
+
+    data = {
+        'ccc_toggle': part_type.ccc_toggle,
+    }
+    return JsonResponse(data)
+
+
 # Part Template Views
 
 def load_parts_navtree(request):
@@ -527,7 +539,7 @@ class PartsAjaxAddUdfFieldUpdateView(LoginRequiredMixin, PermissionRequiredMixin
             for item in self.object.inventory.all():
                 for field in self.object.user_defined_fields.all():
                     try:
-                        currentvalue = item.fieldvalues.filter(field=field).latest(field_name='created_at')
+                        currentvalue = item.fieldvalues.filter(field=field).latest()
                     except FieldValue.DoesNotExist:
                         currentvalue = None
 
@@ -597,7 +609,7 @@ class PartsAjaxSetUdfFieldValueFormView(LoginRequiredMixin, PermissionRequiredMi
 
         #Check if this Part object has value for this field
         try:
-            currentvalue = part.fieldvalues.filter(field_id=field_id).latest(field_name='created_at')
+            currentvalue = part.fieldvalues.filter(field_id=field_id).latest()
         except FieldValue.DoesNotExist:
             currentvalue = None
 
@@ -617,7 +629,7 @@ class PartsAjaxSetUdfFieldValueFormView(LoginRequiredMixin, PermissionRequiredMi
         # or is a Default Value
         for item in part.inventory.all():
             try:
-                itemvalue = item.fieldvalues.filter(field_id=field_id).latest(field_name='created_at')
+                itemvalue = item.fieldvalues.filter(field_id=field_id).latest()
             except FieldValue.DoesNotExist:
                 itemvalue = None
 

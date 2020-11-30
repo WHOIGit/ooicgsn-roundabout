@@ -19,26 +19,24 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os
 import datetime
+import os
 from datetime import timedelta
 
-from django.db import models
-from django.contrib.postgres.fields import JSONField
+from django.core.validators import MaxValueValidator, MinValueValidator, FileExtensionValidator
 from django.urls import reverse
 from django.utils import timezone
-from django.core.validators import MaxValueValidator, MinValueValidator, FileExtensionValidator
-from model_utils import FieldTracker
 from mptt.models import MPTTModel, TreeForeignKey
 
-from .managers import *
-from roundabout.locations.models import Location
-from roundabout.parts.models import Part, Revision
 from roundabout.assemblies.models import Assembly, AssemblyPart
-from roundabout.cruises.models import Cruise
-from roundabout.users.models import User
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
+from roundabout.cruises.models import Cruise
+from roundabout.locations.models import Location
+from roundabout.parts.models import Part, Revision
+from roundabout.users.models import User
+from .managers import *
+
 labels = set_app_labels()
 
 # Private functions for use in Models
@@ -84,13 +82,13 @@ class Inventory(MPTTModel):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     detail = models.TextField(blank=True)
-    test_result = models.NullBooleanField(blank=False, choices=TEST_RESULTS)
+    test_result = models.BooleanField(null=True, blank=False, choices=TEST_RESULTS)
     test_type = models.CharField(max_length=20, choices=TEST_TYPES, null=True, blank=True)
     flag = models.BooleanField(choices=FLAG_TYPES, blank=False, default=False)
     # Deprecated as of v1.5
     _time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
 
-    tracker = FieldTracker(fields=['location', 'parent', 'build'])
+    #tracker = FieldTracker(fields=['location', 'build'])
 
     class MPTTMeta:
         order_insertion_by = ['serial_number']
@@ -295,7 +293,7 @@ class Deployment(DeploymentBase):
         return '%s - %s' % (self.deployment_number, self.location.name)
 
     def get_actions(self):
-        actions = self.build.actions.filter(object_type=Action.BUILD).filter(deployment=self)
+        actions = self.actions.filter(object_type=Action.BUILD)
         return actions
 
 
@@ -303,7 +301,7 @@ class InventoryDeployment(DeploymentBase):
     deployment = models.ForeignKey(Deployment, related_name='inventory_deployments',
                                    on_delete=models.CASCADE, null=False)
     inventory = models.ForeignKey(Inventory, related_name='inventory_deployments',
-                                  on_delete=models.CASCADE, null=False)\
+                                  on_delete=models.CASCADE, null=False)
 
     objects = InventoryDeploymentQuerySet.as_manager()
 

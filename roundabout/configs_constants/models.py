@@ -20,16 +20,13 @@
 """
 
 from django.db import models
-from django.core.validators import MinValueValidator, DecimalValidator, MaxValueValidator, RegexValidator, MaxLengthValidator
 from django.utils import timezone
-from roundabout.parts.models import Part
-from roundabout.inventory.models import Inventory, Deployment, DeploymentAction, Action
+
 from roundabout.assemblies.models import AssemblyPart
+from roundabout.inventory.models import Inventory, Deployment, DeploymentAction, Action
+from roundabout.parts.models import Part
 from roundabout.users.models import User
-from decimal import Decimal
-from sigfig import round
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
+
 
 # Tracks Configuration and Constant event history across Inventory Parts
 class ConfigEvent(models.Model):
@@ -62,11 +59,10 @@ class ConfigEvent(models.Model):
         return self.actions.filter(object_type=Action.CONFEVENT)
 
     def get_latest_deployment_date(self):
-        deploy_record = self.deployment.deployment_to_field_date
-        if deploy_record:
-            return deploy_record.strftime("%m/%d/%Y")
-        else:
-            return 'TBD'
+        if self.deployment:
+            if self.deployment.deployment_to_field_date:
+                return self.deployment.deployment_to_field_date.strftime("%m/%d/%Y")
+        return 'TBD'
 
     def get_sorted_reviewers(self):
         return self.user_draft.all().order_by('username')
@@ -120,6 +116,7 @@ class ConfigName(models.Model):
     name = models.CharField(max_length=255, unique=False, db_index=True)
     config_type = models.CharField(max_length=4, choices=CONFIG_TYPE, null=False, blank=False, default="cnst")
     created_at = models.DateTimeField(default=timezone.now)
+    deprecated = models.BooleanField(null=False, default=False)
     part = models.ForeignKey(Part, related_name='config_names', on_delete=models.CASCADE, null=True)
     include_with_calibrations = models.BooleanField(null=False, default=False)
     config_name_event = models.ForeignKey(ConfigNameEvent, related_name='config_names', on_delete=models.CASCADE, null=True)
@@ -140,7 +137,7 @@ class ConfigValue(models.Model):
     config_event = models.ForeignKey(ConfigEvent, related_name='config_values', on_delete=models.CASCADE, null=True)
     def config_value_with_export_formatting(self):
         if ',' in self.config_value:
-            return '"[{}]"'.format(self.config_value)
+            return '[{}]'.format(self.config_value)
         else:
             return self.config_value
 

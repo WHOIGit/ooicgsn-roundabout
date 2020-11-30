@@ -45,17 +45,16 @@ var password;
 	console.log('Error: Missing Arguments');
     }
 
-    // Step # | name | target | value
-    if (myArgs[1] == 'headless')
+   if (myArgs[2] == 'admin')
     {
-        await driver.get("http://localhost:8000/");   
+        await driver.get("http://localhost:8000/");
         user = "admin";
         password = "admin";
     }
     else
     {
-        // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
-        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+ //        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+        await driver.get("https://rdb-testing.whoi.edu/");
         user = "jkoch";
         password = "Automatedtests";
     }
@@ -110,14 +109,21 @@ var password;
             console.log("Delete Assemblies failed: Electric type not found");
 
        // Searches for and deletes the Assemblies added during the Add and Update Assemblies Test
-	    await new Promise(r => setTimeout(r, 4000));  //required for firefox
-        await driver.wait(until.elementLocated(By.id("searchbar-query")));
+	while ((await driver.findElements(By.id("searchbar-query"))).length == 0) // 1.6
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Search.");
+	}
         await driver.findElement(By.id("searchbar-query")).click();
         var dropdown = await driver.findElement(By.id("searchbar-modelselect"));
         await dropdown.findElement(By.xpath("//option[. = 'Assembly Templates']")).click();
         // 16 | type | id=searchbar-query | Test Assembly 2
         await driver.findElement(By.id("searchbar-query")).sendKeys("Test Assembly");
-        // 17 | click | css=.btn-outline-primary:nth-child(1) | 
+ 	while ((await driver.findElements(By.css(".btn-outline-primary:nth-child(1)"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Link1.");
+        }
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 18 | click | linkText=123-002 | 
 
@@ -125,11 +131,17 @@ var password;
 	{
             await driver.findElement(By.linkText("123-001")).click();
  
-            // 13 | click | linkText=Delete | 
-  	    await new Promise(r => setTimeout(r, 4000));  //required for firefox
+ 	    while ((await driver.findElements(By.linkText("Delete"))).length == 0)
+	    {
+	       await new Promise(r => setTimeout(r, 2000));
+	     console.log("Wait 2 seconds for Delete1.");
+	    }
             await driver.findElement(By.linkText("Delete")).click();
-            // 14 | click | css=.btn-danger | 
-            await driver.wait(until.elementLocated(By.css(".btn-danger")));
+ 	    while ((await driver.findElements(By.css(".btn-danger"))).length == 0)
+	    {
+	       await new Promise(r => setTimeout(r, 2000));
+	     console.log("Wait 2 seconds for Confirm1.");
+	    }
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
@@ -141,7 +153,11 @@ var password;
         await driver.findElement(By.id("searchbar-query")).click();
         // 16 | type | id=searchbar-query | Test Assembly 2
         await driver.findElement(By.id("searchbar-query")).sendKeys("Test Assembly 2");
-        // 17 | click | css=.btn-outline-primary:nth-child(1) | 
+ 	while ((await driver.findElements(By.css(".btn-outline-primary:nth-child(1)"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Link2.");
+        }
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 18 | click | linkText=123-002 | 
 
@@ -149,10 +165,17 @@ var password;
 	{
             await driver.findElement(By.linkText("123-002")).click();
             // 22 | click | linkText=Delete | 
-            await new Promise(r => setTimeout(r, 4000));  //required for firefox
+	    while ((await driver.findElements(By.linkText("Delete"))).length == 0)
+	    {
+	       await new Promise(r => setTimeout(r, 2000));
+	     console.log("Wait 2 seconds for Delete2.");
+	    }
             await driver.findElement(By.linkText("Delete")).click();
-            // 23 | click | css=.btn-danger | 
-            await driver.wait(until.elementLocated(By.css(".btn-danger")));
+ 	    while ((await driver.findElements(By.css(".btn-danger"))).length == 0)
+	    {
+	       await new Promise(r => setTimeout(r, 2000));
+	     console.log("Wait 2 seconds for Confirm2.");
+	    }
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
@@ -164,7 +187,11 @@ var password;
         await driver.findElement(By.id("searchbar-query")).click();
         // 25 | type | id=searchbar-query | Test Assembly 3
         await driver.findElement(By.id("searchbar-query")).sendKeys("Test Assembly 3");
-        // 26 | click | css=.btn-outline-primary:nth-child(1) | 
+ 	while ((await driver.findElements(By.css(".btn-outline-primary:nth-child(1)"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Link3.");
+        }
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 27 | click | linkText=123-003 | 
 
@@ -172,10 +199,17 @@ var password;
 	{
             await driver.findElement(By.linkText("123-003")).click();
             // 28 | click | linkText=Delete | 
-            await new Promise(r => setTimeout(r, 4000));  //required for firefox
+	    while ((await driver.findElements(By.linkText("Delete"))).length == 0)
+	    {
+	       await new Promise(r => setTimeout(r, 2000));
+	     console.log("Wait 2 seconds for Delete3.");
+	    }
             await driver.findElement(By.linkText("Delete")).click();
-            // 29 | click | css=.btn-danger | 
-            await driver.wait(until.elementLocated(By.css(".btn-danger")));
+ 	    while ((await driver.findElements(By.css(".btn-danger"))).length == 0)
+	    {
+	       await new Promise(r => setTimeout(r, 2000));
+	     console.log("Wait 2 seconds for Confirm3.");
+	    }
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else
@@ -186,19 +220,29 @@ var password;
         await driver.findElement(By.id("searchbar-query")).click();
         // 31 | type | id=searchbar-query | Singer
         await driver.findElement(By.id("searchbar-query")).sendKeys("Singer");
-        // 32 | click | css=.btn-outline-primary:nth-child(1) | 
+ 	while ((await driver.findElements(By.css(".btn-outline-primary:nth-child(1)"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Link4.");
+        }
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 33 | click | linkText=000-654-987 | 
-
 
 	if ((await driver.findElements(By.linkText("000-654-987"))).length != 0)
 	{
             await driver.findElement(By.linkText("000-654-987")).click();
             // 34 | click | linkText=Delete | 
-            await new Promise(r => setTimeout(r, 4000));  //required for firefox
+	    while ((await driver.findElements(By.linkText("Delete"))).length == 0)
+	    {
+	       await new Promise(r => setTimeout(r, 2000));
+	     console.log("Wait 2 seconds for Delete4.");
+	    }
             await driver.findElement(By.linkText("Delete")).click();
-            // 35 | click | css=.btn-danger | 
-            await driver.wait(until.elementLocated(By.css(".btn-danger")));
+ 	    while ((await driver.findElements(By.css(".btn-danger"))).length == 0)
+	    {
+	       await new Promise(r => setTimeout(r, 2000));
+	     console.log("Wait 2 seconds for Confirm4.");
+	    }
             await driver.findElement(By.css(".btn-danger")).click();
 	}
 	else

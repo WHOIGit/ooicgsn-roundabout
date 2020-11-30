@@ -37,7 +37,7 @@ from sigfig import round
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.forms.models import inlineformset_factory, BaseInlineFormSet
-from .utils import handle_reviewers
+from .utils import handle_reviewers, check_events
 
 # Handles creation of Calibration Events, Names,and Coefficients
 class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
@@ -50,7 +50,7 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         self.object = None
         inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
         coeff_event = inv_inst.part.coefficient_name_events.first()
-        cal_names = coeff_event.coefficient_names.all()
+        cal_names = coeff_event.coefficient_names.exclude(deprecated=True)
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         form.fields['user_draft'].required = True
@@ -484,6 +484,7 @@ class EventCoeffNameUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxForm
         part_calname_form.save()
         part_cal_copy_form.save()
         _create_action_history(self.object, Action.UPDATE, self.request.user)
+        check_events()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -550,6 +551,7 @@ class EventCoeffNameDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteVi
             'object_type': self.object.get_object_type(),
         }
         self.object.delete()
+        check_events()
         return JsonResponse(data)
 
     def get_success_url(self):

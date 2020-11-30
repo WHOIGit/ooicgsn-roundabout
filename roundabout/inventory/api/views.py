@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -19,18 +19,36 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import generics, viewsets, filters
-from ..models import Inventory
-from .serializers import InventorySerializer
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+
+from roundabout.core.api.views import FlexModelViewSet
+from .filters import *
+from .serializers import InventorySerializer, InventoryDeploymentSerializer, ActionSerializer, PhotoNoteSerializer
 
 
-class InventoryViewSet(viewsets.ModelViewSet):
+class InventoryViewSet(FlexModelViewSet):
     serializer_class = InventorySerializer
-    search_fields = ['serial_number']
-    filter_backends = (filters.SearchFilter,)
+    permission_classes = (IsAuthenticated,)
+    queryset = Inventory.objects.all()
+    filterset_class = InventoryFilter
 
-    def get_queryset(self):
-        queryset = Inventory.objects.all()
-        # Set up eager loading to avoid N+1 selects
-        queryset = self.get_serializer_class().setup_eager_loading(queryset)
-        return queryset
+
+class InventoryDeploymentViewSet(FlexModelViewSet):
+    serializer_class = InventoryDeploymentSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = InventoryDeployment.objects.all()
+    filterset_class = InventoryDeploymentFilter
+
+
+class ActionViewSet(FlexModelViewSet):
+    serializer_class = ActionSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = Action.objects.all()
+    filterset_class = ActionFilter
+
+
+class PhotoNoteViewSet(viewsets.ModelViewSet):
+    serializer_class = PhotoNoteSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = PhotoNote.objects.all()
