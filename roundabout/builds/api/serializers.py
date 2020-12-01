@@ -226,7 +226,17 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
                         for value in event.config_values.all():
                             configuration_values.append({
                                 'name': value.config_name.name,
-                                'value': value.config_value
+                                'value': value.config_value,
+                            })
+
+                # get all constant_default_events for this Inventory/Deployment
+                constant_default_values = []
+                if inv.inventory.constant_default_events.exists():
+                    for event in inv.inventory.constant_default_events.all():
+                        for value in event.constant_defaults.all():
+                            constant_default_values.append({
+                                'name': value.config_name.name,
+                                'value': value.default_value,
                             })
 
                 # get all custom_fields for this Inventory/Deployment
@@ -248,6 +258,7 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
                     'inventory_id': inv.inventory_id,
                     'inventory_serial_number': inv.inventory.serial_number,
                     'configuration_values': configuration_values,
+                    'constant_default_values': constant_default_values,
                     'custom_fields': custom_fields,
                 }
                 assembly_parts.append(item_obj)
