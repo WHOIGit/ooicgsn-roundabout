@@ -33,4 +33,5 @@ urlpatterns = [
     path('parts',view=views.PartTableView.as_view(),name='part'),
     path('assembly', view=views.AssemblyTableView.as_view(), name='assembly'),
     path('actions', view=views.ActionTableView.as_view(), name='action'),
+    path('user', view=views.UserSearchView.as_view(), name='user'),
 ]

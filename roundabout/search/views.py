@@ -25,17 +25,20 @@ from fnmatch import fnmatch
 from functools import reduce
 from urllib.parse import unquote
 
-import django_tables2 as tables
+from django import forms
 from django.contrib.auth.mixins import LoginRequiredMixin
 #from django.template.defaultfilters import register
 #from django.shortcuts import render, get_object_or_404
 #from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
-#from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, QueryDict
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, QueryDict
 from django.db.models import Q, Count, OuterRef, Subquery
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.html import mark_safe
-from django_tables2 import SingleTableView
+from django.views.generic import TemplateView
+
+import django_tables2 as tables
+from django_tables2 import SingleTableView, MultiTableMixin
 
 from roundabout.assemblies.models import Assembly
 from roundabout.builds.models import Build
@@ -743,6 +746,101 @@ class ConfigConstTableView(GenericSearchTableView):
 
         return {'extra_columns':[]}
 
-# TODO see sn CGINS-DOSTAD-00134 for approver/reviewer search functionality
-# http://0.0.0.0:8000/search/calibrations?f=.0.calibration_event__inventory__serial_number&l=.0.icontains&q=.0.CGINS-DOSTAD-00134
-# http://0.0.0.0:8000/search/inventory?f=.0.serial_number&l=.0.icontains&q=.0.CGINS-DOSTAD-00134
+
+# ======================CUSTOM==REVIEWER==SEARCH==PAGE====================== #
+
+class ListTextWidget(forms.TextInput):
+    def __init__(self, data_list, name, *args, **kwargs):
+        super(ListTextWidget, self).__init__(*args, **kwargs)
+        self._name = name
+        self._list = data_list
+        self.attrs.update({'list':'list__{}'.format(self._name)})
+
+    def render(self, name, value, attrs=None, renderer=None):
+        text_html = super(ListTextWidget, self).render(name, value, attrs=attrs)
+        data_list = '<datalist id="list__{}">'.format(self._name)
+        for item in self._list:
+            data_list += '<option value="{}">'.format(item)
+        data_list += '</datalist>'
+        return (text_html + data_list)
+
+class UserSearchForm(forms.Form):
+    q = forms.CharField(required=True, label='Name')
+    ccc_reviewer = forms.BooleanField(required=False, label='is CCC Reviewer')
+    ccc_approver = forms.BooleanField(required=False, label='is CCC Approver')
+    ccc_unapproved_only = forms.BooleanField(required=False, label='show un-approved CCCs only')
+
+    def __init__(self, *args, **kwargs):
+        default_userlist = User.objects.all().values_list('username',flat=True)
+        userlist = kwargs.pop('data_list', default_userlist)
+        super(UserSearchForm, self).__init__(*args, **kwargs)
+        self.fields['q'].widget=ListTextWidget(userlist, name='userlist')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        ccc_reviewer = cleaned_data.get("ccc_reviewer")
+        ccc_approver = cleaned_data.get("ccc_approver")
+
+        if not (ccc_reviewer or ccc_approver):
+            raise forms.ValidationError('Error: At least one of "is CCC Reviewer" and "is CCC Approver" must be checked')
+
+class UserSearchView(LoginRequiredMixin, MultiTableMixin, TemplateView):
+    tables = [CalibrationTable,ConfigConstTable, ActionTable]
+    table_titles = ['Calibration Events', 'Configuration/Constant Events', 'Actions']
+    table_pagination = {"per_page": 10}
+    template_name = 'search/ReviewerApproverSearch.html'
+    form_class = UserSearchForm
+
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+        for table in self.tables:
+            table.shift_table_column = False
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        for table,title in zip(context['tables'],self.table_titles):
+            table.attrs['title'] = title
+        return context
+
+    def get_tables_data(self):
+        if 'q' in self.request.GET:
+            user_query = self.request.GET.get('q')
+            user_approver = self.request.GET.get('ccc_approver',False)
+            user_draft = self.request.GET.get('ccc_reviewer',False)
+            ccc_unapproved_only = self.request.GET.get('ccc_unapproved_only',False)
+        else: # defaults
+            user_query = self.request.user.username
+            user_approver = user_draft = True
+            ccc_unapproved_only = True
+
+        CCC_Q_approver = Q(user_approver__username__icontains=user_query) | Q(user_approver__name__icontains=user_query)
+        CCC_Q_draft = Q(user_draft__username__icontains=user_query) | Q(user_draft__name__icontains=user_query)
+        action_Q = Q(user__username__icontains=user_query) | Q(user__name__icontains=user_query)
+
+        if user_approver and user_draft:
+            CCC_Q = CCC_Q_approver | CCC_Q_draft
+        elif user_approver: CCC_Q = CCC_Q_approver
+        elif user_draft: CCC_Q = CCC_Q_draft
+        else: CCC_Q = Q(pk__in=[]) # else select none
+
+        if ccc_unapproved_only:
+            CCC_Q = CCC_Q & Q(approved=False)
+
+        cal_qs = CalibrationEvent.objects.prefetch_related('user_approver','user_draft').filter(CCC_Q)
+        confconst_qs = ConfigEvent.objects.prefetch_related('user_approver','user_draft').filter(CCC_Q)
+        action_qs = Action.objects.select_related('user').filter(action_Q)
+
+        return [cal_qs,confconst_qs,action_qs]
+
+    def get(self, request, *args, **kwargs):
+        initial = dict(q=request.user.username, ccc_reviewer=True, ccc_approver=True, ccc_unapproved_only=True)
+        if 'q' in request.GET:
+            form = self.form_class(request.GET)
+        else:
+            form = self.form_class(initial)
+        context = self.get_context_data()
+        context['form'] = form
+        return self.render_to_response(context)
+
+
+

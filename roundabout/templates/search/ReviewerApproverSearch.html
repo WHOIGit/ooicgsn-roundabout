@@ -1,0 +1,95 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+{% extends "base.html" %}
+{% load static i18n %}
+{% load mptt_tags %}
+{% load crispy_forms_tags %}
+{% load render_table from django_tables2 %}
+{% load export_url from django_tables2 %}
+{% load querystring from django_tables2 %}
+{% block title %}{{ model }} Search{% endblock %}
+
+{% block javascript %}
+  <script>
+    window.addEventListener("load", function(){
+
+      // fixes loss of pagination formatting due somehow to django_tables2_column_shifter
+      $('.table-container nav ul').addClass('justify-content-center')
+      $('.table-container nav ul li').addClass('page-item')
+      $('.table-container nav ul li a').addClass('page-link')
+
+      // Add reset-shown-columns button to show/hide drowdown interface
+      const new_li = '<li><a href="javascript:reset_column_shifter_defaults()">Reset Defaults</a></li>'
+      $('.table-container .btn-group ul').prepend(new_li)
+
+      // Activate floating horizontal scrollbar
+      // see: https://github.com/Amphiluke/floating-scroll
+      $('.table').floatingScroll('init')
+
+    })
+
+  </script>
+{% endblock javascript %}
+
+
+{% block content %}
+
+<div class="row">
+
+  <!-- SEARCH CONTROLS -->
+  <div class="col-md-4 search-control">
+    <div class="row">
+      <div class="col-sm-12 d-flex flex-row">
+        <h2>Search: Reviewer & Approver</h2>
+      </div>
+    </div>
+
+    <form action="" method="get">
+      <table>
+      {{ form.as_table }}
+      </table>
+      <input type="submit" value="Submit">
+    </form>
+
+  </div>
+
+
+  <!-- LISTVIEW -->
+  <div class="col-md-8 search-results">
+
+    <div class="card" id="search-list-view">
+      <div class="card-header">
+        <h3>Search Results</h3>
+      </div>
+      <div class="card-body">
+      {% for table in tables %}
+        <h3>{{ table.attrs.title }}</h3>
+          {% render_table table %}
+        <br>
+      {% endfor %}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
