@@ -323,6 +323,7 @@
                 </td>
             </tr>
             {% endif %}
+            {% if inventory_item.location %}
             <tr>
                 <th>Current Location</th>
                 <td>
@@ -334,6 +335,20 @@
                     </a>
                 </td>
             </tr>
+            {% else %}
+            <tr>
+                <div class="alert alert-danger" role="alert">
+                    <h5>Warning! This Inventory Item has no Location assigned</h5>
+                    <p>All Inventory in Roundabout should have a Location assigned to it. Use the
+                        <a href="#"
+                            data-detail-url="{% url 'inventory:ajax_inventory_action' 'locationchange' inventory_item.id %}"
+                            data-node-id="{{ inventory_item.id }}"
+                            data-location-id="{{ inventory_item.location.id}}"
+                            data-node-type="{{ node_type }}">Location Change</a>
+                    Action to fix this issue.</p>
+                </div>
+            </tr>
+            {% endif %}
             <tr>
                 <th>Total Time in Field</th>
                 <td>
