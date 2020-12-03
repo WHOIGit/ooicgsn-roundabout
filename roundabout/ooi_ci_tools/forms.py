@@ -308,8 +308,6 @@ def validate_cal_files(csv_files,ext_files):
                 inv_manufacturer_serial = serial_label_qs[0].field_value
             else:
                 inv_manufacturer_serial = ''
-            if 'OPTAA' in inventory_item.part.name:
-                inv_manufacturer_serial = 'ACS-'+inv_manufacturer_serial
         except:
             raise ValidationError(
                 _('File: %(filename)s, %(value)s: Cannot find Manufacturer Serial Number for Inventory Item'),
