@@ -142,10 +142,15 @@ class ImportVesselsForm(forms.Form):
             for row in reader:
                 try:
                     vessel_name = row['Vessel Name']
-                except:
+                    vessel_obj = Vessel.objects.get(
+                        vessel_name = vessel_name,
+                    )
+                except Vessel.DoesNotExist:
+                    vessel_obj = ''
+                except Vessel.MultipleObjectsReturned:
                     raise ValidationError(
-                        _('File: %(filename)s: Unable to parse Vessel Name'),
-                        params={'filename': filename},
+                        _('File: %(filename)s, %(v_name)s: More than one Vessel associated with CSV Vessel Name'),
+                        params={'filename': filename, 'v_name': vessel_name},
                     )
                 MMSI_number = None
                 IMO_number = None
@@ -302,9 +307,29 @@ def validate_cal_files(csv_files,ext_files):
                 _('File: %(filename)s, %(value)s: More than one existing Deployment associated with File Deployment Date'),
                 params={'value': cal_date_string, 'filename': cal_csv.name},
             )
+        try:
+            serial_label_qs = inventory_item.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number',is_current=True)
+            if serial_label_qs.exists():
+                inv_manufacturer_serial = serial_label_qs[0].field_value
+            else:
+                inv_manufacturer_serial = ''
+        except:
+            raise ValidationError(
+                _('File: %(filename)s, %(value)s: Cannot find Manufacturer Serial Number for Inventory Item'),
+                params={'value': inventory_item, 'filename': cal_csv.name},
+            )
         for idx, row in enumerate(reader):
             row_data = row.items()
             for key, value in row_data:
+                if key == 'serial':
+                    csv_manufacturer_serial = value.strip()
+                    try:
+                        assert csv_manufacturer_serial == inv_manufacturer_serial
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s, Serial Number: %(value)s, Row %(row)s: Manufacturer Serial Numbers differ between CSV and Inventory Item'),
+                            params={'value': csv_manufacturer_serial, 'row': idx, 'filename': cal_csv.name},
+                        )
                 if key == 'name':
                     calibration_name = value.strip()
                     try:
