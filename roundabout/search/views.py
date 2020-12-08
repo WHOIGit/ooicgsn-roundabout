@@ -25,19 +25,17 @@ from fnmatch import fnmatch
 from functools import reduce
 from urllib.parse import unquote
 
+import django_tables2 as tables
 from django import forms
 from django.contrib.auth.mixins import LoginRequiredMixin
 #from django.template.defaultfilters import register
 #from django.shortcuts import render, get_object_or_404
 #from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, QueryDict
 from django.db.models import Q, Count, OuterRef, Subquery
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.html import mark_safe
 from django.views.generic import TemplateView
-
-import django_tables2 as tables
 from django_tables2 import SingleTableView, MultiTableMixin
 
 from roundabout.assemblies.models import Assembly
@@ -82,6 +80,7 @@ def searchbar_redirect(request):
         elif model == 'build':      getstr = '?f=.0.build_number&f=.0.assembly__name&f=.0.assembly__assembly_type__name&f=.0.assembly__description&f=.0.build_notes&f=.0.location__name&l=.0.icontains&q=.0.{query}'
         elif model == 'assembly':   getstr = '?f=.0.assembly_number&f=.0.name&f=.0.assembly_type__name&f=.0.description&l=.0.icontains&q=.0.{query}'
         elif model == 'action':     getstr = '?f=.0.action_type&f=.0.user__name&f=.0.detail&f=.0.location__name&f=.0.inventory__serial_number&f=.0.inventory__part__name&l=.0.icontains'+'&q=.0.{query}'
+        elif model == 'user':       getstr = '?ccc_role=both&ccc_status=all'+'&q={query}'
         getstr = getstr.format(query=query)
         resp['Location'] += getstr
     return resp
@@ -766,23 +765,14 @@ class ListTextWidget(forms.TextInput):
 
 class UserSearchForm(forms.Form):
     q = forms.CharField(required=True, label='Name')
-    ccc_reviewer = forms.BooleanField(required=False, label='is CCC Reviewer')
-    ccc_approver = forms.BooleanField(required=False, label='is CCC Approver')
-    ccc_unapproved_only = forms.BooleanField(required=False, label='show un-approved CCCs only')
+    ccc_role = forms.ChoiceField(label='CCC Role',choices=[('both','Both'),('app','Approver'),('rev','Reviewer')])
+    ccc_status = forms.ChoiceField(label='CCC Status',choices=[('all','Show All'),('app','Show Approved'),('uapp','Show UnApproved')])
 
     def __init__(self, *args, **kwargs):
         default_userlist = User.objects.all().values_list('username',flat=True)
         userlist = kwargs.pop('data_list', default_userlist)
         super(UserSearchForm, self).__init__(*args, **kwargs)
         self.fields['q'].widget=ListTextWidget(userlist, name='userlist')
-
-    def clean(self):
-        cleaned_data = super().clean()
-        ccc_reviewer = cleaned_data.get("ccc_reviewer")
-        ccc_approver = cleaned_data.get("ccc_approver")
-
-        if not (ccc_reviewer or ccc_approver):
-            raise forms.ValidationError('Error: At least one of "is CCC Reviewer" and "is CCC Approver" must be checked')
 
 class UserSearchView(LoginRequiredMixin, MultiTableMixin, TemplateView):
     tables = [CalibrationTable,ConfigConstTable, ActionTable]
@@ -805,26 +795,28 @@ class UserSearchView(LoginRequiredMixin, MultiTableMixin, TemplateView):
     def get_tables_data(self):
         if 'q' in self.request.GET:
             user_query = self.request.GET.get('q')
-            user_approver = self.request.GET.get('ccc_approver',False)
-            user_draft = self.request.GET.get('ccc_reviewer',False)
-            ccc_unapproved_only = self.request.GET.get('ccc_unapproved_only',False)
+            ccc_role = self.request.GET.get('ccc_role',None)
+            ccc_status = self.request.GET.get('ccc_status',None)
         else: # defaults
             user_query = self.request.user.username
-            user_approver = user_draft = True
-            ccc_unapproved_only = True
+            ccc_role = 'both'
+            ccc_status = 'all'
 
         CCC_Q_approver = Q(user_approver__username__icontains=user_query) | Q(user_approver__name__icontains=user_query)
         CCC_Q_draft = Q(user_draft__username__icontains=user_query) | Q(user_draft__name__icontains=user_query)
         action_Q = Q(user__username__icontains=user_query) | Q(user__name__icontains=user_query)
 
-        if user_approver and user_draft:
+        if ccc_role == 'both':
             CCC_Q = CCC_Q_approver | CCC_Q_draft
-        elif user_approver: CCC_Q = CCC_Q_approver
-        elif user_draft: CCC_Q = CCC_Q_draft
+        elif ccc_role == 'app': CCC_Q = CCC_Q_approver
+        elif ccc_role == 'rev': CCC_Q = CCC_Q_draft
         else: CCC_Q = Q(pk__in=[]) # else select none
 
-        if ccc_unapproved_only:
+        if ccc_status=='uapp':
             CCC_Q = CCC_Q & Q(approved=False)
+        elif ccc_status=='app':
+            CCC_Q = CCC_Q & Q(approved=True)
+        # else show all CCCs regardless of approval status
 
         cal_qs = CalibrationEvent.objects.prefetch_related('user_approver','user_draft').filter(CCC_Q)
         confconst_qs = ConfigEvent.objects.prefetch_related('user_approver','user_draft').filter(CCC_Q)
@@ -833,7 +825,7 @@ class UserSearchView(LoginRequiredMixin, MultiTableMixin, TemplateView):
         return [cal_qs,confconst_qs,action_qs]
 
     def get(self, request, *args, **kwargs):
-        initial = dict(q=request.user.username, ccc_reviewer=True, ccc_approver=True, ccc_unapproved_only=True)
+        initial = dict(q=request.user.username, ccc_role='both', ccc_status='all')
         if 'q' in request.GET:
             form = self.form_class(request.GET)
         else:
@@ -842,5 +834,7 @@ class UserSearchView(LoginRequiredMixin, MultiTableMixin, TemplateView):
         context['form'] = form
         return self.render_to_response(context)
 
-
+#TODO 1) expand user-search result tables
+#     2) date range thing
+#     3) TASK 6
 
