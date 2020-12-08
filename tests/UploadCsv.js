@@ -247,33 +247,6 @@ var filename;
                 } 
         }
 
-        // Upload Calibration CSV
-
-
-	// Set Manufacturer Serial Number in the Pin Inventory needed for UploadCsv test
-   /*     await driver.findElement(By.id("searchbar-query")).sendKeys("Pin Template");
-        // 8 | select | id=searchbar-modelselect | label=Part Templates
-        {
-            const dropdown = await driver.findElement(By.id("searchbar-modelselect"))
-            await dropdown.findElement(By.xpath("//option[. = 'Inventory']")).click()
-        }
-        await driver.findElement(By.css(".btn:nth-child(1)")).click()
-	while ((await driver.findElements(By.css(".even a"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Search1.");
-	}
-        await driver.findElement(By.css(".even a")).click();
-	while ((await driver.findElements(By.id("action"))).length == 0) 
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Search2.");
-	}
-        await driver.findElement(By.id("action")).click();
-	await new Promise(r => setTimeout(r, 4000));
-        await driver.findElement(By.linkText("Edit Inventory Details")).click();
-	await driver.findElement(By.id("id_udffield_2")).sendKeys("20004");
-	await driver.findElement(By.css(".controls > .btn-primary")).click(); */
 
         // Upload Calibration CSV
         await driver.findElement(By.id("navbarAdmintools")).click()
