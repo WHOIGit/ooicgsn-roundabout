@@ -307,7 +307,7 @@ var token;
         });
         json = await rsp.json();
         if (rsp.ok) {
-           for (let [key, value] of rsp.headers) {
+           for (const [key, value] of rsp.headers) {
                 if (key == 'link') {
                     link = value;
                 }
