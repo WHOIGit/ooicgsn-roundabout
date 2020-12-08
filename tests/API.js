@@ -300,14 +300,14 @@ var token;
 
         // CRUISES
         // There are 10 pages of cruises, get the header link field and verify 10 pages returned
-        var link;
+        var link = ' ';
         rsp = await fetch(url + 'cruises', {
             method: 'GET',
             headers: header,
         });
         json = await rsp.json();
         if (rsp.ok) {
-           for (const [key, value] of rsp.headers) {
+           for (let [key, value] of rsp.headers) {
                 if (key == 'link') {
                     link = value;
                 }
