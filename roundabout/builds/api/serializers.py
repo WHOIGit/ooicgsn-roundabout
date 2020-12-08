@@ -252,7 +252,7 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
                 for event in inv.inventory.calibration_events.all():
                     # find the CalibrationEvent valid date range that matches Deployment date
                     first_date, last_date = event.get_valid_calibration_range()
-                    if first_date < inv.deployment_to_field_date < last_date:
+                    if inv.deployment_to_field_date and first_date < inv.deployment_to_field_date < last_date:
                         for value in event.coefficient_value_sets.all():
                             calibration_values.append({
                                 'name': value.coefficient_name.calibration_name,
@@ -285,12 +285,17 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
             request = self.context.get("request")
             inventory_url = reverse('api_v1:inventory-detail', kwargs={'pk': inv.inventory_id}, request=request)
             assembly_part_url = reverse('api_v1:assembly-templates/assembly-parts-detail', kwargs={'pk': inv.assembly_part_id}, request=request)
+            if inv.assembly_part and inv.assembly_part.parent:
+                parent_assembly_part_url = reverse('api_v1:assembly-templates/assembly-parts-detail', kwargs={'pk': inv.assembly_part.parent_id}, request=request)
+            else:
+                parent_assembly_part_url = None
             # create object to populate the "assembly_part" list
             item_obj = {
                 'assembly_part_id': inv.assembly_part_id,
                 'assembly_part_url': assembly_part_url,
                 'part_name': inv.inventory.part.name,
                 'parent_assembly_part_id': inv.assembly_part.parent_id if inv.assembly_part else None,
+                'parent_assembly_part_url': parent_assembly_part_url,
                 'inventory_id': inv.inventory_id,
                 'inventory_url': inventory_url,
                 'inventory_serial_number': inv.inventory.serial_number,

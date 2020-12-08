@@ -73,6 +73,7 @@ class CalibrationEvent(models.Model):
 
         calibration_range = [self.calibration_date, last_date]
         print(calibration_range)
+        print(self)
         return calibration_range
 
 
