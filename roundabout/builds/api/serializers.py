@@ -229,6 +229,22 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
                                 'value': value.config_value,
                             })
 
+                # get all calibration_events for this Inventory/Deployment
+                # need to get the CalibrationEvent that matches the Deployment date
+                # calibration_date field sets the range for valid Calibration Events
+                calibration_values = []
+                if inv.inventory.calibration_events.exists():
+                    for event in inv.inventory.calibration_events.all():
+                        # find the CalibrationEvent valid date range that matches Deployment date
+                        first_date, last_date = event.get_valid_calibration_range()
+                        if first_date < inv.deployment_to_field_date < last_date:
+                            for value in event.coefficient_value_sets.all():
+                                calibration_values.append({
+                                    'name': value.coefficient_name.calibration_name,
+                                    'value': value.value_set,
+                                })
+                            break
+
                 # get all constant_default_events for this Inventory/Deployment
                 constant_default_values = []
                 if inv.inventory.constant_default_events.exists():
@@ -258,6 +274,7 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
                     'inventory_id': inv.inventory_id,
                     'inventory_serial_number': inv.inventory.serial_number,
                     'configuration_values': configuration_values,
+                    'calibration_values': calibration_values,
                     'constant_default_values': constant_default_values,
                     'custom_fields': custom_fields,
                 }
