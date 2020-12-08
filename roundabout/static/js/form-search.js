@@ -272,15 +272,18 @@ function DoSubmit(e){
 
             //Assert that field input matches field type
             if ( ! lookup_categories[avail_fields[idx].legal_lookup].includes(lookup_value) ){
-                validation_alerts.push(`Field "${field_text}" cannot be used with "${lookup_text}".`)
+                validation_alerts.push(`Field "${field_text}" cannot be used with Lookup "${lookup_text}".`)
             }
 
             //Assert that date input is valid
-            if (avail_fields[idx].legal_lookup === 'DATE_LOOKUP' && lookup_value !== 'isnull') {
+            if ( lookup_value === 'date' && !query_value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                validation_alerts.push(`"Date" lookup query "${query_value}" is invalid. Must use "YYYY-MM-DD" format`)
+            }
+            else if (avail_fields[idx].legal_lookup === 'DATE_LOOKUP' && lookup_value !== 'isnull') {
                 if ( !( query_value.match(/^\d{4}-\d{2}-\d{2}$/) ||
                         query_value.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/) ||
                         query_value.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/) )){
-                    validation_alerts.push(`Date query "${query_value}" is invalid. Must use "YYYY-MM-DD" or "YYYY-MM-DD HH:MM" format`)
+                    validation_alerts.push(`Date query "${query_value}" is invalid. Must use "YYYY-MM-DD [HH:MM[:SS]]" format`)
                 }
                 else if (! Date.parse(query_value)){
                     validation_alerts.push(`Date query "${query_value}" is invalid`)

@@ -68,12 +68,12 @@ def searchbar_redirect(request):
         elif model=='calibrations':
             if fnmatch(query.strip(),'????-??-??'):
                 query = query.strip()
-                getstr = '?f=.0.calibration_event__calibration_date&l=.0.exact&q=.0.{query}'
+                getstr = '?f=.0.calibration_event__calibration_date&l=.0.date&q=.0.{query}'
             else: getstr = '?f=.0.calibration_event__inventory__serial_number&f=.0.calibration_event__inventory__part__name&f=.0.coefficient_name__calibration_name&f=.0.calibration_event__user_approver__any__name&f=.0.calibration_event__user_draft__any__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
         elif model == 'configconsts':
             if fnmatch(query.strip(), '????-??-??'):
                 query = query.strip()
-                getstr = '?f=.0.config_event__configuration_date&l=.0.exact&q=.0.{query}'
+                getstr = '?f=.0.config_event__configuration_date&l=.0.date&q=.0.{query}'
             else:
                 getstr = '?f=.0.config_event__inventory__serial_number&f=.0.config_event__inventory__part__name&f=.0.config_name__name&f=.0.config_event__user_approver__any__name&f=.0.config_event__user_draft__any__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
         elif model=='part':         getstr = '?f=.0.part_number&f=.0.name&f=.0.friendly_name&l=.0.icontains&q=.0.{query}'
@@ -306,6 +306,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
 
         avail_lookups = [dict(value='icontains',text='Contains'),
                          dict(value='exact',    text='Exact'),
+                         dict(value='date',     text='Date'),
                          dict(value='gte',      text='>='),
                          dict(value='lte',      text='<='),
                          dict(value='isnull',   text='Is-Null')]
@@ -647,7 +648,7 @@ class ActionTableView(GenericSearchTableView):
     def get_avail_fields():
         avail_fields = [dict(value="action_type", text="Action Type", legal_lookup='STR_LOOKUP'),
                         dict(value="user__name", text="User", legal_lookup='STR_LOOKUP'),
-                        dict(value="created_at", text="Timestamp", legal_lookup='DATETIME_LOOKUP'),
+                        dict(value="created_at", text="Timestamp", legal_lookup='DATE_LOOKUP'),
                         dict(value="detail", text="Detail", legal_lookup='STR_LOOKUP'),
                         dict(value="location__name",text="Location",legal_lookup='STR_LOOKUP'),
                         dict(value="inventory__serial_number", text="Inventory: Serial Number", legal_lookup='STR_LOOKUP'),
