@@ -190,8 +190,7 @@ class ExportCalibrationEvents(ZipExport):
 
     @staticmethod
     def get_csvrows_aux(cal):
-        serial_label_qs = cal.inventory.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number',
-                                                           is_current=True)
+        serial_label_qs = cal.inventory.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number',is_current=True)
         if serial_label_qs.exists():
             serial_label = serial_label_qs[0].field_value
         else:

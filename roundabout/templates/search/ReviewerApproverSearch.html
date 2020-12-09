@@ -74,22 +74,22 @@
   </div>
 
 
-  <!-- LISTVIEW -->
+  <!-- SEARCH RESULTS -->
   <div class="col-md-8 search-results">
+    <h2>Search Results</h2>
 
-    <div class="card" id="search-list-view">
-      <div class="card-header">
-        <h3>Search Results</h3>
+    {% for table in tables %}
+      <div class="card">
+        <div class="card-header">
+          <h3>{{ table.attrs.title }}</h3>
+        </div>
+        <div class="card-body">
+            {% render_table table %}
+        </div>
       </div>
-      <div class="card-body">
-      {% for table in tables %}
-        <h3>{{ table.attrs.title }}</h3>
-          {% render_table table %}
-        <br>
-      {% endfor %}
+    <br>
+    {% endfor %}
 
-      </div>
-    </div>
   </div>
 </div>
 
