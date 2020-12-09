@@ -201,6 +201,14 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
         lookup_field = 'pk',
         queryset = Build.objects
     )
+    location_id = serializers.SerializerMethodField('get_location_id')
+    location_name = serializers.SerializerMethodField('get_location_name')
+    location_url = serializers.HyperlinkedRelatedField(
+        source='deployed_location',
+        view_name = API_VERSION + ':locations-detail',
+        lookup_field = 'pk',
+        queryset = Location.objects
+    )
     assembly_parts = serializers.SerializerMethodField('get_assembly_parts')
 
     class Meta:
@@ -212,6 +220,9 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
             'deployment_id',
             'deployment_url',
             'deployment_number',
+            'location_id',
+            'location_name',
+            'location_url',
             'current_status',
             'assembly_parts',
         ]
@@ -224,6 +235,16 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
     def get_build_number(self, obj):
         if obj.build:
             return obj.build.build_number
+        return None
+
+    def get_location_id(self, obj):
+        if obj.deployed_location:
+            return obj.deployed_location.id
+        return None
+
+    def get_location_name(self, obj):
+        if obj.deployed_location:
+            return obj.deployed_location.name
         return None
 
     def get_assembly_parts(self, obj):
