@@ -172,7 +172,9 @@ class ExportCalibrationEvents(ZipExport):
 
     @classmethod
     def build_zip(cls, zf, objs, subdir=None):
+        objs = objs.select_related('inventory__part__part_type').exclude(inventory__part__part_type__ccc_toggle=False)
         objs = objs.prefetch_related('inventory', 'inventory__fieldvalues', 'inventory__fieldvalues__field')
+
         for cal in objs:
             csv_fname = '{}__{}.csv'.format(cal.inventory.serial_number, cal.calibration_date.strftime('%Y%m%d'))
             if subdir: csv_fname = join(subdir, csv_fname)
@@ -190,7 +192,7 @@ class ExportCalibrationEvents(ZipExport):
 
     @staticmethod
     def get_csvrows_aux(cal):
-        serial_label_qs = cal.inventory.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number',is_current=True)
+        serial_label_qs = cal.inventory.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number', is_current=True)
         if serial_label_qs.exists():
             serial_label = serial_label_qs[0].field_value
         else:
@@ -225,7 +227,9 @@ class ExportConfigEvents(ZipExport):
 
     @classmethod
     def build_zip(cls, zf, objs, subdir=None):
+        objs = objs.select_related('inventory__part__part_type').exclude(inventory__part__part_type__ccc_toggle=False)
         objs = objs.prefetch_related('inventory', 'inventory__fieldvalues', 'inventory__fieldvalues__field')
+
         for confconst in objs:
             csv_fname = '{}__{}.csv'.format(confconst.inventory.serial_number,
                                             confconst.configuration_date.strftime('%Y%m%d'))
@@ -277,10 +281,9 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
         calib_qs = CalibrationEvent.objects.all().annotate(date = F('calibration_date')).order_by('-date')
         config_qs = ConfigEvent.objects.all().annotate(date = F('configuration_date')).order_by('-date')
 
-        # keep only configs that are associated with a deployment and approved
-        # -- commented out for verbose output in build_zip() --
-        #config_qs = config_qs.filter(approved=True)
-        #config_qs = config_qs.exclude(deployment__isnull=True)
+        # keep only CCCs that are active in the part-template
+        config_qs = config_qs.select_related('inventory__part__part_type').exclude(inventory__part__part_type__ccc_toggle=False)
+        calib_qs = calib_qs.select_related('inventory__part__part_type').exclude(inventory__part__part_type__ccc_toggle=False)
 
         # keep only configs where at least one ConfigValue has include_with_calibration=True
         include_with_calibs = ConfigValue.objects.filter(config_event=OuterRef('pk'), config_name__include_with_calibrations=True)

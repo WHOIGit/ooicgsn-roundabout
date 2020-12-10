@@ -691,6 +691,8 @@ class CalibrationTableView(GenericSearchTableView):
         # final query results must be CalibrationEvents.
         calibration_event_ids = qs.values_list('calibration_event__id', flat=True)
         qs = CalibrationEvent.objects.filter(id__in=calibration_event_ids)
+        qs = qs.prefetch_related(*[pf.replace('calibration_event__','') for pf in self.query_prefetch if pf.startswith('calibration_event__')])
+        qs = qs.select_related('inventory__part__part_type').exclude(inventory__part__part_type__ccc_toggle=False)
         return qs
     def get_table_kwargs(self):
         # since search model is CoefficientValueSet and results are CalibrationEvents,
@@ -731,6 +733,8 @@ class ConfigConstTableView(GenericSearchTableView):
         # final query results must be CalibrationEvents.
         config_event_ids = qs.values_list('config_event__id', flat=True)
         qs = ConfigEvent.objects.filter(id__in=config_event_ids)
+        qs = qs.prefetch_related(*[pf.replace('config_event__','') for pf in self.query_prefetch if pf.startswith('config_event__')])
+        qs = qs.select_related('inventory__part__part_type').exclude(inventory__part__part_type__ccc_toggle=False)
         return qs
     def get_table_kwargs(self):
         # since search model is ConfigValue and results are ConfigEvents,
