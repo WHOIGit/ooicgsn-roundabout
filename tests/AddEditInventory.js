@@ -109,7 +109,7 @@ var password;
         // 6 | select | id=id_part | label=Sewing Template
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await new Promise(r => setTimeout(r, 2000)); //New for 1.6 - This field blanked back out without timeout
+            await new Promise(r => setTimeout(r, 4000)); //New for 1.6 - This field blanked back out without timeout
             await dropdown.findElement(By.xpath("//option[. = 'Sewing Template']")).click();
         }
         // 7 | select | id=id_location | label=Test
@@ -121,7 +121,7 @@ var password;
 
         // 8 | storeValue | id=id_serial_number | Serial_Number
         // Stores the value of the Serial Number assigned
-	await new Promise(r => setTimeout(r, 2000)); 
+	await new Promise(r => setTimeout(r, 4000)); 
         var Serial_Number = await driver.findElement(By.id("id_serial_number")).getAttribute("value");
 	//let encodedString = await driver.takeScreenshot();
 	//await fs.writeFileSync('/tests/iscreen.png', encodedString, 'base64');      

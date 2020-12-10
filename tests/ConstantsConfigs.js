@@ -15,7 +15,7 @@ var user;
 var password;
 
 
-(async function addBuilds() {
+(async function constantsConfigs() {
 
     let chromeCapabilities = Capabilities.chrome();
     var firefoxOptions = new firefox.Options();

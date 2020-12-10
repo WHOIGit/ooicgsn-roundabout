@@ -374,7 +374,9 @@ var token;
         // CALIBRATIONS
 
         // STRESS TEST - run GETS in a loop
-        var start = new Date().getTime();
+	// User “throttling” enabled on the API. So a single user can only make 1000 number of requests in a 24 hour period.
+	// This is working - comment out - there is no need to run this every time.
+/*        var start = new Date().getTime();
         for (var i = 0; i < 1000; i++) {
             rsp = await fetch(url + 'vessels/', {
                 method: 'GET',
@@ -396,16 +398,16 @@ var token;
         }
         var end = new Date().getTime();
         console.log("Time to fetch 1000 items in minutes:", (end - start)/60000);
-
+*/
 
  
     }
     catch (e) {
         console.log(e.message, e.stack);
         console.log("API failed.");
-        return 1;
+        return Promise.resolve(1);
     }
     console.log("API completed.");
-    return 0;
+    return Promise.resolve(0);
 
 })();
