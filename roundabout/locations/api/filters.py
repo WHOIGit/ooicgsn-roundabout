@@ -40,7 +40,7 @@ class LocationFilter(filters.FilterSet):
             'children',
             'weight',
             'location_type',
-            'location_id',
+            'location_code',
             'root_type',
             'inventory',
             'builds',

@@ -77,7 +77,7 @@ class LocationSerializer(serializers.HyperlinkedModelSerializer, FlexFieldsModel
             'children',
             'weight',
             'location_type',
-            'location_id',
+            'location_code',
             'root_type',
             'created_at',
             'updated_at',

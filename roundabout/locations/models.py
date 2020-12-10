@@ -45,7 +45,7 @@ class Location(MPTTModel):
     name = models.CharField(max_length=100)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True, on_delete=models.SET_NULL)
     location_type = models.CharField(max_length=20, choices=LOC_TYPES, blank=True)
-    location_id = models.CharField(max_length=100, blank=True)
+    location_code = models.CharField(max_length=100, blank=True)
     weight = models.IntegerField(default=0, blank=True, null=True)
     root_type = models.CharField(max_length=20, choices=ROOT_TYPES, blank=True)
     created_at = models.DateTimeField(default=timezone.now)

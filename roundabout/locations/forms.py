@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -28,15 +28,11 @@ from mptt.forms import TreeNodeChoiceField
 from .models import Location
 
 
-
 class LocationForm(forms.ModelForm):
 
     class Meta:
         model = Location
-        fields = ['name', 'parent', 'location_type', 'location_id' ]
-        labels = {
-        'location_id': 'Location ID'
-    }
+        fields = ['name', 'parent', 'location_type', 'location_code' ]
 
     def clean_parent(self):
         if self.instance:

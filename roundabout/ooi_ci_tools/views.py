@@ -34,6 +34,10 @@ from django.views.generic import TemplateView, FormView
 
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.assemblies.models import Assembly
+from roundabout.builds.models import Build
+from roundabout.locations.models import Location
+from roundabout.inventory.models import Inventory, Action, Deployment, InventoryDeployment
+from roundabout.inventory.utils import _create_action_history
 from .forms import ImportDeploymentsForm, ImportVesselsForm, ImportCruisesForm, ImportCalibrationForm
 from .models import *
 from .tasks import parse_cal_files, parse_cruise_files, parse_vessel_files, parse_deployment_files
@@ -210,21 +214,60 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
 
             print(deployments)
             for deployment in deployments:
-                # get the Assembly template for this Build
-                assembly_qs = Assembly.objects.filter(assembly_number=deployment['assembly'])
-                if assembly_qs:
-                    if assembly_qs.count() == 1:
-                        assembly = assembly_qs[0]
-                        print(assembly)
-                        print(deployment['mooring.uid'])
-                    else:
-                        raise ValueError("Too many results")
-                else:
+                # get the Assembly template for this Build, needs to be only one match
+                try:
+                    assembly = Assembly.objects.get(assembly_number=deployment['assembly'])
+                    assembly_revision = assembly.assembly_revisions.latest()
+                except Assembly.DoesNotExist:
                     raise ValueError("No results")
+                except Assembly.MultipleObjectsReturned:
+                    raise ValueError("Too many results")
 
-                for row in deployments[0]['rows']:
-                    pass
-                    #print(row['sensor.uid'])
+                # set up common variables for Builds/Deployments
+                location_code = deployment['assembly'][0:2]
+                print(location_code)
+                try:
+                    deployed_location = Location.objects.get(location_code=location_code)
+                except Location.DoesNotExist:
+                    raise ValueError("No Location Matching this Location Code")
+
+                build_location = Location.objects.get(name='Retired')
+
+                dep_start_date = parser.parse(deployment['rows'][0]['startDateTime'])
+                dep_end_date = parser.parse(deployment['rows'][0]['stopDateTime'])
+
+                # Get/Create a Build for this Deployment
+                build, created = Build.objects.get_or_create(
+                    build_number=deployment['mooring.uid'],
+                    defaults={
+                        'assembly': assembly,
+                        'assembly_revision': assembly_revision,
+                        'created_at': dep_start_date,
+                        'location': build_location,
+                    },
+                )
+
+                # Call the function to create an Action history chain
+                if created:
+                    _create_action_history(build, Action.ADD, self.request.user, '', '', dep_start_date)
+
+                # Get/Create Deployment for this Build
+                action_type = Action.STARTDEPLOYMENT
+                deployment, created = Deployment.objects.get_or_create(
+                    deployment_number=deployment['mooring.uid'],
+                    defaults={
+                        'build': build,
+                        'deployment_start_date': dep_start_date,
+                        'deployment_burnin_date': dep_start_date,
+                        'deployment_to_field_date': dep_start_date,
+                        'deployment_recovery_date': dep_end_date,
+                        'deployment_retire_date': dep_end_date,
+                        'deployed_location': deployed_location,
+                    },
+                )
+
+                for row in deployment['rows']:
+                    print(row['sensor.uid'])
 
         return super(ImportDeploymentsUploadView, self).form_valid(form)
 
