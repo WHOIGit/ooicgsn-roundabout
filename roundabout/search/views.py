@@ -27,8 +27,6 @@ from urllib.parse import unquote
 
 import django_tables2 as tables
 from django.contrib.auth.mixins import LoginRequiredMixin
-#from django.template.defaultfilters import register
-#from django.shortcuts import render, get_object_or_404
 #from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.db.models import Q, Count, OuterRef, Subquery
 from django.shortcuts import redirect
@@ -743,7 +741,4 @@ class ConfigConstTableView(GenericSearchTableView):
         except AttributeError: self.exclude_columns = []
 
         return {'extra_columns':[]}
-
-
-
 

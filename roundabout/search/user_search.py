@@ -31,7 +31,7 @@ from django_tables2_column_shifter.tables import ColumnShiftTable
 from roundabout.builds.models import BuildAction
 from roundabout.calibrations.models import CalibrationEvent, CoefficientNameEvent
 from roundabout.configs_constants.models import ConfigEvent, ConfigNameEvent, ConstDefaultEvent, ConfigDefaultEvent
-from roundabout.inventory.models import Action
+from roundabout.inventory.models import Action, DeploymentAction
 from roundabout.users.models import User
 
 
@@ -44,7 +44,7 @@ class UserTableBase(tables2.Table):
         model = None
         title = None
 
-class CCCUserTableBase(tables2.Table):
+class CCCUserTableBase(UserTableBase):
     class Meta(UserTableBase.Meta):
         fields = ['approved', 'user_draft', 'user_approver', 'created_at', 'detail']
     approved = BooleanColumn()
@@ -52,6 +52,11 @@ class CCCUserTableBase(tables2.Table):
     user_draft = ManyToManyColumn(verbose_name='Reviewers', accessor='user_draft', transform=lambda x: x.name, default='')
     created_at = DateTimeColumn(verbose_name='Date Entered', accessor='created_at', format='Y-m-d H:i')
     detail = Column(verbose_name='Note', accessor='detail')
+
+class ActionUserTableBase(UserTableBase):
+    class Meta(UserTableBase.Meta):
+        fields = ['action_type', 'user__name', 'created_at', 'detail']
+    user__name = Column(verbose_name='User')
 
 # ========= TABLES ========== #
 
@@ -119,17 +124,34 @@ class ConstDefaultEventTable(CCCUserTableBase):
 
 ## Actions ##
 
-class ActionTable(UserTableBase):
-    class Meta(UserTableBase.Meta):
+class ActionTable(ActionUserTableBase):
+    class Meta(ActionUserTableBase.Meta):
         model = Action
-        title = 'Action'
-        fields = ['action_type','user__name','created_at','detail']
+        title = 'Misc. Actions'
 
-class BuildActionTable(UserTableBase):
-    class Meta(UserTableBase.Meta):
+class BuildActionTable(ActionUserTableBase):
+    class Meta(ActionUserTableBase.Meta):
         model = BuildAction
         title = 'Build Actions'
-        fields = ['action_type','user__name','created_at','detail']
+        fields = ['build'] + ActionUserTableBase.Meta.fields
+    build = Column(linkify=dict(viewname="builds:builds_detail", args=[tables2.A('build__pk')]))
+
+class DeploymentActionTable(ActionUserTableBase):
+    class Meta(ActionUserTableBase.Meta):
+        model = DeploymentAction
+        title = 'Deployment Actions'
+        fields = ['deployment'] + ActionUserTableBase.Meta.fields
+
+    # Attempt to get link to deployment
+    # doesn't work, anchor doesn't exist when page loads
+    # also reverse("deployments:deployment_detail", args=[record.deployment.pk]) fails
+    def render_deployment(self, record):
+        from django.urls import reverse
+        build_url = reverse("builds:builds_detail", args=[record.deployment.build.pk])
+        deployment_anchor = '#deployment-{}-'.format(record.deployment.pk)
+        deployment_anchor = '#deployments'
+        html_string = '<a href={}>{}</a>'.format(build_url+deployment_anchor, record.deployment)
+        return format_html(html_string)
 
 
 # ========= FORM STUFF ========= #
@@ -175,6 +197,7 @@ class UserSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView):
               ConfigNameEventTable,
               ConfigDefaultEventTable,
               ConstDefaultEventTable,
+              DeploymentActionTable,
               BuildActionTable,
               ActionTable]
 
@@ -220,7 +243,7 @@ class UserSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView):
 
         qs_list = []
         for table in self.tables:
-            if  table.Meta.model in [Action,BuildAction]:
+            if  table.Meta.model in [Action, BuildAction, DeploymentAction]:
                 action_qs = table.Meta.model.objects.select_related('user').filter(action_Q)
                 qs_list.append(action_qs)
             else: # it's a CCC_qs
