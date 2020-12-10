@@ -326,7 +326,6 @@ def parse_vessel_files(self):
 def parse_deployment_files(self):
     csv_files = cache.get('dep_files')
     for csv_file in csv_files:
-        print(csv_file)
         csv_file.seek(0)
         reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
         headers = reader.fieldnames
