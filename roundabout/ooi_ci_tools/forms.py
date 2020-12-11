@@ -308,27 +308,21 @@ def validate_cal_files(csv_files,ext_files):
                 params={'value': cal_date_string, 'filename': cal_csv.name},
             )
         try:
-            serial_label_qs = inventory_item.fieldvalues.filter(field__field_name__iexact='Manufacturer Serial Number',is_current=True)
-            if serial_label_qs.exists():
-                inv_manufacturer_serial = serial_label_qs[0].field_value
-            else:
-                inv_manufacturer_serial = ''
+            custom_field = Field.objects.get(field_name='Manufacturer Serial Number')
         except:
             raise ValidationError(
-                _('File: %(filename)s, %(value)s: Cannot find Manufacturer Serial Number for Inventory Item'),
-                params={'value': inventory_item, 'filename': cal_csv.name},
+                _('Global Custom Field "Manufacturer Serial Number" must be created prior to import'),
             )
         for idx, row in enumerate(reader):
             row_data = row.items()
             for key, value in row_data:
                 if key == 'serial':
-                    csv_manufacturer_serial = value.strip()
                     try:
-                        assert csv_manufacturer_serial == inv_manufacturer_serial
+                        csv_manufacturer_serial = value.strip()
                     except:
                         raise ValidationError(
-                            _('File: %(filename)s, Serial Number: %(value)s, Row %(row)s: Manufacturer Serial Numbers differ between CSV and Inventory Item'),
-                            params={'value': csv_manufacturer_serial, 'row': idx, 'filename': cal_csv.name},
+                            _('File: %(filename)s, Row %(row)s: Cannot parse Manufacturer Serial Number'),
+                            params={'row': idx, 'filename': cal_csv.name},
                         )
                 if key == 'name':
                     calibration_name = value.strip()
