@@ -303,7 +303,8 @@ class InventoryDeployment(DeploymentBase):
     inventory = models.ForeignKey(Inventory, related_name='inventory_deployments',
                                   on_delete=models.CASCADE, null=False)
     assembly_part = models.ForeignKey('assemblies.AssemblyPart', related_name='inventory_deployments',
-                                  on_delete=models.SET_NULL, null=True)
+                                      on_delete=models.SET_NULL, null=True)
+    item_depth = models.PositiveIntegerField(null=True, blank=True)
 
     objects = InventoryDeploymentQuerySet.as_manager()
 

@@ -34,6 +34,7 @@ from django.views.generic import TemplateView, FormView
 
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.assemblies.models import Assembly
+from roundabout.configs_constants.models import ConfigDefault
 from roundabout.builds.models import Build
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory, Action, Deployment, InventoryDeployment
@@ -258,7 +259,7 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                 water_depth = deployment['rows'][0]['water_depth']
 
                 # Get/Create a Build for this Deployment
-                build, created = Build.objects.get_or_create(
+                build, build_created = Build.objects.get_or_create(
                     build_number=deployment['mooring.uid'],
                     defaults={
                         'assembly': assembly,
@@ -268,18 +269,20 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                     },
                 )
 
-                # Call the function to create an Action history chain
-                if created:
+                # Call the function to create an initial Action history
+                if build_created:
                     _create_action_history(build, Action.ADD, self.request.user, '', '', dep_start_date)
 
                 # Get/Create Deployment for this Build
-                deployment_obj, created = Deployment.objects.update_or_create(
+                deployment_obj, deployment_created = Deployment.objects.update_or_create(
                     deployment_number=deployment['mooring.uid'],
                     defaults={
                         'build': build,
                         'deployment_start_date': dep_start_date,
                         'deployment_burnin_date': dep_start_date,
                         'deployment_to_field_date': dep_start_date,
+                        'deployment_recovery_date': None,
+                        'deployment_retire_date': None,
                         'deployed_location': deployed_location,
                         'cruise_deployed': cruise_deployed,
                         'cruise_recovered': cruise_recovered,
@@ -288,7 +291,8 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                         'depth': water_depth,
                     },
                 )
-
+                print(build)
+                print(deployment_obj)
                 # Create Build Action records for deployment
                 build.is_deployed = True
                 build.save()
@@ -302,7 +306,7 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                     deployment_obj.deployment_recovery_date = dep_end_date
                     deployment_obj.deployment_retire_date = dep_end_date
                     deployment_obj.save()
-                    
+
                     recover_actions = [Action.DEPLOYMENTRECOVER, Action.DEPLOYMENTRETIRE]
                     for action in recover_actions:
                         _create_action_history(build, action, self.request.user, '', '', dep_end_date)
@@ -310,6 +314,51 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                 for row in deployment['rows']:
                     # create InventoryDeployments for each item
                     if row['sensor.uid']:
+                        # Find the AssemblyPart that matches this RefDes by searching the ConfigDefault values
+                        # If no match, throw error.
+                        try:
+                            ref_des = row['Reference Designator']
+                            config_default = ConfigDefault.objects.get(default_value=ref_des)
+                            print(config_default)
+                            assembly_part = config_default.conf_def_event.assembly_part
+                            print(assembly_part)
+                        except Exception as e:
+                            print(e)
+                            continue
+
+                        # Get/Create Inventory item with matching serial_number
+                        item, item_created = Inventory.objects.get_or_create(
+                            serial_number=row['sensor.uid'],
+                            defaults={
+                                'location': build_location,
+                                'build': build,
+                                'part': assembly_part.part,
+                                'revision': assembly_part.part.revision.latest(),
+                                'created_at': dep_start_date,
+                            },
+                        )
+                        # Call the function to create an initial Action history
+                        if item_created:
+                            _create_action_history(item, Action.ADD, self.request.user, '', '', dep_start_date)
+
+                        # Get/Create Deployment for this Build
+                        inv_deployment_obj, inv_deployment_created = InventoryDeployment.objects.update_or_create(
+                            inventory=item,
+                            deployment=deployment,
+                            defaults={
+                                'assembly_part': assembly_part,
+                                'deployment_start_date': dep_start_date,
+                                'deployment_burnin_date': dep_start_date,
+                                'deployment_to_field_date': dep_start_date,
+                                'deployment_recovery_date': dep_end_date,
+                                'deployment_retire_date': dep_end_date,
+                                'deployed_location': deployed_location,
+                                'cruise_deployed': cruise_deployed,
+                                'cruise_recovered': cruise_recovered,
+                                'item_depth': depth,
+                            },
+                        )
+
                         print(row['sensor.uid'])
 
         return super(ImportDeploymentsUploadView, self).form_valid(form)
@@ -320,7 +369,6 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
 
 class ImportUploadSuccessView(TemplateView):
     template_name = "ooi_ci_tools/import_upload_success.html"
-
 
 
 def upload_status(request):
