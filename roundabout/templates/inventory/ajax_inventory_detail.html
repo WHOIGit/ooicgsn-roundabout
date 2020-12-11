@@ -25,6 +25,8 @@
 {% load inventory_tags %}
 {% load mptt_tags %}
 
+<script src="{% static 'js/vendor/highcharts.js' %}"></script>
+
 {% if inventory_item %}
 <div class="card-header" data-object-id="{{ inventory_item.id }}"><h3>{{ inventory_item.part.name }}</h3></div>
 
@@ -84,11 +86,19 @@
         {% endif %}
 
         {% if inventory_item.build %}
-            <a class="dropdown-item" href="#"
-                data-detail-url="{% url 'inventory:ajax_inventory_action' 'removefrombuild' inventory_item.id %}"
-                data-node-id="{{ inventory_item.id }}"
-                data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="{{ node_type }}">Remove from {{ label_builds_app_singular }}</a>
+            {% if inventory_item.build.is_deployed_to_field %}
+                <a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'inventory:ajax_inventory_action' 'deploymentrecover' inventory_item.id %}"
+                    data-node-id="{{ inventory_item.id }}"
+                    data-location-id="{{ inventory_item.location.id}}"
+                    data-node-type="{{ node_type }}">Recover from {{ label_deployments_app_singular }}</a>
+            {% else %}
+                <a class="dropdown-item" href="#"
+                    data-detail-url="{% url 'inventory:ajax_inventory_action' 'removefrombuild' inventory_item.id %}"
+                    data-node-id="{{ inventory_item.id }}"
+                    data-location-id="{{ inventory_item.location.id}}"
+                    data-node-type="{{ node_type }}">Remove from {{ label_builds_app_singular }}</a>
+            {% endif %}
         {% endif %}
 
         {% if inventory_item.assembly_part and not inventory_item.build and not inventory_item.parent %}
@@ -143,29 +153,54 @@
                 data-location-id="{{ inventory_item.location.id}}"
                 data-node-type="{{ node_type }}">Edit Inventory Details</a>
 
+            {% if not user|has_group:"inventory only" %}
+                {% if inventory_item.part.coefficient_name_events.exists and inventory_item.part.part_type.ccc_toggle %}
+                    <a  id="add_coefficient_action"
+                        class="dropdown-item"
+                        href="#"
+                        data-detail-url="{% url 'calibrations:event_valueset_add' inventory_item.id %}"
+                        data-node-id="{{ inventory_item.id }}"
+                        data-location-id="{{ inventory_item.location.id}}"
+                        data-node-type="calibration_event">Add Calibration Coefficients</a>
+                {% endif %}
 
-            <a  id="add_coefficient_action"
-                class="dropdown-item" 
-                href="#"
-                data-detail-url="{% url 'calibrations:event_valueset_add' inventory_item.id %}"
-                data-node-id="{{ inventory_item.id }}"
-                data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Add Calibration Coefficients</a>
+                {% if not inventory_item.constant_default_events.exists and part_has_consts and inventory_item.part.part_type.ccc_toggle %}
+                    <a  id="add_constdefault_action"
+                        class="dropdown-item"
+                        href="#"
+                        data-detail-url="{% url 'configs_constants:event_constdefault_add' inventory_item.id %}"
+                        data-node-id="{{ inventory_item.id }}"
+                        data-location-id="{{ inventory_item.location.id}}"
+                        data-node-type="constant_default}">Add Constant Defaults</a>
+                {% endif %}
 
-            <a  id="add_conf_const_action"
-                class="dropdown-item" 
-                href="#"
-                data-detail-url="{% url 'configs_constants:config_event_value_add' inventory_item.id %}"
-                data-node-id="{{ inventory_item.id }}"
-                data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="detail">Add Configuration/Constant Event</a>
+                {% if part_has_consts and inventory_item.build.current_deployment and inventory_item.part.part_type.ccc_toggle %}
+                    <a  id="add_const_action"
+                        class="dropdown-item"
+                        href="#"
+                        data-detail-url="{% url 'configs_constants:config_event_value_add' inventory_item.id 1 %}"
+                        data-node-id="{{ inventory_item.id }}"
+                        data-location-id="{{ inventory_item.location.id}}"
+                        data-node-type="config_event}">Add Constants</a>
+                {% endif %}
+
+                {% if part_has_configs and inventory_item.build.current_deployment and inventory_item.part.part_type.ccc_toggle %}
+                    <a  id="add_conf_action"
+                        class="dropdown-item"
+                        href="#"
+                        data-detail-url="{% url 'configs_constants:config_event_value_add' inventory_item.id 2 %}"
+                        data-node-id="{{ inventory_item.id }}"
+                        data-location-id="{{ inventory_item.location.id}}"
+                        data-node-type="config_event}">Add Configurations</a>
+                {% endif %}
+            {% endif %}
 
 
       </div>
     </div>
 
 
-    <p>Serial Number: {{ inventory_item.serial_number }}<br>
+    <p>
         <a class="btn btn-outline-info btn-sm" data-toggle="collapse" href="#collapseBarCode" role="button" aria-expanded="false" aria-controls="collapseBarCode">
           Print Barcode
         </a>
@@ -229,42 +264,108 @@
       </div>
     </div>
 
-    {% if inventory_item.old_serial_number %}
-        <p>Old Serial Number: {{ inventory_item.old_serial_number }}</p>
-    {% endif %}
-    {% if inventory_item.whoi_number %}
-        <p>WHOI Number: {{ inventory_item.whoi_number }}</p>
-    {% endif %}
-    {% if inventory_item.ooi_property_number %}
-        <p>OOI Property Number: {{ inventory_item.ooi_property_number }}</p>
-    {% endif %}
-    <p>Part Number: {{ inventory_item.part.part_number }}</p>
-    <p>Revision: {{ inventory_item.revision.revision_code }}</p>
-    <p>Current Location: {{ inventory_item.location.name }}</p>
-    {% if inventory_item.build %}
-        <p>Current {{ label_builds_app_singular }}: {{ inventory_item.build }}</p>
-    {% endif %}
-    <p>Total Time in Field: {{ inventory_item.total_time_at_sea|time_at_sea_display }}</p>
-    {% if inventory_item.current_deployment_time_at_sea %}
-        <p>Current {{ label_deployments_app_singular }} Time in Field: {{ inventory_item.current_deployment_time_at_sea|time_at_sea_display }}
-    {% endif %}
+    <table class="table item-data-table">
+        <tbody>
+            <tr>
+                <th>Serial Number</th>
+                <td>{{ inventory_item.serial_number }}</td>
+            </tr>
+            {% if inventory_item.old_serial_number %}
+            <tr>
+                <th>Old Serial Number</th>
+                <td>{{ inventory_item.old_serial_number }}</td>
+            </tr>
+            {% endif %}
+            {% if inventory_item.whoi_number %}
+            <tr>
+                <th>WHOI Number</th>
+                <td>{{ inventory_item.whoi_number }}</td>
+            </tr>
+            {% endif %}
+            {% if inventory_item.ooi_property_number %}
+            <tr>
+                <th>OOI Property Number</th>
+                <td> {{ inventory_item.ooi_property_number }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <th>Part Number</th>
+                <td>
+                    <a href="{% url 'parts:parts_detail' inventory_item.part.id  %}">
+                      {{ inventory_item.part.part_number }} | Revision: {{ inventory_item.revision.revision_code }}
+                    </a>
+                    <a class="btn btn-sm btn-link" href="{% url 'parts:parts_detail' inventory_item.part.id  %}">
+                        <i class="fas fa-link"></i>
+                    </a>
+                </td>
+            </tr>
+            {% if inventory_item.build %}
+            <tr>
+                <th>Current {{ label_builds_app_singular }}</th>
+                <td>
+                    <a href="{% url 'builds:builds_detail' inventory_item.build.id  %}">
+                        {{ inventory_item.build }}
+                    </a>
+                    <a class="btn btn-sm btn-link" href="{% url 'builds:builds_detail' inventory_item.build.id  %}">
+                        <i class="fas fa-link"></i>
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <th>{{ label_assemblies_app_singular }} Part Assigned</th>
+                <td>
+                    <a href="{% url 'assemblies:assemblypart_detail' inventory_item.assembly_part_id  %}">
+                        {{ inventory_item.assembly_part }}
+                    </a>
+                    <a class="btn btn-sm btn-link" href="{% url 'assemblies:assemblypart_detail' inventory_item.assembly_part_id  %}">
+                        <i class="fas fa-link"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endif %}
+            {% if inventory_item.location %}
+            <tr>
+                <th>Current Location</th>
+                <td>
+                    <a href="{% url 'locations:locations_detail' inventory_item.location_id  %}">
+                        {{ inventory_item.location.name }}
+                    </a>
+                    <a class="btn btn-sm btn-link" href="{% url 'locations:locations_detail' inventory_item.location_id  %}">
+                        <i class="fas fa-link"></i>
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <div class="alert alert-danger" role="alert">
+                    <h5>Warning! This Inventory Item has no Location assigned</h5>
+                    <p>All Inventory in Roundabout should have a Location assigned to it. Use the
+                        <a href="#"
+                            data-detail-url="{% url 'inventory:ajax_inventory_action' 'locationchange' inventory_item.id %}"
+                            data-node-id="{{ inventory_item.id }}"
+                            data-location-id="{{ inventory_item.location.id}}"
+                            data-node-type="{{ node_type }}">Location Change</a>
+                    Action to fix this issue.</p>
+                </div>
+            </tr>
+            {% endif %}
+            <tr>
+                <th>Total Time in Field</th>
+                <td>
+                    {{ inventory_item.time_at_sea|time_at_sea_display }}
+                </td>
+            </tr>
+            {% if inventory_item.current_deployment %}
+            <tr>
+                <th>Current {{ label_deployments_app_singular }} Time in Field</th>
+                <td>
+                    {{ inventory_item.current_deployment.deployment_time_in_field|time_at_sea_display }}
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
 
-    {% if inventory_item.parent %}
-    <p class="ajax-detail-link">Parent Assembly:
-        {% recursetree inventory_item.get_ancestors %}
-
-                {% if node.is_child_node %}&#187;{% endif %}
-                <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_detail' node.id %}"
-                            data-node-id="{{ node.id }}"
-                            data-node-type="{{ node.get_object_type }}">
-                            {{ node.part.name }} - {{ node.serial_number }}</a>
-                {% if not node.is_leaf_node %}
-                    {{ children }}
-                {% endif %}
-
-        {% endrecursetree %}
-    </p>
-    {% endif %}
     <hr>
     {% if inventory_item.flag %}
     <div class="float-right ajax-detail-link"><a href="#" data-detail-url="{% url 'inventory:ajax_inventory_action' 'flag' inventory_item.id %}" role="button" class="btn btn-danger">FLAGGED</a></div>
@@ -277,14 +378,17 @@
         </p>
     {% endif %}
 
-
-
-
     <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
 
-        {% if inventory_item.inventory_actions.exists %}
+        {% if inventory_item.actions.exists %}
             <li class="nav-item">
               <a class="nav-link active" id="history-tab" data-toggle="tab" href="#history" role="tab" aria-controls="history" aria-selected="true">History</a>
+            </li>
+        {% endif %}
+
+        {% if inventory_item.inventory_deployments.exists %}
+            <li class="nav-item">
+              <a class="nav-link" id="deployments-tab" data-toggle="tab" href="#deployments" role="tab" aria-controls="deployments" aria-selected="false">Deployments</a>
             </li>
         {% endif %}
 
@@ -310,21 +414,34 @@
           <a class="nav-link" id="part-template-tab" data-toggle="tab" href="#part-template" role="tab" aria-controls="part-template" aria-selected="false">Part Specs</a>
         </li>
 
-       
-        <li class="nav-item">
-          <a class="nav-link" id="calibration-template-tab" data-toggle="tab" href="#calibration-template" role="tab" aria-controls="calibration-template" aria-selected="false">Calibration Coefficient History</a>
-        </li>
+        {% if inventory_item.calibration_events.exists and inventory_item.part.part_type.ccc_toggle %}
+            <li class="nav-item">
+                <a class="nav-link" id="calibration-template-tab" data-toggle="tab" href="#calibration-template" role="tab" aria-controls="calibration-template" aria-selected="false">Calibration Coefficient History</a>
+            </li>
+        {% endif %}
 
-        <li class="nav-item">
-            <a class="nav-link" id="conf_const-template-tab" data-toggle="tab" href="#conf_const-template" role="tab" aria-controls="conf_const-template" aria-selected="false">Configuration / Constant History</a>
-        </li>
-  
+        {% if inventory_item.constant_default_events.exists and inventory_item.part.part_type.ccc_toggle %}
+            <li class="nav-item">
+                <a class="nav-link" id="const_default-template-tab" data-toggle="tab" href="#const_default-template" role="tab" aria-controls="const_default-template" aria-selected="false">Constant Defaults</a>
+            </li>
+        {% endif %}
+
+        {% if inventory_item.config_events.exists and inventory_item.part.part_type.ccc_toggle %}
+            <li class="nav-item">
+                <a class="nav-link" id="const-template-tab" data-toggle="tab" href="#const-template" role="tab" aria-controls="const-template" aria-selected="false">Constant History</a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" id="conf-template-tab" data-toggle="tab" href="#conf-template" role="tab" aria-controls="conf-template" aria-selected="false">Configuration History</a>
+            </li>
+        {% endif %}
+
 
     </ul>
 
     <div class="tab-content" id="inventory-tabs">
 
-        {% if inventory_item.inventory_actions.exists %}
+        {% if inventory_item.actions.exists %}
           <div class="tab-pane fade show active" id="history" role="tabpanel" aria-labelledby="history-tab">
 
               <table class="table table-striped action-table">
@@ -337,7 +454,7 @@
 
                   </thead>
                   <tbody>
-                    {% for action in  inventory_item.inventory_actions.all %}
+                    {% for action in  inventory_item.actions.all %}
                       <tr>
                           <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
                           <td>{{ action.get_action_type_display }}</td>
@@ -363,6 +480,22 @@
             </table>
 
           </div>
+        {% endif %}
+
+        {% if inventory_item.inventory_deployments %}
+        <div class="tab-pane fade" id="deployments" role="tabpanel" aria-labelledby="deployments-tab">
+
+            <ul class="list-group list-group-flush">
+                {% for inventory_deployment in inventory_item.inventory_deployments.all %}
+                    <li class="list-group-item">
+
+                        {% include "inventory/inventory_deployment_detail.html" with inventory_deployment=inventory_deployment %}
+
+                    </li>
+                {% endfor %}
+            </ul>
+
+        </div>
         {% endif %}
 
         {% if inventory_item.get_descendants %}
@@ -413,7 +546,7 @@
         {% if inventory_item.assembly_part %}
             <div class="tab-pane fade" id="destination" role="tabpanel" aria-labelledby="destination-tab">
 
-                <h5 class="mt-3">{{ inventory_item.assembly_part.assembly }} </h5>
+                <h5 class="mt-3">{{ inventory_item.assembly_part.assembly_revision }} </h5>
 
                 <ul>
 
@@ -421,12 +554,13 @@
                       <li>
 
                             {% if node.id == inventory_item.assembly_part_id %}
-                                 <span class="text-primary">
+                                <a href="{% url 'assemblies:assemblypart_detail' inventory_item.assembly_part_id  %}">
+                                     {{ node.part.name }}
+                                </a>
                             {% else %}
-                                <span>
+                                {{ node.part.name }}
                             {% endif %}
-                                    {{ node.part.name }}
-                                </span>
+
                             {% if node.id == inventory_item.assembly_part_id %}
                                 <span class="badge badge-primary badge-pill">Destination</span>
                             {% endif %}
@@ -474,7 +608,6 @@
                 <li class="list-group-item">Part Type: {{ inventory_item.revision.part.part_type }}</li>
                 <li class="list-group-item">Unit Cost: ${{ inventory_item.revision.unit_cost|intcomma }}</li>
                 <li class="list-group-item">Refurbishment Cost: ${{ inventory_item.revision.refurbishment_cost|intcomma }}</li>
-                <li class="list-group-item">Current Inventory: {{ inventory_item.revision.part.get_part_inventory_count }}</li>
                 {% if inventory_item.part.note %}
                     <li class="list-group-item">Part Template Notes: {{ inventory_item.revision.note }}</li>
                 {% endif %}
@@ -500,281 +633,72 @@
 
             </ul>
 
-        </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    <span class="badge badge-primary badge-pill float-right">{{ inventory_item.part.get_part_inventory_count }}</span>
 
-        <div class="tab-pane fade" id="calibration-template" role="tabpanel" aria-labelledby="calibration-template-tab">
-            <ul class="list-group">
-                {% for event in inventory_item.calibration_events.all %}
-                    <li class="list-group-item">
-                        <a  class="collapsed" 
-                            data-toggle="collapse" 
-                            href="#event-{{ event.id }}" 
-                            aria-expanded="false" 
-                            aria-controls="event-{{ event.id }}"
-                        >
-                            {{ event.calibration_date|date:"n/j/y" }}
+                    <div class="">
+                        <a class="collapsed" data-toggle="collapse" href="#inv-count" aria-expanded="false" aria-controls="inv-count">
+                            Current Inventory Count
                         </a>
-                        <a  data-toggle="collapse" 
-                            class="collapsed text-right" 
-                            href="#event-{{ event.id }}" 
-                            aria-controls="event-{{ event.id }}" 
-                            aria-expanded="false" 
-                            role="button"
-                        >
+                        <a data-toggle="collapse" class="collapsed text-right" href="#inv-count" aria-controls="inv-locations" aria-expanded="false" role="button">
                             <i class="fa" aria-hidden="true"></i>
-                            <span class="sr-only">Expand/Collapse Calibration {{ event.calibration_date }}</span>
+                            <span class="sr-only">Expand/Collapse Current Inventory Locations</span>
                         </a>
-                        <div class = 'ajax-detail-link float-right'>
-                            <a  href="#"
-                                class="btn btn-primary btn-sm mr-2"
-                                role="button"
-                                data-detail-url="{% url 'calibrations:event_valueset_update' event.id %}"
-                                data-node-id="{{ event.id }}"
-                                data-node-type="detail">
-                                    Edit Coefficient Values
-                            </a>
-                        </div>
-                        <div class="collapse mt-3" id="event-{{ event.id }}">
-                            <hr>
-                            <div class="ajax-detail-link float-right">
-                                <a  href="#" 
-                                    class="btn btn-danger btn-sm mr-2"
-                                    data-detail-url="{% url 'calibrations:event_valueset_delete' event.id %}" 
-                                    role="button" 
-                                >
-                                        Delete
-                                </a>
-                            </div>
-                            <p>Approved: {{ event.approved }}</p>
-                            <p>Approved by: {{ event.user_approver.username }}</p>
-                            <p>Last Updated by: {{ event.user_draft.username }}</p>
-                            <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
-                                <li class="nav-item">
-                                    <a  class="nav-link active" 
-                                        id="documentation-tab" 
-                                        data-toggle="tab" 
-                                        href="#coefficients" 
-                                        role="tab" 
-                                        aria-controls="coefficients" 
-                                        aria-selected="false">
-                                            Coefficients
-                                    </a>
-                                </li>
-                            </ul>
-                            <div class="tab-content" id="inventory-tabs">
-                                {% if event.coefficient_value_sets.all %}
-                                    <div class="tab-pane fade show active" id="coefficients" role="tabpanel" aria-labelledby="coefficients-tab">
-                                        <table class="table table-tight">
-                                            <thead>
-                                                <th>Name</th>
-                                            </thead>
-                                            <tbody>
-                                                {% for value_set in event.coefficient_value_sets.all %}
-                                                    <tr>
-                                                        <td> 
-                                                            <li class = 'list-group-item'>
-                                                                <a  class="collapse show" 
-                                                                    data-toggle="collapse" 
-                                                                    href="#coeff-{{ value_set.coefficient_name }}{{ event.id }}" 
-                                                                    aria-expanded="false" 
-                                                                    aria-controls="coeff-{{ value_set.coefficient_name }}{{ event.id }}"
-                                                                >
-                                                                    <b>{{ value_set.coefficient_name }}</b>
-                                                                </a>
-                                                                <a  data-toggle="collapse" 
-                                                                    class="collapse show text-right" 
-                                                                    href="#coeff-{{ value_set.coefficient_name }}{{ event.id }}" 
-                                                                    aria-controls="coeff-{{ value_set.coefficient_name }}{{ event.id }}" 
-                                                                    aria-expanded="false" 
-                                                                    role="button"
-                                                                >
-                                                                    <i class="fa" aria-hidden="true"></i>
-                                                                    <span class="sr-only">Expand/Collapse Calibration {{ value_set.coefficient_name }}</span>
-                                                                </a>
-                                                                <div class = 'ajax-detail-link float-right'>
-                                                                    <a  href="#"
-                                                                        class="btn btn-primary btn-sm mr-2"
-                                                                        role="button"
-                                                                        data-detail-url="{% url 'calibrations:valueset_value_update' value_set.id %}"
-                                                                        data-node-id="{{ event.id }}"
-                                                                        data-node-type="detail">
-                                                                            Edit Coefficient Metadata
-                                                                    </a>
-                                                                </div>
-                                                                <div class="collapse show mt-1" id="coeff-{{ value_set.coefficient_name }}{{ event.id }}">
-                                                                    <p class='font-weight-light'><b>Notes:</b> {{ value_set.notes }}</p>
-                                                                    <table id = 'coeff-val-table' class="table table-tight">
-                                                                        <thead>
-                                                                            <th>Value(s)</th>
-                                                                        </thead>
-                                                                        <tbody class = 'coeff-tbody' id = 'coeff-val-tbody' style = 'display:block; overflow: auto; max-height: 200px'>
-                                                                            {% if value_set.coefficient_name.value_set_type == "2d" %}
-                                                                                {% regroup value_set.coefficient_values.all by row as row_sets %}
-                                                                                {% for row in row_sets %}
-                                                                                    <tr style = 'display: block;'>
-                                                                                        {% for val in value_set.coefficient_values.all %}
-                                                                                            {% if val.row == row.grouper %}
-                                                                                                <td style = 'white-space: nowrap'>
-                                                                                                    <div style = 'width: 100px; text-align: center;'>{{ val }}</div>
-                                                                                                </td>
-                                                                                            {% endif %}
-                                                                                        {% endfor %}
-                                                                                    </tr>
-                                                                                {% endfor %}
-                                                                            {% else %}
-                                                                                {% for val in value_set.coefficient_values.all %}
-                                                                                    <tr style = 'display: block;'>
-                                                                                        <td style = 'white-space: nowrap'>{{ val }}</td>
-                                                                                    </tr>
-                                                                                {% endfor %}
-                                                                            {% endif %}
-                                                                        </tbody>
-                                                                    </table>
-                                                                </div>
-                                                            </li>
-                                                        </td>
-                                                    </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
+                    </div>
+
+                    <div class="collapse mt-3" id="inv-count">
+                        <ul class="list-group">
+                            {% for item in inventory_location_data %}
+                                <li class="list-group-item">
+                                    <span class="badge badge-primary badge-pill float-right">{{ item.inventory_items|length }}</span>
+                                    <div class="">
+                                        <a class="collapsed" data-toggle="collapse" href="#inv-locations-{{ item.location_root.id }}" aria-expanded="false" aria-controls="inv-locations-{{ item.location_root.id }}">
+                                            {{ item.location_root }}
+                                        </a>
+                                        <a data-toggle="collapse" class="collapsed text-right" href="#inv-locations-{{ item.location_root.id }}" aria-controls="inv-locations-{{ item.location_root.id }}" aria-expanded="false" role="button">
+                                            <i class="fa" aria-hidden="true"></i>
+                                            <span class="sr-only">Expand/Collapse Current Inventory Locations</span>
+                                        </a>
                                     </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
-        <div class="tab-pane fade" id="conf_const-template" role="tabpanel" aria-labelledby="conf_const-template-tab">
-            <ul class="list-group">
-                {% for event in inventory_item.config_events.all %}
-                    <li class="list-group-item">
-                        <a  class="collapsed" 
-                            data-toggle="collapse" 
-                            href="#conf_event-{{ event.id }}" 
-                            aria-expanded="false" 
-                            aria-controls="conf_event-{{ event.id }}"
-                        >
-                            {% if event.deployment.get_deployment_status_label == 'Deployed' %}
-                                {{ event.get_latest_deployment_date|date:"n/j/y" }}
-                            {% else %}
-                                TBD
-                            {% endif %}
-                            -- {{ event.deployment }} ({{ event.deployment.get_deployment_status_label }})
-                        </a>
-                        <a  data-toggle="collapse" 
-                            class="collapsed text-right" 
-                            href="#conf_event-{{ event.id }}" 
-                            aria-controls="conf_event-{{ event.id }}" 
-                            aria-expanded="false" 
-                            role="button"
-                        >
-                            <i class="fa" aria-hidden="true"></i>
-                            <span class="sr-only">Expand/Collapse Configurations/Constants {{ event.configuration_date }}</span>
-                        </a>
-                        <div class = 'ajax-detail-link float-right'>
-                            <a  href="#"
-                                class="btn btn-primary btn-sm mr-2"
-                                role="button"
-                                data-detail-url="{% url 'configs_constants:config_event_value_update' event.id %}"
-                                data-node-id="{{ event.id }}"
-                                data-node-type="detail">
-                                    Edit Values
-                            </a>
-                        </div>
-                        <div class="collapse mt-3" id="conf_event-{{ event.id }}">
-                            <hr>
-                            <div class="ajax-detail-link float-right">
-                                <a  href="#" 
-                                    class="btn btn-danger btn-sm mr-2"
-                                    data-detail-url="{% url 'configs_constants:config_event_value_delete' event.id %}" 
-                                    role="button" 
-                                >
-                                        Delete
-                                </a>
-                            </div>
-                            <p>Approved: {{ event.approved }}</p>
-                            <p>Approved by: {{ event.user_approver.username }}</p>
-                            <p>Last Updated by: {{ event.user_draft.username }}</p>
-                            <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
-                                <li class="nav-item">
-                                    <a  class="nav-link active" 
-                                        id="documentation-tab" 
-                                        data-toggle="tab" 
-                                        href="#configs_constants" 
-                                        role="tab" 
-                                        aria-controls="configs_constants" 
-                                        aria-selected="false">
-                                            Configurations / Constants
-                                    </a>
-                                </li>
-                            </ul>
-                            <div class="tab-content" id="inventory-tabs">
-                                {% if event.config_values.all %}
-                                    <div class="tab-pane fade show active" id="configs_constants" role="tabpanel" aria-labelledby="configs_constants-tab">
-                                        <table class="table table-tight">
-                                            <thead>
-                                                <th>Name</th>
-                                            </thead>
-                                            <tbody>
-                                                {% for value_set in event.config_values.all %}
-                                                    <tr>
-                                                        <td> 
-                                                            <li class = 'list-group-item'>
-                                                                <a  class="collapse show" 
-                                                                    data-toggle="collapse" 
-                                                                    href="#conf_const-{{ value_set.config_name }}{{ event.id }}" 
-                                                                    aria-expanded="false" 
-                                                                    aria-controls="conf_const-{{ value_set.config_name }}{{ event.id }}"
-                                                                >
-                                                                    <b>{{ value_set.config_name }}</b>
-                                                                </a>
-                                                                <a  data-toggle="collapse" 
-                                                                    class="collapse show text-right" 
-                                                                    href="#conf_const-{{ value_set.config_name }}{{ event.id }}" 
-                                                                    aria-controls="conf_const-{{ value_set.config_name }}{{ event.id }}" 
-                                                                    aria-expanded="false" 
-                                                                    role="button"
-                                                                >
-                                                                    <i class="fa" aria-hidden="true"></i>
-                                                                    <span class="sr-only">Expand/Collapse Configuration {{ value_set.config_name }}</span>
-                                                                </a>
-                                                                <div class="collapse show mt-1" id="conf_const-{{ value_set.config_name }}{{ event.id }}">
-                                                                    <p class='font-weight-light'><b>Notes:</b> {{ value_set.notes }}</p>
-                                                                    <table id = 'conf_const-val-table' class="table table-tight">
-                                                                        <thead>
-                                                                            <th>Value(s)</th>
-                                                                        </thead>
-                                                                        <tbody class = 'conf_const-tbody' id = 'conf_const-val-tbody' style = 'display:block; overflow: auto; max-height: 200px'>
-                                                                            <tr style = 'display: block;'>
-                                                                                <td style = 'white-space: nowrap'>{{ value_set.config_value }}</td>
-                                                                            </tr>
-                                                                        </tbody>
-                                                                    </table>
-                                                                </div>
-                                                            </li>
-                                                        </td>
-                                                    </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
+
+
+                                    <div class="collapse mt-3" id="inv-locations-{{ item.location_root.id }}">
+                                        <ul>
+                                            {% for inventory in item.inventory_items %}
+                                                <li><a href="{% url 'inventory:inventory_detail' inventory.id %}">{{ inventory.serial_number}}</a> - {{inventory.location }}</li>
+                                            {% endfor %}
+                                        </ul>
+
                                     </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </li>
-                {% endfor %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+
+                    </div>
+                </li>
+
             </ul>
+
+
+
         </div>
+        {% include "calibrations/events_detail.html" with coeff_events=coeff_events user=user  %}
+        {% include "configs_constants/const_default_detail.html" with inventory_item=inventory_item user=user  %}
+        {% include "configs_constants/configs_detail.html" with inventory_item=inventory_item user=user  %}
+        {% include "configs_constants/constants_detail.html" with inventory_item=inventory_item user=user  %}
+
     </div>
 
 
 
     <div class="mt-3 ajax-detail-link">
-        <a href="#"
-           data-detail-url="{% url 'inventory:ajax_inventory_action' 'movetotrash' inventory_item.id %}"
-           data-node-id="{{ inventory_item.id }}"
-           role="button" class="btn btn-danger parts-delete">Move to Trash</a>
+        {% if not inventory_item.build.is_deployed_to_field %}
+            <a href="#"
+               data-detail-url="{% url 'inventory:ajax_inventory_action' 'movetotrash' inventory_item.id %}"
+               data-node-id="{{ inventory_item.id }}"
+               role="button" class="btn btn-sm btn-danger parts-delete">Move to Trash</a>
+        {% endif %}
     </div>
 
 
@@ -823,42 +747,6 @@
 
         });
 
-        // Toggle display of Calibration and Configuration Actions sections
-        var inv_part_type = '{{ inventory_item.part.part_type }}';
-        var deployment = '{{ inventory_item.build.current_deployment }}'
-        if (inv_part_type == 'Instrument') {
-            $('#add_coefficient_action').show();
-            $('#calibration-template-tab').show().css('display', '');
-            $('#calibration-template').show().css('display', '');
-        } else {
-            $('#add_coefficient_action').hide();
-            $('#calibration-template-tab').hide();
-            $('#calibration-template').hide();
-        }
-
-        if (inv_part_type == 'Instrument' && deployment != 'None' && deployment.length > 0) {
-            $('#add_conf_const_action').show();
-            $('#conf_const-template-tab').show().css('display', '');
-            $('#conf_const-template').show().css('display', '');
-        } else {
-            $('#add_conf_const_action').hide();
-            $('#conf_const-template-tab').hide();
-            $('#conf_const-template').hide();
-        }
-
-        setCoeffTableWidth();
-        $( window ).bind( "resize", setCoeffTableWidth ); 
-
-        // Auto-resize CoefficientValue tables for horizontal scrolling
-        function setCoeffTableWidth() {
-            let invTabWidth =  $('#inventory-tabs').width()
-            let tBodyWidth = invTabWidth - (invTabWidth * .1)
-            $('.coeff-tbody').each(function() {
-                $(this).css('max-width', tBodyWidth + 'px' );
-            })
-        }
-
     });
-
 </script>
 {% endblock javascript %}

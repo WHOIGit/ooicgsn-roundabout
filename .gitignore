@@ -260,6 +260,11 @@ Session.vim
 # Auto-generated tag files
 tags
 
+# Pycharm IDE files
+.idea
+
+# database backups
+*.sql.gz
 
 ### Project template
 
@@ -275,3 +280,6 @@ media/
 .envs/*
 !.envs.example/
 !static/css/jstree/dist/
+
+# Celery
+celerybeat-schedule

@@ -19,17 +19,23 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 
-version: 2
-
 workflows:
   version: 2
-  test:
+  main:
     jobs:
-      - build
+    - build:
+        filters:
+          branches:
+            only:
+              - develop
+              - automated_tests
+              - /release-.*/
 
+version: 2
 jobs:
   build:
-    machine: true
+    machine:
+       image: ubuntu-1604:202007-01
     steps:
       - checkout
       - run:
@@ -67,6 +73,16 @@ jobs:
           command: >-
             docker-compose --file local.yml run --rm django \
               python manage.py test
+
+      - run:
+          name: Running Automated tests
+          command: >-
+            docker-compose -f local.yml run --rm tests \
+               sh -c "until curl -Is http://localhost:8000; do echo 'sleeping'; sleep 10; done  &&
+                  google-chrome --version && chromedriver --version &&
+                  nodejs -v &&
+                  ./RunAllTests-Chrome-Linux.bat"
+
       - run:
           name: Stopping Docker application
           command: >-

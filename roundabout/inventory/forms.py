@@ -32,11 +32,12 @@ from django_summernote.widgets import SummernoteInplaceWidget, SummernoteWidget
 from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
 from django.contrib.sites.models import Site
 
-from .models import Inventory, Deployment, Action, DeploymentSnapshot, PhotoNote
+from .models import Inventory, Deployment, InventoryDeployment, Action, DeploymentSnapshot, PhotoNote
 from .validators import validate_udffield_decimal
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
 from roundabout.userdefinedfields.models import FieldValue
+from roundabout.cruises.models import Cruise
 # Import environment variables from .env files
 import environ
 env = environ.Env()
@@ -125,7 +126,7 @@ class InventoryForm(forms.ModelForm):
 
                     #Check if this inventory object has values for these fields, set initial values if true
                     try:
-                        fieldvalue = self.instance.fieldvalues.filter(field_id=field.id).latest(field_name='created_at')
+                        fieldvalue = self.instance.fieldvalues.filter(field_id=field.id).latest()
                     except FieldValue.DoesNotExist:
                         fieldvalue = None
 
@@ -243,6 +244,44 @@ class ActionRemoveFromBuildForm(forms.ModelForm):
         self.initial['detail'] = ''
 
 
+class ActionRecoverFromDeploymentForm(forms.ModelForm):
+    # Add custom date field to allow user to pick date for the Action
+    date = forms.DateTimeField( widget=DateTimePickerInput(
+                                options={
+                                    #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                                    "showClose": True,
+                                    "showClear": True,
+                                    "showTodayButton": False,
+                                    }
+                                ),
+                                initial=timezone.now,
+                                label='Date Recovered',
+                                help_text='Set all date/times to UTC time zone.',
+    )
+    cruise = forms.ModelChoiceField(queryset=Cruise.objects.all(),
+                                    label='Cruise Recovered On',
+                                    required=False)
+    class Meta:
+        model = Inventory
+        fields = ['location', 'date', 'cruise', 'detail', 'parent', 'build', 'assembly_part']
+        widgets = {
+            'parent': forms.HiddenInput(),
+            'build': forms.HiddenInput(),
+            'assembly_part': forms.HiddenInput(),
+        }
+        labels = {
+            'location': 'Select new Location for item',
+            'detail': 'Notes on recovery',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(ActionRecoverFromDeploymentForm, self).__init__(*args, **kwargs)
+        self.initial['parent'] = ''
+        self.initial['build'] = ''
+        self.initial['assembly_part'] = ''
+        self.initial['detail'] = ''
+
+
 class ActionRemoveDestinationForm(forms.ModelForm):
 
     class Meta:
@@ -328,6 +367,25 @@ class ActionPhotoUploadForm(forms.ModelForm):
         }
 
 
+class ActionDeployInventoryForm(forms.Form):
+    # Add custom date field to allow user to pick date for the Action
+    date = forms.DateTimeField( widget=DateTimePickerInput(
+                                options={
+                                    #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                                    "showClose": True,
+                                    "showClear": True,
+                                    "showTodayButton": False,
+                                    }
+                                ),
+                                initial=timezone.now,
+                                label='Date Deployed',
+                                help_text='Set all date/times to UTC time zone.',
+    )
+    cruise = forms.ModelChoiceField(queryset=Cruise.objects.all(),
+                                    label='Cruise Deployed On',
+                                    required=False,)
+
+
 class ActionHistoryNoteForm(forms.ModelForm):
 
     class Meta:
@@ -363,14 +421,13 @@ class ActionMoveToTrashForm(forms.ModelForm):
 
     class Meta:
         model = Inventory
-        fields = ['location', 'detail', 'parent', 'deployment', 'assembly_part', 'assigned_destination_root', 'build']
+        fields = ['location', 'detail', 'parent', 'assembly_part', 'assigned_destination_root', 'build']
         widgets = {
             'location': forms.HiddenInput(),
             'parent': forms.HiddenInput(),
-            'deployment': forms.HiddenInput(),
+            'build': forms.HiddenInput(),
             'assembly_part': forms.HiddenInput(),
             'assigned_destination_root': forms.HiddenInput(),
-            'build': forms.HiddenInput(),
         }
         labels = {
             'detail': 'Reasons for moving to Trash Bin',
@@ -380,185 +437,97 @@ class ActionMoveToTrashForm(forms.ModelForm):
         super(ActionMoveToTrashForm, self).__init__(*args, **kwargs)
         self.initial['location'] = Location.objects.get(root_type='Trash')
         self.initial['parent'] = ''
-        self.initial['deployment'] = ''
         self.initial['assembly_part'] = ''
         self.initial['assigned_destination_root'] = ''
-        self.initial['build'] = ''
         self.initial['detail'] = ''
 
 
-class DeploymentForm(forms.ModelForm):
+class InventoryDeploymentForm(forms.ModelForm):
+    #Add custom date field to allow user to update Deployment dates
+    deployment_start_date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": False,
+            }
+        ),
+        help_text='Set all date/times to UTC time zone.',
+    )
+    deployment_burnin_date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": False,
+            }
+        ),
+        help_text='Set all date/times to UTC time zone.',
+    )
+    deployment_to_field_date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": False,
+            }
+        ),
+        help_text='Set all date/times to UTC time zone.',
+    )
+    deployment_recovery_date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": False,
+            }
+        ),
+        help_text='Set all date/times to UTC time zone.',
+    )
+    deployment_retire_date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": False,
+            }
+        ),
+        help_text='Set all date/times to UTC time zone.',
+    )
 
     class Meta:
-        model = Deployment
-        fields = ['location', 'deployment_number', 'final_location', 'build']
+        model = InventoryDeployment
+        fields = [
+            'cruise_deployed', 'cruise_recovered', 'deployment_start_date', 'deployment_burnin_date', \
+            'deployment_to_field_date', 'deployment_recovery_date', 'deployment_retire_date',
+        ]
 
         labels = {
-            'location': 'Current Location',
-            'final_location': 'Deployment ID',
-            'build': 'Select an Assembly Build',
+            'cruise_deployed': 'Cruise Deployed On',
+            'cruise_recovered': 'Cruise Recovered On',
         }
 
-    # Add custom date field to allow user to pick date for the Action
-    date = forms.DateTimeField( widget=DateTimePickerInput(
-            options={
-                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
-                "showClose": True,
-                "showClear": True,
-                "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
-            }
-        ),
-        initial=timezone.now
-    )
-
     def __init__(self, *args, **kwargs):
-        super(DeploymentForm, self).__init__(*args, **kwargs)
-        # Check what Site we're on, change form label if obs-rdb.whoi.edu
-        current_site = Site.objects.get_current()
-        if current_site.domain == 'obs-rdb.whoi.edu':
-            deployment_number_label = 'Experiment Number'
-        else:
-            deployment_number_label = 'Deployment Number'
+        super(InventoryDeploymentForm, self).__init__(*args, **kwargs)
+        if self.instance.pk:
+            if self.instance.current_status == Action.STARTDEPLOYMENT or self.instance.current_status == Action.DEPLOYMENTBURNIN:
+                self.fields.pop('cruise_deployed')
+                self.fields.pop('cruise_recovered')
 
-        self.fields['deployment_number'].label = deployment_number_label
+            if not self.instance.deployment_start_date:
+                self.fields.pop('deployment_start_date')
 
-        # Limit final_location choices to only Sea locations
-        root_node = Location.objects.get(root_type='Sea')
-        location_list = root_node.get_descendants()
-        self.fields['final_location'].queryset = location_list
+            if not self.instance.deployment_burnin_date:
+                self.fields.pop('deployment_burnin_date')
 
+            if not self.instance.deployment_to_field_date:
+                self.fields.pop('deployment_to_field_date')
 
-class DeploymentActionBurninForm(forms.ModelForm):
+            if not self.instance.deployment_recovery_date:
+                self.fields.pop('deployment_recovery_date')
 
-    class Meta:
-        model = Deployment
-        fields = ['location',]
-        labels = {
-            'location': 'Select Location for Burn In',
-        }
-
-    # Add custom date field to allow user to pick date for the Action
-    date = forms.DateTimeField( widget=DateTimePickerInput(
-            options={
-                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
-                "showClose": True,
-                "showClear": True,
-                "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
-            }
-        ),
-        initial=timezone.now
-    )
-
-    def __init__(self, *args, **kwargs):
-        super(DeploymentActionBurninForm, self).__init__(*args, **kwargs)
-        root_node = Location.objects.get(root_type='Land')
-        location_list = root_node.get_descendants()
-        self.fields['location'].queryset = location_list
-
-
-class DeploymentActionDeployForm(forms.ModelForm):
-
-    class Meta:
-        model = Deployment
-        fields = ['location',]
-        widgets = {
-            'location': forms.HiddenInput()
-        }
-
-    # Add custom date field to allow user to pick date for the Action record
-    date = forms.DateTimeField( widget=DateTimePickerInput(
-            options={
-                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
-                "showClose": True,
-                "showClear": True,
-                "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
-            }
-        ),
-        initial=timezone.now
-    )
-    # Add lat/long, depth fields for the Action record
-    latitude = forms.DecimalField()
-    longitude = forms.DecimalField()
-    depth = forms.IntegerField(label='Depth in Meters', min_value=0)
-
-    def __init__(self, *args, **kwargs):
-        super(DeploymentActionDeployForm, self).__init__(*args, **kwargs)
-        self.initial['location'] = self.instance.final_location
-
-        self.helper = FormHelper()
-        self.helper.layout = Layout(
-            Div(
-                Field('date'),
-            ),
-            Div(
-                Field('latitude', wrapper_class='col-md-4'),
-                Field('longitude', wrapper_class='col-md-4'),
-                Field('depth', wrapper_class='col-md-4'),
-                css_class='form-row'
-            ),
-            Div(
-                Field('location'),
-            )
-        )
-
-
-class DeploymentActionRecoverForm(forms.ModelForm):
-
-    class Meta:
-        model = Deployment
-        fields = ['location',]
-        labels = {
-            'location': 'Select Land location to recover Deployment to:',
-        }
-
-    # Add custom date field to allow user to pick date for the Action
-    date = forms.DateTimeField( widget=DateTimePickerInput(
-            options={
-                #"format": "MM/DD/YYYY, HH:mm:ss", # moment date-time format
-                "showClose": True,
-                "showClear": True,
-                "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
-            }
-        ),
-        initial=timezone.now()
-    )
-
-    def __init__(self, *args, **kwargs):
-        super(DeploymentActionRecoverForm, self).__init__(*args, **kwargs)
-        root_node = Location.objects.get(root_type='Land')
-        location_list = root_node.get_descendants()
-        self.fields['location'].queryset = location_list
-
-
-class DeploymentActionRetireForm(forms.ModelForm):
-
-    class Meta:
-        model = Deployment
-        fields = ['location',]
-        widgets = {
-            'location': forms.HiddenInput()
-        }
-
-    # Add custom date field to allow user to pick date for the Action
-    date = forms.DateTimeField( widget=DateTimePickerInput(
-            options={
-                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
-                "showClose": True,
-                "showClear": True,
-                "showTodayButton": True,
-                "maxDate": timezone.now().strftime('%Y-%m-%d %H:%M'),
-            }
-        ),
-        initial=timezone.now
-    )
-
-    def __init__(self, *args, **kwargs):
-        super(DeploymentActionRetireForm, self).__init__(*args, **kwargs)
-        self.initial['location'] = Location.objects.get(root_type='Retired')
+            if not self.instance.deployment_retire_date:
+                self.fields.pop('deployment_retire_date')
 
 
 class DeploymentSnapshotForm(forms.ModelForm):

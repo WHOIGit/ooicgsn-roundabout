@@ -27,6 +27,7 @@ $(document).ready(function() {
 
     /* Make the Documentation Inline Formset Jquery work */
     $('.form-group').removeClass('row');
+
 });
 
 /* Use History API to load AJAX data on Back button click */
@@ -84,8 +85,13 @@ $(document).ready(function() {
             });
         } else if (typeof assemblyID !== 'undefined') {
             console.log(assemblyID);
-            data.instance._open_to(assemblyID);
-            data.instance.open_node(assemblyID);
+            if (typeof assemblyRevisionID !== 'undefined') {
+              data.instance._open_to(assemblyRevisionID);
+              data.instance.open_node(assemblyRevisionID);
+            } else{
+              data.instance._open_to(assemblyID);
+              data.instance.open_node(assemblyID);
+            }
             $(navTree).on("open_node.jstree", function (event, data) {
                 data.instance._open_to(nodeID);
                 data.instance.select_node(nodeID);
@@ -128,6 +134,8 @@ $(document).ready(function() {
                   var bookmarkURL = '/assemblies/assemblyrevision/' + itemID;
               } else if (nodeType == 'part_type') {
                   var bookmarkURL = '/parts/part_type/' + itemID;
+              } else if (nodeType == 'cruises_by_year') {
+                  var bookmarkURL = '/cruises/cruises-by-year/' + itemID;
               } else {
                  var bookmarkURL = '/' + nodeType + '/' + itemID
               }
@@ -178,7 +186,7 @@ $(document).ready(function() {
     });
 
     // AJAX call for Cancel Button to go back to object detail
-    $('#content-block').on('click','input.cancel-btn',function(){
+    $('#content-block').on('click','input.cancel-btn', function(){
         var url = $(this).attr("data-detail-url");
         var nodeID = $(this).attr("data-node-id");
         console.log(url);
@@ -191,7 +199,8 @@ $(document).ready(function() {
     });
 
     // AJAX functions for Detail template
-    $('#content-block').on('click','.ajax-detail-link a',function(){
+    $('#content-block').on('click','.ajax-detail-link a', function(event){
+        event.preventDefault();
         var nodeType = $(this).attr("data-node-type");
         console.log(nodeType);
         if (!nodeType) {
@@ -235,7 +244,7 @@ $(document).ready(function() {
 
               history.pushState(state, '', bookmarkURL);
               console.log(history.state);
-            }
+          }
         });
     });
 
@@ -322,7 +331,6 @@ function getCookie(name) {
     }
     return cookieValue;
 }
-
 var csrftoken = getCookie('csrftoken');
 
 function csrfSafeMethod(method) {

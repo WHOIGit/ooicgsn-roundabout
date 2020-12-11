@@ -29,7 +29,7 @@ from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, Div, Fie
 from django_summernote.widgets import SummernoteInplaceWidget, SummernoteWidget
 
 from .models import Build, BuildAction, BuildSnapshot, PhotoNote
-from roundabout.inventory.models import Deployment, DeploymentAction
+from roundabout.inventory.models import Deployment, DeploymentAction, Action
 from roundabout.locations.models import Location
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
@@ -108,16 +108,21 @@ class BuildActionPhotoNoteForm(forms.ModelForm):
     photo_ids = forms.CharField(required=False, widget=forms.HiddenInput())
 
     class Meta:
-        model = BuildAction
-        fields = ['detail', 'build', 'location']
+        model = Action
+        fields = ['detail', 'build', 'location', 'object_type']
         labels = {
             'detail': 'Add a Note',
         }
         widgets = {
             'build': forms.HiddenInput(),
             'location': forms.HiddenInput(),
+            'object_type': forms.HiddenInput(),
             'detail': SummernoteWidget(),
         }
+
+    def __init__(self, *args, **kwargs):
+        super(BuildActionPhotoNoteForm, self).__init__(*args, **kwargs)
+        self.initial['object_type'] = Action.BUILD
 
 
 class BuildActionPhotoUploadForm(forms.ModelForm):
@@ -168,22 +173,148 @@ class BuildSnapshotForm(forms.ModelForm):
 
 
 class DeploymentForm(forms.ModelForm):
+    #Add custom date field to allow user to update Deployment dates
+    deployment_start_date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": False,
+            }
+        ),
+        help_text='Set all date/times to UTC time zone.',
+    )
+    deployment_burnin_date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": False,
+            }
+        ),
+        help_text='Set all date/times to UTC time zone.',
+    )
+    deployment_to_field_date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": False,
+            }
+        ),
+        help_text='Set all date/times to UTC time zone.',
+    )
+    deployment_recovery_date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": False,
+            }
+        ),
+        help_text='Set all date/times to UTC time zone.',
+    )
+    deployment_retire_date = forms.DateTimeField( widget=DateTimePickerInput(
+            options={
+                #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
+                "showClose": True,
+                "showClear": True,
+                "showTodayButton": False,
+            }
+        ),
+        help_text='Set all date/times to UTC time zone.',
+    )
 
     class Meta:
         model = Deployment
-        fields = ['location', 'deployment_number', 'build', 'deployed_location']
+        fields = [
+            'deployment_number', 'build', 'deployed_location', 'cruise_deployed', 'cruise_recovered', \
+            'deployment_start_date', 'deployment_burnin_date', 'deployment_to_field_date', \
+            'deployment_recovery_date', 'deployment_retire_date', 'latitude', 'longitude', 'depth',
+        ]
 
         labels = {
             'location': 'Current Location',
             'deployment_number': '%s Number' % (labels['label_deployments_app_singular']),
             'deployed_location': 'Final %s Location' % (labels['label_deployments_app_singular']),
+            'cruise_deployed': 'Cruise Deployed On',
+            'latitude': 'Latitude (+/- degrees N)',
+            'longitude': 'Longitude (+/-  degrees E)',
         }
 
         widgets = {
             'build': forms.HiddenInput(),
         }
 
-    # Add custom date field to allow user to pick date for the Action
+    def __init__(self, *args, **kwargs):
+        super(DeploymentForm, self).__init__(*args, **kwargs)
+        if self.instance.pk:
+            print(self.instance.current_status)
+            if self.instance.current_status == Action.STARTDEPLOYMENT or self.instance.current_status == Action.DEPLOYMENTBURNIN:
+                self.fields.pop('depth')
+                self.fields.pop('latitude')
+                self.fields.pop('longitude')
+                self.fields.pop('cruise_recovered')
+
+            if self.instance.current_status == Action.DEPLOYMENTTOFIELD:
+                self.fields.pop('cruise_recovered')
+
+            if not self.instance.deployment_start_date:
+                self.fields.pop('deployment_start_date')
+
+            if not self.instance.deployment_burnin_date:
+                self.fields.pop('deployment_burnin_date')
+
+            if not self.instance.deployment_to_field_date:
+                self.fields.pop('deployment_to_field_date')
+
+            if not self.instance.deployment_recovery_date:
+                self.fields.pop('deployment_recovery_date')
+
+            if not self.instance.deployment_retire_date:
+                self.fields.pop('deployment_retire_date')
+
+    def clean_deployment_burnin_date(self):
+        deployment_start_date = self.cleaned_data.get('deployment_start_date')
+        deployment_burnin_date = self.cleaned_data.get('deployment_burnin_date')
+
+        if deployment_burnin_date < deployment_start_date:
+            raise forms.ValidationError('Deployment Cycle dates are invalid. Check that that dates are in correct order')
+        return deployment_burnin_date
+
+    def clean_deployment_to_field_date(self):
+        print(self.cleaned_data)
+        deployment_burnin_date = self.cleaned_data.get('deployment_burnin_date', None)
+        deployment_to_field_date = self.cleaned_data.get('deployment_to_field_date')
+
+        if deployment_burnin_date:
+            if deployment_to_field_date < deployment_burnin_date:
+                raise forms.ValidationError('Deployment Cycle dates are invalid. Check that that dates are in correct order')
+        return deployment_to_field_date
+
+    def clean_deployment_recovery_date(self):
+        print(self.cleaned_data)
+        deployment_to_field_date = self.cleaned_data.get('deployment_to_field_date', None)
+        deployment_recovery_date = self.cleaned_data.get('deployment_recovery_date')
+
+        if deployment_to_field_date:
+            if deployment_recovery_date < deployment_to_field_date:
+                raise forms.ValidationError('Deployment Cycle dates are invalid. Check that that dates are in correct order')
+        return deployment_recovery_date
+
+    def clean_deployment_retire_date(self):
+        print(self.cleaned_data)
+        deployment_recovery_date = self.cleaned_data.get('deployment_recovery_date', None)
+        deployment_retire_date = self.cleaned_data.get('deployment_retire_date')
+
+        if deployment_recovery_date:
+            if deployment_retire_date < deployment_recovery_date:
+                raise forms.ValidationError('Deployment Cycle dates are invalid. Check that that dates are in correct order')
+        return deployment_retire_date
+
+
+class DeploymentStartForm(forms.ModelForm):
+    #Add custom date field to allow user to pick date for the Action
     date = forms.DateTimeField( widget=DateTimePickerInput(
             options={
                 #"format": "MM/DD/YYYY, HH:mm", # moment date-time format
@@ -196,15 +327,33 @@ class DeploymentForm(forms.ModelForm):
         help_text='Set all date/times to UTC time zone.',
     )
 
+    class Meta:
+        model = Deployment
+        fields = [
+            'location', 'deployment_number', 'build', 'deployed_location', 'cruise_deployed',
+        ]
+
+        labels = {
+            'location': 'Current Location',
+            'deployment_number': '%s Number' % (labels['label_deployments_app_singular']),
+            'deployed_location': 'Final %s Location' % (labels['label_deployments_app_singular']),
+            'cruise_deployed': 'Cruise Deployed On',
+        }
+
+        widgets = {
+            'build': forms.HiddenInput(),
+        }
+
 
 class DeploymentActionBurninForm(forms.ModelForm):
 
     class Meta:
         model = Deployment
-        fields = ['location', 'deployed_location']
+        fields = ['location', 'deployed_location', 'cruise_deployed']
         labels = {
             'location': 'Select Location for Burn In',
             'deployed_location': 'Final %s Location' % (labels['label_deployments_app_singular']),
+            'cruise_deployed': 'Cruise Deployed On',
         }
 
     # Add custom date field to allow user to pick date for the Action
@@ -225,9 +374,10 @@ class DeploymentActionDeployForm(forms.ModelForm):
 
     class Meta:
         model = Deployment
-        fields = ['location',]
+        fields = ['location', 'cruise_deployed', 'latitude', 'longitude', 'depth']
         labels = {
             'location': '%s Location' % (labels['label_deployments_app_singular']),
+            'cruise_deployed': 'Cruise Deployed On',
         }
 
     # Add custom date field to allow user to pick date for the Action record
@@ -243,10 +393,6 @@ class DeploymentActionDeployForm(forms.ModelForm):
         initial=timezone.now,
         help_text='Set all date/times to UTC time zone.',
     )
-    # Add lat/long, depth fields for the Action record
-    latitude = forms.DecimalField(required=False)
-    longitude = forms.DecimalField(required=False)
-    depth = forms.IntegerField(label='Depth in Meters', min_value=0, required=False)
 
     def __init__(self, *args, **kwargs):
         super(DeploymentActionDeployForm, self).__init__(*args, **kwargs)
@@ -273,9 +419,10 @@ class DeploymentActionDetailsForm(forms.ModelForm):
 
     class Meta:
         model = Deployment
-        fields = ['location',]
+        fields = ['location', 'cruise_deployed']
         labels = {
             'location': '%s Location' % (labels['label_deployments_app_singular']),
+            'cruise_deployed': 'Cruise Deployed On',
         }
 
     # Add custom date field to allow user to pick date for the Action record
@@ -320,9 +467,10 @@ class DeploymentActionRecoverForm(forms.ModelForm):
 
     class Meta:
         model = Deployment
-        fields = ['location',]
+        fields = ['location', 'cruise_recovered']
         labels = {
             'location': 'Select Location to recover %s to:' % (labels['label_deployments_app_singular']),
+            'cruise_recovered': 'Cruise Recovered On'
         }
 
     # Add custom date field to allow user to pick date for the Action record

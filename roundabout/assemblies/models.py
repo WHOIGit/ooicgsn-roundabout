@@ -40,7 +40,7 @@ class AssemblyType(models.Model):
 
 # Assembly base model
 class Assembly(models.Model):
-    name = models.CharField(max_length=255, unique=False, db_index=True)
+    name = models.CharField(max_length=255, unique=True, db_index=True)
     assembly_type = models.ForeignKey(AssemblyType, related_name='assemblies',
                                     on_delete=models.SET_NULL, null=True, blank=True)
     assembly_number = models.CharField(max_length=100, unique=False, db_index=True, null=False, blank=True)
@@ -69,7 +69,7 @@ class AssemblyRevision(models.Model):
         get_latest_by = 'created_at'
 
     def __str__(self):
-        return '%s - %s' % (self.revision_code, self.assembly.name)
+        return 'Revision %s - %s' % (self.revision_code, self.assembly.name)
 
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):

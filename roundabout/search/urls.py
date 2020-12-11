@@ -25,10 +25,12 @@ from . import views
 
 app_name = 'search'
 urlpatterns = [
-    path('inventory', view=views.InventoryTableView.as_view(), name='inventory'),
-    path('part',view=views.PartTableView.as_view(),name='part'),
-    path('build', view=views.BuildTableView.as_view(), name='build'),
-    path('assembly', view=views.AssemblyTableView.as_view(), name='assembly'),
     path('searchbar', view=views.searchbar_redirect, name='searchbar'),
-
+    path('inventory', view=views.InventoryTableView.as_view(), name='inventory'),
+    path('calibrations',view=views.CalibrationTableView.as_view(),name='calibrations'),
+    path('configconsts',view=views.ConfigConstTableView.as_view(),name='configconsts'),
+    path('builds', view=views.BuildTableView.as_view(), name='build'),
+    path('parts',view=views.PartTableView.as_view(),name='part'),
+    path('assembly', view=views.AssemblyTableView.as_view(), name='assembly'),
+    path('actions', view=views.ActionTableView.as_view(), name='action'),
 ]

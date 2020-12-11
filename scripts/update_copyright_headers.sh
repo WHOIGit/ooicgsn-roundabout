@@ -70,7 +70,7 @@ do
     
     find $code_dir -regex $regex_match | while read -r file; do    
 
-        if [[ "${file}" != *"__init__.py"* ]]; then # Ignore auto-generated __init__.py
+        if [[ "${file}" != *"__init__.py"* ]] && [[ "${file}" != *"/static/"* ]]; then # Ignore auto-generated __init__.py & "static" folder
             
             echo -e "$comment_start\n$(cat $header)" > /tmp/copyright_header_tmp
             

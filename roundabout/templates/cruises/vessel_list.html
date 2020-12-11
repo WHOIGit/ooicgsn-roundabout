@@ -1,0 +1,86 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+{% extends "base.html" %}
+{% load static i18n %}
+{% block title %}Vessels{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="parts-add-btn">
+      <a href="{% url 'cruises:vessels_add' %}" role="button" class="btn btn-primary">Add Vessel</a>
+  </div>
+  <h2>Vessels</h2>
+
+
+  <table class="table table-striped table-hover" id="vessel-table">
+      <thead>
+
+        <th>Prefix</th>
+        <th>Vessel Designation</th>
+        <th>Vessel Name</th>
+        <th>ICES Code</th>
+        <th>Operator</th>
+        <th>Call Sign</th>
+        <th>MMSI Number</th>
+        <th>IMO Number</th>
+        <th>Length</th>
+        <th>Max Speed</th>
+        <th>Max Draft</th>
+        <th>Designation</th>
+        <th>Active</th>
+        <th>R2R</th>
+        <th>Notes</th>
+
+        <th>&nbsp;</th>
+
+      </thead>
+      <tbody>
+        {% for vessel in vessels %}
+          <tr>
+
+              <td>{{ vessel.prefix }}</td>
+              <td>{{ vessel.vessel_designation }}</td>
+              <td>{{ vessel.vessel_name }}</td>
+              <td>{{ vessel.ICES_code }}</td>
+              <td>{{ vessel.operator }}</td>
+              <td>{{ vessel.call_sign }}</td>
+              <td>{% if vessel.MMSI_number %}{{ vessel.MMSI_number }}{% endif %}</td>
+              <td>{% if vessel.IMO_number %}{{ vessel.IMO_number }}{% endif %}</td>
+              <td>{% if vessel.length %}{{ vessel.length }}{% endif %}</td>
+              <td>{% if vessel.max_speed %}{{ vessel.max_speed }}{% endif %}</td>
+              <td>{% if vessel.max_draft %}{{ vessel.max_draft }}{% endif %}</td>
+              <td>{{ vessel.designation }}</td>
+              <td>{% if vessel.get_active_display %}{{ vessel.get_active_display }}{% endif %}</td>
+              <td>{% if vessel.get_R2R_display %}{{ vessel.get_R2R_display  }}{% endif %}</td>
+              <td>{{ vessel.notes  }}</td>
+
+              <td class="text-right action-col">
+                  <a href="{% url 'cruises:vessels_update' vessel.id %}" role="button" class="btn btn-primary btn-sm">Edit</a>
+                  <a href="{% url 'cruises:vessels_delete' vessel.id %}" role="button" class="btn btn-danger btn-sm">Delete</a>
+              </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+</table>
+</div>
+{% endblock content %}

@@ -27,7 +27,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.db import transaction
 
 from .models import Assembly, AssemblyPart, AssemblyType, AssemblyDocument, AssemblyRevision
-from .forms import AssemblyForm, AssemblyPartForm, AssemblyTypeForm, AssemblyRevisionForm, AssemblyRevisionFormset, AssemblyDocumentationFormset
+from .forms import AssemblyForm, AssemblyPartForm, AssemblyTypeForm, AssemblyRevisionForm, AssemblyRevisionFormset, AssemblyDocumentationFormset, AssemblyTypeDeleteForm
 from roundabout.parts.models import PartType, Part
 from roundabout.inventory.models import Action
 from common.util.mixins import AjaxFormMixin
@@ -533,8 +533,13 @@ class AssemblyPartAjaxDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(AssemblyPartAjaxDetailView, self).get_context_data(**kwargs)
+        part_has_configs = False
+        if self.object.part.config_name_events.exists():
+            if self.object.part.config_name_events.first().config_names.filter(config_type='conf').exists():
+                part_has_configs = True
         context.update({
-            'node_type': self.object.get_object_type()
+            'node_type': self.object.get_object_type(),
+            'part_has_configs': part_has_configs
         })
         return context
 
@@ -741,12 +746,44 @@ class AssemblyTypeUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Update
         return reverse('assemblies:assembly_type_home', )
 
 
-class AssemblyTypeDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
-    model = AssemblyType
+class AssemblyTypeDeleteView(LoginRequiredMixin, PermissionRequiredMixin, FormView):
+    form_class = AssemblyTypeDeleteForm
     template_name = 'assemblies/assembly_type_confirm_delete.html'
-    success_url = reverse_lazy('assemblies:assembly_type_home')
     permission_required = 'assemblies.delete_assembly'
     redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super(AssemblyTypeDeleteView, self).get_context_data(**kwargs)
+        assembly_type = AssemblyType.objects.get(id=self.kwargs['pk'])
+
+        context.update({
+            'assembly_type': assembly_type
+        })
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super(AssemblyTypeDeleteView, self).get_form_kwargs()
+        if 'pk' in self.kwargs:
+            kwargs['pk'] = self.kwargs['pk']
+        return kwargs
+
+    def form_valid(self, form):
+        new_assembly_type = form.cleaned_data['new_assembly_type']
+        assembly_type_to_delete = AssemblyType.objects.get(id=self.kwargs['pk'])
+
+        # Need to check if there's Part Templates. If so, need move them to new Part Type.
+        if assembly_type_to_delete.assemblies.exists():
+            for assembly in assembly_type_to_delete.assemblies.all():
+                assembly.assembly_type = new_assembly_type
+                assembly.save()
+
+        # Delete the Assembly object
+        assembly_type_to_delete.delete()
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse('assemblies:assembly_type_home')
+
 
 # Direct Detail view for Assembly Types
 class AssemblyTypeDetailView(LoginRequiredMixin, DetailView):
@@ -765,6 +802,7 @@ class AssemblyTypeDetailView(LoginRequiredMixin, DetailView):
         self.object = self.get_object()
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
+
 
 # AJAX Views
 class AssemblyTypeAjaxDetailView(LoginRequiredMixin, DetailView):

@@ -42,5 +42,6 @@ urlpatterns = [
     path('ajax/load-new-buildid-number/', views.load_assembly_revisions, name='ajax_load_assembly_revisions'),
     # Deployment paths
     path('ajax/deployment/add/<int:build_pk>/', view=views_deployments.DeploymentAjaxCreateView.as_view(), name='ajax_deployment_add'),
+    path('ajax/deployment/edit/<int:pk>/', view=views_deployments.DeploymentAjaxUpdateView.as_view(), name='ajax_deployment_update'),
     path('ajax/deployment/action/<action_type>/<int:pk>/<int:build_pk>/', view=views_deployments.DeploymentAjaxActionView.as_view(), name='ajax_deployment_action'),
 ]

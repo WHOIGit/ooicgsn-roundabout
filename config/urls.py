@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -26,10 +26,6 @@ from django.contrib import admin
 from django.views.generic import TemplateView
 from django.views import defaults as default_views
 
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
 
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
@@ -50,23 +46,20 @@ urlpatterns = [
     path('locations/', include('roundabout.locations.urls', namespace='locations')),
     path('parts/', include('roundabout.parts.urls', namespace='parts')),
     path('inventory/', include('roundabout.inventory.urls', namespace='inventory')),
-    path('deployments/', include('roundabout.inventory.urls_deployment', namespace='deployments')),
     path('admintools/', include('roundabout.admintools.urls', namespace='admintools')),
     path('userdefinedfields/', include('roundabout.userdefinedfields.urls', namespace='userdefinedfields')),
     path('assemblies/', include('roundabout.assemblies.urls', namespace='assemblies')),
     path('builds/', include('roundabout.builds.urls', namespace='builds')),
+    path('cruises/', include('roundabout.cruises.urls', namespace='cruises')),
     path('reports/', include('roundabout.reports.urls', namespace='reports')),
     path('search/', include('roundabout.search.urls', namespace='search')),
+    path('export/', include('roundabout.exports.urls', namespace='export')),
     path('calibrations/', include('roundabout.calibrations.urls', namespace='calibrations')),
-    path('configs_constants/', include('roundabout.configs_constants.urls', namespace='configs_constants')),
+    path('configs-constants/', include('roundabout.configs_constants.urls', namespace='configs_constants')),
+    path('field-instances/', include('roundabout.field_instances.urls', namespace='field_instances')),
+    path('ooi-ci-tools/', include('roundabout.ooi_ci_tools.urls', namespace='ooi_ci_tools')),
     # API urls
-    path('api/v1/', include('roundabout.inventory.api.urls')),
-    path('api/v1/', include('roundabout.locations.api.urls')),
-    path('api/v1/', include('roundabout.parts.api.urls')),
-    path('api/v1/', include('roundabout.assemblies.api.urls')),
-    # API JWT token paths
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/v1/', include('roundabout.core.api.urls', namespace='api_v1')),
     #Summernote WYSIWYG
     path('summernote/', include('django_summernote.urls')),
 ] + static(

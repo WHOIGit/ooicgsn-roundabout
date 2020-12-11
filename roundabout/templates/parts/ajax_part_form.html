@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or
+# This file is part of the Roundabout Database project ("RDB" or 
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -214,21 +214,31 @@ $(document).ready(function() {
 
     })
 
-    const part_type = '{{part_template.part_type}}'
-    if (part_type == 'Instrument') {
+    const ccc_toggle = '{{part_template.part_type.ccc_toggle}}'
+    if (ccc_toggle == 'True') {
       $('#div_id_cal_dec_places').show();
     } else {
         $('#div_id_cal_dec_places').hide();
     }
 
+    // On-change of dropdown selection, obtain part type name, show/hide max-cal attribute 
     $('#id_part_type').change(function() {
-        let part_id = $(this).val();
-        if (part_id == 3) {
-            $('#div_id_cal_dec_places').show();
-        } else {
-            $('#div_id_cal_dec_places').hide();
-        }
-    })
+        let part_type_id = $(this).find('option:selected').attr('value');
+        let url = "{% url 'parts:check_ccc_enabled' %}"
+        $.ajax({
+            url: url,
+            data: {
+                "part_type_id": part_type_id,
+            },
+            success: function (data) {
+                if ( data.ccc_toggle ) {
+                    $('#div_id_cal_dec_places').show();
+                } else {
+                    $('#div_id_cal_dec_places').hide();
+                }
+            }
+        });
+    });
 
 });
 

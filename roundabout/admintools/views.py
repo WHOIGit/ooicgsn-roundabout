@@ -20,30 +20,110 @@
 """
 
 import csv
+import datetime
 import io
-import json
+from types import SimpleNamespace
+
 import requests
 from dateutil import parser
-
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
-from django.urls import reverse, reverse_lazy
-from django.db import IntegrityError
-from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.http import HttpResponse
+from django.urls import reverse, reverse_lazy
+from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, \
+    TemplateView, FormView
 
-from .forms import PrinterForm, ImportInventoryForm
-from .models import *
-from roundabout.userdefinedfields.models import FieldValue, Field
+from roundabout.assemblies.models import Assembly, AssemblyPart, AssemblyRevision
+from roundabout.calibrations.forms import parse_valid_coeff_vals
+from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
 from roundabout.inventory.models import Inventory, Action
-from roundabout.parts.models import Part, Revision
+from roundabout.inventory.utils import _create_action_history
 from roundabout.locations.models import Location
-from roundabout.assemblies.models import AssemblyType, Assembly, AssemblyPart
-from roundabout.assemblies.views import _make_tree_copy
+from roundabout.parts.models import Revision, Documentation, PartType
+from roundabout.userdefinedfields.models import FieldValue, Field
+from .forms import PrinterForm, ImportInventoryForm, ImportCalibrationForm
+from .models import *
+
 
 # Test URL for Sentry.io logging
 def trigger_error(request):
     division_by_zero = 1 / 0
+
+def parse_cal_file(self,form,cal_csv,ext_files):
+    cal_csv_filename = cal_csv.name[:-4]
+    cal_csv.seek(0)
+    reader = csv.DictReader(io.StringIO(cal_csv.read().decode('utf-8')))
+    headers = reader.fieldnames
+    coeff_val_sets = []
+    inv_serial = cal_csv.name.split('__')[0]
+    cal_date_string = cal_csv.name.split('__')[1][:8]
+    inventory_item = Inventory.objects.get(serial_number=inv_serial)
+    cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
+    csv_event = CalibrationEvent.objects.create(
+        calibration_date = cal_date_date,
+        inventory = inventory_item
+    )
+    for idx, row in enumerate(reader):
+        row_data = row.items()
+        for key, value in row_data:
+            if key == 'name':
+                calibration_name = value.strip()
+                cal_name_item = CoefficientName.objects.get(
+                    calibration_name = calibration_name,
+                    coeff_name_event =  inventory_item.part.coefficient_name_events.first()
+                )
+            elif key == 'value':
+                valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
+                mock_valset_instance = SimpleNamespace(**valset_keys)
+                raw_valset = str(value)
+                if '[' in raw_valset:
+                    raw_valset = raw_valset[1:-1]
+                if 'SheetRef' in raw_valset:
+                    ext_finder_filename = "__".join((cal_csv_filename,calibration_name))
+                    ref_file = [file for file in ext_files if ext_finder_filename in file.name][0]
+                    ref_file.seek(0)
+                    reader = io.StringIO(ref_file.read().decode('utf-8'))
+                    contents = reader.getvalue()
+                    raw_valset = contents
+            elif key == 'notes':
+                notes = value.strip()
+                coeff_val_set = CoefficientValueSet(
+                    coefficient_name = cal_name_item,
+                    value_set = raw_valset,
+                    notes = notes
+                )
+                coeff_val_sets.append(coeff_val_set)
+    if form.cleaned_data['user_draft'].exists():
+        draft_users = form.cleaned_data['user_draft']
+        for user in draft_users:
+            csv_event.user_draft.add(user)
+    for valset in coeff_val_sets:
+        valset.calibration_event = csv_event
+        valset.save()
+        parse_valid_coeff_vals(valset)
+    _create_action_history(csv_event, Action.CALCSVIMPORT, self.request.user)
+
+# CSV File Uploader for GitHub Calibration Coefficients
+class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
+    form_class = ImportCalibrationForm
+    template_name = 'admintools/import_calibrations_upload_form.html'
+
+    def form_valid(self, form):
+        cal_files = self.request.FILES.getlist('cal_csv')
+        csv_files = []
+        ext_files = []
+        for file in cal_files:
+            ext = file.name[-3:]
+            if ext == 'ext':
+                ext_files.append(file)
+            if ext == 'csv':
+                csv_files.append(file)
+        for cal_csv in csv_files:
+            parse_cal_file(self,form,cal_csv,ext_files)
+        return super(ImportCalibrationsUploadView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse('admintools:import_inventory_upload_success', )
+
 
 # Bulk Inventory Import Functions
 # ------------------------------------------
@@ -322,84 +402,121 @@ class ImportInventoryUploadSuccessView(TemplateView):
 
 # Assembly Template import tool
 # Import an existing Assembly template from a separate RDB instance
+# Makes a copy of the Assembly Revisiontree starting at "root_part",
+# move to new Revision, reparenting it to "parent"
+def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent=None):
+    params = {'expand': 'part'}
+    assembly_part_request = requests.get(root_part_url, params=params, headers=headers, verify=False)
+    assembly_part_data = assembly_part_request.json()
+    # Need to validate that the Part template exists before creating AssemblyPart
+    try:
+        part_obj = Part.objects.get(part_number=assembly_part_data['part']['part_number'])
+    except Part.DoesNotExist:
+        params = {'expand': 'part_type,revisions.documentation'}
+        part_request = requests.get(assembly_part_data['part']['url'], params=params, headers=headers, verify=False)
+        part_data = part_request.json()
+        print(part_data)
+
+        try:
+            part_type = PartType.objects.get(name=part_data['part_type']['name'])
+        except PartType.DoesNotExist:
+            # No matching AssemblyType, add it from the API request data
+            part_type = PartType.objects.create(name=part_data['part_type']['name'])
+
+        part_obj = Part.objects.create(
+            name = part_data['name'],
+            friendly_name = part_data['friendly_name'],
+            part_type = part_type,
+            part_number = part_data['part_number'],
+            unit_cost = part_data['unit_cost'],
+            refurbishment_cost = part_data['refurbishment_cost'],
+            note = part_data['note'],
+            cal_dec_places = part_data['cal_dec_places'],
+        )
+        # Create all Revisions objects for this Part
+        for revision in part_data['revisions']:
+            revision_obj = Revision.objects.create(
+                revision_code = revision['revision_code'],
+                unit_cost = revision['unit_cost'],
+                refurbishment_cost = revision['refurbishment_cost'],
+                created_at = revision['created_at'],
+                part = part_obj,
+            )
+            # Create all Documentation objects for this Revision
+            for doc in revision['documentation']:
+                doc_obj = Documentation.objects.create(
+                    name = doc['name'],
+                    doc_type = doc['doc_type'],
+                    doc_link =  doc['doc_link'],
+                    revision = revision_obj,
+                )
+    # Now create the Assembly Part
+    assembly_part_obj = AssemblyPart.objects.create(
+        assembly_revision = new_revision,
+        part = part_obj,
+        parent=parent,
+        note = assembly_part_data['note'],
+        order = assembly_part_data['order']
+    )
+    # Loop through the tree
+    for child_url in assembly_part_data['children']:
+        _api_import_assembly_parts_tree(headers, child_url, new_revision, assembly_part_obj)
+
+    return True
+
 
 # View to make API request to a separate RDB instance and copy an Assembly Template
 class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'assemblies.add_assembly'
 
     def get(self, request, *args, **kwargs):
+        import_url = request.GET.get('import_url')
+        api_token = request.GET.get('api_token')
+
+        if not import_url:
+            return HttpResponse("No import_url query paramater data")
+
+        if not api_token:
+            return HttpResponse("No api_token query paramater data")
+        #api_token = '92e4efc1731d7ed2c31bf76c8d08ab2a34d3ce6d'
+        headers = {
+            'Authorization': 'Token ' + api_token,
+        }
+        params = {'expand': 'assembly_type,assembly_revisions'}
         # Get the Assembly data from RDB API
-        request_url = 'https://rdb-demo.whoi.edu/api/v1/assemblies/13/'
-        assembly_request = requests.get(request_url, verify=False)
+        #import_url = 'https://rdb-demo.whoi.edu/api/v1/assembly-templates/assemblies/8/'
+        assembly_request = requests.get(import_url, params=params, headers=headers, verify=False)
         new_assembly = assembly_request.json()
         # Get or create new parent Temp Assembly
-        temp_assembly_obj, created = TempImportAssembly.objects.get_or_create(name=new_assembly['name'],
-                                                                              assembly_number=new_assembly['assembly_number'],
-                                                                              description=new_assembly['description'],)
-        # If already exists, reset all the related items
-        error_count = 0
-        error_parts = []
-        if not created:
-            temp_assembly_obj.temp_assembly_parts.all().delete()
-
+        assembly_obj, created = Assembly.objects.get_or_create(name=new_assembly['name'],
+                                                               assembly_number=new_assembly['assembly_number'],
+                                                               description=new_assembly['description'],)
+        print(assembly_obj)
         try:
             assembly_type = AssemblyType.objects.get(name=new_assembly['assembly_type']['name'])
-            import_error = False
         except AssemblyType.DoesNotExist:
-            assembly_type = None
-            import_error = True
-            import_error_msg = 'Assembly Type does not exist in this RDB. Please add it, and try again.'
+            # No matching AssemblyType, add it from the API request data
+            assembly_type = AssemblyType.objects.create(name=new_assembly['assembly_type']['name'])
+        print(assembly_type)
+        assembly_obj.assembly_type = assembly_type
+        assembly_obj.save()
 
-        if not import_error:
-            # add Assembly Type to the parent object
-            temp_assembly_obj.assembly_type = assembly_type
-            temp_assembly_obj.save()
+        # Create all Revisions
+        for rev in new_assembly['assembly_revisions']:
+            assembly_revision_obj = AssemblyRevision.objects.create(
+                revision_code = rev['revision_code'],
+                revision_note = rev['revision_note'],
+                created_at = rev['created_at'],
+                assembly = assembly_obj,
+            )
+            print(assembly_revision_obj)
 
-            # import all Assembly Parts to temp table
-            for assembly_part in new_assembly['assembly_parts']:
-                # Need to validate that the Part template exists
-                try:
-                    part = Part.objects.get(part_number=assembly_part['part']['part_number'])
-                except Part.DoesNotExist:
-                    part = None
-                    import_error = True
-                    error_count += 1
-                    error_parts.append(assembly_part['part']['part_number'])
-                    import_error_msg = 'Part Number does not exist in this RDB. Please add Part Template, and try again.'
+            for root_url in rev['assembly_parts_roots']:
+                tree_created = _api_import_assembly_parts_tree(headers, root_url, assembly_revision_obj)
 
-                if not import_error:
-                    temp_assembly_part_obj = TempImportAssemblyPart(assembly=temp_assembly_obj,
-                                                                    part=part,
-                                                                    previous_id=assembly_part['id'],
-                                                                    previous_parent=assembly_part['parent'],
-                                                                    note=assembly_part['note'],
-                                                                    order=assembly_part['order'])
-                    temp_assembly_part_obj.save()
-                    print(temp_assembly_part_obj)
-
-            # run through the temp Assembly Parts again to set the correct Parent structure for MPTT
-            for temp_assembly_part in temp_assembly_obj.temp_assembly_parts.all():
-                # Check if there's a previous_parent, if so we need to find the correct new object
-                if temp_assembly_part.previous_parent:
-                    parent_obj = TempImportAssemblyPart.objects.get(previous_id=temp_assembly_part.previous_parent)
-                    temp_assembly_part.parent = parent_obj
-                    temp_assembly_part.save()
-
-            # Rebuild the TempImportAssemblyPart MPTT tree to ensure correct structure for copying
-            TempImportAssemblyPart._tree_manager.rebuild()
-
-            # copy the Temp Assembly to real destination table
-            assembly_obj = Assembly(name=temp_assembly_obj.name,
-                                    assembly_type=temp_assembly_obj.assembly_type,
-                                    assembly_number=temp_assembly_obj.assembly_number,
-                                    description=temp_assembly_obj.description)
-            assembly_obj.save()
-
-            for ap in temp_assembly_obj.temp_assembly_parts.all():
-                if ap.is_root_node():
-                    _make_tree_copy(ap, assembly_obj, ap.parent)
-
-        return HttpResponse('<h1>New Assembly Template Imported! - %s</h1><p>Errors count: %s</p><p>%s</p>' % (import_error, error_count, error_parts))
+            print(tree_created)
+            #AssemblyPart._tree_manager.rebuild()
+        return HttpResponse('<h1>New Assembly Template Imported! - %s</h1>' % (assembly_obj))
 
 
 # Printer functionality
@@ -420,6 +537,7 @@ class PrinterCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView)
 
     def get_success_url(self):
         return reverse('admintools:printers_home', )
+
 
 class PrinterUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Printer

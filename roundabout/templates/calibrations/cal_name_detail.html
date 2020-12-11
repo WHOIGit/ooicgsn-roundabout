@@ -1,0 +1,252 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or 
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+{% load common_tags %}
+
+<div id = 'calibrations-section'>
+    <div class="ajax-detail-link float-right">
+        {% if not user|has_group:"inventory only" %}
+            {% if part_template.coefficient_name_events.exists %}
+                <div class = 'ajax-detail-link float-right'>
+                    <a  href="#"
+                        class="btn btn-primary btn-sm mr-2"
+                        role="button"
+                        data-detail-url="{% url 'calibrations:event_coeffname_update' part_template.coefficient_name_events.first.id %}"
+                        data-node-id="{{ part_template.id }}"
+                        data-node-type="detail">
+                            Edit Calibrations
+                    </a>
+                </div>
+            {% else %}
+                <a class="btn btn-primary btn-sm" href="#" role="button"
+                    data-detail-url="{% url 'calibrations:event_coeffname_add' part_template.id %}"
+                    data-node-id="{{ part_template.id }}"
+                    data-node-type="detail"
+                >
+                    Create Calibrations
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
+    <h4>Calibrations</h4>
+    <hr>
+    <div id="coefficient_name-template" aria-labelledby="coefficient_name-template-tab">
+        <ul class="list-group">
+            {% for event in part_template.coefficient_name_events.all %}
+                <li class="list-group-item">
+                    <a  class="collapsed" 
+                        data-toggle="collapse" 
+                        href="#coeff_name-{{ event.id }}" 
+                        aria-expanded="false" 
+                        aria-controls="coeff_name-{{ event.id }}"
+                    >
+                        Calibrations
+                    </a>
+                    <a  data-toggle="collapse" 
+                        class="collapsed text-right" 
+                        href="#coeff_name-{{ event.id }}" 
+                        aria-controls="coeff_name-{{ event.id }}" 
+                        aria-expanded="false" 
+                        role="button"
+                    >
+                        <i class="fa" aria-hidden="true"></i>
+                        <span class="sr-only">Expand/Collapse Default</span>
+                    </a>
+                    {% if user in event.user_draft.all %}
+                        <span id="review-badge" class="badge badge-pill badge-secondary">Review Requested</span>
+                    {% endif %}
+                    {% if event.approved %}
+                        <span id="approve-badge" class="badge badge-pill badge-success">Approved</span> 
+                    {% else %} 
+                        <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span> 
+                    {% endif %}
+                    <div class="collapse mt-3" id="coeff_name-{{ event.id }}">
+                        <hr>
+                        {% if user in event.user_draft.all %}
+                            <button class="btn btn-success btn-sm mr-2" id='expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_coeffname_approve' event.id user.id %}">
+                                Approve
+                            </button>
+                        {% endif %}
+                        {% if not user|has_group:"inventory only" %}
+                            <div class="ajax-detail-link float-right">
+                                <a  href="#" 
+                                    class="btn btn-danger btn-sm mr-2"
+                                    data-detail-url="{% url 'calibrations:event_coeffname_delete' event.id %}" 
+                                    role="button" 
+                                >
+                                        Delete
+                                </a>
+                            </div>
+                        {% endif %}
+                        <p id = 'approvers'>Approvers: 
+                            {% for user in event.get_sorted_approvers.all %}
+                                <span id='approver-{{ user.id }}'>{{ user.username }}</span>
+                            {% endfor %}
+                        </p>
+                        <p id = 'reviewers'>Reviewers: 
+                            {% for user in event.get_sorted_reviewers.all %}
+                                <span id='reviewer-{{ user.id }}'>{{ user.username }}</span>
+                            {% endfor %}
+                        </p> 
+                        <div class="tab-content" id="inventory-tabs">
+                            <div class="tab-pane fade show active" id="names" role="tabpanel" aria-labelledby="names-tab">
+                                <table class="table table-tight">
+                                    <tbody>
+                                        {% for name in event.coefficient_names.all %}
+                                            <tr>
+                                                <td>
+                                                    <li class = 'list-group-item'>
+                                                        <a  class="collapse show" 
+                                                            data-toggle="collapse" 
+                                                            href="#name-{{ name.calibration_name }}{{ event.id }}" 
+                                                            aria-expanded="false" 
+                                                            aria-controls="name-{{ name.calibration_name }}{{ event.id }}"
+                                                        >
+                                                            <b>{{ name.calibration_name }}</b>
+                                                        </a>
+                                                        <a  data-toggle="collapse" 
+                                                            class="collapse show text-right" 
+                                                            href="#name-{{ name.calibration_name }}{{ event.id }}" 
+                                                            aria-controls="name-{{ name.calibration_name }}{{ event.id }}" 
+                                                            aria-expanded="false" 
+                                                            role="button"
+                                                        >
+                                                            <i class="fa" aria-hidden="true"></i>
+                                                            <span class="sr-only">Expand/Collapse Default</span>
+                                                        </a>
+                                                        {% if name.deprecated %}
+                                                            <span id="progress-badge" class="badge badge-pill badge-warning">Deprecated</span> 
+                                                        {% endif %}
+                                                        <div class="collapse show mt-1" id="name-{{ name.calibration_name }}{{ event.id }}">
+                                                            <table id = 'coefficient_name-val-table' class="table table-tight" style = 'display:block; overflow: auto; max-height: 200px'>
+                                                                <thead>
+                                                                    <th>Type</th>
+                                                                    <th>Significant Figures</th>
+                                                                </thead>
+                                                                <tbody class = 'coefficient_name-tbody' id = 'coefficient_name-val-tbody' style = 'overflow: auto; max-height: 200px'>
+                                                                    <tr style = 'text-align: center;'>
+                                                                        <td>{{ name.value_set_type }}</td>
+                                                                        <td>{{ name.sigfig_override }}</td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </li>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+                                <li class="nav-item">
+                                    <a  class="nav-link active" 
+                                        id="coeffname_event_history-tab" 
+                                        data-toggle="tab" 
+                                        href="#coeffname_event_history" 
+                                        role="tab" 
+                                        aria-controls="coeffname_event_history" 
+                                        aria-selected="false">
+                                            Event History
+                                    </a>
+                                </li>
+                            </ul>
+                            <table class="table table-tight">
+                                <tbody>
+                                    <tr>
+                                        <td> 
+                                            <li class = 'list-group-item' style = 'display:block; overflow: auto; max-height: 200px'>
+                                                <table class="table table-tight table-striped action-table">
+                                                    <thead>
+                                                        <th>Date</th>
+                                                        <th>Action</th>
+                                                        <th>Details</th>
+                                                        <th>Person</th>
+                                                    </thead>
+                                                    <tbody style = 'overflow: auto; max-height: 200px'>
+                                                        {% for action in event.get_actions.all %}
+                                                            <tr>
+                                                                <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
+                                                                <td>{{ action.get_action_type_display }}</td>
+                                                                <td>
+                                                                    {{ action.detail|safe }}
+                                                                </td>
+                                                                <td>{{ action.user.username }}</td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </li>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <hr>
+</div>
+
+
+{% block javascript %}
+<script>
+    $(document).ready(function() {
+
+        // Toggle display of Constant functionality 
+        let user_id = '{{ user.id }}'
+        let ccc_toggle = '{{ part_template.part_type.ccc_toggle }}';
+        if (ccc_toggle == 'True') {
+            $('#calibrations-section').show();
+        } else {
+            $('#calibrations-section').hide();
+        }
+
+        // Swap Reviewers as Approvers
+        $('#coefficient_name-template').on('click', 'button[id^=expander]', function(e) {
+            e.preventDefault();
+            let url = $(this).attr('data-reviewer-url');
+            let grandParent = $(this).parent().parent()
+            let review_badge = grandParent.find('#review-badge');
+            let progress_badge = grandParent.find('#progress-badge');
+            let reviewer = grandParent.find('#reviewer-' + user_id)
+            let approver_list = grandParent.find('#approvers');
+            if (review_badge.length) {
+                $.ajax({
+                    url: url,
+                    success: function (data) {
+                        if (data.approved) {
+                            review_badge.after('<span id = "approve-badge" class = "badge badge-pill badge-success">Approved</span>');
+                            progress_badge.hide();
+                        }
+                        $(this).remove();
+                        approver_list.append("<span id='approver-{{ user.id }}'>{{ user.username }}</span>");
+                        review_badge.remove();
+                        reviewer.hide();
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock javascript %}

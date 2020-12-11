@@ -1,0 +1,41 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<ul>
+{% regroup cruises by cruise_start_date|date:"Y" as cruises_by_year %}
+{% for year_group in cruises_by_year %}
+    <li data-jstree='{"icon":"fas fa-calendar"}' id="cruises_by_year_{{ year_group.grouper }}">
+        <a href="#" data-detail-url="{% url 'cruises:ajax_cruises_by_year' year_group.grouper %}"
+           data-node-id="{{ year_group.grouper }}"
+           data-node-type="cruises_by_year">{{ year_group.grouper }}</a>
+        <ul>
+            {% for cruise in year_group.list %}
+                <li data-jstree='{"icon":"fas fa-ship"}' id="cruises_{{ cruise.id }}">
+                    <a href="#" data-detail-url="{% url 'cruises:ajax_cruises_detail' cruise.id %}"
+                       data-node-id="{{ cruise.id }}"
+                       data-node-type="{{ node_type }}">{{ cruise.CUID }} {% if cruise.friendly_name  %}- {{ cruise.friendly_name }} {% endif %}</a>
+                   </li>
+            {% endfor %}
+        </ul>
+
+    </li>
+{% endfor %}
+</ul>

@@ -23,128 +23,128 @@
 {% load mptt_tags %}
 {% load crispy_forms_tags %}
 
-                <div class="card-header">
-                    {% if inventory_item.id %}
-                        <h3>{{ inventory_item.part.name }}</h3>
-                    {% else %}
-                        <h3>Add Inventory</h3>
-                    {% endif %}
+<div class="card-header">
+    {% if inventory_item.id %}
+        <h3>{{ inventory_item.part.name }}</h3>
+    {% else %}
+        <h3>Add Inventory</h3>
+    {% endif %}
 
-                    <p>{{ inventory_item.serial_number }}</p>
+    <p>{{ inventory_item.serial_number }}</p>
 
-                    {% if parent.id %}
-                        <h3>Add Subassembly to {{ parent.part.name }}</h3>
-                    {% endif %}
+    {% if parent.id %}
+        <h3>Add Subassembly to {{ parent.part.name }}</h3>
+    {% endif %}
+</div>
+
+<div class="card-body">
+
+    {% if not inventory_item.id and not parent.id %}
+        <div id="inventory-filter">
+            <form class="form-horizontal" method="post" action="" id="inventory-filter-form" data-url="{% url 'inventory:ajax_load_part_templates' %}" novalidate>
+                <div class="form-group">
+                <label for="id_part_type" class="form-control-label  requiredField">Select Part Type</label>
+                    <select name="part_type" class="select form-control" id="id_part_type">
+                        <option value="">---------</option>
+                        <option value="All">All Parts</option>
+                        {% for type in part_types %}
+                            <option value="{{ type.id }}">-- {{ type.name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
+            </form>
+        </div>
 
-                <div class="card-body">
+        <div class="mb-3"><h4><span class="badge badge-secondary">OR</span></h4></div>
 
-                    {% if not inventory_item.id and not parent.id %}
-                        <div id="inventory-filter">
-                            <form class="form-horizontal" method="post" action="" id="inventory-filter-form" data-url="{% url 'inventory:ajax_load_part_templates' %}" novalidate>
-                                <div class="form-group">
-                                <label for="id_part_type" class="form-control-label  requiredField">Select Part Type</label>
-                                    <select name="part_type" class="select form-control" id="id_part_type">
-                                        <option value="">---------</option>
-                                        <option value="All">All Parts</option>
-                                        {% for type in part_types %}
-                                            <option value="{{ type.id }}">-- {{ type.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </form>
+        <div id="inventory-filter">
+            <form method="post" action="" id="inventory-filter-form-part-number"
+                data-url="{% url 'inventory:ajax_load_part_templates_by_partnumber' %}"
+                data-serialnumber-url="{% url 'inventory:ajax_load_new_serialnumber' %}"
+                novalidate>
+                <div class="form-row">
+                    <div class="form-group col-md-8 col-lg-6">
+                        <label for="part_number" class="sr-only">Scan Part Number<span class="asteriskField">*</span></label>
+                        <div class="input-group mb-2 mr-sm-2">
+
+                            <div class="input-group-prepend">
+                              <div class="input-group-text">#</div>
+                            </div>
+                            <input type="text" name="part_number_search" class="textinput form-control" placeholder="Scan Part Number" id="part_number_search">
                         </div>
-
-                        <div class="mb-3"><h4><span class="badge badge-secondary">OR</span></h4></div>
-
-                        <div id="inventory-filter">
-                            <form method="post" action="" id="inventory-filter-form-part-number"
-                                data-url="{% url 'inventory:ajax_load_part_templates_by_partnumber' %}"
-                                data-serialnumber-url="{% url 'inventory:ajax_load_new_serialnumber' %}"
-                                novalidate>
-                                <div class="form-row">
-                                    <div class="form-group col-md-8 col-lg-6">
-                                        <label for="part_number" class="sr-only">Scan Part Number<span class="asteriskField">*</span></label>
-                                        <div class="input-group mb-2 mr-sm-2">
-
-                                            <div class="input-group-prepend">
-                                              <div class="input-group-text">#</div>
-                                            </div>
-                                            <input type="text" name="part_number_search" class="textinput form-control" placeholder="Scan Part Number" id="part_number_search">
-                                        </div>
-                                    </div>
-                                    <div class="form-group col-md-4 col-lg-6">
-                                        <button type="submit" class="btn btn-primary mb-2">Search</button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                        <hr>
-                    {% endif %}
-
-                    {% if action_type == 'subchange' %}
-                        <p>Select a new Location for this item. Item will be removed from Parent assembly and Build.</p>
-
-                    {% endif %}
-
-                    {% if latest_flag.detail %}<p><strong>Why Flagged:</strong> {{ latest_flag.detail }}</p>{% endif %}
-                    <form class="form-horizontal ajax-form" method="post" action="" id="inventory-action-form" enctype="multipart/form-data"
-                          data-parents-url="{% url 'inventory:ajax_load_parents' %}"
-                          data-deployments-url="{% url 'inventory:ajax_load_deployments' %}"
-                          data-serialnumber-url="{% url 'inventory:ajax_load_new_serialnumber' %}"
-                          data-revisions-url="{% url 'inventory:ajax_load_revisions_by_partnumber' %}"
-                          data-url='{{ request.build_absolute_uri|safe }}' novalidate>
-                      {% csrf_token %}
-                      {{ form.media }}
-                      {{ form|crispy }}
-
-                      <div class="row">
-                          {% if form.errors %}
-                              {% for field in form %}
-                                  {% for error in field.errors %}
-                                      <div class="alert alert-danger">
-                                          <strong>{{ error|escape }}</strong>
-                                      </div>
-                                  {% endfor %}
-                              {% endfor %}
-                              {% for error in form.non_field_errors %}
-                                  <div class="alert alert-danger">
-                                      <strong>{{ error|escape }}</strong>
-                                  </div>
-                              {% endfor %}
-                          {% endif %}
-
-
-                      </div>
-
-                      <div class="control-group">
-                        <div class="controls">
-                          {% if inventory_item.id %}
-                              {% if action_type == 'movetotrash' %}
-                                  <button type="submit" class="btn btn-danger">Confirm Move to Trash</button>
-                              {% else %}
-                                  <button type="submit" class="btn btn-primary">Update Inventory</button>
-                              {% endif %}
-                          {% else %}
-                              <button type="submit" class="btn btn-primary">Add Inventory</button>
-                          {% endif %}
-
-                         {% if inventory_item.id %}
-                             <input class="btn btn-light cancel-btn"
-                                    type="button" value="Cancel"
-                                    data-detail-url="{% url 'inventory:ajax_inventory_detail' inventory_item.id %}"
-                                    data-node-id="{{ inventory_item.id }}" />
-                         {% else %}
-                             <input class="btn btn-light cancel-btn-noajax"
-                                    type="button" value="Cancel"
-                                    onclick="window.history.go(-1);"/>
-                         {% endif %}
-                        </div>
-                      </div>
-                    </form>
-
-
+                    </div>
+                    <div class="form-group col-md-4 col-lg-6">
+                        <button type="submit" class="btn btn-primary mb-2">Search</button>
+                    </div>
                 </div>
+            </form>
+        </div>
+        <hr>
+    {% endif %}
+
+    {% if action_type == 'subchange' %}
+        <p>Select a new Location for this item. Item will be removed from Parent assembly and Build.</p>
+
+    {% endif %}
+
+    {% if latest_flag.detail %}<p><strong>Why Flagged:</strong> {{ latest_flag.detail }}</p>{% endif %}
+    <form class="form-horizontal ajax-form" method="post" action="" id="inventory-action-form" enctype="multipart/form-data"
+          data-parents-url="{% url 'inventory:ajax_load_parents' %}"
+          data-deployments-url="{% url 'inventory:ajax_load_deployments' %}"
+          data-serialnumber-url="{% url 'inventory:ajax_load_new_serialnumber' %}"
+          data-revisions-url="{% url 'inventory:ajax_load_revisions_by_partnumber' %}"
+          data-url='{{ request.build_absolute_uri|safe }}' novalidate>
+      {% csrf_token %}
+      {{ form.media }}
+      {{ form|crispy }}
+
+      <div class="row">
+          {% if form.errors %}
+              {% for field in form %}
+                  {% for error in field.errors %}
+                      <div class="alert alert-danger">
+                          <strong>{{ error|escape }}</strong>
+                      </div>
+                  {% endfor %}
+              {% endfor %}
+              {% for error in form.non_field_errors %}
+                  <div class="alert alert-danger">
+                      <strong>{{ error|escape }}</strong>
+                  </div>
+              {% endfor %}
+          {% endif %}
+
+
+      </div>
+
+      <div class="control-group">
+        <div class="controls">
+          {% if inventory_item.id %}
+              {% if action_type == 'movetotrash' %}
+                  <button type="submit" class="btn btn-danger">Confirm Move to Trash</button>
+              {% else %}
+                  <button type="submit" class="btn btn-primary">Update Inventory</button>
+              {% endif %}
+          {% else %}
+              <button type="submit" class="btn btn-primary">Add Inventory</button>
+          {% endif %}
+
+         {% if inventory_item.id %}
+               <input class="btn btn-light cancel-btn"
+                      type="button" value="Cancel"
+                      data-detail-url="{% url 'inventory:ajax_inventory_detail' inventory_item.id %}"
+                      data-node-id="{{ inventory_item.id }}" />
+         {% else %}
+             <input class="btn btn-light cancel-btn-noajax"
+                    type="button" value="Cancel"
+                    onclick="window.history.go(-1);"/>
+         {% endif %}
+        </div>
+      </div>
+    </form>
+
+
+</div>
 
 
 {% block javascript %}

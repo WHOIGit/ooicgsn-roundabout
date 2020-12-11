@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -91,7 +91,7 @@
                            ">
                             {% if assembly_part.part.friendly_name %} {{ assembly_part.part.friendly_name}} {% else %} {{ assembly_part.part.name }} {% endif %}
                             - {{ i.serial_number }}
-                            {% if forloop.first %}<span class="badge badge-pill badge-primary">DEST - {{ assembly_part.assembly }}</span>{% endif %}</a>
+                            {% if forloop.first %}<span class="badge badge-pill badge-primary">DEST - {{ assembly_part.assembly_revision }}</span>{% endif %}</a>
                     {% endif %}
                 {% endfor %}
             {% else %}

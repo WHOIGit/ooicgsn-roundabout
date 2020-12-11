@@ -19,7 +19,7 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 
-version: '3.5'
+version: '3.7'
 
 volumes:
   production_postgres_data: {}
@@ -29,12 +29,12 @@ volumes:
   media_volume: {}
 
 services:
-  django:
+  django: &django
     build:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
     image: roundabout_production_django
-    container_name: django
+    #container_name: django
     depends_on:
       - postgres
       - redis
@@ -65,10 +65,35 @@ services:
       - roundabout-network
 
   redis:
-    image: redis:3.2
+    image: redis:6.0
     restart: unless-stopped
     networks:
       - roundabout-network
+
+  celeryworker:
+    <<: *django
+    image: roundabout_production_celeryworker
+    depends_on:
+      - redis
+      - postgres
+
+    ports: []
+    command: /start-celeryworker
+
+  celerybeat:
+    <<: *django
+    image: roundabout_production_celerybeat
+    depends_on:
+      - redis
+      - postgres
+
+    ports: []
+    command: /start-celerybeat
+
+  flower:
+    <<: *django
+    image: roundabout_production_flower
+    command: /start-flower
 
   nginx:
     build:
@@ -84,6 +109,7 @@ services:
     ports:
       - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"
+      - "0.0.0.0:5555:5555"
     restart: unless-stopped
     networks:
       - roundabout-network

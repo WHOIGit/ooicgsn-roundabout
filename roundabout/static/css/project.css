@@ -193,10 +193,6 @@ a.wh {
     color: #eee !important;
 }
 
-#inventory-tabs table th {
-    border-top: none;
-}
-
 #inventory-tabs .list-group-item {
     padding-right: 0;
 }
@@ -213,6 +209,10 @@ a.wh {
 
 .action-table {
     font-size: 12px;
+}
+
+.action-table th {
+    border-top: none;
 }
 
 #history {
@@ -263,10 +263,27 @@ a.wh {
     border: none;
 }
 
+/* Tables */
+
+.action-col {
+    white-space: nowrap;
+}
+
+.item-data-table th {
+    width: 28%;
+    color: #666;
+}
+
 /* Template Mode styling for apps that are considered Templates */
 .template #detail-view {
     border-color: #28a745;
     background-color: #28a7450d;
+}
+
+/* Cruise/Vessel app styling */
+
+#vessel-table {
+    font-size: .8em;
 }
 
 /* Custom Fields styling */
@@ -281,7 +298,6 @@ a.wh {
 
 footer {
     background-color: white;
-    color: white;
 }
 
 /* Table Header Ordering */

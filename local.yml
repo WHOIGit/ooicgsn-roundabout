@@ -19,14 +19,14 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 
-version: '3.5'
+version: '3.7'
 
 volumes:
   local_postgres_data: {}
   local_postgres_data_backups: {}
 
 services:
-  django:
+  django: &django
     build:
       context: .
       dockerfile: ./compose/local/django/Dockerfile
@@ -44,6 +44,15 @@ services:
     networks:
       - roundabout-network
 
+  tests:
+    build:
+      context: .
+      dockerfile: ./compose/local/tests/Dockerfile
+    image: roundabout_production_tests
+    depends_on:
+      - django
+    network_mode: "service:django"
+
   postgres:
     build:
       context: .
@@ -58,6 +67,40 @@ services:
       - "5432:5432"
     networks:
       - roundabout-network
+
+  redis:
+    image: redis:6.0
+    restart: unless-stopped
+    networks:
+      - roundabout-network
+
+  celeryworker:
+    <<: *django
+    image: roundabout_local_celeryworker
+    depends_on:
+      - redis
+      - postgres
+
+    ports: []
+    command: /start-celeryworker
+
+  celerybeat:
+    <<: *django
+    image: roundabout_local_celerybeat
+    depends_on:
+      - redis
+      - postgres
+
+    ports: []
+    command: /start-celerybeat
+
+  flower:
+    <<: *django
+    image: roundabout_local_flower
+    ports:
+      - "5555:5555"
+    command: /start-flower
+
 
 networks:
   roundabout-network:
