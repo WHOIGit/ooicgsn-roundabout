@@ -43,7 +43,7 @@ from roundabout.calibrations.models import CoefficientName, CoefficientValueSet,
 from roundabout.calibrations.forms import validate_coeff_vals, parse_valid_coeff_vals
 from roundabout.configs_constants.models import ConfigName
 from roundabout.users.models import User
-
+from roundabout.userdefinedfields.models import Field, FieldValue
 
 class ImportDeploymentsForm(forms.Form):
     deployments_csv = forms.FileField(
@@ -313,6 +313,10 @@ def validate_cal_files(csv_files,ext_files):
             raise ValidationError(
                 _('Global Custom Field "Manufacturer Serial Number" must be created prior to import'),
             )
+        try:
+            inv_manufacturer_serial = FieldValue.objects.get(inventory=inventory_item,field=custom_field,is_current=True)
+        except FieldValue.DoesNotExist:
+            inv_manufacturer_serial = ''
         for idx, row in enumerate(reader):
             row_data = row.items()
             for key, value in row_data:
@@ -324,6 +328,14 @@ def validate_cal_files(csv_files,ext_files):
                             _('File: %(filename)s, Row %(row)s: Cannot parse Manufacturer Serial Number'),
                             params={'row': idx, 'filename': cal_csv.name},
                         )
+                    if len(inv_manufacturer_serial.field_value) > 0 and len(csv_manufacturer_serial) > 0:
+                        try:
+                            assert csv_manufacturer_serial == inv_manufacturer_serial.field_value
+                        except:
+                            raise ValidationError(
+                                _('File: %(filename)s, Row %(row)s: Manufacturer Serial Number differs between Inventory Item (%(inv_msn)s) and file (%(csv_msn)s)'),
+                                params={'row': idx, 'filename': cal_csv.name, 'inv_msn': inv_manufacturer_serial.field_value, 'csv_msn':csv_manufacturer_serial},
+                            )
                 if key == 'name':
                     calibration_name = value.strip()
                     try:
