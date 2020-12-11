@@ -224,19 +224,35 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
 
                 # set up common variables for Builds/Deployments
                 location_code = deployment['assembly'][0:2]
-                print(location_code)
+
                 try:
                     deployed_location = Location.objects.get(location_code=location_code)
                 except Location.DoesNotExist:
                     raise ValueError("No Location Matching this Location Code")
 
-                build_location = Location.objects.get(name='Retired')
-
                 dep_start_date = parser.parse(deployment['rows'][0]['startDateTime'])
-                if deployment['rows'][0]['stopDateTime']:
+
+                try:
                     dep_end_date = parser.parse(deployment['rows'][0]['stopDateTime'])
-                else:
+                except:
                     dep_end_date = None
+
+                try:
+                    cruise_deployed = Cruise.objects.get(CUID=deployment['rows'][0]['CUID_Deploy'])
+                except Cruise.DoesNotExist:
+                    raise ValueError("No Cruise matches this CUID")
+
+                try:
+                    cruise_recovered = Cruise.objects.get(CUID=deployment['rows'][0]['CUID_Recover'])
+                except:
+                    cruise_recovered = None
+
+                # Set Build location dependiing on Deployment status
+                if dep_end_date:
+                    build_location = Location.objects.get(name='Retired')
+                else:
+                    build_location = deployed_location
+
                 latitude = deployment['rows'][0]['lat']
                 longitude = deployment['rows'][0]['lon']
                 water_depth = deployment['rows'][0]['water_depth']
@@ -257,7 +273,6 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                     _create_action_history(build, Action.ADD, self.request.user, '', '', dep_start_date)
 
                 # Get/Create Deployment for this Build
-                action_type = Action.STARTDEPLOYMENT
                 deployment_obj, created = Deployment.objects.update_or_create(
                     deployment_number=deployment['mooring.uid'],
                     defaults={
@@ -265,20 +280,37 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                         'deployment_start_date': dep_start_date,
                         'deployment_burnin_date': dep_start_date,
                         'deployment_to_field_date': dep_start_date,
-                        'deployment_recovery_date': dep_end_date,
-                        'deployment_retire_date': dep_end_date,
                         'deployed_location': deployed_location,
-                        #'cruise_deployed': cruise_deployed,
-                        #'cruise_recovered': cruise_recovered,
+                        'cruise_deployed': cruise_deployed,
+                        'cruise_recovered': cruise_recovered,
                         'latitude': latitude,
                         'longitude': longitude,
                         'depth': water_depth,
                     },
                 )
 
+                # Create Build Action records for deployment
+                build.is_deployed = True
+                build.save()
+                deploy_actions = [Action.STARTDEPLOYMENT, Action.DEPLOYMENTBURNIN, Action.DEPLOYMENTTOFIELD]
+                for action in deploy_actions:
+                    _create_action_history(build, action, self.request.user, '', '', dep_start_date)
+
+                if dep_end_date:
+                    build.is_deployed = False
+                    build.save()
+                    deployment_obj.deployment_recovery_date = dep_end_date
+                    deployment_obj.deployment_retire_date = dep_end_date
+                    deployment_obj.save()
+                    
+                    recover_actions = [Action.DEPLOYMENTRECOVER, Action.DEPLOYMENTRETIRE]
+                    for action in recover_actions:
+                        _create_action_history(build, action, self.request.user, '', '', dep_end_date)
+
                 for row in deployment['rows']:
                     # create InventoryDeployments for each item
-                    print(row['sensor.uid'])
+                    if row['sensor.uid']:
+                        print(row['sensor.uid'])
 
         return super(ImportDeploymentsUploadView, self).form_valid(form)
 

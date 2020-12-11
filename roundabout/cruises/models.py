@@ -52,7 +52,7 @@ class Vessel(models.Model):
 
 
 class Cruise(models.Model):
-    CUID = models.CharField(max_length=20)
+    CUID = models.CharField(max_length=20, unique=True)
     friendly_name = models.CharField(max_length=100, null=False, blank=True)
     vessel = models.ForeignKey(Vessel, related_name='cruises',
                                on_delete=models.SET_NULL, null=True)
