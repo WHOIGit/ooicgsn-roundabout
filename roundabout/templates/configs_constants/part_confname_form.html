@@ -18,34 +18,60 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 -->
+
+{% load crispy_forms_tags %}
+
+{% block javascript %}
 <script type="text/javascript">
     $(document).ready(function() {
         // Handles CoefficientValueSet form instance generation
         $('.conf_name-form tbody tr').formset({
             prefix: 'config_names',
             addText: 'Add Configurations/Constants',
-            deleteText: 'Remove'
+            deleteText: 'Remove',
+            removed: function(row) {
+                let del = row.find('input:hidden[id $= "-DELETE"]')                
+                let totalForms = $("[id$='TOTAL_FORMS']")
+                if( confirm('Warning: deleting Names will delete associated Defaults and Event data') ) {
+                    del.val('on')
+                    row.hide()
+                } else {
+                    del.val('')
+                    row.show()
+                }
+                forms = $('.dynamic-form').not(':hidden');
+                totalForms.val(forms.length)
+            }
         });
 
         let formRows = $('.dynamic-form');
         formRows.each(function() {
-            row = $(this);
+            let row = $(this);
             let removeButtons = row.find('.delete-row');
             let deprecated = row.find("[id$='deprecated']").attr('checked');
             if (deprecated == 'checked') {
                 removeButtons.remove();
             } 
+            if (removeButtons.length > 1) {
+                removeButtons.map((idx, button) => {
+                    if (idx != 0) {
+                        button.remove()
+                    }
+                })
+            }
         });
 
-        $('.delete-row').on('click',function() {
-            alert('Warning: deleting Names will delete all downstream Defaults and Events');
-        });
+        let formAddRows = $('.dynamic-form-add');
+        if (formAddRows.length > 1) {
+            formAddRows.map((idx, button) => {
+                if (idx != 0) {
+                    button.remove()
+                }
+            })
+        }
     });
 </script>
-
-{% load static i18n %}
-{% load mptt_tags %}
-{% load crispy_forms_tags %}
+{% endblock javascript %}
 
 <div class="card-header">
     {% if event_template.id %}
@@ -55,6 +81,7 @@
     {% endif %}
 </div>
 
+{% block content %}
 <div class="card-body">
 
     {% if latest_flag.detail %}
@@ -122,8 +149,4 @@
         </div>
     </form>
 </div>
-
-
-{% block javascript %}
-
-{% endblock javascript %}
+{% endblock content %}

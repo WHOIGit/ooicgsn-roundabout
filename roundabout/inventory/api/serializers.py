@@ -256,15 +256,22 @@ class InventorySerializer(FlexFieldsModelSerializer):
         read_only = True,
         lookup_field = 'pk',
     )
+    constant_default_events = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':configs-constants/const-default-events-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
     time_in_field = serializers.SerializerMethodField('get_time_in_field')
 
     class Meta:
         model = Inventory
         fields = [
-            'id', 'url', 'serial_number', 'old_serial_number', 'part', 'location', 'revision', \
-            'parent', 'children', 'build', 'assembly_part', 'assigned_destination_root', 'created_at', \
+            'id', 'url', 'serial_number', 'old_serial_number', 'part', 'location', 'revision',
+            'parent', 'children', 'build', 'assembly_part', 'assigned_destination_root', 'created_at',
             'updated_at', 'test_result', 'test_type', 'flag', 'time_in_field',
-            'calibration_events', 'config_events', 'actions', 'fieldvalues', 'inventory_deployments',
+            'calibration_events', 'config_events', 'constant_default_events',
+            'actions', 'fieldvalues', 'inventory_deployments',
         ]
 
         expandable_fields = {
@@ -278,6 +285,7 @@ class InventorySerializer(FlexFieldsModelSerializer):
             'children': ('roundabout.inventory.api.serializers.InventorySerializer', {'many': True}),
             'calibration_events': ('roundabout.calibrations.api.serializers.CalibrationEventSerializer', {'many': True}),
             'config_events': ('roundabout.configs_constants.api.serializers.ConfigEventSerializer', {'many': True}),
+            'constant_default_events': ('roundabout.configs_constants.api.serializers.ConstDefaultEventSerializer', {'many': True}),
             'actions': ('roundabout.inventory.api.serializers.ActionSerializer', {'many': True}),
             'fieldvalues': ('roundabout.userdefinedfields.api.serializers.FieldValueSerializer', {'many': True, "omit": ["field.fieldvalues"]}),
             'inventory_deployments': ('roundabout.inventory.api.serializers.InventoryDeploymentSerializer', {'many': True}),

@@ -70,8 +70,8 @@
               <td>{% if vessel.max_speed %}{{ vessel.max_speed }}{% endif %}</td>
               <td>{% if vessel.max_draft %}{{ vessel.max_draft }}{% endif %}</td>
               <td>{{ vessel.designation }}</td>
-              <td>{{ vessel.get_active_display }}</td>
-              <td>{{ vessel.get_R2R_display  }}</td>
+              <td>{% if vessel.get_active_display %}{{ vessel.get_active_display }}{% endif %}</td>
+              <td>{% if vessel.get_R2R_display %}{{ vessel.get_R2R_display  }}{% endif %}</td>
               <td>{{ vessel.notes  }}</td>
 
               <td class="text-right action-col">

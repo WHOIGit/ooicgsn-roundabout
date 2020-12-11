@@ -184,15 +184,6 @@ var password;
         // 30 | click | css=.controls > .btn-primary |
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
-
-        // 31 | click | css=.list-group:nth-child(1) > .list-group-item > .collapsed > .fa |
-   	while ((await driver.findElements(By.css(".list-group:nth-child(1) > .list-group-item > .collapsed > .fa"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Link.");
-	}
-        await driver.findElement(By.css(".list-group:nth-child(1) > .list-group-item > .collapsed > .fa")).click()
-
         // 36 | click | linkText=Edit Configurations / Constants |
    	while ((await driver.findElements(By.linkText("Edit Configurations / Constants"))).length == 0)
 	{
@@ -221,49 +212,28 @@ var password;
 	        console.log("Wait 2 seconds for Config Name.");
            }     
 	}
-
-        await driver.findElement(By.id("id_config_names-3-name")).clear();
+	
+	await new Promise(r => setTimeout(r, 2000));   //waits inbetween these items required to set fields
+        await driver.findElement(By.id("id_config_names-3-name")).clear(); 
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_config_names-3-name")).sendKeys("sconf12"); //stale element
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_config_names-1-name")).clear();
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_config_names-1-name")).sendKeys("scnst12");
 
+	await new Promise(r => setTimeout(r, 2000));  
         // 46 | click | css=.controls > .btn-primary | 
-        await driver.findElement(By.css(".controls > .btn-primary")).click();
-
-   	while ((await driver.findElements(By.css(".list-group:nth-child(1) > .list-group-item > .collapsed > .fa"))).length == 0)
+let encodedString = await driver.takeScreenshot();
+await fs.writeFileSync('/tests/cscreen.png', encodedString, 'base64');   
+        await driver.findElement(By.css(".controls > .btn-primary")).click();  //not attached to page
+  
+   	while ((await driver.findElements(By.linkText("Configurations / Constants"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Link2.");
+	   console.log("Wait 2 seconds for Link3.");
 	}
-	//let encodedString = await driver.takeScreenshot();
-	//await fs.writeFileSync('/tests/cscreen1.png', encodedString, 'base64');       
-        // 47 | click | css=.list-group:nth-child(1) > .list-group-item > .collapsed > .fa | 
-        await driver.findElement(By.css(".list-group:nth-child(1) > .list-group-item > .collapsed > .fa")).click();
-   	while ((await driver.findElements(By.linkText("Edit Configurations / Constants"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Edit CC.");
-	}
-        // 48 | click | linkText=Edit Configurations / Constants | 
-        await driver.findElement(By.linkText("Edit Configurations / Constants")).click();
-   	//while ((await driver.findElements(By.css(".controls > .btn-primary"))).length == 0)
-	//{
-	//   await new Promise(r => setTimeout(r, 2000));
-	//   console.log("Wait 2 seconds for Btn-primary.");
-	//}
-	await new Promise(r => setTimeout(r, 6000));   //stale element
-        // 51 | click | css=.controls > .btn-primary | 
-        await driver.findElement(By.css(".controls > .btn-primary")).click();
-
-   	//while ((await driver.findElements(By.css(".list-group:nth-child(1) > .list-group-item > .collapsed > .fa"))).length == 0)
-	//{
-	//   await new Promise(r => setTimeout(r, 2000));
-	//   console.log("Wait 2 seconds for Link3.");
-	//} 
-	await new Promise(r => setTimeout(r, 6000));  //stale element
-        // 52 | click | css=.list-group:nth-child(1) > .list-group-item > .collapsed > .fa | 
-        await driver.findElement(By.css(".list-group:nth-child(1) > .list-group-item > .collapsed > .fa")).click(); //stale element
+	await driver.findElement(By.linkText("Configurations / Constants")).click();
 
         // Verify Approvers; blank, Reviewers: admin
         await new Promise(r => setTimeout(r, 2000));
@@ -271,6 +241,8 @@ var password;
         assert(bodyText.includes("Approvers:"));        
 //        assert(bodyText.includes("Reviewers: admin"));
         assert(bodyText.includes("Reviewers: " + user));
+        assert(bodyText.includes("sconf12"));
+        assert(bodyText.includes("scnst12"));
 
        
         // UPDATE CONSTANT & CONFIG DEFAULTS - ISSUE#133
@@ -316,6 +288,8 @@ var password;
 	   console.log("Wait 2 seconds for Add CC Default.");
 	}
         await driver.findElement(By.id("add_configdefault_action")).click()
+	await new Promise(r => setTimeout(r, 2000));
+
         // 14 | addSelection | id=id_user_draft | label=admin
         {
             const dropdown = await driver.findElement(By.id("id_user_draft"))
@@ -335,10 +309,8 @@ var password;
 	}
         // Edit Defaults Again
         await driver.findElement(By.linkText("Edit Configuration Defaults")).click()
-        // 20 | click | id=id_config_defaults-1-default_value | 
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_config_defaults-1-default_value")).sendKeys("12")
-
-        // 25 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
 	while ((await driver.findElements(By.css(".collapsed > .fa"))).length == 0)
