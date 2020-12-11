@@ -212,7 +212,6 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                 deployment = next((deployment for deployment in deployments if deployment['mooring.uid'] == row['mooring.uid']), False)
                 deployment['rows'].append(row)
 
-            print(deployments)
             for deployment in deployments:
                 # get the Assembly template for this Build, needs to be only one match
                 try:
@@ -234,7 +233,13 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                 build_location = Location.objects.get(name='Retired')
 
                 dep_start_date = parser.parse(deployment['rows'][0]['startDateTime'])
-                dep_end_date = parser.parse(deployment['rows'][0]['stopDateTime'])
+                if deployment['rows'][0]['stopDateTime']:
+                    dep_end_date = parser.parse(deployment['rows'][0]['stopDateTime'])
+                else:
+                    dep_end_date = None
+                latitude = deployment['rows'][0]['lat']
+                longitude = deployment['rows'][0]['lon']
+                water_depth = deployment['rows'][0]['water_depth']
 
                 # Get/Create a Build for this Deployment
                 build, created = Build.objects.get_or_create(
@@ -253,7 +258,7 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
 
                 # Get/Create Deployment for this Build
                 action_type = Action.STARTDEPLOYMENT
-                deployment, created = Deployment.objects.get_or_create(
+                deployment_obj, created = Deployment.objects.update_or_create(
                     deployment_number=deployment['mooring.uid'],
                     defaults={
                         'build': build,
@@ -263,10 +268,16 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                         'deployment_recovery_date': dep_end_date,
                         'deployment_retire_date': dep_end_date,
                         'deployed_location': deployed_location,
+                        #'cruise_deployed': cruise_deployed,
+                        #'cruise_recovered': cruise_recovered,
+                        'latitude': latitude,
+                        'longitude': longitude,
+                        'depth': water_depth,
                     },
                 )
 
                 for row in deployment['rows']:
+                    # create InventoryDeployments for each item
                     print(row['sensor.uid'])
 
         return super(ImportDeploymentsUploadView, self).form_valid(form)
