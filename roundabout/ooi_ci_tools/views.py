@@ -359,6 +359,33 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                             },
                         )
 
+                        # _create_action_history function won't work correctly fo Inventory Deployments if item is already in RDB,
+                        # need to add history Actions manually
+                        # ADDTOBUILD
+                        action = Action.objects.create(
+                            action_type = Action.ADDTOBUILD,
+                            object_type = Action.INVENTORY,
+                            created_at = dep_start_date,
+                            inventory = item,
+                            build = build,
+                            location = deployed_location,
+                            user = self.request.user,
+                            detail = 'Moved to %s.' % (build),
+                        )
+
+                        # STARTDEPLOYMENT
+                        action = Action.objects.create(
+                            action_type = Action.STARTDEPLOYMENT,
+                            object_type = Action.INVENTORY,
+                            created_at = dep_start_date,
+                            inventory = item,
+                            build = build,
+                            location = deployed_location,
+                            inventory_deployment = inv_deployment_obj,
+                            deployment_type = Action.INVENTORY_DEPLOYMENT,
+                            user = self.request.user,
+                            detail = '%s %s started' % (labels['label_deployments_app_singular'], deployment_obj)
+                        )
                         print(row['sensor.uid'])
 
         return super(ImportDeploymentsUploadView, self).form_valid(form)
