@@ -311,6 +311,12 @@ var filename;
         // await and promise required to work
         await fs.createReadStream(rdb_calib).pipe(unzipper.Extract({ path: rdb_path })).promise();
 
+        while (!fs.existsSync(rdb_unzip)) // wait for file extract
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for File Extract.");
+        }
+
         // Compare Uploaded & Exported Calibration files
         var upload = fs.readFileSync(filename, 'utf8');
         var exported = fs.readFileSync(rdb_unzip, 'utf8');

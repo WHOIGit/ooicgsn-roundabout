@@ -274,7 +274,6 @@ var password;
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Deployment Number.");
 	}
-	await driver.findElement(By.id("id_deployment_number")).click();
         await driver.findElement(By.id("id_deployment_number")).sendKeys("7");
         // 14 | select | id=id_deployed_location | label=Test
         {

@@ -207,7 +207,7 @@ var password;
         // 6 | select | id=id_part | label=Wheel Template
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await new Promise(r => setTimeout(r, 4000)); //New for 1.6 - This field blanked back out without timeout
+            await new Promise(r => setTimeout(r, 6000)); //New for 1.6 - This field blanked back out without timeout
             await dropdown.findElement(By.xpath("//option[. = 'Wheel Template']")).click();
         }
         // 7 | select | id=id_location | label=--- Lost
@@ -498,7 +498,7 @@ await fs.writeFileSync('/tests/iscreen1.png', encodedString, 'base64');
         }
 
 	    // Edit item with duplicate serial number
-	await new Promise(r => setTimeout(r, 2000));
+	await new Promise(r => setTimeout(r, 4000));
   
         await driver.findElement(By.id("hint_id_serial_number")).click();
 	await new Promise(r => setTimeout(r, 2000));

@@ -125,6 +125,8 @@ var password;
 
 	// Circleci times out deleting all cruises, just delete one cruise
 //        while ((await driver.findElements(By.xpath("//li/ul/li/a"))).length != 0) {
+	  if ((await driver.findElements(By.xpath("//li/ul/li/a"))).length != 0)
+	  {
             await driver.findElement(By.xpath("//li/ul/li/a")).click();
 
             while ((await driver.findElements(By.linkText("Delete"))).length == 0) {
@@ -139,9 +141,9 @@ var password;
             }
             await driver.findElement(By.css(".btn-danger")).click();
             await new Promise(r => setTimeout(r, 4000));
-//        }
+        }
 
-	console.log("All Cruises Deleted.");
+	console.log("Cruise Deleted.");
 
         // Close browser window
         driver.quit();

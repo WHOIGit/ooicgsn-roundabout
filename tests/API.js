@@ -102,6 +102,8 @@ var token;
                     console.log("API failed: 4 Part Templates not returned.");
                     console.log(json);
                 }
+		else
+		    console.log("Get Locations.");
             }
             else {
                 console.log("API failed: 4 Part Templates not returned.");
@@ -175,6 +177,8 @@ var token;
                     console.log("API failed: 2 Part Types not returned.");
                     console.log(json);
                 }
+		else
+		    console.log("Get Parts.");
             }
             else {
                 console.log("API failed: 2 Part Types not returned.");
@@ -204,6 +208,8 @@ var token;
                     console.log("API failed: 3 Assembly Parts not returned.");
                     console.log(json);
                 }
+		else
+		    console.log("Get Assemblies.");
             }
             else {
                 console.log("API failed: 3 Assembly Parts not returned.");
@@ -247,6 +253,8 @@ var token;
                                     console.log("API failed: Inventory has wrong serial number.");
                                     console.log(json);
                                 }
+				else
+		                    console.log("Get Inventory.");
                             }
                             else {
                                 console.log("API failed: Inventory child not returned.");
@@ -289,6 +297,8 @@ var token;
                     console.log("API failed: Deployment Number is not 7.");
                     console.log(json);
                 }
+		else
+		    console.log("Get Deployments.");
             }
             else {
                 console.log("API failed: Deployment not returned.");
@@ -325,6 +335,8 @@ var token;
                         console.log("API failed: Cruise Page 10 data not returned.");
                         console.log(json);
                     }
+		    else
+		        console.log("Get Cruises.");
                 }
                 else {
                     console.log(rsp.statusText, "  ", json);
@@ -350,6 +362,8 @@ var token;
                 console.log("API failed: 5 Inventory Items with Condition Custom Field not returned.");
                 console.log(json);
             }
+	    else
+		console.log("Get Custom Fields.");
         }
         else
             console.log(rsp.statusText, "  ", json);
@@ -363,15 +377,33 @@ var token;
         json = await rsp.json();
         if (rsp.ok) {
             if (json.length != 4) {
-                console.log("API failed: 4 Config/Constants not returned.");
+                console.log("API failed: 4 Configs/Constants not returned.");
                 console.log(json);
             }
+	    else
+		console.log("Get Configs/Constants.");
         }
         else
             console.log(rsp.statusText, "  ", json);
 
 
-        // CALIBRATIONS
+        // CALIBRATIONS - some parts are null - is this a bug
+        rsp = await fetch(url + 'calibrations/coefficent-names/', {
+            method: 'GET',
+            headers: header,
+        });
+        json = await rsp.json();
+        if (rsp.ok) {
+            if (json.length != 4) {
+                console.log("API failed: 4 Calibrations/Coefficents not returned.");
+                console.log(json);
+            }
+	    else
+		console.log("Get Calibrations/Coefficents.");
+        }
+        else
+            console.log(rsp.statusText, "  ", json);
+
 
         // STRESS TEST - run GETS in a loop
 	// User “throttling” enabled on the API. So a single user can only make 1000 number of requests in a 24 hour period.
