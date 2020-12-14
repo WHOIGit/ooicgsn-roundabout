@@ -314,26 +314,28 @@
                     <td>{{ current_deployment.deployment_time_in_field|time_at_sea_display }}</td>
                 </tr>
                 {% if current_deployment.current_status != 'startdeployment' and current_deployment.current_status != 'deploymentburnin' %}
-                <tr>
-                    <th>{{ label_deployments_app_singular }} to Field Date</th>
-                    <td>{{ current_deployment.deployment_to_field_date|date:"n/j/Y H:i" }}</td>
-                </tr>
-                {% if current_deployment.latitude %}
-                <tr>
-                    <th>Latitude</th>
-                    <td>{{ current_deployment.latitude }} &deg; N </td>
-                </tr>
-                {% endif %}
-                {% if current_deployment.longitude %}
-                <tr>
-                    <th>Longitude</th>
-                    <td>{{ current_deployment.longitude }} &deg; E </td>
-                </tr>
-                {% endif %}
-                <tr>
-                    <th>Depth</th>
-                    <td>{{ current_deployment.depth }} m</td>
-                </tr>
+                    <tr>
+                        <th>{{ label_deployments_app_singular }} to Field Date</th>
+                        <td>{{ current_deployment.deployment_to_field_date|date:"n/j/Y H:i" }}</td>
+                    </tr>
+                    {% if current_deployment.latitude %}
+                    <tr>
+                        <th>Latitude</th>
+                        <td>{{ current_deployment.latitude }} &deg; N </td>
+                    </tr>
+                    {% endif %}
+                    {% if current_deployment.longitude %}
+                    <tr>
+                        <th>Longitude</th>
+                        <td>{{ current_deployment.longitude }} &deg; E </td>
+                    </tr>
+                    {% endif %}
+                    {% if current_deployment.depth %}
+                    <tr>
+                        <th>Depth</th>
+                        <td>{{ current_deployment.depth }} m</td>
+                    </tr>
+                    {% endif %}
                 {% endif %}
             </tbody>
         </table>

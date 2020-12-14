@@ -37,6 +37,7 @@ from roundabout.configs_constants.models import ConfigName, ConfigValue, ConfigE
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.inventory.models import Inventory, Action, Deployment
 from roundabout.inventory.utils import _create_action_history
+from roundabout.userdefinedfields.models import Field, FieldValue
 
 
 @shared_task(bind = True)
@@ -61,6 +62,11 @@ def parse_cal_files(self):
         cal_date_string = cal_csv.name.split('__')[1][:8]
         inventory_item = Inventory.objects.get(serial_number=inv_serial)
         cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
+        custom_field = Field.objects.get(field_name='Manufacturer Serial Number')
+        try:
+            inv_manufacturer_serial = FieldValue.objects.get(inventory=inventory_item,field=custom_field,is_current=True)
+        except FieldValue.DoesNotExist:
+            inv_manufacturer_serial = FieldValue.objects.create(inventory=inventory_item,field=custom_field,is_current=True)
         try:
             deployment = Deployment.objects.get(
                 deployment_to_field_date__year=cal_date_date.year,
@@ -88,6 +94,11 @@ def parse_cal_files(self):
         for idx, row in enumerate(reader):
             row_data = row.items()
             for key, value in row_data:
+                if key == 'serial':
+                    csv_manufacturer_serial = value.strip()
+                    if len(inv_manufacturer_serial.field_value) == 0 and len(csv_manufacturer_serial) > 0:
+                        inv_manufacturer_serial.field_value = csv_manufacturer_serial
+                        inv_manufacturer_serial.save()
                 if key == 'name':
                     calibration_name = value.strip()
                     try:
@@ -326,7 +337,6 @@ def parse_vessel_files(self):
 def parse_deployment_files(self):
     csv_files = cache.get('dep_files')
     for csv_file in csv_files:
-        print(csv_file)
         csv_file.seek(0)
         reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
         headers = reader.fieldnames

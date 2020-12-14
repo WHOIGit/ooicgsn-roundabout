@@ -32,6 +32,10 @@ from roundabout.configs_constants.models import ConfigEvent
 from roundabout.calibrations.models import CalibrationEvent
 from ..models import Build
 
+# Import environment variables from .env files
+import environ
+env = environ.Env()
+base_url = env('RDB_SITE_URL')
 API_VERSION = 'api_v1'
 
 class BuildSerializer(serializers.HyperlinkedModelSerializer, FlexFieldsModelSerializer):
@@ -185,17 +189,40 @@ class DeploymentSerializer(FlexFieldsModelSerializer):
 
 class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
     deployment_id = serializers.IntegerField(source='id')
+    deployment_url = serializers.HyperlinkedIdentityField(
+        view_name =  API_VERSION + ':deployments-detail',
+        lookup_field='pk',
+    )
     build_id = serializers.SerializerMethodField('get_build_id')
     build_number = serializers.SerializerMethodField('get_build_number')
+    build_url = serializers.HyperlinkedRelatedField(
+        source='build',
+        view_name = API_VERSION + ':builds-detail',
+        lookup_field = 'pk',
+        queryset = Build.objects
+    )
+    location_id = serializers.SerializerMethodField('get_location_id')
+    location_name = serializers.SerializerMethodField('get_location_name')
+    location_url = serializers.HyperlinkedRelatedField(
+        source='deployed_location',
+        view_name = API_VERSION + ':locations-detail',
+        lookup_field = 'pk',
+        queryset = Location.objects
+    )
     assembly_parts = serializers.SerializerMethodField('get_assembly_parts')
 
     class Meta:
         model = Deployment
         fields = [
             'build_id',
+            'build_url',
             'build_number',
             'deployment_id',
+            'deployment_url',
             'deployment_number',
+            'location_id',
+            'location_name',
+            'location_url',
             'current_status',
             'assembly_parts',
         ]
@@ -210,61 +237,94 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
             return obj.build.build_number
         return None
 
+    def get_location_id(self, obj):
+        if obj.deployed_location:
+            return obj.deployed_location.id
+        return None
+
+    def get_location_name(self, obj):
+        if obj.deployed_location:
+            return obj.deployed_location.name
+        return None
+
     def get_assembly_parts(self, obj):
-        try:
-            # Use the InventoryDeployment related model to get historical list of Inventory items
-            # on each Deployment
-            inventory_dep_qs = obj.inventory_deployments.exclude(current_status=Deployment.DEPLOYMENTRETIRE)
-            assembly_parts = []
+        # Use the InventoryDeployment related model to get historical list of Inventory items
+        # on each Deployment
+        inventory_dep_qs = obj.inventory_deployments.exclude(current_status=Deployment.DEPLOYMENTRETIRE)
+        assembly_parts = []
 
-            for inv in inventory_dep_qs:
-                # get all config_events for this Inventory/Deployment
-                configuration_values = []
-                config_events = ConfigEvent.objects.filter(inventory=inv.inventory).filter(deployment=inv.deployment)
-                if config_events:
-                    for event in config_events:
-                        for value in event.config_values.all():
-                            configuration_values.append({
-                                'name': value.config_name.name,
-                                'value': value.config_value,
-                            })
-
-                # get all constant_default_events for this Inventory/Deployment
-                constant_default_values = []
-                if inv.inventory.constant_default_events.exists():
-                    for event in inv.inventory.constant_default_events.all():
-                        for value in event.constant_defaults.all():
-                            constant_default_values.append({
-                                'name': value.config_name.name,
-                                'value': value.default_value,
-                            })
-
-                # get all custom_fields for this Inventory/Deployment
-                custom_fields = []
-                if inv.inventory.fieldvalues.exists():
-                    inv_custom_fields = inv.inventory.fieldvalues.filter(is_current=True).select_related('field')
-                    # create initial empty dict
-                    for field in inv_custom_fields:
-                        custom_fields.append({
-                            'name': field.field.field_name,
-                            'value': field.field_value,
+        for inv in inventory_dep_qs:
+            # get all config_events for this Inventory/Deployment
+            configuration_values = []
+            config_events = ConfigEvent.objects.filter(inventory=inv.inventory).filter(deployment=inv.deployment)
+            if config_events:
+                for event in config_events:
+                    for value in event.config_values.all():
+                        configuration_values.append({
+                            'name': value.config_name.name,
+                            'value': value.config_value,
                         })
 
-                # create object to populate the "assembly_part" list
-                item_obj = {
-                    'assembly_part_id': inv.assembly_part_id,
-                    'part_name': inv.inventory.part.name,
-                    'parent_assembly_part_id': inv.assembly_part.parent_id if inv.assembly_part else None,
-                    'inventory_id': inv.inventory_id,
-                    'inventory_serial_number': inv.inventory.serial_number,
-                    'configuration_values': configuration_values,
-                    'constant_default_values': constant_default_values,
-                    'custom_fields': custom_fields,
-                }
-                assembly_parts.append(item_obj)
+            # get all calibration_events for this Inventory/Deployment
+            # need to get the CalibrationEvent that matches the Deployment date
+            # calibration_date field sets the range for valid Calibration Events
+            calibration_values = []
+            if inv.inventory.calibration_events.exists():
+                for event in inv.inventory.calibration_events.all():
+                    # find the CalibrationEvent valid date range that matches Deployment date
+                    first_date, last_date = event.get_valid_calibration_range()
+                    if inv.deployment_to_field_date and first_date < inv.deployment_to_field_date < last_date:
+                        for value in event.coefficient_value_sets.all():
+                            calibration_values.append({
+                                'name': value.coefficient_name.calibration_name,
+                                'value': value.value_set,
+                            })
+                        break
 
-            return assembly_parts
+            # get all constant_default_events for this Inventory/Deployment
+            constant_default_values = []
+            if inv.inventory.constant_default_events.exists():
+                for event in inv.inventory.constant_default_events.all():
+                    for value in event.constant_defaults.all():
+                        constant_default_values.append({
+                            'name': value.config_name.name,
+                            'value': value.default_value,
+                        })
 
-        except Exception as e:
-            print(e)
-            return None
+            # get all custom_fields for this Inventory/Deployment
+            custom_fields = []
+            if inv.inventory.fieldvalues.exists():
+                inv_custom_fields = inv.inventory.fieldvalues.filter(is_current=True).select_related('field')
+                # create initial empty dict
+                for field in inv_custom_fields:
+                    custom_fields.append({
+                        'name': field.field.field_name,
+                        'value': field.field_value,
+                    })
+
+            # set up URL link fields
+            request = self.context.get("request")
+            inventory_url = reverse('api_v1:inventory-detail', kwargs={'pk': inv.inventory_id}, request=request)
+            assembly_part_url = reverse('api_v1:assembly-templates/assembly-parts-detail', kwargs={'pk': inv.assembly_part_id}, request=request)
+            if inv.assembly_part and inv.assembly_part.parent:
+                parent_assembly_part_url = reverse('api_v1:assembly-templates/assembly-parts-detail', kwargs={'pk': inv.assembly_part.parent_id}, request=request)
+            else:
+                parent_assembly_part_url = None
+            # create object to populate the "assembly_part" list
+            item_obj = {
+                'assembly_part_id': inv.assembly_part_id,
+                'assembly_part_url': assembly_part_url,
+                'part_name': inv.inventory.part.name,
+                'parent_assembly_part_id': inv.assembly_part.parent_id if inv.assembly_part else None,
+                'parent_assembly_part_url': parent_assembly_part_url,
+                'inventory_id': inv.inventory_id,
+                'inventory_url': inventory_url,
+                'inventory_serial_number': inv.inventory.serial_number,
+                'configuration_values': configuration_values,
+                'calibration_values': calibration_values,
+                'constant_default_values': constant_default_values,
+                'custom_fields': custom_fields,
+            }
+            assembly_parts.append(item_obj)
+
+        return assembly_parts

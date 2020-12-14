@@ -33,6 +33,7 @@ from django.urls import reverse
 from django.views.generic import TemplateView, FormView
 
 from roundabout.cruises.models import Cruise, Vessel
+from roundabout.assemblies.models import Assembly
 from .forms import ImportDeploymentsForm, ImportVesselsForm, ImportCruisesForm, ImportCalibrationForm
 from .models import *
 from .tasks import parse_cal_files, parse_cruise_files, parse_vessel_files, parse_deployment_files
@@ -196,7 +197,7 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
             headers = reader.fieldnames
             deployments = []
             for row in reader:
-                if row['mooring.uid'] not in deployments:
+                if not any(dict['mooring.uid'] == row['mooring.uid'] for dict in deployments):
                     # get Assembly number from RefDes as that seems to be most consistent across CSVs
                     ref_des = row['Reference Designator']
                     assembly = ref_des.split('-')[0]
@@ -204,13 +205,26 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                     mooring_uid_dict = {'mooring.uid': row['mooring.uid'], 'assembly': assembly, 'rows': []}
                     deployments.append(mooring_uid_dict)
 
-                deployment = next((deployment for deployment in deployments if deployment['mooring.uid']== row['mooring.uid']), False)
-                for key, value in row.items():
-                    deployment['rows'].append({key: value})
+                deployment = next((deployment for deployment in deployments if deployment['mooring.uid'] == row['mooring.uid']), False)
+                deployment['rows'].append(row)
 
-            print(deployments[0])
-            for row in deployments[0]['rows']:
-                print(row)
+            print(deployments)
+            for deployment in deployments:
+                # get the Assembly template for this Build
+                assembly_qs = Assembly.objects.filter(assembly_number=deployment['assembly'])
+                if assembly_qs:
+                    if assembly_qs.count() == 1:
+                        assembly = assembly_qs[0]
+                        print(assembly)
+                        print(deployment['mooring.uid'])
+                    else:
+                        raise ValueError("Too many results")
+                else:
+                    raise ValueError("No results")
+
+                for row in deployments[0]['rows']:
+                    pass
+                    #print(row['sensor.uid'])
 
         return super(ImportDeploymentsUploadView, self).form_valid(form)
 

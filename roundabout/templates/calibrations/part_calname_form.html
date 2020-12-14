@@ -18,13 +18,30 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 -->
+
+{% load crispy_forms_tags %}
+
+{% block javascript %}
 <script type="text/javascript">
     $(document).ready(function() {
     // Handles CoefficientValueSet form instance generation
         $('.calibration-form tbody tr').formset({
             prefix: 'coefficient_names',
             addText: 'Add Calibration',
-            deleteText: 'Remove'
+            deleteText: 'Remove',
+            removed: function(row) {
+                let del = row.find('input:hidden[id $= "-DELETE"]')                
+                let totalForms = $("[id$='TOTAL_FORMS']")
+                if( confirm('Warning: deleting Names will delete associated Event data') ) {
+                    del.val('on')
+                    row.hide()
+                } else {
+                    del.val('')
+                    row.show()
+                }
+                forms = $('.dynamic-form').not(':hidden');
+                totalForms.val(forms.length)
+            }
         });
 
         let formRows = $('.dynamic-form');
@@ -52,17 +69,11 @@
                 }
             })
         }
-
-        $('.delete-row').on('click',function(e) {
-            alert('Warning: deleting Names will delete all downstream Defaults and Events');
-        });
     });
 </script>
+{% endblock javascript %}
 
-{% load static i18n %}
-{% load mptt_tags %}
-{% load crispy_forms_tags %}
-
+{% block content %}
 <div class="card-header">
     {% if event_template.id %}
         <h3>Update Calibration(s)</h3>
@@ -137,8 +148,4 @@
         </div>
     </form>
 </div>
-
-
-{% block javascript %}
-
-{% endblock javascript %}
+{% endblock content %}
