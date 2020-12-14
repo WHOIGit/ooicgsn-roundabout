@@ -32,6 +32,7 @@ from decimal import Decimal
 
 
 from django import forms
+from django.db import transaction
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -39,7 +40,7 @@ from django.utils.translation import gettext_lazy as _
 from roundabout.inventory.models import Inventory, Action, Deployment
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.inventory.utils import _create_action_history
-from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
+from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientNameEvent
 from roundabout.calibrations.forms import validate_coeff_vals, parse_valid_coeff_vals
 from roundabout.configs_constants.models import ConfigName
 from roundabout.users.models import User
@@ -318,6 +319,12 @@ def validate_cal_files(csv_files,ext_files):
         except FieldValue.DoesNotExist:
             inv_keys = {'field_value': ''}
             inv_manufacturer_serial = SimpleNamespace(**inv_keys)
+        try:
+            coeff_name_event = CoefficientNameEvent.objects.get(part=inventory_item.part)
+        except CoefficientNameEvent.DoesNotExist:
+            with transaction.atomic:
+                coeff_name_event = CoefficientNameEvent.objects.create(part=inventory_item.part)
+                _create_action_history(coeff_name_event, Action.CALCSVIMPORT, None)
         for idx, row in enumerate(reader):
             row_data = row.items()
             for key, value in row_data:
@@ -340,15 +347,23 @@ def validate_cal_files(csv_files,ext_files):
                 if key == 'name':
                     calibration_name = value.strip()
                     try:
-                        cal_name_item = CoefficientName.objects.get(
-                            calibration_name = calibration_name,
-                            coeff_name_event =  inventory_item.part.coefficient_name_events.first()
-                        )
+                        assert len(calibration_name) > 0
                     except:
                         raise ValidationError(
-                            _('File: %(filename)s, Calibration Name: %(value)s, Row %(row)s: Unable to find Calibration item with this Name'),
+                            _('File: %(filename)s, Calibration Name: %(value)s, Row %(row)s: Calibration Name is blank'),
                             params={'value': calibration_name, 'row': idx, 'filename': cal_csv.name},
                         )
+                    try:
+                        cal_name_item = CoefficientName.objects.get(
+                            calibration_name = calibration_name,
+                            coeff_name_event =  coeff_name_event
+                        )
+                    except CoefficientName.DoesNotExist:
+                        with transaction.atomic:
+                            cal_name_item = CoefficientName.objects.create(
+                                calibration_name = calibration_name,
+                                coeff_name_event =  coeff_name_event
+                            )
                 elif key == 'value':
                     valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
                     mock_valset_instance = SimpleNamespace(**valset_keys)
@@ -360,8 +375,16 @@ def validate_cal_files(csv_files,ext_files):
                             params={'value': calibration_name,'row': idx, 'filename': cal_csv.name},
                         )
                     if '[' in raw_valset:
+                        if cal_name_item.value_set_type != '1d':
+                            with transaction.atomic:
+                                cal_name_item.value_set_type = '1d'
+                                cal_name_item.save()
                         raw_valset = raw_valset[1:-1]
                     if 'SheetRef' in raw_valset:
+                        if cal_name_item.value_set_type != '2d':
+                            with transaction.atomic:
+                                cal_name_item.value_set_type = '2d'
+                                cal_name_item.save()
                         ext_finder_filename = "__".join((cal_csv_filename,calibration_name))
                         try:
                             ref_file = [file for file in ext_files if ext_finder_filename in file.name][0]
