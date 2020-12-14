@@ -316,7 +316,8 @@ def validate_cal_files(csv_files,ext_files):
         try:
             inv_manufacturer_serial = FieldValue.objects.get(inventory=inventory_item,field=custom_field,is_current=True)
         except FieldValue.DoesNotExist:
-            inv_manufacturer_serial = ''
+            inv_keys = {'field_value': ''}
+            inv_manufacturer_serial = SimpleNamespace(**inv_keys)
         for idx, row in enumerate(reader):
             row_data = row.items()
             for key, value in row_data:
@@ -386,7 +387,7 @@ def validate_cal_files(csv_files,ext_files):
                             params={'value': calibration_name, 'row': idx, 'filename': cal_csv.name},
                         )
 
-
+# 
 class ImportCalibrationForm(forms.Form):
     calibration_csv = forms.FileField(
         widget=forms.ClearableFileInput(
