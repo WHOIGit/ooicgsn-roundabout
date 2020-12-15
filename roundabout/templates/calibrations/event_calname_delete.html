@@ -29,11 +29,19 @@
           <input class="btn btn-link cancel-btn"
                  type="button" value="Cancel"
                  data-detail-url="{% url 'parts:ajax_parts_detail' object.part.id %}"/>
-          <input data-detail-url="{% url 'parts:ajax_parts_detail' object.part.id %}" class="btn btn-danger" type="submit" value="Confirm"/>
+          <input id = 'submit' data-detail-url="{% url 'parts:ajax_parts_detail' object.part.id %}" class="btn btn-danger" type="submit" value="Confirm"/>
       </form>
   </div>
 </div>
 
 {% block javascript %}
+<script>
+    $(document).ready(function() {
 
+        let part_id = '{{object.part.id}}'
+        $('#submit').on('click', function() {
+            location.href = '/parts/' + part_id + '/';
+        })
+    });
+</script>
 {% endblock javascript %}
