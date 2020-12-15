@@ -188,12 +188,10 @@ class DeploymentSerializer(FlexFieldsModelSerializer):
 
 
 class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
-    deployment_id = serializers.IntegerField(source='id')
     deployment_url = serializers.HyperlinkedIdentityField(
         view_name =  API_VERSION + ':deployments-detail',
         lookup_field='pk',
     )
-    build_id = serializers.SerializerMethodField('get_build_id')
     build_number = serializers.SerializerMethodField('get_build_number')
     build_url = serializers.HyperlinkedRelatedField(
         source='build',
@@ -201,7 +199,6 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
         lookup_field = 'pk',
         queryset = Build.objects
     )
-    location_id = serializers.SerializerMethodField('get_location_id')
     location_name = serializers.SerializerMethodField('get_location_name')
     location_url = serializers.HyperlinkedRelatedField(
         source='deployed_location',
@@ -214,13 +211,10 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = Deployment
         fields = [
-            'build_id',
             'build_url',
             'build_number',
-            'deployment_id',
             'deployment_url',
             'deployment_number',
-            'location_id',
             'location_name',
             'location_url',
             'current_status',
@@ -250,13 +244,13 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
     def get_assembly_parts(self, obj):
         # Use the InventoryDeployment related model to get historical list of Inventory items
         # on each Deployment
-        inventory_dep_qs = obj.inventory_deployments.exclude(current_status=Deployment.DEPLOYMENTRETIRE)
+        inventory_dep_qs = obj.inventory_deployments.exclude(current_status=Deployment.DEPLOYMENTRETIRE).select_related('inventory')
         assembly_parts = []
 
         for inv in inventory_dep_qs:
             # get all config_events for this Inventory/Deployment
             configuration_values = []
-            config_events = ConfigEvent.objects.filter(inventory=inv.inventory).filter(deployment=inv.deployment)
+            config_events = inv.inventory.config_events.filter(deployment=inv.deployment).prefetch_related('config_values')
             if config_events:
                 for event in config_events:
                     for value in event.config_values.all():
@@ -306,18 +300,17 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
             request = self.context.get("request")
             inventory_url = reverse('api_v1:inventory-detail', kwargs={'pk': inv.inventory_id}, request=request)
             assembly_part_url = reverse('api_v1:assembly-templates/assembly-parts-detail', kwargs={'pk': inv.assembly_part_id}, request=request)
+
             if inv.assembly_part and inv.assembly_part.parent:
                 parent_assembly_part_url = reverse('api_v1:assembly-templates/assembly-parts-detail', kwargs={'pk': inv.assembly_part.parent_id}, request=request)
             else:
                 parent_assembly_part_url = None
             # create object to populate the "assembly_part" list
             item_obj = {
-                'assembly_part_id': inv.assembly_part_id,
                 'assembly_part_url': assembly_part_url,
                 'part_name': inv.inventory.part.name,
-                'parent_assembly_part_id': inv.assembly_part.parent_id if inv.assembly_part else None,
+                'part_type': inv.inventory.part.part_type.name if inv.inventory.part.part_type else None,
                 'parent_assembly_part_url': parent_assembly_part_url,
-                'inventory_id': inv.inventory_id,
                 'inventory_url': inventory_url,
                 'inventory_serial_number': inv.inventory.serial_number,
                 'configuration_values': configuration_values,
