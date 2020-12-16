@@ -298,7 +298,7 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                 if not deployment_created:
                     deployment_actions = deployment_obj.actions.all()
                     deployment_actions.delete()
-                    
+
                 print(build)
                 print(deployment_obj)
                 # Create Build Action records for deployment
@@ -374,7 +374,7 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                             Action.REMOVEFROMBUILD,
                         ]
 
-                        inv_deployment_actions: = [
+                        inv_deployment_actions = [
                             Action.STARTDEPLOYMENT,
                             Action.DEPLOYMENTBURNIN,
                             Action.DEPLOYMENTTOFIELD,
