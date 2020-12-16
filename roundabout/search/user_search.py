@@ -142,14 +142,12 @@ class DeploymentActionTable(ActionUserTableBase):
         title = 'Deployment Actions'
         fields = ['deployment'] + ActionUserTableBase.Meta.fields
 
-    # Attempt to get link to deployment
-    # doesn't work, anchor doesn't exist when page loads
-    # also reverse("deployments:deployment_detail", args=[record.deployment.pk]) fails
+    # workaround linking to deployment.
     def render_deployment(self, record):
         from django.urls import reverse
         build_url = reverse("builds:builds_detail", args=[record.deployment.build.pk])
-        deployment_anchor = '#deployment-{}-'.format(record.deployment.pk)
-        deployment_anchor = '#deployments'
+        deployment_anchor = '#deployment-{}-'.format(record.deployment.pk)  # doesn't work, anchor doesn't exist
+        deployment_anchor = '#deployments'  # next best anchor that does work
         html_string = '<a href={}>{}</a>'.format(build_url+deployment_anchor, record.deployment)
         return format_html(html_string)
 

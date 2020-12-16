@@ -305,7 +305,7 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
         return qs
 
     @classmethod
-    def build_zip(cls, zf, objs, subdir=None, verbose='CalibrationsWithConfigs_exportlog.txt'):  # TODO~ PRODUCTION: change VERBOSE to None
+    def build_zip(cls, zf, objs, subdir=None, verbose=None):
         # objs here is a dict-of-dicts, not a queryset.
         # Each top-level key is an inst_id.
         # Per inst_id there is (a) a "calibs" key containing a CalibrationEvent Queryset
@@ -315,7 +315,7 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
         # To be valid, the bundled inventory CCC fields must (1) include all the part's inventory CCC fields
         #                                                    (2) be approved==True
 
-        # setting up printing to file option.
+        # if verbose is a string, a log file with that string name is included in the export
         if isinstance(verbose,str):
             if subdir: verbose = join(subdir,verbose)
             out = io.StringIO()
@@ -565,7 +565,7 @@ class ExportDeployments(ZipExport):
         objs = objs.prefetch_related('build__assembly_revision__assembly')
         assy_names = objs.values_list('build__assembly_revision__assembly__name',flat=True)
         assy_names = set(assy_names)
-        #assy_names.discard(None) # removes None if any
+        assy_names.discard(None) # removes None if any
         for assy_name in assy_names:
             csv_fname = '{}_Deploy.csv'.format(str(assy_name).replace(' ','_'))
             if subdir: csv_fname = join(subdir,csv_fname)
