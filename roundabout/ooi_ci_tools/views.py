@@ -42,7 +42,9 @@ from roundabout.inventory.utils import _create_action_history
 from .forms import ImportDeploymentsForm, ImportVesselsForm, ImportCruisesForm, ImportCalibrationForm
 from .models import *
 from .tasks import parse_cal_files, parse_cruise_files, parse_vessel_files, parse_deployment_files
-
+# Get the app label names from the core utility functions
+from roundabout.core.utils import set_app_labels
+labels = set_app_labels()
 
 # Github CSV file importer for Vessels
 class ImportVesselsUploadView(LoginRequiredMixin, FormView):
@@ -273,7 +275,7 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                 if build_created:
                     _create_action_history(build, Action.ADD, self.request.user, '', '', dep_start_date)
 
-                # Get/Create Deployment for this Build
+                # Update/Create Deployment for this Build
                 deployment_obj, deployment_created = Deployment.objects.update_or_create(
                     deployment_number=deployment['mooring.uid'],
                     defaults={
@@ -291,6 +293,12 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                         'depth': water_depth,
                     },
                 )
+
+                # If this an update to existing Deployment, need to delete all previous Deployment History Actions
+                if not deployment_created:
+                    deployment_actions = deployment_obj.actions.all()
+                    deployment_actions.delete()
+                    
                 print(build)
                 print(deployment_obj)
                 # Create Build Action records for deployment
@@ -361,31 +369,74 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
 
                         # _create_action_history function won't work correctly fo Inventory Deployments if item is already in RDB,
                         # need to add history Actions manually
-                        # ADDTOBUILD
-                        action = Action.objects.create(
-                            action_type = Action.ADDTOBUILD,
-                            object_type = Action.INVENTORY,
-                            created_at = dep_start_date,
-                            inventory = item,
-                            build = build,
-                            location = deployed_location,
-                            user = self.request.user,
-                            detail = 'Moved to %s.' % (build),
-                        )
+                        inv_actions = [
+                            Action.ADDTOBUILD,
+                            Action.REMOVEFROMBUILD,
+                        ]
 
-                        # STARTDEPLOYMENT
-                        action = Action.objects.create(
-                            action_type = Action.STARTDEPLOYMENT,
-                            object_type = Action.INVENTORY,
-                            created_at = dep_start_date,
-                            inventory = item,
-                            build = build,
-                            location = deployed_location,
-                            inventory_deployment = inv_deployment_obj,
-                            deployment_type = Action.INVENTORY_DEPLOYMENT,
-                            user = self.request.user,
-                            detail = '%s %s started' % (labels['label_deployments_app_singular'], deployment_obj)
-                        )
+                        inv_deployment_actions: = [
+                            Action.STARTDEPLOYMENT,
+                            Action.DEPLOYMENTBURNIN,
+                            Action.DEPLOYMENTTOFIELD,
+                            Action.DEPLOYMENTRECOVER,
+                            Action.DEPLOYMENTRETIRE,
+                        ]
+
+                        for action in inv_actions:
+                            if action = Action.ADDTOBUILD:
+                                action_date = dep_start_date
+                                detail = 'Moved to %s.' % (build)
+
+                            elif action = Action.REMOVEFROMBUILD and dep_end_date:
+                                action_date = dep_end_date
+                                detail = 'Removed from %s.' % (build)
+
+                            action = Action.objects.create(
+                                action_type = action,
+                                object_type = Action.INVENTORY,
+                                created_at = action_date,
+                                inventory = item,
+                                build = build,
+                                location = deployed_location,
+                                user = self.request.user,
+                                detail = detail,
+                            )
+
+                        for action in inv_deployment_actions:
+                            if action = Action.STARTDEPLOYMENT:
+                                action_date = dep_start_date
+                                detail = '%s %s started.' % (labels['label_deployments_app_singular'], deployment_obj)
+
+                            elif action = Action.DEPLOYMENTBURNIN:
+                                action_date = dep_start_date
+                                detail = '%s %s burn in.' % (labels['label_deployments_app_singular'], deployment_obj)
+
+                            elif action = Action.DEPLOYMENTTOFIELD:
+                                action_date = dep_start_date
+                                detail = 'Deployed to field on %s.' % (labels['label_deployments_app_singular'], deployment_obj)
+
+                            elif action = Action.DEPLOYMENTRECOVER and dep_end_date:
+                                action_date = dep_end_date
+                                detail = 'Recovered from %s.' % (labels['label_deployments_app_singular'], deployment_obj)
+
+                            elif action = Action.DEPLOYMENTRETIRE and dep_end_date:
+                                action_date = dep_end_date
+                                detail = '%s %s ended for this %s.' % (labels['label_deployments_app_singular'], deployment_obj, labels['label_inventory_app_singular'])
+
+                            action = Action.objects.create(
+                                action_type = action,
+                                object_type = Action.INVENTORY,
+                                created_at = action_date,
+                                inventory = item,
+                                build = build,
+                                location = deployed_location,
+                                deployment = deployment_obj,
+                                inventory_deployment = inventory_deployment_obj,
+                                deployment_type = Action.INVENTORY_DEPLOYMENT,
+                                user = self.request.user,
+                                detail = detail,
+                            )
+
                         print(row['sensor.uid'])
 
         return super(ImportDeploymentsUploadView, self).form_valid(form)
