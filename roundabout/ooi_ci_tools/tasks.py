@@ -20,23 +20,16 @@
 """
 
 
-import datetime
-from types import SimpleNamespace
-
 import csv
+import datetime
 import io
 import re
 from decimal import Decimal
-
-from dateutil import parser
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.cache import cache
-from django.http import JsonResponse
-from django.shortcuts import render, redirect
-from django.urls import reverse
-from django.views.generic import TemplateView, FormView
+from types import SimpleNamespace
 
 from celery import shared_task
+from dateutil import parser
+from django.core.cache import cache
 
 from roundabout.calibrations.forms import parse_valid_coeff_vals
 from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
@@ -44,6 +37,7 @@ from roundabout.configs_constants.models import ConfigName, ConfigValue, ConfigE
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.inventory.models import Inventory, Action, Deployment
 from roundabout.inventory.utils import _create_action_history
+from roundabout.userdefinedfields.models import Field, FieldValue
 
 
 @shared_task(bind = True)
@@ -68,6 +62,11 @@ def parse_cal_files(self):
         cal_date_string = cal_csv.name.split('__')[1][:8]
         inventory_item = Inventory.objects.get(serial_number=inv_serial)
         cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
+        custom_field = Field.objects.get(field_name='Manufacturer Serial Number')
+        try:
+            inv_manufacturer_serial = FieldValue.objects.get(inventory=inventory_item,field=custom_field,is_current=True)
+        except FieldValue.DoesNotExist:
+            inv_manufacturer_serial = FieldValue.objects.create(inventory=inventory_item,field=custom_field,is_current=True)
         try:
             deployment = Deployment.objects.get(
                 deployment_to_field_date__year=cal_date_date.year,
@@ -95,6 +94,11 @@ def parse_cal_files(self):
         for idx, row in enumerate(reader):
             row_data = row.items()
             for key, value in row_data:
+                if key == 'serial':
+                    csv_manufacturer_serial = value.strip()
+                    if len(inv_manufacturer_serial.field_value) == 0 and len(csv_manufacturer_serial) > 0:
+                        inv_manufacturer_serial.field_value = csv_manufacturer_serial
+                        inv_manufacturer_serial.save()
                 if key == 'name':
                     calibration_name = value.strip()
                     try:
@@ -303,37 +307,36 @@ def parse_vessel_files(self):
                 else:
                     R2R = False
 
-                # update or create Vessel object based on vessel_name field
-                vessel_obj, created = Vessel.objects.update_or_create(
-                    vessel_name = vessel_name,
-                    defaults = {
-                        'prefix': row['Prefix'],
-                        'vessel_designation': row['Vessel Designation'],
-                        'ICES_code': row['ICES Code'],
-                        'operator': row['Operator'],
-                        'call_sign': row['Call Sign'],
-                        'MMSI_number': MMSI_number,
-                        'IMO_number': IMO_number,
-                        'length': length,
-                        'max_speed': max_speed,
-                        'max_draft': max_draft,
-                        'designation': row['Designation'],
-                        'active': active,
-                        'R2R': R2R,
-                    },
-                )
+            # update or create Vessel object based on vessel_name field
+            vessel_obj, created = Vessel.objects.update_or_create(
+                vessel_name = vessel_name,
+                defaults = {
+                    'prefix': row['Prefix'],
+                    'vessel_designation': row['Vessel Designation'],
+                    'ICES_code': row['ICES Code'],
+                    'operator': row['Operator'],
+                    'call_sign': row['Call Sign'],
+                    'MMSI_number': MMSI_number,
+                    'IMO_number': IMO_number,
+                    'length': length,
+                    'max_speed': max_speed,
+                    'max_draft': max_draft,
+                    'designation': row['Designation'],
+                    'active': active,
+                    'R2R': R2R,
+                },
+            )
 
-                if created:
-                    vessels_created.append(vessel_obj)
-                else:
-                    vessels_updated.append(vessel_obj)
+            if created:
+                vessels_created.append(vessel_obj)
+            else:
+                vessels_updated.append(vessel_obj)
     cache.delete('vessels_files')
 
 @shared_task(bind=True)
 def parse_deployment_files(self):
     csv_files = cache.get('dep_files')
     for csv_file in csv_files:
-        print(csv_file)
         csv_file.seek(0)
         reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
         headers = reader.fieldnames
