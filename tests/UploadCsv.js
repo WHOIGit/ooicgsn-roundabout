@@ -155,10 +155,15 @@ var filename;
         // Skip header and UNRECOVERED lines
         for (var i = 2, len = uploaded_data.length; i < len; i++) {
             var cruise_str = uploaded_data[i];
-            // This is the only way to handle the double quotes in the compare
+	    // Strip off any trailing blanks in cruise name imported data
+	    cruise_str[1] = cruise_str[1].toString().trim();
+	    // Remove extra dash in Timestamp
+	    cruise_str[2] = cruise_str[2].toString().replace('-T', 'T');
+	    cruise_str[3] = cruise_str[3].toString().replace('-T', 'T');
+            // This is the only way to compare the double quotes in the notes field
             if (cruise_str[4].includes(",")) {
                 if (!(exported.includes(cruise_str[0]) && exported.includes(cruise_str[1])
-                    && exported.includes(cruise_str[3])))
+                    && exported.includes(cruise_str[2]) && exported.includes(cruise_str[3])))
                     console.log("Cruise Export Missing: " + cruise_str)
                 if (!exported.includes(cruise_str[4]))
                     console.log("Cruise Export Missing: " + cruise_str[4])
@@ -249,6 +254,7 @@ var filename;
 
 
         // Upload Calibration CSV
+	// Test depends on Manufacturer Serial Number previously defined in Import Export Inventory
         await driver.findElement(By.id("navbarAdmintools")).click()
         await driver.findElement(By.linkText("Upload GitHub CSVs")).click()
         if (myArgs[1] == 'headless') {
