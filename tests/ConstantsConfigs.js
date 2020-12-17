@@ -430,7 +430,7 @@ await fs.writeFileSync('/tests/cscreen.png', encodedString, 'base64');
         //Create Constant Value (on a Deployed Build) and Search for Name, Value, Date, Reviewers, Approval Flag
         await driver.findElement(By.id("action")).click()
         await driver.findElement(By.id("add_const_action")).click()
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.id("id_deployment")).sendKeys("7 - Test");
         // 9 | addSelection | id=id_user_draft | label=admin
         {
