@@ -96,6 +96,7 @@ class Revision(models.Model):
 
     class Meta:
         ordering = ['-created_at', '-revision_code']
+        get_latest_by = 'created_at'
 
     def __str__(self):
         return self.revision_code

@@ -202,23 +202,24 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
             csv_file.seek(0)
             reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
             headers = reader.fieldnames
-            deployments = []
+            # Restructure CSV data to group rows by Deployment
+            deployment_imports = []
             for row in reader:
-                if not any(dict['mooring.uid'] == row['mooring.uid'] for dict in deployments):
+                if not any(dict['mooring.uid'] == row['mooring.uid'] for dict in deployment_imports):
                     # get Assembly number from RefDes as that seems to be most consistent across CSVs
                     ref_des = row['Reference Designator']
                     assembly = ref_des.split('-')[0]
                     # build data dict
                     mooring_uid_dict = {'mooring.uid': row['mooring.uid'], 'assembly': assembly, 'rows': []}
-                    deployments.append(mooring_uid_dict)
+                    deployment_imports.append(mooring_uid_dict)
 
-                deployment = next((deployment for deployment in deployments if deployment['mooring.uid'] == row['mooring.uid']), False)
+                deployment = next((deployment for deployment in deployment_imports if deployment['mooring.uid'] == row['mooring.uid']), False)
                 deployment['rows'].append(row)
 
-            for deployment in deployments:
+            for deployment_import in deployment_imports:
                 # get the Assembly template for this Build, needs to be only one match
                 try:
-                    assembly = Assembly.objects.get(assembly_number=deployment['assembly'])
+                    assembly = Assembly.objects.get(assembly_number=deployment_import['assembly'])
                     assembly_revision = assembly.assembly_revisions.latest()
                 except Assembly.DoesNotExist:
                     raise ValueError("No results")
@@ -226,27 +227,27 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                     raise ValueError("Too many results")
 
                 # set up common variables for Builds/Deployments
-                location_code = deployment['assembly'][0:2]
+                location_code = deployment_import['assembly'][0:2]
 
                 try:
                     deployed_location = Location.objects.get(location_code=location_code)
                 except Location.DoesNotExist:
                     raise ValueError("No Location Matching this Location Code")
 
-                dep_start_date = parser.parse(deployment['rows'][0]['startDateTime'])
+                dep_start_date = parser.parse(deployment_import['rows'][0]['startDateTime'])
 
                 try:
-                    dep_end_date = parser.parse(deployment['rows'][0]['stopDateTime'])
+                    dep_end_date = parser.parse(deployment_import['rows'][0]['stopDateTime'])
                 except:
                     dep_end_date = None
 
                 try:
-                    cruise_deployed = Cruise.objects.get(CUID=deployment['rows'][0]['CUID_Deploy'])
+                    cruise_deployed = Cruise.objects.get(CUID=deployment_import['rows'][0]['CUID_Deploy'])
                 except Cruise.DoesNotExist:
                     raise ValueError("No Cruise matches this CUID")
 
                 try:
-                    cruise_recovered = Cruise.objects.get(CUID=deployment['rows'][0]['CUID_Recover'])
+                    cruise_recovered = Cruise.objects.get(CUID=deployment_import['rows'][0]['CUID_Recover'])
                 except:
                     cruise_recovered = None
 
@@ -256,13 +257,13 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                 else:
                     build_location = deployed_location
 
-                latitude = deployment['rows'][0]['lat']
-                longitude = deployment['rows'][0]['lon']
-                water_depth = deployment['rows'][0]['water_depth']
+                latitude = deployment_import['rows'][0]['lat']
+                longitude = deployment_import['rows'][0]['lon']
+                water_depth = deployment_import['rows'][0]['water_depth']
 
                 # Get/Create a Build for this Deployment
                 build, build_created = Build.objects.get_or_create(
-                    build_number=deployment['mooring.uid'],
+                    build_number=deployment_import['mooring.uid'],
                     defaults={
                         'assembly': assembly,
                         'assembly_revision': assembly_revision,
@@ -277,7 +278,7 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
 
                 # Update/Create Deployment for this Build
                 deployment_obj, deployment_created = Deployment.objects.update_or_create(
-                    deployment_number=deployment['mooring.uid'],
+                    deployment_number=deployment_import['mooring.uid'],
                     defaults={
                         'build': build,
                         'deployment_start_date': dep_start_date,
@@ -319,7 +320,7 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                     for action in recover_actions:
                         _create_action_history(build, action, self.request.user, '', '', dep_end_date)
 
-                for row in deployment['rows']:
+                for row in deployment_import['rows']:
                     # create InventoryDeployments for each item
                     if row['sensor.uid']:
                         # Find the AssemblyPart that matches this RefDes by searching the ConfigDefault values
@@ -341,18 +342,20 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                                 'location': build_location,
                                 'build': build,
                                 'part': assembly_part.part,
-                                'revision': assembly_part.part.revision.latest(),
+                                'revision': assembly_part.part.revisions.latest(),
+                                'assembly_part': assembly_part,
                                 'created_at': dep_start_date,
                             },
                         )
                         # Call the function to create an initial Action history
                         if item_created:
+                            print(f"{item} created")
                             _create_action_history(item, Action.ADD, self.request.user, '', '', dep_start_date)
 
                         # Get/Create Deployment for this Build
                         inv_deployment_obj, inv_deployment_created = InventoryDeployment.objects.update_or_create(
                             inventory=item,
-                            deployment=deployment,
+                            deployment=deployment_obj,
                             defaults={
                                 'assembly_part': assembly_part,
                                 'deployment_start_date': dep_start_date,
@@ -360,10 +363,9 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                                 'deployment_to_field_date': dep_start_date,
                                 'deployment_recovery_date': dep_end_date,
                                 'deployment_retire_date': dep_end_date,
-                                'deployed_location': deployed_location,
                                 'cruise_deployed': cruise_deployed,
                                 'cruise_recovered': cruise_recovered,
-                                'item_depth': depth,
+                                #'item_depth': depth,
                             },
                         )
 
@@ -383,11 +385,11 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                         ]
 
                         for action in inv_actions:
-                            if action = Action.ADDTOBUILD:
+                            if action == Action.ADDTOBUILD:
                                 action_date = dep_start_date
                                 detail = 'Moved to %s.' % (build)
 
-                            elif action = Action.REMOVEFROMBUILD and dep_end_date:
+                            elif action == Action.REMOVEFROMBUILD and dep_end_date:
                                 action_date = dep_end_date
                                 detail = 'Removed from %s.' % (build)
 
@@ -403,23 +405,23 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                             )
 
                         for action in inv_deployment_actions:
-                            if action = Action.STARTDEPLOYMENT:
+                            if action == Action.STARTDEPLOYMENT:
                                 action_date = dep_start_date
                                 detail = '%s %s started.' % (labels['label_deployments_app_singular'], deployment_obj)
 
-                            elif action = Action.DEPLOYMENTBURNIN:
+                            elif action == Action.DEPLOYMENTBURNIN:
                                 action_date = dep_start_date
                                 detail = '%s %s burn in.' % (labels['label_deployments_app_singular'], deployment_obj)
 
-                            elif action = Action.DEPLOYMENTTOFIELD:
+                            elif action == Action.DEPLOYMENTTOFIELD:
                                 action_date = dep_start_date
-                                detail = 'Deployed to field on %s.' % (labels['label_deployments_app_singular'], deployment_obj)
+                                detail = 'Deployed to field on %s.' % (deployment_obj)
 
-                            elif action = Action.DEPLOYMENTRECOVER and dep_end_date:
+                            elif action == Action.DEPLOYMENTRECOVER and dep_end_date:
                                 action_date = dep_end_date
-                                detail = 'Recovered from %s.' % (labels['label_deployments_app_singular'], deployment_obj)
+                                detail = 'Recovered from %s.' % (deployment_obj)
 
-                            elif action = Action.DEPLOYMENTRETIRE and dep_end_date:
+                            elif action == Action.DEPLOYMENTRETIRE and dep_end_date:
                                 action_date = dep_end_date
                                 detail = '%s %s ended for this %s.' % (labels['label_deployments_app_singular'], deployment_obj, labels['label_inventory_app_singular'])
 
@@ -431,7 +433,7 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                                 build = build,
                                 location = deployed_location,
                                 deployment = deployment_obj,
-                                inventory_deployment = inventory_deployment_obj,
+                                inventory_deployment = inv_deployment_obj,
                                 deployment_type = Action.INVENTORY_DEPLOYMENT,
                                 user = self.request.user,
                                 detail = detail,
