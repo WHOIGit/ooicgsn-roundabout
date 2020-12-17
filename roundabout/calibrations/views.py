@@ -231,6 +231,17 @@ class EventValueSetDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteVie
     permission_required = 'calibrations.add_calibrationevent'
     redirect_field_name = 'home'
 
+    def delete(self, request, *args, **kwargs):	
+        self.object = self.get_object()	
+        data = {	
+            'message': "Successfully submitted form data.",	
+            'parent_id': self.object.inventory.id,	
+            'parent_type': 'part_type',	
+            'object_type': self.object.get_object_type(),	
+        }	
+        self.object.delete()	
+        return JsonResponse(data)
+
     def get_success_url(self):
         return reverse('inventory:ajax_inventory_detail', args=(self.object.inventory.id,))
 
