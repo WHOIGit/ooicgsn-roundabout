@@ -707,7 +707,7 @@ class CalibrationTableView(GenericSearchTableView):
 class ConfigConstTableView(GenericSearchTableView):
     model = ConfigValue
     table_class = ConfigConstTable
-    query_prefetch = ['config_name','config_event','config_event__inventory','config_event__inventory__part','config_event__user_approver','config_event__draft_approver']
+    query_prefetch = ['config_name','config_event','config_event__inventory','config_event__inventory__part','config_event__user_approver','config_event__user_draft']
 
     @staticmethod
     def get_avail_fields():
