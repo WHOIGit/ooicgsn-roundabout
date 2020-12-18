@@ -152,7 +152,7 @@ var filename;
 
         var uploaded_data = $.csv.toArrays(upload);
 
-        // Skip header and UNRECOVERED lines
+        // Skip  line
         for (var i = 2, len = uploaded_data.length; i < len; i++) {
             var cruise_str = uploaded_data[i];
 	    // Strip off any trailing blanks in cruise name imported data
@@ -242,14 +242,17 @@ var filename;
         for (var i = 1, len = uploaded_data.length; i < len; i++)
         {
             var vessel_str = uploaded_data[i];
-                for (var j = 0, lth = vessel_str.length; j < lth; j++)
+	    // Strip off any trailing blanks in vessel name imported data
+	    vessel_str[2] = vessel_str[2].toString().trim();
+
+            for (var j = 0, lth = vessel_str.length; j < lth; j++)
+            {
+                if (!(exported.includes(vessel_str[j])))
                 {
-                    if (!(exported.includes(vessel_str[j])))
-                    {
-                        console.log("Vessel Export Missing: " + vessel_str +" at index:  "+ j +"  "+ vessel_str[j] );
-                        break;
-                    }
-                } 
+                    console.log("Vessel Export Missing: " + vessel_str +" at index:  "+ j +"  "+ vessel_str[j] );
+                    break;
+                }
+            } 
         }
 
 
