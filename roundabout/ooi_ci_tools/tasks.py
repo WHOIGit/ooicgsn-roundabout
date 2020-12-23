@@ -155,9 +155,8 @@ def parse_cal_files(self):
                             }
                             const_val_sets.append(const_val_set)
         if user_draft.exists():
-            draft_users = user_draft
-            for user in draft_users:
-                csv_event.user_draft.add(user)
+            for draft_user in user_draft:
+                csv_event.user_draft.add(draft_user)
         if len(coeff_val_sets) >= 1:
             for valset in coeff_val_sets:
                 valset['calibration_event'] = csv_event
