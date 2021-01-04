@@ -34,16 +34,21 @@ from roundabout.inventory.models import Inventory, Action
 from roundabout.parts.models import Part
 
 
-def trunc_render(length=100, safe=False, showable=True, target=None):
+def trunc_render(length=100, safe=False, showable=True, targets=None):
     def render_func(value):
 
         if len(value)<=length:
             output_str = value
         else:
+            if targets and isinstance(targets,list): # just use the first match
+                target = [t for t in targets if t.lower() in value.lower()]
+                if target: target=target[0]
+                else: target=None
+            else: target = targets
             if target and target.lower() in value.lower():
-                target_idx = value.lower().index(target.lower())+int(len(target)/2)
-                offset = int(length/2)
-                start_idx,end_idx = target_idx-offset,target_idx+offset
+                target_idx = value.lower().index(target.lower())
+                start_idx,end_idx = target_idx-int(length/2),target_idx+int(length/2)
+                start_idx,end_idx = start_idx+int(len(target)/2), end_idx+int(len(target)/2)
                 if start_idx>0 and end_idx<len(value):
                     shown_txt = value[start_idx:end_idx]
                     start,end = '▴…','…▾'
@@ -53,6 +58,7 @@ def trunc_render(length=100, safe=False, showable=True, target=None):
                 else:
                     shown_txt = value[:length]
                     start,end = '','…▾'
+                # TODO bold found text
             else:
                 start,end = '','…▾'
                 shown_txt = value[:length]
@@ -181,11 +187,9 @@ class AssemblyTable(SearchTable):
 class ActionTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Action
-        fields = ['action_type','user__name','created_at','detail']
+        fields = ['action_type','user__name','created_at']
         base_shown_cols = fields
 
-    def render_detail(self, value):
-        return trunc_render()(value)
 
 
 class CalibrationTable(SearchTable):
