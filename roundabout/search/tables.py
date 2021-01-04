@@ -34,17 +34,28 @@ from roundabout.inventory.models import Inventory, Action
 from roundabout.parts.models import Part
 
 
-def trunc_render(length=100, safe=False, showable=True, targets=None):
+def trunc_render(length=100, safe=False, showable=True, targets=None, bold_target=True):
+    def boldify(text,target):
+        if target and target.lower() in text.lower():
+            target_idx = text.lower().index(target.lower())
+            text = text[:target_idx]+'<strong><em>'+text[target_idx:target_idx+len(target)]+'</em></strong>'+text[target_idx+len(target):]
+            return text
+        else: return text
     def render_func(value):
 
-        if len(value)<=length:
-            output_str = value
+        if targets and isinstance(targets, list):  # just use the first match
+            target = [t for t in targets if t.lower() in value.lower()]
+            if target:
+                target = target[0]
+            else:
+                target = None
         else:
-            if targets and isinstance(targets,list): # just use the first match
-                target = [t for t in targets if t.lower() in value.lower()]
-                if target: target=target[0]
-                else: target=None
-            else: target = targets
+            target = targets
+
+        if len(value)<=length:
+            if bold_target: output_str = boldify(value, target)
+            else: output_str = value
+        else:
             if target and target.lower() in value.lower():
                 target_idx = value.lower().index(target.lower())
                 start_idx,end_idx = target_idx-int(length/2),target_idx+int(length/2)
@@ -58,7 +69,9 @@ def trunc_render(length=100, safe=False, showable=True, targets=None):
                 else:
                     shown_txt = value[:length]
                     start,end = '','…▾'
-                # TODO bold found text
+
+                if bold_target: shown_txt = boldify(shown_txt,target)
+
             else:
                 start,end = '','…▾'
                 shown_txt = value[:length]
@@ -66,6 +79,8 @@ def trunc_render(length=100, safe=False, showable=True, targets=None):
             if showable: # insert some javascript to show truncated text
                 hidden_id = 'trunc{:05}'.format(randint(0,100000))
                 hidden_txt = value # all of it
+                if bold_target:
+                    hidden_txt = boldify(hidden_txt,target)
                 hidden_html = '<div id="{}-full" style="display:none;">{}</div>'.format(hidden_id,hidden_txt)
                 onclick = 'document.getElementById("{id}-full").style.display="inline";document.getElementById("{id}").style.display="none"; return false;'.format(id=hidden_id)
                 a_start = '''<a href="#" onclick='{oc}'>{text}</a>'''.format(oc=onclick,text=start) if start else ''
@@ -74,6 +89,7 @@ def trunc_render(length=100, safe=False, showable=True, targets=None):
                 shown_html = mark_safe(shown_html)
                 hidden_html = mark_safe(hidden_html)
                 output_str = shown_html+hidden_html
+
             else:
                 output_str = start+shown_txt+end
 
