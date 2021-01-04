@@ -251,6 +251,11 @@ await fs.writeFileSync('/tests/cscreen.png', encodedString, 'base64');
         // 4 | click | linkText=Assemblies | 
         await driver.findElement(By.linkText("Assemblies")).click()
 
+   	while ((await driver.findElements(By.linkText("Electrics"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Electrics.");
+	}
         if ((await driver.findElements(By.xpath("//div/div/ul/li[*]/a[text()='Electrics']"))).length != 0) {
             // Expand Revision B and Sewing Template
             var j = 1;
@@ -328,7 +333,11 @@ await fs.writeFileSync('/tests/cscreen.png', encodedString, 'base64');
 
         // Tests defaults on Inventory Items with multiple assemblies - issue #141
         await driver.findElement(By.linkText("Inventory")).click();
-        await new Promise(r => setTimeout(r, 6000));
+	while ((await driver.findElements(By.linkText("Test"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Inventory.");
+	}
         if ((await driver.findElements(By.xpath("//div[2]/ul/li[*]/a[text()='Test']"))).length != 0) {
             // Expand Revision B and Sewing Template
             var j = 1;

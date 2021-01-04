@@ -178,7 +178,11 @@ var password;
         // 21 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
-        await new Promise(r => setTimeout(r, 8000));
+	while ((await driver.findElements(By.css("#div_id_serial_number .ajax-error"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Serial number error.");
+	}
         assert(await driver.findElement(By.css("#div_id_serial_number .ajax-error")).getText() == "Inventory with this Serial number already exists.");
 
     // EDIT INVENTORY TEST
