@@ -34,22 +34,43 @@ from roundabout.inventory.models import Inventory, Action
 from roundabout.parts.models import Part
 
 
-def trunc_render(length=100, safe=False, end='…▾', showable=True): # '…'
+def trunc_render(length=100, safe=False, showable=True, target=None):
     def render_func(value):
-        if len(value)>length:
-            shown_txt = value[:length]
+
+        if len(value)<=length:
+            output_str = value
+        else:
+            if target and target.lower() in value.lower():
+                target_idx = value.lower().index(target.lower())+int(len(target)/2)
+                offset = int(length/2)
+                start_idx,end_idx = target_idx-offset,target_idx+offset
+                if start_idx>0 and end_idx<len(value):
+                    shown_txt = value[start_idx:end_idx]
+                    start,end = '▴…','…▾'
+                elif end_idx > len(value):
+                    shown_txt = value[-length:]
+                    start,end = '▴…',''
+                else:
+                    shown_txt = value[:length]
+                    start,end = '','…▾'
+            else:
+                start,end = '','…▾'
+                shown_txt = value[:length]
+
             if showable: # insert some javascript to show truncated text
                 hidden_id = 'trunc{:05}'.format(randint(0,100000))
                 hidden_txt = value # all of it
                 hidden_html = '<div id="{}-full" style="display:none;">{}</div>'.format(hidden_id,hidden_txt)
                 onclick = 'document.getElementById("{id}-full").style.display="inline";document.getElementById("{id}").style.display="none"; return false;'.format(id=hidden_id)
-                shown_html = '''<div id="{id}">{text}<a href="#" onclick='{oc}'>{end}</a></div>'''.format(id=hidden_id, text=shown_txt, oc=onclick, end=end)
+                a_start = '''<a href="#" onclick='{oc}'>{text}</a>'''.format(oc=onclick,text=start) if start else ''
+                a_end = '''<a href="#" onclick='{oc}'>{text}</a>'''.format(oc=onclick,text=end) if end else ''
+                shown_html = '''<div id="{id}">{a_start}{text}{a_end}</div>'''.format(id=hidden_id, text=shown_txt, oc=onclick, a_start=a_start, a_end=a_end)
                 shown_html = mark_safe(shown_html)
                 hidden_html = mark_safe(hidden_html)
                 output_str = shown_html+hidden_html
             else:
-                output_str = shown_txt+end
-        else: output_str = value
+                output_str = start+shown_txt+end
+
         if safe: output_str = mark_safe(output_str)
         return output_str
     return render_func
