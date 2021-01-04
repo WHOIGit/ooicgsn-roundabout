@@ -18,10 +18,11 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 """
+from random import randint
 
 import django_tables2 as tables
 from django.urls import reverse
-from django.utils.html import format_html
+from django.utils.html import format_html, mark_safe
 from django_tables2.columns import Column, DateColumn, DateTimeColumn, ManyToManyColumn
 from django_tables2_column_shifter.tables import ColumnShiftTable
 
@@ -32,6 +33,26 @@ from roundabout.configs_constants.models import ConfigEvent
 from roundabout.inventory.models import Inventory, Action
 from roundabout.parts.models import Part
 
+
+def trunc_render(length=100, safe=False, end='…▾', showable=True): # '…'
+    def render_func(value):
+        if len(value)>length:
+            shown_txt = value[:length]
+            if showable: # insert some javascript to show truncated text
+                hidden_id = 'trunc{:05}'.format(randint(0,100000))
+                hidden_txt = value # all of it
+                hidden_html = '<div id="{}-full" style="display:none;">{}</div>'.format(hidden_id,hidden_txt)
+                onclick = 'document.getElementById("{id}-full").style.display="inline";document.getElementById("{id}").style.display="none"; return false;'.format(id=hidden_id)
+                shown_html = '''<div id="{id}">{text}<a href="#" onclick='{oc}'>{end}</a></div>'''.format(id=hidden_id, text=shown_txt, oc=onclick, end=end)
+                shown_html = mark_safe(shown_html)
+                hidden_html = mark_safe(hidden_html)
+                output_str = shown_html+hidden_html
+            else:
+                output_str = shown_txt+end
+        else: output_str = value
+        if safe: output_str = mark_safe(output_str)
+        return output_str
+    return render_func
 
 class UDF_Column(ManyToManyColumn):
     prefix = 'udf-'
@@ -142,6 +163,9 @@ class ActionTable(SearchTable):
         fields = ['action_type','user__name','created_at','detail']
         base_shown_cols = fields
 
+    def render_detail(self, value):
+        return trunc_render()(value)
+
 
 class CalibrationTable(SearchTable):
     class Meta(SearchTable.Meta):
@@ -162,7 +186,7 @@ class CalibrationTable(SearchTable):
     coefficient_value_set__names = ManyToManyColumn(verbose_name='Coefficient Names',
             accessor='coefficient_value_sets', transform=lambda x: x.coefficient_name)
     coefficient_value_set__notes = ManyToManyColumn(verbose_name='Coefficient Notes',
-            accessor='coefficient_value_sets', transform=lambda x: format_html('<b>{}:</b> [{}]<br>'.format(x.coefficient_name,x.notes)) if x.notes else '', separator='\n')
+            accessor='coefficient_value_sets', transform=lambda x: format_html('<b>{}:</b> [{}]<br>'.format(x.coefficient_name,trunc_render()(x.notes))) if x.notes else '', separator='\n')
 
     detail = Column(verbose_name='CalibrationEvent Note', accessor='detail')
     created_at = DateTimeColumn(verbose_name='Date Entered', accessor='created_at', format='Y-m-d H:i')
@@ -188,7 +212,7 @@ class ConfigConstTable(SearchTable):
     config_values__names = ManyToManyColumn(verbose_name='Config/Constant Names',
             accessor='config_values', transform=lambda x: x.config_name)
     config_values__notes = ManyToManyColumn(verbose_name='Config/Constant Notes',
-            accessor='config_values', transform=lambda x: format_html('<b>{}:</b> [{}]<br>'.format(x.config_name,x.notes)) if x.notes else '', separator='\n')
+            accessor='config_values', transform=lambda x: format_html('<b>{}:</b> [{}]<br>'.format(x.config_name,trunc_render()(x.notes))) if x.notes else '', separator='\n')
 
     detail = Column(verbose_name='ConfigEvent Note', accessor='detail')
     created_at = DateTimeColumn(verbose_name='Date Entered', accessor='created_at', format='Y-m-d H:i')
