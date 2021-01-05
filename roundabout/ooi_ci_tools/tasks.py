@@ -50,7 +50,7 @@ def parse_cal_files(self):
     counter = 0
     for cal_csv in csv_files:
         counter+=1
-        self.update_state(state='PROGRESS', meta = {'progress': counter, 'total': len(cal_csv)})
+        self.update_state(state='PROGRESS', meta = {'progress': counter, 'total': len(csv_files)})
         cal_csv_filename = cal_csv.name[:-4]
         cal_csv.seek(0)
         reader = csv.DictReader(io.StringIO(cal_csv.read().decode('utf-8')))
