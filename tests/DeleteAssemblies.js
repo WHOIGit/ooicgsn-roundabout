@@ -85,29 +85,6 @@ var password;
 
         // DELETE ASSEMBLIES TEST
 
-        // Delete Assembly Type
-        // 10 | click | id=navbarTemplates |
-        await driver.findElement(By.id("navbarTemplates")).click();
-        await driver.findElement(By.id("navbarAdmintools")).click();
-        // 5 | click | linkText=Test |
-        await driver.findElement(By.linkText("Edit Assembly Types")).click();
-
-        if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Electric']"))).length != 0) {
-            var i = 1;
-            while (true) {
-                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Electric") {
-                    break;
-                }
-                i++;
-            }
-
-            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
-            // 6 | click | css=.btn-danger | 
-            await driver.findElement(By.css(".btn-danger")).click();
-        }
-        else
-            console.log("Delete Assemblies failed: Electric type not found");
-
        // Searches for and deletes the Assemblies added during the Add and Update Assemblies Test
 	while ((await driver.findElements(By.id("searchbar-query"))).length == 0) // 1.6
 	{
@@ -247,6 +224,28 @@ var password;
 	}
 	else
 	    console.log("Delete Assemblies failed: Singer not found");
+
+        // Delete Assembly Type
+        // 10 | click | id=navbarTemplates |
+        await driver.findElement(By.id("navbarTemplates")).click();
+        await driver.findElement(By.id("navbarAdmintools")).click();
+        // 5 | click | linkText=Test |
+        await driver.findElement(By.linkText("Edit Assembly Types")).click();
+
+        if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Electric']"))).length != 0) {
+            var i = 1;
+            while (true) {
+                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Electric") {
+                    break;
+                }
+                i++;
+            }
+            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
+            // 6 | click | css=.btn-danger | 
+            await driver.findElement(By.css(".btn-danger")).click();
+        }
+        else
+            console.log("Delete Assemblies failed: Electric type not found");
 
 
         // Close browser window
