@@ -15,7 +15,7 @@ var user;
 var password;
 
 
-(async function addBuilds() {
+(async function constantsConfigs() {
 
     let chromeCapabilities = Capabilities.chrome();
     var firefoxOptions = new firefox.Options();
@@ -251,6 +251,11 @@ await fs.writeFileSync('/tests/cscreen.png', encodedString, 'base64');
         // 4 | click | linkText=Assemblies | 
         await driver.findElement(By.linkText("Assemblies")).click()
 
+   	while ((await driver.findElements(By.linkText("Electrics"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Electrics.");
+	}
         if ((await driver.findElements(By.xpath("//div/div/ul/li[*]/a[text()='Electrics']"))).length != 0) {
             // Expand Revision B and Sewing Template
             var j = 1;
@@ -328,7 +333,11 @@ await fs.writeFileSync('/tests/cscreen.png', encodedString, 'base64');
 
         // Tests defaults on Inventory Items with multiple assemblies - issue #141
         await driver.findElement(By.linkText("Inventory")).click();
-        await new Promise(r => setTimeout(r, 6000));
+	while ((await driver.findElements(By.linkText("Test"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Inventory.");
+	}
         if ((await driver.findElements(By.xpath("//div[2]/ul/li[*]/a[text()='Test']"))).length != 0) {
             // Expand Revision B and Sewing Template
             var j = 1;
@@ -430,7 +439,7 @@ await fs.writeFileSync('/tests/cscreen.png', encodedString, 'base64');
         //Create Constant Value (on a Deployed Build) and Search for Name, Value, Date, Reviewers, Approval Flag
         await driver.findElement(By.id("action")).click()
         await driver.findElement(By.id("add_const_action")).click()
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.id("id_deployment")).sendKeys("7 - Test");
         // 9 | addSelection | id=id_user_draft | label=admin
         {
