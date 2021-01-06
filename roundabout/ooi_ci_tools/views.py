@@ -302,23 +302,48 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
 
                 print(build)
                 print(deployment_obj)
-                # Create Build Action records for deployment
-                build.is_deployed = True
-                build.save()
-                deploy_actions = [Action.STARTDEPLOYMENT, Action.DEPLOYMENTBURNIN, Action.DEPLOYMENTTOFIELD]
-                for action in deploy_actions:
-                    _create_action_history(build, action, self.request.user, '', '', dep_start_date)
+                # _create_action_history function won't work correctly for back-dated Build Deployments,
+                # need to add history Actions manually
+                build_deployment_actions = [
+                    Action.STARTDEPLOYMENT,
+                    Action.DEPLOYMENTBURNIN,
+                    Action.DEPLOYMENTTOFIELD,
+                    Action.DEPLOYMENTRECOVER,
+                    Action.DEPLOYMENTRETIRE,
+                ]
 
-                if dep_end_date:
-                    build.is_deployed = False
-                    build.save()
-                    deployment_obj.deployment_recovery_date = dep_end_date
-                    deployment_obj.deployment_retire_date = dep_end_date
-                    deployment_obj.save()
+                for action in build_deployment_actions:
+                    if action == Action.STARTDEPLOYMENT:
+                        action_date = dep_start_date
+                        detail = '%s %s started.' % (labels['label_deployments_app_singular'], deployment_obj)
 
-                    recover_actions = [Action.DEPLOYMENTRECOVER, Action.DEPLOYMENTRETIRE]
-                    for action in recover_actions:
-                        _create_action_history(build, action, self.request.user, '', '', dep_end_date)
+                    elif action == Action.DEPLOYMENTBURNIN:
+                        action_date = dep_start_date
+                        detail = '%s %s burn in.' % (labels['label_deployments_app_singular'], deployment_obj)
+
+                    elif action == Action.DEPLOYMENTTOFIELD:
+                        action_date = dep_start_date
+                        detail = 'Deployed to field on %s. Cruise: %s' % (deployment_obj, cruise_deployed)
+
+                    elif action == Action.DEPLOYMENTRECOVER and dep_end_date:
+                        action_date = dep_end_date
+                        detail = 'Recovered from %s. Cruise: %s' % (deployment_obj, cruise_recovered)
+
+                    elif action == Action.DEPLOYMENTRETIRE and dep_end_date:
+                        action_date = dep_end_date
+                        detail = '%s %s ended for this %s.' % (labels['label_deployments_app_singular'], deployment_obj, labels['label_inventory_app_singular'])
+
+                    action = Action.objects.create(
+                        action_type = action,
+                        object_type = Action.BUILD,
+                        created_at = action_date,
+                        build = build,
+                        location = deployed_location,
+                        deployment = deployment_obj,
+                        deployment_type = Action.BUILD_DEPLOYMENT,
+                        user = self.request.user,
+                        detail = detail,
+                    )
 
                 for row in deployment_import['rows']:
                     # create InventoryDeployments for each item
@@ -365,7 +390,6 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                                 'deployment_retire_date': dep_end_date,
                                 'cruise_deployed': cruise_deployed,
                                 'cruise_recovered': cruise_recovered,
-                                #'item_depth': depth,
                             },
                         )
 
