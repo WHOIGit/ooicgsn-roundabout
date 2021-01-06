@@ -218,6 +218,8 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
             'location_name',
             'location_url',
             'current_status',
+            'latitude',
+            'longitude',
             'assembly_parts',
         ]
 
@@ -317,6 +319,8 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
                 'parent_assembly_part_id': parent_assembly_part_id,
                 'inventory_url': inventory_url,
                 'inventory_serial_number': inv.inventory.serial_number,
+                'deployment_to_field_date': inv.deployment_to_field_date,
+                'deployment_recovery_date': inv.deployment_recovery_date,
                 'configuration_values': configuration_values,
                 'calibration_values': calibration_values,
                 'constant_default_values': constant_default_values,
