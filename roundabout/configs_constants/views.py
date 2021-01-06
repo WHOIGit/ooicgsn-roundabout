@@ -38,7 +38,8 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.forms.models import inlineformset_factory, BaseInlineFormSet
 from roundabout.inventory.utils import _create_action_history
-from roundabout.calibrations.utils import handle_reviewers, check_events
+from roundabout.calibrations.utils import handle_reviewers
+from roundabout.calibrations.tasks import check_events
 
 # Handles creation of Configuration / Constant Events, along with Name/Value formsets
 class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
@@ -463,7 +464,7 @@ class EventConfigNameUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFor
         part_confname_form.save()
         part_conf_copy_form.save()
         _create_action_history(self.object, Action.UPDATE, self.request.user)
-        check_events()
+        job = check_events.delay()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -529,7 +530,7 @@ class EventConfigNameDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteV
             'object_type': self.object.get_object_type(),
         }
         self.object.delete()
-        check_events()
+        job = check_events.delay()
         return JsonResponse(data)
 
     def get_success_url(self):

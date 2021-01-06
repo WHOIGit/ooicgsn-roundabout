@@ -41,7 +41,11 @@ class DeploymentViewSet(FlexModelViewSet):
 
 
 class DeploymentOmsCustomViewSet(FlexModelViewSet):
-    queryset = Deployment.objects.all()
     serializer_class = DeploymentOmsCustomSerializer
     permission_classes = (IsAuthenticated,)
     filterset_class = DeploymentOmsCustomFilter
+
+    def get_queryset(self):
+        queryset = Deployment.objects.all().prefetch_related('inventory_deployments')
+        queryset = queryset.prefetch_related('inventory_deployments').select_related('build')
+        return queryset
