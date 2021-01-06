@@ -357,11 +357,9 @@ def validate_cal_files(csv_files,ext_files):
                             calibration_name = calibration_name,
                             coeff_name_event =  inventory_item.part.coefficient_name_events.first()
                         )
-                    except:
-                        raise ValidationError(
-                            _('File: %(filename)s, Calibration Name: %(value)s, Row %(row)s: Unable to find Calibration item with this Name'),
-                            params={'value': calibration_name, 'row': idx, 'filename': cal_csv.name},
-                        )
+                    except CoefficientName.DoesNotExist:
+                        calname_keys = {'value_set_type': 'sl'}
+                        cal_name_item = SimpleNamespace(**calname_keys)
                 elif key == 'value':
                     valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
                     mock_valset_instance = SimpleNamespace(**valset_keys)
@@ -374,8 +372,10 @@ def validate_cal_files(csv_files,ext_files):
                         )
                     if '[' in raw_valset:
                         raw_valset = raw_valset[1:-1]
+                        cal_name_item.value_set_type = '1d'
                     if 'SheetRef' in raw_valset:
                         ext_finder_filename = "__".join((cal_csv_filename,calibration_name))
+                        cal_name_item.value_set_type = '2d'
                         try:
                             ref_file = [file for file in ext_files if ext_finder_filename in file.name][0]
                             assert len(ref_file) > 0
