@@ -153,6 +153,11 @@ class ImportVesselsForm(forms.Form):
                         _('File: %(filename)s, %(v_name)s: More than one Vessel associated with CSV Vessel Name'),
                         params={'filename': filename, 'v_name': vessel_name},
                     )
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse Vessel Name'),
+                        params={'filename': filename},
+                    )
                 MMSI_number = None
                 IMO_number = None
                 length = None
