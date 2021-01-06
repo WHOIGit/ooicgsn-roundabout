@@ -202,7 +202,7 @@ var password;
         var exported_data = $.csv.toArrays(csv);
  
 	var found = false;	
-        for (var i = 2, len = exported_data.length; i < len; i++) {
+        for (var i = 1, len = exported_data.length; i < len; i++) {
 	  if (exported_data[i][2] == "Maui Princess") {
            if ((exported_data[i][0] == "MS") &&
                (exported_data[i][1] == "MP") &&
@@ -239,7 +239,7 @@ var password;
         exported_data = $.csv.toArrays(csv);
 
 	found = false;	
-        for (var i = 2, len = exported_data.length; i < len; i++) {
+        for (var i = 1, len = exported_data.length; i < len; i++) {
 	  if (exported_data[i][1] == "Maui Princess") {
             if ((exported_data[i][0] == "MAUI") &&
                 (exported_data[i][1] == "Maui Princess") &&

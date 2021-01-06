@@ -432,7 +432,7 @@ var password;
            assert(bodyText.includes(newDate));
         }
 	catch (AssertionError) {
-           console.log("Possible Error: Expecting Inventory Deployment To Field Date:  "+ newDate);
+           console.log("Possible Error: Expecting Inventory Deployment (2 Days Prior) To Field Date:  "+ newDate);
         }
         
         // Remove sewing Inventory from Build
@@ -509,8 +509,12 @@ var password;
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Id_date.");
 	}
+
         var ele = await driver.findElement(By.xpath("//input[@id='id_date']"));
         var dateString = await ele.getAttribute("value");
+	// Recovery screen date format is 01/05/2021 03:06, trim leading zeroes and time
+	dateString = dateString.replace(/\b0/g, '');
+	dateString = dateString.split(" ")[0];
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
         // Verify Total Time in Field and Current Deployment Time in Field: 0 days 0 hours
@@ -551,7 +555,7 @@ var password;
             assert(bodyText.includes(dateString));
         }
         catch (AssertionError) {
-            console.log("Possible Error: Expecting Inventory Deployment To Field Date:  " + dateString);
+            console.log("Possible Error: Expecting Inventory Deployment (1 Day Prior) To Field Date:  " + dateString);
         }
 
         // Close browser window
