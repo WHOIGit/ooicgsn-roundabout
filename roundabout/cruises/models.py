@@ -50,6 +50,22 @@ class Vessel(models.Model):
     def full_vessel_name(self):
         return f'{self.vessel_designation} {self.vessel_name}'.strip()
 
+class VesselDocument(models.Model):
+    DOC_TYPES = (
+        ('website', 'Website'),
+        ('document', 'Document'),
+    )
+    name = models.CharField(max_length=255, unique=False)
+    doc_type = models.CharField(max_length=20, choices=DOC_TYPES)
+    doc_link = models.CharField(max_length=1000)
+    vessel = models.ForeignKey(Vessel, related_name='documents',
+                 on_delete=models.CASCADE, null=False, blank=False)
+
+    class Meta:
+        ordering = ['doc_type', 'name']
+
+    def __str__(self):
+        return self.name
 
 class Cruise(models.Model):
     CUID = models.CharField(max_length=20)

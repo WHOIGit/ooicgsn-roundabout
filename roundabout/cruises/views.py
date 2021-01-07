@@ -27,7 +27,7 @@ from django.views.generic import View, DetailView, ListView, UpdateView, CreateV
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 from .models import *
-from .forms import VesselForm, CruiseForm
+from .forms import VesselForm, CruiseForm, VesselDocumentFormset
 from roundabout.inventory.models import Action
 from common.util.mixins import AjaxFormMixin
 
@@ -226,6 +226,35 @@ class VesselCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     permission_required = 'cruises.add_vessel'
     redirect_field_name = 'home'
 
+    def get(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        documents_form = VesselDocumentFormset(instance=self.object)
+        return self.render_to_response(self.get_context_data(form=form, documents_form=documents_form))
+
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        documents_form = VesselDocumentFormset(self.request.POST, instance=self.object)
+
+        if form.is_valid() and documents_form.is_valid():
+            return self.form_valid(form,documents_form)
+        return self.form_invalid(form,documents_form)
+
+    def form_valid(self, vessel_form, doc_formset):
+        vessel = vessel_form.save()
+        for doc_form in doc_formset:
+            doc = doc_form.save(commit=False)
+            doc.vessel = vessel
+            doc.save()
+        return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, vessel_form, doc_formset):
+        form_errors = doc_formset.errors
+        return self.render_to_response(self.get_context_data(form=vessel_form, documents_form=doc_formset, form_errors=form_errors))
+
     def get_success_url(self):
         return reverse('cruises:vessels_home', )
 
@@ -235,6 +264,35 @@ class VesselUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     context_object_name = 'vessel'
     permission_required = 'cruises.change_vessel'
     redirect_field_name = 'home'
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        documents_form = VesselDocumentFormset(instance=self.object)
+        return self.render_to_response(self.get_context_data(form=form, documents_form=documents_form))
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        documents_form = VesselDocumentFormset(self.request.POST, instance=self.object)
+
+        if form.is_valid() and documents_form.is_valid():
+            return self.form_valid(form,documents_form)
+        return self.form_invalid(form,documents_form)
+
+    def form_valid(self, vessel_form, doc_formset):
+        vessel = vessel_form.save()
+        for doc_form in doc_formset:
+            doc = doc_form.save(commit=False)
+            doc.vessel = vessel
+            doc.save()
+        return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, vessel_form, doc_formset):
+        form_errors = doc_formset.errors
+        return self.render_to_response(self.get_context_data(form=vessel_form, documents_form=doc_formset, form_errors=form_errors))
 
     def get_success_url(self):
         return reverse('cruises:vessels_home', )

@@ -21,13 +21,12 @@
 
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
-
 {% block title %}Vessel - {{ vessel.vessel_name }}{% endblock %}
 
 {% block content %}
 <div class="container">
   <h1>{% if vessel %} Edit {{ vessel.vessel_name }} {% else %} Add Vessel {% endif %}</h1>
-  <form class="form-horizontal" method="post" action="" novalidate>
+  <form id="vessel-form" class="form-horizontal" method="post" action="" novalidate>
     {% csrf_token %}
     {{ form|crispy }}
 
@@ -46,8 +45,40 @@
                 </div>
             {% endfor %}
         {% endif %}
+    </div>
 
+    <div class="col-md-12">
+      <table class="table table-tight">
+        <thead>
+          <th>Document</th>
+          <th class="text-right">Document Type</th>
+          <th class="text-right">Link</th>
+        </thead>
+        <tbody>
+          {{ documents_form.management_form }}
 
+          {% if documents_form.errors %}
+          <tr>
+            <div class="alert alert-danger">
+            {% for dict in documents_form.errors %}
+                {% for error in dict.values %}
+                  {{ error|escape }}
+                {% endfor %}
+            {% endfor %}
+            </div>
+          </tr>
+         {% endif %}
+
+          {% for doc in documents_form %}
+
+            <tr>
+                <td>{% if doc.id  %}{{ doc.DELETE }}{% endif %} {{ doc.id }} {{ doc.name }}</td>
+                <td class="text-right">{{ doc.doc_type }}</td>
+                <td class="text-right">{{ doc.doc_link }} </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
 
     <div class="control-group">
@@ -65,3 +96,18 @@
   </form>
 </div>
 {% endblock %}
+
+{% block javascript %}
+<script type="text/javascript">
+
+  $(document).ready(function() {
+
+    $('#vessel-form tbody tr').formset({
+        prefix: 'documents', // <-- Needs to match the Django related_name for the models
+        addText: 'add document',
+        deleteText: 'remove',
+    });
+
+});
+</script>
+{% endblock javascript %}

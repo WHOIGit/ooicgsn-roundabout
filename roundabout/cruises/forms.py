@@ -54,6 +54,8 @@ class VesselForm(forms.ModelForm):
             },
         }
 
+VesselDocumentFormset = forms.models.inlineformset_factory(Vessel, VesselDocument, fields=('name', 'doc_type', 'doc_link'), extra=1, can_delete=True)
+
 
 class CruiseForm(forms.ModelForm):
     # Add custom date fields

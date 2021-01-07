@@ -50,6 +50,7 @@
         <th>Active</th>
         <th>R2R</th>
         <th>Notes</th>
+        <th>Documents</th>
 
         <th>&nbsp;</th>
 
@@ -73,6 +74,16 @@
               <td>{% if vessel.get_active_display %}{{ vessel.get_active_display }}{% endif %}</td>
               <td>{% if vessel.get_R2R_display %}{{ vessel.get_R2R_display  }}{% endif %}</td>
               <td>{{ vessel.notes  }}</td>
+
+              <th>
+                {% if vessel.documents %}
+                  <ul>
+                  {% for doc in vessel.documents.all %}
+                    <li><a href="{{ doc.doc_link }}">{{ doc.name }}</a></li>
+                  {% endfor %}
+                  </ul>
+                {% endif %}
+              </th>
 
               <td class="text-right action-col">
                   <a href="{% url 'cruises:vessels_update' vessel.id %}" role="button" class="btn btn-primary btn-sm">Edit</a>
