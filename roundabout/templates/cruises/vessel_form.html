@@ -50,17 +50,16 @@
     <div class="col-md-12">
       <table class="table table-tight">
         <thead>
-          <th>Document</th>
-          <th class="text-right">Document Type</th>
-          <th class="text-right">Link</th>
+          <th>Hyperlink Text</th>
+          <th>URL</th>
         </thead>
         <tbody>
-          {{ documents_form.management_form }}
+          {{ link_formset.management_form }}
 
-          {% if documents_form.errors %}
+          {% if link_formset.errors %}
           <tr>
             <div class="alert alert-danger">
-            {% for dict in documents_form.errors %}
+            {% for dict in link_formset.errors %}
                 {% for error in dict.values %}
                   {{ error|escape }}
                 {% endfor %}
@@ -69,12 +68,10 @@
           </tr>
          {% endif %}
 
-          {% for doc in documents_form %}
-
+          {% for link in link_formset %}
             <tr>
-                <td>{% if doc.id  %}{{ doc.DELETE }}{% endif %} {{ doc.id }} {{ doc.name }}</td>
-                <td class="text-right">{{ doc.doc_type }}</td>
-                <td class="text-right">{{ doc.doc_link }} </td>
+                <td>{% if link.id  %}{{ link.DELETE }}{% endif %} {{ link.id }} {{ link.text }}</td>
+                <td>{{ link.url }} </td>
             </tr>
           {% endfor %}
         </tbody>
@@ -103,7 +100,7 @@
   $(document).ready(function() {
 
     $('#vessel-form tbody tr').formset({
-        prefix: 'documents', // <-- Needs to match the Django related_name for the models
+        prefix: 'hyperlinks', // <-- Needs to match the Django related_name for the models
         addText: 'add document',
         deleteText: 'remove',
     });

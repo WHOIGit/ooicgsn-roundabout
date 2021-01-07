@@ -76,10 +76,10 @@
               <td>{{ vessel.notes  }}</td>
 
               <th>
-                {% if vessel.documents %}
+                {% if vessel.hyperlinks %}
                   <ul>
-                  {% for doc in vessel.documents.all %}
-                    <li><a href="{{ doc.doc_link }}">{{ doc.name }}</a></li>
+                  {% for link in vessel.hyperlinks.all %}
+                    <li><a href="{{ link.url }}">{{ link.text }}</a></li>
                   {% endfor %}
                   </ul>
                 {% endif %}

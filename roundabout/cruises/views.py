@@ -27,7 +27,7 @@ from django.views.generic import View, DetailView, ListView, UpdateView, CreateV
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 from .models import *
-from .forms import VesselForm, CruiseForm, VesselDocumentFormset
+from .forms import VesselForm, CruiseForm, VesselHyperlinkFormset
 from roundabout.inventory.models import Action
 from common.util.mixins import AjaxFormMixin
 
@@ -230,30 +230,30 @@ class VesselCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        documents_form = VesselDocumentFormset(instance=self.object)
-        return self.render_to_response(self.get_context_data(form=form, documents_form=documents_form))
+        link_formset = VesselHyperlinkFormset(instance=self.object)
+        return self.render_to_response(self.get_context_data(form=form, link_formset=link_formset))
 
     def post(self, request, *args, **kwargs):
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        documents_form = VesselDocumentFormset(self.request.POST, instance=self.object)
+        link_formset = VesselHyperlinkFormset(self.request.POST, instance=self.object)
 
-        if form.is_valid() and documents_form.is_valid():
-            return self.form_valid(form,documents_form)
-        return self.form_invalid(form,documents_form)
+        if form.is_valid() and link_formset.is_valid():
+            return self.form_valid(form,link_formset)
+        return self.form_invalid(form,link_formset)
 
-    def form_valid(self, vessel_form, doc_formset):
+    def form_valid(self, vessel_form, link_formset):
         vessel = vessel_form.save()
-        for doc_form in doc_formset:
-            doc = doc_form.save(commit=False)
-            doc.vessel = vessel
-            doc.save()
+        for link_form in link_formset:
+            link = link_form.save(commit=False)
+            link.vessel = vessel
+            link.save()
         return HttpResponseRedirect(self.get_success_url())
 
-    def form_invalid(self, vessel_form, doc_formset):
-        form_errors = doc_formset.errors
-        return self.render_to_response(self.get_context_data(form=vessel_form, documents_form=doc_formset, form_errors=form_errors))
+    def form_invalid(self, vessel_form, link_formset):
+        form_errors = link_formset.errors
+        return self.render_to_response(self.get_context_data(form=vessel_form, link_formset=link_formset, form_errors=form_errors))
 
     def get_success_url(self):
         return reverse('cruises:vessels_home', )
@@ -269,30 +269,30 @@ class VesselUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
         self.object = self.get_object()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        documents_form = VesselDocumentFormset(instance=self.object)
-        return self.render_to_response(self.get_context_data(form=form, documents_form=documents_form))
+        link_formset = VesselHyperlinkFormset(instance=self.object)
+        return self.render_to_response(self.get_context_data(form=form, link_formset=link_formset))
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        documents_form = VesselDocumentFormset(self.request.POST, instance=self.object)
+        link_formset = VesselHyperlinkFormset(self.request.POST, instance=self.object)
 
-        if form.is_valid() and documents_form.is_valid():
-            return self.form_valid(form,documents_form)
-        return self.form_invalid(form,documents_form)
+        if form.is_valid() and link_formset.is_valid():
+            return self.form_valid(form,link_formset)
+        return self.form_invalid(form,link_formset)
 
-    def form_valid(self, vessel_form, doc_formset):
+    def form_valid(self, vessel_form, link_formset):
         vessel = vessel_form.save()
-        for doc_form in doc_formset:
-            doc = doc_form.save(commit=False)
-            doc.vessel = vessel
-            doc.save()
+        for link_form in link_formset:
+            link = link_form.save(commit=False)
+            link.vessel = vessel
+            link.save()
         return HttpResponseRedirect(self.get_success_url())
 
-    def form_invalid(self, vessel_form, doc_formset):
-        form_errors = doc_formset.errors
-        return self.render_to_response(self.get_context_data(form=vessel_form, documents_form=doc_formset, form_errors=form_errors))
+    def form_invalid(self, vessel_form, link_formset):
+        form_errors = link_formset.errors
+        return self.render_to_response(self.get_context_data(form=vessel_form, link_formset=link_formset, form_errors=form_errors))
 
     def get_success_url(self):
         return reverse('cruises:vessels_home', )
