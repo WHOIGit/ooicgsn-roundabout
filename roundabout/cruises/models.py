@@ -79,3 +79,12 @@ class Cruise(models.Model):
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
         return 'cruises'
+
+class CruiseHyperlink(models.Model):
+    text = models.CharField(max_length=255, unique=False)
+    url = models.CharField(max_length=1000)
+    parent = models.ForeignKey(Cruise, related_name='hyperlinks',
+                 on_delete=models.CASCADE, null=False, blank=False)
+
+    class Meta: ordering = ['text']
+    def __str__(self): return self.text

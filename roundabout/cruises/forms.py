@@ -86,3 +86,5 @@ class CruiseForm(forms.ModelForm):
     class Meta:
         model = Cruise
         fields = '__all__'
+
+CruiseHyperlinkFormset = forms.models.inlineformset_factory(Cruise, CruiseHyperlink, fields=('text', 'url'), extra=1, can_delete=True)

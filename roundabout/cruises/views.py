@@ -27,7 +27,7 @@ from django.views.generic import View, DetailView, ListView, UpdateView, CreateV
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 from .models import *
-from .forms import VesselForm, CruiseForm, VesselHyperlinkFormset
+from .forms import VesselForm, CruiseForm, VesselHyperlinkFormset, CruiseHyperlinkFormset
 from roundabout.inventory.models import Action
 from common.util.mixins import AjaxFormMixin
 
@@ -144,21 +144,50 @@ class CruiseAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
     context_object_name = 'cruise'
     template_name='cruises/ajax_cruise_form.html'
 
-    def form_valid(self, form):
+    def get(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        link_formset = CruiseHyperlinkFormset(instance=self.object)
+        return self.render_to_response(self.get_context_data(form=form, link_formset=link_formset))
+
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        link_formset = CruiseHyperlinkFormset(self.request.POST, instance=self.object)
+
+        if form.is_valid() and link_formset.is_valid():
+            return self.form_valid(form,link_formset)
+        return self.form_invalid(form,link_formset)
+
+    def form_valid(self, form, formset):
         self.object = form.save()
-        response = HttpResponseRedirect(self.get_success_url())
+        for link_form in formset:
+            link = link_form.save(commit=False)
+            link.parent = self.object
+            link.save()
 
         if self.request.is_ajax():
             print(form.cleaned_data)
             data = {
-                'message': "Successfully submitted form data.",
-                'object_id': self.object.id,
+                'message':     "Successfully submitted form data.",
+                'object_id':   self.object.id,
                 'object_type': self.object.get_object_type(),
                 'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
-            return response
+            return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, form, formset):
+        formset_errors = formset.errors
+
+        if self.request.is_ajax():
+            data = form.errors
+            return JsonResponse(data, status=400)
+        else:
+            return self.render_to_response(self.get_context_data(form=form, link_formset=formset, form_errors=formset_errors))
 
     def get_success_url(self):
         return reverse('cruises:ajax_cruises_detail', args=(self.object.id,))
@@ -171,21 +200,50 @@ class CruiseAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
     context_object_name = 'cruise'
     template_name='cruises/ajax_cruise_form.html'
 
-    def form_valid(self, form):
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        link_formset = CruiseHyperlinkFormset(instance=self.object)
+        return self.render_to_response(self.get_context_data(form=form, link_formset=link_formset))
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        link_formset = CruiseHyperlinkFormset(self.request.POST, instance=self.object)
+
+        if form.is_valid() and link_formset.is_valid():
+            return self.form_valid(form,link_formset)
+        return self.form_invalid(form,link_formset)
+
+    def form_valid(self, form, formset):
         self.object = form.save()
-        response = HttpResponseRedirect(self.get_success_url())
+        for link_form in formset:
+            link = link_form.save(commit=False)
+            link.parent = self.object
+            link.save()
 
         if self.request.is_ajax():
             print(form.cleaned_data)
             data = {
-                'message': "Successfully submitted form data.",
-                'object_id': self.object.id,
+                'message':     "Successfully submitted form data.",
+                'object_id':   self.object.id,
                 'object_type': self.object.get_object_type(),
                 'detail_path': self.get_success_url(),
             }
             return JsonResponse(data)
         else:
-            return response
+            return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, form, formset):
+        formset_errors = formset.errors
+
+        if self.request.is_ajax():
+            data = form.errors
+            return JsonResponse(data, status=400)
+        else:
+            return self.render_to_response(self.get_context_data(form=form, link_formset=formset, form_errors=formset_errors))
 
     def get_success_url(self):
         return reverse('cruises:ajax_cruises_detail', args=(self.object.id,))
@@ -243,17 +301,17 @@ class VesselCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
             return self.form_valid(form,link_formset)
         return self.form_invalid(form,link_formset)
 
-    def form_valid(self, vessel_form, link_formset):
-        vessel = vessel_form.save()
-        for link_form in link_formset:
+    def form_valid(self, form, formset):
+        vessel = form.save()
+        for link_form in formset:
             link = link_form.save(commit=False)
             link.vessel = vessel
             link.save()
         return HttpResponseRedirect(self.get_success_url())
 
-    def form_invalid(self, vessel_form, link_formset):
-        form_errors = link_formset.errors
-        return self.render_to_response(self.get_context_data(form=vessel_form, link_formset=link_formset, form_errors=form_errors))
+    def form_invalid(self, form, formset):
+        formset_errors = formset.errors
+        return self.render_to_response(self.get_context_data(form=form, link_formset=formset, form_errors=formset_errors))
 
     def get_success_url(self):
         return reverse('cruises:vessels_home', )
