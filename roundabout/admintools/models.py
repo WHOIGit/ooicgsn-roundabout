@@ -20,9 +20,9 @@
 """
 
 from django.db import models
+from django.db.models import JSONField
 from django.utils import timezone
 from mptt.models import MPTTModel, TreeForeignKey
-from django.contrib.postgres.fields import JSONField
 
 from roundabout.assemblies.models import AssemblyType
 from roundabout.parts.models import Part

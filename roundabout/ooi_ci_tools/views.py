@@ -216,6 +216,9 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                 deployment = next((deployment for deployment in deployment_imports if deployment['mooring.uid'] == row['mooring.uid']), False)
                 deployment['rows'].append(row)
 
+            # need to keep a list of Inventory that is created to check in future loops
+            inventory_created = []
+            # loop through the Deployments
             for deployment_import in deployment_imports:
                 # get the Assembly template for this Build, needs to be only one match
                 try:
@@ -274,7 +277,15 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
 
                 # Call the function to create an initial Action history
                 if build_created:
-                    _create_action_history(build, Action.ADD, self.request.user, '', '', dep_start_date)
+                    action = Action.objects.create(
+                        action_type = Action.ADD,
+                        object_type = Action.BUILD,
+                        created_at = dep_start_date,
+                        build = build,
+                        location = deployed_location,
+                        user = self.request.user,
+                        detail = f'{Action.BUILD} first added to RDB',
+                    )
 
                 # Update/Create Deployment for this Build
                 deployment_obj, deployment_created = Deployment.objects.update_or_create(
@@ -284,8 +295,8 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                         'deployment_start_date': dep_start_date,
                         'deployment_burnin_date': dep_start_date,
                         'deployment_to_field_date': dep_start_date,
-                        'deployment_recovery_date': None,
-                        'deployment_retire_date': None,
+                        'deployment_recovery_date': dep_end_date,
+                        'deployment_retire_date': dep_end_date,
                         'deployed_location': deployed_location,
                         'cruise_deployed': cruise_deployed,
                         'cruise_recovered': cruise_recovered,
@@ -313,37 +324,44 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                 ]
 
                 for action in build_deployment_actions:
+                    create_action = False
                     if action == Action.STARTDEPLOYMENT:
+                        create_action = True
                         action_date = dep_start_date
                         detail = '%s %s started.' % (labels['label_deployments_app_singular'], deployment_obj)
 
                     elif action == Action.DEPLOYMENTBURNIN:
+                        create_action = True
                         action_date = dep_start_date
                         detail = '%s %s burn in.' % (labels['label_deployments_app_singular'], deployment_obj)
 
                     elif action == Action.DEPLOYMENTTOFIELD:
+                        create_action = True
                         action_date = dep_start_date
                         detail = 'Deployed to field on %s. Cruise: %s' % (deployment_obj, cruise_deployed)
 
                     elif action == Action.DEPLOYMENTRECOVER and dep_end_date:
+                        create_action = True
                         action_date = dep_end_date
                         detail = 'Recovered from %s. Cruise: %s' % (deployment_obj, cruise_recovered)
 
                     elif action == Action.DEPLOYMENTRETIRE and dep_end_date:
+                        create_action = True
                         action_date = dep_end_date
                         detail = '%s %s ended for this %s.' % (labels['label_deployments_app_singular'], deployment_obj, labels['label_inventory_app_singular'])
 
-                    action = Action.objects.create(
-                        action_type = action,
-                        object_type = Action.BUILD,
-                        created_at = action_date,
-                        build = build,
-                        location = deployed_location,
-                        deployment = deployment_obj,
-                        deployment_type = Action.BUILD_DEPLOYMENT,
-                        user = self.request.user,
-                        detail = detail,
-                    )
+                    if create_action:
+                        action = Action.objects.create(
+                            action_type = action,
+                            object_type = Action.BUILD,
+                            created_at = action_date,
+                            build = build,
+                            location = deployed_location,
+                            deployment = deployment_obj,
+                            deployment_type = Action.BUILD_DEPLOYMENT,
+                            user = self.request.user,
+                            detail = detail,
+                        )
 
                 for row in deployment_import['rows']:
                     # create InventoryDeployments for each item
@@ -353,9 +371,7 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                         try:
                             ref_des = row['Reference Designator']
                             config_default = ConfigDefault.objects.get(default_value=ref_des)
-                            print(config_default)
                             assembly_part = config_default.conf_def_event.assembly_part
-                            print(assembly_part)
                         except Exception as e:
                             print(e)
                             continue
@@ -372,10 +388,27 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                                 'created_at': dep_start_date,
                             },
                         )
-                        # Call the function to create an initial Action history
+                        # Create an initial Action history if Inventory needs to be created
                         if item_created:
                             print(f"{item} created")
-                            _create_action_history(item, Action.ADD, self.request.user, '', '', dep_start_date)
+                            inventory_created.append(item)
+                            action = Action.objects.create(
+                                action_type = Action.ADD,
+                                object_type = Action.INVENTORY,
+                                created_at = dep_start_date,
+                                inventory = item,
+                                build = build,
+                                location = deployed_location,
+                                user = self.request.user,
+                                detail = f'{Action.INVENTORY} first added to RDB',
+                            )
+
+                        # Need to check if this item was created in previous loops, if so need to update its status
+                        if item in inventory_created:
+                            print(f"{item} in list")
+                            item.build = build
+                            item.assembly_part = assembly_part
+                            item.save()
 
                         # Get/Create Deployment for this Build
                         inv_deployment_obj, inv_deployment_created = InventoryDeployment.objects.update_or_create(
@@ -429,41 +462,49 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                             )
 
                         for action in inv_deployment_actions:
+                            create_action = False
+
                             if action == Action.STARTDEPLOYMENT:
+                                create_action = True
                                 action_date = dep_start_date
                                 detail = '%s %s started.' % (labels['label_deployments_app_singular'], deployment_obj)
 
                             elif action == Action.DEPLOYMENTBURNIN:
+                                create_action = True
                                 action_date = dep_start_date
                                 detail = '%s %s burn in.' % (labels['label_deployments_app_singular'], deployment_obj)
 
                             elif action == Action.DEPLOYMENTTOFIELD:
+                                create_action = True
                                 action_date = dep_start_date
                                 detail = 'Deployed to field on %s.' % (deployment_obj)
 
                             elif action == Action.DEPLOYMENTRECOVER and dep_end_date:
+                                create_action = True
                                 action_date = dep_end_date
                                 detail = 'Recovered from %s.' % (deployment_obj)
 
                             elif action == Action.DEPLOYMENTRETIRE and dep_end_date:
+                                create_action = True
                                 action_date = dep_end_date
                                 detail = '%s %s ended for this %s.' % (labels['label_deployments_app_singular'], deployment_obj, labels['label_inventory_app_singular'])
 
-                            action = Action.objects.create(
-                                action_type = action,
-                                object_type = Action.INVENTORY,
-                                created_at = action_date,
-                                inventory = item,
-                                build = build,
-                                location = deployed_location,
-                                deployment = deployment_obj,
-                                inventory_deployment = inv_deployment_obj,
-                                deployment_type = Action.INVENTORY_DEPLOYMENT,
-                                user = self.request.user,
-                                detail = detail,
-                            )
+                            if create_action:
+                                action = Action.objects.create(
+                                    action_type = action,
+                                    object_type = Action.INVENTORY,
+                                    created_at = action_date,
+                                    inventory = item,
+                                    build = build,
+                                    location = deployed_location,
+                                    deployment = deployment_obj,
+                                    inventory_deployment = inv_deployment_obj,
+                                    deployment_type = Action.INVENTORY_DEPLOYMENT,
+                                    user = self.request.user,
+                                    detail = detail,
+                                )
 
-                        print(row['sensor.uid'])
+                        #print(row['sensor.uid'])
 
         return super(ImportDeploymentsUploadView, self).form_valid(form)
 
