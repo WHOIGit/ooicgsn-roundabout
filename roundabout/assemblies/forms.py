@@ -184,3 +184,6 @@ class AssemblyTypeDeleteForm(forms.Form):
         if not assembly_type_to_delete.assemblies.exists():
             self.fields['new_assembly_type'].required = False
             self.fields['new_assembly_type'].widget = forms.HiddenInput()
+
+        # remove this object from the possible replacements
+        self.fields['new_assembly_type'].queryset = AssemblyType.objects.exclude(id=assembly_type_to_delete.id)

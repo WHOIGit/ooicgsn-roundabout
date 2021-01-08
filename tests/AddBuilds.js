@@ -274,7 +274,6 @@ var password;
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Deployment Number.");
 	}
-	await driver.findElement(By.id("id_deployment_number")).click();
         await driver.findElement(By.id("id_deployment_number")).sendKeys("7");
         // 14 | select | id=id_deployed_location | label=Test
         {
@@ -325,7 +324,8 @@ var password;
         // Get new date 2 days prior to current date
         var d = new Date(dateString);
         d.setDate(d.getDate() - 2);
-        var newDate = (d.getMonth() + 1) + "/" + d.getDate() + "/" + d.getFullYear() + " " + d.getHours() + ":" + d.getMinutes();
+	var month = d.getMonth() + 1;
+        var newDate = month.toString().trim() + "/" + d.getDate().toString().trim() + "/" + d.getFullYear() + " " + ('0'+d.getHours()).slice(-2) + ":" + ('0'+d.getMinutes()).slice(-2);
   
         await driver.findElement(By.xpath("//input[@id='id_date']")).clear();
         await driver.executeScript("arguments[0].value = arguments[1]", ele, newDate); 
@@ -370,7 +370,6 @@ var password;
         bodyText = await driver.findElement(By.tagName("Body")).getText();
 	// Deployment Time in Field
         assert(bodyText.includes("2 days 0 hours"));
-        newDate = newDate.replace(/\b0+/g, "");
         
 	try {
 	   assert(bodyText.includes(newDate));
@@ -428,13 +427,12 @@ var password;
         bodyText = await driver.findElement(By.tagName("Body")).getText();
 	// Inventory Time in Field
         assert(bodyText.includes("2 days 0 hours"));
-        newDate = newDate.replace(/\b0+/g, "");  //remove leading zeros
     
 	try {
            assert(bodyText.includes(newDate));
         }
 	catch (AssertionError) {
-           console.log("Possible Error: Expecting Inventory Deployment To Field Date:  "+ newDate);
+           console.log("Possible Error: Expecting Inventory Deployment (2 Days Prior) To Field Date:  "+ newDate);
         }
         
         // Remove sewing Inventory from Build
@@ -457,7 +455,8 @@ var password;
         var d = new Date(dateString);
         d.setDate(d.getDate() - 1);
         var day = parseInt(d.getDate(), 10);
-        var newDate = (d.getMonth() + 1) + "/" + day + "/" + d.getFullYear() + " " + d.getHours() + ":" + d.getMinutes();
+	var month = d.getMonth() + 1;
+        var newDate = month.toString().trim() + "/" + day.toString().trim() + "/" + d.getFullYear() + " " + ('0'+d.getHours()).slice(-2) + ":" + ('0'+d.getMinutes()).slice(-2);
         await driver.findElement(By.xpath("//input[@id='id_date']")).clear();
         await driver.executeScript("arguments[0].value = arguments[1]", ele, newDate); 
         // 43 | click | css=.controls > .btn-primary | 
@@ -482,7 +481,6 @@ var password;
         bodyText = await driver.findElement(By.tagName("Body")).getText();
 	// Inventory Time in Field
         assert(bodyText.includes("1 days 0 hours"));
-        newDate = newDate.replace(/\b0+/g, "");
 
 	try {
            assert(bodyText.includes(newDate));
@@ -511,8 +509,12 @@ var password;
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Id_date.");
 	}
+
         var ele = await driver.findElement(By.xpath("//input[@id='id_date']"));
         var dateString = await ele.getAttribute("value");
+	// Recovery screen date format is 01/05/2021 03:06, trim leading zeroes and time
+	dateString = dateString.replace(/\b0/g, '');
+	dateString = dateString.split(" ")[0];
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
         // Verify Total Time in Field and Current Deployment Time in Field: 0 days 0 hours
@@ -524,7 +526,7 @@ var password;
 	//let encodedString = await driver.takeScreenshot();
 	//await fs.writeFileSync('/tests/bscreen.png', encodedString, 'base64');      
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
-        // UNCOMMENT FOR DOCKER - history shows 27 days due to staging testing
+        // UNCOMMENT FOR DOCKER - Inventory history shows 27 days due to staging testing
 	// Total Time in Field
         assert(bodyText.includes("1 days 0 hours"));
 	// Current Deployment Time in Field
@@ -547,14 +549,13 @@ var password;
         bodyText = await driver.findElement(By.tagName("Body")).getText();
 	// Inventory Time in Field
         assert(bodyText.includes("0 days 0 hours"));
-        dateString = dateString.replace(/\b0+/g, "");
 
 	// Deployment to Field Date
         try {
             assert(bodyText.includes(dateString));
         }
         catch (AssertionError) {
-            console.log("Possible Error: Expecting Inventory Deployment To Field Date:  " + dateString);
+            console.log("Possible Error: Expecting Inventory Deployment (1 Day Prior) To Field Date:  " + dateString);
         }
 
         // Close browser window

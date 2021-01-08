@@ -92,28 +92,7 @@
     <div class="row">
       <div class="col-sm-12 d-flex flex-row">
         <h2>Search: </h2>
-        <div class="dropdown ml-3">
-          <button class="btn btn-secondary dropdown-toggle" type="button" id="search-model-dropdown" data-toggle="dropdown">
-            <span class="fa"></span>
-            {% if model == 'Inventory' %}  {{ label_inventory_app_plural }}
-            {% elif model == 'Calibrations' %} Calibrations
-            {% elif model == 'Configs_Constants' %} Configs/Constants
-            {% elif model == 'Build' %}    {{ label_builds_app_plural }}
-            {% elif model == 'Part' %}     Part Templates
-            {% elif model == 'Assembly' %} {{ label_assemblies_app_singular }} Templates
-            {% elif model == 'Action' %} Actions
-            {% endif %}
-          </button>
-          <div class="dropdown-menu" aria-labelledby="search-model-dropdown">
-            <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:inventory' %}>{{ label_inventory_app_plural }}</a>
-            <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:calibrations' %}> -- Calibrations</a>
-            <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:configconsts' %}> -- Config/Constants</a>
-            <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:build' %}>{{ label_builds_app_plural }}</a>
-            <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:part' %}>Part Templates</a>
-            <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:assembly' %}>{{ label_assemblies_app_singular }} Templates</a>
-            <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:action' %}>Actions</a>
-          </div>
-        </div>
+        {% include 'search/_search-model-dropdown_button.html' %}
         <div class="p-2 ml-auto">
           <button class="btn btn-primary btn-sm" type="button" id="query-all-button"
              onclick="buttonload_spinner('on','#query-all-button');window.location.href='{{ request.path }}';">

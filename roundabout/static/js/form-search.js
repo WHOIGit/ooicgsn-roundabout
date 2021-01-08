@@ -124,12 +124,6 @@ function create_row(card_idx, model, row_index,row_data=null,field_options=null)
         init_nega = row_data['nega']
         init_multi = row_data['multi']
     }
-    else{
-        if (model === 'Inventory'){      init_fields = []   }
-        else if (model === 'Part'){      init_fields = []   }
-        else if (model === 'Build'){     init_fields = []   }
-        else if (model === 'Assembly'){  init_fields = []   }
-    }
 
     const row_id = `qfield-row_c${card_idx}_r${row_index}`
     let row = `<div id=${row_id} class="form-group form-inline searchcard-row">
@@ -269,21 +263,27 @@ function DoSubmit(e){
         const query_value = query_input.val()
 
         // alert if query text box empty
-        if (!query_input.val()){
-            validation_alerts.push('Query textboxes cannot be left empty.')
+        if (!query_input.val() && lookup_value !== 'exact'){
+            validation_alerts.push('Query textboxes may only be left blank if "Exact" is selected (to query a field for "empty" string entries')
         }
 
         field_texts.forEach(function(field_text){
             const idx = avail_fields.findIndex(f => f.text === field_text)
+
+            //Assert that field input matches field type
             if ( ! lookup_categories[avail_fields[idx].legal_lookup].includes(lookup_value) ){
-                validation_alerts.push(`Field "${field_text}" cannot be used with "${lookup_text}".`)
+                validation_alerts.push(`Field "${field_text}" cannot be used with Lookup "${lookup_text}".`)
             }
 
             //Assert that date input is valid
-            if (avail_fields[idx].legal_lookup === 'DATE_LOOKUP') {
+            if ( lookup_value === 'date' && !query_value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                validation_alerts.push(`"Date" lookup query "${query_value}" is invalid. Must use "YYYY-MM-DD" format`)
+            }
+            else if (avail_fields[idx].legal_lookup === 'DATE_LOOKUP' && lookup_value !== 'isnull') {
                 if ( !( query_value.match(/^\d{4}-\d{2}-\d{2}$/) ||
-                        query_value.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)) ){
-                    validation_alerts.push(`Date query "${query_value}" is invalid. Must use "YYYY-MM-DD" or "YYYY-MM-DD HH:MM" format`)
+                        query_value.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/) ||
+                        query_value.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/) )){
+                    validation_alerts.push(`Date query "${query_value}" is invalid. Must use "YYYY-MM-DD [HH:MM[:SS]]" format`)
                 }
                 else if (! Date.parse(query_value)){
                     validation_alerts.push(`Date query "${query_value}" is invalid`)
@@ -296,7 +296,7 @@ function DoSubmit(e){
             }
 
             //Assert that boolean field recieves only legal boolean input/query
-            if (avail_fields[idx].legal_lookup === 'BOOL_LOOKUP'){
+            if (avail_fields[idx].legal_lookup === 'BOOL_LOOKUP' || lookup_value === 'isnull'){
                 if (['True','False'].includes(query_value)) {  }
                 else if(['TRUE','true','T','t','1','yes','Yes','YES','y','Y'].includes(query_value))
                     { query_input.val('True') }

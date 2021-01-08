@@ -435,7 +435,11 @@ var password;
         // 28 | click | linkText=Add New Sub-Assembly | 
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Add New Sub-Assembly")).click();
-        await new Promise(r => setTimeout(r, 4000));
+        while ((await driver.findElements(By.css(".controls > .btn-primary"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add New Sub-Assembly.");
+	} 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 	while ((await driver.findElements(By.css("#div_id_part .ajax-error"))).length == 0)
 	{

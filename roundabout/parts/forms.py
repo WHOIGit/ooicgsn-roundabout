@@ -204,3 +204,6 @@ class PartTypeDeleteForm(forms.Form):
         if not part_type_to_delete.parts.exists():
             self.fields['new_part_type'].required = False
             self.fields['new_part_type'].widget = forms.HiddenInput()
+
+        # remove this object from the possible replacements
+        self.fields['new_part_type'].queryset = PartType.objects.exclude(id=part_type_to_delete.id)

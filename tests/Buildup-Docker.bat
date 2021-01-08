@@ -28,4 +28,6 @@ node UploadCsv.js chrome headless admin
 
 node AdminUser.js chrome headless admin
 
+node API.js chrome headless admin
+
 exit 0

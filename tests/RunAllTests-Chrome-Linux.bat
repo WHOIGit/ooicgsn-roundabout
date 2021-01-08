@@ -65,13 +65,19 @@ if [[ "$val" == *"failed."* ]]; then
   exit 1
 fi
 
-#val=$(node UploadCsv.js chrome headless admin )
-#echo $val
-#if [[ "$val" == *"failed."* ]]; then
-#  exit 1
-#fi
+val=$(node UploadCsv.js chrome headless admin )
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
 
 val=$(node AdminUser.js chrome headless admin )
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
+val=$(node API.js chrome headless admin )
 echo $val
 if [[ "$val" == *"failed."* ]]; then
   exit 1

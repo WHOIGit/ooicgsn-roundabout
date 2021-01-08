@@ -218,6 +218,8 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
             'location_name',
             'location_url',
             'current_status',
+            'latitude',
+            'longitude',
             'assembly_parts',
         ]
 
@@ -303,16 +305,22 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
 
             if inv.assembly_part and inv.assembly_part.parent:
                 parent_assembly_part_url = reverse('api_v1:assembly-templates/assembly-parts-detail', kwargs={'pk': inv.assembly_part.parent_id}, request=request)
+                parent_assembly_part_id = inv.assembly_part.parent.id
             else:
                 parent_assembly_part_url = None
+                parent_assembly_part_id = None
             # create object to populate the "assembly_part" list
             item_obj = {
                 'assembly_part_url': assembly_part_url,
+                'assembly_part_id': inv.assembly_part.id,
                 'part_name': inv.inventory.part.name,
                 'part_type': inv.inventory.part.part_type.name if inv.inventory.part.part_type else None,
                 'parent_assembly_part_url': parent_assembly_part_url,
+                'parent_assembly_part_id': parent_assembly_part_id,
                 'inventory_url': inventory_url,
                 'inventory_serial_number': inv.inventory.serial_number,
+                'deployment_to_field_date': inv.deployment_to_field_date,
+                'deployment_recovery_date': inv.deployment_recovery_date,
                 'configuration_values': configuration_values,
                 'calibration_values': calibration_values,
                 'constant_default_values': constant_default_values,

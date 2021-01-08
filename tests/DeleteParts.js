@@ -261,6 +261,22 @@ var password;
 	else
             console.log("Delete Parts failed: Condition Custom Field not found");
 
+	if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Manufacturer Serial Number']"))).length != 0)
+	{
+            var i = 1;
+            while (true) {
+                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Manufacturer Serial Number") {
+                    break;
+                } 
+                i++;
+            }
+            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
+            // 6 | click | css=.btn-danger | 
+	    await driver.findElement(By.css(".btn-danger")).click();
+	}
+	else
+            console.log("Delete Parts failed: Manufacturer Serial Number Custom Field not found");
+
 
         // Close browser window
         driver.quit();

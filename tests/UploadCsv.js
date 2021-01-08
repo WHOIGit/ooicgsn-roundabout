@@ -152,13 +152,18 @@ var filename;
 
         var uploaded_data = $.csv.toArrays(upload);
 
-        // Skip header and UNRECOVERED lines
+        // Skip  line
         for (var i = 2, len = uploaded_data.length; i < len; i++) {
             var cruise_str = uploaded_data[i];
-            // This is the only way to handle the double quotes in the compare
+	    // Strip off any trailing blanks in cruise name imported data
+	    cruise_str[1] = cruise_str[1].toString().trim();
+	    // Remove extra dash in Timestamp
+	    cruise_str[2] = cruise_str[2].toString().replace('-T', 'T');
+	    cruise_str[3] = cruise_str[3].toString().replace('-T', 'T');
+            // This is the only way to compare the double quotes in the notes field
             if (cruise_str[4].includes(",")) {
                 if (!(exported.includes(cruise_str[0]) && exported.includes(cruise_str[1])
-                    && exported.includes(cruise_str[3])))
+                    && exported.includes(cruise_str[2]) && exported.includes(cruise_str[3])))
                     console.log("Cruise Export Missing: " + cruise_str)
                 if (!exported.includes(cruise_str[4]))
                     console.log("Cruise Export Missing: " + cruise_str[4])
@@ -237,45 +242,22 @@ var filename;
         for (var i = 1, len = uploaded_data.length; i < len; i++)
         {
             var vessel_str = uploaded_data[i];
-                for (var j = 0, lth = vessel_str.length; j < lth; j++)
+	    // Strip off any trailing blanks in vessel name imported data
+	    vessel_str[2] = vessel_str[2].toString().trim();
+
+            for (var j = 0, lth = vessel_str.length; j < lth; j++)
+            {
+                if (!(exported.includes(vessel_str[j])))
                 {
-                    if (!(exported.includes(vessel_str[j])))
-                    {
-                        console.log("Vessel Export Missing: " + vessel_str +" at index:  "+ j +"  "+ vessel_str[j] );
-                        break;
-                    }
-                } 
+                    console.log("Vessel Export Missing: " + vessel_str +" at index:  "+ j +"  "+ vessel_str[j] );
+                    break;
+                }
+            } 
         }
 
-        // Upload Calibration CSV
-
-
-	// Set Manufacturer Serial Number in the Pin Inventory needed for UploadCsv test
-   /*     await driver.findElement(By.id("searchbar-query")).sendKeys("Pin Template");
-        // 8 | select | id=searchbar-modelselect | label=Part Templates
-        {
-            const dropdown = await driver.findElement(By.id("searchbar-modelselect"))
-            await dropdown.findElement(By.xpath("//option[. = 'Inventory']")).click()
-        }
-        await driver.findElement(By.css(".btn:nth-child(1)")).click()
-	while ((await driver.findElements(By.css(".even a"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Search1.");
-	}
-        await driver.findElement(By.css(".even a")).click();
-	while ((await driver.findElements(By.id("action"))).length == 0) 
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Search2.");
-	}
-        await driver.findElement(By.id("action")).click();
-	await new Promise(r => setTimeout(r, 4000));
-        await driver.findElement(By.linkText("Edit Inventory Details")).click();
-	await driver.findElement(By.id("id_udffield_2")).sendKeys("20004");
-	await driver.findElement(By.css(".controls > .btn-primary")).click(); */
 
         // Upload Calibration CSV
+	// Test depends on Manufacturer Serial Number previously defined in Import Export Inventory
         await driver.findElement(By.id("navbarAdmintools")).click()
         await driver.findElement(By.linkText("Upload GitHub CSVs")).click()
         if (myArgs[1] == 'headless') {
@@ -337,6 +319,12 @@ var filename;
 
         // await and promise required to work
         await fs.createReadStream(rdb_calib).pipe(unzipper.Extract({ path: rdb_path })).promise();
+
+        while (!fs.existsSync(rdb_unzip)) // wait for file extract
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for File Extract.");
+        }
 
         // Compare Uploaded & Exported Calibration files
         var upload = fs.readFileSync(filename, 'utf8');

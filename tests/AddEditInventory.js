@@ -109,7 +109,7 @@ var password;
         // 6 | select | id=id_part | label=Sewing Template
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await new Promise(r => setTimeout(r, 2000)); //New for 1.6 - This field blanked back out without timeout
+            await new Promise(r => setTimeout(r, 4000)); //New for 1.6 - This field blanked back out without timeout
             await dropdown.findElement(By.xpath("//option[. = 'Sewing Template']")).click();
         }
         // 7 | select | id=id_location | label=Test
@@ -121,7 +121,7 @@ var password;
 
         // 8 | storeValue | id=id_serial_number | Serial_Number
         // Stores the value of the Serial Number assigned
-	await new Promise(r => setTimeout(r, 2000)); 
+	await new Promise(r => setTimeout(r, 4000)); 
         var Serial_Number = await driver.findElement(By.id("id_serial_number")).getAttribute("value");
 	//let encodedString = await driver.takeScreenshot();
 	//await fs.writeFileSync('/tests/iscreen.png', encodedString, 'base64');      
@@ -178,7 +178,11 @@ var password;
         // 21 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
-        await new Promise(r => setTimeout(r, 8000));
+	while ((await driver.findElements(By.css("#div_id_serial_number .ajax-error"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Serial number error.");
+	}
         assert(await driver.findElement(By.css("#div_id_serial_number .ajax-error")).getText() == "Inventory with this Serial number already exists.");
 
     // EDIT INVENTORY TEST
@@ -207,7 +211,7 @@ var password;
         // 6 | select | id=id_part | label=Wheel Template
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await new Promise(r => setTimeout(r, 4000)); //New for 1.6 - This field blanked back out without timeout
+            await new Promise(r => setTimeout(r, 6000)); //New for 1.6 - This field blanked back out without timeout
             await dropdown.findElement(By.xpath("//option[. = 'Wheel Template']")).click();
         }
         // 7 | select | id=id_location | label=--- Lost
@@ -498,7 +502,7 @@ await fs.writeFileSync('/tests/iscreen1.png', encodedString, 'base64');
         }
 
 	    // Edit item with duplicate serial number
-	await new Promise(r => setTimeout(r, 2000));
+	await new Promise(r => setTimeout(r, 4000));
   
         await driver.findElement(By.id("hint_id_serial_number")).click();
 	await new Promise(r => setTimeout(r, 2000));

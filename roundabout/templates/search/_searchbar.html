@@ -29,13 +29,14 @@
               <div class="input-group-append">
                 <button class="btn btn-outline-primary" type="submit"><i class="fa fa-search"></i> Search</button>
                 <select class="btn btn-outline-primary" name="model" id="searchbar-modelselect">
-                  <option value="inventory" selected>{{ label_inventory_app_plural }}</option>
-                  <option value="calibrations"> -- Calibrations</option>
-                  <option value="configconsts"> -- Configs/Constants</option>
-                  <option value="build">{{ label_builds_app_plural }}</option>
-                  <option value="part">Part Templates</option>
-                  <option value="assembly">{{ label_assemblies_app_singular }} Templates</option>
-                  <option value="action">Actions</option>
+          {# 0 #} <option value="inventory" selected>{{ label_inventory_app_plural }}</option>
+          {# 1 #} <option value="calibrations"> -- Calibrations</option>
+          {# 2 #} <option value="configconsts"> -- Configs/Constants</option>
+          {# 3 #} <option value="build">{{ label_builds_app_plural }}</option>
+          {# 4 #} <option value="part">Part Templates</option>
+          {# 5 #} <option value="assembly">{{ label_assemblies_app_singular }} Templates</option>
+          {# 6 #} <option value="action">Actions</option>
+          {# 7 #} <option value="user">User</option>
                 </select>
               </div>
 
@@ -57,6 +58,7 @@
   else if (domain.startsWith('part'))  { select_idx = 4 }
   else if (domain.startsWith('assem')) { select_idx = 5 }
   else if (domain.startsWith('action')){ select_idx = 6 }
+  else if (domain.startsWith('user'))  { select_idx = 7 }
   else { select_idx = 0 } // inventory, the default
 
   document.getElementById("searchbar-modelselect").selectedIndex = select_idx
