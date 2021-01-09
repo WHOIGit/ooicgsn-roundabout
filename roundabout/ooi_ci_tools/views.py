@@ -30,6 +30,7 @@ from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.utils.timezone import make_aware
 from django.views.generic import TemplateView, FormView
 
 from roundabout.cruises.models import Cruise, Vessel
@@ -209,8 +210,19 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                     # get Assembly number from RefDes as that seems to be most consistent across CSVs
                     ref_des = row['Reference Designator']
                     assembly = ref_des.split('-')[0]
+                    dep_number_string = row['mooring.uid'].split('-')[2]
+                    # parse together the Build/Deployment Numbers from CSV fields
+                    deployment_number = f'{assembly}-{dep_number_string}'
+                    print(deployment_number)
+                    build_number = f'H{dep_number_string[-1]}'
                     # build data dict
-                    mooring_uid_dict = {'mooring.uid': row['mooring.uid'], 'assembly': assembly, 'rows': []}
+                    mooring_uid_dict = {
+                        'mooring.uid': row['mooring.uid'],
+                        'assembly': assembly,
+                        'build_number': build_number,
+                        'deployment_number': deployment_number,
+                        'rows': [],
+                    }
                     deployment_imports.append(mooring_uid_dict)
 
                 deployment = next((deployment for deployment in deployment_imports if deployment['mooring.uid'] == row['mooring.uid']), False)
@@ -237,10 +249,10 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                 except Location.DoesNotExist:
                     raise ValueError("No Location Matching this Location Code")
 
-                dep_start_date = parser.parse(deployment_import['rows'][0]['startDateTime'])
+                dep_start_date = make_aware(parser.parse(deployment_import['rows'][0]['startDateTime']))
 
                 try:
-                    dep_end_date = parser.parse(deployment_import['rows'][0]['stopDateTime'])
+                    dep_end_date = make_aware(parser.parse(deployment_import['rows'][0]['stopDateTime']))
                 except:
                     dep_end_date = None
 
@@ -266,9 +278,9 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
 
                 # Get/Create a Build for this Deployment
                 build, build_created = Build.objects.get_or_create(
-                    build_number=deployment_import['mooring.uid'],
+                    build_number=deployment_import['build_number'],
+                    assembly=assembly,
                     defaults={
-                        'assembly': assembly,
                         'assembly_revision': assembly_revision,
                         'created_at': dep_start_date,
                         'location': build_location,
@@ -288,23 +300,26 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                     )
 
                 # Update/Create Deployment for this Build
-                deployment_obj, deployment_created = Deployment.objects.update_or_create(
-                    deployment_number=deployment_import['mooring.uid'],
-                    defaults={
-                        'build': build,
-                        'deployment_start_date': dep_start_date,
-                        'deployment_burnin_date': dep_start_date,
-                        'deployment_to_field_date': dep_start_date,
-                        'deployment_recovery_date': dep_end_date,
-                        'deployment_retire_date': dep_end_date,
-                        'deployed_location': deployed_location,
-                        'cruise_deployed': cruise_deployed,
-                        'cruise_recovered': cruise_recovered,
-                        'latitude': latitude,
-                        'longitude': longitude,
-                        'depth': water_depth,
-                    },
-                )
+                try:
+                    deployment_obj, deployment_created = Deployment.objects.update_or_create(
+                        deployment_number=deployment_import['deployment_number'],
+                        build=build,
+                        defaults={
+                            'deployment_start_date': dep_start_date,
+                            'deployment_burnin_date': dep_start_date,
+                            'deployment_to_field_date': dep_start_date,
+                            'deployment_recovery_date': dep_end_date,
+                            'deployment_retire_date': dep_end_date,
+                            'deployed_location': deployed_location,
+                            'cruise_deployed': cruise_deployed,
+                            'cruise_recovered': cruise_recovered,
+                            'latitude': latitude,
+                            'longitude': longitude,
+                            'depth': water_depth,
+                        },
+                    )
+                except Deployment.MultipleObjectsReturned:
+                    print('ERROR', deployment_import['deployment_number'])
 
                 # If this an update to existing Deployment, need to delete all previous Deployment History Actions
                 if not deployment_created:
@@ -404,12 +419,12 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                             )
 
                         # Need to check if this item was created in previous loops, if so need to update its status
+                        """
                         if item in inventory_created:
-                            print(f"{item} in list")
                             item.build = build
                             item.assembly_part = assembly_part
                             item.save()
-
+                        """
                         # Get/Create Deployment for this Build
                         inv_deployment_obj, inv_deployment_created = InventoryDeployment.objects.update_or_create(
                             inventory=item,
@@ -428,6 +443,20 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
 
                         # _create_action_history function won't work correctly fo Inventory Deployments if item is already in RDB,
                         # need to add history Actions manually
+
+                        # create Build object action
+                        action = Action.objects.create(
+                            action_type = Action.SUBCHANGE,
+                            object_type = Action.BUILD,
+                            created_at = dep_start_date,
+                            build = build,
+                            location = deployed_location,
+                            deployment = deployment_obj,
+                            user = self.request.user,
+                            detail = f'Sub-Assembly {item} added.',
+                        )
+
+                        # create Inventory object actions
                         inv_actions = [
                             Action.ADDTOBUILD,
                             Action.REMOVEFROMBUILD,
@@ -442,24 +471,30 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                         ]
 
                         for action in inv_actions:
+                            create_action = False
+
                             if action == Action.ADDTOBUILD:
+                                create_action = True
                                 action_date = dep_start_date
                                 detail = 'Moved to %s.' % (build)
 
                             elif action == Action.REMOVEFROMBUILD and dep_end_date:
+                                create_action = True
                                 action_date = dep_end_date
                                 detail = 'Removed from %s.' % (build)
 
-                            action = Action.objects.create(
-                                action_type = action,
-                                object_type = Action.INVENTORY,
-                                created_at = action_date,
-                                inventory = item,
-                                build = build,
-                                location = deployed_location,
-                                user = self.request.user,
-                                detail = detail,
-                            )
+                            if create_action:
+                                action = Action.objects.create(
+                                    action_type = action,
+                                    object_type = Action.INVENTORY,
+                                    created_at = action_date,
+                                    inventory = item,
+                                    build = build,
+                                    location = deployed_location,
+                                    deployment = deployment_obj,
+                                    user = self.request.user,
+                                    detail = detail,
+                                )
 
                         for action in inv_deployment_actions:
                             create_action = False
@@ -503,8 +538,20 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                                     user = self.request.user,
                                     detail = detail,
                                 )
-
                         #print(row['sensor.uid'])
+                        # get the latest Action for this item, if it's NOT later than action_date,
+                        # need to update Item build/location date to match this Deployment
+                        last_action = item.actions.latest()
+                        if action_date >= last_action.created_at:
+                            # remove from Build if Deployment is retired
+                            if dep_end_date:
+                                item.build = None
+                                item.assembly_part = None
+                            else:
+                                item.build = build
+                                item.assembly_part = assembly_part
+                            item.location = build.location
+                            item.save()
 
         return super(ImportDeploymentsUploadView, self).form_valid(form)
 
