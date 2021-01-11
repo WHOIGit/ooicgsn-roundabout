@@ -35,7 +35,7 @@ from django.views.generic import TemplateView, FormView
 
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.assemblies.models import Assembly
-from roundabout.configs_constants.models import ConfigDefault
+from roundabout.configs_constants.models import ConfigDefault, ConfigEvent, ConfigName, ConfigValue
 from roundabout.builds.models import Build
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory, Action, Deployment, InventoryDeployment
@@ -228,8 +228,6 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                 deployment = next((deployment for deployment in deployment_imports if deployment['mooring.uid'] == row['mooring.uid']), False)
                 deployment['rows'].append(row)
 
-            # need to keep a list of Inventory that is created to check in future loops
-            inventory_created = []
             # loop through the Deployments
             for deployment_import in deployment_imports:
                 # get the Assembly template for this Build, needs to be only one match
@@ -406,7 +404,6 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                         # Create an initial Action history if Inventory needs to be created
                         if item_created:
                             print(f"{item} created")
-                            inventory_created.append(item)
                             action = Action.objects.create(
                                 action_type = Action.ADD,
                                 object_type = Action.INVENTORY,
@@ -418,13 +415,6 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                                 detail = f'{Action.INVENTORY} first added to RDB',
                             )
 
-                        # Need to check if this item was created in previous loops, if so need to update its status
-                        """
-                        if item in inventory_created:
-                            item.build = build
-                            item.assembly_part = assembly_part
-                            item.save()
-                        """
                         # Get/Create Deployment for this Build
                         inv_deployment_obj, inv_deployment_created = InventoryDeployment.objects.update_or_create(
                             inventory=item,
@@ -441,6 +431,30 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                             },
                         )
 
+                        # Create/update Configuration values for this Deployment
+                        config_event, config_event_created = ConfigEvent.objects.update_or_create(
+                            inventory=item,
+                            deployment=deployment_obj,
+                            defaults={
+                                'created_at': dep_start_date,
+                                'configuration_date': dep_start_date,
+                                'approved': True,
+                                'config_type': 'conf',
+                            },
+                        )
+                        config_event.user_approver.add(self.request.user)
+
+                        config_name = ConfigName.objects.filter(name='Nominal Depth', part=assembly_part.part).first()
+                        print(config_name)
+
+                        config_value, config_value_created = ConfigValue.objects.update_or_create(
+                            config_event=config_event,
+                            config_name=config_name,
+                            defaults={
+                                'config_value': row['deployment_depth'],
+                                'created_at': dep_start_date,
+                            },
+                        )
                         # _create_action_history function won't work correctly fo Inventory Deployments if item is already in RDB,
                         # need to add history Actions manually
 
