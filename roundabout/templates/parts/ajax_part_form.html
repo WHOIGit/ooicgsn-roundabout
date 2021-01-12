@@ -214,8 +214,8 @@ $(document).ready(function() {
 
     })
 
-    const part_type = '{{part_template.part_type}}'
-    if (part_type == 'Instrument') {
+    const ccc_toggle = '{{part_template.part_type.ccc_toggle}}'
+    if (ccc_toggle == 'True') {
       $('#div_id_cal_dec_places').show();
     } else {
         $('#div_id_cal_dec_places').hide();
@@ -223,13 +223,22 @@ $(document).ready(function() {
 
     // On-change of dropdown selection, obtain part type name, show/hide max-cal attribute 
     $('#id_part_type').change(function() {
-        let part_type = $(this).find('option:selected').text();
-        if (part_type == ' Instrument') {
-            $('#div_id_cal_dec_places').show();
-        } else {
-            $('#div_id_cal_dec_places').hide();
-        }
-    })
+        let part_type_id = $(this).find('option:selected').attr('value');
+        let url = "{% url 'parts:check_ccc_enabled' %}"
+        $.ajax({
+            url: url,
+            data: {
+                "part_type_id": part_type_id,
+            },
+            success: function (data) {
+                if ( data.ccc_toggle ) {
+                    $('#div_id_cal_dec_places').show();
+                } else {
+                    $('#div_id_cal_dec_places').hide();
+                }
+            }
+        });
+    });
 
 });
 

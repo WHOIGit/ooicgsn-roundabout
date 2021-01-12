@@ -288,8 +288,8 @@ $(document).ready(function() {
         });
     });
 
-    let partType = '{{part_template.part_type}}';
-    if (partType == 'Instrument') {
+    let ccc_toggle = '{{part_template.part_type.ccc_toggle}}';
+    if (ccc_toggle == 'True') {
         $('#calibrations-section').show();
         $('#configuration_constant-section').show();
     } else {

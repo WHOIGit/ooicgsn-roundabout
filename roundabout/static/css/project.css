@@ -193,10 +193,6 @@ a.wh {
     color: #eee !important;
 }
 
-#inventory-tabs table th {
-    border-top: none;
-}
-
 #inventory-tabs .list-group-item {
     padding-right: 0;
 }
@@ -213,6 +209,10 @@ a.wh {
 
 .action-table {
     font-size: 12px;
+}
+
+.action-table th {
+    border-top: none;
 }
 
 #history {
@@ -269,6 +269,11 @@ a.wh {
     white-space: nowrap;
 }
 
+.item-data-table th {
+    width: 28%;
+    color: #666;
+}
+
 /* Template Mode styling for apps that are considered Templates */
 .template #detail-view {
     border-color: #28a745;
@@ -293,7 +298,6 @@ a.wh {
 
 footer {
     background-color: white;
-    color: white;
 }
 
 /* Table Header Ordering */

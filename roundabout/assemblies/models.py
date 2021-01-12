@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -40,7 +40,7 @@ class AssemblyType(models.Model):
 
 # Assembly base model
 class Assembly(models.Model):
-    name = models.CharField(max_length=255, unique=False, db_index=True)
+    name = models.CharField(max_length=255, unique=True, db_index=True)
     assembly_type = models.ForeignKey(AssemblyType, related_name='assemblies',
                                     on_delete=models.SET_NULL, null=True, blank=True)
     assembly_number = models.CharField(max_length=100, unique=False, db_index=True, null=False, blank=True)

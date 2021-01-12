@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -19,18 +19,38 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import generics, viewsets, filters
-from ..models import Assembly
-from .serializers import AssemblySerializer, AssemblyPartSerializer
+from django.db.models import Prefetch
+from rest_framework.permissions import IsAuthenticated
+
+from roundabout.core.api.views import FlexModelViewSet
+from .filters import *
+from .serializers import *
 
 
-class AssemblyViewSet(viewsets.ModelViewSet):
+class AssemblyViewSet(FlexModelViewSet):
     serializer_class = AssemblySerializer
-    search_fields = ['name']
-    filter_backends = (filters.SearchFilter,)
+    permission_classes = (IsAuthenticated,)
+    queryset = Assembly.objects.all()
+    filterset_class = AssemblyFilter
 
-    def get_queryset(self):
-        queryset = Assembly.objects.all()
-        # Set up eager loading to avoid N+1 selects
-        queryset = self.get_serializer_class().setup_eager_loading(queryset)
-        return queryset
+
+class AssemblyTypeViewSet(FlexModelViewSet):
+    serializer_class = AssemblyTypeSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = AssemblyType.objects.all()
+
+
+class AssemblyRevisionViewSet(FlexModelViewSet):
+    serializer_class = AssemblyRevisionSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = AssemblyRevision.objects.prefetch_related(
+        Prefetch('assembly_parts', queryset=AssemblyPart.objects.order_by('-parent_id'))
+    )
+    filterset_class = AssemblyRevisionFilter
+
+
+class AssemblyPartViewSet(FlexModelViewSet):
+    serializer_class = AssemblyPartSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = AssemblyPart.objects.all()
+    filterset_class = AssemblyPartFilter

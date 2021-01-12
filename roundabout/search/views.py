@@ -21,33 +21,31 @@
 
 import json
 import operator
+from fnmatch import fnmatch
 from functools import reduce
 from urllib.parse import unquote
-from fnmatch import fnmatch
-
-from django.urls import reverse, reverse_lazy
-from django.utils.html import format_html, mark_safe
-#from django.template.defaultfilters import register
-#from django.shortcuts import render, get_object_or_404
-#from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
-#from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, QueryDict
-from django.db.models import Q, F, Max, Min, Count, OuterRef, Subquery
-from django.shortcuts import redirect
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 import django_tables2 as tables
+from django.contrib.auth.mixins import LoginRequiredMixin
+#from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
+from django.db.models import Q, Count, OuterRef, Subquery
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.utils.html import mark_safe
 from django_tables2 import SingleTableView
-from django_tables2.export.views import ExportMixin
 
-from roundabout.parts.models import Part
-from roundabout.builds.models import Build
-from roundabout.inventory.models import Inventory, Action
 from roundabout.assemblies.models import Assembly
-from roundabout.userdefinedfields.models import Field
+from roundabout.builds.models import Build
 from roundabout.calibrations.models import CalibrationEvent, CoefficientValueSet
 from roundabout.configs_constants.models import ConfigEvent, ConfigValue
+from roundabout.inventory.models import Inventory, Action
+from roundabout.parts.models import Part
+from roundabout.search.mixins import ExportStreamMixin
+from roundabout.userdefinedfields.models import Field
+from roundabout.users.models import User
+from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable, ActionTable, CalibrationTable, \
+    ConfigConstTable, UDF_Column
 
-from .tables import InventoryTable, PartTable, BuildTable, AssemblyTable,  ActionTable, CalibrationTable, ConfigConstTable, UDF_Column
 
 def rgetattr(obj, attr, *args):
     """Recursive getattr(), where attr is dot.separated"""
@@ -66,24 +64,25 @@ def searchbar_redirect(request):
         elif model=='calibrations':
             if fnmatch(query.strip(),'????-??-??'):
                 query = query.strip()
-                getstr = '?f=.0.calibration_event__calibration_date&l=.0.exact&q=.0.{query}'
-            else: getstr = '?f=.0.calibration_event__inventory__serial_number&f=.0.calibration_event__inventory__part__name&f=.0.coefficient_name__calibration_name&f=.0.calibration_event__user_approver__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
+                getstr = '?f=.0.calibration_event__calibration_date&l=.0.date&q=.0.{query}'
+            else: getstr = '?f=.0.calibration_event__inventory__serial_number&f=.0.calibration_event__inventory__part__name&f=.0.coefficient_name__calibration_name&f=.0.calibration_event__user_approver__any__name&f=.0.calibration_event__user_draft__any__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
         elif model == 'configconsts':
             if fnmatch(query.strip(), '????-??-??'):
                 query = query.strip()
-                getstr = '?f=.0.config_event__configuration_date&l=.0.exact&q=.0.{query}'
+                getstr = '?f=.0.config_event__configuration_date&l=.0.date&q=.0.{query}'
             else:
-                getstr = '?f=.0.config_event__inventory__serial_number&f=.0.config_event__inventory__part__name&f=.0.config_name__name&f=.0.config_event__user_approver__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
+                getstr = '?f=.0.config_event__inventory__serial_number&f=.0.config_event__inventory__part__name&f=.0.config_name__name&f=.0.config_event__user_approver__any__name&f=.0.config_event__user_draft__any__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
         elif model=='part':         getstr = '?f=.0.part_number&f=.0.name&f=.0.friendly_name&l=.0.icontains&q=.0.{query}'
         elif model == 'build':      getstr = '?f=.0.build_number&f=.0.assembly__name&f=.0.assembly__assembly_type__name&f=.0.assembly__description&f=.0.build_notes&f=.0.location__name&l=.0.icontains&q=.0.{query}'
         elif model == 'assembly':   getstr = '?f=.0.assembly_number&f=.0.name&f=.0.assembly_type__name&f=.0.description&l=.0.icontains&q=.0.{query}'
         elif model == 'action':     getstr = '?f=.0.action_type&f=.0.user__name&f=.0.detail&f=.0.location__name&f=.0.inventory__serial_number&f=.0.inventory__part__name&l=.0.icontains'+'&q=.0.{query}'
+        elif model == 'user':       getstr = '?ccc_role=both&ccc_status=all'+'&q={query}'
         getstr = getstr.format(query=query)
         resp['Location'] += getstr
     return resp
 
 
-class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
+class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableView):
     model = None
     table_class = None
     context_object_name = 'query_objs'
@@ -98,6 +97,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
         queries = self.request.GET.getlist('q')
         negas = self.request.GET.getlist('n')
 
+        # the +['t'] corresponds to the t of "... for c,r,v,t in ..." below
         fields = [unquote(f).split('.',2)+['f'] for f in fields]
         lookups = [unquote(l).split('.',2)+['l'] for l in lookups]
         queries = [unquote(q).split('.',2)+['q'] for q in queries]
@@ -114,24 +114,41 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
             secret_rows_ANDed =[]
             for row_id in row_IDs:
                 row_items = [(v,t) for c,r,v,t in card_things if r==row_id]
+                print(row_items)
                 fields = [v for v,t in row_items if t=='f']
                 lookup = [v for v,t in row_items if t=='l']
                 query = [v for v,t in row_items if t=='q']
                 nega = [v for v,t in row_items if t=='n']
                 try:
-                    assert len(fields) >=1
-                    assert len(lookup)==1
-                    assert len(query)==1 and query[0]
+                    assert len(fields) >= 1
+                    assert len(lookup) == 1
+                    assert len(query) == 1
                     assert len(nega) <= 1
+                    lookup,query = lookup[0],query[0]
+                    multi_bool = len(fields) > 1
                 except AssertionError:
                     continue #skip
 
+                # Searching for Null/None field values
+                if lookup == 'isnull':
+                    query = True if query == 'True' else False
+
+                # querying for empty strings
+                if query == '' and lookup not in ['exact','iexact']:
+                    continue #skip empty
+
+                # hack: implicitly search for usernames in addition to a user's name
+                for f in fields[:]:
+                    if 'user__name' in f:
+                        extra_f = f.replace('user__name','user__username')
+                        fields.append(extra_f)
+
                 row = dict( #row_id=row_id,
                     fields=fields,
-                    lookup=lookup[0],
-                    query=query[0],
+                    lookup=lookup,
+                    query=query,
                     nega=bool(nega),
-                    multi=len(fields) > 1)
+                    multi=multi_bool)
                 rows.append(row)
 
                 # choice field hack
@@ -148,20 +165,40 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
         return cards
 
     def get_queryset(self):
+        def userlist_Qkwarg(field,row):
+            approver_or_draft = field.split('__')[-3]
+            matching_user_IDs = User.objects.filter(**{'name__{}'.format(row['lookup']): row['query']}).values_list('id', flat=True)
+
+            if field.startswith('calibration_events__latest__'):
+                cals_with_matching_users__qs = CalibrationEvent.objects.filter(**{approver_or_draft+'__in':matching_user_IDs})
+                inv_latest_cal__subQ = Subquery(CalibrationEvent.objects.filter(inventory=OuterRef('pk')).values('pk')[:1])
+                all_inv_latest_cal_IDs = Inventory.objects.all().annotate(latest_calib=inv_latest_cal__subQ).values_list('latest_calib', flat=True)
+                latest_cals_with_matching_users = cals_with_matching_users__qs.filter(id__in=all_inv_latest_cal_IDs)
+                inventory_IDs_for__latest_cals_with_matching_users = latest_cals_with_matching_users.values_list('inventory__pk', flat=True)
+                Q_kwarg = {'id__in': inventory_IDs_for__latest_cals_with_matching_users}
+                return Q_kwarg
+
+            else:
+                calib_or_conf = field.split('__')[0]
+                Q_kwarg = { '{}__{}__in'.format(calib_or_conf,approver_or_draft) : matching_user_IDs }
+                return Q_kwarg
+
         def make_Qkwarg(field,row):
             select_ones = ['__latest__', '__last__', '__earliest__', '__first__']
             select_one = [s1 for s1 in select_ones if s1 in field]
             select_one = select_one[0] if select_one else None
 
-            select_somes = ['__any__','__all__']
-            select_some = [s1 for s1 in select_somes if s1 in field]
-            select_some = select_one[0] if select_one else None
-            # TODO a query system by which you can look into object lists and perform whatever is downstream on each
-            # __any__ returns true if any of the listed items match.
-            # this keyword functionality will have to carry over to displaying things in search-tables.
-            # TODO to account for any nesting of levels for this, we might have to make a recursive function 😬
+            userlist_cases = ['calibration_events__latest__user_approver__any__name',
+                              'calibration_events__latest__user_draft__any__name',
+                              'calibration_event__user_approver__any__name',
+                              'calibration_event__user_draft__any__name',
+                              'config_event__user_approver__any__name',
+                              'config_event__user_draft__any__name']
 
-            if not select_one:
+            if field in userlist_cases:
+                return userlist_Qkwarg(field,row)
+
+            elif not select_one:
                 # default
                 Q_kwarg = {'{field}__{lookup}'.format(field=field, lookup=row['lookup']): row['query']}
                 if field.endswith('__count'):
@@ -199,6 +236,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
 
                 Q_kwarg = {'id__in': matched_model_IDs}
                 return Q_kwarg
+
         cards = self.get_search_cards()
 
         final_Qs = []
@@ -264,8 +302,10 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
 
         avail_lookups = [dict(value='icontains',text='Contains'),
                          dict(value='exact',    text='Exact'),
+                         dict(value='date',     text='Date'),
                          dict(value='gte',      text='>='),
-                         dict(value='lte',      text='<='),]
+                         dict(value='lte',      text='<='),
+                         dict(value='isnull',   text='Is-Null')]
         context['avail_lookups'] = json.dumps(avail_lookups)
 
         lcats = dict(
@@ -275,9 +315,10 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
             DATE_LOOKUP = ['date', 'year', 'iso_year', 'month', 'day', 'week',
                            'week_day', 'quarter', 'time', 'hour', 'minute', 'second'] +
                            ['exact', 'gt', 'gte', 'lt', 'lte', 'range'],
-            ITER_LOOKUP = ['in'],
+            ITER_LOOKUP=['in']+['icontains', 'exact'],
             EXACT_LOOKUP = ['exact'],
             BOOL_LOOKUP = ['exact','iexact'], )
+        lcats = {k:v+['isnull'] for k,v in lcats.items()}
         context['lookup_categories'] = json.dumps(lcats)
 
         avail_fields_sans_col_args = self.get_avail_fields()
@@ -358,7 +399,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportMixin,SingleTableView):
 class InventoryTableView(GenericSearchTableView):
     model = Inventory
     table_class = InventoryTable
-    query_prefetch = ['fieldvalues', 'fieldvalues__field', 'part', 'location', 'actions', 'actions__user', 'actions__location']
+    query_prefetch = ['fieldvalues', 'fieldvalues__field', 'part', 'actions', 'actions__user', 'actions__location']
     avail_udf = set()
     choice_fields = {'actions__latest__action_type': Action.ACTION_TYPES}
 
@@ -524,7 +565,7 @@ class PartTableView(GenericSearchTableView):
 class BuildTableView(GenericSearchTableView):
     model = Build
     table_class = BuildTable
-    query_prefetch = ['assembly','assembly__assembly_type','location','actions','actions__user']
+    query_prefetch = ['assembly','assembly__assembly_type','actions','actions__user']
     choice_fields = {'actions__latest__action_type': Action.ACTION_TYPES}
 
     @staticmethod
@@ -603,7 +644,7 @@ class ActionTableView(GenericSearchTableView):
     def get_avail_fields():
         avail_fields = [dict(value="action_type", text="Action Type", legal_lookup='STR_LOOKUP'),
                         dict(value="user__name", text="User", legal_lookup='STR_LOOKUP'),
-                        dict(value="created_at", text="Timestamp", legal_lookup='DATETIME_LOOKUP'),
+                        dict(value="created_at", text="Timestamp", legal_lookup='DATE_LOOKUP'),
                         dict(value="detail", text="Detail", legal_lookup='STR_LOOKUP'),
                         dict(value="location__name",text="Location",legal_lookup='STR_LOOKUP'),
                         dict(value="inventory__serial_number", text="Inventory: Serial Number", legal_lookup='STR_LOOKUP'),
@@ -631,10 +672,10 @@ class CalibrationTableView(GenericSearchTableView):
                         dict(value="calibration_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
                         dict(value="coefficient_name__calibration_name", text="Coefficient Name", legal_lookup='STR_LOOKUP'),
                         dict(value="calibration_event__calibration_date", text="Calibration Event: Date", legal_lookup='DATE_LOOKUP'),
-#                        dict(value="calibration_event__user_approver__any__name", text="Calibration Event: Approvers", legal_lookup='???'), # TODO
-#                        dict(value="calibration_event__user_draft__any__name", text="Calibration Event: Reviewers", legal_lookup='???'), # TODO
+                        dict(value="calibration_event__user_approver__any__name", text="Calibration Event: Approvers", legal_lookup='ITER_LOOKUP'),
+                        dict(value="calibration_event__user_draft__any__name", text="Calibration Event: Reviewers", legal_lookup='ITER_LOOKUP'),
                         dict(value="calibration_event__approved", text="Calibration Event: Approved Flag", legal_lookup='BOOL_LOOKUP'),
-                        dict(value="created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
+                        #dict(value="calibration_event__created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
                         dict(value="value_set", text="Value", legal_lookup='STR_LOOKUP'),
                         dict(value="notes", text="Notes", legal_lookup='STR_LOOKUP'),
                         #dict(value="calibration_event__is_current", text="Latest Only", legal_lookup='BOOL_LOOKUP'),
@@ -650,6 +691,8 @@ class CalibrationTableView(GenericSearchTableView):
         # final query results must be CalibrationEvents.
         calibration_event_ids = qs.values_list('calibration_event__id', flat=True)
         qs = CalibrationEvent.objects.filter(id__in=calibration_event_ids)
+        qs = qs.prefetch_related(*[pf.replace('calibration_event__','') for pf in self.query_prefetch if pf.startswith('calibration_event__')])
+        qs = qs.select_related('inventory__part__part_type').exclude(inventory__part__part_type__ccc_toggle=False)
         return qs
     def get_table_kwargs(self):
         # since search model is CoefficientValueSet and results are CalibrationEvents,
@@ -664,18 +707,18 @@ class CalibrationTableView(GenericSearchTableView):
 class ConfigConstTableView(GenericSearchTableView):
     model = ConfigValue
     table_class = ConfigConstTable
-    query_prefetch = ['config_name','config_event','config_event__inventory','config_event__inventory__part','config_event__user_approver','config_event__draft_approver']
+    query_prefetch = ['config_name','config_event','config_event__inventory','config_event__inventory__part','config_event__user_approver','config_event__user_draft']
 
     @staticmethod
     def get_avail_fields():
         avail_fields = [dict(value="config_event__inventory__serial_number", text="Inventory: SN", legal_lookup='STR_LOOKUP'),
                         dict(value="config_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
                         dict(value="config_name__name", text="Config/Const Name", legal_lookup='STR_LOOKUP'),
-                        dict(value="config_event__configuraton_date", text="Config/Const Event: Date", legal_lookup='DATE_LOOKUP'),
-#                        dict(value="config_event__user_approver__any__name", text="Config/Const Event: Approvers", legal_lookup='???'), # TODO
-#                        dict(value="config_event__draft_approver__any__name", text="Config/Const Event: Reviewers", legal_lookup='???'), # TODO
-                        dict(value="calibration_event__approved", text="Calibration Event: Approved Flag", legal_lookup='BOOL_LOOKUP'),
-                        dict(value="created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
+                        dict(value="config_event__configuration_date", text="Config/Const Event: Date", legal_lookup='DATE_LOOKUP'),
+                        dict(value="config_event__user_approver__any__name", text="Config/Const Event: Approvers", legal_lookup='ITER_LOOKUP'),
+                        dict(value="config_event__user_draft__any__name", text="Config/Const Event: Reviewers", legal_lookup='ITER_LOOKUP'),
+                        dict(value="config_event__approved", text="Config/Const Event: Approved Flag", legal_lookup='BOOL_LOOKUP'),
+                        #dict(value="config_event__created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
                         dict(value="config_value", text="Value", legal_lookup='STR_LOOKUP'),
                         dict(value="notes", text="Notes", legal_lookup='STR_LOOKUP'),
                         ]
@@ -690,6 +733,8 @@ class ConfigConstTableView(GenericSearchTableView):
         # final query results must be CalibrationEvents.
         config_event_ids = qs.values_list('config_event__id', flat=True)
         qs = ConfigEvent.objects.filter(id__in=config_event_ids)
+        qs = qs.prefetch_related(*[pf.replace('config_event__','') for pf in self.query_prefetch if pf.startswith('config_event__')])
+        qs = qs.select_related('inventory__part__part_type').exclude(inventory__part__part_type__ccc_toggle=False)
         return qs
     def get_table_kwargs(self):
         # since search model is ConfigValue and results are ConfigEvents,
@@ -701,6 +746,3 @@ class ConfigConstTableView(GenericSearchTableView):
 
         return {'extra_columns':[]}
 
-# TODO see sn CGINS-DOSTAD-00134 for approver/reviewer search functionality
-# http://0.0.0.0:8000/search/calibrations?f=.0.calibration_event__inventory__serial_number&l=.0.icontains&q=.0.CGINS-DOSTAD-00134
-# http://0.0.0.0:8000/search/inventory?f=.0.serial_number&l=.0.icontains&q=.0.CGINS-DOSTAD-00134

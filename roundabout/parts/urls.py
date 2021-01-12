@@ -53,4 +53,5 @@ urlpatterns = [
     path('part_type/add/', view=views.PartsTypeCreateView.as_view(), name='parts_type_add'),
     path('part_type/edit/<int:pk>/', view=views.PartsTypeUpdateView.as_view(), name='parts_type_update'),
     path('part_type/delete/<int:pk>/', view=views.PartsTypeDeleteView.as_view(), name='parts_type_delete'),
+    path('part_type/check_ccc_enabled/', views.check_ccc_enabled, name='check_ccc_enabled'),
 ]
