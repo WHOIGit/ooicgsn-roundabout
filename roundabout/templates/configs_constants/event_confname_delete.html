@@ -38,7 +38,7 @@
 <script>
     $(document).ready(function() {
 
-        let part_id = '{{object.part.id}}'
+        let part_id = '{{event_template.part.id}}'
         $('#submit').on('click', function() {
             location.href = '/parts/' + part_id + '/';
         })
