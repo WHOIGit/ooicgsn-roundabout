@@ -371,11 +371,9 @@ def validate_cal_files(csv_files,ext_files):
                             params={'value': calibration_name,'row': idx, 'filename': cal_csv.name},
                         )
                     if '[' in raw_valset:
-                        cal_name_item.value_set_type = '1d'
                         raw_valset = raw_valset[1:-1]
                         cal_name_item.value_set_type = '1d'
                     if 'SheetRef' in raw_valset:
-                        cal_name_item.value_set_type = '2d'
                         ext_finder_filename = "__".join((cal_csv_filename,calibration_name))
                         cal_name_item.value_set_type = '2d'
                         try:
