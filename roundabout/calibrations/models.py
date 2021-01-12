@@ -27,7 +27,6 @@ from roundabout.inventory.models import Inventory, Deployment, Action
 from roundabout.parts.models import Part
 from roundabout.users.models import User
 
-
 # Tracks Calibration Coefficient event history across Inventory Parts
 class CalibrationEvent(models.Model):
     class Meta:
@@ -59,6 +58,23 @@ class CalibrationEvent(models.Model):
 
     def get_sorted_approvers(self):
         return self.user_approver.all().order_by('username')
+
+    # method to return a date range that corresponds to the period of time when this CalibrationEvent is valid
+    # this range corresponds to this calibration_date -> next latest calibration_date.
+    # calibration_date is floor of range.
+    # Returns a list of datetimes
+    def get_valid_calibration_range(self):
+        next_event = CalibrationEvent.objects.filter(inventory=self.inventory).filter(calibration_date__gt=self.calibration_date).last()
+
+        if next_event:
+            last_date = next_event.calibration_date
+        else:
+            last_date = timezone.now()
+
+        calibration_range = [self.calibration_date, last_date]
+        print(calibration_range)
+        print(self)
+        return calibration_range
 
 
 # Tracks Coefficient Name Event history across Parts

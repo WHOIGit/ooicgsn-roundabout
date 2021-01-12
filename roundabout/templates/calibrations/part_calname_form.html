@@ -18,34 +18,12 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 -->
-<script type="text/javascript">
-    $(document).ready(function() {
-    // Handles CoefficientValueSet form instance generation
-        $('.calibration-form tbody tr').formset({
-            prefix: 'coefficient_names',
-            addText: 'Add Calibration',
-            deleteText: 'Remove'
-        });
 
-        let formRows = $('.dynamic-form');
-        formRows.each(function() {
-            row = $(this);
-            let removeButtons = row.find('.delete-row');
-            let deprecated = row.find("[id$='deprecated']").attr('checked');
-            if (deprecated == 'checked') {
-                removeButtons.remove();
-            } 
-        });
-
-        $('.delete-row').on('click',function() {
-            alert('Warning: deleting Names will delete all downstream Defaults and Events');
-        });
-    });
-</script>
 
 {% load static i18n %}
 {% load mptt_tags %}
 {% load crispy_forms_tags %}
+
 
 <div class="card-header">
     {% if event_template.id %}
@@ -72,33 +50,29 @@
         {% csrf_token %}
 
         <div class="col-md-12">
-            <div class="form-group">
-                {{ part_cal_copy_form | crispy }}
-            </div>
-            <div class="form-group">
-                {{ form | crispy }}
-            </div>
+            {{ part_cal_copy_form | crispy }}
+            {{ form | crispy }}
             <h5 id = '__all__'>Calibration(s)</h5>
-            <table class="table table-tight calibration-form" style = 'display:block; overflow: auto; max-height: 100vh'>
-              <thead>
-                  <th>Name</th>
-                  <th>Type</th>
-                  <th>Significant Figures</th>
-                  <th>Deprecated</th>
-              </thead>
-              <tbody>
+            <table class="table table-tight calibration-name-form" style = 'display:block; overflow: auto; max-height: 100vh'>
+                <thead>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Significant Figures</th>
+                    <th>Deprecated</th>
+                </thead>
+                <tbody>
                 {{ part_calname_form.management_form }}
                 {% for cal in part_calname_form %}
-                  <tr>
-                      <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.calibration_name }}</td>
-                      <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.value_set_type }}</td>
-                      <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.sigfig_override }} <small class = 'form-text text-muted'>{{cal.sigfig_override.help_text}}</small></td>
-                      <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.deprecated }}</td>
-                  </tr>
+                    <tr>
+                        <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.calibration_name }}</td>
+                        <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.value_set_type }}</td>
+                        <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.sigfig_override }} <small class = 'form-text text-muted'>{{cal.sigfig_override.help_text}}</small></td>
+                        <td>{% if cal.id  %}{{ cal.DELETE }}{% endif %} {{ cal.id }} {{ cal.deprecated }}</td>
+                    </tr>
                 {% endfor %}
-              </tbody>
+                </tbody>
             </table>
-          </div>
+        </div>
 
         <div class="control-group">
             <div class="controls">
@@ -123,6 +97,55 @@
 </div>
 
 
-{% block javascript %}
 
+{% block javascript %}
+<script type="text/javascript">
+    $(document).ready(function() {
+    // Handles CoefficientValueSet form instance generation
+        $('.calibration-name-form tbody tr').formset({
+            prefix: 'coefficient_names',
+            addText: 'Add Calibration',
+            deleteText: 'Remove',
+            removed: function(row) {
+                let del = row.find('input:hidden[id $= "-DELETE"]')                
+                let totalForms = $("[id$='TOTAL_FORMS']")
+                if( confirm('Warning: deleting Names will delete associated Event data') ) {
+                    del.val('on')
+                    row.hide()
+                } else {
+                    del.val('')
+                    row.show()
+                }
+                forms = $('.dynamic-form').not(':hidden');
+                totalForms.val(forms.length)
+            }
+        });
+
+        let formRows = $('.dynamic-form');
+        formRows.each(function() {
+            let row = $(this);
+            let removeButtons = row.find('.delete-row');
+            let deprecated = row.find("[id$='deprecated']").attr('checked');
+            if (deprecated == 'checked') {
+                removeButtons.remove();
+            } 
+            if (removeButtons.length > 1) {
+                removeButtons.map((idx, button) => {
+                    if (idx != 0) {
+                        button.remove()
+                    }
+                })
+            }
+        });
+
+        let formAddRows = $('.dynamic-form-add');
+        if (formAddRows.length > 1) {
+            formAddRows.map((idx, button) => {
+                if (idx != 0) {
+                    button.remove()
+                }
+            })
+        }
+    });
+</script>
 {% endblock javascript %}

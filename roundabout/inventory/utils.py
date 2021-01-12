@@ -214,6 +214,7 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
             inventory_deployment = InventoryDeployment.objects.create(
                 deployment=deployment,
                 inventory=obj,
+                assembly_part=obj.assembly_part,
                 deployment_start_date = action_date
             )
             action_record.inventory_deployment = inventory_deployment

@@ -8,6 +8,7 @@ const chrome = require('selenium-webdriver/chrome');
 const firefox = require('selenium-webdriver/firefox');
 const assert = require('assert');
 const { exception } = require('console');
+const fs = require('fs');
 
 var driver;
 var myArgs = process.argv.slice(2);
@@ -434,7 +435,11 @@ var password;
         // 28 | click | linkText=Add New Sub-Assembly | 
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Add New Sub-Assembly")).click();
-        await new Promise(r => setTimeout(r, 4000));
+        while ((await driver.findElements(By.css(".controls > .btn-primary"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add New Sub-Assembly.");
+	} 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 	while ((await driver.findElements(By.css("#div_id_part .ajax-error"))).length == 0)
 	{
@@ -471,7 +476,12 @@ var password;
         }
 	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-        await new Promise(r => setTimeout(r, 8000));  //1.6
+//        await new Promise(r => setTimeout(r, 8000));  //1.6
+	while ((await driver.findElements(By.linkText("Sewing Template"))).length == 0) // displayed after above command completes
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Add Wheel Subassembly.");
+	} 
 
         if ((await driver.findElements(By.xpath("//div/div/ul/li[*]/a[text()='Electrics']"))).length != 0) {
             // Expand Revision B and Sewing Template
@@ -528,7 +538,7 @@ var password;
         // 35 | select | id=id_part | label=Wheel Template
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-	    await new Promise(r => setTimeout(r, 2000));  //1.6 stale element
+	    await new Promise(r => setTimeout(r, 4000));  //1.6 stale element, element not set
             await dropdown.findElement(By.xpath("//option[. = 'Pin Template']")).click();
         }
         await driver.findElement(By.css(".controls > .btn-primary")).click();
@@ -539,6 +549,8 @@ var password;
 	{
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Add SubAssembly4.");
+let encodedString = await driver.takeScreenshot();
+await fs.writeFileSync('/tests/ascreen.png', encodedString, 'base64');      
 	} 
         await driver.findElement(By.linkText("sewing"));
         await driver.findElement(By.linkText("wheel"));

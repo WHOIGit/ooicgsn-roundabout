@@ -18,34 +18,13 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 -->
-<script type="text/javascript">
-    $(document).ready(function() {
-        // Handles CoefficientValueSet form instance generation
-        $('.conf_name-form tbody tr').formset({
-            prefix: 'config_names',
-            addText: 'Add Configurations/Constants',
-            deleteText: 'Remove'
-        });
 
-        let formRows = $('.dynamic-form');
-        formRows.each(function() {
-            row = $(this);
-            let removeButtons = row.find('.delete-row');
-            let deprecated = row.find("[id$='deprecated']").attr('checked');
-            if (deprecated == 'checked') {
-                removeButtons.remove();
-            } 
-        });
 
-        $('.delete-row').on('click',function() {
-            alert('Warning: deleting Names will delete all downstream Defaults and Events');
-        });
-    });
-</script>
 
 {% load static i18n %}
 {% load mptt_tags %}
 {% load crispy_forms_tags %}
+
 
 <div class="card-header">
     {% if event_template.id %}
@@ -72,33 +51,29 @@
         {% csrf_token %}
 
         <div class="col-md-12">
-            <div class="form-group">
-                {{ part_conf_copy_form | crispy }}
-            </div>
-            <div class="form-group">
-                {{ form | crispy }}
-            </div>
+            {{ part_conf_copy_form | crispy }}
+            {{ form | crispy }}
             <h5 id = '__all__'>Configurations/Constants</h5>
             <table class="table table-tight conf_name-form" style = 'display:block; overflow: auto; max-height: 100vh'>
-              <thead>
-                  <th>Name</th>
-                  <th>Type</th>
-                  <th>Export with Calibrations</th>
-                  <th>Deprecated</th>
-              </thead>
-              <tbody>
+                <thead>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Export with Calibrations</th>
+                    <th>Deprecated</th>
+                </thead>
+                <tbody>
                 {{ part_confname_form.management_form }}
                 {% for conf in part_confname_form %}
-                  <tr>
-                      <td>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.name }}</td>
-                      <td>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.config_type }}</td>
-                      <td style = 'text-align: center;'>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.include_with_calibrations }}</td>
-                      <td style = 'text-align: center;'>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.deprecated }}</td>
-                  </tr>
-              {% endfor %}
-              </tbody>
+                    <tr>
+                        <td>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.name }}</td>
+                        <td>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.config_type }}</td>
+                        <td style = 'text-align: center;'>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.include_with_calibrations }}</td>
+                        <td style = 'text-align: center;'>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.deprecated }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
             </table>
-          </div>
+        </div>
 
         <div class="control-group">
             <div class="controls">
@@ -125,5 +100,53 @@
 
 
 {% block javascript %}
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Handles CoefficientValueSet form instance generation
+        $('.conf_name-form tbody tr').formset({
+            prefix: 'config_names',
+            addText: 'Add Configurations/Constants',
+            deleteText: 'Remove',
+            removed: function(row) {
+                let del = row.find('input:hidden[id $= "-DELETE"]')                
+                let totalForms = $("[id$='TOTAL_FORMS']")
+                if( confirm('Warning: deleting Names will delete associated Defaults and Event data') ) {
+                    del.val('on')
+                    row.hide()
+                } else {
+                    del.val('')
+                    row.show()
+                }
+                forms = $('.dynamic-form').not(':hidden');
+                totalForms.val(forms.length)
+            }
+        });
 
+        let formRows = $('.dynamic-form');
+        formRows.each(function() {
+            let row = $(this);
+            let removeButtons = row.find('.delete-row');
+            let deprecated = row.find("[id$='deprecated']").attr('checked');
+            if (deprecated == 'checked') {
+                removeButtons.remove();
+            } 
+            if (removeButtons.length > 1) {
+                removeButtons.map((idx, button) => {
+                    if (idx != 0) {
+                        button.remove()
+                    }
+                })
+            }
+        });
+
+        let formAddRows = $('.dynamic-form-add');
+        if (formAddRows.length > 1) {
+            formAddRows.map((idx, button) => {
+                if (idx != 0) {
+                    button.remove()
+                }
+            })
+        }
+    });
+</script>
 {% endblock javascript %}

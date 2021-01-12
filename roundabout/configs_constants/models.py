@@ -103,7 +103,7 @@ class ConfigNameEvent(models.Model):
 # Tracks Configurations across Parts
 class ConfigName(models.Model):
     class Meta:
-        ordering = ['name']
+        ordering = ['created_at']
         unique_together = ['part','config_type','name']
     def __str__(self):
         return self.name

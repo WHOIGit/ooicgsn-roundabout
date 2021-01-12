@@ -302,6 +302,8 @@ class InventoryDeployment(DeploymentBase):
                                    on_delete=models.CASCADE, null=False)
     inventory = models.ForeignKey(Inventory, related_name='inventory_deployments',
                                   on_delete=models.CASCADE, null=False)
+    assembly_part = models.ForeignKey('assemblies.AssemblyPart', related_name='inventory_deployments',
+                                  on_delete=models.SET_NULL, null=True)
 
     objects = InventoryDeploymentQuerySet.as_manager()
 
@@ -316,7 +318,12 @@ class InventoryDeployment(DeploymentBase):
         deployment_percentage = 0
         if self.deployment_to_field_date:
             # calculate percentage of total build deployment item was deployed
-            deployment_percentage = int(self.deployment_time_in_field / self.deployment.deployment_time_in_field * 100)
+            if not self.deployment.deployment_time_in_field:
+                deployment_percentage = 0
+            elif not self.deployment_time_in_field:
+                deployment_percentage = 0
+            else:
+                deployment_percentage = int(self.deployment_time_in_field / self.deployment.deployment_time_in_field * 100)
             if deployment_percentage >= 99:
                 deployment_percentage = 100
             return deployment_percentage

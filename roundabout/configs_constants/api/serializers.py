@@ -253,10 +253,10 @@ class ConstDefaultSerializer(FlexFieldsModelSerializer):
         lookup_field = 'pk',
         queryset = ConfigName.objects
     )
-    config_event = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':configs-constants/config-events-detail',
+    const_event = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':configs-constants/const-default-events-detail',
         lookup_field = 'pk',
-        queryset = ConfigEvent.objects
+        queryset = ConstDefaultEvent.objects
     )
 
     class Meta:
@@ -266,13 +266,13 @@ class ConstDefaultSerializer(FlexFieldsModelSerializer):
             'url',
             'default_value',
             'created_at',
-            'config_event',
+            'const_event',
             'config_name',
         ]
 
         expandable_fields = {
             'config_name': 'roundabout.configs_constants.api.serializers.ConfigNameSerializer',
-            'config_event': 'roundabout.configs_constants.api.serializers.ConfigEventSerializer',
+            'const_event': 'roundabout.configs_constants.api.serializers.ConstDefaultEventSerializer',
         }
 
 

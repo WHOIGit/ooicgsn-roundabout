@@ -20,20 +20,28 @@
 -->
 
 <div class="card-body">
-  <div class="side-p">
-      <h3>Are you sure?</h3>
-      <p>You're about to delete an Event {{ event_template.configuration_date | date:"n/j/y" }}. Please confirm.</p>
-      <form action="" method="post" class="delete-form"
-            id="delete-form" data-url='{{ request.build_absolute_uri|safe }}'>
-          {% csrf_token %}
-          <input class="btn btn-link cancel-btn"
-                 type="button" value="Cancel"
-                 data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' object.assembly_part.id %}"/>
-          <input class="btn btn-danger" type="submit" value="Confirm"/>
-      </form>
-  </div>
+    <div class="side-p">
+        <h3>Are you sure?</h3>
+        <p>You're about to delete an Event {{ event_template.configuration_date | date:"n/j/y" }}. Please confirm.</p>
+        <form action="" method="post" class="delete-form"
+                id="delete-form" data-url='{{ request.build_absolute_uri|safe }}'>
+            {% csrf_token %}
+            <input class="btn btn-link cancel-btn"
+                    type="button" value="Cancel"
+                    data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' object.assembly_part.id %}"/>
+            <input id = 'submit' class="btn btn-danger" type="submit" value="Confirm"/>
+        </form>
+    </div>
 </div>
 
 {% block javascript %}
+<script>
+    $(document).ready(function() {
 
+        let assm_id = '{{object.assembly_part.id}}'
+        $('#submit').on('click', function() {
+            location.href = '/assemblies/' + assm_id + '/';
+        })
+    });
+</script>
 {% endblock javascript %}

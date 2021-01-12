@@ -31,7 +31,7 @@ from django.core.exceptions import ValidationError
 from django.template.defaultfilters import slugify
 
 from .models import Part, PartType, Revision, Documentation
-from .forms import PartForm, PartTypeForm, RevisionForm, DocumentationFormset, RevisionFormset, PartUdfAddFieldForm, PartUdfFieldSetValueForm
+from .forms import PartForm, PartTypeForm, RevisionForm, DocumentationFormset, RevisionFormset, PartUdfAddFieldForm, PartUdfFieldSetValueForm, PartTypeDeleteForm
 from roundabout.calibrations.forms import PartCalNameFormset
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory
@@ -827,12 +827,44 @@ class PartsTypeUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateVie
         return reverse('parts:parts_type_home', )
 
 
-class PartsTypeDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
-    model = PartType
+class PartsTypeDeleteView(LoginRequiredMixin, PermissionRequiredMixin, FormView):
+    form_class = PartTypeDeleteForm
     template_name = 'parts/part_type_confirm_delete.html'
-    success_url = reverse_lazy('parts:parts_type_home')
     permission_required = 'parts.delete_part'
     redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super(PartsTypeDeleteView, self).get_context_data(**kwargs)
+        part_type = PartType.objects.get(id=self.kwargs['pk'])
+
+        context.update({
+            'part_type': part_type
+        })
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super(PartsTypeDeleteView, self).get_form_kwargs()
+        if 'pk' in self.kwargs:
+            kwargs['pk'] = self.kwargs['pk']
+        return kwargs
+
+    def form_valid(self, form):
+        new_part_type = form.cleaned_data['new_part_type']
+        part_type_to_delete = PartType.objects.get(id=self.kwargs['pk'])
+
+        # Need to check if there's Part Templates. If so, need move them to new Part Type.
+        if part_type_to_delete.parts.exists():
+            for part in part_type_to_delete.parts.all():
+                part.part_type = new_part_type
+                part.save()
+
+        # Delete the Part Type object
+        part_type_to_delete.delete()
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse('parts:parts_type_home')
+
 
 # Direct detail view
 class PartsTypeDetailView(LoginRequiredMixin, DetailView):
@@ -851,6 +883,7 @@ class PartsTypeDetailView(LoginRequiredMixin, DetailView):
         self.object = self.get_object()
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
+
 
 # AJAX Views
 

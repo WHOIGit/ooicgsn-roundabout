@@ -14,37 +14,6 @@ var myArgs = process.argv.slice(2);
 var user;
 var password;
 
-async function fixMonthAbbr(month)
-{
-    var abbr;
-
-    if (month == "Sep") { abbr = month + "t.";}
-    else if (month == "Jul") { abbr = month + "y.";}
-    else if (month == "Mar") { abbr = month + "ch";}
-    else if (month == "Apr")  { abbr = month + "il";}
-    else if (month == "Jun") { abbr = month + "e";}
-    else { abbr = month + "."; }
-
-    return abbr;
-}
-
-async function fixDayAbbr(day)
-{
-    var abbr;
-
-    if (day <= "09") 
-    { 
-       abbr = day.substring(1);
-    }
-    else
-    {
-       abbr = day;
-    }
-
-    return abbr;
-}
-
-
 (async function addBuilds() {
 
     let chromeCapabilities = Capabilities.chrome();
@@ -117,7 +86,7 @@ async function fixDayAbbr(day)
         await driver.findElement(By.id("id_password")).sendKeys(password);
         await driver.findElement(By.css(".primaryAction")).click();
 
-        // ADD BUILDS TEST
+        // ADD BUILDS TEST 
 
         // Add build with non null assembly template, build number, and location
         await driver.findElement(By.linkText("Builds")).click();
@@ -217,7 +186,11 @@ async function fixDayAbbr(day)
         }
         // 15 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
-	await new Promise(r => setTimeout(r, 2000));
+	while ((await driver.findElements(By.css("#div_id_assembly .ajax-error"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for New Build Assembly Ajax Error.");
+	}
 
         // 16 | verifyText | css=.ajax-error | This field is required.
         assert(await driver.findElement(By.css("#div_id_assembly .ajax-error")).getText() == "This field is required.");
@@ -301,7 +274,6 @@ async function fixDayAbbr(day)
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Deployment Number.");
 	}
-	await driver.findElement(By.id("id_deployment_number")).click();
         await driver.findElement(By.id("id_deployment_number")).sendKeys("7");
         // 14 | select | id=id_deployed_location | label=Test
         {
@@ -315,7 +287,7 @@ async function fixDayAbbr(day)
 	while ((await driver.findElements(By.linkText("Retire Build"))).length == 0) //1.6
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Deploy2.");
+	   console.log("Wait 2 seconds for Deploy3.");
 	}
         // 18 | click | id=action | 
         await driver.findElement(By.id("action")).click();
@@ -335,7 +307,7 @@ async function fixDayAbbr(day)
 	while ((await driver.findElements(By.linkText("Retire Build"))).length == 0) //1.6
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Deploy2.");
+	   console.log("Wait 2 seconds for Deploy4.");
 	}
         await driver.findElement(By.id("action")).click();
         await driver.findElement(By.linkText("Deploy to Field")).click();
@@ -352,7 +324,8 @@ async function fixDayAbbr(day)
         // Get new date 2 days prior to current date
         var d = new Date(dateString);
         d.setDate(d.getDate() - 2);
-        var newDate = (d.getMonth() + 1) + "/" + d.getDate() + "/" + d.getFullYear() + " " + d.getHours() + ":" + d.getMinutes();
+	var month = d.getMonth() + 1;
+        var newDate = month.toString().trim() + "/" + d.getDate().toString().trim() + "/" + d.getFullYear() + " " + ('0'+d.getHours()).slice(-2) + ":" + ('0'+d.getMinutes()).slice(-2);
   
         await driver.findElement(By.xpath("//input[@id='id_date']")).clear();
         await driver.executeScript("arguments[0].value = arguments[1]", ele, newDate); 
@@ -372,8 +345,8 @@ async function fixDayAbbr(day)
 	}
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
         // UNCOMMENT FOR DOCKER - history shows 27 days due to staging testing
-        assert(bodyText.includes("Total Time in Field: 2 days 0 hours"));        
-        assert(bodyText.includes("Current Deployment Time in Field: 2 days 0 hours"));
+	// Total Time in Field and Current Deployment Time in Field
+        assert(bodyText.includes("2 days 0 hours"));        
 
         // Click Deployments Tab and verify Deployment To Field Date: is 2 days prior 
         // 31 | click | id=deployments-tab |
@@ -395,21 +368,14 @@ async function fixDayAbbr(day)
         await new Promise(r => setTimeout(r, 2000));
         // Verify Deployment Times in the Deployments Tab
         bodyText = await driver.findElement(By.tagName("Body")).getText();
-        assert(bodyText.includes("Deployment Time in Field: 2 days 0 hours"));
-
-        var date = new Date(newDate);
-        var fullDate = date.toDateString();
-        var rdbDate = fullDate.split(" ");
-
-        //FIX date Sep -> Sept. & other months
-        var month = await fixMonthAbbr(rdbDate[1]);
-	day = await fixDayAbbr(rdbDate[2]);
-        rdbDate = month + " " + day + ", " + rdbDate[3] + ",";
+	// Deployment Time in Field
+        assert(bodyText.includes("2 days 0 hours"));
+        
 	try {
-	   assert(bodyText.includes("Deployment To Field Date: " + rdbDate));
+	   assert(bodyText.includes(newDate));
 	}
 	catch (AssertionError) {
-           console.log("Assertion Error: Deployment To Field Date is  "+rdbDate);
+           console.log("Possible Error: Expecting Build Deployment To Field Date:  "+ newDate);
         }
 
 
@@ -459,17 +425,14 @@ async function fixDayAbbr(day)
         await driver.findElement(By.css(".list-group-item > .collapsed > .fa")).click(); 
         await new Promise(r => setTimeout(r, 2000));
         bodyText = await driver.findElement(By.tagName("Body")).getText();
-        assert(bodyText.includes("Inventory Time in Field: 2 days 0 hours"));    
-        var rdbDate = fullDate.split(" ");
-
-        month = await fixMonthAbbr(rdbDate[1]);
-	day = await fixDayAbbr(rdbDate[2]);
-        rdbDate = month + " " + day + ", " + rdbDate[3] + ",";
+	// Inventory Time in Field
+        assert(bodyText.includes("2 days 0 hours"));
+    
 	try {
-           assert(bodyText.includes("Deployment To Field Date: " + rdbDate));
+           assert(bodyText.includes(newDate));
         }
 	catch (AssertionError) {
-           console.log("Assertion Error: Deployment To Field Date:  is  "+rdbDate);
+           console.log("Possible Error: Expecting Inventory Deployment (2 Days Prior) To Field Date:  "+ newDate);
         }
         
         // Remove sewing Inventory from Build
@@ -491,7 +454,9 @@ async function fixDayAbbr(day)
         // Get new date 1 day prior to current date
         var d = new Date(dateString);
         d.setDate(d.getDate() - 1);
-        var newDate = (d.getMonth() + 1) + "/" + d.getDate() + "/" + d.getFullYear() + " " + d.getHours() + ":" + d.getMinutes();
+        var day = parseInt(d.getDate(), 10);
+	var month = d.getMonth() + 1;
+        var newDate = month.toString().trim() + "/" + day.toString().trim() + "/" + d.getFullYear() + " " + ('0'+d.getHours()).slice(-2) + ":" + ('0'+d.getMinutes()).slice(-2);
         await driver.findElement(By.xpath("//input[@id='id_date']")).clear();
         await driver.executeScript("arguments[0].value = arguments[1]", ele, newDate); 
         // 43 | click | css=.controls > .btn-primary | 
@@ -514,21 +479,15 @@ async function fixDayAbbr(day)
         await driver.findElement(By.css(".list-group-item > .collapsed > .fa")).click();
         await new Promise(r => setTimeout(r, 2000));
         bodyText = await driver.findElement(By.tagName("Body")).getText();
-        assert(bodyText.includes("Inventory Time in Field: 1 days 0 hours"));
+	// Inventory Time in Field
+        assert(bodyText.includes("1 days 0 hours"));
 
-        var date = new Date(newDate);
-        var fullDate = date.toDateString();
-        var rdbDate = fullDate.split(" ");
-
-        month = await fixMonthAbbr(rdbDate[1]);
-	var day = await fixDayAbbr(rdbDate[2]);
-        rdbDate = month + " " + day + ", " + rdbDate[3] + ",";
 	try {
-           assert(bodyText.includes("Deployment Recovery Date: " + rdbDate));
+           assert(bodyText.includes(newDate));
 	}
 	catch (AssertionError) {
-           console.log("Assertion Error: Deployment Recovery Date is  "+rdbDate);
-        }
+           console.log("Possibe Error: Expecting Inventory Deployment Recovery Date:  "+ newDate);
+        } 
 
         // Re-add sewing Inventory to Build at the current date
         // 47 | click | id=action | 
@@ -550,8 +509,12 @@ async function fixDayAbbr(day)
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Id_date.");
 	}
+
         var ele = await driver.findElement(By.xpath("//input[@id='id_date']"));
         var dateString = await ele.getAttribute("value");
+	// Recovery screen date format is 01/05/2021 03:06, trim leading zeroes and time
+	dateString = dateString.replace(/\b0/g, '');
+	dateString = dateString.split(" ")[0];
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
         // Verify Total Time in Field and Current Deployment Time in Field: 0 days 0 hours
@@ -563,9 +526,11 @@ async function fixDayAbbr(day)
 	//let encodedString = await driver.takeScreenshot();
 	//await fs.writeFileSync('/tests/bscreen.png', encodedString, 'base64');      
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
-        // UNCOMMENT FOR DOCKER - history shows 27 days due to staging testing
-        assert(bodyText.includes("Total Time in Field: 1 days 0 hours"));        
-        assert(bodyText.includes("Current Deployment Time in Field: 0 days 0 hours"));
+        // UNCOMMENT FOR DOCKER - Inventory history shows 27 days due to staging testing
+	// Total Time in Field
+        assert(bodyText.includes("1 days 0 hours"));
+	// Current Deployment Time in Field
+       assert(bodyText.includes("0 days 0 hours"));
 
         // 53 | click | id=deployments-tab | 
 	while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //1.6
@@ -582,16 +547,16 @@ async function fixDayAbbr(day)
 
         await new Promise(r => setTimeout(r, 2000));
         bodyText = await driver.findElement(By.tagName("Body")).getText();
-        assert(bodyText.includes("Inventory Time in Field: 0 days 0 hours"));
+	// Inventory Time in Field
+        assert(bodyText.includes("0 days 0 hours"));
 
-        var date = new Date(dateString);
-        var fullDate = date.toDateString();
-        var rdbDate = fullDate.split(" ");
-
-        month = await fixMonthAbbr(rdbDate[1]);
-	var day = await fixDayAbbr(rdbDate[2]);
-        var string = month + " " + day + ", " + rdbDate[3] + ",";
-        assert(bodyText.includes("Deployment To Field Date: " + string));
+	// Deployment to Field Date
+        try {
+            assert(bodyText.includes(dateString));
+        }
+        catch (AssertionError) {
+            console.log("Possible Error: Expecting Inventory Deployment (1 Day Prior) To Field Date:  " + dateString);
+        }
 
         // Close browser window
         driver.quit();

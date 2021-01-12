@@ -27,7 +27,6 @@ from .models import *
 
 
 class VesselForm(forms.ModelForm):
-
     class Meta:
         model = Vessel
         fields = '__all__'
@@ -35,6 +34,24 @@ class VesselForm(forms.ModelForm):
             'length': 'Length (m)',
             'max_speed': 'Max speed (m/s)',
             'max_draft': 'Max draft (m)',
+        }
+        number_err_message = 'Enter a value 0.1 - 999.9 in the format NNN.N, with or without leading zeros or a decimal place.'
+        error_messages = {
+            'length': {
+                'max_digits': number_err_message,
+                'min_value': number_err_message,
+                'decimal_places': number_err_message,
+            },
+            'max_speed': {
+                'max_digits': number_err_message,
+                'min_value': number_err_message,
+                'decimal_places': number_err_message,
+            },
+            'max_draft': {
+                'max_digits': number_err_message,
+                'min_value': number_err_message,
+                'decimal_places': number_err_message,
+            },
         }
 
 

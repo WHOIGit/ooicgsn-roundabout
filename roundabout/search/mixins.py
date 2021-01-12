@@ -26,7 +26,7 @@ from tablib import Dataset
 
 class TableExportStream(TableExport):
 
-    def table_to_dataset(self, table, exclude_columns):
+    def table_to_dataset(self, table, exclude_columns, dataset_kwargs=None):
         """A generator that returns a tablib dataset for each row of the table."""
         table_rows = table.as_values(exclude_columns=exclude_columns)
         headers = next(table_rows)

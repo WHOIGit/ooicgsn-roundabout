@@ -20,20 +20,31 @@
 """
 
 import csv
+import io
+import json
+import re
+import requests
+from dateutil import parser
 import datetime
 import io
 from types import SimpleNamespace
+from decimal import Decimal
+
 
 from django import forms
+from django.db import transaction
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from roundabout.calibrations.forms import validate_coeff_vals
-from roundabout.calibrations.models import CoefficientName
-from roundabout.inventory.models import Inventory
+from roundabout.inventory.models import Inventory, Action, Deployment
+from roundabout.cruises.models import Cruise, Vessel
+from roundabout.inventory.utils import _create_action_history
+from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientNameEvent
+from roundabout.calibrations.forms import validate_coeff_vals, parse_valid_coeff_vals
+from roundabout.configs_constants.models import ConfigName
 from roundabout.users.models import User
-
+from roundabout.userdefinedfields.models import Field, FieldValue
 
 class ImportDeploymentsForm(forms.Form):
     deployments_csv = forms.FileField(
@@ -41,16 +52,223 @@ class ImportDeploymentsForm(forms.Form):
             attrs={
                 'multiple': True
             }
-        )
+        ),
+        required=False
     )
+
+    def clean_deployments_csv(self):
+        deployments_csv = self.files.getlist('deployments_csv')
+        counter = 0
+        for csv_file in deployments_csv:
+            counter += 1
+            filename = csv_file.name[:-4]
+            cache.set('validation_progress',{
+                'progress': counter,
+                'total': len(deployments_csv),
+                'file': filename
+            })
+            try:
+                csv_file.seek(0)
+                reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+                headers = reader.fieldnames
+            except:
+                raise ValidationError(
+                    _('File: %(filename)s: Unable to decode file headers'),
+                    params={'filename': filename},
+                )
+            deployments = []
+            for row in reader:
+                try:
+                    mooring_id = row['mooring.uid']
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse Mooring UID'),
+                        params={'filename': filename},
+                    )
+                if mooring_id not in deployments:
+                    # get Assembly number from RefDes as that seems to be most consistent across CSVs
+                    try:
+                        ref_des = row['Reference Designator']
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Unable to parse Reference Designator'),
+                            params={'filename': filename},
+                        )
+                    try:
+                        assembly = ref_des.split('-')[0]
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Unable to parse Assembly from Reference Designator'),
+                            params={'filename': filename},
+                        )
+                    # build data dict
+                    mooring_uid_dict = {'mooring.uid': row['mooring.uid'], 'assembly': assembly, 'rows': []}
+                    deployments.append(mooring_uid_dict)
+                deployment = next((deployment for deployment in deployments if deployment['mooring.uid']== row['mooring.uid']), False)
+                for key, value in row.items():
+                    deployment['rows'].append({key: value})
+        return deployments_csv
 
 
 class ImportVesselsForm(forms.Form):
-    vessels_csv = forms.FileField()
+    vessels_csv = forms.FileField(
+        widget=forms.ClearableFileInput(
+            attrs={
+                'multiple': True
+            }
+        ),
+        required=False
+    )
+
+    def clean_vessels_csv(self):
+        vessels_csv = self.files.getlist('vessels_csv')
+        counter = 0
+        for csv_file in vessels_csv:
+            counter += 1
+            filename = csv_file.name[:-4]
+            cache.set('validation_progress',{
+                'progress': counter,
+                'total': len(vessels_csv),
+                'file': filename
+            })
+            try:
+                csv_file.seek(0)
+                reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+                headers = reader.fieldnames
+            except:
+                raise ValidationError(
+                    _('File: %(filename)s: Unable to decode file headers'),
+                    params={'filename': filename},
+                )
+            for row in reader:
+                try:
+                    vessel_name = row['Vessel Name']
+                    vessel_obj = Vessel.objects.get(
+                        vessel_name = vessel_name,
+                    )
+                except Vessel.DoesNotExist:
+                    vessel_obj = ''
+                except Vessel.MultipleObjectsReturned:
+                    raise ValidationError(
+                        _('File: %(filename)s, %(v_name)s: More than one Vessel associated with CSV Vessel Name'),
+                        params={'filename': filename, 'v_name': vessel_name},
+                    )
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse Vessel Name'),
+                        params={'filename': filename},
+                    )
+                MMSI_number = None
+                IMO_number = None
+                length = None
+                max_speed = None
+                max_draft = None
+                try:
+                    active = row['Active']
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse Active'),
+                        params={'filename': filename},
+                    )
+                try:
+                    R2R = row['R2R']
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse R2R'),
+                        params={'filename': filename},
+                    )
+                try:
+                    MMSI_number = row['MMSI#']
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse MMSI'),
+                        params={'filename': filename},
+                    )
+                try:
+                    IMO_number = row['IMO#']
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse IMO'),
+                        params={'filename': filename},
+                    )
+                try:
+                    length = row['Length (m)']
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse Lenth (m)'),
+                        params={'filename': filename},
+                    )
+                try:
+                    max_speed = row['Max Draft (m)']
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse Max Speed (m/s)'),
+                        params={'filename': filename},
+                    )
+                try:
+                    max_draft = row['Max Draft (m)']
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse Max Draft (m)'),
+                        params={'filename': filename},
+                    )
+        return vessels_csv
 
 
 class ImportCruisesForm(forms.Form):
-    cruises_csv = forms.FileField()
+    cruises_csv = forms.FileField(
+        widget=forms.ClearableFileInput(
+            attrs={
+                'multiple': True
+            }
+        ),
+        required=False
+    )
+
+    def clean_cruises_csv(self):
+        cruises_csv = self.files.getlist('cruises_csv')
+        counter = 0
+        for csv_file in cruises_csv:
+            filename = csv_file.name[:-4]
+            counter += 1
+            cache.set('validation_progress',{
+                'progress': counter,
+                'total': len(cruises_csv),
+                'file': filename
+            })
+            try:
+                csv_file.seek(0)
+                reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+                headers = reader.fieldnames
+            except:
+                raise ValidationError(
+                    _('File: %(filename)s: Unable to decode file headers'),
+                    params={'filename': filename},
+                )
+            for row in reader:
+                try:
+                    cuid = row['CUID']
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse CUID'),
+                        params={'filename': filename},
+                    )
+                try:
+                    cruise_start_date = parser.parse(row['cruiseStartDateTime']).date()
+                    cruise_stop_date = parser.parse(row['cruiseStopDateTime']).date()
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse Cruise Start/Stop Dates'),
+                        params={'filename': filename},
+                    )
+                try:
+                    vessel_name_csv = row['ShipName'].strip()
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse Vessel Name'),
+                        params={'filename': filename},
+                    )     
+        return cruises_csv
 
 
 
@@ -83,21 +301,65 @@ def validate_cal_files(csv_files,ext_files):
                 _('File: %(filename)s, %(value)s: Unable to parse Calibration Date from Filename'),
                 params={'value': cal_date_string, 'filename': cal_csv.name},
             )
+        try:
+            deployment = Deployment.objects.filter(
+                deployment_to_field_date__year=cal_date_date.year,
+                deployment_to_field_date__month=cal_date_date.month,
+                deployment_to_field_date__day=cal_date_date.day,
+            )
+            assert len(deployment) < 2
+        except:
+            raise ValidationError(
+                _('File: %(filename)s, %(value)s: More than one existing Deployment associated with File Deployment Date'),
+                params={'value': cal_date_string, 'filename': cal_csv.name},
+            )
+        try:
+            custom_field = Field.objects.get(field_name='Manufacturer Serial Number')
+        except:
+            raise ValidationError(
+                _('Global Custom Field "Manufacturer Serial Number" must be created prior to import'),
+            )
+        try:
+            inv_manufacturer_serial = FieldValue.objects.get(inventory=inventory_item,field=custom_field,is_current=True)
+        except FieldValue.DoesNotExist:
+            inv_keys = {'field_value': ''}
+            inv_manufacturer_serial = SimpleNamespace(**inv_keys)
         for idx, row in enumerate(reader):
             row_data = row.items()
             for key, value in row_data:
+                if key == 'serial':
+                    try:
+                        csv_manufacturer_serial = value.strip()
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s, Row %(row)s: Cannot parse Manufacturer Serial Number'),
+                            params={'row': idx, 'filename': cal_csv.name},
+                        )
+                    if len(inv_manufacturer_serial.field_value) > 0 and len(csv_manufacturer_serial) > 0:
+                        try:
+                            assert csv_manufacturer_serial == inv_manufacturer_serial.field_value
+                        except:
+                            raise ValidationError(
+                                _('File: %(filename)s, Row %(row)s: Manufacturer Serial Number differs between Inventory Item (%(inv_msn)s) and file (%(csv_msn)s)'),
+                                params={'row': idx, 'filename': cal_csv.name, 'inv_msn': inv_manufacturer_serial.field_value, 'csv_msn':csv_manufacturer_serial},
+                            )
                 if key == 'name':
                     calibration_name = value.strip()
+                    try:
+                        assert len(calibration_name) > 0
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s, Calibration Name: %(value)s, Row %(row)s: Calibration Name is blank'),
+                            params={'value': calibration_name, 'row': idx, 'filename': cal_csv.name},
+                        )
                     try:
                         cal_name_item = CoefficientName.objects.get(
                             calibration_name = calibration_name,
                             coeff_name_event =  inventory_item.part.coefficient_name_events.first()
                         )
-                    except:
-                        raise ValidationError(
-                            _('File: %(filename)s, Calibration Name: %(value)s, Row %(row)s: Unable to find Calibration item with this Name'),
-                            params={'value': calibration_name, 'row': idx, 'filename': cal_csv.name},
-                        )
+                    except CoefficientName.DoesNotExist:
+                        calname_keys = {'value_set_type': 'sl'}
+                        cal_name_item = SimpleNamespace(**calname_keys)
                 elif key == 'value':
                     valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
                     mock_valset_instance = SimpleNamespace(**valset_keys)
@@ -109,8 +371,10 @@ def validate_cal_files(csv_files,ext_files):
                             params={'value': calibration_name,'row': idx, 'filename': cal_csv.name},
                         )
                     if '[' in raw_valset:
+                        cal_name_item.value_set_type = '1d'
                         raw_valset = raw_valset[1:-1]
                     if 'SheetRef' in raw_valset:
+                        cal_name_item.value_set_type = '2d'
                         ext_finder_filename = "__".join((cal_csv_filename,calibration_name))
                         try:
                             ref_file = [file for file in ext_files if ext_finder_filename in file.name][0]
@@ -136,14 +400,15 @@ def validate_cal_files(csv_files,ext_files):
                             params={'value': calibration_name, 'row': idx, 'filename': cal_csv.name},
                         )
 
-
+# 
 class ImportCalibrationForm(forms.Form):
-    cal_csv = forms.FileField(
+    calibration_csv = forms.FileField(
         widget=forms.ClearableFileInput(
             attrs={
                 'multiple': True
             }
-        )
+        ),
+        required = False
     )
     user_draft = forms.ModelMultipleChoiceField(
         queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username'),
@@ -151,8 +416,8 @@ class ImportCalibrationForm(forms.Form):
         label = 'Select Reviewers'
     )
 
-    def clean_cal_csv(self):
-        cal_files = self.files.getlist('cal_csv')
+    def clean_calibration_csv(self):
+        cal_files = self.files.getlist('calibration_csv')
         csv_files = []
         ext_files = []
         for file in cal_files:

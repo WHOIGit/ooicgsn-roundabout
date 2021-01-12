@@ -68,7 +68,7 @@ class Build(models.Model):
         ordering = ['assembly_revision', 'build_number']
 
     def __str__(self):
-        return '%s - %s' % (self.build_number, self.assembly_revision.assembly.name)
+        return '%s - %s' % (self.assembly_revision.assembly.name, self.build_number)
 
     @property
     def name(self):
