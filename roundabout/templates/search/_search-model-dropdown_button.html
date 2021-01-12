@@ -1,0 +1,45 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<div class="dropdown ml-3">
+  <button class="btn btn-secondary dropdown-toggle" type="button" id="search-model-dropdown" data-toggle="dropdown">
+    <span class="fa"></span>
+    {% if model == 'Inventory' %}  {{ label_inventory_app_plural }}
+    {% elif model == 'Calibrations' %} Calibrations
+    {% elif model == 'Configs_Constants' %} Configs/Constants
+    {% elif model == 'Build' %}    {{ label_builds_app_plural }}
+    {% elif model == 'Part' %}     Part Templates
+    {% elif model == 'Assembly' %} {{ label_assemblies_app_singular }} Templates
+    {% elif model == 'Action' %} Actions
+    {% elif model == 'User' %} User
+    {% endif %}
+  </button>
+  <div class="dropdown-menu" aria-labelledby="search-model-dropdown">
+    <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:inventory' %}>{{ label_inventory_app_plural }}</a>
+    <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:calibrations' %}> -- Calibrations</a>
+    <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:configconsts' %}> -- Config/Constants</a>
+    <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:build' %}>{{ label_builds_app_plural }}</a>
+    <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:part' %}>Part Templates</a>
+    <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:assembly' %}>{{ label_assemblies_app_singular }} Templates</a>
+    <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:action' %}>Actions</a>
+    <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:user' %}>User</a>
+  </div>
+</div>

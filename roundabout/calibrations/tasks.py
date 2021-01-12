@@ -19,20 +19,23 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from django.urls import path
+from celery import shared_task
 
-from . import user_search
-from . import views
+from roundabout.calibrations.models import CalibrationEvent
+from roundabout.configs_constants.models import ConfigEvent, ConfigDefaultEvent, ConstDefaultEvent
 
-app_name = 'search'
-urlpatterns = [
-    path('searchbar', view=views.searchbar_redirect, name='searchbar'),
-    path('inventory', view=views.InventoryTableView.as_view(), name='inventory'),
-    path('calibrations',view=views.CalibrationTableView.as_view(),name='calibrations'),
-    path('configconsts',view=views.ConfigConstTableView.as_view(),name='configconsts'),
-    path('builds', view=views.BuildTableView.as_view(), name='build'),
-    path('parts',view=views.PartTableView.as_view(),name='part'),
-    path('assembly', view=views.AssemblyTableView.as_view(), name='assembly'),
-    path('actions', view=views.ActionTableView.as_view(), name='action'),
-    path('user', view=user_search.UserSearchView.as_view(), name='user'),
-]
+
+@shared_task(bind = True)
+def check_events(self):
+    for event in CalibrationEvent.objects.all():
+        if not event.coefficient_value_sets.exists():
+            event.delete()
+    for event in ConfigEvent.objects.all():
+        if not event.config_values.exists():
+            event.delete()
+    for event in ConfigDefaultEvent.objects.all():
+        if not event.config_defaults.exists():
+            event.delete()
+    for event in ConstDefaultEvent.objects.all():
+        if not event.constant_defaults.exists():
+            event.delete()

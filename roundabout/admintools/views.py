@@ -329,7 +329,7 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
             tempimport_obj = None
 
         if tempimport_obj:
-            # get all the Inventory items to upload from the Temp tables
+            # get all the Inventory items to upload from the Temp tables2
             for item_obj in tempimport_obj.tempimportitems.all():
                 inventory_obj = Inventory()
 

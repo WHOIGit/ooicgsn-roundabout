@@ -201,26 +201,33 @@ var password;
         var csv = fs.readFileSync(rdb_ves, 'utf8');
         var exported_data = $.csv.toArrays(csv);
  
-        if ((exported_data[1][0] == "MS") &&
-            (exported_data[1][1] == "MP") &&
-            (exported_data[1][2] == "Maui Princess") &&
-            (exported_data[1][3] == "2234") &&
-            (exported_data[1][4] == "Koch") &&
-            (exported_data[1][5] == "Prin") &&
-            (exported_data[1][6] == "100000000") &&
-            (exported_data[1][7] == "1000000") &&
-            (exported_data[1][8] == "999.9") &&
-            (exported_data[1][9] == "99.9") &&
-            (exported_data[1][10] == "0.1") &&
-            (exported_data[1][11] == "5") &&
-            (exported_data[1][12] == "Y") &&
-            (exported_data[1][13] == "Y")) {
+	var found = false;	
+        for (var i = 1, len = exported_data.length; i < len; i++) {
+	  if (exported_data[i][2] == "Maui Princess") {
+           if ((exported_data[i][0] == "MS") &&
+               (exported_data[i][1] == "MP") &&
+               (exported_data[i][2] == "Maui Princess") &&
+               (exported_data[i][3] == "2234") &&
+               (exported_data[i][4] == "Koch") &&
+               (exported_data[i][5] == "Prin") &&
+               (exported_data[i][6] == "100000000") &&
+               (exported_data[i][7] == "1000000") &&
+               (exported_data[i][8] == "999.9") &&
+               (exported_data[i][9] == "99.9") &&
+               (exported_data[i][10] == "0.1") &&
+               (exported_data[i][11] == "5") &&
+               (exported_data[i][12] == "Y") &&
+               (exported_data[i][13] == "Y")) {
                 console.log("Export Vessel Fields Match.");
-        }
-        else
-        {
-            console.log("Export Vessel Fields Do Not Match.");
-        }
+		found = true;
+           }
+           else
+           {
+               console.log("Export Vessel Fields Do Not Match.");
+           }
+	  }
+	}
+	if (!found) console.log("Export Vessel Fields Do Not Match.");
  
         // Read in the exported Cruise csv data  
         while (!fs.existsSync(rdb_cru)) // wait for file download
@@ -231,19 +238,25 @@ var password;
         csv = fs.readFileSync(rdb_cru, 'utf8');
         exported_data = $.csv.toArrays(csv);
 
-        if ((exported_data[1][0] == "MAUI") &&
-            (exported_data[1][1] == "Maui Princess") &&
-            (exported_data[1][2] == "2020-11-04T00:00:00") &&
-            (exported_data[1][3] == "2021-01-03T00:00:00") &&
-            (exported_data[1][4] == "Sunset Cruise."))
-        {
-            console.log("Export Cruise Fields Match.");
-        }
-        else
-        {
-            console.log("Export Cruise Fields Do Not Match.");
-        }
-
+	found = false;	
+        for (var i = 1, len = exported_data.length; i < len; i++) {
+	  if (exported_data[i][1] == "Maui Princess") {
+            if ((exported_data[i][0] == "MAUI") &&
+                (exported_data[i][1] == "Maui Princess") &&
+                (exported_data[i][2] == "2020-11-04T00:00:00") &&
+                (exported_data[i][3] == "2021-01-03T00:00:00") &&
+                (exported_data[i][4] == "Sunset Cruise."))
+            {
+                console.log("Export Cruise Fields Match.");
+		found = true;
+            }
+            else
+            {
+                console.log("Export Cruise Fields Do Not Match.");
+            }
+	  }
+	}
+	if (!found) console.log("Export Cruise Fields Do Not Match.");
 
 
         // Close browser window

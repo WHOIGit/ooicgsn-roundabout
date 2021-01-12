@@ -45,7 +45,7 @@
                     data-node-type="{{ node_type }}">Edit Sub-{{ label_assemblies_app_singular }} Part Template</a>
 
                 {% if not user|has_group:"inventory only" %}
-                    {% if not assembly_part.config_default_events.exists %}
+                    {% if not assembly_part.config_default_events.exists and assembly_part.part.config_name_events.exists %}
                         <a  id="add_configdefault_action"
                             class="dropdown-item"
                             href="#"

@@ -32,6 +32,7 @@ from decimal import Decimal
 
 
 from django import forms
+from django.db import transaction
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -39,7 +40,7 @@ from django.utils.translation import gettext_lazy as _
 from roundabout.inventory.models import Inventory, Action, Deployment
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.inventory.utils import _create_action_history
-from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
+from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientNameEvent
 from roundabout.calibrations.forms import validate_coeff_vals, parse_valid_coeff_vals
 from roundabout.configs_constants.models import ConfigName
 from roundabout.users.models import User
@@ -151,6 +152,11 @@ class ImportVesselsForm(forms.Form):
                     raise ValidationError(
                         _('File: %(filename)s, %(v_name)s: More than one Vessel associated with CSV Vessel Name'),
                         params={'filename': filename, 'v_name': vessel_name},
+                    )
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to parse Vessel Name'),
+                        params={'filename': filename},
                     )
                 MMSI_number = None
                 IMO_number = None
@@ -316,7 +322,8 @@ def validate_cal_files(csv_files,ext_files):
         try:
             inv_manufacturer_serial = FieldValue.objects.get(inventory=inventory_item,field=custom_field,is_current=True)
         except FieldValue.DoesNotExist:
-            inv_manufacturer_serial = ''
+            inv_keys = {'field_value': ''}
+            inv_manufacturer_serial = SimpleNamespace(**inv_keys)
         for idx, row in enumerate(reader):
             row_data = row.items()
             for key, value in row_data:
@@ -339,15 +346,20 @@ def validate_cal_files(csv_files,ext_files):
                 if key == 'name':
                     calibration_name = value.strip()
                     try:
+                        assert len(calibration_name) > 0
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s, Calibration Name: %(value)s, Row %(row)s: Calibration Name is blank'),
+                            params={'value': calibration_name, 'row': idx, 'filename': cal_csv.name},
+                        )
+                    try:
                         cal_name_item = CoefficientName.objects.get(
                             calibration_name = calibration_name,
                             coeff_name_event =  inventory_item.part.coefficient_name_events.first()
                         )
-                    except:
-                        raise ValidationError(
-                            _('File: %(filename)s, Calibration Name: %(value)s, Row %(row)s: Unable to find Calibration item with this Name'),
-                            params={'value': calibration_name, 'row': idx, 'filename': cal_csv.name},
-                        )
+                    except CoefficientName.DoesNotExist:
+                        calname_keys = {'value_set_type': 'sl'}
+                        cal_name_item = SimpleNamespace(**calname_keys)
                 elif key == 'value':
                     valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
                     mock_valset_instance = SimpleNamespace(**valset_keys)
@@ -359,8 +371,10 @@ def validate_cal_files(csv_files,ext_files):
                             params={'value': calibration_name,'row': idx, 'filename': cal_csv.name},
                         )
                     if '[' in raw_valset:
+                        cal_name_item.value_set_type = '1d'
                         raw_valset = raw_valset[1:-1]
                     if 'SheetRef' in raw_valset:
+                        cal_name_item.value_set_type = '2d'
                         ext_finder_filename = "__".join((cal_csv_filename,calibration_name))
                         try:
                             ref_file = [file for file in ext_files if ext_finder_filename in file.name][0]
@@ -386,7 +400,7 @@ def validate_cal_files(csv_files,ext_files):
                             params={'value': calibration_name, 'row': idx, 'filename': cal_csv.name},
                         )
 
-
+# 
 class ImportCalibrationForm(forms.Form):
     calibration_csv = forms.FileField(
         widget=forms.ClearableFileInput(

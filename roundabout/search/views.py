@@ -27,10 +27,7 @@ from urllib.parse import unquote
 
 import django_tables2 as tables
 from django.contrib.auth.mixins import LoginRequiredMixin
-#from django.template.defaultfilters import register
-#from django.shortcuts import render, get_object_or_404
 #from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
-#from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, QueryDict
 from django.db.models import Q, Count, OuterRef, Subquery
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -67,18 +64,19 @@ def searchbar_redirect(request):
         elif model=='calibrations':
             if fnmatch(query.strip(),'????-??-??'):
                 query = query.strip()
-                getstr = '?f=.0.calibration_event__calibration_date&l=.0.exact&q=.0.{query}'
+                getstr = '?f=.0.calibration_event__calibration_date&l=.0.date&q=.0.{query}'
             else: getstr = '?f=.0.calibration_event__inventory__serial_number&f=.0.calibration_event__inventory__part__name&f=.0.coefficient_name__calibration_name&f=.0.calibration_event__user_approver__any__name&f=.0.calibration_event__user_draft__any__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
         elif model == 'configconsts':
             if fnmatch(query.strip(), '????-??-??'):
                 query = query.strip()
-                getstr = '?f=.0.config_event__configuration_date&l=.0.exact&q=.0.{query}'
+                getstr = '?f=.0.config_event__configuration_date&l=.0.date&q=.0.{query}'
             else:
                 getstr = '?f=.0.config_event__inventory__serial_number&f=.0.config_event__inventory__part__name&f=.0.config_name__name&f=.0.config_event__user_approver__any__name&f=.0.config_event__user_draft__any__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
         elif model=='part':         getstr = '?f=.0.part_number&f=.0.name&f=.0.friendly_name&l=.0.icontains&q=.0.{query}'
         elif model == 'build':      getstr = '?f=.0.build_number&f=.0.assembly__name&f=.0.assembly__assembly_type__name&f=.0.assembly__description&f=.0.build_notes&f=.0.location__name&l=.0.icontains&q=.0.{query}'
         elif model == 'assembly':   getstr = '?f=.0.assembly_number&f=.0.name&f=.0.assembly_type__name&f=.0.description&l=.0.icontains&q=.0.{query}'
         elif model == 'action':     getstr = '?f=.0.action_type&f=.0.user__name&f=.0.detail&f=.0.location__name&f=.0.inventory__serial_number&f=.0.inventory__part__name&l=.0.icontains'+'&q=.0.{query}'
+        elif model == 'user':       getstr = '?ccc_role=both&ccc_status=all'+'&q={query}'
         getstr = getstr.format(query=query)
         resp['Location'] += getstr
     return resp
@@ -99,6 +97,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
         queries = self.request.GET.getlist('q')
         negas = self.request.GET.getlist('n')
 
+        # the +['t'] corresponds to the t of "... for c,r,v,t in ..." below
         fields = [unquote(f).split('.',2)+['f'] for f in fields]
         lookups = [unquote(l).split('.',2)+['l'] for l in lookups]
         queries = [unquote(q).split('.',2)+['q'] for q in queries]
@@ -121,19 +120,35 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
                 query = [v for v,t in row_items if t=='q']
                 nega = [v for v,t in row_items if t=='n']
                 try:
-                    assert len(fields) >=1
-                    assert len(lookup)==1
-                    assert len(query)==1 and query[0]
+                    assert len(fields) >= 1
+                    assert len(lookup) == 1
+                    assert len(query) == 1
                     assert len(nega) <= 1
+                    lookup,query = lookup[0],query[0]
+                    multi_bool = len(fields) > 1
                 except AssertionError:
                     continue #skip
 
+                # Searching for Null/None field values
+                if lookup == 'isnull':
+                    query = True if query == 'True' else False
+
+                # querying for empty strings
+                if query == '' and lookup not in ['exact','iexact']:
+                    continue #skip empty
+
+                # hack: implicitly search for usernames in addition to a user's name
+                for f in fields[:]:
+                    if 'user__name' in f:
+                        extra_f = f.replace('user__name','user__username')
+                        fields.append(extra_f)
+
                 row = dict( #row_id=row_id,
                     fields=fields,
-                    lookup=lookup[0],
-                    query=query[0],
+                    lookup=lookup,
+                    query=query,
                     nega=bool(nega),
-                    multi=len(fields) > 1)
+                    multi=multi_bool)
                 rows.append(row)
 
                 # choice field hack
@@ -221,6 +236,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
 
                 Q_kwarg = {'id__in': matched_model_IDs}
                 return Q_kwarg
+
         cards = self.get_search_cards()
 
         final_Qs = []
@@ -286,8 +302,10 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
 
         avail_lookups = [dict(value='icontains',text='Contains'),
                          dict(value='exact',    text='Exact'),
+                         dict(value='date',     text='Date'),
                          dict(value='gte',      text='>='),
-                         dict(value='lte',      text='<='),]
+                         dict(value='lte',      text='<='),
+                         dict(value='isnull',   text='Is-Null')]
         context['avail_lookups'] = json.dumps(avail_lookups)
 
         lcats = dict(
@@ -300,6 +318,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
             ITER_LOOKUP=['in']+['icontains', 'exact'],
             EXACT_LOOKUP = ['exact'],
             BOOL_LOOKUP = ['exact','iexact'], )
+        lcats = {k:v+['isnull'] for k,v in lcats.items()}
         context['lookup_categories'] = json.dumps(lcats)
 
         avail_fields_sans_col_args = self.get_avail_fields()
@@ -625,7 +644,7 @@ class ActionTableView(GenericSearchTableView):
     def get_avail_fields():
         avail_fields = [dict(value="action_type", text="Action Type", legal_lookup='STR_LOOKUP'),
                         dict(value="user__name", text="User", legal_lookup='STR_LOOKUP'),
-                        dict(value="created_at", text="Timestamp", legal_lookup='DATETIME_LOOKUP'),
+                        dict(value="created_at", text="Timestamp", legal_lookup='DATE_LOOKUP'),
                         dict(value="detail", text="Detail", legal_lookup='STR_LOOKUP'),
                         dict(value="location__name",text="Location",legal_lookup='STR_LOOKUP'),
                         dict(value="inventory__serial_number", text="Inventory: Serial Number", legal_lookup='STR_LOOKUP'),
@@ -672,6 +691,8 @@ class CalibrationTableView(GenericSearchTableView):
         # final query results must be CalibrationEvents.
         calibration_event_ids = qs.values_list('calibration_event__id', flat=True)
         qs = CalibrationEvent.objects.filter(id__in=calibration_event_ids)
+        qs = qs.prefetch_related(*[pf.replace('calibration_event__','') for pf in self.query_prefetch if pf.startswith('calibration_event__')])
+        qs = qs.select_related('inventory__part__part_type').exclude(inventory__part__part_type__ccc_toggle=False)
         return qs
     def get_table_kwargs(self):
         # since search model is CoefficientValueSet and results are CalibrationEvents,
@@ -686,7 +707,7 @@ class CalibrationTableView(GenericSearchTableView):
 class ConfigConstTableView(GenericSearchTableView):
     model = ConfigValue
     table_class = ConfigConstTable
-    query_prefetch = ['config_name','config_event','config_event__inventory','config_event__inventory__part','config_event__user_approver','config_event__draft_approver']
+    query_prefetch = ['config_name','config_event','config_event__inventory','config_event__inventory__part','config_event__user_approver','config_event__user_draft']
 
     @staticmethod
     def get_avail_fields():
@@ -712,6 +733,8 @@ class ConfigConstTableView(GenericSearchTableView):
         # final query results must be CalibrationEvents.
         config_event_ids = qs.values_list('config_event__id', flat=True)
         qs = ConfigEvent.objects.filter(id__in=config_event_ids)
+        qs = qs.prefetch_related(*[pf.replace('config_event__','') for pf in self.query_prefetch if pf.startswith('config_event__')])
+        qs = qs.select_related('inventory__part__part_type').exclude(inventory__part__part_type__ccc_toggle=False)
         return qs
     def get_table_kwargs(self):
         # since search model is ConfigValue and results are ConfigEvents,
@@ -723,6 +746,3 @@ class ConfigConstTableView(GenericSearchTableView):
 
         return {'extra_columns':[]}
 
-# TODO see sn CGINS-DOSTAD-00134 for approver/reviewer search functionality
-# http://0.0.0.0:8000/search/calibrations?f=.0.calibration_event__inventory__serial_number&l=.0.icontains&q=.0.CGINS-DOSTAD-00134
-# http://0.0.0.0:8000/search/inventory?f=.0.serial_number&l=.0.icontains&q=.0.CGINS-DOSTAD-00134

@@ -18,6 +18,7 @@ RUN npm install jsdom
 RUN npm install jquery
 RUN npm install jquery-csv
 RUN npm install unzipper
+RUN npm install node-fetch
 
 RUN npm install selenium-webdriver
 
