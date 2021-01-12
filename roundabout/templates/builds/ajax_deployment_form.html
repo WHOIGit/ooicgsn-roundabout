@@ -85,10 +85,15 @@
               {% endif %}
 
               {% if deployment.id %}
-               <input class="btn btn-light cancel-btn"
+                  <input class="btn btn-light cancel-btn"
                       type="button" value="Cancel"
                       data-detail-url="{% url 'builds:ajax_builds_detail' deployment.build.id %}"
                       data-node-id="{{ deployment.id }}" />
+               {% else %}
+                  <input class="btn btn-light cancel-btn"
+                         type="button" value="Cancel"
+                         data-detail-url="{% url 'builds:ajax_builds_detail' build.id %}"
+                         data-node-id="{{ build.id }}" />
               {% endif %}
             </div>
           </div>

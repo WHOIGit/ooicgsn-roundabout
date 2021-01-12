@@ -26,6 +26,19 @@ from roundabout.builds.models import Build, BuildAction
 # Functions to update legacy content to match new model updates
 #------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
+# v.1.6.1 upgrades
+# v1.5 upgrades
+def run_v1_6_1_content_updates():
+    _update_inventory_deployments()
+
+def _update_inventory_deployments():
+    inventory_deployments = InventoryDeployment.objects.all()
+
+    for inv in inventory_deployments:
+        print(inv.inventory.assembly_part)
+        inv.assembly_part = inv.inventory.assembly_part
+        inv.save()
+
 # v1.5 upgrades
 def run_v1_5_content_updates():
     _update_deployment_actions()

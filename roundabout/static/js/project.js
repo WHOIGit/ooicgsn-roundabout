@@ -85,8 +85,13 @@ $(document).ready(function() {
             });
         } else if (typeof assemblyID !== 'undefined') {
             console.log(assemblyID);
-            data.instance._open_to(assemblyID);
-            data.instance.open_node(assemblyID);
+            if (typeof assemblyRevisionID !== 'undefined') {
+              data.instance._open_to(assemblyRevisionID);
+              data.instance.open_node(assemblyRevisionID);
+            } else{
+              data.instance._open_to(assemblyID);
+              data.instance.open_node(assemblyID);
+            }
             $(navTree).on("open_node.jstree", function (event, data) {
                 data.instance._open_to(nodeID);
                 data.instance.select_node(nodeID);
@@ -326,7 +331,6 @@ function getCookie(name) {
     }
     return cookieValue;
 }
-
 var csrftoken = getCookie('csrftoken');
 
 function csrfSafeMethod(method) {

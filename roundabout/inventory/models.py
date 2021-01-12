@@ -19,26 +19,24 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os
 import datetime
+import os
 from datetime import timedelta
 
-from django.db import models
-from django.contrib.postgres.fields import JSONField
+from django.core.validators import MaxValueValidator, MinValueValidator, FileExtensionValidator
 from django.urls import reverse
 from django.utils import timezone
-from django.core.validators import MaxValueValidator, MinValueValidator, FileExtensionValidator
-from model_utils import FieldTracker
 from mptt.models import MPTTModel, TreeForeignKey
 
-from .managers import *
-from roundabout.locations.models import Location
-from roundabout.parts.models import Part, Revision
 from roundabout.assemblies.models import Assembly, AssemblyPart
-from roundabout.cruises.models import Cruise
-from roundabout.users.models import User
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
+from roundabout.cruises.models import Cruise
+from roundabout.locations.models import Location
+from roundabout.parts.models import Part, Revision
+from roundabout.users.models import User
+from .managers import *
+
 labels = set_app_labels()
 
 # Private functions for use in Models
@@ -84,18 +82,27 @@ class Inventory(MPTTModel):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     detail = models.TextField(blank=True)
-    test_result = models.NullBooleanField(blank=False, choices=TEST_RESULTS)
+    test_result = models.BooleanField(null=True, blank=False, choices=TEST_RESULTS)
     test_type = models.CharField(max_length=20, choices=TEST_TYPES, null=True, blank=True)
     flag = models.BooleanField(choices=FLAG_TYPES, blank=False, default=False)
-    time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
+    # Deprecated as of v1.5
+    _time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
 
-    tracker = FieldTracker(fields=['location', 'parent', 'build'])
+    #tracker = FieldTracker(fields=['location', 'build'])
 
     class MPTTMeta:
         order_insertion_by = ['serial_number']
 
     def __str__(self):
         return self.serial_number
+
+    # get all Deployments "time in field", add them up for item's life total
+    @property
+    def time_at_sea(self):
+        deployments = self.inventory_deployments.all()
+        times = [dep.deployment_time_in_field for dep in deployments]
+        total_time_in_field = sum(times, datetime.timedelta())
+        return total_time_in_field
 
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
@@ -150,22 +157,6 @@ class Inventory(MPTTModel):
             return action.deployment
         except:
             return None
-
-    # get the most recent Deployment time in field, add this time delta to the time_at_sea column
-    def update_time_at_sea(self):
-        latest_time_at_sea = self.inventory_deployments.get_active_deployment().deployment_time_in_field
-        # add to existing Time at Sea duration
-        self.time_at_sea = self.time_at_sea + latest_time_at_sea
-        self.save()
-
-    # get the Total Time at Sea by adding historical sea time and current deployment sea time
-    def total_time_at_sea(self):
-        if self.current_deployment() and self.current_deployment().current_status == DeploymentBase.DEPLOYMENTTOFIELD:
-            current_deployment_time_at_sea = self.current_deployment().deployment_time_in_field
-            total_time_at_sea = self.time_at_sea + current_deployment_time_at_sea
-            return total_time_at_sea
-        else:
-            return self.time_at_sea
 
 
 class DeploymentBase(models.Model):
@@ -238,10 +229,6 @@ class DeploymentBase(models.Model):
             return time_on_deployment
         return timedelta(minutes=0)
 
-    def get_actions(self):
-        actions = self.build.actions.filter(object_type=Action.BUILD).filter(deployment=self)
-        return actions
-
     def deployment_progress_bar(self):
         deployment_progress_bar = None
         # Set variables for Deployment/Inventory Deployment Status bar in Bootstrap
@@ -291,12 +278,12 @@ class Deployment(DeploymentBase):
     latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
                                     validators=[
                                         MaxValueValidator(90),
-                                        MinValueValidator(0)
+                                        MinValueValidator(-90)
                                     ])
     longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
                                     validators=[
                                         MaxValueValidator(180),
-                                        MinValueValidator(0)
+                                        MinValueValidator(-180)
                                     ])
     depth = models.PositiveIntegerField(null=True, blank=True)
 
@@ -305,12 +292,18 @@ class Deployment(DeploymentBase):
             return '%s - %s' % (self.deployment_number, self.deployed_location)
         return '%s - %s' % (self.deployment_number, self.location.name)
 
+    def get_actions(self):
+        actions = self.actions.filter(object_type=Action.BUILD)
+        return actions
+
 
 class InventoryDeployment(DeploymentBase):
     deployment = models.ForeignKey(Deployment, related_name='inventory_deployments',
                                    on_delete=models.CASCADE, null=False)
     inventory = models.ForeignKey(Inventory, related_name='inventory_deployments',
-                                  on_delete=models.CASCADE, null=False)\
+                                  on_delete=models.CASCADE, null=False)
+    assembly_part = models.ForeignKey('assemblies.AssemblyPart', related_name='inventory_deployments',
+                                  on_delete=models.SET_NULL, null=True)
 
     objects = InventoryDeploymentQuerySet.as_manager()
 
@@ -325,10 +318,19 @@ class InventoryDeployment(DeploymentBase):
         deployment_percentage = 0
         if self.deployment_to_field_date:
             # calculate percentage of total build deployment item was deployed
-            deployment_percentage = int(self.deployment_time_in_field / self.deployment.deployment_time_in_field * 100)
+            if not self.deployment.deployment_time_in_field:
+                deployment_percentage = 0
+            elif not self.deployment_time_in_field:
+                deployment_percentage = 0
+            else:
+                deployment_percentage = int(self.deployment_time_in_field / self.deployment.deployment_time_in_field * 100)
             if deployment_percentage >= 99:
                 deployment_percentage = 100
             return deployment_percentage
+
+    def get_actions(self):
+        actions = self.inventory.actions.filter(object_type=Action.INVENTORY).filter(inventory_deployment=self)
+        return actions
 
 
 class DeploymentSnapshot(models.Model):
@@ -398,6 +400,7 @@ class Action(models.Model):
     RETIREBUILD = 'retirebuild'
     REVIEWAPPROVE = 'reviewapprove'
     EVENTAPPROVE = 'eventapprove'
+    CALCSVIMPORT = 'calcsvimport'
     ACTION_TYPES = (
         (ADD, 'Added to RDB'),
         (UPDATE, 'Details updated'),
@@ -425,6 +428,7 @@ class Action(models.Model):
         (RETIREBUILD, 'Retire Build'),
         (REVIEWAPPROVE, 'Reviewer approved Event'),
         (EVENTAPPROVE, 'Event Approved'),
+        (CALCSVIMPORT, 'Calibration CSV Uploaded'),
     )
     # object_type choices
     BUILD = 'build'

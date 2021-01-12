@@ -21,6 +21,7 @@
 
 from django.urls import path
 
+from . import user_search
 from . import views
 
 app_name = 'search'
@@ -33,4 +34,5 @@ urlpatterns = [
     path('parts',view=views.PartTableView.as_view(),name='part'),
     path('assembly', view=views.AssemblyTableView.as_view(), name='assembly'),
     path('actions', view=views.ActionTableView.as_view(), name='action'),
+    path('user', view=user_search.UserSearchView.as_view(), name='user'),
 ]

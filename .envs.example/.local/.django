@@ -11,6 +11,13 @@ REDIS_URL=redis://redis:6379/0
 # ------------------------------------------------------------------------------
 DJANGO_SECRET_KEY=9vgy4xpSMfbmesHKI5mJjZn2V6tHZhQHgSmvAoGzq4HnLpX1LagUTGiYwHJQNWCo
 
+# Celery
+# ------------------------------------------------------------------------------
+
+# Flower
+CELERY_FLOWER_USER=celeryusername
+CELERY_FLOWER_PASSWORD=celeryuserpassword
+
 # Roundabout Specific Django settings
 # ------------------------------------------------------------------------------
 
@@ -18,6 +25,9 @@ DJANGO_SECRET_KEY=9vgy4xpSMfbmesHKI5mJjZn2V6tHZhQHgSmvAoGzq4HnLpX1LagUTGiYwHJQNW
 DJANGO_SU_NAME=admin
 DJANGO_SU_EMAIL=admin@example.com
 DJANGO_SU_PASSWORD=admin
+
+# Site Domain
+RDB_SITE_URL=https://yourdomain.com
 
 # Settings for RDB serial number generation functions
 # ------------------------------------------------------------------------------

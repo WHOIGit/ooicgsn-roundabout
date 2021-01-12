@@ -29,11 +29,19 @@
           <input class="btn btn-link cancel-btn"
                  type="button" value="Cancel"
                  data-detail-url="{% url 'inventory:ajax_inventory_detail' object.inventory.id %}"/>
-          <input class="btn btn-danger" type="submit" value="Confirm"/>
+          <input id ='submit' class="btn btn-danger" type="submit" value="Confirm"/>
       </form>
   </div>
 </div>
 
 {% block javascript %}
+<script>
+    $(document).ready(function() {
 
+        let inventory_id = '{{object.inventory.id}}'
+        $('#submit').on('click', function() {
+            location.href = '/inventory/' + inventory_id + '/';
+        })
+    });
+</script>
 {% endblock javascript %}

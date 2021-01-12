@@ -31,12 +31,8 @@
                         aria-expanded="false" 
                         aria-controls="conf_event-{{ event.id }}"
                     >
-                        {% if event.deployment.build.is_deployed %}
-                            {{ event.get_latest_deployment_date }}
-                        {% else %}
-                            TBD
-                        {% endif %}
-                        -- {{ event.deployment }} ({{ event.deployment.build.actions.first }})
+                    {{ event.get_latest_deployment_date }}
+                    -- {{ event.deployment }} ({{ event.deployment.build.actions.first }})
                     </a>
                     <a  data-toggle="collapse" 
                         class="collapsed text-right" 
@@ -218,16 +214,6 @@
         let deployment = '{{ inventory_item.build.current_deployment }}';
         let user_id = '{{ user.id }}';
         let part_has_consts = '{{ part_has_consts }}';
-
-        // if (inv_part_type == 'Instrument' && deployment != 'None' && deployment.length > 0 && part_has_consts == 'True') {
-        //     $('#add_const_action').show();
-        //     $('#const-template-tab').show().css('display', '');
-        //     $('#const-template').show().css('display', '');
-        // } else {
-        //     $('#add_const_action').hide();
-        //     $('#const-template-tab').hide();
-        //     $('#const-template').hide();
-        // }
 
         $('#const-template').on('click', 'button[id^=expander]', function(e) {
             e.preventDefault();

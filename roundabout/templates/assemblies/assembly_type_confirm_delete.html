@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -20,18 +20,52 @@
 -->
 
 {% extends 'base.html' %}
-{% block title %}{{object_name}} Confirm delete?{% endblock %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}{{assembly_type}} Confirm delete?{% endblock %}
 
 {% block content %}
     <div id="content-container" class="container p-none">
         <div class="side-p">
             <h3>Are you sure?</h3>
-            <p>You're about to delete {{ object }}. Please confirm.</p>
-            <form action="" method="post">
+
+            {% if assembly_type.assemblies.exists %}
+                <div class="alert alert-danger" role="alert">
+                    <h5>Warning! This Assembly Type has Assemblies associated with it!</h5>
+
+                    <ul class="list-group list-group-flush">
+
+                        {% for assembly in assembly_type.assemblies.all %}
+
+                            <li class="list-group-item">
+                                <a href="{% url 'assemblies:assembly_detail' assembly.id %}"
+                                   class="btn btn-primary btn-sm float-right"
+                                   role="button">View</a>
+                                Assembly: {{ assembly }}
+
+                            </li>
+
+                        {% endfor %}
+
+                    </ul>
+
+                    <p class="mt-3">If you delete this Assembly Type, the existing Assemblies
+                        will need to be assigned to a new Assembly Type. Use the form below to select a new
+                        Assembly Type.</p>
+
+                </div>
+            {% endif %}
+
+
+            <form action="" method="post" novalidate>
                 {% csrf_token %}
-                <input class="btn btn-link"
-                       type="button" value="Cancel"
-                       onclick="window.history.go(-1);"/>
+
+                {{ form|crispy }}
+
+                <p>You're about to delete <b>{{ assembly_type }}</b>. Please confirm.</p>
+                <a class="btn btn-light cancel-btn"
+                   href="{% url 'assemblies:assembly_type_home' %}">Cancel</a>
                 <input class="btn btn-danger" type="submit" value="Confirm"/>
             </form>
         </div>

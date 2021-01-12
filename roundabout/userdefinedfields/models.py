@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -21,6 +21,7 @@
 from dateutil import parser
 
 from django.db import models
+from django.utils import timezone
 from django.contrib.postgres.fields import JSONField
 
 # Create your models here.
@@ -40,6 +41,8 @@ class Field(models.Model):
     field_default_value = models.CharField(max_length=255, null=False, blank=True)
     choice_field_options = JSONField(null=True, blank=True)
     global_for_part_types = models.ManyToManyField('parts.PartType', blank=True, related_name='custom_fields')
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ('field_name',)
@@ -57,6 +60,7 @@ class FieldValue(models.Model):
     part = models.ForeignKey('parts.Part', related_name='fieldvalues',
                           on_delete=models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey('users.User', related_name='fieldvalues',
                              on_delete=models.SET_NULL, null=True, blank=False)
     is_current = models.BooleanField(default=False)
