@@ -445,7 +445,6 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                         config_event.user_approver.add(self.request.user)
 
                         config_name = ConfigName.objects.filter(name='Nominal Depth', part=assembly_part.part).first()
-                        print(config_name)
 
                         config_value, config_value_created = ConfigValue.objects.update_or_create(
                             config_event=config_event,
@@ -455,6 +454,8 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                                 'created_at': dep_start_date,
                             },
                         )
+                        _create_action_history(config_event, Action.CALCSVIMPORT, self.request.user)
+
                         # _create_action_history function won't work correctly fo Inventory Deployments if item is already in RDB,
                         # need to add history Actions manually
 
@@ -496,6 +497,17 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                                 create_action = True
                                 action_date = dep_end_date
                                 detail = 'Removed from %s.' % (build)
+                                # create Build object action
+                                action = Action.objects.create(
+                                    action_type = Action.SUBCHANGE,
+                                    object_type = Action.BUILD,
+                                    created_at = action_date,
+                                    build = build,
+                                    location = deployed_location,
+                                    deployment = deployment_obj,
+                                    user = self.request.user,
+                                    detail = f'Sub-Assembly {item} removed.',
+                                )
 
                             if create_action:
                                 action = Action.objects.create(
