@@ -10,6 +10,8 @@ const assert = require('assert');
 
 var driver;
 var myArgs = process.argv.slice(2);
+var user;
+var password;
 
 (async function deleteLocations() {
 
@@ -43,20 +45,24 @@ var myArgs = process.argv.slice(2);
 	console.log('Error: Missing Arguments');
     }
 
-    // Step # | name | target | value
-    if (myArgs[1] == 'headless')
+   if (myArgs[2] == 'admin')
     {
-        await driver.get("http://localhost:8000/");   
+        await driver.get("http://localhost:8000/");
+        user = "admin";
+        password = "admin";
     }
     else
     {
-        // 1 | open | https://ooi-cgrdb-staging.whoi.net/ | 
-        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+//        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+        await driver.get("https://rdb-testing.whoi.edu/");
+        user = "jkoch";
+        password = "Automatedtests";
     }
+
     // 2 | setWindowSize | 1304x834 | 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
-    // Set implict wait time in between steps
-    await driver.manage().setTimeouts({ implicit: 2000 });
+    // Set implict wait time in between steps//
+//    await driver.manage().setTimeouts({ implicit: 2000 });
 
     //Hide Timer Panel when connecting to circleci local rdb django app
     if ((await driver.findElements(By.css("#djHideToolBarButton"))).length != 0)
@@ -75,13 +81,13 @@ var myArgs = process.argv.slice(2);
          }
         // LOGIN
         await driver.findElement(By.linkText("Sign In")).click();
-        await driver.findElement(By.id("id_login")).sendKeys("admin");
-        await driver.findElement(By.id("id_password")).sendKeys("admin");
+        await driver.findElement(By.id("id_login")).sendKeys(user);
+        await driver.findElement(By.id("id_password")).sendKeys(password);
         await driver.findElement(By.css(".primaryAction")).click()
 
         // DELETE LOCATIONS TEST
 
-        // Delete empty location
+        // Delete location with no children
         // 10 | click | id=navbarTemplates |
         await driver.findElement(By.id("navbarTemplates")).click();
         // 11 | click | linkText=Locations | 
@@ -93,10 +99,22 @@ var myArgs = process.argv.slice(2);
 	{
             await driver.findElement(By.linkText("Test1")).click(); 
             // 6 | click | linkText=Delete | 
-	    await new Promise(r => setTimeout(r, 2000)); //circleci - firefox
+//	    await new Promise(r => setTimeout(r, 6000));
+	    while ((await driver.findElements(By.linkText("Delete"))).length == 0) // 1.6
+	    {
+	      await new Promise(r => setTimeout(r, 2000));
+	      console.log("Wait 2 seconds for Delete1.");
+	    }
             await driver.findElement(By.linkText("Delete")).click();
+//            await new Promise(r => setTimeout(r, 6000));
+	    while ((await driver.findElements(By.css(".btn-danger"))).length == 0) // 1.6
+	    {
+	      await new Promise(r => setTimeout(r, 2000));
+	      console.log("Wait 2 seconds for Delete1.");
+	    }
             // 7 | click | css=.btn-danger | 
             await driver.findElement(By.css(".btn-danger")).click();
+            await new Promise(r => setTimeout(r, 6000));
 	}
 	else
 	    console.log("Delete Locations failed: Test1 not found");
@@ -114,83 +132,75 @@ var myArgs = process.argv.slice(2);
         j++;
         }
         
-        // 8 | click | linkText=Test Child |
-        await new Promise(r => setTimeout(r, 2000));
-        
 	if ((await driver.findElements(By.linkText("Test Child1"))).length != 0)
 	{
 	    await driver.findElement(By.linkText("Test Child1")).click();
+//            await new Promise(r => setTimeout(r, 6000));
+	    while ((await driver.findElements(By.linkText("Delete"))).length == 0) // 1.6
+	    {
+	      await new Promise(r => setTimeout(r, 2000));
+	      console.log("Wait 2 seconds for Delete2.");
+	    }
             // 9 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
+//	    await new Promise(r => setTimeout(r, 6000));
+	    while ((await driver.findElements(By.css(".btn-danger"))).length == 0) // 1.6
+	    {
+	      await new Promise(r => setTimeout(r, 2000));
+	      console.log("Wait 2 seconds for Delete2.");
+	    }
             // 10 | click | css=.btn-danger | 
             await driver.findElement(By.css(".btn-danger")).click();
+	    await new Promise(r => setTimeout(r, 6000));
 	}
 	else
 	    console.log("Delete Locations failed: Test Child1 not found");
 
-        // 11 | click | linkText=Add Location |
-        await driver.wait(until.elementLocated(By.linkText("Add Location")));
-        await driver.findElement(By.linkText("Add Location")).click();
-        await driver.wait(until.elementLocated(By.id("id_name")));
-        // 13 | type | id=id_name | Test Child2
-        await driver.findElement(By.id("id_name")).sendKeys("Test Child2");
-        // 14 | click | id=id_parent | 
-        await driver.findElement(By.id("id_parent")).click();
-        // 15 | select | id=id_parent | label=Test Child
-         {
-           const dropdown = await driver.findElement(By.id("id_parent"));
-           await dropdown.findElement(By.xpath("//option[. = '--- Test Child']")).click();
-         }
-        // 16 | click | id=id_parent | 
-        await driver.findElement(By.id("id_parent")).click();
-        // 17 | click | css=.controls > .btn | 
-        await driver.findElement(By.css(".controls > .btn")).click();
-
-        // Delete location with child location
         // 18 | click | linkText=Test Child |
-        await new Promise(r => setTimeout(r, 2000));
 	if ((await driver.findElements(By.linkText("Test Child"))).length != 0)
 	{
             await driver.findElement(By.linkText("Test Child")).click();
             // 19 | click | linkText=Delete | 
-            await new Promise(r => setTimeout(r, 2000));
+//            await new Promise(r => setTimeout(r, 6000));
+	    while ((await driver.findElements(By.linkText("Delete"))).length == 0) // 1.6
+	    {
+	      await new Promise(r => setTimeout(r, 2000));
+	      console.log("Wait 2 seconds for Delete3.");
+	    }
             await driver.findElement(By.linkText("Delete")).click();
+//	    await new Promise(r => setTimeout(r, 6000));
+	    while ((await driver.findElements(By.css(".btn-danger"))).length == 0) // 1.6
+	    {
+	      await new Promise(r => setTimeout(r, 2000));
+	      console.log("Wait 2 seconds for Delete3.");
+	    }
             // 20 | click | css=.btn-danger | 
             await driver.findElement(By.css(".btn-danger")).click();
+            await new Promise(r => setTimeout(r, 6000));
 	}
 	else
 	    console.log("Delete Locations failed: Test Child not found");
 
-
-        // 21 | click | linkText=Test Child2 | 
-        //Stale element error here because only the name changes
-        // only thing that works is this wait
-        await new Promise(r => setTimeout(r, 2000));
-
-	if ((await driver.findElements(By.linkText("Test Child2"))).length != 0)
-	{
-            await new Promise(r => setTimeout(r, 2000));  //circleci
-	    await driver.findElement(By.linkText("Test Child2")).click();
-            // 22 | click | linkText=Delete | 
-            await new Promise(r => setTimeout(r, 2000));
-            await driver.findElement(By.linkText("Delete")).click();
-            // 23 | click | css=.btn-danger | 
-            await driver.findElement(By.css(".btn-danger")).click();
-	}
-	else
-	    console.log("Delete Locations failed: Test Child2 not found");
-
-        // Delete location with inventory, move inventory to the trash
-        // 24 | click | linkText=Test |
-        await new Promise(r => setTimeout(r, 2000));
-
 	if ((await driver.findElements(By.linkText("Test"))).length != 0)
 	{   
             await driver.findElement(By.linkText("Test")).click();
+//            await new Promise(r => setTimeout(r, 8000)); //6 seconds not enough 1.6
+	    while ((await driver.findElements(By.linkText("Delete"))).length == 0) // 1.6
+	    {
+	      await new Promise(r => setTimeout(r, 2000));
+	      console.log("Wait 2 seconds for Delete4.");
+	    }
             // 25 | click | linkText=Delete | 
             await driver.findElement( By.linkText("Delete")).click();
+//            await new Promise(r => setTimeout(r, 6000));
+	    while ((await driver.findElements(By.css(".btn-danger"))).length == 0) // 1.6
+	    {
+	      await new Promise(r => setTimeout(r, 2000));
+	      console.log("Wait 2 seconds for Delete4.");
+	    }
             // 26 | click | css=.btn-danger | 
             await driver.findElement(By.css(".btn-danger")).click();
+            await new Promise(r => setTimeout(r, 6000));
 	}
 	else
 	    console.log("Delete Locations failed: Test not found");

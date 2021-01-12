@@ -20,20 +20,23 @@
 """
 
 from decimal import Decimal
-from django.db import models
+
 from django.contrib.postgres.fields import JSONField
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db import models
 from django.urls import reverse
 from django.utils import timezone
-from django.core.validators import MinValueValidator, MaxValueValidator
 from mptt.models import MPTTModel, TreeForeignKey
 
 from roundabout.locations.models import Location
 from roundabout.userdefinedfields.models import Field
 
+
 # Create your models here
 
 class PartType(MPTTModel):
     name = models.CharField(max_length=255, unique=False)
+    ccc_toggle = models.BooleanField(null=False, default=False)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', on_delete=models.SET_NULL)
 
     class MPTTMeta:
@@ -54,7 +57,7 @@ class Part(models.Model):
     note = models.TextField(blank=True)
     custom_fields = JSONField(blank=True, null=True)
     user_defined_fields = models.ManyToManyField(Field, blank=True, related_name='parts')
-    cal_dec_places = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(20)], null=False, blank=True, default=8)
+    cal_dec_places = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(32)], null=False, blank=True, default=15)
 
     class Meta:
         ordering = ['name']

@@ -19,7 +19,7 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView
@@ -38,6 +38,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.forms.models import inlineformset_factory, BaseInlineFormSet
 from .utils import handle_reviewers
+from .tasks import check_events
 
 # Handles creation of Calibration Events, Names,and Coefficients
 class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
@@ -50,7 +51,7 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         self.object = None
         inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
         coeff_event = inv_inst.part.coefficient_name_events.first()
-        cal_names = coeff_event.coefficient_names.all()
+        cal_names = coeff_event.coefficient_names.exclude(deprecated=True)
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         form.fields['user_draft'].required = True
@@ -148,37 +149,10 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         form.fields['user_draft'].required = False
-        coeff_name_event = self.object.inventory.part.coefficient_name_events.first()
-        coeff_name_event_names = coeff_name_event.coefficient_names.all()
-        cal_event_names = [valset.coefficient_name for valset in self.object.coefficient_value_sets.all()]
-        extra_rows = len(coeff_name_event_names) - len(cal_event_names)
-        EventValueSetAddFormset = inlineformset_factory(
-            CalibrationEvent,
-            CoefficientValueSet,
-            form=CoefficientValueSetForm,
-            fields=('coefficient_name', 'value_set', 'notes'),
-            extra=extra_rows,
-            can_delete=True
-        )
-        event_valueset_form = EventValueSetAddFormset(
+        event_valueset_form = EventValueSetFormset(
             instance=self.object,
             form_kwargs={'inv_id': self.object.inventory.id}
         )
-        for idx,name in enumerate(coeff_name_event_names):
-            try:
-                coeff_val_set = CoefficientValueSet.objects.get(coefficient_name = name, calibration_event = self.object)
-            except CoefficientValueSet.DoesNotExist:
-                coeff_val_set = ''
-            if coeff_val_set != '':
-                event_valueset_form.forms[idx].initial = {
-                    'coefficient_name': name,
-                    'value_set': coeff_val_set.value_set,
-                    'notes': coeff_val_set.notes
-                }
-            else:
-                event_valueset_form.forms[idx].initial = {
-                    'coefficient_name': name
-                }
         return self.render_to_response(
             self.get_context_data(
                 form=form,
@@ -258,19 +232,32 @@ class EventValueSetDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteVie
     permission_required = 'calibrations.add_calibrationevent'
     redirect_field_name = 'home'
 
-    def delete(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        data = {
-            'message': "Successfully submitted form data.",
-            'parent_id': self.object.inventory.id,
-            'parent_type': 'part_type',
-            'object_type': self.object.get_object_type(),
-        }
-        self.object.delete()
+    def delete(self, request, *args, **kwargs):	
+        self.object = self.get_object()	
+        data = {	
+            'message': "Successfully submitted form data.",	
+            'parent_id': self.object.inventory.id,	
+            'parent_type': 'part_type',	
+            'object_type': self.object.get_object_type(),	
+        }	
+        self.object.delete()	
         return JsonResponse(data)
 
     def get_success_url(self):
-        return reverse_lazy('inventory:ajax_inventory_detail', args=(self.object.inventory.id, ))
+        return reverse('inventory:ajax_inventory_detail', args=(self.object.inventory.id,))
+
+
+def event_delete_view(request, pk):
+    evt = CalibrationEvent.objects.get(id=pk)
+    inv_id = evt.inventory.id
+    if request.method == "POST":
+        evt.delete()
+        return HttpResponseRedirect(reverse('inventory:ajax_inventory_detail', args=(inv_id,)))
+        
+    return render(request, 'calibrations/event_delete.html', {
+        "event_template": evt,
+        'request': request
+    })
 
 
 
@@ -511,6 +498,7 @@ class EventCoeffNameUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxForm
         part_calname_form.save()
         part_cal_copy_form.save()
         _create_action_history(self.object, Action.UPDATE, self.request.user)
+        job = check_events.delay()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -577,6 +565,7 @@ class EventCoeffNameDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteVi
             'object_type': self.object.get_object_type(),
         }
         self.object.delete()
+        job = check_events.delay()
         return JsonResponse(data)
 
     def get_success_url(self):

@@ -139,12 +139,14 @@ class ConfigNameForm(forms.ModelForm):
         fields = [
             'name', 
             'config_type', 
-            'include_with_calibrations'
+            'include_with_calibrations',
+            'deprecated'
         ] 
         labels = {
             'name': 'Configuration/Constant Name',
             'config_type': 'Type',
-            'include_with_calibrations': 'Export with Calibrations' 
+            'include_with_calibrations': 'Export with Calibrations',
+            'deprecated': 'Deprecated'
         }
         widgets = {
             'name': forms.TextInput(
@@ -152,8 +154,18 @@ class ConfigNameForm(forms.ModelForm):
                     'required': False
                 }
             ),
-            'include_with_calibrations': forms.CheckboxInput() 
+            'include_with_calibrations': forms.CheckboxInput(),
+            'deprecated': forms.CheckboxInput() 
         }
+    def __init__(self, *args, **kwargs):
+        super(ConfigNameForm, self).__init__(*args, **kwargs)
+        if self.instance.deprecated:
+            self.fields['name'].widget.attrs.update(
+                {
+                    'readonly': True,
+                    'style': 'cursor: not-allowed; pointer-events: none; background-color: #d5dfed;'
+                }
+            )
 
 
 # Constant Default form
@@ -278,15 +290,16 @@ class ConfigDefaultForm(forms.ModelForm):
 # Inputs: Part 
 class ConfPartCopyForm(forms.Form):
     from_part = forms.ModelChoiceField(
-        queryset = Part.objects.filter(part_type__name='Instrument'),
+        queryset = Part.objects.filter(part_type__ccc_toggle=True),
         required=False,
         label = 'Copy Configurations/Constants from Part'
     )
 
     def __init__(self, *args, **kwargs):
         self.part_id = kwargs.pop('part_id')
+        self.part_type = kwargs.pop('part_type')
         super(ConfPartCopyForm, self).__init__(*args, **kwargs)
-        self.fields['from_part'].queryset = Part.objects.filter(part_type__name='Instrument', config_name_events__gt=0).exclude(id__in=str(self.part_id))
+        self.fields['from_part'].queryset = Part.objects.filter(part_type__name=self.part_type, config_name_events__gt=0).exclude(id__in=str(self.part_id))
 
     def clean_from_part(self):
         from_part = self.cleaned_data.get('from_part')
@@ -309,7 +322,7 @@ ConfigEventValueFormset = inlineformset_factory(
     ConfigValue, 
     form=ConfigValueForm,
     fields=('config_name', 'config_value', 'notes'), 
-    extra=1, 
+    extra=0, 
     can_delete=True
 )
 
@@ -321,7 +334,8 @@ PartConfigNameFormset = inlineformset_factory(
     fields=(
         'name', 
         'config_type', 
-        'include_with_calibrations'
+        'include_with_calibrations',
+        'deprecated'
     ), 
     extra=1, 
     can_delete=True

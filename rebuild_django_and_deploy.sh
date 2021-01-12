@@ -28,4 +28,7 @@ then
     docker-compose -f production.yml up -d --no-deps --build django
     docker-compose -f production.yml run --rm django python manage.py migrate
     docker-compose -f production.yml run --rm django python manage.py collectstatic --noinput
+    docker-compose -f production.yml up -d --no-deps --build celeryworker
+    docker-compose -f production.yml up -d --no-deps --build celerybeat
+    docker-compose -f production.yml up -d --no-deps --build flower
 fi

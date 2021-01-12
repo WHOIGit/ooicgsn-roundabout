@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -19,14 +19,36 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
-from rest_framework import generics, viewsets, filters
-from ..models import Part
-from .serializers import PartSerializer
+from rest_framework.permissions import IsAuthenticated
+
+from roundabout.core.api.views import FlexModelViewSet
+from .filters import *
+from .serializers import PartSerializer, PartTypeSerializer, RevisionSerializer, DocumentationSerializer
 
 
-class PartViewSet(viewsets.ModelViewSet):
+class PartTypeViewSet(FlexModelViewSet):
+    serializer_class = PartTypeSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = PartType.objects.all()
+    filterset_class = PartTypeFilter
 
-    queryset = Part.objects.all()
+
+class PartViewSet(FlexModelViewSet):
     serializer_class = PartSerializer
-    search_fields = ['part_number']
-    filter_backends = (filters.SearchFilter,)
+    permission_classes = (IsAuthenticated,)
+    queryset = Part.objects.all()
+    filterset_class = PartFilter
+
+
+class RevisionViewSet(FlexModelViewSet):
+    serializer_class = RevisionSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = Revision.objects.all()
+    filterset_class = RevisionFilter
+
+
+class DocumentationViewSet(FlexModelViewSet):
+    serializer_class = DocumentationSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = Documentation.objects.all()
+    filterset_class = DocumentationFilter
