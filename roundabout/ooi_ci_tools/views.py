@@ -214,7 +214,7 @@ class ImportDeploymentsUploadView(LoginRequiredMixin, FormView):
                     # parse together the Build/Deployment Numbers from CSV fields
                     deployment_number = f'{assembly}-{dep_number_string}'
                     print(deployment_number)
-                    build_number = f'H{dep_number_string[-1]}'
+                    build_number = f'Historical {dep_number_string}'
                     # build data dict
                     mooring_uid_dict = {
                         'mooring.uid': row['mooring.uid'],
