@@ -75,19 +75,19 @@ def parse_cal_files(self):
             )
         except Deployment.DoesNotExist:
             deployment = None
-        conf_event, created = ConfigEvent.objects.get_or_create(
+        conf_event, conf_created = ConfigEvent.objects.get_or_create(
             configuration_date = cal_date_date,
             inventory = inventory_item,
             config_type = 'conf',
             deployment = deployment
         )
-        cnst_event, created = ConfigEvent.objects.get_or_create(
+        cnst_event, cnst_created = ConfigEvent.objects.get_or_create(
             configuration_date = cal_date_date,
             inventory = inventory_item,
             config_type = 'cnst',
             deployment = deployment
         )
-        csv_event, created = CalibrationEvent.objects.get_or_create(
+        csv_event, cal_created = CalibrationEvent.objects.get_or_create(
             calibration_date = cal_date_date,
             inventory = inventory_item
         )
@@ -189,7 +189,10 @@ def parse_cal_files(self):
                     }
                 )
                 parse_valid_coeff_vals(coeff_val_set)
-            _create_action_history(csv_event, Action.CALCSVIMPORT, user)
+            if cal_created:
+                _create_action_history(csv_event, Action.CALCSVIMPORT, user)
+            else:
+                _create_action_history(csv_event, Action.CALCSVUPDATE, user)
         else:
             csv_event.delete()
         if len(config_val_sets) >= 1:
@@ -203,7 +206,10 @@ def parse_cal_files(self):
                         'notes': valset['notes'],
                     }
                 )
-            _create_action_history(conf_event, Action.CALCSVIMPORT, user)
+            if conf_created:
+                _create_action_history(conf_event, Action.CALCSVIMPORT, user)
+            else:
+                _create_action_history(conf_event, Action.CALCSVUPDATE, user)
         else:
             conf_event.delete()
         if len(const_val_sets) >= 1:
@@ -217,7 +223,10 @@ def parse_cal_files(self):
                         'notes': valset['notes'],
                     }
                 )
-            _create_action_history(cnst_event, Action.CALCSVIMPORT, user)
+            if cnst_created:
+                _create_action_history(cnst_event, Action.CALCSVIMPORT, user)
+            else:
+                _create_action_history(cnst_event, Action.CALCSVUPDATE, user)
         else:
             cnst_event.delete()
     cache.delete('user')
