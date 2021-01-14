@@ -342,8 +342,11 @@ class BuildAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         for link_form in formset:
             link = link_form.save(commit=False)
             if link.text and link.url:
-                link.parent = self.object
-                link.save()
+                if link_form['DELETE'].data:
+                    link.delete()
+                else:
+                    link.parent = self.object
+                    link.save()
 
         # Create new Action record
         # Call the function to create an Action history chain

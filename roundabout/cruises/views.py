@@ -226,8 +226,11 @@ class CruiseAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         for link_form in formset:
             link = link_form.save(commit=False)
             if link.text and link.url:
-                link.parent = self.object
-                link.save()
+                if link_form['DELETE'].data:
+                    link.delete()
+                else:
+                    link.parent = self.object
+                    link.save()
 
         if self.request.is_ajax():
             print(form.cleaned_data)
@@ -353,8 +356,11 @@ class VesselUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
         for link_form in link_formset:
             link = link_form.save(commit=False)
             if link.text and link.url:
-                link.parent = vessel
-                link.save()
+                if link_form['DELETE'].data:
+                    link.delete()
+                else:
+                    link.parent = vessel
+                    link.save()
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, vessel_form, link_formset):
