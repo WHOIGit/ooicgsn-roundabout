@@ -78,7 +78,7 @@
               <td>
                 {% if vessel.hyperlinks %}
                   {% for link in vessel.hyperlinks.all %}
-                    <a href="{{ link.url }}">{{ link.text }}</a><br>
+                    <a href="{{ link.url }}">{{ link.text }} <i class="fas fa-link"></i></a><br>
                   {% endfor %}
                 {% endif %}
               </td>

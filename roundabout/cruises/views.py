@@ -165,8 +165,9 @@ class CruiseAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         self.object = form.save()
         for link_form in formset:
             link = link_form.save(commit=False)
-            link.parent = self.object
-            link.save()
+            if link.text and link.url:
+                link.parent = self.object
+                link.save()
 
         if self.request.is_ajax():
             print(form.cleaned_data)
@@ -181,13 +182,16 @@ class CruiseAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
             return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, formset):
-        formset_errors = formset.errors
-
         if self.request.is_ajax():
-            data = form.errors
-            return JsonResponse(data, status=400)
+            if not form.is_valid():
+                # show form errors before formset errors
+                return JsonResponse(form.errors, status=400)
+            else:
+                # only show formset errors if there are no form errors
+                # because it is unclear how to combine form and formset errors in a way that doesnt break project.js:handleFormError()
+                return JsonResponse(formset.errors, status=400, safe=False)
         else:
-            return self.render_to_response(self.get_context_data(form=form, link_formset=formset, form_errors=formset_errors))
+            return self.render_to_response(self.get_context_data(form=form, link_formset=formset))
 
     def get_success_url(self):
         return reverse('cruises:ajax_cruises_detail', args=(self.object.id,))
@@ -221,8 +225,9 @@ class CruiseAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         self.object = form.save()
         for link_form in formset:
             link = link_form.save(commit=False)
-            link.parent = self.object
-            link.save()
+            if link.text and link.url:
+                link.parent = self.object
+                link.save()
 
         if self.request.is_ajax():
             print(form.cleaned_data)
@@ -237,13 +242,16 @@ class CruiseAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
             return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, formset):
-        formset_errors = formset.errors
-
         if self.request.is_ajax():
-            data = form.errors
-            return JsonResponse(data, status=400)
+            if not form.is_valid():
+                # show form errors before formset errors
+                return JsonResponse(form.errors, status=400)
+            else:
+                # only show formset errors if there are no form errors
+                # because it is unclear how to combine form and formset errors in a way that doesnt break project.js:handleFormError()
+                return JsonResponse(formset.errors, status=400, safe=False)
         else:
-            return self.render_to_response(self.get_context_data(form=form, link_formset=formset, form_errors=formset_errors))
+            return self.render_to_response(self.get_context_data(form=form, link_formset=formset))
 
     def get_success_url(self):
         return reverse('cruises:ajax_cruises_detail', args=(self.object.id,))
@@ -305,13 +313,13 @@ class VesselCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
         vessel = form.save()
         for link_form in formset:
             link = link_form.save(commit=False)
-            link.vessel = vessel
-            link.save()
+            if link.text and link.url:
+                link.parent = vessel
+                link.save()
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form, formset):
-        formset_errors = formset.errors
-        return self.render_to_response(self.get_context_data(form=form, link_formset=formset, form_errors=formset_errors))
+        return self.render_to_response(self.get_context_data(form=form, link_formset=formset))
 
     def get_success_url(self):
         return reverse('cruises:vessels_home', )
@@ -344,13 +352,13 @@ class VesselUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
         vessel = vessel_form.save()
         for link_form in link_formset:
             link = link_form.save(commit=False)
-            link.vessel = vessel
-            link.save()
+            if link.text and link.url:
+                link.parent = vessel
+                link.save()
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, vessel_form, link_formset):
-        form_errors = link_formset.errors
-        return self.render_to_response(self.get_context_data(form=vessel_form, link_formset=link_formset, form_errors=form_errors))
+        return self.render_to_response(self.get_context_data(form=vessel_form, link_formset=link_formset))
 
     def get_success_url(self):
         return reverse('cruises:vessels_home', )
