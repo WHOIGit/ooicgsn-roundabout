@@ -59,7 +59,7 @@
                 <td>
                   {% if cruise.hyperlinks %}
                     {% for link in cruise.hyperlinks.all %}
-                      <a href="{{ link.url }}">{{ link.text }} <i class="fas fa-link"></i></a><br>
+                      <a target="_blank" href="{{ link.url }}">{{ link.text }} <i class="fas fa-link"></i></a><br>
                     {% endfor %}
                   {% endif %}
                 </td>

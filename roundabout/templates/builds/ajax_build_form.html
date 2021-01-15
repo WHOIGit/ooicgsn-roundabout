@@ -52,8 +52,8 @@
 
             {% for link in link_formset %}
               <tr>
-                <td {% if link.errors.text %} class="alert alert-danger"{% endif %}>{% if link.id  %}{{ link.DELETE }}{% endif %} {{ link.id }} {{ link.text }}</td>
-                <td {% if link.errors.url %} class="alert alert-danger"{% endif %}>{{ link.url }}</td>
+                <td {% if link.errors.text %}class="alert alert-danger"{% endif %}>{% if link.id  %}{{ link.DELETE }}{% endif %} {{ link.id }} {{ link.text }}</td>
+                <td {% if link.errors.url %}class="alert alert-danger"{% endif %}>{{ link.url }}</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -112,7 +112,7 @@
 
     $('#build-form tbody tr').formset({
         prefix: 'hyperlinks', // <-- Needs to match the Django related_name for the models
-        addText: 'add document',
+        addText: 'add row',
         deleteText: 'remove',
     });
 
