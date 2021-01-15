@@ -401,6 +401,7 @@ class Action(models.Model):
     REVIEWAPPROVE = 'reviewapprove'
     EVENTAPPROVE = 'eventapprove'
     CALCSVIMPORT = 'calcsvimport'
+    CALCSVUPDATE = 'calcsvupdate'
     ACTION_TYPES = (
         (ADD, 'Added to RDB'),
         (UPDATE, 'Details updated'),
@@ -429,6 +430,7 @@ class Action(models.Model):
         (REVIEWAPPROVE, 'Reviewer approved Event'),
         (EVENTAPPROVE, 'Event Approved'),
         (CALCSVIMPORT, 'Calibration CSV Uploaded'),
+        (CALCSVUPDATE, 'Updated by Calibration CSV'),
     )
     # object_type choices
     BUILD = 'build'
