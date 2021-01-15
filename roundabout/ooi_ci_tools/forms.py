@@ -45,6 +45,8 @@ from roundabout.calibrations.forms import validate_coeff_vals, parse_valid_coeff
 from roundabout.configs_constants.models import ConfigName
 from roundabout.users.models import User
 from roundabout.userdefinedfields.models import Field, FieldValue
+from .models import Comment
+from django.forms.models import inlineformset_factory
 
 class ImportDeploymentsForm(forms.Form):
     deployments_csv = forms.FileField(
@@ -428,3 +430,29 @@ class ImportCalibrationForm(forms.Form):
                 csv_files.append(file)
         validate_cal_files(csv_files,ext_files)
         return cal_files
+
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['detail',]
+        labels = {
+            'detail': 'Provide your comment here:'
+        }
+
+class ActionForm(forms.ModelForm):
+    class Meta:
+        model = Action
+        fields = ['detail',]
+
+
+
+ActionCommentFormset = inlineformset_factory(
+    Action, 
+    Comment, 
+    form=CommentForm,
+    fields=('detail',), 
+    extra=1, 
+    can_delete=True
+)

@@ -27,14 +27,17 @@ from decimal import Decimal
 from dateutil import parser
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.cache import cache
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.generic import TemplateView, FormView
+from common.util.mixins import AjaxFormMixin
+from django.views.generic import CreateView, UpdateView, DeleteView
 
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.assemblies.models import Assembly
-from .forms import ImportDeploymentsForm, ImportVesselsForm, ImportCruisesForm, ImportCalibrationForm
+from roundabout.inventory.models import Action
+from .forms import ImportDeploymentsForm, ImportVesselsForm, ImportCruisesForm, ImportCalibrationForm, CommentForm, ActionCommentFormset, ActionForm
 from .models import *
 from .tasks import parse_cal_files, parse_cruise_files, parse_vessel_files, parse_deployment_files
 
@@ -319,3 +322,77 @@ def import_csv(request):
         'vessels_form': vessels_form,
         'confirm': confirm
     })
+
+
+
+
+class ActionCommentAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
+    model = Action
+    form_class = ActionForm
+    context_object_name = 'comment_template'
+    template_name='ooi_ci_tools/action_comment.html'
+
+    def get(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        action_comment_form = ActionCommentFormset(
+            instance=self.object
+        )
+        return self.render_to_response(
+            self.get_context_data(
+                form=form, 
+                action_comment_form=action_comment_form
+            )
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        action_comment_form = ActionCommentFormset(
+            self.request.POST, 
+            instance=self.object
+        )
+        if (form.is_valid() and action_comment_form.is_valid()):
+            return self.form_valid(form, action_comment_form)
+        return self.form_invalid(form, action_comment_form)
+
+    def form_valid(self, form, action_comment_form):
+        action = Action.objects.get(id=self.kwargs['pk'])
+        form.instance.action = action
+        form.save()
+        self.object = form.save()
+        action_comment_form.instance = self.object
+        action_comment_form.save()
+        response = HttpResponseRedirect(self.get_success_url())
+        if self.request.is_ajax():
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+                'object_type': 'comment',
+                'detail_path': self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def form_invalid(self, form, action_comment_form):
+        if self.request.is_ajax():
+            if form.errors:
+                data = form.errors
+                return JsonResponse(data, status=400)
+            elif action_comment_form.errors:
+                data = action_comment_form.errors
+                return JsonResponse(data, status=400, safe=False)
+        else:
+            return self.render_to_response(
+                self.get_context_data(
+                    form=form, 
+                    action_comment_form=action_comment_form, 
+                    form_errors=form_errors
+                )
+            )
+
+    def get_success_url(self):
+        return reverse('inventory:ajax_inventory_detail', args=(self.object.action.inventory.id, ))
