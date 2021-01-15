@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -24,7 +24,7 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import CreateView, UpdateView, DeleteView
 from .models import ConfigEvent, ConfigName, ConfigValue, ConstDefault, ConstDefaultEvent, ConfigDefaultEvent, ConfigDefault, ConfigNameEvent
-from .forms import ConfigEventForm, ConfigEventValueFormset, PartConfigNameFormset, ConfigNameForm, ConstDefaultForm, EventConstDefaultFormset, ConstDefaultEventForm, ConfigValueForm, ConfPartCopyForm, ConfigDefaultEventForm, ConfigDefaultForm, EventConfigDefaultFormset, ConfigNameEventForm
+from .forms import ConfigEventForm, ConfigEventValueFormset, PartConfigNameFormset, ConfigNameForm, ConstDefaultForm, EventConstDefaultFormset, ConstDefaultEventForm, ConfigValueForm, ConfPartCopyForm, ConfigDefaultEventForm, ConfigDefaultForm, EventConfigDefaultFormset, ConfigNameEventForm, ConfigEventHyperlinkFormset
 from common.util.mixins import AjaxFormMixin
 from django.urls import reverse, reverse_lazy
 from roundabout.parts.models import Part
@@ -60,11 +60,11 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         form = self.get_form(form_class)
         form.fields['user_draft'].required = True
         ConfigEventValueAddFormset = inlineformset_factory(
-            ConfigEvent, 
-            ConfigValue, 
+            ConfigEvent,
+            ConfigValue,
             form=ConfigValueForm,
-            fields=('config_name', 'config_value', 'notes'), 
-            extra=len(names),  
+            fields=('config_name', 'config_value', 'notes'),
+            extra=len(names),
             can_delete=True
         )
         config_event_value_form = ConfigEventValueAddFormset(
@@ -101,10 +101,14 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
                     config_event_value_form.forms[idx].initial = {
                         'config_name': name
                     }
+
+        link_formset = ConfigEventHyperlinkFormset(instance=self.object)
+
         return self.render_to_response(
             self.get_context_data(
-                form=form, 
+                form=form,
                 config_event_value_form=config_event_value_form,
+                link_formset = link_formset,
                 inv_id = self.kwargs['pk'],
                 cfg_type=cfg_type
             )
@@ -115,14 +119,15 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         config_event_value_form = ConfigEventValueFormset(
-            self.request.POST, 
+            self.request.POST,
             instance=self.object
         )
-        if (form.is_valid() and config_event_value_form.is_valid()):
-            return self.form_valid(form, config_event_value_form)
-        return self.form_invalid(form, config_event_value_form)
+        link_formset = ConfigEventHyperlinkFormset(self.request.POST, instance=self.object)
+        if (form.is_valid() and config_event_value_form.is_valid() and link_formset.is_valid()):
+            return self.form_valid(form, config_event_value_form, link_formset)
+        return self.form_invalid(form, config_event_value_form, link_formset)
 
-    def form_valid(self, form, config_event_value_form):
+    def form_valid(self, form, config_event_value_form, link_formset):
         inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
         form.instance.inventory = inv_inst
         cfg_type = self.kwargs['cfg_type']
@@ -141,8 +146,17 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
             if latest_deploy_date:
                 form.instance.configuration_date = latest_deploy_date.created_at
         self.object = form.save()
+
         config_event_value_form.instance = self.object
         config_event_value_form.save()
+
+        # Adding ConfigEvent to hyperlink objects
+        for link_form in link_formset:
+            link = link_form.save(commit=False)
+            if link.text and link.url:
+                link.parent = self.object
+                link.save()
+
         _create_action_history(self.object, Action.ADD, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
@@ -156,20 +170,20 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         else:
             return response
 
-    def form_invalid(self, form, config_event_value_form):
+    def form_invalid(self, form, config_event_value_form, link_formset):
         if self.request.is_ajax():
-            if form.errors:
-                data = form.errors
-                return JsonResponse(data, status=400)
-            elif config_event_value_form.errors:
-                data = config_event_value_form.errors
-                return JsonResponse(data, status=400, safe=False)
+            if not form.is_valid():
+                return JsonResponse(form.errors, status=400)
+            elif not config_event_value_form.is_valid():
+                return JsonResponse(config_event_value_form.errors, status=400, safe=False)
+            elif not link_formset.is_valid():
+                return JsonResponse(link_formset.errors, status=400, safe=False)
         else:
             return self.render_to_response(
                 self.get_context_data(
-                    form=form, 
-                    config_event_value_form=config_event_value_form, 
-                    form_errors=form_errors,
+                    form=form,
+                    event_valueset_form=config_event_value_form,
+                    link_formset = link_formset,
                     inv_id = self.kwargs['pk']
                 )
             )
@@ -195,10 +209,12 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         config_event_value_form = ConfigEventValueFormset(
             instance=self.object
         )
+        link_formset = ConfigEventHyperlinkFormset(instance=self.object)
         return self.render_to_response(
             self.get_context_data(
-                form=form, 
+                form=form,
                 config_event_value_form=config_event_value_form,
+                link_formset=link_formset,
                 inv_id = self.object.inventory.id,
                 cfg_type=cfg_type
             )
@@ -209,14 +225,15 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         config_event_value_form = ConfigEventValueFormset(
-            self.request.POST, 
+            self.request.POST,
             instance=self.object
         )
-        if (form.is_valid() and config_event_value_form.is_valid()):
-            return self.form_valid(form, config_event_value_form)
-        return self.form_invalid(form, config_event_value_form)
+        link_formset = ConfigEventHyperlinkFormset(self.request.POST, instance=self.object)
+        if form.is_valid() and config_event_value_form.is_valid() and link_formset.is_valid():
+            return self.form_valid(form, config_event_value_form, link_formset)
+        return self.form_invalid(form, config_event_value_form, link_formset)
 
-    def form_valid(self, form, config_event_value_form):
+    def form_valid(self, form, config_event_value_form, link_formset):
         form.instance.inventory = self.object.inventory
         form.instance.approved = False
         handle_reviewers(form)
@@ -225,8 +242,20 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
             if latest_deploy_date:
                 form.instance.configuration_date = latest_deploy_date.created_at
         self.object = form.save()
+
         config_event_value_form.instance = self.object
         config_event_value_form.save()
+
+        # Adding ConfigEvent to hyperlink objects
+        for link_form in link_formset:
+            link = link_form.save(commit=False)
+            if link.text and link.url:
+                if link_form['DELETE'].data:
+                    link.delete()
+                else:
+                    link.parent = self.object
+                    link.save()
+
         _create_action_history(self.object, Action.UPDATE, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
@@ -240,28 +269,21 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
         else:
             return response
 
-    def form_invalid(self, form, config_event_value_form):
+    def form_invalid(self, form, config_event_value_form, link_formset):
         if self.request.is_ajax():
-            if form.errors:
-                data = form.errors
-                return JsonResponse(
-                    data, 
-                    status=400
-                )
-            if config_event_value_form.errors:
-                data = config_event_value_form.errors
-                return JsonResponse(
-                    data, 
-                    status=400,
-                    safe=False
-                )
+            if not form.is_valid():
+                return JsonResponse(form.errors, status=400)
+            elif not config_event_value_form.is_valid():
+                return JsonResponse(config_event_value_form.errors, status=400, safe=False)
+            elif not link_formset.is_valid():
+                return JsonResponse(link_formset.errors, status=400, safe=False)
         else:
             return self.render_to_response(
                 self.get_context_data(
-                    form=form, 
-                    config_event_value_form=config_event_value_form, 
-                    form_errors=form_errors,
-                    inv_id = self.object.inventory.id
+                    form=form,
+                    event_valueset_form=config_event_value_form,
+                    link_formset = link_formset,
+                    inv_id = self.kwargs['pk']
                 )
             )
 
@@ -552,11 +574,11 @@ class EventDefaultAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         form = self.get_form(form_class)
         form.fields['user_draft'].required = True
         EventDefaultAddFormset = inlineformset_factory(
-            ConstDefaultEvent, 
-            ConstDefault, 
+            ConstDefaultEvent,
+            ConstDefault,
             form=ConstDefaultForm,
-            fields=('config_name', 'default_value'), 
-            extra=len(const_names), 
+            fields=('config_name', 'default_value'),
+            extra=len(const_names),
             can_delete=True
         )
         event_default_form = EventDefaultAddFormset(
@@ -577,7 +599,7 @@ class EventDefaultAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         event_default_form = EventConstDefaultFormset(
-            self.request.POST, 
+            self.request.POST,
             instance=self.object
         )
         if (form.is_valid() and event_default_form.is_valid()):
@@ -613,14 +635,14 @@ class EventDefaultAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
             if form.errors:
                 data = form.errors
                 return JsonResponse(
-                    data, 
+                    data,
                     status=400,
                     safe=False
                 )
             if event_default_form.errors:
                 data = event_default_form.errors
                 return JsonResponse(
-                    data, 
+                    data,
                     status=400,
                     safe=False
                 )
@@ -628,7 +650,7 @@ class EventDefaultAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
             return self.render_to_response(
                 self.get_context_data(
                     form=form,
-                    event_default_form=event_default_form, 
+                    event_default_form=event_default_form,
                     form_errors=form_errors
                 )
             )
@@ -655,11 +677,11 @@ class EventDefaultUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
         const_names = conf_name_event.config_names.filter(config_type='cnst', deprecated = False).order_by('created_at')
         form.fields['user_draft'].required = False
         EventDefaultAddFormset = inlineformset_factory(
-            ConstDefaultEvent, 
-            ConstDefault, 
+            ConstDefaultEvent,
+            ConstDefault,
             form=ConstDefaultForm,
-            fields=('config_name', 'default_value'), 
-            extra=len(const_names) - len(self.object.constant_defaults.all()), 
+            fields=('config_name', 'default_value'),
+            extra=len(const_names) - len(self.object.constant_defaults.all()),
             can_delete=True
         )
         event_default_form = EventDefaultAddFormset(
@@ -671,7 +693,7 @@ class EventDefaultUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
             except ConstDefault.DoesNotExist:
                 default_value = ''
             event_default_form.forms[idx].initial = {
-                'config_name': name, 
+                'config_name': name,
                 'default_value': default_value
             }
         return self.render_to_response(
@@ -687,7 +709,7 @@ class EventDefaultUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         event_default_form = EventConstDefaultFormset(
-            self.request.POST, 
+            self.request.POST,
             instance=self.object
         )
         if (form.is_valid() and event_default_form.is_valid()):
@@ -719,14 +741,14 @@ class EventDefaultUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
             if form.errors:
                 data = form.errors
                 return JsonResponse(
-                    data, 
+                    data,
                     status=400,
                     safe=False
                 )
             if event_default_form.errors:
                 data = event_default_form.errors
                 return JsonResponse(
-                    data, 
+                    data,
                     status=400,
                     safe=False
                 )
@@ -734,7 +756,7 @@ class EventDefaultUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
             return self.render_to_response(
                 self.get_context_data(
                     form=form,
-                    event_default_form=event_default_form, 
+                    event_default_form=event_default_form,
                     form_errors=form_errors
                 )
             )
@@ -782,11 +804,11 @@ class EventConfigDefaultAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         form = self.get_form(form_class)
         form.fields['user_draft'].required = True
         EventConfigDefaultAddFormset = inlineformset_factory(
-            ConfigDefaultEvent, 
-            ConfigDefault, 
+            ConfigDefaultEvent,
+            ConfigDefault,
             form=ConfigDefaultForm,
-            fields=('config_name', 'default_value'), 
-            extra=len(conf_names), 
+            fields=('config_name', 'default_value'),
+            extra=len(conf_names),
             can_delete=True
         )
         event_default_form = EventConfigDefaultAddFormset(
@@ -807,7 +829,7 @@ class EventConfigDefaultAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         event_default_form = EventConfigDefaultFormset(
-            self.request.POST, 
+            self.request.POST,
             instance=self.object
         )
         if (form.is_valid() and event_default_form.is_valid()):
@@ -843,14 +865,14 @@ class EventConfigDefaultAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
             if form.errors:
                 data = form.errors
                 return JsonResponse(
-                    data, 
+                    data,
                     status=400,
                     safe=False
                 )
             if event_default_form.errors:
                 data = event_default_form.errors
                 return JsonResponse(
-                    data, 
+                    data,
                     status=400,
                     safe=False
                 )
@@ -858,7 +880,7 @@ class EventConfigDefaultAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
             return self.render_to_response(
                 self.get_context_data(
                     form=form,
-                    event_default_form=event_default_form, 
+                    event_default_form=event_default_form,
                     form_errors=form_errors
                 )
             )
@@ -885,11 +907,11 @@ class EventConfigDefaultUpdate(LoginRequiredMixin, AjaxFormMixin, CreateView):
         conf_name_event = assm_part_inst.part.config_name_events.first()
         conf_names = conf_name_event.config_names.filter(config_type='conf', deprecated = False).order_by('created_at')
         EventConfigDefaultAddFormset = inlineformset_factory(
-            ConfigDefaultEvent, 
-            ConfigDefault, 
+            ConfigDefaultEvent,
+            ConfigDefault,
             form=ConfigDefaultForm,
-            fields=('config_name', 'default_value'), 
-            extra=len(conf_names) - len(self.object.config_defaults.all()), 
+            fields=('config_name', 'default_value'),
+            extra=len(conf_names) - len(self.object.config_defaults.all()),
             can_delete=True
         )
         event_default_form = EventConfigDefaultAddFormset(
@@ -917,7 +939,7 @@ class EventConfigDefaultUpdate(LoginRequiredMixin, AjaxFormMixin, CreateView):
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         event_default_form = EventConfigDefaultFormset(
-            self.request.POST, 
+            self.request.POST,
             instance=self.object
         )
         if (form.is_valid() and event_default_form.is_valid()):
@@ -949,14 +971,14 @@ class EventConfigDefaultUpdate(LoginRequiredMixin, AjaxFormMixin, CreateView):
             if form.errors:
                 data = form.errors
                 return JsonResponse(
-                    data, 
+                    data,
                     status=400,
                     safe=False
                 )
             if event_default_form.errors:
                 data = event_default_form.errors
                 return JsonResponse(
-                    data, 
+                    data,
                     status=400,
                     safe=False
                 )
@@ -964,7 +986,7 @@ class EventConfigDefaultUpdate(LoginRequiredMixin, AjaxFormMixin, CreateView):
             return self.render_to_response(
                 self.get_context_data(
                     form=form,
-                    event_default_form=event_default_form, 
+                    event_default_form=event_default_form,
                     form_errors=form_errors
                 )
             )
