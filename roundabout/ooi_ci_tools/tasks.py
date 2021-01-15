@@ -32,7 +32,7 @@ from dateutil import parser
 from django.core.cache import cache
 
 from roundabout.calibrations.forms import parse_valid_coeff_vals
-from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
+from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientNameEvent
 from roundabout.configs_constants.models import ConfigName, ConfigValue, ConfigEvent
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.inventory.models import Inventory, Action, Deployment
@@ -75,19 +75,19 @@ def parse_cal_files(self):
             )
         except Deployment.DoesNotExist:
             deployment = None
-        conf_event, created = ConfigEvent.objects.get_or_create(
+        conf_event, conf_created = ConfigEvent.objects.get_or_create(
             configuration_date = cal_date_date,
             inventory = inventory_item,
             config_type = 'conf',
             deployment = deployment
         )
-        cnst_event, created = ConfigEvent.objects.get_or_create(
+        cnst_event, cnst_created = ConfigEvent.objects.get_or_create(
             configuration_date = cal_date_date,
             inventory = inventory_item,
             config_type = 'cnst',
             deployment = deployment
         )
-        csv_event, created = CalibrationEvent.objects.get_or_create(
+        csv_event, cal_created = CalibrationEvent.objects.get_or_create(
             calibration_date = cal_date_date,
             inventory = inventory_item
         )
@@ -119,8 +119,10 @@ def parse_cal_files(self):
                     valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
                     mock_valset_instance = SimpleNamespace(**valset_keys)
                     raw_valset = str(value)
+                    value_set_type = 'sl'
                     if '[' in raw_valset:
                         raw_valset = raw_valset[1:-1]
+                        value_set_type = '1d'
                     if 'SheetRef' in raw_valset:
                         ext_finder_filename = "__".join((cal_csv_filename,calibration_name))
                         ref_file = [file for file in ext_files if ext_finder_filename in file.name][0]
@@ -128,6 +130,7 @@ def parse_cal_files(self):
                         reader = io.StringIO(ref_file.read().decode('utf-8'))
                         contents = reader.getvalue()
                         raw_valset = contents
+                        value_set_type = '2d'
                 elif key == 'notes':
                     notes = value.strip()
                     if cal_name_item:
@@ -154,6 +157,23 @@ def parse_cal_files(self):
                                 'config_event': cnst_event
                             }
                             const_val_sets.append(const_val_set)
+                    if not cal_name_item and not config_name_item:
+                        if not inventory_item.part.coefficient_name_events.exists():
+                            coeff_name_event = CoefficientNameEvent.objects.create(part = inventory_item.part)
+                            _create_action_history(coeff_name_event, Action.CALCSVIMPORT, user)
+                        else:
+                            coeff_name_event = inventory_item.part.coefficient_name_events.first()
+                        cal_name_item = CoefficientName.objects.create(
+                            calibration_name = calibration_name,
+                            coeff_name_event =  coeff_name_event,
+                            value_set_type = value_set_type
+                        )
+                        coeff_val_set = {
+                            'coefficient_name': cal_name_item,
+                            'value_set': raw_valset,
+                            'notes': notes
+                        }
+                        coeff_val_sets.append(coeff_val_set)
         if user_draft.exists():
             for draft_user in user_draft:
                 csv_event.user_draft.add(draft_user)
@@ -169,7 +189,10 @@ def parse_cal_files(self):
                     }
                 )
                 parse_valid_coeff_vals(coeff_val_set)
-            _create_action_history(csv_event, Action.CALCSVIMPORT, user)
+            if cal_created:
+                _create_action_history(csv_event, Action.CALCSVIMPORT, user)
+            else:
+                _create_action_history(csv_event, Action.CALCSVUPDATE, user)
         else:
             csv_event.delete()
         if len(config_val_sets) >= 1:
@@ -183,7 +206,10 @@ def parse_cal_files(self):
                         'notes': valset['notes'],
                     }
                 )
-            _create_action_history(conf_event, Action.CALCSVIMPORT, user)
+            if conf_created:
+                _create_action_history(conf_event, Action.CALCSVIMPORT, user)
+            else:
+                _create_action_history(conf_event, Action.CALCSVUPDATE, user)
         else:
             conf_event.delete()
         if len(const_val_sets) >= 1:
@@ -197,7 +223,10 @@ def parse_cal_files(self):
                         'notes': valset['notes'],
                     }
                 )
-            _create_action_history(cnst_event, Action.CALCSVIMPORT, user)
+            if cnst_created:
+                _create_action_history(cnst_event, Action.CALCSVIMPORT, user)
+            else:
+                _create_action_history(cnst_event, Action.CALCSVUPDATE, user)
         else:
             cnst_event.delete()
     cache.delete('user')
