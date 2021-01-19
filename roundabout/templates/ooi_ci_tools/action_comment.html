@@ -29,34 +29,22 @@
 
         <div class="col-md-12">
             <h5 id = '__all__'>Comment(s)</h5>
-            <table class="table table-tight comment-action-form" style = 'display:block; overflow: auto; max-height: 100vh'>
-                <thead>
-                    <th>Comment</th>
-                </thead>
-                <tbody>
-                {{ action_comment_form.management_form }}
-                {% for row in action_comment_form %}
-                    <tr>
-                        <td>{% if row.id  %}{{ row.DELETE }}{% endif %} {{ row.id }} {{ row.detail }}</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+            {{ comment_form|crispy }}
         </div>
 
         <div class="control-group">
             <div class="controls">
                 {% if comment_template.id %}
-                    <button type="submit" class="btn btn-primary">Update Comments</button>
+                    <button id ='submit' type="submit" class="btn btn-primary">Update Comments</button>
                 {% else %}
-                    <button type="submit" class="btn btn-primary">Add Comments</button>
+                    <button id ='submit' type="submit" class="btn btn-primary">Add Comments</button>
                 {% endif %}
 
                 <input  class="btn btn-light cancel-btn"
                         type="button"
                         value="Cancel"
-                        data-detail-url="{% url 'inventory:ajax_inventory_detail' 1 %}"
-                        data-node-id="{{ comment_template.action.inventory.id }}"
+                        data-detail-url="{% url 'inventory:ajax_inventory_detail' action_object.inventory.id %}"
+                        data-node-id="{{ comment_form.action.inventory.id }}"
                 />
             </div>
         </div>
@@ -67,12 +55,10 @@
 {% block javascript %}
 <script type="text/javascript">
     $(document).ready(function() {
-        // Handles CoefficientValueSet form instance generation
-        $('.comment-action-form tbody tr').formset({
-            prefix: 'comments',
-            addText: 'Add Comments',
-            deleteText: 'Remove'
-        });
+        let inventory_id = '{{action_object.inventory.id}}'
+        $('#submit').on('click', function() {
+            location.href = '/inventory/' + inventory_id + '/';
+        })
     });
 </script>
 {% endblock javascript %}

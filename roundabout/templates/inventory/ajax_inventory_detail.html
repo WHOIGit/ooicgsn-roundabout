@@ -474,6 +474,48 @@
                                         Comment
                                 </a>
                             </div>
+                            <div class="collapse mt-3" id="action-{{ action.id }}">
+                                <hr>
+                                <ul class="nav nav-tabs" id="action-tabs-nav" role="tablist">
+                                    <li class="nav-item">
+                                        <a  class="nav-link active" 
+                                            id="action-tab" 
+                                            data-toggle="tab" 
+                                            href="#action" 
+                                            role="tab" 
+                                            aria-controls="action" 
+                                            aria-selected="false">
+                                                Comments
+                                        </a>
+                                    </li>
+                                </ul>
+                                <table class="table table-tight">
+                                    <tbody>
+                                        <tr>
+                                            <td> 
+                                                <li class = 'list-group-item' style = 'display:block; overflow: auto; max-height: 200px'>
+                                                    <table class="table table-tight table-striped action-table">
+                                                        <thead>
+                                                            <th>User</th>
+                                                            <th>Created</th>
+                                                            <th>Details</th>
+                                                        </thead>
+                                                        <tbody style = 'overflow: auto; max-height: 200px'>
+                                                            {% for comment in action.comments.all %}
+                                                                <tr>
+                                                                    <td>{{ comment.user }}</td>
+                                                                    <td>{{ comment.created_at|date:"n/j/y H:i" }}</td>
+                                                                    <td>{{ comment.detail|safe }}</td>
+                                                                </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </li>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </li>
                     {% endfor %}
                 </ul>

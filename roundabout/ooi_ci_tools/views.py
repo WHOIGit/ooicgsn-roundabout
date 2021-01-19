@@ -324,7 +324,24 @@ def import_csv(request):
     })
 
 
-
+# Action View
+def action_comment(request, pk):
+    action = Action.objects.get(id=pk)
+    if request.method == "POST":
+        comment_form = CommentForm(request.POST)
+        if comment_form.is_valid():
+            comment_form.instance.action = action
+            comment_form.instance.user = request.user
+            comment_form.instance.detail = comment_form.cleaned_data['detail']
+            comment_form.save()
+    else:
+        comment_form = CommentForm()
+        comment_form.instance.action = action
+        comment_form.instance.user = request.user
+    return render(request, 'ooi_ci_tools/action_comment.html', {
+        "comment_form": comment_form,
+        "action_object": action
+    })
 
 class ActionCommentAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
     model = Action
