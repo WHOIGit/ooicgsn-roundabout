@@ -476,6 +476,24 @@
                             </div>
                             <div class="collapse mt-3" id="action-{{ action.id }}">
                                 <hr>
+                                <p class='font-weight-light'><b>Date:</b> {{ action.created_at|date:"n/j/y H:i" }}</p>
+                                <p class='font-weight-light'><b>Type:</b> {{ action.get_action_type_display }}</p>
+                                <p class='font-weight-light'>
+                                    <b>Photos:</b>
+                                    {% for photo in action.photos.all %}
+                                        {% if photo.file_type == 'image' %}
+                                            <a href="{{ photo.photo.url }}" target="_blank">
+                                                <img src="{{ photo.photo.url }}" width="100%">
+                                            </a> <br><br>
+                                        {% else %}
+                                            <a href="{{ photo.photo.url }}" target="_blank"><i class='fa fa-file fa-3x'></i>
+                                                {{ photo.photo.name }}
+                                            </a>  <br><br>
+                                        {% endif %}
+                                    {% endfor %}
+                                </p>
+                                <p class='font-weight-light'><b>User:</b> {{ action.user.username }}</p>
+                                <p class='font-weight-light'><b>Location:</b> {{ action.location.name }}</p>
                                 <ul class="nav nav-tabs" id="action-tabs-nav" role="tablist">
                                     <li class="nav-item">
                                         <a  class="nav-link active" 

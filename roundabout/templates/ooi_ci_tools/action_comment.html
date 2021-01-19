@@ -28,6 +28,25 @@
         {% csrf_token %}
 
         <div class="col-md-12">
+            <p class='font-weight-light'><b>Date:</b> {{ action_object.created_at|date:"n/j/y H:i" }}</p>
+            <p class='font-weight-light'><b>Type:</b> {{ action_object.get_action_type_display }}</p>
+            <p class='font-weight-light'><b>Detail:</b> {{ action_object.detail|safe }}</p>
+            <p class='font-weight-light'>
+                <b>Photos:</b>
+                {% for photo in action_object.photos.all %}
+                    {% if photo.file_type == 'image' %}
+                        <a href="{{ photo.photo.url }}" target="_blank">
+                            <img src="{{ photo.photo.url }}" width="100%">
+                        </a> <br><br>
+                    {% else %}
+                        <a href="{{ photo.photo.url }}" target="_blank"><i class='fa fa-file fa-3x'></i>
+                            {{ photo.photo.name }}
+                        </a>  <br><br>
+                    {% endif %}
+                {% endfor %}
+            </p>
+            <p class='font-weight-light'><b>User:</b> {{ action_object.user.username }}</p>
+            <p class='font-weight-light'><b>Location:</b> {{ action_object.location.name }}</p>
             <h5 id = '__all__'>Comment(s)</h5>
             {{ comment_form|crispy }}
         </div>
