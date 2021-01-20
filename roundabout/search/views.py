@@ -577,7 +577,7 @@ class BuildTableView(GenericSearchTableView):
                         dict(value="location__name",            text="Location", legal_lookup='STR_LOOKUP'),
                         dict(value="assembly__description",  text="Description", legal_lookup='STR_LOOKUP'),
                         dict(value="build_notes",                  text="Notes", legal_lookup='STR_LOOKUP'),
-                        dict(value="time_at_sea",            text="Time at Sea", legal_lookup='NUM_LOOKUP'),
+                       #dict(value="time_at_sea",            text="Time at Sea", legal_lookup='NUM_LOOKUP'),
                         dict(value="is_deployed",           text="is-deployed?", legal_lookup='BOOL_LOOKUP'),
                         dict(value="flag",                   text="is-flagged?", legal_lookup='BOOL_LOOKUP'),
                         dict(value="created_at",            text="Date Created", legal_lookup='DATE_LOOKUP'),
