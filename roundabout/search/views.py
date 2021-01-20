@@ -653,8 +653,8 @@ class ActionTableView(GenericSearchTableView):
                         dict(value="build__assembly_revision__assembly__name", text="Build Assembly", legal_lookup='STR_LOOKUP'),
                         dict(value="build__build_number", text="Build Number", legal_lookup='STR_LOOKUP'),
                         dict(value="deployment__deployment_number", text="Deployment Number", legal_lookup='STR_LOOKUP'),
-                        dict(value="cruise__CUID", text="Cruise: ID", legal_lookup='STR_LOOKUP'),
-                        dict(value="cruise__friendly_name", text="Cruise: Name", legal_lookup='STR_LOOKUP'),
+                        dict(value="cruise__CUID", text="Deployed Cruise: ID", legal_lookup='STR_LOOKUP'),
+                        dict(value="cruise__friendly_name", text="Deployed Cruise: Name", legal_lookup='STR_LOOKUP'),
                         ]
         return avail_fields
     def get_context_data(self, **kwargs):
