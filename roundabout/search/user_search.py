@@ -53,11 +53,6 @@ class CCCUserTableBase(UserTableBase):
     created_at = DateTimeColumn(verbose_name='Date Entered', accessor='created_at', format='Y-m-d H:i')
     detail = Column(verbose_name='Note', accessor='detail')
 
-class ActionUserTableBase(UserTableBase):
-    class Meta(UserTableBase.Meta):
-        fields = ['action_type', 'user__name', 'created_at', 'detail']
-    user__name = Column(verbose_name='User')
-
 # ========= TABLES ========== #
 
 ## CCC Events ##
@@ -124,11 +119,17 @@ class ConstDefaultEventTable(CCCUserTableBase):
 
 ## Actions ##
 
-class ActionTable(ActionUserTableBase):
-    class Meta(ActionUserTableBase.Meta):
+class ActionUserTable(UserTableBase):
+    class Meta(UserTableBase.Meta):
         model = Action
-        title = 'Misc. Actions'
+        title = 'Actions'
+        fields = ['object_type', 'action_type', 'user', 'created_at', 'detail']
 
+    def render_user(self,value):
+        return value.name or value.username
+
+
+'''
 class BuildActionTable(ActionUserTableBase):
     class Meta(ActionUserTableBase.Meta):
         model = BuildAction
@@ -150,7 +151,7 @@ class DeploymentActionTable(ActionUserTableBase):
         deployment_anchor = '#deployments'  # next best anchor that does work
         html_string = '<a href={}>{}</a>'.format(build_url+deployment_anchor, record.deployment)
         return format_html(html_string)
-
+'''
 
 # ========= FORM STUFF ========= #
 
@@ -174,6 +175,9 @@ class UserSearchForm(forms.Form):
     q = forms.CharField(required=True, label='Name')
     ccc_role = forms.ChoiceField(label='CCC Role',choices=[('both','Both'),('app','Approver'),('rev','Reviewer')])
     ccc_status = forms.ChoiceField(label='CCC Status',choices=[('all','Show All'),('app','Show Approved'),('uapp','Show UnApproved')])
+    action_object_options = list(Action.OBJECT_TYPES)
+    action_object_options = [('all','All'), ('bid','Build + Inventory + Deployment'),('ccc',"CCCs Only")]+action_object_options
+    action_object = forms.ChoiceField(label='Action Object', choices=action_object_options, required=False)
 
     def __init__(self, *args, **kwargs):
         default_userlist = User.objects.all().values_list('username',flat=True)
@@ -195,9 +199,7 @@ class UserSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView):
               ConfigNameEventTable,
               ConfigDefaultEventTable,
               ConstDefaultEventTable,
-              DeploymentActionTable,
-              BuildActionTable,
-              ActionTable]
+              ActionUserTable]
 
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
@@ -218,10 +220,12 @@ class UserSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView):
             user_query = self.request.GET.get('q')
             ccc_role = self.request.GET.get('ccc_role',None)
             ccc_status = self.request.GET.get('ccc_status',None)
+            action_object = self.request.GET.get('action_object',None)
         else: # defaults
             user_query = self.request.user.username
             ccc_role = 'both'
             ccc_status = 'all'
+            action_object = 'all'
 
         ccc_Q_approver = Q(user_approver__username__icontains=user_query) | Q(user_approver__name__icontains=user_query)
         ccc_Q_draft = Q(user_draft__username__icontains=user_query) | Q(user_draft__name__icontains=user_query)
@@ -238,6 +242,15 @@ class UserSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView):
         elif ccc_status=='app':
             ccc_Q = ccc_Q & Q(approved=True)
         # else show all CCCs regardless of approval status
+
+        if action_object == 'bid':
+            action_Q = action_Q & Q(object_type__in=['build','inventory','deployment'])
+        elif action_object == 'ccc':
+            action_Q = action_Q & Q(object_type__in=list(zip(*Action.OBJECT_TYPES))[0][3:])
+        elif action_object is None or action_object == 'all':
+            pass
+        else:
+            action_Q = action_Q & Q(object_type__exact=action_object)
 
         qs_list = []
         for table in self.tables:
