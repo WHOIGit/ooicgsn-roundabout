@@ -206,6 +206,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
                     accessor = field.rsplit('__count', 1)[0]
                     annote_obj = {field: Count(accessor)}
                     self.model.objects = self.model.objects.annotate(**annote_obj)
+                    Q_kwarg = {'{field}__{lookup}'.format(field=field, lookup=row['lookup']): int(float(row['query']))}
                 return Q_kwarg
 
             else:
