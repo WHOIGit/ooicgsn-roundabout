@@ -446,7 +446,7 @@
                 <ul class="list-group">
                     {% for action in inventory_item.actions.all %}
                         <li class="list-group-item">
-                            <a  class="collapsed" 
+                            <a  class="collapse show" 
                                 data-toggle="collapse" 
                                 href="#action-{{ action.id }}" 
                                 aria-expanded="false" 
@@ -455,7 +455,7 @@
                                 {{ action.detail|safe }}
                             </a>
                             <a  data-toggle="collapse" 
-                                class="collapsed text-right" 
+                                class="collapse show text-right" 
                                 href="#action-{{ action.id }}" 
                                 aria-controls="action-{{ action.id }}" 
                                 aria-expanded="false" 
@@ -474,11 +474,10 @@
                                         Comment
                                 </a>
                             </div>
-                            <div class="collapse mt-3" id="action-{{ action.id }}">
-                                <hr>
-                                <p class='font-weight-light'><b>Date:</b> {{ action.created_at|date:"n/j/y H:i" }}</p>
-                                <p class='font-weight-light'><b>Type:</b> {{ action.get_action_type_display }}</p>
-                                <p class='font-weight-light'>
+                            <small class = 'form-text text-muted'>
+                                <span class='font-weight-light'><b>Date:</b> {{ action.created_at|date:"n/j/y H:i" }}&nbsp;</span>
+                                <span class='font-weight-light'><b>Type:</b> {{ action.get_action_type_display }}&nbsp;</span>
+                                <span class='font-weight-light'>
                                     <b>Photos:</b>
                                     {% for photo in action.photos.all %}
                                         {% if photo.file_type == 'image' %}
@@ -491,9 +490,13 @@
                                             </a>  <br><br>
                                         {% endif %}
                                     {% endfor %}
-                                </p>
-                                <p class='font-weight-light'><b>User:</b> {{ action.user.username }}</p>
-                                <p class='font-weight-light'><b>Location:</b> {{ action.location.name }}</p>
+                                    &nbsp;
+                                </span>
+                                <span class='font-weight-light'><b>User:</b> {{ action.user.username }}&nbsp;</span>
+                                <span class='font-weight-light'><b>Location:</b> {{ action.location.name }}</span>
+                            </small>
+                            <div class="collapse show mt-3" id="action-{{ action.id }}">
+                                <hr>
                                 <ul class="nav nav-tabs" id="action-tabs-nav" role="tablist">
                                     <li class="nav-item">
                                         <a  class="nav-link active" 
