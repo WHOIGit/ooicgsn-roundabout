@@ -206,6 +206,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
                     accessor = field.rsplit('__count', 1)[0]
                     annote_obj = {field: Count(accessor)}
                     self.model.objects = self.model.objects.annotate(**annote_obj)
+                    Q_kwarg = {'{field}__{lookup}'.format(field=field, lookup=row['lookup']): int(float(row['query']))}
                 return Q_kwarg
 
             else:
@@ -576,7 +577,7 @@ class BuildTableView(GenericSearchTableView):
                         dict(value="location__name",            text="Location", legal_lookup='STR_LOOKUP'),
                         dict(value="assembly__description",  text="Description", legal_lookup='STR_LOOKUP'),
                         dict(value="build_notes",                  text="Notes", legal_lookup='STR_LOOKUP'),
-                        dict(value="time_at_sea",            text="Time at Sea", legal_lookup='NUM_LOOKUP'),
+                       #dict(value="time_at_sea",            text="Time at Sea", legal_lookup='NUM_LOOKUP'),
                         dict(value="is_deployed",           text="is-deployed?", legal_lookup='BOOL_LOOKUP'),
                         dict(value="flag",                   text="is-flagged?", legal_lookup='BOOL_LOOKUP'),
                         dict(value="created_at",            text="Date Created", legal_lookup='DATE_LOOKUP'),
@@ -652,8 +653,8 @@ class ActionTableView(GenericSearchTableView):
                         dict(value="build__assembly_revision__assembly__name", text="Build Assembly", legal_lookup='STR_LOOKUP'),
                         dict(value="build__build_number", text="Build Number", legal_lookup='STR_LOOKUP'),
                         dict(value="deployment__deployment_number", text="Deployment Number", legal_lookup='STR_LOOKUP'),
-                        dict(value="cruise__CUID", text="Cruise: ID", legal_lookup='STR_LOOKUP'),
-                        dict(value="cruise__friendly_name", text="Cruise: Name", legal_lookup='STR_LOOKUP'),
+                        dict(value="cruise__CUID", text="Deployed Cruise: ID", legal_lookup='STR_LOOKUP'),
+                        dict(value="cruise__friendly_name", text="Deployed Cruise: Name", legal_lookup='STR_LOOKUP'),
                         ]
         return avail_fields
     def get_context_data(self, **kwargs):
