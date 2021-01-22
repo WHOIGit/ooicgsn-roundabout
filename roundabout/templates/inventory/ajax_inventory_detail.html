@@ -510,7 +510,51 @@
                                         </a>
                                     </li>
                                 </ul>
-                                <table class="table table-tight">
+                                <ul class="list-group">
+                                    {% for comment in action.comments.all %}
+                                        <li class="list-group-item">
+                                            <a  class="collapse show" 
+                                                data-toggle="collapse" 
+                                                href="#comment-{{ comment.id }}" 
+                                                aria-expanded="false" 
+                                                aria-controls="comment-{{ comment.id }}"
+                                            >
+                                                {{ comment.detail|safe }}
+                                            </a>
+                                            <a  data-toggle="collapse" 
+                                                class="collapse show text-right" 
+                                                href="#comment-{{ comment.id }}" 
+                                                aria-controls="comment-{{ comment.id }}" 
+                                                aria-expanded="false" 
+                                                role="button"
+                                            >
+                                                <i class="fa" aria-hidden="true"></i>
+                                                <span class="sr-only">{{ comment.detail|safe }}</span>
+                                            </a>
+                                            <div class = 'ajax-detail-link float-right'>
+                                                <a  href="#"
+                                                    class="btn btn-outline-primary btn-sm mr-2"
+                                                    role="button"
+                                                    data-detail-url="{% url 'ooi_ci_tools:comment_comment_add' comment.id %}"
+                                                    data-node-id="{{ comment.id }}"
+                                                    data-node-type="inventory">
+                                                        Comment
+                                                </a>
+                                            </div>
+                                            <small class = 'form-text text-muted'>
+                                                <span class='font-weight-light'><b>Date:</b> {{ comment.created_at|date:"n/j/y H:i" }}&nbsp;</span>
+                                                <span class='font-weight-light'><b>User:</b> {{ comment.user.username }}&nbsp;</span>
+                                            </small>
+                                            {% if comment.parent %}
+                                                <small class = 'form-text text-muted'>
+                                                    <span class='font-weight-light'><b>In Response to:</b> {{ comment.parent.detail | safe }}&nbsp;</span>
+                                                    <span class='font-weight-light'><b>User:</b> {{ comment.parent.user.username | safe }}&nbsp;</span>
+                                                </small>
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                                <!-- <table class="table table-tight">
                                     <tbody>
                                         <tr>
                                             <td> 
@@ -520,6 +564,7 @@
                                                             <th>User</th>
                                                             <th>Created</th>
                                                             <th>Details</th>
+                                                            <th>Comment</th>
                                                         </thead>
                                                         <tbody style = 'overflow: auto; max-height: 200px'>
                                                             {% for comment in action.comments.all %}
@@ -527,6 +572,18 @@
                                                                     <td>{{ comment.user }}</td>
                                                                     <td>{{ comment.created_at|date:"n/j/y H:i" }}</td>
                                                                     <td>{{ comment.detail|safe }}</td>
+                                                                    <td>
+                                                                        <div class = 'ajax-detail-link'>
+                                                                            <a  href="#"
+                                                                                class="btn btn-outline-primary btn-sm mr-2"
+                                                                                role="button"
+                                                                                data-detail-url="{% url 'ooi_ci_tools:comment_comment_add' comment.id %}"
+                                                                                data-node-id="{{ comment.id }}"
+                                                                                data-node-type="inventory">
+                                                                                    Comment
+                                                                            </a>
+                                                                        </div>
+                                                                    </td>
                                                                 </tr>
                                                             {% endfor %}
                                                         </tbody>
@@ -535,7 +592,7 @@
                                             </td>
                                         </tr>
                                     </tbody>
-                                </table>
+                                </table> -->
                             </div>
                         </li>
                     {% endfor %}

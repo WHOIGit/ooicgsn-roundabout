@@ -342,3 +342,20 @@ def action_comment(request, pk):
         "comment_form": comment_form,
         "action_object": action
     })
+
+def comment_comment(request, pk):
+    comment = Comment.objects.get(id=pk)
+    if request.method == "POST":
+        comment_form = CommentForm(request.POST)
+        if comment_form.is_valid():
+            comment_form.instance.parent = comment
+            comment_form.instance.action = comment.action
+            comment_form.instance.user = request.user
+            comment_form.instance.detail = comment_form.cleaned_data['detail']
+            comment_form.save()
+    else:
+        comment_form = CommentForm()
+    return render(request, 'ooi_ci_tools/comment_comment.html', {
+        "comment_form": comment_form,
+        "parent_comment": comment
+    })

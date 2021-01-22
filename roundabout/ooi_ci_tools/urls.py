@@ -38,4 +38,5 @@ urlpatterns = [
     path('import/csv/upload/', view=views.import_csv, name='import_csv'),
     path('import/calibrations/status/', view=views.upload_status, name='upload_status'),
     path('import/actions/comments/add/<int:pk>/', view=views.action_comment, name='action_comment_add'),
+    path('import/comments/comments/add/<int:pk>/', view=views.comment_comment, name='comment_comment_add'),
 ]
