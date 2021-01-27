@@ -162,8 +162,8 @@ class CalibrationTable(SearchTable):
     calibration_date = DateColumn(verbose_name='Calibration Date', format='Y-m-d',
             linkify=dict(viewname="exports:calibration", args=[tables.A('pk')]))
 
-    user_approver__all__name = ManyToManyColumn(verbose_name='Approvers', accessor='user_approver', transform=lambda x: x.name, default='')
-    user_draft__all__name = ManyToManyColumn(verbose_name='Reviewers', accessor='user_draft', transform=lambda x: x.name, default='')
+    user_approver__all__name = ManyToManyColumn(verbose_name='Approvers', accessor='user_approver', transform=lambda x: x.name or x.username, default='')
+    user_draft__all__name = ManyToManyColumn(verbose_name='Reviewers', accessor='user_draft', transform=lambda x: x.name or x.username, default='')
 
     coefficient_value_set__names = ManyToManyColumn(verbose_name='Coefficient Names',
             accessor='coefficient_value_sets', transform=lambda x: x.coefficient_name)
@@ -188,8 +188,8 @@ class ConfigConstTable(SearchTable):
     configuration_date = DateColumn(verbose_name='Event Date', format='Y-m-d',
             linkify=dict(viewname="exports:configconst", args=[tables.A('pk')])
             )
-    user_approver__all__name = ManyToManyColumn(verbose_name='Approvers', accessor='user_approver', transform=lambda x: x.name, default='')
-    user_draft__all__name = ManyToManyColumn(verbose_name='Reviewers', accessor='user_draft', transform=lambda x: x.name, default='')
+    user_approver__all__name = ManyToManyColumn(verbose_name='Approvers', accessor='user_approver', transform=lambda x: x.name or x.username, default='')
+    user_draft__all__name = ManyToManyColumn(verbose_name='Reviewers', accessor='user_draft', transform=lambda x: x.name or x.username, default='')
 
     config_values__names = ManyToManyColumn(verbose_name='Config/Constant Names',
             accessor='config_values', transform=lambda x: x.config_name)
