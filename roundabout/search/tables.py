@@ -31,6 +31,7 @@ from roundabout.calibrations.models import CalibrationEvent
 from roundabout.configs_constants.models import ConfigEvent
 from roundabout.inventory.models import Inventory, Action
 from roundabout.parts.models import Part
+from roundabout.search.user_search import ActionUserTable
 
 
 class UDF_Column(ManyToManyColumn):
@@ -139,8 +140,13 @@ class AssemblyTable(SearchTable):
 class ActionTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Action
-        fields = ['action_type','user__name','created_at','detail']
+        fields = ['object_type', 'object', 'action_type', 'user__name', 'created_at', 'detail']
         base_shown_cols = fields
+    user__name = Column(verbose_name='User')
+    object = Column(verbose_name='Associated Object', accessor='object_type')
+    render_object = ActionUserTable.render_object  # yay for weird ways of implementing code re-use
+    def render_user__name(self,record):
+        return record.user.name or record.user.username
 
 
 class CalibrationTable(SearchTable):

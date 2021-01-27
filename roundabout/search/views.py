@@ -643,7 +643,8 @@ class ActionTableView(GenericSearchTableView):
 
     @staticmethod
     def get_avail_fields():
-        avail_fields = [dict(value="action_type", text="Action Type", legal_lookup='STR_LOOKUP'),
+        avail_fields = [dict(value="object_type", text="Object Type", legal_lookup='STR_LOOKUP'),
+                        dict(value="action_type", text="Action Type", legal_lookup='STR_LOOKUP'),
                         dict(value="user__name", text="User", legal_lookup='STR_LOOKUP'),
                         dict(value="created_at", text="Timestamp", legal_lookup='DATE_LOOKUP'),
                         dict(value="detail", text="Detail", legal_lookup='STR_LOOKUP'),

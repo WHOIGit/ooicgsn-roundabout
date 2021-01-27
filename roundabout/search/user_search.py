@@ -148,25 +148,25 @@ class ActionUserTable(UserTableBase):
             return format_html(html_string)
         elif isinstance(parent_obj,Build):
             build_url = reverse("builds:builds_detail", args=[parent_obj.pk])
-            html_string = html_string.format(url=build_url, text=record.build)
+            html_string = html_string.format(url=build_url, text=parent_obj)
             return format_html(html_string)
         elif isinstance(parent_obj,Deployment):
             build_url = reverse("builds:builds_detail", args=[record.deployment.build.pk])
             deployment_anchor = '#deployment-{}-'.format(record.deployment.pk)  # doesn't work, anchor doesn't exist
             deployment_anchor = '#deployments'  # next best anchor that does work
-            html_string = html_string.format(url=build_url+deployment_anchor, text=record.deployment)
+            html_string = html_string.format(url=build_url+deployment_anchor, text=parent_obj)
             return format_html(html_string)
         elif isinstance(parent_obj,InventoryDeployment):
             inv_url = reverse("inventory:inventory_detail", args=[parent_obj.inventory.pk])
             html_string = html_string.format(url=inv_url, text=parent_obj)
             return format_html(html_string)
         elif isinstance(parent_obj,Part):
-            build_url = reverse("pars:parts_detail", args=[parent_obj.pk])
-            html_string = html_string.format(url=build_url, text=record.build)
+            build_url = reverse("parts:parts_detail", args=[parent_obj.pk])
+            html_string = html_string.format(url=build_url, text=parent_obj)
             return format_html(html_string)
         elif isinstance(parent_obj,AssemblyPart):
             assy_url = reverse("assemblies:assemblypart_detail", args=[parent_obj.pk])
-            html_string = html_string.format(url=assy_url, text=record.build)
+            html_string = html_string.format(url=assy_url, text=parent_obj)
             return format_html(html_string)
         else:
             return ''
