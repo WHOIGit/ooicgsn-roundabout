@@ -23,15 +23,18 @@ import django_tables2 as tables2
 from django import forms
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
+from django.urls import reverse
 from django.utils.html import format_html
 from django.views.generic import TemplateView
 from django_tables2.columns import Column, DateTimeColumn, ManyToManyColumn, BooleanColumn
 from django_tables2_column_shifter.tables import ColumnShiftTable
 
-from roundabout.builds.models import BuildAction
+from roundabout.builds.models import BuildAction, Build, Deployment
 from roundabout.calibrations.models import CalibrationEvent, CoefficientNameEvent
 from roundabout.configs_constants.models import ConfigEvent, ConfigNameEvent, ConstDefaultEvent, ConfigDefaultEvent
-from roundabout.inventory.models import Action, DeploymentAction
+from roundabout.inventory.models import Action, DeploymentAction, Inventory, InventoryDeployment
+from roundabout.parts.models import Part
+from roundabout.assemblies.models import AssemblyPart
 from roundabout.users.models import User
 
 
@@ -123,35 +126,51 @@ class ActionUserTable(UserTableBase):
     class Meta(UserTableBase.Meta):
         model = Action
         title = 'Actions'
-        fields = ['object_type', 'action_type', 'user', 'created_at', 'detail']
+        fields = ['object_type', 'object', 'action_type', 'user', 'created_at', 'detail']
+    object = Column(verbose_name='Associated Object', accessor='object_type')
 
     def render_user(self,value):
         return value.name or value.username
 
+    def render_object(self,record):
+        html_string = '<a href={url}>{text}</a>'
+        parent_obj = record.get_parent()
+        if isinstance(parent_obj,(CalibrationEvent,ConfigEvent,ConstDefaultEvent)):
+            parent_obj = parent_obj.inventory
+        elif isinstance(parent_obj,(ConfigNameEvent,CoefficientNameEvent)):
+            parent_obj = parent_obj.part
+        elif isinstance(parent_obj,ConfigDefaultEvent):
+            parent_obj = parent_obj.assembly_part
 
-'''
-class BuildActionTable(ActionUserTableBase):
-    class Meta(ActionUserTableBase.Meta):
-        model = BuildAction
-        title = 'Build Actions'
-        fields = ['build'] + ActionUserTableBase.Meta.fields
-    build = Column(linkify=dict(viewname="builds:builds_detail", args=[tables2.A('build__pk')]))
+        if isinstance(parent_obj, Inventory):
+            inv_url = reverse("inventory:inventory_detail", args=[parent_obj.pk])
+            html_string = html_string.format(url=inv_url, text=parent_obj)
+            return format_html(html_string)
+        elif isinstance(parent_obj,Build):
+            build_url = reverse("builds:builds_detail", args=[parent_obj.pk])
+            html_string = html_string.format(url=build_url, text=record.build)
+            return format_html(html_string)
+        elif isinstance(parent_obj,Deployment):
+            build_url = reverse("builds:builds_detail", args=[record.deployment.build.pk])
+            deployment_anchor = '#deployment-{}-'.format(record.deployment.pk)  # doesn't work, anchor doesn't exist
+            deployment_anchor = '#deployments'  # next best anchor that does work
+            html_string = html_string.format(url=build_url+deployment_anchor, text=record.deployment)
+            return format_html(html_string)
+        elif isinstance(parent_obj,InventoryDeployment):
+            inv_url = reverse("inventory:inventory_detail", args=[parent_obj.inventory.pk])
+            html_string = html_string.format(url=inv_url, text=parent_obj)
+            return format_html(html_string)
+        elif isinstance(parent_obj,Part):
+            build_url = reverse("pars:parts_detail", args=[parent_obj.pk])
+            html_string = html_string.format(url=build_url, text=record.build)
+            return format_html(html_string)
+        elif isinstance(parent_obj,AssemblyPart):
+            assy_url = reverse("assemblies:assemblypart_detail", args=[parent_obj.pk])
+            html_string = html_string.format(url=assy_url, text=record.build)
+            return format_html(html_string)
+        else:
+            return ''
 
-class DeploymentActionTable(ActionUserTableBase):
-    class Meta(ActionUserTableBase.Meta):
-        model = DeploymentAction
-        title = 'Deployment Actions'
-        fields = ['deployment'] + ActionUserTableBase.Meta.fields
-
-    # workaround linking to deployment.
-    def render_deployment(self, record):
-        from django.urls import reverse
-        build_url = reverse("builds:builds_detail", args=[record.deployment.build.pk])
-        deployment_anchor = '#deployment-{}-'.format(record.deployment.pk)  # doesn't work, anchor doesn't exist
-        deployment_anchor = '#deployments'  # next best anchor that does work
-        html_string = '<a href={}>{}</a>'.format(build_url+deployment_anchor, record.deployment)
-        return format_html(html_string)
-'''
 
 # ========= FORM STUFF ========= #
 
@@ -193,13 +212,14 @@ class UserSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView):
     form_class = UserSearchForm
     table_pagination = {"per_page": 10}
 
-    tables = [CalibrationTable,
+    tables = [ActionUserTable,
+              CalibrationTable,
               ConfigConstTable,
               CoefficientNameEventTable,
               ConfigNameEventTable,
               ConfigDefaultEventTable,
               ConstDefaultEventTable,
-              ActionUserTable]
+              ]
 
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)

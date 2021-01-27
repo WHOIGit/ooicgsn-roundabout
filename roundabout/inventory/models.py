@@ -515,6 +515,32 @@ class Action(models.Model):
     def __str__(self):
         return self.get_action_type_display()
 
+    def get_parent(self):
+        if self.object_type == self.BUILD:
+            return self.build
+        elif self.object_type == self.INVENTORY:
+            return self.inventory
+        elif self.object_type == self.DEPLOYMENT:
+            if self.deployment_type == self.INVENTORY_DEPLOYMENT:
+                return self.inventory_deployment
+            else:
+                # self.deployment_type == self.BUILD_DEPLOYMENT
+                return self.deployment
+
+        elif self.object_type == self.CALEVENT:
+            return self.calibration_event
+        elif self.object_type == self.CONFEVENT:
+            return self.config_event
+
+        elif self.object_type == self.CONSTDEFEVENT:
+            return self.const_default_event
+        elif self.object_type == self.CONFDEFEVENT:
+            return self.config_default_event
+
+        elif self.object_type == self.COEFFNAMEEVENT:
+            return self.coefficient_name_event
+        elif self.object_type == self.CONFNAMEEVENT:
+            return self.config_name_event
 
 class PhotoNote(models.Model):
     photo = models.FileField(upload_to='notes/',
