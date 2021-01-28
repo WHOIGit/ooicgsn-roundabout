@@ -31,7 +31,7 @@
                         role="button"
                         data-detail-url="{% url 'calibrations:event_coeffname_update' part_template.coefficient_name_events.first.id %}"
                         data-node-id="{{ part_template.id }}"
-                        data-node-type="detail">
+                        data-node-type="parts">
                             Edit Calibrations
                     </a>
                 </div>
@@ -39,7 +39,7 @@
                 <a class="btn btn-primary btn-sm" href="#" role="button"
                     data-detail-url="{% url 'calibrations:event_coeffname_add' part_template.id %}"
                     data-node-id="{{ part_template.id }}"
-                    data-node-type="detail"
+                    data-node-type="parts"
                 >
                     Create Calibrations
                 </a>

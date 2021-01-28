@@ -36,6 +36,26 @@
 
 <div class="card-body">
 
+    <div class="modal fade" id="warningModal" tabindex="-1" role="dialog" aria-labelledby="warningModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="warningModalLabel">New message</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Warning: deleting Names will delete associated Event data</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button id = 'modal_delete' type="button" class="btn btn-primary">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {% if latest_flag.detail %}
         <p>
             <strong>Why Flagged:</strong> {{ latest_flag.detail }}
@@ -60,17 +80,27 @@
                     <th>Type</th>
                     <th>Export with Calibrations</th>
                     <th>Deprecated</th>
+                    <th>Delete</th>
                 </thead>
                 <tbody>
                 {{ part_confname_form.management_form }}
                 {% for conf in part_confname_form %}
-                    <tr>
-                        <td>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.name }}</td>
-                        <td>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.config_type }}</td>
-                        <td style = 'text-align: center;'>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.include_with_calibrations }}</td>
-                        <td style = 'text-align: center;'>{% if conf.id  %}{{ conf.DELETE }}{% endif %} {{ conf.id }} {{ conf.deprecated }}</td>
+                    <tr class = 'custom-form-template'>
+                        <td>{{ conf.id }} {{ conf.name }}</td>
+                        <td>{{ conf.id }} {{ conf.config_type }}</td>
+                        <td style = 'text-align: center;'>{{ conf.id }} {{ conf.include_with_calibrations }}</td>
+                        <td style = 'text-align: center;'>{{ conf.id }} {{ conf.deprecated }}</td>
+                        <td>
+                            {{conf.id}}  {{conf.DELETE}}
+                            <button id = 'delete_button-{{forloop.counter}}' data-row_num='{{forloop.counter}}' type="button" class="btn btn-primary" data-toggle="modal" data-target="#warningModal" data-whatever="{{ event_template.config_name }}">Delete</button>
+                        </td>
                     </tr>
                 {% endfor %}
+                    <tr id = 'add_row'>
+                        <td>
+                            <button type='button' id = 'add_button' class="btn btn-primary">Add Row</button>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -102,50 +132,60 @@
 {% block javascript %}
 <script type="text/javascript">
     $(document).ready(function() {
-        // Handles CoefficientValueSet form instance generation
-        $('.conf_name-form tbody tr').formset({
-            prefix: 'config_names',
-            addText: 'Add Configurations/Constants',
-            deleteText: 'Remove',
-            removed: function(row) {
-                let del = row.find('input:hidden[id $= "-DELETE"]')                
-                let totalForms = $("[id$='TOTAL_FORMS']")
-                if( confirm('Warning: deleting Names will delete associated Defaults and Event data') ) {
-                    del.val('on')
-                    row.hide()
-                } else {
-                    del.val('')
-                    row.show()
-                }
-                forms = $('.dynamic-form').not(':hidden');
-                totalForms.val(forms.length)
-            }
+        // Holds selected row marked for deletion
+        let global_row = []
+
+        // Hide default form delete checkboxes
+        $('[id$=-DELETE]').hide()
+
+        // Set selected row
+        $('[id^=delete_button]').on('click', function () {
+            let button = $(this);
+            let row = button.parent().parent();
+            let conf_name = row.find('[name$=-name]')
+            let conf_type = row.find(':selected')
+            $('#warningModalLabel').text(conf_type.text() + ': ' + conf_name.val())
+            global_row = row
         });
 
-        let formRows = $('.dynamic-form');
-        formRows.each(function() {
-            let row = $(this);
-            let removeButtons = row.find('.delete-row');
-            let deprecated = row.find("[id$='deprecated']").attr('checked');
-            if (deprecated == 'checked') {
-                removeButtons.remove();
-            } 
-            if (removeButtons.length > 1) {
-                removeButtons.map((idx, button) => {
-                    if (idx != 0) {
-                        button.remove()
-                    }
-                })
+        // Hide and mark row for deletion
+        $('#modal_delete').on('click', function() {
+            let delete_field = global_row.find('input[id$=-DELETE]')
+            if (delete_field) {
+                delete_field.prop("checked", "checked");
             }
+            global_row.hide();
+            $('#warningModal').modal('toggle')
         });
 
-        let formAddRows = $('.dynamic-form-add');
-        if (formAddRows.length > 1) {
-            formAddRows.map((idx, button) => {
-                if (idx != 0) {
-                    button.remove()
-                }
+        // Clone last table row, replace row numbers in id/name attributes of child tags, update total form count
+        $('#add_button').on('click', function() {
+            let total_forms = $('[id$=-TOTAL_FORMS]')
+            let add_row = $('#add_row')
+            let last_row_clone = $('.conf_name-form tbody tr.custom-form-template:last').clone()
+            add_row.before(last_row_clone)
+            let new_last_row = $('.conf_name-form tbody tr.custom-form-template:last')
+            if (new_last_row.is(':hidden')) {
+                new_last_row.show()
+            }
+            let tr_children = new_last_row.find('[id^="id_config_names"]')
+            tr_children.each(function() {
+                let tag = $(this)
+                let tag_id = tag.attr('id')
+                let tag_name = tag.attr('name')
+                let id_rownum_char_idx = tag.attr('id').indexOf('-') + 1
+                let name_rownum_char_idx = tag.attr('name').indexOf('-') + 1
+                let new_tag_id = tag_id.replaceAt(id_rownum_char_idx, total_forms.val())
+                let new_tag_name = tag_name.replaceAt(name_rownum_char_idx, total_forms.val())
+                tag.prop('id', new_tag_id)
+                tag.prop('name', new_tag_name)
             })
+            total_forms.val(parseInt(total_forms.val()) + 1)
+        });
+
+        // Replace String character at specific index
+        String.prototype.replaceAt = function(index, replacement) {
+            return this.substr(0, index) + replacement + this.substr(index + replacement.length);
         }
     });
 </script>

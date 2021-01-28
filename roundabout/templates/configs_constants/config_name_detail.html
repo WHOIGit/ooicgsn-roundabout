@@ -31,7 +31,7 @@
                         role="button"
                         data-detail-url="{% url 'configs_constants:event_confname_update' part_template.config_name_events.first.id %}"
                         data-node-id="{{ part_template.id }}"
-                        data-node-type="detail">
+                        data-node-type="parts">
                             Edit Configurations / Constants
                     </a>
                 </div>
@@ -39,7 +39,7 @@
                 <a class="btn btn-primary btn-sm" href="#" role="button"
                     data-detail-url="{% url 'configs_constants:event_confname_add' part_template.id %}"
                     data-node-id="{{ part_template.id }}"
-                    data-node-type="detail"
+                    data-node-type="parts"
                 >
                     Create Configurations / Constants
                 </a>
