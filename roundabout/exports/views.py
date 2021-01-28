@@ -305,7 +305,7 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
         return qs
 
     @classmethod
-    def build_zip(cls, zf, objs, subdir=None, verbose=None):
+    def build_zip(cls, zf, objs, subdir=None, verbose='CalibrationsWithConfigs_EXPORTLOG.txt'):
         # objs here is a dict-of-dicts, not a queryset.
         # Each top-level key is an inst_id.
         # Per inst_id there is (a) a "calibs" key containing a CalibrationEvent Queryset
