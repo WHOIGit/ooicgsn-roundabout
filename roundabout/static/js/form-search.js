@@ -275,6 +275,11 @@ function DoSubmit(e){
                 validation_alerts.push(`Field "${field_text}" cannot be used with Lookup "${lookup_text}".`)
             }
 
+            //Assert that numerical input is value
+            if (avail_fields[idx].legal_lookup === 'NUM_LOOKUP' && !query_value.match(/^-?(0|[1-9]\d*)(\.\d+)?$/)){
+                validation_alerts.push(`Numerical field "${query_value}" is invalid for "${field_text}".`)
+            }
+
             //Assert that date input is valid
             if ( lookup_value === 'date' && !query_value.match(/^\d{4}-\d{2}-\d{2}$/)) {
                 validation_alerts.push(`"Date" lookup query "${query_value}" is invalid. Must use "YYYY-MM-DD" format`)
