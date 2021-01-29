@@ -85,7 +85,7 @@
                 <tbody>
                 {{ part_confname_form.management_form }}
                 {% for conf in part_confname_form %}
-                    <tr class = 'custom-form-template'>
+                    <tr class = 'formset-row'>
                         <td>{{ conf.id }} {{ conf.name }}</td>
                         <td>{{ conf.id }} {{ conf.config_type }}</td>
                         <td style = 'text-align: center;'>{{ conf.id }} {{ conf.include_with_calibrations }}</td>
@@ -133,54 +133,59 @@
 <script type="text/javascript">
     $(document).ready(function() {
         // Holds selected row marked for deletion
-        let global_row = []
+        let global_row = [];
 
         // Hide default form delete checkboxes
-        $('[id$=-DELETE]').hide()
+        $('[id$=-DELETE]').hide();
 
         // Set selected row
         $('[id^=delete_button]').on('click', function () {
             let button = $(this);
             let row = button.parent().parent();
-            let conf_name = row.find('[name$=-name]')
-            let conf_type = row.find(':selected')
-            $('#warningModalLabel').text(conf_type.text() + ': ' + conf_name.val())
+            let conf_name = row.find('[name$=-name]');
+            let conf_type = row.find(':selected');
+            $('#warningModalLabel').text(conf_type.text() + ': ' + conf_name.val());
             global_row = row
         });
 
         // Hide and mark row for deletion
         $('#modal_delete').on('click', function() {
-            let delete_field = global_row.find('input[id$=-DELETE]')
+            let delete_field = global_row.find('input[id$=-DELETE]');
             if (delete_field) {
                 delete_field.prop("checked", "checked");
             }
             global_row.hide();
-            $('#warningModal').modal('toggle')
+            $('#warningModal').modal('toggle');
         });
 
         // Clone last table row, replace row numbers in id/name attributes of child tags, update total form count
         $('#add_button').off().on('click', function() {
-            let total_forms = $('[id$=-TOTAL_FORMS]')
-            let add_row = $('#add_row')
-            let last_row_clone = $('.conf_name-form tbody tr.custom-form-template:last').clone()
-            add_row.before(last_row_clone)
-            let new_last_row = $('.conf_name-form tbody tr.custom-form-template:last')
+
+            let total_forms = $('[id$=-TOTAL_FORMS]');
+            let add_row = $('#add_row');
+            let last_row_clone = $('.conf_name-form tbody tr.formset-row:last').clone();
+
+            add_row.before(last_row_clone);
+
+            let new_last_row = $('.conf_name-form tbody tr.formset-row:last');
             if (new_last_row.is(':hidden')) {
-                new_last_row.show()
+                new_last_row.show();
             }
-            let tr_children = new_last_row.find('[id^="id_config_names"]')
+
+            let tr_children = new_last_row.find('[id^="id_config_names"]');
             tr_children.each(function() {
-                let tag = $(this)
-                let tag_id = tag.attr('id')
-                let tag_name = tag.attr('name')
-                let id_rownum_char_idx = tag.attr('id').indexOf('-') + 1
-                let name_rownum_char_idx = tag.attr('name').indexOf('-') + 1
-                let new_tag_id = tag_id.replaceAt(id_rownum_char_idx, total_forms.val())
-                let new_tag_name = tag_name.replaceAt(name_rownum_char_idx, total_forms.val())
-                tag.prop('id', new_tag_id)
-                tag.prop('name', new_tag_name)
-            })
-            total_forms.val(parseInt(total_forms.val()) + 1)
+                let tag = $(this);
+                let tag_id = tag.attr('id');
+                let tag_name = tag.attr('name');
+                let id_rownum_char_idx = tag.attr('id').indexOf('-') + 1;
+                let name_rownum_char_idx = tag.attr('name').indexOf('-') + 1;
+                let new_tag_id = tag_id.replaceAt(id_rownum_char_idx, total_forms.val());
+                let new_tag_name = tag_name.replaceAt(name_rownum_char_idx, total_forms.val());
+                tag.prop('id', new_tag_id);
+                tag.prop('name', new_tag_name);
+            });
+
+            total_forms.val(parseInt(total_forms.val()) + 1);
         });
 
         // Replace String character at specific index
