@@ -159,7 +159,7 @@
         });
 
         // Clone last table row, replace row numbers in id/name attributes of child tags, update total form count
-        $('#add_button').on('click', function() {
+        $('#add_button').off().on('click', function() {
             let total_forms = $('[id$=-TOTAL_FORMS]')
             let add_row = $('#add_row')
             let last_row_clone = $('.conf_name-form tbody tr.custom-form-template:last').clone()
