@@ -38,7 +38,7 @@
           <th>Cruise Stop Date</th>
           <th>Location</th>
           <th>Notes</th>
-
+          <th>Links</th>
 
         </thead>
         <tbody>
@@ -56,6 +56,13 @@
                 <td>{{ cruise.cruise_stop_date }}</td>
                 <td>{{ cruise.location.name }}</td>
                 <td>{{ cruise.notes }}</td>
+                <td>
+                  {% if cruise.hyperlinks %}
+                    {% for link in cruise.hyperlinks.all %}
+                      <a target="_blank" href="{{ link.url }}">{{ link.text }} <i class="fas fa-link"></i></a><br>
+                    {% endfor %}
+                  {% endif %}
+                </td>
 
             </tr>
           {% endfor %}

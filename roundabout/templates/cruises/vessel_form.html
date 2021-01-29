@@ -21,33 +21,40 @@
 
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
-
 {% block title %}Vessel - {{ vessel.vessel_name }}{% endblock %}
 
 {% block content %}
 <div class="container">
   <h1>{% if vessel %} Edit {{ vessel.vessel_name }} {% else %} Add Vessel {% endif %}</h1>
-  <form class="form-horizontal" method="post" action="" novalidate>
+  <form id="vessel-form" class="form-horizontal" method="post" action="" novalidate>
     {% csrf_token %}
     {{ form|crispy }}
 
     <div class="row">
-        {% if form.errors %}
-            {% for field in form %}
-                {% for error in field.errors %}
-                    <div class="alert alert-danger">
-                        <strong>{{ error|escape }}</strong>
-                    </div>
-                {% endfor %}
-            {% endfor %}
-            {% for error in form.non_field_errors %}
-                <div class="alert alert-danger">
-                    <strong>{{ error|escape }}</strong>
-                </div>
-            {% endfor %}
-        {% endif %}
+      <table class="table table-tight">
+        <thead>
+          <th>Hyperlink Text</th>
+          <th>URL</th>
+        </thead>
+        <tbody>
+          {{ link_formset.management_form }}
 
+          {% for link in link_formset %}
+            <tr>
+                <td {% if link.errors.text %} class="alert alert-danger"{% endif %}>{% if link.id  %}{{ link.DELETE }}{% endif %} {{ link.id }} {{ link.text }}</td>
+                <td {% if link.errors.url %} class="alert alert-danger"{% endif %}>{{ link.url }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
+    <div class="row">
+      {% if form.errors or link_formset.errors%}
+        <div class="alert alert-danger">
+          <strong>This field is required.</strong>
+        </div>
+      {% endif %}
     </div>
 
     <div class="control-group">
@@ -65,3 +72,18 @@
   </form>
 </div>
 {% endblock %}
+
+{% block javascript %}
+<script type="text/javascript">
+
+  $(document).ready(function() {
+
+    $('#vessel-form tbody tr').formset({
+        prefix: 'hyperlinks', // <-- Needs to match the Django related_name for the models
+        addText: 'add row',
+        deleteText: 'remove',
+    });
+
+});
+</script>
+{% endblock javascript %}

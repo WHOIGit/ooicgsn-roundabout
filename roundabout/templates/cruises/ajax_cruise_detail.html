@@ -32,8 +32,16 @@
     <p>Destination: {{ cruise.location }} </p>
     <p>Cruise Start Date: {{ cruise.cruise_start_date }}</p>
     <p>Cruise Stop Date: {{ cruise.cruise_stop_date }}</p>
-    <p>Vessel: <a href="{% url 'cruises:vessels_home' %}">{{ cruise.vessel }}</a>
-    <p>Notes: {{ cruise.notes }}
+    <p>Vessel: <a href="{% url 'cruises:vessels_home' %}">{{ cruise.vessel }}</a></p>
+    <p>Notes: {{ cruise.notes }}</p>
+    <p>Links:</p>
+    {% if cruise.hyperlinks %}
+      <ul>
+      {% for link in cruise.hyperlinks.all %}
+        <li><a target="_blank" href="{{ link.url }}">{{ link.text }}</a></li>
+      {% endfor %}
+      </ul>
+    {% endif %}
 
     <h5>Deployment History for this Cruise</h5>
     <hr>
@@ -88,17 +96,12 @@
         </ul>
     {% endif %}
 
-
-
-
-
-<div class="mt-3 ajax-btn">
-    <a href="#" data-update-url="{% url 'cruises:ajax_cruises_update' cruise.id %}" role="button" class="btn btn-primary">Edit Cruise</a>
-
-    <a href="#" data-update-url="{% url 'cruises:ajax_cruises_delete' cruise.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
+  <div class="mt-3 ajax-btn">
+      <a href="#" data-update-url="{% url 'cruises:ajax_cruises_update' cruise.id %}" role="button" class="btn btn-primary">Edit Cruise</a>
+      <a href="#" data-update-url="{% url 'cruises:ajax_cruises_delete' cruise.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
+  </div>
 
 </div>
-
 
 {% block javascript %}
 
