@@ -65,13 +65,13 @@ def searchbar_redirect(request):
             if fnmatch(query.strip(),'????-??-??'):
                 query = query.strip()
                 getstr = '?f=.0.calibration_event__calibration_date&l=.0.date&q=.0.{query}'
-            else: getstr = '?f=.0.calibration_event__inventory__serial_number&f=.0.calibration_event__inventory__part__name&f=.0.coefficient_name__calibration_name&f=.0.calibration_event__user_approver__any__name&f=.0.calibration_event__user_draft__any__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
+            else: getstr = '?f=.0.calibration_event__inventory__serial_number&f=.0.calibration_event__inventory__part__name&f=.0.coefficient_name__calibration_name&f=.0.calibration_event__user_approver__any__username&f=.0.calibration_event__user_draft__any__username&f=.0.notes&l=.0.icontains&q=.0.{query}'
         elif model == 'configconsts':
             if fnmatch(query.strip(), '????-??-??'):
                 query = query.strip()
                 getstr = '?f=.0.config_event__configuration_date&l=.0.date&q=.0.{query}'
             else:
-                getstr = '?f=.0.config_event__inventory__serial_number&f=.0.config_event__inventory__part__name&f=.0.config_name__name&f=.0.config_event__user_approver__any__name&f=.0.config_event__user_draft__any__name&f=.0.notes&l=.0.icontains&q=.0.{query}'
+                getstr = '?f=.0.config_event__inventory__serial_number&f=.0.config_event__inventory__part__name&f=.0.config_name__name&f=.0.config_event__user_approver__any__username&f=.0.config_event__user_draft__any__username&f=.0.notes&l=.0.icontains&q=.0.{query}'
         elif model=='part':         getstr = '?f=.0.part_number&f=.0.name&f=.0.friendly_name&l=.0.icontains&q=.0.{query}'
         elif model == 'build':      getstr = '?f=.0.build_number&f=.0.assembly__name&f=.0.assembly__assembly_type__name&f=.0.assembly__description&f=.0.build_notes&f=.0.location__name&l=.0.icontains&q=.0.{query}'
         elif model == 'assembly':   getstr = '?f=.0.assembly_number&f=.0.name&f=.0.assembly_type__name&f=.0.description&l=.0.icontains&q=.0.{query}'
@@ -167,8 +167,9 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
     def get_queryset(self):
         def userlist_Qkwarg(field,row):
             approver_or_draft = field.split('__')[-3]
-            matching_user_IDs = User.objects.filter(**{'name__{}'.format(row['lookup']): row['query']}).values_list('id', flat=True)
-
+            Q_username = Q(**{'username__{}'.format(row['lookup']): row['query']})
+            Q_userName = Q(**{'name__{}'.format(row['lookup']): row['query']})
+            matching_user_IDs = User.objects.filter(Q_username|Q_userName).values_list('id', flat=True)
             if field.startswith('calibration_events__latest__'):
                 cals_with_matching_users__qs = CalibrationEvent.objects.filter(**{approver_or_draft+'__in':matching_user_IDs})
                 inv_latest_cal__subQ = Subquery(CalibrationEvent.objects.filter(inventory=OuterRef('pk')).values('pk')[:1])
@@ -188,12 +189,12 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
             select_one = [s1 for s1 in select_ones if s1 in field]
             select_one = select_one[0] if select_one else None
 
-            userlist_cases = ['calibration_events__latest__user_approver__any__name',
-                              'calibration_events__latest__user_draft__any__name',
-                              'calibration_event__user_approver__any__name',
-                              'calibration_event__user_draft__any__name',
-                              'config_event__user_approver__any__name',
-                              'config_event__user_draft__any__name']
+            userlist_cases = ['calibration_events__latest__user_approver__any__username',
+                              'calibration_events__latest__user_draft__any__username',
+                              'calibration_event__user_approver__any__username',
+                              'calibration_event__user_draft__any__username',
+                              'config_event__user_approver__any__username',
+                              'config_event__user_draft__any__username']
 
             if field in userlist_cases:
                 return userlist_Qkwarg(field,row)
@@ -444,8 +445,8 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="calibration_events__latest__calibration_date", text="Latest Calibration Event: Date", legal_lookup='DATE_LOOKUP',
                              col_args = dict(format='Y-m-d', linkify=lambda record,value: reverse(viewname="exports:calibration",
                                                                 args=[record.calibration_events.latest().pk]) if value else None)),
-                        dict(value="calibration_events__latest__user_approver__any__name", text="Latest Calibration Event: Approvers", legal_lookup='ITER_LOOKUP'),
-                        dict(value="calibration_events__latest__user_draft__any__name", text="Latest Calibration Event: Reviewers", legal_lookup='ITER_LOOKUP'),
+                        dict(value="calibration_events__latest__user_approver__any__username", text="Latest Calibration Event: Approvers", legal_lookup='ITER_LOOKUP'),
+                        dict(value="calibration_events__latest__user_draft__any__username", text="Latest Calibration Event: Reviewers", legal_lookup='ITER_LOOKUP'),
                         dict(value="calibration_events__latest__approved", text="Latest Calibration Event: Approved", legal_lookup='BOOL_LOOKUP'),
 
                         ]
@@ -643,7 +644,8 @@ class ActionTableView(GenericSearchTableView):
 
     @staticmethod
     def get_avail_fields():
-        avail_fields = [dict(value="action_type", text="Action Type", legal_lookup='STR_LOOKUP'),
+        avail_fields = [dict(value="object_type", text="Object Type", legal_lookup='STR_LOOKUP'),
+                        dict(value="action_type", text="Action Type", legal_lookup='STR_LOOKUP'),
                         dict(value="user__name", text="User", legal_lookup='STR_LOOKUP'),
                         dict(value="created_at", text="Timestamp", legal_lookup='DATE_LOOKUP'),
                         dict(value="detail", text="Detail", legal_lookup='STR_LOOKUP'),
@@ -673,8 +675,8 @@ class CalibrationTableView(GenericSearchTableView):
                         dict(value="calibration_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
                         dict(value="coefficient_name__calibration_name", text="Coefficient Name", legal_lookup='STR_LOOKUP'),
                         dict(value="calibration_event__calibration_date", text="Calibration Event: Date", legal_lookup='DATE_LOOKUP'),
-                        dict(value="calibration_event__user_approver__any__name", text="Calibration Event: Approvers", legal_lookup='ITER_LOOKUP'),
-                        dict(value="calibration_event__user_draft__any__name", text="Calibration Event: Reviewers", legal_lookup='ITER_LOOKUP'),
+                        dict(value="calibration_event__user_approver__any__username", text="Calibration Event: Approvers", legal_lookup='ITER_LOOKUP'),
+                        dict(value="calibration_event__user_draft__any__username", text="Calibration Event: Reviewers", legal_lookup='ITER_LOOKUP'),
                         dict(value="calibration_event__approved", text="Calibration Event: Approved Flag", legal_lookup='BOOL_LOOKUP'),
                         #dict(value="calibration_event__created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
                         dict(value="value_set", text="Value", legal_lookup='STR_LOOKUP'),
@@ -716,8 +718,8 @@ class ConfigConstTableView(GenericSearchTableView):
                         dict(value="config_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
                         dict(value="config_name__name", text="Config/Const Name", legal_lookup='STR_LOOKUP'),
                         dict(value="config_event__configuration_date", text="Config/Const Event: Date", legal_lookup='DATE_LOOKUP'),
-                        dict(value="config_event__user_approver__any__name", text="Config/Const Event: Approvers", legal_lookup='ITER_LOOKUP'),
-                        dict(value="config_event__user_draft__any__name", text="Config/Const Event: Reviewers", legal_lookup='ITER_LOOKUP'),
+                        dict(value="config_event__user_approver__any__username", text="Config/Const Event: Approvers", legal_lookup='ITER_LOOKUP'),
+                        dict(value="config_event__user_draft__any__username", text="Config/Const Event: Reviewers", legal_lookup='ITER_LOOKUP'),
                         dict(value="config_event__approved", text="Config/Const Event: Approved Flag", legal_lookup='BOOL_LOOKUP'),
                         #dict(value="config_event__created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
                         dict(value="config_value", text="Value", legal_lookup='STR_LOOKUP'),

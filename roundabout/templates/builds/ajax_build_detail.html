@@ -61,10 +61,6 @@
                     data-location-id="{{ build.location.id }}"
                     data-node-type="{{ node_type }}">Photo/Note</a>
 
-                <a class="dropdown-item" href="{% url 'reports:build_report' build.id %}"
-                   data-node-id="{{ build.id }}"
-                   data-node-type="{{ node_type }}">Generate Report</a>
-
                 <a class="dropdown-item" href="#"
                     data-detail-url="{% url 'builds:ajax_builds_update' build.id %}"
                     data-node-id="{{ build.id }}"
