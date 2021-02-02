@@ -10,7 +10,7 @@ Django application to manage Part, Location, and Assembly Templates, and Invento
 Requirements
 ============
 
-Django 2.2
+Django 3.1
 ------------------
 - Based on Django Cookiecutter template and included apps (http://cookiecutter-django.readthedocs.io/en/latest/index.html)
 - django-mptt - Django app to use Modified Preorder Tree Traversal for hierarchical data models
