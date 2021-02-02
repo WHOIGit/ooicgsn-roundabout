@@ -54,6 +54,9 @@ DJANGO_SU_PASSWORD=admin
 # Site Domain
 RDB_SITE_URL=https://yourdomain.com
 
+# Google Analytics option
+RDB_GOOGLE_ANALYTICS_ID=
+
 # Settings for RDB serial number generation functions
 # ------------------------------------------------------------------------------
 # Default pattern - "1, 2, 3, ... etc."

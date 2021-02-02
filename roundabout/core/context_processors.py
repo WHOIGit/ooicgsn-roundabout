@@ -29,6 +29,7 @@ from .utils import set_app_labels
 def template_get_env_variables(request):
     data = {}
     data['rdb_site_url'] = env('RDB_SITE_URL', default='')
+    data['rdb_google_analytics_id'] = env('RDB_GOOGLE_ANALYTICS_ID', default=None)
     return data
 
 # Set sitewide template variable for headings/labels display
