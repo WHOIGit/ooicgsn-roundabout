@@ -469,8 +469,8 @@
                                     class="btn btn-primary btn-sm mr-2"
                                     role="button"
                                     data-detail-url="{% url 'ooi_ci_tools:action_comment_add' action.id %}"
-                                    data-node-id="{{ action.id }}"
-                                    data-node-type="{{ action.get_object_type }}">
+                                    data-node-id="{{ inventory_item.id }}"
+                                    data-node-type="inventory">
                                         Comment
                                 </a>
                             </div>
@@ -511,16 +511,6 @@
                                     </li>
                                 </ul>
                                 <ul class="list-group">
-                                    <!-- {% recursetree action.comment_nodes.all %}
-                                        <li class="list-group-item">
-                                            <p>{{ node.detail }}</p>
-                                            {% if not node.is_leaf_node %}
-                                                <ul class="list-group list-group-flush">
-                                                    {{ children }}
-                                                </ul>
-                                            {% endif %}
-                                        </li>
-                                    {% endrecursetree %} -->
                                     {% for comment in action.comments.all %}
                                         <li class="list-group-item">
                                             <a  class="collapse show" 
@@ -546,7 +536,7 @@
                                                     class="btn btn-outline-primary btn-sm mr-2"
                                                     role="button"
                                                     data-detail-url="{% url 'ooi_ci_tools:comment_comment_add' comment.id %}"
-                                                    data-node-id="{{ comment.id }}"
+                                                    data-node-id="{{ inventory_item.id }}"
                                                     data-node-type="inventory">
                                                         Comment
                                                 </a>
@@ -557,7 +547,7 @@
                                                         class="btn btn-outline-info btn-sm mr-2"
                                                         role="button"
                                                         data-detail-url="{% url 'ooi_ci_tools:comment_comment_edit' comment.id %}"
-                                                        data-node-id="{{ comment.id }}"
+                                                        data-node-id="{{ inventory_item.id }}"
                                                         data-node-type="inventory">
                                                             Edit
                                                     </a>
@@ -569,7 +559,7 @@
                                                         class="btn btn-outline-danger btn-sm mr-2"
                                                         role="button"
                                                         data-detail-url="{% url 'ooi_ci_tools:comment_comment_delete' comment.id %}"
-                                                        data-node-id="{{ comment.id }}"
+                                                        data-node-id="{{ inventory_item.id }}"
                                                         data-node-type="inventory">
                                                             Delete
                                                     </a>
