@@ -111,16 +111,16 @@ var password;
 	// 1.6 Behavior of this screen is so tweeky!!! Values set are cleared before .btn-primary
 	// pushed. Doesn't happen stepping through the debugger. Fields MUST be set in this order!
 	// Wait on a link, not a field, or a Stale Element error will be thrown
-	while ((await driver.findElements(By.linkText("Add Calibration"))).length == 0)
+	while ((await driver.findElements(By.id("add_button"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add.");
+	   console.log("Wait 2 seconds for Add Row.");
 	} 
       
         // 24 | click | linkText=Add Configurations/Constants | 
         await new Promise(r => setTimeout(r, 2000));
 
-        await driver.findElement(By.linkText("Add Calibration")).click();
+    	await driver.findElement(By.id("add_button")).click();
         await new Promise(r => setTimeout(r, 2000)); 
 
         await driver.findElement(By.id("id_coefficient_names-1-value_set_type")).click();
@@ -128,6 +128,7 @@ var password;
         await driver.findElement(By.id("id_coefficient_names-1-calibration_name")).click();
         await driver.findElement(By.id("id_coefficient_names-1-calibration_name")).sendKeys("scalib2");
         await driver.findElement(By.id("id_coefficient_names-1-sigfig_override")).click(); 
+        await driver.findElement(By.id("id_coefficient_names-1-sigfig_override")).clear(); 
         await driver.findElement(By.id("id_coefficient_names-1-sigfig_override")).sendKeys("20");
    
 	await new Promise(r => setTimeout(r, 2000));
