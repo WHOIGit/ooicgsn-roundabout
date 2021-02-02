@@ -26,6 +26,19 @@
 <html lang="en">
 
 <head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <!-- Optional, add a "Measurement ID" in environmental variables to use -->
+  {% if rdb_google_analytics_id %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ rdb_google_analytics_id }}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', '{{ rdb_google_analytics_id }}');
+    </script>
+  {% endif %}
+
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <title>{% block title %}Roundabout DB{% endblock title %}</title>
@@ -184,7 +197,7 @@
 
     <!--Copyright-->
     <div class="footer-copyright py-3 text-center">
-        &copy; OOI-CGSN | Roundabout DB | <a href="https://github.com/WHOIGit/ooicgsn-roundabout" target="_blank">v1.6.2</a> 
+        &copy; OOI-CGSN | Roundabout DB | <a href="https://github.com/WHOIGit/ooicgsn-roundabout" target="_blank">v1.6.2</a>
     </div>
     <!--/.Copyright-->
 
