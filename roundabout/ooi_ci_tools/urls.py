@@ -39,4 +39,6 @@ urlpatterns = [
     path('import/calibrations/status/', view=views.upload_status, name='upload_status'),
     path('import/actions/comments/add/<int:pk>/', view=views.action_comment, name='action_comment_add'),
     path('import/comments/comments/add/<int:pk>/', view=views.comment_comment, name='comment_comment_add'),
+    path('import/comments/comments/edit/<int:pk>/', view=views.comment_comment_edit, name='comment_comment_edit'),
+    path('import/comments/comments/delete/<int:pk>/', view=views.CommentDelete.as_view(), name='comment_comment_delete'),
 ]

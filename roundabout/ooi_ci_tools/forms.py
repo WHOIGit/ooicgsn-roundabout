@@ -446,13 +446,4 @@ class ActionForm(forms.ModelForm):
         model = Action
         fields = ['detail',]
 
-
-
-ActionCommentFormset = inlineformset_factory(
-    Action, 
-    Comment, 
-    form=CommentForm,
-    fields=('detail',), 
-    extra=1, 
-    can_delete=True
-)
+        

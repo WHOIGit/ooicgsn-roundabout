@@ -511,6 +511,16 @@
                                     </li>
                                 </ul>
                                 <ul class="list-group">
+                                    <!-- {% recursetree action.comment_nodes.all %}
+                                        <li class="list-group-item">
+                                            <p>{{ node.detail }}</p>
+                                            {% if not node.is_leaf_node %}
+                                                <ul class="list-group list-group-flush">
+                                                    {{ children }}
+                                                </ul>
+                                            {% endif %}
+                                        </li>
+                                    {% endrecursetree %} -->
                                     {% for comment in action.comments.all %}
                                         <li class="list-group-item">
                                             <a  class="collapse show" 
@@ -519,7 +529,7 @@
                                                 aria-expanded="false" 
                                                 aria-controls="comment-{{ comment.id }}"
                                             >
-                                                {{ comment.detail|safe }}
+                                                {{ comment.detail|safe|truncatechars:255 }}
                                             </a>
                                             <a  data-toggle="collapse" 
                                                 class="collapse show text-right" 
@@ -529,7 +539,7 @@
                                                 role="button"
                                             >
                                                 <i class="fa" aria-hidden="true"></i>
-                                                <span class="sr-only">{{ comment.detail|safe }}</span>
+                                                <span class="sr-only">{{ comment.detail|safe|truncatechars:255 }}</span>
                                             </a>
                                             <div class = 'ajax-detail-link float-right'>
                                                 <a  href="#"
@@ -541,97 +551,49 @@
                                                         Comment
                                                 </a>
                                             </div>
-                                            <small class = 'form-text text-muted'>
-                                                <span class='font-weight-light'><b>Date:</b> {{ comment.created_at|date:"n/j/y H:i" }}&nbsp;</span>
-                                                <span class='font-weight-light'><b>User:</b> {{ comment.user.username }}&nbsp;</span>
-                                            </small>
-                                            {% if comment.parent %}
-                                                <small class = 'form-text text-muted'>
-                                                    <span class='font-weight-light'><b>In Response to:</b> {{ comment.parent.detail | safe }}&nbsp;</span>
-                                                    <span class='font-weight-light'><b>User:</b> {{ comment.parent.user.username | safe }}&nbsp;</span>
-                                                </small>
+                                            {% if user == comment.user %}
+                                                <div class = 'ajax-detail-link float-right'>
+                                                    <a  href="#"
+                                                        class="btn btn-outline-info btn-sm mr-2"
+                                                        role="button"
+                                                        data-detail-url="{% url 'ooi_ci_tools:comment_comment_edit' comment.id %}"
+                                                        data-node-id="{{ comment.id }}"
+                                                        data-node-type="inventory">
+                                                            Edit
+                                                    </a>
+                                                </div>
                                             {% endif %}
+                                            {% if user == comment.user %}
+                                                <div class = 'ajax-detail-link float-right'>
+                                                    <a  href="#"
+                                                        class="btn btn-outline-danger btn-sm mr-2"
+                                                        role="button"
+                                                        data-detail-url="{% url 'ooi_ci_tools:comment_comment_delete' comment.id %}"
+                                                        data-node-id="{{ comment.id }}"
+                                                        data-node-type="inventory">
+                                                            Delete
+                                                    </a>
+                                                </div>
+                                            {% endif %}
+                                            <div class="collapse show mt-3" id="comment-{{ comment.id }}">
+                                                <small class = 'form-text text-muted'>
+                                                    <span class='font-weight-light'><b>Date:</b> {{ comment.created_at|date:"n/j/y H:i" }}&nbsp;</span>
+                                                    <span class='font-weight-light'><b>User:</b> {{ comment.user.username }}&nbsp;</span>
+                                                </small>
+                                                {% if comment.parent %}
+                                                    <small class = 'form-text text-muted'>
+                                                        <span class='font-weight-light'><b>In Response to:</b> {{ comment.parent.detail | safe | truncatechars:125 }}&nbsp;</span>
+                                                        <span class='font-weight-light'><b>User:</b> {{ comment.parent.user.username | safe }}&nbsp;</span>
+                                                    </small>
+                                                {% endif %}
+                                            </div>
                                         </li>
                                     {% endfor %}
                                 </ul>
-                                <!-- <table class="table table-tight">
-                                    <tbody>
-                                        <tr>
-                                            <td> 
-                                                <li class = 'list-group-item' style = 'display:block; overflow: auto; max-height: 200px'>
-                                                    <table class="table table-tight table-striped action-table">
-                                                        <thead>
-                                                            <th>User</th>
-                                                            <th>Created</th>
-                                                            <th>Details</th>
-                                                            <th>Comment</th>
-                                                        </thead>
-                                                        <tbody style = 'overflow: auto; max-height: 200px'>
-                                                            {% for comment in action.comments.all %}
-                                                                <tr>
-                                                                    <td>{{ comment.user }}</td>
-                                                                    <td>{{ comment.created_at|date:"n/j/y H:i" }}</td>
-                                                                    <td>{{ comment.detail|safe }}</td>
-                                                                    <td>
-                                                                        <div class = 'ajax-detail-link'>
-                                                                            <a  href="#"
-                                                                                class="btn btn-outline-primary btn-sm mr-2"
-                                                                                role="button"
-                                                                                data-detail-url="{% url 'ooi_ci_tools:comment_comment_add' comment.id %}"
-                                                                                data-node-id="{{ comment.id }}"
-                                                                                data-node-type="inventory">
-                                                                                    Comment
-                                                                            </a>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                            {% endfor %}
-                                                        </tbody>
-                                                    </table>
-                                                </li>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table> -->
                             </div>
                         </li>
                     {% endfor %}
                 </ul>
-
-                <table class="table table-striped action-table">
-                    <thead>
-                        <th>Date</th>
-                        <th>Action</th>
-                        <th>Details</th>
-                        <th>Person</th>
-                        <th>Location</th>
-                    </thead>
-                    <tbody>
-                        {% for action in  inventory_item.actions.all %}
-                        <tr>
-                            <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
-                            <td>{{ action.get_action_type_display }}</td>
-                            <td>
-                                {{ action.detail|safe }}
-                                {% for photo in action.photos.all %}
-                                    {% if photo.file_type == 'image' %}
-                                        <a href="{{ photo.photo.url }}" target="_blank">
-                                            <img src="{{ photo.photo.url }}" width="100%">
-                                        </a> <br><br>
-                                    {% else %}
-                                        <a href="{{ photo.photo.url }}" target="_blank"><i class='fa fa-file fa-3x'></i>
-                                            {{ photo.photo.name }}
-                                        </a>  <br><br>
-                                    {% endif %}
-                                {% endfor %}
-                            </td>
-                            <td>{{ action.user.username }}</td>
-                            <td>{{ action.location.name }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
             </div>
         {% endif %}
 

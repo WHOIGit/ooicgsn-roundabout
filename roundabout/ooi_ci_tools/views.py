@@ -37,7 +37,7 @@ from django.views.generic import CreateView, UpdateView, DeleteView
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.assemblies.models import Assembly
 from roundabout.inventory.models import Action
-from .forms import ImportDeploymentsForm, ImportVesselsForm, ImportCruisesForm, ImportCalibrationForm, CommentForm, ActionCommentFormset, ActionForm
+from .forms import ImportDeploymentsForm, ImportVesselsForm, ImportCruisesForm, ImportCalibrationForm, CommentForm, ActionForm
 from .models import *
 from .tasks import parse_cal_files, parse_cruise_files, parse_vessel_files, parse_deployment_files
 
@@ -359,3 +359,39 @@ def comment_comment(request, pk):
         "comment_form": comment_form,
         "parent_comment": comment
     })
+
+def comment_comment_edit(request, pk):
+    comment = Comment.objects.get(id=pk)
+    if request.method == "POST":
+        comment_form = CommentForm(request.POST, instance=comment)
+        if comment_form.is_valid():
+            comment_form.instance.detail = comment_form.cleaned_data['detail']
+            comment_form.save()
+    else:
+        comment_form = CommentForm(instance=comment)
+    return render(request, 'ooi_ci_tools/comment_comment.html', {
+        "comment_form": comment_form,
+        "parent_comment": comment
+    })
+
+# Handles deletion of Comments
+class CommentDelete(LoginRequiredMixin, DeleteView):
+    model = Comment
+    context_object_name='comment_obj'
+    template_name = 'ooi_ci_tools/comment_delete.html'
+    permission_required = 'ooi_ci_tools.add_comments'
+    redirect_field_name = 'home'
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        data = {
+            'message': "Successfully submitted form data.",
+            'parent_id': self.object.id,
+            'parent_type': 'comment',
+            'object_type': self.object.get_object_type(),
+        }
+        self.object.delete()
+        return JsonResponse(data)
+
+    def get_success_url(self):
+        return reverse_lazy('inventory:ajax_inventory_detail', args=(self.object.action.inventory.id, ))

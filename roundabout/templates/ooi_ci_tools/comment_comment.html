@@ -4,7 +4,7 @@
 
 
 <div class="card-header">
-    {% if comment_form.id %}
+    {% if comment_form.instance.id %}
         <h3>Update Comments</h3>
     {% else %}
         <h3>Add Comments</h3>
@@ -37,7 +37,7 @@
 
         <div class="control-group">
             <div class="controls">
-                {% if comment_form.id %}
+                {% if comment_form.instance.id %}
                     <button id ='submit' type="submit" class="btn btn-primary">Update Comments</button>
                 {% else %}
                     <button id ='submit' type="submit" class="btn btn-primary">Add Comments</button>
