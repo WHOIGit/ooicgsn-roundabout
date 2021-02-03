@@ -36,7 +36,7 @@ from roundabout.inventory.models import Action, DeploymentAction, Inventory, Inv
 from roundabout.parts.models import Part
 from roundabout.assemblies.models import AssemblyPart
 from roundabout.users.models import User
-from roundabout.search.tables import trunc_render
+from roundabout.search.tables import trunc_render, ActionTable
 
 # ========= TABLE BASES ========== #
 
@@ -137,44 +137,7 @@ class ActionUserTable(UserTableBase):
     def render_detail(self,value):
         return trunc_render()(value)
 
-    def render_object(self,record):
-        html_string = '<a href={url}>{text}</a>'
-        parent_obj = record.get_parent()
-        if isinstance(parent_obj,(CalibrationEvent,ConfigEvent,ConstDefaultEvent)):
-            parent_obj = parent_obj.inventory
-        elif isinstance(parent_obj,(ConfigNameEvent,CoefficientNameEvent)):
-            parent_obj = parent_obj.part
-        elif isinstance(parent_obj,ConfigDefaultEvent):
-            parent_obj = parent_obj.assembly_part
-
-        if isinstance(parent_obj, Inventory):
-            inv_url = reverse("inventory:inventory_detail", args=[parent_obj.pk])
-            html_string = html_string.format(url=inv_url, text=parent_obj)
-            return format_html(html_string)
-        elif isinstance(parent_obj,Build):
-            build_url = reverse("builds:builds_detail", args=[parent_obj.pk])
-            html_string = html_string.format(url=build_url, text=parent_obj)
-            return format_html(html_string)
-        elif isinstance(parent_obj,Deployment):
-            build_url = reverse("builds:builds_detail", args=[record.deployment.build.pk])
-            deployment_anchor = '#deployment-{}-'.format(record.deployment.pk)  # doesn't work, anchor doesn't exist
-            deployment_anchor = '#deployments'  # next best anchor that does work
-            html_string = html_string.format(url=build_url+deployment_anchor, text=parent_obj)
-            return format_html(html_string)
-        elif isinstance(parent_obj,InventoryDeployment):
-            inv_url = reverse("inventory:inventory_detail", args=[parent_obj.inventory.pk])
-            html_string = html_string.format(url=inv_url, text=parent_obj)
-            return format_html(html_string)
-        elif isinstance(parent_obj,Part):
-            build_url = reverse("parts:parts_detail", args=[parent_obj.pk])
-            html_string = html_string.format(url=build_url, text=parent_obj)
-            return format_html(html_string)
-        elif isinstance(parent_obj,AssemblyPart):
-            assy_url = reverse("assemblies:assemblypart_detail", args=[parent_obj.pk])
-            html_string = html_string.format(url=assy_url, text=parent_obj)
-            return format_html(html_string)
-        else:
-            return ''
+    render_object = ActionTable.render_object
 
 
 # ========= FORM STUFF ========= #
