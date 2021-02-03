@@ -286,8 +286,11 @@ var filename;
 
         // Bulk Download Calibrations
         await driver.findElement(By.id("navbarAdmintools")).click()
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Bulk Download Tool")).click()
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Export Calibrations")).click()
+	await new Promise(r => setTimeout(r, 2000));
 
         // Access Downloaded Calibrations file
         if (myArgs[1] == 'headless') {

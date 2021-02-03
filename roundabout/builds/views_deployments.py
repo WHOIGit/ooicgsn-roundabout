@@ -159,13 +159,25 @@ class DeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         return actions
 
     def form_valid(self, form):
-        action_type = 'deploymentdetails'
+        action_type = Action.DEPLOYMENTDETAILS
         previous_deployment = Deployment.objects.get(id=self.object.pk)
         self.object = form.save()
         self.object.build.detail = '%s Details changed.' % (self.object.deployment_number)
         self.object.build.save()
         # Create Build Action record for deployment
         build_record = _create_action_history(self.object.build, action_type, self.request.user,)
+
+        # can only associate one cruise with an action, so for deployment detail change, only show changed cruise value
+        cruise_deployed_change = previous_deployment.cruise_deployed != self.object.cruise_deployed
+        cruise_recovered_change = previous_deployment.cruise_recovered != self.object.cruise_recovered
+        if cruise_deployed_change and cruise_recovered_change:
+            pass # can't record both so record neither
+        elif cruise_deployed_change:
+            build_record.cruise = self.object.cruise_deployed
+        elif cruise_recovered_change:
+            build_record.cruise = self.object.cruise_recovered
+        build_record.save()
+
         # Update Deployment Action items to match any date changes
         self._update_actions(self.object)
 
@@ -211,7 +223,7 @@ class DeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
             }
             return JsonResponse(data)
         else:
-            return response
+            return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
         return reverse('builds:ajax_builds_detail', args=(self.object.build.id,))
@@ -276,6 +288,8 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         build.save()
         # Create Build Action record for deployment
         build_record = _create_action_history(build, action_type, self.request.user, None, '', action_date)
+        build_record.cruise = self.object.cruise_recovered or self.object.cruise_deployed
+        build_record.save()
 
         """
         # Create automatic Snapshot when Deployed to Sea or Recovered
@@ -295,10 +309,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             for item in inventory_items:
                 if item.is_root_node():
                     make_tree_copy(item, base_location, snapshot, item.parent)
-        """
 
-        # Get all Inventory items on Build, match location and add Actions
-        inventory_items = build.inventory.all()
         detail = build_record.get_action_type_display()
         cruise = None
         deployment_type = 'build_deployment'
@@ -307,6 +318,10 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             cruise = self.object.cruise_deployed
         elif action_type ==  Action.DEPLOYMENTRECOVER:
             cruise = self.object.cruise_recovered
+        """
+
+        # Get all Inventory items on Build, match location and add Actions
+        inventory_items = build.inventory.all()
 
         for item in inventory_items:
             item.location = build.location
