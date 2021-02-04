@@ -7,7 +7,7 @@ from roundabout.users.models import User
 # Comment model
 class Comment(models.Model):
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['created_at']
     def __str__(self):
         return self.detail
     def get_object_type(self):
