@@ -11,6 +11,7 @@ RUN apt-get install -y wget && apt install -y unzip
 COPY ./tests/*.bat /tests/
 COPY ./tests/*.js /tests/
 COPY ./tests/*.csv /tests/
+COPY ./tests/*.ext /tests/
 
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
 RUN apt-get install -y nodejs

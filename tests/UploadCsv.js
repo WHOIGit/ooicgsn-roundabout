@@ -12,7 +12,7 @@ var driver;
 var myArgs = process.argv.slice(2);
 var user;
 var password;
-var filename;
+var filename, filename_ext;
 
 (async function uploadCsv() {
 
@@ -256,8 +256,8 @@ var filename;
         }
 
 
-        // Upload Calibration CSV
-	// Test depends on Manufacturer Serial Number previously defined in Import Export Inventory
+         // Upload Calibration CSV with a single calibration and a 2D calibration
+	        // Test depends on Manufacturer Serial Number previously defined in Import Export Inventory
         await driver.findElement(By.id("navbarAdmintools")).click()
         await driver.findElement(By.linkText("Upload GitHub CSVs")).click()
         if (myArgs[1] == 'headless') {
@@ -266,7 +266,16 @@ var filename;
         else {
             filename = process.cwd() + "\\3604-00131-00001-20004__20160510-import.csv";
         }
-        await driver.findElement(By.id("id_calibration_csv")).sendKeys(filename)
+
+        await driver.findElement(By.id("id_calibration_csv")).sendKeys(filename);
+        if (myArgs[1] == 'headless') {
+            filename_ext = process.cwd() + "//3604-00131-00001-20004__20160510-import__scalib2.ext";
+        }
+        else {
+            filename_ext = process.cwd() + "\\3604-00131-00001-20004__20160510-import__scalib2.ext";
+        }
+        await driver.findElement(By.id("id_calibration_csv")).sendKeys(filename_ext);
+
         await driver.findElement(By.id("submit")).click()
 
         // Wait for upload to Complete
@@ -278,7 +287,7 @@ var filename;
             }
             else {
                 await new Promise(r => setTimeout(r, 2000));
-                console.log("Wait 2 seconds for Import Calibrations.");
+                console.log("Wait 2 seconds fr Import Calibrations.");
             }
         }
         // Don't trust Import Complete has actually imported all the Calibrations
@@ -331,10 +340,12 @@ var filename;
 
         // Compare Uploaded & Exported Calibration files
         var upload = fs.readFileSync(filename, 'utf8');
+        var upload_ext = fs.readFileSync(filename_ext, 'utf8');
         var exported = fs.readFileSync(rdb_unzip, 'utf8');
 
         // First imported value is type single, second imported value is type 2D array - read it's value from referenced .ext file
         var uploaded_data = $.csv.toArrays(upload);
+        var uploaded_ext = $.csv.toArrays(upload_ext);
         var exported_data = $.csv.toArrays(exported);
 
         var single_str = uploaded_data[1];
@@ -356,8 +367,8 @@ var filename;
 
         // Open and read the Ext file
         var ext_data = fs.readFileSync(rdb_ext, 'utf8');
-        if (!ext_data.includes(uploaded_data[2][2]))
-            console.log("Calibration Export Missing: 2 Dimensional Array Value");
+        if (!ext_data.includes(uploaded_ext[0]))
+            console.log("Calibration Export Missing: 2 Dimensional Array Values");
 
 
         // Upload Deployment CSV
