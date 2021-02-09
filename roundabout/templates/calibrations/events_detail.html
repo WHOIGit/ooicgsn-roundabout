@@ -24,19 +24,19 @@
     <ul class="list-group">
         {% for event in inventory_item.calibration_events.all %}
             <li class="list-group-item">
-                <a  class="collapsed" 
-                    data-toggle="collapse" 
-                    href="#event-{{ event.id }}" 
-                    aria-expanded="false" 
+                <a  class="collapsed"
+                    data-toggle="collapse"
+                    href="#event-{{ event.id }}"
+                    aria-expanded="false"
                     aria-controls="event-{{ event.id }}"
                 >
                     {{ event.calibration_date|date:"n/j/y" }}
                 </a>
-                <a  data-toggle="collapse" 
-                    class="collapsed text-right" 
-                    href="#event-{{ event.id }}" 
-                    aria-controls="event-{{ event.id }}" 
-                    aria-expanded="false" 
+                <a  data-toggle="collapse"
+                    class="collapsed text-right"
+                    href="#event-{{ event.id }}"
+                    aria-controls="event-{{ event.id }}"
+                    aria-expanded="false"
                     role="button"
                 >
                     <i class="fa" aria-hidden="true"></i>
@@ -46,9 +46,9 @@
                     <span id="review-badge" class="badge badge-pill badge-secondary">Review Requested</span>
                 {% endif %}
                 {% if event.approved %}
-                    <span id="approve-badge" class="badge badge-pill badge-success">Approved</span> 
-                {% else %} 
-                    <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span> 
+                    <span id="approve-badge" class="badge badge-pill badge-success">Approved</span>
+                {% else %}
+                    <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span>
                 {% endif %}
                 {% if not user|has_group:"inventory only" %}
                     <div class = 'ajax-detail-link float-right'>
@@ -71,98 +71,124 @@
                     {% endif %}
                     {% if not user|has_group:"inventory only" %}
                         <div class="ajax-detail-link float-right">
-                            <a  href="#" 
+                            <a  href="#"
                                 class="btn btn-danger btn-sm mr-2"
-                                data-detail-url="{% url 'calibrations:event_valueset_delete' event.id %}" 
-                                role="button" 
+                                data-detail-url="{% url 'calibrations:event_valueset_delete' event.id %}"
+                                role="button"
                             >
                                     Delete
                             </a>
                         </div>
                     {% endif %}
-                    <p id = 'approvers'>Approvers: 
+                    <p id = 'approvers'>Approvers:
                         {% for user in event.get_sorted_approvers.all %}
                             <span id='approver-{{ user.id }}'>{{ user.username }}</span>
                         {% endfor %}
                     </p>
-                    <p id = 'reviewers'>Reviewers: 
+                    <p id = 'reviewers'>Reviewers:
                         {% for user in event.get_sorted_reviewers.all %}
                             <span id='reviewer-{{ user.id }}'>{{ user.username }}</span>
                         {% endfor %}
-                    </p> 
+                    </p>
+
+                  {# TABS PER EVENT #}
                     <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
                         <li class="nav-item">
-                            <a  class="nav-link active" 
-                                id="documentation-tab" 
-                                data-toggle="tab" 
-                                href="#coefficients" 
-                                role="tab" 
-                                aria-controls="coefficients" 
+                            <a  class="nav-link active"
+                                id="coefficients-{{ event.id }}-tab"
+                                data-toggle="tab"
+                                href="#coefficients-{{ event.id }}"
+                                role="tab"
+                                aria-controls="coefficients"
                                 aria-selected="false">
                                     Coefficients
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a  class="nav-link"
+                                id="eventhistory-{{ event.id }}-tab"
+                                data-toggle="tab"
+                                href="#eventhistory-{{ event.id }}"
+                                role="tab"
+                                aria-controls="eventhistory"
+                                aria-selected="false">
+                                    Event History
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a  class="nav-link"
+                                id="links-{{ event.id }}-tab"
+                                data-toggle="tab"
+                                href="#links-{{ event.id }}"
+                                role="tab"
+                                aria-controls="links"
+                                aria-selected="false">
+                                    Links
+                            </a>
+                        </li>
                     </ul>
+
                     <div class="tab-content" id="inventory-tabs">
                         {% if event.coefficient_value_sets.all %}
-                            <div class="tab-pane fade show active" id="coefficients" role="tabpanel" aria-labelledby="coefficients-tab">
+                            {# EVENT COEFFICIENTS TAB #}
+                            <div class="tab-pane fade show active" id="coefficients-{{ event.id }}" role="tabpanel" aria-labelledby="coefficients-{{ event.id }}-tab">
                                 <table class="table table-tight">
                                     <tbody>
                                         {% for value_set in event.coefficient_value_sets.all %}
                                             <tr>
-                                                <td> 
-                                                    <li class = 'list-group-item'>
-                                                        <a  class="collapse show" 
-                                                            data-toggle="collapse" 
-                                                            href="#coeff-{{ value_set.coefficient_name }}{{ event.id }}" 
-                                                            aria-expanded="false" 
-                                                            aria-controls="coeff-{{ value_set.coefficient_name }}{{ event.id }}"
-                                                        >
-                                                            <b>{{ value_set.coefficient_name }}</b>
-                                                        </a>
-                                                        <a  data-toggle="collapse" 
-                                                            class="collapse show text-right" 
-                                                            href="#coeff-{{ value_set.coefficient_name }}{{ event.id }}" 
-                                                            aria-controls="coeff-{{ value_set.coefficient_name }}{{ event.id }}" 
-                                                            aria-expanded="false" 
-                                                            role="button"
-                                                        >
-                                                            <i class="fa" aria-hidden="true"></i>
-                                                            <span class="sr-only">Expand/Collapse Calibration {{ value_set.coefficient_name }}</span>
-                                                        </a>
-                                                        {% if value_set.coefficient_name.value_set_type != '2d' and not user|has_group:"inventory only" %}
-                                                            <div class = 'ajax-detail-link float-right'>
-                                                                <a  href="#"
-                                                                    class="btn btn-primary btn-sm mr-2"
-                                                                    role="button"
-                                                                    data-detail-url="{% url 'calibrations:valueset_value_update' value_set.id %}"
-                                                                    data-node-id="{{ value_set.id }}"
-                                                                    data-node-type="{{ value_set.get_object_type }}">
-                                                                        Edit Coefficient Metadata
-                                                                </a>
-                                                            </div>
-                                                        {% endif %}
-                                                        <div class="collapse show mt-1" id="coeff-{{ value_set.coefficient_name }}{{ event.id }}">
-                                                            <p class='font-weight-light'><b>Notes:</b> {{ value_set.notes }}</p>
-                                                            <table id = 'coeff-val-table' class="table table-tight">
-                                                                <thead>
-                                                                    <th>Value(s)</th>
-                                                                </thead>
-                                                                <tbody class = 'coeff-tbody' id = 'coeff-val-tbody' style = 'display:block; overflow: auto; max-height: 200px'>
-                                                                    {% regroup value_set.coefficient_values.all by row as row_sets %}
-                                                                    {% for row in row_sets %}
-                                                                        <tr style = 'display: block;'>
-                                                                            {% for val in row.list %}
-                                                                                <td style = 'white-space: nowrap'>
-                                                                                    <div style = 'width: 100px; text-align: center;'>{{ val }}</div>
-                                                                                </td>
-                                                                            {% endfor %}
-                                                                        </tr>
-                                                                    {% endfor %}
-                                                                </tbody>
-                                                            </table>
+                                                <td>
+                                                    <a  class="collapse show"
+                                                        data-toggle="collapse"
+                                                        href="#coeff-{{ value_set.coefficient_name }}{{ event.id }}"
+                                                        aria-expanded="false"
+                                                        aria-controls="coeff-{{ value_set.coefficient_name }}{{ event.id }}"
+                                                    >
+                                                        <b>{{ value_set.coefficient_name }}</b>
+                                                    </a>
+                                                    <a  data-toggle="collapse"
+                                                        class="collapse show text-right"
+                                                        href="#coeff-{{ value_set.coefficient_name }}{{ event.id }}"
+                                                        aria-controls="coeff-{{ value_set.coefficient_name }}{{ event.id }}"
+                                                        aria-expanded="false"
+                                                        role="button"
+                                                    >
+                                                        <i class="fa" aria-hidden="true"></i>
+                                                        <span class="sr-only">Expand/Collapse Calibration {{ value_set.coefficient_name }}</span>
+                                                    </a>
+                                                    {% if value_set.coefficient_name.value_set_type != '2d' and not user|has_group:"inventory only" %}
+                                                        <div class = 'ajax-detail-link float-right'>
+                                                            <a  href="#"
+                                                                class="btn btn-primary btn-sm mr-2"
+                                                                role="button"
+                                                                data-detail-url="{% url 'calibrations:valueset_value_update' value_set.id %}"
+                                                                data-node-id="{{ value_set.id }}"
+                                                                data-node-type="{{ value_set.get_object_type }}">
+                                                                    Edit Coefficient Metadata
+                                                            </a>
                                                         </div>
-                                                    </li>
+                                                    {% endif %}
+
+                                                    {# COLLAPSING EVENT VALUE AREA #}
+                                                    <div class="collapse show mt-1 border p-2 m-3" id="coeff-{{ value_set.coefficient_name }}{{ event.id }}">
+                                                        <p class='font-weight-light'><b>Notes:</b> {{ value_set.notes }}</p>
+                                                        <table id = 'coeff-val-table' class="table table-tight">
+                                                            <thead>
+                                                                <th>Value(s)</th>
+                                                            </thead>
+                                                            <tbody class = 'coeff-tbody' id = 'coeff-val-tbody' style = 'display:block; overflow: auto; max-height: 200px'>
+                                                                {% regroup value_set.coefficient_values.all by row as row_sets %}
+                                                                {% for row in row_sets %}
+                                                                    <tr style = 'display: block;'>
+                                                                        {% for val in row.list %}
+                                                                            <td style = 'white-space: nowrap'>
+                                                                                <div style = 'width: 100px; text-align: center;'>{{ val }}</div>
+                                                                            </td>
+                                                                        {% endfor %}
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         {% endfor %}
@@ -170,50 +196,41 @@
                                 </table>
                             </div>
                         {% endif %}
-                        <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
-                            <li class="nav-item">
-                                <a  class="nav-link active" 
-                                    id="eventhistory-tab" 
-                                    data-toggle="tab" 
-                                    href="#eventhistory" 
-                                    role="tab" 
-                                    aria-controls="eventhistory" 
-                                    aria-selected="false">
-                                        Event History
-                                </a>
-                            </li>
-                        </ul>
-                        <table class="table table-tight">
-                            <tbody>
-                                <tr>
-                                    <td> 
-                                        <li class = 'list-group-item' style = 'display:block; overflow: auto; max-height: 200px'>
-                                            <table class="table table-tight table-striped action-table">
-                                                <thead>
-                                                    <th>Date</th>
-                                                    <th>Action</th>
-                                                    <th>Details</th>
-                                                    <th>Person</th>
-                                                </thead>
-                                                <tbody style = 'overflow: auto; max-height: 200px'>
-                                                    {% for action in event.get_actions.all %}
-                                                        <tr>
-                                                            <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
-                                                            <td>{{ action.get_action_type_display }}</td>
-                                                            <td>
-                                                                {{ action.detail|safe }}
-                                                            </td>
-                                                            <td>{{ action.user.username }}</td>
-                                                        </tr>
-                                                    {% endfor %}
-                                                </tbody>
-                                            </table>
-                                        </li>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+
+                        {# EVENT HISTORY TAB #}
+                        <div class="tab-pane fade border m-2 p-2" id="eventhistory-{{ event.id }}" role="tabpanel" aria-labelledby="eventhistory-{{ event.id }}-tab">
+                            <table class="table table-tight table-striped action-table">
+                                <thead>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                    <th>Details</th>
+                                    <th>Person</th>
+                                </thead>
+                                <tbody style = 'overflow: auto; max-height: 200px'>
+                                    {% for action in event.get_actions.all %}
+                                        <tr>
+                                            <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
+                                            <td>{{ action.get_action_type_display }}</td>
+                                            <td>
+                                                {{ action.detail|safe }}
+                                            </td>
+                                            <td>{{ action.user.username }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {# LINKS TAB #}
+                        <div class="tab-pane fade m-2 p-2" id="links-{{ event.id }}" role="tabpanel" aria-labelledby="links-{{ event.id }}-tab">
+                          <ul>
+                            {% for link in event.hyperlinks.all %}
+                              <li><a target="_blank" href="{{ link.url }}">{{ link.text }} <i class="fas fa-link"></i></a></li>
+                            {% endfor %}
+                          </ul>
+                        </div>
+
+                    </div> {# end of collapsing section #}
                 </div>
             </li>
         {% endfor %}
@@ -230,7 +247,7 @@
         let part_has_cals = '{{ inventory_item.part.coefficient_name_events.exists }}';
 
         setCoeffTableWidth();
-        $( window ).bind( "resize", setCoeffTableWidth ); 
+        $( window ).bind( "resize", setCoeffTableWidth );
 
         // Auto-resize CoefficientValue tables for horizontal scrolling
         function setCoeffTableWidth() {

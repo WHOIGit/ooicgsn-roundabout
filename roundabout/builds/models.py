@@ -118,6 +118,16 @@ class Build(models.Model):
         return False
 
 
+class BuildHyperlink(models.Model):
+    text = models.CharField(max_length=255, unique=False, blank=False, null=False)
+    url = models.CharField(max_length=1000)
+    parent = models.ForeignKey(Build, related_name='hyperlinks',
+                 on_delete=models.CASCADE, null=False, blank=False)
+
+    class Meta: ordering = ['text']
+    def __str__(self): return self.text
+
+
 class BuildAction(models.Model):
     BUILDADD = 'buildadd'
     LOCATIONCHANGE = 'locationchange'
