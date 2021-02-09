@@ -70,6 +70,14 @@ class ConfigEvent(models.Model):
     def get_sorted_approvers(self):
         return self.user_approver.all().order_by('username')
 
+class ConfigEventHyperlink(models.Model):
+    text = models.CharField(max_length=255, unique=False, blank=False, null=False)
+    url = models.CharField(max_length=1000)
+    parent = models.ForeignKey(ConfigEvent, related_name='hyperlinks',
+                 on_delete=models.CASCADE, null=False, blank=False)
+
+    class Meta: ordering = ['text']
+    def __str__(self): return self.text
 
 # Tracks Config Name  history across Parts
 class ConfigNameEvent(models.Model):

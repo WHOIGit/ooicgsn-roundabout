@@ -54,6 +54,8 @@ class VesselForm(forms.ModelForm):
             },
         }
 
+VesselHyperlinkFormset = forms.models.inlineformset_factory(Vessel, VesselHyperlink, fields=('text', 'url'), extra=1, can_delete=True)
+
 
 class CruiseForm(forms.ModelForm):
     # Add custom date fields
@@ -84,3 +86,5 @@ class CruiseForm(forms.ModelForm):
     class Meta:
         model = Cruise
         fields = '__all__'
+
+CruiseHyperlinkFormset = forms.models.inlineformset_factory(Cruise, CruiseHyperlink, fields=('text', 'url'), extra=1, can_delete=True)

@@ -22,7 +22,6 @@ from dateutil import parser
 
 from django.db import models
 from django.utils import timezone
-from django.contrib.postgres.fields import JSONField
 
 # Create your models here.
 
@@ -39,7 +38,7 @@ class Field(models.Model):
     field_description = models.CharField(max_length=255, null=False, blank=True)
     field_type = models.CharField(max_length=100, choices=FIELD_TYPES)
     field_default_value = models.CharField(max_length=255, null=False, blank=True)
-    choice_field_options = JSONField(null=True, blank=True)
+    choice_field_options = models.JSONField(null=True, blank=True)
     global_for_part_types = models.ManyToManyField('parts.PartType', blank=True, related_name='custom_fields')
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
