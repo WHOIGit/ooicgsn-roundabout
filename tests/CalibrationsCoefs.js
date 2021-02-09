@@ -273,10 +273,14 @@ var password;
 
         await driver.findElement(By.css("#calibration-template .collapsed > .fa")).click()
         await new Promise(r => setTimeout(r, 4000));
-        // Verify values added in the History
+        // Verify values added
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
         assert(bodyText.includes("55"));
         assert(bodyText.includes("66"));
+	// Verify event in Event History
+	await driver.findElement(By.linkText("Event History")).click();
+	await new Promise(r => setTimeout(r, 4000));
+        bodyText = await driver.findElement(By.tagName("Body")).getText();
         assert(bodyText.includes("Calibration Event first added to RDB."));
 
         // Edit Coefficient Values and Metadata for Part Template on Inventory - Issues #151 and #96
