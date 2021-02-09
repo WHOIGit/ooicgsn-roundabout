@@ -91,11 +91,11 @@ class Revision(models.Model):
     refurbishment_cost = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], null=False, blank=True, default='0.00')
     note = models.TextField(blank=True)
     created_at = models.DateTimeField(default=timezone.now)
-    part = models.ForeignKey(Part, related_name='revisions',
-                          on_delete=models.CASCADE, null=False, blank=False, db_index=True)
+    part = models.ForeignKey(Part, related_name='revisions', on_delete=models.CASCADE, null=False, blank=False, db_index=True)
 
     class Meta:
         ordering = ['-created_at', '-revision_code']
+        get_latest_by = 'created_at'
 
     def __str__(self):
         return self.revision_code

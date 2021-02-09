@@ -204,7 +204,7 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
         if obj.location_changed():
             _create_action_history(obj, Action.LOCATIONCHANGE, user, '', '', action_date)
 
-        action_record.detail = '%s %s started' % (labels['label_deployments_app_singular'], deployment)
+        action_record.detail = '%s %s started.' % (labels['label_deployments_app_singular'], deployment)
         action_record.deployment_type = deployment_type
         if deployment_type == Action.BUILD_DEPLOYMENT:
             action_record.created_at = deployment.deployment_start_date
@@ -224,7 +224,7 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
         if obj.location_changed():
             _create_action_history(obj, Action.LOCATIONCHANGE, user, '', '', action_date)
 
-        action_record.detail = '%s %s burn in' % (labels['label_deployments_app_singular'], deployment)
+        action_record.detail = '%s %s burn in.' % (labels['label_deployments_app_singular'], deployment)
         action_record.created_at = deployment.deployment_burnin_date
         action_record.deployment_type = deployment_type
 
@@ -323,6 +323,7 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
     elif action_type == Action.EVENTAPPROVE:
         action_record.detail = '%s Approved. %s' % (obj_label, detail)
         action_record.save()
+
     elif action_type == Action.CALCSVIMPORT:
         action_record.detail = '%s Created via CSV Import. %s' % (obj_label, detail)
         action_record.save()
