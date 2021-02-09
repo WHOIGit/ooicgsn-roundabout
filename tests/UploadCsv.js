@@ -383,10 +383,10 @@ var filename, filename_ext;
     }
     catch (e) {
         console.log(e.message, e.stack);
-        console.log("Upload CSV failed.");
+        console.log("Upload CSV (CI Version) failed.");
         return 1;
     }
-    console.log("Upload CSV completed.");
+    console.log("Upload CSV (CI Version) completed.");
     return 0;
 
 })();
