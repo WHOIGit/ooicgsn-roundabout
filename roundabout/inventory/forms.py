@@ -32,7 +32,7 @@ from django_summernote.widgets import SummernoteInplaceWidget, SummernoteWidget
 from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
 from django.contrib.sites.models import Site
 
-from .models import Inventory, Deployment, InventoryDeployment, Action, DeploymentSnapshot, PhotoNote
+from .models import Inventory, Deployment, InventoryDeployment, Action, DeploymentSnapshot, PhotoNote, InventoryHyperlink
 from .validators import validate_udffield_decimal
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
@@ -133,6 +133,8 @@ class InventoryForm(forms.ModelForm):
                     if fieldvalue:
                         self.initial['udffield_' + str(field.id)] = fieldvalue.field_value
 
+InventoryHyperlinkFormset = forms.models.inlineformset_factory(
+    Inventory, InventoryHyperlink, fields=('text', 'url'), extra=1, can_delete=True)
 
 class InventoryAddForm(forms.ModelForm):
     RDB_SERIALNUMBER_CREATE = env.bool('RDB_SERIALNUMBER_CREATE', default=False)

@@ -109,22 +109,25 @@ class CSVExport(ListView,LoginRequiredMixin):
     model = None
     fname = '{}.csv'
     context_object_name = 'objs'
+
     def render_to_response(self, context, **response_kwargs):
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'inline; filename="{}"'.format(self.fname)
         csv_writer = CSV.writer(response)
         objs = context.get(self.context_object_name)
-        self.build_csv(csv_writer, objs)
+        CI_mode = 'ci' in self.request.GET
+        self.build_csv(csv_writer, objs, CI_mode)
         return response
 
     @classmethod
-    def build_csv(cls, csv, objs):
+    def build_csv(cls, csv, objs, CI_mode=False):
         pass
 
 class ZipExport(ListView,LoginRequiredMixin):
     model = None
     fname = '{}.zip'
     context_object_name = 'objs'
+
     def render_to_response(self, context, **response_kwargs):
         response = HttpResponse(content_type='application/zip')
         response['Content-Disposition'] = 'inline; filename="{}"'.format(self.fname)
@@ -463,24 +466,24 @@ class ExportCruises(CSVExport):
     #see https://github.com/oceanobservatories/asset-management/tree/master/cruise
 
     @classmethod
-    def build_csv(cls, csv, objs):
+    def build_csv(cls, csv, objs, CI_mode=False):
         objs = objs.prefetch_related('vessel')
-        header_att = [('CUID',                  'CUID'),
-                      ('ShipName',              'friendly_name'),
-                      ('cruiseStartDateTime',   'cruise_start_date'),
-                      ('cruiseStopDateTime',    'cruise_stop_date'),
-                      ('notes',                 'notes'),
-                      ]
-        headers, attribs = zip(*header_att)
+        if CI_mode==True:
+            headers = ['CUID','ShipName','cruiseStartDateTime','cruiseStopDateTime','notes']
+        else:
+            headers = ['CUID','ShipName','Friendly Name','Destination','cruiseStartDateTime','cruiseStopDateTime','notes']
+
         csv.writerow(headers)
         for cruise in objs:
             row = list()
+            location = cruise.location or ''
+            notes = cruise.notes or ''
             row.append(cruise.CUID)
             row.append(getattr(cruise.vessel,'vessel_name',''))
+            if CI_mode==False: row.append(cruise.friendly_name)
+            if CI_mode==False: row.append(location)
             row.append(cruise.cruise_start_date.replace(tzinfo=None).isoformat())
             row.append(cruise.cruise_stop_date.replace(tzinfo=None).isoformat())
-            #location = cruise.location or ''
-            notes = cruise.notes or ''
             row.append(notes)
             csv.writerow(row)
 
@@ -493,7 +496,7 @@ class ExportVessels(CSVExport):
     # see https://github.com/oceanobservatories/asset-management/tree/master/vessel
 
     @classmethod
-    def build_csv(cls, csv, objs):
+    def build_csv(cls, csv, objs, CI_mode=False):
         header_att = [('Prefix',                'prefix'),
                       ('Vessel Designation',    'vessel_designation'),
                       ('Vessel Name',           'vessel_name'),
@@ -508,8 +511,10 @@ class ExportVessels(CSVExport):
                       ('Designation',           'designation'),
                       ('Active',                'active'),
                       ('R2R',                   'R2R'),
-                     #('Notes',                 'notes'),
                       ]
+        if CI_mode==False:
+            header_att.append( ('Notes', 'notes') )
+
         headers,attribs = zip(*header_att)
         csv.writerow(headers)
         for vessel in objs:
@@ -608,7 +613,7 @@ class ExportCI(ZipExport):
         cruise_csv_fname = join('cruise',ExportCruises.fname)
         cruise_csv_content = io.StringIO()
         cruise_csv = CSV.writer(cruise_csv_content)
-        ExportCruises.build_csv(  cruise_csv, cruises)
+        ExportCruises.build_csv(cruise_csv, cruises, CI_mode=True)
         zf.writestr(cruise_csv_fname,cruise_csv_content.getvalue())
         cruise_csv_content.close()
 
@@ -617,6 +622,6 @@ class ExportCI(ZipExport):
         vessel_csv_fname = join('vessel',ExportVessels.fname)
         vessel_csv_content = io.StringIO()
         vessel_csv = CSV.writer(vessel_csv_content)
-        ExportVessels.build_csv(  vessel_csv, vessels)
+        ExportVessels.build_csv(vessel_csv, vessels, CI_mode=True)
         zf.writestr(vessel_csv_fname,vessel_csv_content.getvalue())
         vessel_csv_content.close()

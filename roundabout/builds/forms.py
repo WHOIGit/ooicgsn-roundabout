@@ -28,7 +28,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, Div, Field
 from django_summernote.widgets import SummernoteInplaceWidget, SummernoteWidget
 
-from .models import Build, BuildAction, BuildSnapshot, PhotoNote
+from .models import Build, BuildAction, BuildSnapshot, PhotoNote, BuildHyperlink
 from roundabout.inventory.models import Deployment, DeploymentAction, Action
 from roundabout.locations.models import Location
 # Get the app label names from the core utility functions
@@ -59,6 +59,8 @@ class BuildForm(forms.ModelForm):
         if self.instance.pk:
             del self.fields['assembly']
             del self.fields['assembly_revision']
+
+BuildHyperlinkFormset = forms.models.inlineformset_factory(Build, BuildHyperlink, fields=('text', 'url'), extra=1, can_delete=True)
 
 
 class BuildActionLocationChangeForm(forms.ModelForm):

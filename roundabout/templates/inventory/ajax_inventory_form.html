@@ -98,6 +98,27 @@
       {{ form.media }}
       {{ form|crispy }}
 
+      {% if link_formset %}
+      <div class="row m-1">
+        <table class="table table-tight" id="hyperlink-table">
+          <thead>
+            <th>Hyperlinks Text</th>
+            <th>URL</th>
+          </thead>
+          <tbody>
+            {{ link_formset.management_form }}
+
+            {% for link in link_formset %}
+              <tr>
+                <td {% if link.errors.text %} class="alert alert-danger"{% endif %}>{% if link.id  %}{{ link.DELETE }}{% endif %} {{ link.id }} {{ link.text }}</td>
+                <td {% if link.errors.url %} class="alert alert-danger"{% endif %}>{{ link.url }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
       <div class="row">
           {% if form.errors %}
               {% for field in form %}
@@ -142,12 +163,21 @@
         </div>
       </div>
     </form>
-
-
 </div>
 
-
 {% block javascript %}
+    <script type="text/javascript">
 
+        $(document).ready(function() {
 
+            // hyperlinks formset
+            $('#hyperlink-table tbody tr').formset({
+                prefix: 'hyperlinks', // <-- Needs to match the Django related_name for the models
+                addText: 'add row',
+                deleteText: 'remove',
+            });
+
+        })
+
+    </script>
 {% endblock javascript %}

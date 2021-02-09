@@ -228,6 +228,16 @@
                 <th>Total Time in Field</th>
                 <td>{{ build.time_at_sea|time_at_sea_display }}</td>
             </tr>
+            {% if build.hyperlinks.all %}
+            <tr>
+              <th>Links</th>
+                <td>
+                {% for link in build.hyperlinks.all %}
+                  <a target="_blank" href="{{ link.url }}">{{ link.text }} <i class="fas fa-link"></i></a><br>
+                {% endfor %}
+                </td>
+            </tr>
+           {% endif %}
         </tbody>
     </table>
 
