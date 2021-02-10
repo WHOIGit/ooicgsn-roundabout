@@ -392,6 +392,7 @@ class EventCoeffNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMix
         part_calname_form.save()
         part_cal_copy_form.save()
         _create_action_history(self.object, Action.ADD, self.request.user)
+        job = check_events.delay()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {

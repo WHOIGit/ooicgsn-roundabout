@@ -324,7 +324,7 @@ def import_csv(request):
     })
 
 
-# Action View
+# Action-Comment View
 def action_comment(request, pk):
     action = Action.objects.get(id=pk)
     if request.method == "POST":
@@ -343,6 +343,7 @@ def action_comment(request, pk):
         "action_object": action
     })
 
+# Sub-comment create view
 def comment_comment(request, pk):
     comment = Comment.objects.get(id=pk)
     if request.method == "POST":
@@ -360,6 +361,7 @@ def comment_comment(request, pk):
         "parent_comment": comment
     })
 
+# Sub-comment edit view
 def comment_comment_edit(request, pk):
     comment = Comment.objects.get(id=pk)
     if request.method == "POST":
@@ -374,7 +376,7 @@ def comment_comment_edit(request, pk):
         "parent_comment": comment
     })
 
-# Handles deletion of Comments
+# Comment delete view
 class CommentDelete(LoginRequiredMixin, DeleteView):
     model = Comment
     context_object_name='comment_obj'

@@ -73,7 +73,7 @@
             {{ part_cal_copy_form | crispy }}
             {{ form | crispy }}
             <h5 id = '__all__'>Calibration(s)</h5>
-            <table class="table table-tight calibration-name-form" style = 'display:block; overflow: auto; max-height: 100vh'>
+            <table id ='cal_name_table' class="table table-tight calibration-name-form" style = 'display:block; overflow: auto; max-height: 100vh'>
                 <thead>
                     <th>Name</th>
                     <th>Type</th>
@@ -139,7 +139,7 @@
         $('[id$=-DELETE]').hide();
 
         // Set selected row
-        $('[id^=delete_button]').on('click', function () {
+        $('#cal_name_table').on('click', 'button[id^=delete_button]', function(e) {
             let button = $(this);
             let row = button.parent().parent();
             let cal_name = row.find('[name$=calibration_name]');
@@ -149,12 +149,14 @@
 
         // Hide and mark row for deletion
         $('#modal_delete').on('click', function() {
-            let delete_field = global_row.find('input[id$=-DELETE]');
-            if (delete_field) {
-                delete_field.prop("checked", "checked");
+            if (global_row.length >= 1) {
+                let delete_field = global_row.find('[id$=-DELETE]')
+                if (delete_field) {
+                    delete_field.prop("checked", "checked");
+                }
+                global_row.hide();
+                $('#warningModal').modal('toggle');
             }
-            global_row.hide();
-            $('#warningModal').modal('toggle');
         });
 
         // Clone last table row, replace row numbers in id/name attributes of child tags, update total form count

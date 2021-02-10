@@ -76,19 +76,6 @@
                     </small>
                     <div class="collapse show mt-3" id="action-{{ action.id }}">
                         <hr>
-                        <ul class="nav nav-tabs" id="action-tabs-nav" role="tablist">
-                            <li class="nav-item">
-                                <a  class="nav-link active" 
-                                    id="action-tab" 
-                                    data-toggle="tab" 
-                                    href="#action" 
-                                    role="tab" 
-                                    aria-controls="action" 
-                                    aria-selected="false">
-                                        Comments
-                                </a>
-                            </li>
-                        </ul>
                         <ul class="list-group">
                             {% for comment in action.comments.all %}
                                 <li class="list-group-item">
@@ -120,7 +107,7 @@
                                                 Comment
                                         </a>
                                     </div>
-                                    {% if user == comment.user %}
+                                    {% if user == comment.user or user|has_group:"admin" %}
                                         <div class = 'ajax-detail-link float-right'>
                                             <a  href="#"
                                                 class="btn btn-outline-info btn-sm mr-2"
@@ -132,7 +119,7 @@
                                             </a>
                                         </div>
                                     {% endif %}
-                                    {% if user == comment.user %}
+                                    {% if user == comment.user or user|has_group:"admin" %}
                                         <div class = 'ajax-detail-link float-right'>
                                             <a  href="#"
                                                 class="btn btn-outline-danger btn-sm mr-2"
