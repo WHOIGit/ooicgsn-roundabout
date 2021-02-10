@@ -199,10 +199,10 @@
             <tr>
                 <th>{{ label_assemblies_app_singular }} Template</th>
                 <td>
-                    <a href="{% url 'assemblies:assemblyrevision_detail' build.assembly_id  %}">
+                    <a href="{% url 'assemblies:assemblyrevision_detail' build.assembly_revision.id  %}">
                         {{ build.assembly }} | Revision: {{ build.assembly_revision.revision_code }}
                     </a>
-                    <a class="btn btn-sm btn-link" href="{% url 'assemblies:assemblyrevision_detail' build.assembly_id  %}">
+                    <a class="btn btn-sm btn-link" href="{% url 'assemblies:assemblyrevision_detail' build.assembly_revision.id  %}">
                         <i class="fas fa-link"></i>
                     </a>
                 </td>
