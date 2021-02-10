@@ -2,7 +2,9 @@
 
 Django application to manage Part, Location, and Assembly Templates, and Inventory tracking for OOI-CGSN arrays. Uses PostgreSQL database.
 
-:License: GPL v2.0 or later
+[![License: GPL v2 or later](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
+
+
 
 ## Requirements
 
