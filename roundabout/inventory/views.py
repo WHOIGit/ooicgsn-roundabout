@@ -729,7 +729,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
 
         return context
 
-    def form_valid(self, form):
+    def form_valid(self, form, formset=None):
         action_type = self.kwargs['action_type']
         detail = self.object.detail
         created_at = form.cleaned_data.get('date', timezone.now())
