@@ -74,7 +74,7 @@
             {{ part_conf_copy_form | crispy }}
             {{ form | crispy }}
             <h5 id = '__all__'>Configurations/Constants</h5>
-            <table class="table table-tight conf_name-form" style = 'display:block; overflow: auto; max-height: 100vh'>
+            <table id = 'conf_name_table' class="table table-tight conf_name-form" style = 'display:block; overflow: auto; max-height: 100vh'>
                 <thead>
                     <th>Name</th>
                     <th>Type</th>
@@ -139,7 +139,7 @@
         $('[id$=-DELETE]').hide();
 
         // Set selected row
-        $('[id^=delete_button]').on('click', function () {
+        $('#conf_name_table').on('click', 'button[id^=delete_button]', function(e) {
             let button = $(this);
             let row = button.parent().parent();
             let conf_name = row.find('[name$=-name]');
