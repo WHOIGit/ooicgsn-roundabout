@@ -748,3 +748,28 @@ class CommentDelete(LoginRequiredMixin, DeleteView):
 
     def get_success_url(self):
         return reverse_lazy('inventory:ajax_inventory_detail', args=(self.object.action.inventory.id, ))
+
+
+
+# Handles import configurations of Calibration, Deployment, Cruises, and Vessels CSVs
+class ImportConfigUpdate(LoginRequiredMixin, AjaxFormMixin, UpdateView):
+    model = ImportConfig
+    form_class = ImportConfigForm
+    context_object_name = 'import_config'
+    template_name='ooi_ci_tools/import_config.html'
+
+    def get(self, request, *args, **kwargs):
+        if ImportConfig.objects.exists():
+            self.object = self.get_object()
+        else:
+            self.object = ImportConfig.objects.create()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        return self.render_to_response(
+            self.get_context_data(
+                form=form, 
+            )
+        )
+
+    def get_success_url(self):
+        return reverse('ooi_ci_tools:import_csv')

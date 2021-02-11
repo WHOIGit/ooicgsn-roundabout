@@ -41,4 +41,5 @@ urlpatterns = [
     path('import/comments/comments/add/<int:pk>/', view=views.comment_comment, name='comment_comment_add'),
     path('import/comments/comments/edit/<int:pk>/', view=views.comment_comment_edit, name='comment_comment_edit'),
     path('import/comments/comments/delete/<int:pk>/', view=views.CommentDelete.as_view(), name='comment_comment_delete'),
+    path('configure_import/update/<int:pk>/', view=views.ImportConfigUpdate.as_view(), name='import_config_edit'),
 ]
