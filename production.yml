@@ -104,7 +104,8 @@ services:
     depends_on:
       - django
     volumes:
-      - production_nginx:/var/log/nginx
+      - production_nginx:/var/log/nginx # logs
+      - ./nginx:/etc/nginx/conf.d/
       - ./.ssl/certs:/etc/ssl/certs/ # bind a local directory with the WHOI SSL certs
     ports:
       - "0.0.0.0:80:80"
