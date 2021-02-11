@@ -24,7 +24,7 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView
 from .models import CoefficientName, CalibrationEvent, CoefficientValueSet, CoefficientNameEvent
-from .forms import CalibrationEventForm, EventValueSetFormset, CoefficientValueForm, CoefficientValueSetForm, ValueSetValueFormset, CoefficientNameForm, PartCalNameFormset, CalPartCopyForm, CoefficientNameEventForm
+from .forms import CalibrationEventForm, EventValueSetFormset, CoefficientValueForm, CoefficientValueSetForm, ValueSetValueFormset, CoefficientNameForm, PartCalNameFormset, CalPartCopyForm, CoefficientNameEventForm, CalibrationEventHyperlinkFormset
 from common.util.mixins import AjaxFormMixin
 from django.urls import reverse, reverse_lazy
 from roundabout.parts.models import Part
@@ -69,10 +69,12 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         )
         for idx,name in enumerate(cal_names):
             event_valueset_form.forms[idx].initial = {'coefficient_name': name}
+        link_formset = CalibrationEventHyperlinkFormset(instance=self.object)
         return self.render_to_response(
             self.get_context_data(
                 form=form,
                 event_valueset_form=event_valueset_form,
+                link_formset = link_formset,
                 inv_id = self.kwargs['pk']
             )
         )
@@ -86,11 +88,12 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
             instance=self.object,
             form_kwargs={'inv_id': self.kwargs['pk']}
         )
-        if (form.is_valid() and event_valueset_form.is_valid()):
-            return self.form_valid(form, event_valueset_form)
-        return self.form_invalid(form, event_valueset_form)
+        link_formset = CalibrationEventHyperlinkFormset(self.request.POST, instance=self.object)
+        if (form.is_valid() and event_valueset_form.is_valid() and link_formset.is_valid()):
+            return self.form_valid(form, event_valueset_form, link_formset)
+        return self.form_invalid(form, event_valueset_form, link_formset)
 
-    def form_valid(self, form, event_valueset_form):
+    def form_valid(self, form, event_valueset_form, link_formset):
         inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
         form.instance.inventory = inv_inst
         form.save()
@@ -99,8 +102,17 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
             for user in draft_users:
                 form.instance.user_draft.add(user)
         self.object = form.save()
+
         event_valueset_form.instance = self.object
         event_valueset_form.save()
+
+        # Adding ConfigEvent to hyperlink objects
+        for link_form in link_formset:
+            link = link_form.save(commit=False)
+            if link.text and link.url:
+                link.parent = self.object
+                link.save()
+
         _create_action_history(self.object, Action.ADD, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
@@ -114,20 +126,20 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         else:
             return response
 
-    def form_invalid(self, form, event_valueset_form):
+    def form_invalid(self, form, event_valueset_form, link_formset):
         if self.request.is_ajax():
-            if form.errors:
-                data = form.errors
-                return JsonResponse(data, status=400)
-            elif event_valueset_form.errors:
-                data = event_valueset_form.errors
-                return JsonResponse(data, status=400, safe=False)
+            if not form.is_valid():
+                return JsonResponse(form.errors, status=400)
+            elif not event_valueset_form.is_valid():
+                return JsonResponse(event_valueset_form.errors, status=400, safe=False)
+            elif not link_formset.is_valid():
+                return JsonResponse(link_formset.errors, status=400, safe=False)
         else:
             return self.render_to_response(
                 self.get_context_data(
                     form=form,
                     event_valueset_form=event_valueset_form,
-                    form_errors=form_errors,
+                    link_formset = link_formset,
                     inv_id = self.kwargs['pk']
                 )
             )
@@ -153,10 +165,12 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
             instance=self.object,
             form_kwargs={'inv_id': self.object.inventory.id}
         )
+        link_formset = CalibrationEventHyperlinkFormset(instance=self.object)
         return self.render_to_response(
             self.get_context_data(
                 form=form,
                 event_valueset_form=event_valueset_form,
+                link_formset=link_formset,
                 inv_id = self.object.inventory.id
             )
         )
@@ -170,19 +184,33 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
             instance=self.object,
             form_kwargs={'inv_id': self.object.inventory.id}
         )
-        if (form.is_valid() and event_valueset_form.is_valid()):
-            return self.form_valid(form, event_valueset_form)
-        return self.form_invalid(form, event_valueset_form)
+        link_formset = CalibrationEventHyperlinkFormset(self.request.POST, instance=self.object)
+        if form.is_valid() and event_valueset_form.is_valid() and link_formset.is_valid():
+            return self.form_valid(form, event_valueset_form, link_formset)
+        return self.form_invalid(form, event_valueset_form, link_formset)
 
-    def form_valid(self, form, event_valueset_form):
+    def form_valid(self, form, event_valueset_form, link_formset):
         inv_inst = Inventory.objects.get(id=self.object.inventory.id)
         form.instance.inventory = inv_inst
         form.instance.approved = False
         handle_reviewers(form)
         self.object = form.save()
+
         event_valueset_form.instance = self.object
         event_valueset_form.save()
+
+        # Adding CalEvent to hyperlink objects
+        for link_form in link_formset:
+            link = link_form.save(commit=False)
+            if link.text and link.url:
+                if link_form['DELETE'].data:
+                    link.delete()
+                else:
+                    link.parent = self.object
+                    link.save()
+
         _create_action_history(self.object, Action.UPDATE, self.request.user)
+
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -195,27 +223,20 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         else:
             return response
 
-    def form_invalid(self, form, event_valueset_form):
+    def form_invalid(self, form, event_valueset_form, link_formset):
         if self.request.is_ajax():
-            if form.errors:
-                data = form.errors
-                return JsonResponse(
-                    data,
-                    status=400
-                )
-            if event_valueset_form.errors:
-                data = event_valueset_form.errors
-                return JsonResponse(
-                    data,
-                    status=400,
-                    safe=False
-                )
+            if not form.is_valid():
+                return JsonResponse(form.errors, status=400)
+            elif not event_valueset_form.is_valid():
+                return JsonResponse(event_valueset_form.errors, status=400, safe=False)
+            elif not link_formset.is_valid():
+                return JsonResponse(link_formset.errors, status=400, safe=False)
         else:
             return self.render_to_response(
                 self.get_context_data(
                     form=form,
                     event_valueset_form=event_valueset_form,
-                    form_errors=form_errors,
+                    link_formset = link_formset,
                     inv_id = self.object.inventory.id
                 )
             )
@@ -232,15 +253,15 @@ class EventValueSetDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteVie
     permission_required = 'calibrations.add_calibrationevent'
     redirect_field_name = 'home'
 
-    def delete(self, request, *args, **kwargs):	
-        self.object = self.get_object()	
-        data = {	
-            'message': "Successfully submitted form data.",	
-            'parent_id': self.object.inventory.id,	
-            'parent_type': 'part_type',	
-            'object_type': self.object.get_object_type(),	
-        }	
-        self.object.delete()	
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        data = {
+            'message': "Successfully submitted form data.",
+            'parent_id': self.object.inventory.id,
+            'parent_type': 'part_type',
+            'object_type': self.object.get_object_type(),
+        }
+        self.object.delete()
         return JsonResponse(data)
 
     def get_success_url(self):
@@ -253,7 +274,7 @@ def event_delete_view(request, pk):
     if request.method == "POST":
         evt.delete()
         return HttpResponseRedirect(reverse('inventory:ajax_inventory_detail', args=(inv_id,)))
-        
+
     return render(request, 'calibrations/event_delete.html', {
         "event_template": evt,
         'request': request

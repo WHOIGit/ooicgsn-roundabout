@@ -29,7 +29,7 @@
 <div class="card-body">
 
 
-    {% if location.location_id %}<p>Location ID: {{ location.location_id }}</p>{% endif %}
+    {% if location.location_code %}<p>Location Code: {{ location.location_code }}</p>{% endif %}
 
     {% if deployments.exists %}
         <h5>Deployment History for this Location</h5>

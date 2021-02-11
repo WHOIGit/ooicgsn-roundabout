@@ -29,7 +29,7 @@ from sigfig import round
 from roundabout.inventory.models import Inventory
 from roundabout.parts.models import Part
 from roundabout.users.models import User
-from .models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientValue, CoefficientNameEvent
+from .models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientValue, CoefficientNameEvent, CalibrationEventHyperlink
 
 
 # Event form
@@ -287,6 +287,10 @@ EventValueSetFormset = inlineformset_factory(
     extra=0,
     can_delete=True
 )
+
+CalibrationEventHyperlinkFormset = forms.models.inlineformset_factory(
+    CalibrationEvent, CalibrationEventHyperlink, fields=('text', 'url'), extra=1, can_delete=True)
+
 
 # Coefficient Name form instance generator for Parts
 PartCalNameFormset = inlineformset_factory(

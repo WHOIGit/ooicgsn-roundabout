@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -20,7 +20,7 @@
 """
 
 from django import forms
-from .models import ConfigEvent, ConfigName, ConfigValue, ConstDefault, ConstDefaultEvent, ConfigDefaultEvent, ConfigDefault, ConfigNameEvent
+from .models import ConfigEvent, ConfigName, ConfigValue, ConstDefault, ConstDefaultEvent, ConfigDefaultEvent, ConfigDefault, ConfigNameEvent, ConfigEventHyperlink
 from roundabout.inventory.models import Inventory, Deployment
 from roundabout.parts.models import Part
 from roundabout.users.models import User
@@ -32,11 +32,11 @@ from django.utils.translation import gettext_lazy as _
 
 
 
-# Configuration Event form 
+# Configuration Event form
 # Inputs: Config Date and Approval
 class ConfigEventForm(forms.ModelForm):
     class Meta:
-        model = ConfigEvent 
+        model = ConfigEvent
         fields = ['deployment','user_draft']
         labels = {
             'deployment': 'Deployment',
@@ -55,7 +55,7 @@ class ConfigEventForm(forms.ModelForm):
         self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username')
         self.fields['deployment'].required = False
 
-    def save(self, commit = True): 
+    def save(self, commit = True):
         event = super(ConfigEventForm, self).save(commit = False)
         if commit:
             event.save()
@@ -91,7 +91,7 @@ class ConfigValueForm(forms.ModelForm):
                 }
             )
         }
-    
+
     def __init__(self, *args, **kwargs):
         super(ConfigValueForm, self).__init__(*args, **kwargs)
 
@@ -99,11 +99,11 @@ class ConfigValueForm(forms.ModelForm):
         config_name = self.cleaned_data.get('config_name')
         return config_name
 
-# ConfigNameEvent form 
-# Inputs: Reviewers 
+# ConfigNameEvent form
+# Inputs: Reviewers
 class ConfigNameEventForm(forms.ModelForm):
     class Meta:
-        model = ConfigNameEvent 
+        model = ConfigNameEvent
         fields = ['user_draft']
         labels = {
             'user_draft': 'Reviewers'
@@ -120,7 +120,7 @@ class ConfigNameEventForm(forms.ModelForm):
         user_draft = self.cleaned_data.get('user_draft')
         return user_draft
 
-    def save(self, commit = True): 
+    def save(self, commit = True):
         event = super(ConfigNameEventForm, self).save(commit = False)
         if commit:
             event.save()
@@ -137,11 +137,11 @@ class ConfigNameForm(forms.ModelForm):
     class Meta:
         model = ConfigName
         fields = [
-            'name', 
-            'config_type', 
+            'name',
+            'config_type',
             'include_with_calibrations',
             'deprecated'
-        ] 
+        ]
         labels = {
             'name': 'Configuration/Constant Name',
             'config_type': 'Type',
@@ -155,7 +155,7 @@ class ConfigNameForm(forms.ModelForm):
                 }
             ),
             'include_with_calibrations': forms.CheckboxInput(),
-            'deprecated': forms.CheckboxInput() 
+            'deprecated': forms.CheckboxInput()
         }
     def __init__(self, *args, **kwargs):
         super(ConfigNameForm, self).__init__(*args, **kwargs)
@@ -186,7 +186,7 @@ class ConstDefaultForm(forms.ModelForm):
                 }
             ),
         }
-    
+
     def __init__(self, *args, **kwargs):
         super(ConstDefaultForm, self).__init__(*args, **kwargs)
 
@@ -195,11 +195,11 @@ class ConstDefaultForm(forms.ModelForm):
         return config_name
 
 
-# Constant Default Event form 
+# Constant Default Event form
 # Inputs: Reviewers
 class ConstDefaultEventForm(forms.ModelForm):
     class Meta:
-        model = ConstDefaultEvent 
+        model = ConstDefaultEvent
         fields = ['user_draft']
         labels = {
             'user_draft': 'Reviewers'
@@ -216,7 +216,7 @@ class ConstDefaultEventForm(forms.ModelForm):
         user_draft = self.cleaned_data.get('user_draft')
         return user_draft
 
-    def save(self, commit = True): 
+    def save(self, commit = True):
         event = super(ConstDefaultEventForm, self).save(commit = False)
         if commit:
             event.save()
@@ -228,11 +228,11 @@ class ConstDefaultEventForm(forms.ModelForm):
             return event
 
 
-# Config Default Event form 
+# Config Default Event form
 # Inputs: Reviewers
 class ConfigDefaultEventForm(forms.ModelForm):
     class Meta:
-        model = ConfigDefaultEvent 
+        model = ConfigDefaultEvent
         fields = ['user_draft']
         labels = {
             'user_draft': 'Reviewers'
@@ -249,7 +249,7 @@ class ConfigDefaultEventForm(forms.ModelForm):
         user_draft = self.cleaned_data.get('user_draft')
         return user_draft
 
-    def save(self, commit = True): 
+    def save(self, commit = True):
         event = super(ConfigDefaultEventForm, self).save(commit = False)
         if commit:
             event.save()
@@ -278,7 +278,7 @@ class ConfigDefaultForm(forms.ModelForm):
                 }
             ),
         }
-    
+
     def __init__(self, *args, **kwargs):
         super(ConfigDefaultForm, self).__init__(*args, **kwargs)
 
@@ -287,7 +287,7 @@ class ConfigDefaultForm(forms.ModelForm):
         return config_name
 
 # Configuration/Constant Copy Form
-# Inputs: Part 
+# Inputs: Part
 class ConfPartCopyForm(forms.Form):
     from_part = forms.ModelChoiceField(
         queryset = Part.objects.filter(part_type__ccc_toggle=True),
@@ -315,49 +315,53 @@ class ConfPartCopyForm(forms.Form):
             copy_from_id = from_part.id
             copy_confignames(copy_to_id, copy_from_id)
         return from_part
-        
+
 # Configuration Value form instance generator for ConfigEvents
 ConfigEventValueFormset = inlineformset_factory(
-    ConfigEvent, 
-    ConfigValue, 
+    ConfigEvent,
+    ConfigValue,
     form=ConfigValueForm,
-    fields=('config_name', 'config_value', 'notes'), 
-    extra=0, 
+    fields=('config_name', 'config_value', 'notes'),
+    extra=0,
     can_delete=True
 )
 
+ConfigEventHyperlinkFormset = forms.models.inlineformset_factory(
+    ConfigEvent, ConfigEventHyperlink, fields=('text', 'url'), extra=1, can_delete=True)
+
+
 # Configuration Name form instance generator for Parts
 PartConfigNameFormset = inlineformset_factory(
-    ConfigNameEvent, 
-    ConfigName, 
-    form=ConfigNameForm, 
+    ConfigNameEvent,
+    ConfigName,
+    form=ConfigNameForm,
     fields=(
-        'name', 
-        'config_type', 
+        'name',
+        'config_type',
         'include_with_calibrations',
         'deprecated'
-    ), 
-    extra=1, 
+    ),
+    extra=1,
     can_delete=True
 )
 
 # Constant Default form instance generator for Parts
 EventConstDefaultFormset = inlineformset_factory(
-    ConstDefaultEvent, 
-    ConstDefault, 
-    form=ConstDefaultForm, 
-    fields=('config_name', 'default_value'), 
-    extra=0, 
+    ConstDefaultEvent,
+    ConstDefault,
+    form=ConstDefaultForm,
+    fields=('config_name', 'default_value'),
+    extra=0,
     can_delete=True
 )
 
 # Constant Default form instance generator for Parts
 EventConfigDefaultFormset = inlineformset_factory(
-    ConfigDefaultEvent, 
-    ConfigDefault, 
-    form=ConfigDefaultForm, 
-    fields=('config_name', 'default_value'), 
-    extra=0, 
+    ConfigDefaultEvent,
+    ConfigDefault,
+    form=ConfigDefaultForm,
+    fields=('config_name', 'default_value'),
+    extra=0,
     can_delete=True
 )
 
@@ -395,5 +399,5 @@ def validate_from_part(to_part, from_part):
         raise ValidationError(
             _('Duplicate Config/Constant Names exist between Parts. Please select Part with unique Config/Constant Names.')
         )
-    else: 
+    else:
         pass

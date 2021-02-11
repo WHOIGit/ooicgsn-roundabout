@@ -363,6 +363,16 @@
                 </td>
             </tr>
             {% endif %}
+            {% if inventory_item.hyperlinks.all %}
+            <tr>
+                <th>Links</th>
+                <td>
+                  <ul>{% for link in inventory_item.hyperlinks.all %}
+                      <li><a target="_blank" href="{{ link.url }}">{{ link.text }} <i class="fas fa-link"></i></a></li>
+                  {% endfor %}</ul>
+                </td>
+            </tr>
+            {% endif %}
         </tbody>
     </table>
 

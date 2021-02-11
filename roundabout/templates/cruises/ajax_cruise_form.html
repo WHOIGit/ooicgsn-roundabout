@@ -52,8 +52,37 @@
                   </div>
               {% endfor %}
           {% endif %}
+      </div>
 
+      <div class="row">
+        <table class="table table-tight">
+          <thead>
+            <th>Hyperlink Text</th>
+            <th>URL</th>
+          </thead>
+          <tbody>
+            {{ link_formset.management_form }}
 
+            {% if link_formset.errors %}
+            <tr>
+              <div class="alert alert-danger">
+              {% for dict in link_formset.errors %}
+                  {% for error in dict.values %}
+                    {{ error|escape }}
+                  {% endfor %}
+              {% endfor %}
+              </div>
+            </tr>
+           {% endif %}
+
+            {% for link in link_formset %}
+              <tr>
+                  <td>{% if link.id  %}{{ link.DELETE }}{% endif %} {{ link.id }} {{ link.text }}</td>
+                  <td>{{ link.url }} </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
 
       <div class="control-group">
@@ -96,7 +125,13 @@
     $("#id_cruise_stop_date").on("dp.change", function (e) {
         $('#id_cruise_start_date').data("DateTimePicker").maxDate(e.date);
      });
+
+    $(document).ready(function() {
+      $('#cruise-form tbody tr').formset({
+          prefix: 'hyperlinks', // <-- Needs to match the Django related_name for the models
+          addText: 'add row',
+          deleteText: 'remove',
+      });
+    });
 </script>
-
-
 {% endblock javascript %}

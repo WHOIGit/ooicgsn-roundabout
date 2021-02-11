@@ -158,6 +158,11 @@ class Inventory(MPTTModel):
         except:
             return None
 
+class InventoryHyperlink(models.Model):
+    text = models.CharField(max_length=255, unique=False, blank=False, null=False)
+    url = models.CharField(max_length=1000)
+    parent = models.ForeignKey(Inventory, related_name='hyperlinks',
+                 on_delete=models.CASCADE, null=False, blank=False)
 
 class DeploymentBase(models.Model):
     STARTDEPLOYMENT = 'startdeployment'
@@ -303,8 +308,8 @@ class InventoryDeployment(DeploymentBase):
     inventory = models.ForeignKey(Inventory, related_name='inventory_deployments',
                                   on_delete=models.CASCADE, null=False)
     assembly_part = models.ForeignKey('assemblies.AssemblyPart', related_name='inventory_deployments',
-                                  on_delete=models.SET_NULL, null=True)
-
+                                      on_delete=models.SET_NULL, null=True)
+                                      
     objects = InventoryDeploymentQuerySet.as_manager()
 
     def __str__(self):
