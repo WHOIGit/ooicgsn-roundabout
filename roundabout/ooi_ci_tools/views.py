@@ -42,9 +42,9 @@ from roundabout.builds.models import Build
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory, Action, Deployment, InventoryDeployment
 from roundabout.inventory.utils import _create_action_history
-from .forms import ImportDeploymentsForm, ImportVesselsForm, ImportCruisesForm, ImportCalibrationForm
+from .forms import *
 from .models import *
-from .tasks import parse_cal_files, parse_cruise_files, parse_vessel_files, parse_deployment_files
+from .tasks import *
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
 labels = set_app_labels()
