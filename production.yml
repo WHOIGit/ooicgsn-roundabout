@@ -96,10 +96,7 @@ services:
     command: /start-flower
 
   nginx:
-    build:
-      context: .
-      dockerfile: ./compose/production/nginx/Dockerfile
-    image: roundabout_production_nginx
+    image: nginx:1.15
     container_name: nginx
     depends_on:
       - django
