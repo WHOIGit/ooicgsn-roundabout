@@ -38,10 +38,15 @@ class AssemblyForm(forms.ModelForm):
     revision_code = forms.CharField(strip=True, initial='A',
         help_text='Enter a Revision Code for the initial version of this Assembly. Defaults to "A"',
     )
+    copy_default_configs = forms.BooleanField(
+        required=False,
+        initial=True,
+        label="Copy defaut config values from current Assembly",
+    )
 
     class Meta:
         model = Assembly
-        fields = ['name', 'assembly_type', 'assembly_number', 'description', 'revision_code' ]
+        fields = ['name', 'assembly_type', 'assembly_number', 'description', 'revision_code', 'copy_default_configs' ]
         labels = {
             'name': '%s Name' % (labels['label_assemblies_app_singular']),
             'assembly_type': '%s Type' % (labels['label_assemblies_app_singular']),
@@ -65,10 +70,15 @@ class AssemblyForm(forms.ModelForm):
 
 
 class AssemblyRevisionForm(forms.ModelForm):
+    copy_default_configs = forms.BooleanField(
+        required=False,
+        initial=True,
+        label="Copy defaut config values from current Revision",
+    )
 
     class Meta:
         model = AssemblyRevision
-        fields = ['revision_code', 'created_at', 'revision_note', 'assembly']
+        fields = ['copy_default_configs', 'revision_code', 'created_at', 'revision_note', 'assembly']
         labels = {
             'created_at': 'Release Date',
             'note': 'Revision Notes',

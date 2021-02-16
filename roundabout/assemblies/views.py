@@ -49,14 +49,15 @@ def _make_tree_copy(root_part, new_assembly, parent=None):
 
 # Makes a copy of the Assembly Revision tree starting at "root_part",
 # move to new Revision, reparenting it to "parent"
-def _make_revision_tree_copy(root_part, new_revision, parent=None, user=None):
+def _make_revision_tree_copy(root_part, new_revision, parent=None, user=None, copy_default_configs=True):
+    print(f'COPY: {copy_default_configs}')
     new_ap = AssemblyPart.objects.create(
         assembly_revision=new_revision,
         part=root_part.part,
         parent=parent, order=root_part.order
     )
     # Copy ConfigDefaults for this Assembly Part
-    if root_part.config_default_events.exists():
+    if copy_default_configs and root_part.config_default_events.exists():
         for event in root_part.config_default_events.all():
             new_event = ConfigDefaultEvent.objects.create(
                 assembly_part = new_ap,
@@ -80,7 +81,7 @@ def _make_revision_tree_copy(root_part, new_revision, parent=None, user=None):
 
 
     for child in root_part.get_children():
-        _make_revision_tree_copy(child, new_revision, new_ap, user)
+        _make_revision_tree_copy(child, new_revision, new_ap, user, copy_default_configs)
 
 
 # Load the javascript navtree
@@ -250,6 +251,7 @@ class AssemblyAjaxCopyView(AssemblyAjaxCreateView):
 
     def form_valid(self, form, documentation_form, **kwargs):
         self.object = form.save()
+        copy_default_configs = form.cleaned_data['copy_default_configs']
         # Create an initial Revision for this Assembly
         revision_code = form.cleaned_data['revision_code']
         revision = AssemblyRevision.objects.create(revision_code=revision_code, assembly=self.object)
@@ -269,7 +271,7 @@ class AssemblyAjaxCopyView(AssemblyAjaxCreateView):
 
         for ap in assembly_parts:
             if ap.is_root_node():
-                _make_revision_tree_copy(ap, revision, ap.parent, self.request.user)
+                _make_revision_tree_copy(ap, revision, ap.parent, self.request.user, copy_default_configs)
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -419,6 +421,8 @@ class AssemblyRevisionAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin
 
     def form_valid(self, form, documentation_form):
         self.object = form.save()
+        copy_default_configs = form.cleaned_data['copy_default_configs']
+        print(f'COPY: {copy_default_configs}')
         documentation_form.instance = self.object
         documentation_form.save()
 
@@ -429,7 +433,13 @@ class AssemblyRevisionAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin
 
         for ap in assembly_parts:
             if ap.is_root_node():
-                _make_revision_tree_copy(ap, self.object, ap.parent)
+                _make_revision_tree_copy(
+                    ap,
+                    self.object,
+                    ap.parent,
+                    self.request.user,
+                    copy_default_configs,
+                )
 
         response = HttpResponseRedirect(self.get_success_url())
 
