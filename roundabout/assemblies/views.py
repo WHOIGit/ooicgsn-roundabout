@@ -50,7 +50,6 @@ def _make_tree_copy(root_part, new_assembly, parent=None):
 # Makes a copy of the Assembly Revision tree starting at "root_part",
 # move to new Revision, reparenting it to "parent"
 def _make_revision_tree_copy(root_part, new_revision, parent=None, user=None, copy_default_configs=True):
-    print(f'COPY: {copy_default_configs}')
     new_ap = AssemblyPart.objects.create(
         assembly_revision=new_revision,
         part=root_part.part,
@@ -422,7 +421,7 @@ class AssemblyRevisionAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin
     def form_valid(self, form, documentation_form):
         self.object = form.save()
         copy_default_configs = form.cleaned_data['copy_default_configs']
-        print(f'COPY: {copy_default_configs}')
+        
         documentation_form.instance = self.object
         documentation_form.save()
 
