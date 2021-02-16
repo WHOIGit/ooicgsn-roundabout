@@ -19,6 +19,7 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 from pprint import pprint
+from copy import deepcopy
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
@@ -30,6 +31,8 @@ from .models import Assembly, AssemblyPart, AssemblyType, AssemblyDocument, Asse
 from .forms import AssemblyForm, AssemblyPartForm, AssemblyTypeForm, AssemblyRevisionForm, AssemblyRevisionFormset, AssemblyDocumentationFormset, AssemblyTypeDeleteForm
 from roundabout.parts.models import PartType, Part
 from roundabout.inventory.models import Action
+from roundabout.inventory.utils import _create_action_history
+from roundabout.configs_constants.models import ConfigDefaultEvent, ConfigDefault
 from common.util.mixins import AjaxFormMixin
 
 
@@ -44,13 +47,40 @@ def _make_tree_copy(root_part, new_assembly, parent=None):
         _make_tree_copy(child, new_assembly, new_ap)
 
 
-# Makes a copy of the Assembly Revisiontree starting at "root_part",
+# Makes a copy of the Assembly Revision tree starting at "root_part",
 # move to new Revision, reparenting it to "parent"
-def _make_revision_tree_copy(root_part, new_revision, parent=None):
-    new_ap = AssemblyPart.objects.create(assembly_revision=new_revision, part=root_part.part, parent=parent, order=root_part.order)
+def _make_revision_tree_copy(root_part, new_revision, parent=None, user=None):
+    new_ap = AssemblyPart.objects.create(
+        assembly_revision=new_revision,
+        part=root_part.part,
+        parent=parent, order=root_part.order
+    )
+    # Copy ConfigDefaults for this Assembly Part
+    if root_part.config_default_events.exists():
+        for event in root_part.config_default_events.all():
+            new_event = ConfigDefaultEvent.objects.create(
+                assembly_part = new_ap,
+                created_at = event.created_at,
+                updated_at = event.updated_at,
+                approved = event.approved,
+                detail = event.detail,
+            )
+            # add ManyToManyFields
+            new_event.user_draft.add(*event.user_draft.all())
+            new_event.user_approver.add(*event.user_approver.all())
+            # add new Action History for event
+            _create_action_history(new_event, Action.ADD, user)
+
+            for config in event.config_defaults.all():
+                print(config)
+                # just copy ConfigDefault by setting id to None
+                config.id = None
+                config.conf_def_event = new_event
+                config.save()
+
 
     for child in root_part.get_children():
-        _make_revision_tree_copy(child, new_revision, new_ap)
+        _make_revision_tree_copy(child, new_revision, new_ap, user)
 
 
 # Load the javascript navtree
@@ -239,7 +269,7 @@ class AssemblyAjaxCopyView(AssemblyAjaxCreateView):
 
         for ap in assembly_parts:
             if ap.is_root_node():
-                _make_revision_tree_copy(ap, revision, ap.parent)
+                _make_revision_tree_copy(ap, revision, ap.parent, self.request.user)
 
         response = HttpResponseRedirect(self.get_success_url())
 
