@@ -28,8 +28,8 @@ from django_tables2_column_shifter.tables import ColumnShiftTable
 
 from roundabout.assemblies.models import Assembly
 from roundabout.builds.models import Build
-from roundabout.calibrations.models import CalibrationEvent
-from roundabout.configs_constants.models import ConfigEvent
+from roundabout.calibrations.models import CalibrationEvent, CoefficientNameEvent
+from roundabout.configs_constants.models import ConfigEvent, ConstDefaultEvent, ConfigNameEvent, ConfigDefaultEvent
 from roundabout.inventory.models import Inventory, Action
 from roundabout.parts.models import Part
 
