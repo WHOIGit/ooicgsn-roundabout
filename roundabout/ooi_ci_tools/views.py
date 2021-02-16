@@ -27,11 +27,13 @@ from decimal import Decimal
 from dateutil import parser
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.cache import cache
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils.timezone import make_aware
 from django.views.generic import TemplateView, FormView
+from common.util.mixins import AjaxFormMixin
+from django.views.generic import CreateView, UpdateView, DeleteView
 
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.assemblies.models import Assembly
@@ -40,9 +42,9 @@ from roundabout.builds.models import Build
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory, Action, Deployment, InventoryDeployment
 from roundabout.inventory.utils import _create_action_history
-from .forms import ImportDeploymentsForm, ImportVesselsForm, ImportCruisesForm, ImportCalibrationForm
+from .forms import *
 from .models import *
-from .tasks import parse_cal_files, parse_cruise_files, parse_vessel_files, parse_deployment_files
+from .tasks import *
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
 labels = set_app_labels()
@@ -671,3 +673,103 @@ def import_csv(request):
         'vessels_form': vessels_form,
         'confirm': confirm
     })
+
+
+# Action-Comment View
+def action_comment(request, pk):
+    action = Action.objects.get(id=pk)
+    if request.method == "POST":
+        comment_form = CommentForm(request.POST)
+        if comment_form.is_valid():
+            comment_form.instance.action = action
+            comment_form.instance.user = request.user
+            comment_form.instance.detail = comment_form.cleaned_data['detail']
+            comment_form.save()
+    else:
+        comment_form = CommentForm()
+        comment_form.instance.action = action
+        comment_form.instance.user = request.user
+    return render(request, 'ooi_ci_tools/action_comment.html', {
+        "comment_form": comment_form,
+        "action_object": action
+    })
+
+# Sub-comment create view
+def comment_comment(request, pk):
+    comment = Comment.objects.get(id=pk)
+    if request.method == "POST":
+        comment_form = CommentForm(request.POST)
+        if comment_form.is_valid():
+            comment_form.instance.parent = comment
+            comment_form.instance.action = comment.action
+            comment_form.instance.user = request.user
+            comment_form.instance.detail = comment_form.cleaned_data['detail']
+            comment_form.save()
+    else:
+        comment_form = CommentForm()
+    return render(request, 'ooi_ci_tools/comment_comment.html', {
+        "comment_form": comment_form,
+        "parent_comment": comment
+    })
+
+# Sub-comment edit view
+def comment_comment_edit(request, pk):
+    comment = Comment.objects.get(id=pk)
+    if request.method == "POST":
+        comment_form = CommentForm(request.POST, instance=comment)
+        if comment_form.is_valid():
+            comment_form.instance.detail = comment_form.cleaned_data['detail']
+            comment_form.save()
+    else:
+        comment_form = CommentForm(instance=comment)
+    return render(request, 'ooi_ci_tools/comment_comment.html', {
+        "comment_form": comment_form,
+        "parent_comment": comment
+    })
+
+# Comment delete view
+class CommentDelete(LoginRequiredMixin, DeleteView):
+    model = Comment
+    context_object_name='comment_obj'
+    template_name = 'ooi_ci_tools/comment_delete.html'
+    permission_required = 'ooi_ci_tools.add_comments'
+    redirect_field_name = 'home'
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        data = {
+            'message': "Successfully submitted form data.",
+            'parent_id': self.object.id,
+            'parent_type': 'comment',
+            'object_type': self.object.get_object_type(),
+        }
+        self.object.delete()
+        return JsonResponse(data)
+
+    def get_success_url(self):
+        return reverse_lazy('inventory:ajax_inventory_detail', args=(self.object.action.inventory.id, ))
+
+
+
+# Handles import configurations of Calibration, Deployment, Cruises, and Vessels CSVs
+class ImportConfigUpdate(LoginRequiredMixin, AjaxFormMixin, UpdateView):
+    model = ImportConfig
+    form_class = ImportConfigForm
+    context_object_name = 'import_config'
+    template_name='ooi_ci_tools/import_config.html'
+
+    def get(self, request, *args, **kwargs):
+        if ImportConfig.objects.exists():
+            self.object = self.get_object()
+        else:
+            self.object = ImportConfig.objects.create()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        return self.render_to_response(
+            self.get_context_data(
+                form=form, 
+            )
+        )
+
+    def get_success_url(self):
+        return reverse('ooi_ci_tools:import_csv')

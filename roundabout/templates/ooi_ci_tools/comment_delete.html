@@ -1,0 +1,50 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or 
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<div class="card-body">
+    <div class="side-p">
+        <h3>Are you sure?</h3>
+        <p class='font-weight-light'><b>Date:</b> {{ comment_obj.created_at|date:"n/j/y H:i" }}</p>
+        <p class='font-weight-light'><b>User:</b> {{ comment_obj.user.username }}</p>
+        <p class='font-weight-light'><b>Detail:</b> {{ comment_obj.detail|safe }}</p>
+        <form action="" method="post" class="delete-form"
+              id="delete-form" data-url='{{ request.build_absolute_uri|safe }}'>
+            {% csrf_token %}
+            <input class="btn btn-link cancel-btn"
+                   type="button" value="Cancel"
+                   data-detail-url="{% url 'inventory:ajax_inventory_detail' comment_obj.action.inventory.id %}"/>
+            <input id ='submit' class="btn btn-danger" type="submit" value="Confirm"/>
+        </form>
+    </div>
+  </div>
+  
+  {% block javascript %}
+  <script>
+      $(document).ready(function() {
+  
+          let inventory_id = '{{comment_obj.action.inventory.id}}'
+          $('#submit').on('click', function() {
+              location.href = '/inventory/' + inventory_id + '/';
+          })
+      });
+  </script>
+  {% endblock javascript %}
+  

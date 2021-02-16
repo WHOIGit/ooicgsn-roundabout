@@ -174,7 +174,7 @@
                         data-node-type="constant_default}">Add Constant Defaults</a>
                 {% endif %}
 
-                {% if part_has_consts and inventory_item.build.current_deployment and inventory_item.part.part_type.ccc_toggle %}
+                {% if part_has_consts and inventory_item.part.part_type.ccc_toggle %}
                     <a  id="add_const_action"
                         class="dropdown-item"
                         href="#"
@@ -184,7 +184,7 @@
                         data-node-type="config_event}">Add Constants</a>
                 {% endif %}
 
-                {% if part_has_configs and inventory_item.build.current_deployment and inventory_item.part.part_type.ccc_toggle %}
+                {% if part_has_configs and inventory_item.part.part_type.ccc_toggle %}
                     <a  id="add_conf_action"
                         class="dropdown-item"
                         href="#"
@@ -451,46 +451,7 @@
 
     <div class="tab-content" id="inventory-tabs">
 
-        {% if inventory_item.actions.exists %}
-          <div class="tab-pane fade show active" id="history" role="tabpanel" aria-labelledby="history-tab">
-
-              <table class="table table-striped action-table">
-                  <thead>
-                    <th>Date</th>
-                    <th>Action</th>
-                    <th>Details</th>
-                    <th>Person</th>
-                    <th>Location</th>
-
-                  </thead>
-                  <tbody>
-                    {% for action in  inventory_item.actions.all %}
-                      <tr>
-                          <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
-                          <td>{{ action.get_action_type_display }}</td>
-                          <td>
-                              {{ action.detail|safe }}
-                              {% for photo in action.photos.all %}
-                                  {% if photo.file_type == 'image' %}
-                                      <a href="{{ photo.photo.url }}" target="_blank">
-                                          <img src="{{ photo.photo.url }}" width="100%">
-                                      </a> <br><br>
-                                  {% else %}
-                                     <a href="{{ photo.photo.url }}" target="_blank"><i class='fa fa-file fa-3x'></i>
-                                         {{ photo.photo.name }}
-                                     </a>  <br><br>
-                                  {% endif %}
-                              {% endfor %}
-                          </td>
-                          <td>{{ action.user.username }}</td>
-                          <td>{{ action.location.name }}</td>
-                      </tr>
-                    {% endfor %}
-                  </tbody>
-            </table>
-
-          </div>
-        {% endif %}
+        {% include "ooi_ci_tools/action_comment_detail.html" with inventory_item=inventory_item user=user  %}
 
         {% if inventory_item.inventory_deployments %}
         <div class="tab-pane fade" id="deployments" role="tabpanel" aria-labelledby="deployments-tab">

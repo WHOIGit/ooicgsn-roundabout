@@ -149,12 +149,14 @@
 
         // Hide and mark row for deletion
         $('#modal_delete').on('click', function() {
-            let delete_field = global_row.find('input[id$=-DELETE]');
-            if (delete_field) {
-                delete_field.prop("checked", "checked");
+            if (global_row.length >= 1) {
+                let delete_field = global_row.find('[id$=-DELETE]')
+                if (delete_field) {
+                    delete_field.prop("checked", "checked");
+                }
+                global_row.hide();
+                $('#warningModal').modal('toggle');
             }
-            global_row.hide();
-            $('#warningModal').modal('toggle');
         });
 
         // Clone last table row, replace row numbers in id/name attributes of child tags, update total form count

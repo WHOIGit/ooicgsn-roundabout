@@ -65,15 +65,23 @@
 
 
         let confirm = '{{ confirm }}';
-        
-        if (confirm == 'True') {
-            $('.progress').show();
-            $('.progress-bar')
-                .attr('aria-valuenow', 100)
-                .css('width', 100 + '%')
-                .removeClass('bg-info')
-                .addClass('bg-success')
-                .text('Import Complete')
+
+        check_confirm(confirm)
+
+        function check_confirm(confirm) {
+            if (confirm == 'True') {
+                $('.progress').show();
+                $('.progress-bar')
+                    .attr('aria-valuenow', 100)
+                    .css('width', 100 + '%')
+                    .removeClass('bg-info')
+                    .addClass('bg-success')
+                    .text('Import Complete')
+            } else {
+                $('.progress-bar')
+                    .removeClass('bg-success')
+                    .addClass('bg-info')
+            }
         }
 
         function update_status() {
@@ -81,6 +89,8 @@
                 $('#submit').attr('disabled', true);
                 if (r.progress != null) {
                     $('.progress').show();
+                    confirm = 'False'
+                    check_confirm(confirm)
                     let current = r.progress.progress;
                     let total = r.progress.total;
                     let filename = r.progress.file;
