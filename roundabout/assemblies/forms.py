@@ -62,6 +62,7 @@ class AssemblyForm(forms.ModelForm):
             self.assembly_to_copy_pk = kwargs.pop('assembly_to_copy_pk')
         else:
             self.assembly_to_copy_pk = None
+
         super(AssemblyForm, self).__init__(*args, **kwargs)
         self.fields['assembly_type'].required = True
 
@@ -75,10 +76,11 @@ class AssemblyRevisionForm(forms.ModelForm):
         initial=True,
         label="Copy defaut config values from current Revision",
     )
+    assembly_revision_to_copy = forms.ModelChoiceField(queryset = AssemblyRevision.objects.all(), required=False,)
 
     class Meta:
         model = AssemblyRevision
-        fields = ['copy_default_configs', 'revision_code', 'created_at', 'revision_note', 'assembly']
+        fields = ['copy_default_configs', 'assembly_revision_to_copy', 'revision_code', 'created_at', 'revision_note', 'assembly']
         labels = {
             'created_at': 'Release Date',
             'note': 'Revision Notes',
@@ -97,12 +99,24 @@ class AssemblyRevisionForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        if 'assembly_pk' in kwargs:
+            self.assembly_pk = kwargs.pop('assembly_pk')
+        else:
+            self.assembly_pk = None
 
         if 'assembly_revision_pk' in kwargs:
             self.assembly_revision_pk = kwargs.pop('assembly_revision_pk')
         else:
             self.assembly_revision_pk = None
+
         super(AssemblyRevisionForm, self).__init__(*args, **kwargs)
+        if self.assembly_revision_pk:
+            self.fields.pop('assembly_revision_to_copy')
+        else:
+            # Populate Revision field with only Revisions for this Part
+            if self.assembly_pk:
+                revisions = AssemblyRevision.objects.filter(assembly_id=self.assembly_pk)
+                self.fields['assembly_revision_to_copy'].queryset = revisions
 
     def clean_revision_code(self):
         # Need to check if the Revision Code is already in use on this Assembly

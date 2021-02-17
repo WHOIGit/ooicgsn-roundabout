@@ -375,9 +375,13 @@ class AssemblyRevisionAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin
 
     def get_context_data(self, **kwargs):
         context = super(AssemblyRevisionAjaxCreateView, self).get_context_data(**kwargs)
-        assembly_revision_pk = self.kwargs['assembly_revision_pk']
-        copy_revision = AssemblyRevision.objects.get(id=assembly_revision_pk)
+        assembly_pk = self.kwargs.get('assembly_pk', None)
+        assembly_revision_pk = self.kwargs.get('assembly_revision_pk', None)
 
+        copy_revision = None
+        if assembly_revision_pk:
+            copy_revision = AssemblyRevision.objects.get(id=assembly_revision_pk)
+        print(copy_revision)
         context.update({
             'copy_revision': copy_revision,
         })
@@ -404,16 +408,19 @@ class AssemblyRevisionAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin
     def get_initial(self):
         #Returns the initial data from current revision
         initial = super(AssemblyRevisionAjaxCreateView, self).get_initial()
-        # get the current revision object, prepopolate fields
-        assembly_revision_pk = self.kwargs['assembly_revision_pk']
-        assembly_revision = AssemblyRevision.objects.get(id=assembly_revision_pk)
-        initial['assembly'] = assembly_revision.assembly
+        # get the current Assembly object, prepopolate fields
+        assembly_pk = self.kwargs['assembly_pk']
+        assembly = Assembly.objects.get(id=assembly_pk)
+        initial['assembly'] = assembly
         initial['revision_code'] = None
 
         return initial
 
     def get_form_kwargs(self):
         kwargs = super(AssemblyRevisionAjaxCreateView, self).get_form_kwargs()
+        if 'assembly_pk' in self.kwargs:
+            kwargs['assembly_pk'] = self.kwargs['assembly_pk']
+
         if 'assembly_revision_pk' in self.kwargs:
             kwargs['assembly_revision_pk'] = self.kwargs['assembly_revision_pk']
         return kwargs
@@ -421,7 +428,7 @@ class AssemblyRevisionAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin
     def form_valid(self, form, documentation_form):
         self.object = form.save()
         copy_default_configs = form.cleaned_data['copy_default_configs']
-        
+
         documentation_form.instance = self.object
         documentation_form.save()
 
