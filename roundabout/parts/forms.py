@@ -167,6 +167,13 @@ class PartUdfFieldSetValueForm(forms.Form):
         elif field.field_type == 'BooleanField':
             self.fields['field_value'] = forms.BooleanField(label=str(field.field_name), required=False,
                                                 help_text=str(field.field_description))
+
+        elif field.field_type == 'ChoiceField':
+            FIELD_CHOICES = [(d['value'],d['label']) if d['label'] else (d['value'],d['value']) for d in field.choice_field_options['options']]
+            self.fields['field_value'] = forms.ChoiceField(label=str(field.field_name), required=False,
+                                                choices=FIELD_CHOICES,
+                                                help_text=str(field.field_description))
+
         else:
             self.fields['field_value'] = forms.CharField(label=str(field.field_name), required=False,
                                                 help_text=str(field.field_description))
