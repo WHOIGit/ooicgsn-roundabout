@@ -141,10 +141,10 @@ var password;
 	}
         // Create Configurations / Constants | 
         await driver.findElement(By.linkText("Create Configurations / Constants")).click();
-	while ((await driver.findElements(By.id("add_button"))).length == 0)
+//	while ((await driver.findElements(By.id("add_button"))).length == 0)  //stale element v1.7.0
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Row.");
+//	   console.log("Wait 2 seconds for Add Row.");
 	}
         await driver.findElement(By.id("add_button")).click();
         await new Promise(r => setTimeout(r, 2000));
