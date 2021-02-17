@@ -155,10 +155,10 @@ var password;
 	   console.log("Wait 2 seconds for Edit Part.");
 	}
         await driver.findElement(By.linkText("Edit Part Template")).click();
-	while ((await driver.findElements(By.id("id_cal_dec_places"))).length == 0)
+//	while ((await driver.findElements(By.id("id_cal_dec_places"))).length == 0) //causing stale element v1.7.0
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Page Load.");
+//	   console.log("Wait 2 seconds for Page Load.");
 	}
         await driver.findElement(By.id("id_cal_dec_places")).clear();
         await driver.findElement(By.id("id_cal_dec_places")).sendKeys("20");
