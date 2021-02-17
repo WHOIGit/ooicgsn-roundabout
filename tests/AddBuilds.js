@@ -349,13 +349,6 @@ var password;
         assert(bodyText.includes("2 days 0 hours"));        
 
         // Click Deployments Tab and verify Deployment To Field Date: is 2 days prior 
-        // 31 | click | id=deployments-tab |
-	while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Deployments.");
-	}
-	await driver.findElement(By.linkText("Deployments")).click();
 	while ((await driver.findElements(By.id("deployments-tab"))).length == 0) //1.6
 	{
 	   await new Promise(r => setTimeout(r, 2000));
@@ -363,8 +356,7 @@ var password;
 	}
         //await driver.findElement(By.id("deployments-tab")).click();
         await new Promise(r => setTimeout(r, 4000));
-        // 32 | click | css=.collapsed > .fa |  0 
-        await driver.findElement(By.css(".collapsed > .fa")).click();
+        await driver.findElement(By.partialLinkText("Singer")).click();
         await new Promise(r => setTimeout(r, 2000));
         // Verify Deployment Times in the Deployments Tab
         bodyText = await driver.findElement(By.tagName("Body")).getText();

@@ -1,3 +1,87 @@
-from django.db import models
+"""
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+"""
 
-# Create your models here.
+
+from django.db import models
+from mptt.models import MPTTModel, TreeForeignKey
+from roundabout.inventory.models import Action
+from roundabout.users.models import User
+
+
+# Comment model
+class Comment(models.Model):
+    class Meta:
+        ordering = ['created_at']
+    def __str__(self):
+        return self.detail
+    def get_object_type(self):
+        return 'comment'
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    parent = models.ForeignKey('self', related_name = 'comments', on_delete=models.CASCADE, null=True)
+    action = models.ForeignKey(Action, related_name='comments', on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey(User, related_name='comments', on_delete=models.SET_NULL, null=True)
+    detail = models.TextField(blank=True)
+
+
+# CSV Import configuration model
+class ImportConfig(models.Model):
+    def __str__(self):
+        return self.created_at.strftime("%m/%d/%Y")
+    def get_object_type(self):
+        return 'import_configuration'
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    require_calibration_coefficient_values = models.BooleanField(blank=False, default=True)
+    require_calibration_notes = models.BooleanField(blank=False, default=False)
+    require_deployment_sensor_uid = models.BooleanField(blank=False, default=True)
+    require_deployment_startDateTime = models.BooleanField(blank=False, default=True)
+    require_deployment_stopDateTime = models.BooleanField(blank=False, default=True)
+    require_deployment_lat = models.BooleanField(blank=False, default=True)
+    require_deployment_lon = models.BooleanField(blank=False, default=True)
+    require_deployment_mooring_uid = models.BooleanField(blank=False, default=True)
+    require_deployment_CUID_Deploy = models.BooleanField(blank=False, default=True)
+    require_deployment_node_uid = models.BooleanField(blank=False, default=False)
+    require_deployment_versionNumber = models.BooleanField(blank=False, default=True)
+    require_deployment_deployedBy = models.BooleanField(blank=False, default=False)
+    require_deployment_CUID_Recover = models.BooleanField(blank=False, default=True)
+    require_deployment_orbit = models.BooleanField(blank=False, default=False)
+    require_deployment_deployment_depth = models.BooleanField(blank=False, default=True)
+    require_deployment_water_depth = models.BooleanField(blank=False, default=True)
+    require_deployment_notes = models.BooleanField(blank=False, default=False)
+    require_cruise_ship_name = models.BooleanField(blank=False, default=True)
+    require_cruise_cruise_start_date = models.BooleanField(blank=False, default=True)
+    require_cruise_cruise_end_date = models.BooleanField(blank=False, default=True)
+    require_cruise_notes = models.BooleanField(blank=False, default=True)
+    require_vessel_prefix = models.BooleanField(blank=False, default=True)
+    require_vessel_vessel_designation = models.BooleanField(blank=False, default=True)
+    require_vessel_vessel_name = models.BooleanField(blank=False, default=True)
+    require_vessel_ICES_code = models.BooleanField(blank=False, default=True)
+    require_vessel_operator = models.BooleanField(blank=False, default=True)
+    require_vessel_call_sign = models.BooleanField(blank=False, default=True)
+    require_vessel_MMSI_number = models.BooleanField(blank=False, default=True)
+    require_vessel_IMO_number = models.BooleanField(blank=False, default=True)
+    require_vessel_length = models.BooleanField(blank=False, default=True)
+    require_vessel_max_speed = models.BooleanField(blank=False, default=True)
+    require_vessel_max_draft = models.BooleanField(blank=False, default=True)
+    require_vessel_designation = models.BooleanField(blank=False, default=True)
+    require_vessel_active = models.BooleanField(blank=False, default=True)
+    require_vessel_R2R = models.BooleanField(blank=False, default=True)

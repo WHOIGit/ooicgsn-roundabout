@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -35,6 +35,28 @@
     {% csrf_token %}
     {{ form|crispy }}
 
+      {% if link_formset %}
+      <div class="row m-1">
+        <h5>Hyperlinks</h5>
+        <table class="table table-tight" id="hyperlink-table">
+          <thead>
+            <th>Text</th>
+            <th>URL</th>
+          </thead>
+          <tbody>
+            {{ link_formset.management_form }}
+
+            {% for link in link_formset %}
+              <tr>
+                <td {% if link.errors.text %} class="alert alert-danger"{% endif %}>{% if link.id  %}{{ link.DELETE }}{% endif %} {{ link.id }} {{ link.text }}</td>
+                <td {% if link.errors.url %} class="alert alert-danger"{% endif %}>{{ link.url }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
     <div class="row">
         {% if form.errors %}
             {% for field in form %}
@@ -50,8 +72,6 @@
                 </div>
             {% endfor %}
         {% endif %}
-
-
     </div>
 
     <div class="control-group">
@@ -87,6 +107,18 @@
 
 
 {% block javascript %}
+    <script type="text/javascript">
 
+        $(document).ready(function() {
 
+            // hyperlinks formset
+            $('#hyperlink-table tbody tr').formset({
+                prefix: 'hyperlinks', // <-- Needs to match the Django related_name for the models
+                addText: 'add row',
+                deleteText: 'remove',
+            });
+
+        })
+
+    </script>
 {% endblock javascript %}

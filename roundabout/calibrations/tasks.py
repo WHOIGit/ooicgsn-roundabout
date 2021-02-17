@@ -21,7 +21,7 @@
 
 from celery import shared_task
 
-from roundabout.calibrations.models import CalibrationEvent
+from roundabout.calibrations.models import CalibrationEvent, CoefficientNameEvent
 from roundabout.configs_constants.models import ConfigEvent, ConfigDefaultEvent, ConstDefaultEvent
 
 
@@ -38,4 +38,7 @@ def check_events(self):
             event.delete()
     for event in ConstDefaultEvent.objects.all():
         if not event.constant_defaults.exists():
+            event.delete()
+    for event in CoefficientNameEvent.objects.all():
+        if not event.coefficient_names.exists():
             event.delete()

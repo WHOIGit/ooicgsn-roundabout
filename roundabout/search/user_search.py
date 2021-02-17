@@ -36,7 +36,7 @@ from roundabout.inventory.models import Action, DeploymentAction, Inventory, Inv
 from roundabout.parts.models import Part
 from roundabout.assemblies.models import AssemblyPart
 from roundabout.users.models import User
-
+from roundabout.search.tables import trunc_render, ActionTable
 
 # ========= TABLE BASES ========== #
 
@@ -55,6 +55,8 @@ class CCCUserTableBase(UserTableBase):
     user_draft = ManyToManyColumn(verbose_name='Reviewers', accessor='user_draft', transform=lambda x: x.name, default='')
     created_at = DateTimeColumn(verbose_name='Date Entered', accessor='created_at', format='Y-m-d H:i')
     detail = Column(verbose_name='Note', accessor='detail')
+    def render_detail(self,value):
+        return trunc_render()(value)
 
 # ========= TABLES ========== #
 
@@ -68,7 +70,7 @@ class CalibrationTable(CCCUserTableBase):
     inventory__serial_number = Column(verbose_name='Inventory', linkify=dict(viewname="inventory:inventory_detail", args=[tables2.A('inventory__pk')]))
     value_names = ManyToManyColumn(verbose_name='Coefficient Names', accessor='coefficient_value_sets', transform=lambda x: x.coefficient_name)
     #value_notes = ManyToManyColumn(verbose_name='Coefficient Notes', accessor='coefficient_value_sets',
-    #                transform=lambda x: format_html('<b>{}:</b> [{}]<br>'.format(x.coefficient_name,x.notes)) if x.notes else '', separator='\n')
+    #                transform=lambda x: format_html('<b>{}:</b> [{}]<br>'.format(x.coefficient_name,trunc_render()(x.notes))) if x.notes else '', separator='\n')
 
 class ConfigConstTable(CCCUserTableBase):
     class Meta(CCCUserTableBase.Meta):
@@ -78,7 +80,7 @@ class ConfigConstTable(CCCUserTableBase):
     inventory__serial_number = Column(verbose_name='Inventory', linkify=dict(viewname="inventory:inventory_detail", args=[tables2.A('inventory__pk')]))
     value_names = ManyToManyColumn(verbose_name='Config/Constant Names', accessor='config_values', transform=lambda x: x.config_name)
     #value_notes = ManyToManyColumn(verbose_name='Config/Constant Notes', accessor='config_values',
-    #                transform=lambda x: format_html('<b>{}:</b> [{}]<br>'.format(x.config_name,x.notes)) if x.notes else '', separator='\n')
+    #                transform=lambda x: format_html('<b>{}:</b> [{}]<br>'.format(x.config_name,trunc_render()(x.notes))) if x.notes else '', separator='\n')
 
 
 ## CCC Name Events ##
@@ -132,44 +134,10 @@ class ActionUserTable(UserTableBase):
     def render_user(self,value):
         return value.name or value.username
 
-    def render_object(self,record):
-        html_string = '<a href={url}>{text}</a>'
-        parent_obj = record.get_parent()
-        if isinstance(parent_obj,(CalibrationEvent,ConfigEvent,ConstDefaultEvent)):
-            parent_obj = parent_obj.inventory
-        elif isinstance(parent_obj,(ConfigNameEvent,CoefficientNameEvent)):
-            parent_obj = parent_obj.part
-        elif isinstance(parent_obj,ConfigDefaultEvent):
-            parent_obj = parent_obj.assembly_part
+    def render_detail(self,value):
+        return trunc_render()(value)
 
-        if isinstance(parent_obj, Inventory):
-            inv_url = reverse("inventory:inventory_detail", args=[parent_obj.pk])
-            html_string = html_string.format(url=inv_url, text=parent_obj)
-            return format_html(html_string)
-        elif isinstance(parent_obj,Build):
-            build_url = reverse("builds:builds_detail", args=[parent_obj.pk])
-            html_string = html_string.format(url=build_url, text=parent_obj)
-            return format_html(html_string)
-        elif isinstance(parent_obj,Deployment):
-            build_url = reverse("builds:builds_detail", args=[record.deployment.build.pk])
-            deployment_anchor = '#deployment-{}-'.format(record.deployment.pk)  # doesn't work, anchor doesn't exist
-            deployment_anchor = '#deployments'  # next best anchor that does work
-            html_string = html_string.format(url=build_url+deployment_anchor, text=parent_obj)
-            return format_html(html_string)
-        elif isinstance(parent_obj,InventoryDeployment):
-            inv_url = reverse("inventory:inventory_detail", args=[parent_obj.inventory.pk])
-            html_string = html_string.format(url=inv_url, text=parent_obj)
-            return format_html(html_string)
-        elif isinstance(parent_obj,Part):
-            build_url = reverse("parts:parts_detail", args=[parent_obj.pk])
-            html_string = html_string.format(url=build_url, text=parent_obj)
-            return format_html(html_string)
-        elif isinstance(parent_obj,AssemblyPart):
-            assy_url = reverse("assemblies:assemblypart_detail", args=[parent_obj.pk])
-            html_string = html_string.format(url=assy_url, text=parent_obj)
-            return format_html(html_string)
-        else:
-            return ''
+    render_object = ActionTable.render_object
 
 
 # ========= FORM STUFF ========= #

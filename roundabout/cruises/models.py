@@ -50,9 +50,17 @@ class Vessel(models.Model):
     def full_vessel_name(self):
         return f'{self.vessel_designation} {self.vessel_name}'.strip()
 
+class VesselHyperlink(models.Model):
+    text = models.CharField(max_length=255, unique=False)
+    url = models.CharField(max_length=1000)
+    parent = models.ForeignKey(Vessel, related_name='hyperlinks',
+                 on_delete=models.CASCADE, null=False, blank=False)
+
+    class Meta: ordering = ['text']
+    def __str__(self): return self.text
 
 class Cruise(models.Model):
-    CUID = models.CharField(max_length=20)
+    CUID = models.CharField(max_length=20, unique=True)
     friendly_name = models.CharField(max_length=100, null=False, blank=True)
     vessel = models.ForeignKey(Vessel, related_name='cruises',
                                on_delete=models.SET_NULL, null=True)
@@ -71,3 +79,12 @@ class Cruise(models.Model):
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
         return 'cruises'
+
+class CruiseHyperlink(models.Model):
+    text = models.CharField(max_length=255, unique=False)
+    url = models.CharField(max_length=1000)
+    parent = models.ForeignKey(Cruise, related_name='hyperlinks',
+                 on_delete=models.CASCADE, null=False, blank=False)
+
+    class Meta: ordering = ['text']
+    def __str__(self): return self.text

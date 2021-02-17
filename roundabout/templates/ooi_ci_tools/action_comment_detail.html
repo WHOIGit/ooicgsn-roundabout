@@ -1,0 +1,175 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+{% load common_tags %}
+
+{% if inventory_item.actions.exists %}
+    <div class="tab-pane fade show active" id="history" role="tabpanel" aria-labelledby="history-tab">
+        <ul class="list-group">
+            {% for action in inventory_item.actions.all %}
+                <li class="list-group-item">
+                    <div class = 'row'>
+                        <div class = 'col-md-9'>
+                            <a  class="collapse show" 
+                                data-toggle="collapse" 
+                                href="#action-{{ action.id }}" 
+                                aria-expanded="false" 
+                                aria-controls="action-{{ action.id }}"
+                            >
+                                {{ action.detail|safe|striptags }}
+                            </a>
+                            <a  data-toggle="collapse" 
+                                class="collapse show text-right" 
+                                href="#action-{{ action.id }}" 
+                                aria-controls="action-{{ action.id }}" 
+                                aria-expanded="false" 
+                                role="button"
+                            >
+                                <i class="fa" aria-hidden="true"></i>
+                                <span class="sr-only">{{ action.detail|safe|striptags }}</span>
+                            </a>
+                            <small class = 'form-text text-muted'>
+                                <span class='font-weight-light'><b>Date:</b> {{ action.created_at|date:"n/j/y H:i" }}&nbsp;</span>
+                                <span class='font-weight-light'><b>Type:</b> {{ action.get_action_type_display }}&nbsp;</span>
+                                <span class='font-weight-light'>
+                                    <b>Photos:</b>
+                                    {% for photo in action.photos.all %}
+                                        {% if photo.file_type == 'image' %}
+                                            <a href="{{ photo.photo.url }}" target="_blank">
+                                                <img src="{{ photo.photo.url }}" width="100%">
+                                            </a> <br><br>
+                                        {% else %}
+                                            <a href="{{ photo.photo.url }}" target="_blank"><i class='fa fa-file fa-3x'></i>
+                                                {{ photo.photo.name }}
+                                            </a>  <br><br>
+                                        {% endif %}
+                                    {% endfor %}
+                                    &nbsp;
+                                </span>
+                                <span class='font-weight-light'><b>User:</b> {{ action.user.username }}&nbsp;</span>
+                                <span class='font-weight-light'><b>Location:</b> {{ action.location.name }}</span>
+                            </small>
+                        </div>
+                        <div class = 'col-md-3'>
+                            <div class = 'ajax-detail-link float-right'>
+                                <a  href="#"
+                                    class="btn btn-primary btn-sm mr-2"
+                                    role="button"
+                                    data-detail-url="{% url 'ooi_ci_tools:action_comment_add' action.id %}"
+                                    data-node-id="{{ inventory_item.id }}"
+                                    data-node-type="inventory">
+                                        Comment
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="collapse show mt-3" id="action-{{ action.id }}">
+                        <hr>
+                        <ul class="list-group">
+                            {% for comment in action.comments.all %}
+                                <li class="list-group-item">
+                                    <div class = 'row'>
+                                        <div class = 'col-md-9'>
+                                            <a  class="collapse show" 
+                                                data-toggle="collapse" 
+                                                href="#comment-{{ comment.id }}" 
+                                                aria-expanded="false" 
+                                                aria-controls="comment-{{ comment.id }}"
+                                            >
+                                                {{ comment.detail|safe|truncatechars:255 }}
+                                            </a>
+                                            <a  data-toggle="collapse" 
+                                                class="collapse show text-right" 
+                                                href="#comment-{{ comment.id }}" 
+                                                aria-controls="comment-{{ comment.id }}" 
+                                                aria-expanded="false" 
+                                                role="button"
+                                            >
+                                                <i class="fa" aria-hidden="true"></i>
+                                                <span class="sr-only">{{ comment.detail|safe|truncatechars:255 }}</span>
+                                            </a>
+                                        </div>
+                                        <div class = 'col-md-3'>
+                                            <div class = 'ajax-detail-link float-right'>
+                                                <a  href="#"
+                                                    class="btn btn-outline-primary btn-sm mr-2"
+                                                    role="button"
+                                                    data-detail-url="{% url 'ooi_ci_tools:comment_comment_add' comment.id %}"
+                                                    data-node-id="{{ inventory_item.id }}"
+                                                    data-node-type="inventory">
+                                                        Comment
+                                                </a>
+                                            </div>
+                                            {% if user == comment.user or user|has_group:"admin" %}
+                                                <div class = 'ajax-detail-link float-right'>
+                                                    <a  href="#"
+                                                        class="btn btn-outline-info btn-sm mr-2"
+                                                        role="button"
+                                                        data-detail-url="{% url 'ooi_ci_tools:comment_comment_edit' comment.id %}"
+                                                        data-node-id="{{ inventory_item.id }}"
+                                                        data-node-type="inventory">
+                                                            Edit
+                                                    </a>
+                                                </div>
+                                            {% endif %}
+                                            {% if user == comment.user or user|has_group:"admin" %}
+                                                <div class = 'ajax-detail-link float-right'>
+                                                    <a  href="#"
+                                                        class="btn btn-outline-danger btn-sm mr-2"
+                                                        role="button"
+                                                        data-detail-url="{% url 'ooi_ci_tools:comment_comment_delete' comment.id %}"
+                                                        data-node-id="{{ inventory_item.id }}"
+                                                        data-node-type="inventory">
+                                                            Delete
+                                                    </a>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="collapse show mt-3" id="comment-{{ comment.id }}">
+                                        <small class = 'form-text text-muted'>
+                                            <span class='font-weight-light'><b>Date:</b> {{ comment.created_at|date:"n/j/y H:i" }}&nbsp;</span>
+                                            <span class='font-weight-light'><b>User:</b> {{ comment.user.username }}&nbsp;</span>
+                                        </small>
+                                        {% if comment.parent %}
+                                            <small class = 'form-text text-muted'>
+                                                <span class='font-weight-light'><b>In Response to:</b> {{ comment.parent.detail | safe | truncatechars:125 }}&nbsp;</span>
+                                                <span class='font-weight-light'><b>User:</b> {{ comment.parent.user.username | safe }}&nbsp;</span>
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+{% block javascript %}
+<script>
+    $(document).ready(function() {
+
+    });
+</script>
+{% endblock javascript %}

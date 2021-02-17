@@ -29,7 +29,7 @@ from sigfig import round
 from roundabout.inventory.models import Inventory
 from roundabout.parts.models import Part
 from roundabout.users.models import User
-from .models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientValue, CoefficientNameEvent
+from .models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientValue, CoefficientNameEvent, CalibrationEventHyperlink
 
 
 # Event form
@@ -192,10 +192,10 @@ class CoefficientNameForm(forms.ModelForm):
     def clean_sigfig_override(self):
         raw_sigfig = self.cleaned_data.get('sigfig_override')
         try:
-            assert 0 <= raw_sigfig <= 20
+            assert 1 <= raw_sigfig <= 32
         except:
             raise ValidationError(
-                    _('Input must be between 0 and 20.')
+                    _('Input must be between 1 and 32.')
                 )
         else:
             return raw_sigfig
@@ -288,6 +288,10 @@ EventValueSetFormset = inlineformset_factory(
     can_delete=True
 )
 
+CalibrationEventHyperlinkFormset = forms.models.inlineformset_factory(
+    CalibrationEvent, CalibrationEventHyperlink, fields=('text', 'url'), extra=1, can_delete=True)
+
+
 # Coefficient Name form instance generator for Parts
 PartCalNameFormset = inlineformset_factory(
     CoefficientNameEvent,
@@ -318,7 +322,7 @@ def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0, filenam
             rounded_coeff_val = round(val)
         except:
             raise ValidationError(
-                _('File: %(filename)s, Calibration Name: %(cal_name)s, Row: %(row)s, Column: %(column)s, %(value)s is an invalid Number. Please enter a valid Number (Digits + 1 optional decimal point).'),
+                _('File: %(filename)s, Calibration Name: %(cal_name)s, Row: %(row)s, Column: %(column)s, %(value)s is an invalid Number. Please enter a valid Number (Digits + 1 optional decimal point, commas to separate multiple values).'),
                 params={'row': error_row_index, 'value': val, 'column': error_col_index, 'filename': filename, 'cal_name': cal_name},
             )
         else:

@@ -489,8 +489,32 @@ class InventoryAjaxCreateBasicView(LoginRequiredMixin, AjaxFormMixin, CreateView
             initial['location'] = self.kwargs['current_location']
         return initial
 
-    def form_valid(self, form):
+    def get(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        link_formset = InventoryHyperlinkFormset(instance=self.object)
+        return self.render_to_response(self.get_context_data(form=form, link_formset=link_formset))
+
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        link_formset = InventoryHyperlinkFormset(self.request.POST, instance=self.object)
+
+        if form.is_valid() and link_formset.is_valid():
+            return self.form_valid(form,link_formset)
+        return self.form_invalid(form,link_formset)
+
+    def form_valid(self, form, formset):
         self.object = form.save()
+
+        for link_form in formset:
+            link = link_form.save(commit=False)
+            if link.text and link.url:
+                link.parent = self.object
+                link.save()
+
         # Call the function to create an Action history chain this event
         _create_action_history(self.object, Action.ADD, self.request.user)
         # Check if this Part has Custom fields with global default values, create fields if needed
@@ -541,6 +565,18 @@ class InventoryAjaxCreateBasicView(LoginRequiredMixin, AjaxFormMixin, CreateView
         else:
             return response
 
+    def form_invalid(self, form, formset):
+        if self.request.is_ajax():
+            if not form.is_valid():
+                # show form errors before formset errors
+                return JsonResponse(form.errors, status=400)
+            else:
+                # only show formset errors if there are no form errors
+                # because it is unclear how to combine form and formset errors in a way that doesnt break project.js:handleFormError()
+                return JsonResponse(formset.errors, status=400, safe=False)
+        else:
+            return self.render_to_response(self.get_context_data(form=form, link_formset=link_formset))
+
 
 class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
     model = Inventory
@@ -548,8 +584,34 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
     context_object_name = 'inventory_item'
     template_name='inventory/ajax_inventory_form.html'
 
-    def form_valid(self, form):
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        link_formset = InventoryHyperlinkFormset(instance=self.object)
+        return self.render_to_response(self.get_context_data(form=form, link_formset=link_formset))
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        link_formset = InventoryHyperlinkFormset(self.request.POST, instance=self.object)
+
+        if form.is_valid() and link_formset.is_valid():
+            return self.form_valid(form,link_formset)
+        return self.form_invalid(form,link_formset)
+
+    def form_valid(self, form, formset):
         self.object = form.save()
+
+        for link_form in formset:
+            link = link_form.save(commit=False)
+            if link.text and link.url:
+                if link_form['DELETE'].data:
+                    link.delete()
+                else:
+                    link.parent = self.object
+                    link.save()
 
         # Check is this Part has custom fields
         if self.object.part.user_defined_fields.exists():
@@ -618,6 +680,18 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         else:
             return response
 
+    def form_invalid(self, form, formset):
+        if self.request.is_ajax():
+            if not form.is_valid():
+                # show form errors before formset errors
+                return JsonResponse(form.errors, status=400)
+            else:
+                # only show formset errors if there are no form errors
+                # because it is unclear how to combine form and formset errors in a way that doesnt break project.js:handleFormError()
+                return JsonResponse(formset.errors, status=400, safe=False)
+        else:
+            return self.render_to_response(self.get_context_data(form=form, link_formset=formset))
+
     def get_success_url(self):
         return reverse('inventory:ajax_inventory_detail', args=(self.object.id,))
 
@@ -655,7 +729,7 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
 
         return context
 
-    def form_valid(self, form):
+    def form_valid(self, form, formset=None):
         action_type = self.kwargs['action_type']
         detail = self.object.detail
         created_at = form.cleaned_data.get('date', timezone.now())

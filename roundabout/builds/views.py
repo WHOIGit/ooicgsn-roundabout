@@ -249,8 +249,34 @@ class BuildAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
     context_object_name = 'build'
     template_name='builds/ajax_build_form.html'
 
-    def form_valid(self, form):
+    def get(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        link_formset = BuildHyperlinkFormset(instance=self.object)
+        return self.render_to_response(self.get_context_data(form=form, link_formset=link_formset))
+
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        link_formset = BuildHyperlinkFormset(self.request.POST, instance=self.object)
+
+        if form.is_valid() and link_formset.is_valid():
+            return self.form_valid(form,link_formset)
+        return self.form_invalid(form,link_formset)
+
+
+    def form_valid(self, form, formset):
         self.object = form.save()
+
+        # Adding Build to hyperlink objects
+        for link_form in formset:
+            link = link_form.save(commit=False)
+            if link.text and link.url:
+                link.parent = self.object
+                link.save()
+
         # Call the function to create an Action history chain
         _create_action_history(self.object, Action.ADD, self.request.user)
 
@@ -268,6 +294,18 @@ class BuildAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         else:
             return response
 
+    def form_invalid(self, form, formset):
+        if self.request.is_ajax():
+            if not form.is_valid():
+                # show form errors before formset errors
+                return JsonResponse(form.errors, status=400)
+            else:
+                # only show formset errors if there are no form errors
+                # because it is unclear how to combine form and formset errors in a way that doesnt break project.js:handleFormError()
+                return JsonResponse(formset.errors, status=400, safe=False)
+        else:
+            return self.render_to_response(self.get_context_data(form=form, link_formset=formset))
+
     def get_success_url(self):
         return reverse('builds:ajax_builds_detail', args=(self.object.id,))
 
@@ -279,8 +317,37 @@ class BuildAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
     context_object_name = 'build'
     template_name='builds/ajax_build_form.html'
 
-    def form_valid(self, form):
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        link_formset = BuildHyperlinkFormset(instance=self.object)
+        return self.render_to_response(self.get_context_data(form=form, link_formset=link_formset))
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        link_formset = BuildHyperlinkFormset(self.request.POST, instance=self.object)
+
+        if form.is_valid() and link_formset.is_valid():
+            return self.form_valid(form,link_formset)
+        return self.form_invalid(form,link_formset)
+
+
+    def form_valid(self, form, formset):
         self.object = form.save()
+
+        # Adding Build to hyperlink objects
+        for link_form in formset:
+            link = link_form.save(commit=False)
+            if link.text and link.url:
+                if link_form['DELETE'].data:
+                    link.delete()
+                else:
+                    link.parent = self.object
+                    link.save()
+
         # Create new Action record
         # Call the function to create an Action history chain
         _create_action_history(self.object, Action.UPDATE, self.request.user)
@@ -298,6 +365,18 @@ class BuildAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
             return JsonResponse(data)
         else:
             return response
+
+    def form_invalid(self, form, formset):
+        if self.request.is_ajax():
+            if not form.is_valid():
+                # show form errors before formset errors
+                return JsonResponse(form.errors, status=400)
+            else:
+                # only show formset errors if there are no form errors
+                # because it is unclear how to combine form and formset errors in a way that doesnt break project.js:handleFormError()
+                return JsonResponse(formset.errors, status=400, safe=False)
+        else:
+            return self.render_to_response(self.get_context_data(form=form, link_formset=formset))
 
     def get_success_url(self):
         return reverse('builds:ajax_builds_detail', args=(self.object.id,))
@@ -318,6 +397,20 @@ class BuildAjaxActionView(BuildAjaxUpdateView):
         form_class_name = ACTION_FORMS[action_type]
 
         return form_class_name
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        if form.is_valid():
+            return self.form_valid(form)
+        self.form_invalid(form)
 
     def form_valid(self, form):
         action_type = self.kwargs['action_type']

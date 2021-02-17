@@ -20,9 +20,9 @@
 """
 
 from django.db import models
+from django.db.models import JSONField
 from django.utils import timezone
 from mptt.models import MPTTModel, TreeForeignKey
-from django.contrib.postgres.fields import JSONField
 
 from roundabout.assemblies.models import AssemblyType
 from roundabout.parts.models import Part
@@ -49,14 +49,14 @@ class Printer(models.Model):
 class TempImport(models.Model):
     name = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
-    column_headers = JSONField()
+    column_headers = models.JSONField()
 
     def __str__(self):
         return self.name
 
 
 class TempImportItem(models.Model):
-    data = JSONField()
+    data = models.JSONField()
     tempimport = models.ForeignKey(TempImport, related_name='tempimportitems',
                                    on_delete=models.CASCADE, null=True, blank=False)
 
