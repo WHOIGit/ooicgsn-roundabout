@@ -153,7 +153,6 @@ var password;
 	   console.log("Wait 2 seconds for New Build2.");
 	}
         await driver.findElement(By.linkText("Create New Build")).click();
-//	    await new Promise(r => setTimeout(r, 9000));  //linux firefox & circleci
 	while ((await driver.findElements(By.id("id_assembly"))).length == 0) //1.6
 	{
 	   await new Promise(r => setTimeout(r, 2000));
@@ -331,7 +330,7 @@ var password;
         await driver.executeScript("arguments[0].value = arguments[1]", ele, newDate); 
        // await driver.findElement(By.xpath("//input[@id='id_date']")).sendKeys(newDate);  //this appends new date to old date
 
-        // Set Location - to avoid spinning wheel bug
+	// Set Location - to avoid spinning wheel bug - #186
         const dropdown = await driver.findElement(By.id("id_location"));
         await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();       
         // 29 | click | css=.controls > .btn-primary | 
@@ -346,7 +345,7 @@ var password;
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
         // UNCOMMENT FOR DOCKER - history shows 27 days due to staging testing
 	// Total Time in Field and Current Deployment Time in Field
-        assert(bodyText.includes("2 days 0 hours"));        
+        assert(bodyText.includes("2 days 0 hours"));
 
         // Click Deployments Tab and verify Deployment To Field Date: is 2 days prior 
 	while ((await driver.findElements(By.id("deployments-tab"))).length == 0) //1.6
@@ -370,8 +369,15 @@ var password;
            console.log("Possible Error: Expecting Build Deployment To Field Date:  "+ newDate);
         }
 
+	// Verify Assembly Template link on build page points to the correct Assembly Template
+        await driver.findElement(By.linkText("Singer | Revision: B")).click();
+	bodyText = await driver.findElement(By.tagName("Body")).getText();
+	// Singer - Revision B
+        assert(bodyText.includes("Singer - Revision B"));
 
-        await driver.findElement(By.linkText("Inventory")).click();
+
+        // Go to Inventory Item
+	await driver.findElement(By.linkText("Inventory")).click();
 
 	while ((await driver.findElements(By.linkText("Test"))).length == 0) //1.6
 	{

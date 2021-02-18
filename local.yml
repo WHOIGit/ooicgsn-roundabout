@@ -76,7 +76,7 @@ services:
 
   celeryworker:
     <<: *django
-    image: roundabout_local_celeryworker
+    #image: roundabout_local_celeryworker
     depends_on:
       - redis
       - postgres
@@ -86,7 +86,7 @@ services:
 
   celerybeat:
     <<: *django
-    image: roundabout_local_celerybeat
+    #image: roundabout_local_celerybeat
     depends_on:
       - redis
       - postgres
@@ -96,7 +96,7 @@ services:
 
   flower:
     <<: *django
-    image: roundabout_local_flower
+    #image: roundabout_local_flower
     ports:
       - "5555:5555"
     command: /start-flower

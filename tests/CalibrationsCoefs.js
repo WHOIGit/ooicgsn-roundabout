@@ -155,10 +155,10 @@ var password;
 	   console.log("Wait 2 seconds for Edit Part.");
 	}
         await driver.findElement(By.linkText("Edit Part Template")).click();
-	while ((await driver.findElements(By.id("id_cal_dec_places"))).length == 0)
+//	while ((await driver.findElements(By.id("id_cal_dec_places"))).length == 0) //causing stale element v1.7.0
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Page Load.");
+//	   console.log("Wait 2 seconds for Page Load.");
 	}
         await driver.findElement(By.id("id_cal_dec_places")).clear();
         await driver.findElement(By.id("id_cal_dec_places")).sendKeys("20");
@@ -248,7 +248,6 @@ var password;
         // 36 | addSelection | id=id_user_draft | label=admin
         {
             const dropdown = await driver.findElement(By.id("id_user_draft"))
-//            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click()
  	    await dropdown.findElement(By.xpath("//option[. = '" + user + "']")).click();
         }
         // 38 | type | id=id_constant_defaults-0-default_value | 1
@@ -355,7 +354,6 @@ var password;
         }
 	await new Promise(r => setTimeout(r, 4000));
         
-//        await driver.findElement(By.id("id_user_draft")).sendKeys("admin");
 	await driver.findElement(By.id("id_user_draft")).sendKeys(user);
 	await new Promise(r => setTimeout(r, 4000));
 
@@ -369,8 +367,8 @@ var password;
         await driver.findElement(By.linkText("Calibrations")).click()
         await new Promise(r => setTimeout(r, 4000));
 
-let encodedString = await driver.takeScreenshot();
-await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');    
+	//let encodedString = await driver.takeScreenshot();
+	//await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');    
         // Verify values added in the History
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
         assert(bodyText.includes("scalib1"));
