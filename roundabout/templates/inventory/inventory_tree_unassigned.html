@@ -62,17 +62,29 @@
                    data-node-id="{{ inv.id }}"
                    data-part-type-id="{{ inv.part.part_type.id }}"
                    data-node-type="inventory"
-                   class="
-                   {% if part_types %}
-                       {% if inv.part.part_type.id in part_types %}
-                           blue
-                       {% else %}
-                           wh
-                       {% endif %}
-                   {% endif %}
-                   ">
-                   {% if inv.part.friendly_name %} {{ inv.part.friendly_name}} {% else %} {{ inv.part.name }} {% endif %}
-                    - {{ inv.serial_number }}
+                   class=
+                   "
+                        {% if part_types %}
+                            {% if inv.part.part_type.id in part_types %}
+                                blue
+                            {% else %}
+                                wh
+                            {% endif %}
+                        {% endif %}
+                    "
+                >
+                        {% if inv.part.friendly_name %} 
+                            {{ inv.part.friendly_name}} 
+                        {% else %} 
+                            {{ inv.part.name }} 
+                        {% endif %}
+                        - {{ inv.serial_number }}
+                        {% logged_user_is_reviewer inv user as user_is_reviewer %}
+                        {% if user_is_reviewer %}
+                            <span id="review-badge" class="badge badge-pill badge-secondary">Review Requested</span>
+                        {% endif %}
+                 
+
                  </a>
 
                 {% for level in structure.closed_levels %}</li></ul>{% endfor %}
