@@ -38,15 +38,24 @@ class AssemblyForm(forms.ModelForm):
     revision_code = forms.CharField(strip=True, initial='A',
         help_text='Enter a Revision Code for the initial version of this Assembly. Defaults to "A"',
     )
+    assembly_revision_to_copy = forms.ModelChoiceField(queryset = AssemblyRevision.objects.all(), required=False,)
     copy_default_configs = forms.BooleanField(
         required=False,
         initial=True,
-        label="Copy defaut config values from current Assembly",
+        label="Copy defaut config values from this Revision",
     )
 
     class Meta:
         model = Assembly
-        fields = ['name', 'assembly_type', 'assembly_number', 'description', 'revision_code', 'copy_default_configs' ]
+        fields = [
+            'name',
+            'assembly_type',
+            'assembly_number',
+            'description',
+            'revision_code',
+            'assembly_revision_to_copy',
+            'copy_default_configs'
+        ]
         labels = {
             'name': '%s Name' % (labels['label_assemblies_app_singular']),
             'assembly_type': '%s Type' % (labels['label_assemblies_app_singular']),
@@ -62,23 +71,33 @@ class AssemblyForm(forms.ModelForm):
             self.assembly_to_copy_pk = kwargs.pop('assembly_to_copy_pk')
         else:
             self.assembly_to_copy_pk = None
+
         super(AssemblyForm, self).__init__(*args, **kwargs)
         self.fields['assembly_type'].required = True
 
         if self.instance.pk:
             del self.fields['revision_code']
 
+        if self.assembly_to_copy_pk:
+            revisions = AssemblyRevision.objects.filter(assembly_id=self.assembly_to_copy_pk)
+            self.fields['assembly_revision_to_copy'].queryset = revisions
+            self.fields['assembly_revision_to_copy'].initial = revisions.first()
+        else:
+            del self.fields['assembly_revision_to_copy']
+            del self.fields['copy_default_configs']
+
 
 class AssemblyRevisionForm(forms.ModelForm):
     copy_default_configs = forms.BooleanField(
         required=False,
         initial=True,
-        label="Copy defaut config values from current Revision",
+        label="Copy defaut config values from Revision",
     )
+    assembly_revision_to_copy = forms.ModelChoiceField(queryset = AssemblyRevision.objects.all(), required=False,)
 
     class Meta:
         model = AssemblyRevision
-        fields = ['copy_default_configs', 'revision_code', 'created_at', 'revision_note', 'assembly']
+        fields = ['copy_default_configs', 'assembly_revision_to_copy', 'revision_code', 'created_at', 'revision_note', 'assembly']
         labels = {
             'created_at': 'Release Date',
             'note': 'Revision Notes',
@@ -97,12 +116,29 @@ class AssemblyRevisionForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        if 'assembly_pk' in kwargs:
+            self.assembly_pk = kwargs.pop('assembly_pk')
+        else:
+            self.assembly_pk = None
 
         if 'assembly_revision_pk' in kwargs:
             self.assembly_revision_pk = kwargs.pop('assembly_revision_pk')
         else:
             self.assembly_revision_pk = None
+
         super(AssemblyRevisionForm, self).__init__(*args, **kwargs)
+        # if assembly_revision_pk exists, direct copy from a Revision.
+        # set "assembly_revision_to_copy" field and hide it
+        if self.assembly_revision_pk:
+            assembly_revision_to_copy = AssemblyRevision.objects.get(id=self.assembly_revision_pk)
+            self.fields['assembly_revision_to_copy'].initial = assembly_revision_to_copy
+            self.fields['assembly_revision_to_copy'].widget = forms.HiddenInput()
+        # Populate Revision field with only Revisions for this Part
+        else:
+            if self.assembly_pk:
+                revisions = AssemblyRevision.objects.filter(assembly_id=self.assembly_pk)
+                self.fields['assembly_revision_to_copy'].queryset = revisions
+                self.fields['assembly_revision_to_copy'].initial = revisions.first()
 
     def clean_revision_code(self):
         # Need to check if the Revision Code is already in use on this Assembly
