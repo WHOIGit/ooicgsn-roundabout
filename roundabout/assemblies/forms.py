@@ -127,6 +127,11 @@ class AssemblyRevisionForm(forms.ModelForm):
             self.assembly_revision_pk = None
 
         super(AssemblyRevisionForm, self).__init__(*args, **kwargs)
+        # remove copy fields if this is an Update action
+        if self.instance.pk:
+            del self.fields['copy_default_configs']
+            del self.fields['assembly_revision_to_copy']
+
         # if assembly_revision_pk exists, direct copy from a Revision.
         # set "assembly_revision_to_copy" field and hide it
         if self.assembly_revision_pk:
@@ -134,11 +139,10 @@ class AssemblyRevisionForm(forms.ModelForm):
             self.fields['assembly_revision_to_copy'].initial = assembly_revision_to_copy
             self.fields['assembly_revision_to_copy'].widget = forms.HiddenInput()
         # Populate Revision field with only Revisions for this Part
-        else:
-            if self.assembly_pk:
-                revisions = AssemblyRevision.objects.filter(assembly_id=self.assembly_pk)
-                self.fields['assembly_revision_to_copy'].queryset = revisions
-                self.fields['assembly_revision_to_copy'].initial = revisions.first()
+        elif self.assembly_pk:
+            revisions = AssemblyRevision.objects.filter(assembly_id=self.assembly_pk)
+            self.fields['assembly_revision_to_copy'].queryset = revisions
+            self.fields['assembly_revision_to_copy'].initial = revisions.first()
 
     def clean_revision_code(self):
         # Need to check if the Revision Code is already in use on this Assembly
