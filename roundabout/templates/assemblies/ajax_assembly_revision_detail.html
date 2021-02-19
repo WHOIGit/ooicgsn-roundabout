@@ -100,7 +100,7 @@
             but keep existing {{ label_builds_app_plural }} unchanged, please create a
             <span class="ajax-detail-link">
                 <a href="#"
-                data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly_revision.id %}"
+                data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly_revision.assembly.id %}"
                 data-node-id="{{ assembly_revision.id }}"
                 data-node-type="{{ assembly_revision.get_object_type }}"><b>NEW REVISION</b></a>
             </span> of this {{ label_assemblies_app_singular }}  instead.
