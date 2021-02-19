@@ -38,11 +38,11 @@ class AssemblyForm(forms.ModelForm):
     revision_code = forms.CharField(strip=True, initial='A',
         help_text='Enter a Revision Code for the initial version of this Assembly. Defaults to "A"',
     )
-    assembly_revision_to_copy = forms.ModelChoiceField(queryset = AssemblyRevision.objects.all(), required=False,)
+    assembly_revision_to_copy = forms.ModelChoiceField(queryset = AssemblyRevision.objects.all(), )
     copy_default_configs = forms.BooleanField(
         required=False,
         initial=True,
-        label="Copy defaut config values from this Revision",
+        label="Copy default config values from Revision",
     )
 
     class Meta:
@@ -91,9 +91,9 @@ class AssemblyRevisionForm(forms.ModelForm):
     copy_default_configs = forms.BooleanField(
         required=False,
         initial=True,
-        label="Copy defaut config values from Revision",
+        label="Copy default config values from Revision",
     )
-    assembly_revision_to_copy = forms.ModelChoiceField(queryset = AssemblyRevision.objects.all(), required=False,)
+    assembly_revision_to_copy = forms.ModelChoiceField(queryset = AssemblyRevision.objects.all(), )
 
     class Meta:
         model = AssemblyRevision
