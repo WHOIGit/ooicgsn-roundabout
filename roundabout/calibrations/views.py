@@ -37,7 +37,7 @@ from sigfig import round
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.forms.models import inlineformset_factory, BaseInlineFormSet
-from .utils import handle_reviewers
+from .utils import handle_reviewers, user_ccc_reviews
 from .tasks import check_events
 
 # Handles creation of Calibration Events, Names,and Coefficients
@@ -608,7 +608,8 @@ def event_review_approve(request, pk, user_pk):
         event.approved = True
         _create_action_history(event, Action.EVENTAPPROVE, user)
     event.save()
-    data = {'approved':event.approved}
+    all_reviewed = user_ccc_reviews(event, user)
+    data = {'approved':event.approved, 'all_reviewed': all_reviewed}
     return JsonResponse(data)
 
 

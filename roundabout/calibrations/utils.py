@@ -56,3 +56,16 @@ def handle_reviewers(form):
             reviewers = form.cleaned_data['user_draft']
             for user in reviewers:
                 form.instance.user_draft.add(user)
+
+
+def user_ccc_reviews(event, user):
+    found_cal_events = False
+    found_conf_events = False
+    all_reviewed = False
+    if user.calibration_events_drafter.exists():
+        found_cal_events = event.inventory.calibration_events.filter(user_draft__in=[user])
+    if user.config_events_reviewer.exists():
+        found_conf_events = event.inventory.config_events.filter(user_draft__in=[user])
+    if not found_cal_events and not found_conf_events:
+        all_reviewed = True
+    return all_reviewed

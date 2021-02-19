@@ -245,6 +245,7 @@
         let user_id = '{{ user.id }}'
         let inv_part_type = '{{ inventory_item.part.part_type }}';
         let part_has_cals = '{{ inventory_item.part.coefficient_name_events.exists }}';
+        let inv_id = '{{ inventory_item.id }}';
 
         setCoeffTableWidth();
         $( window ).bind( "resize", setCoeffTableWidth );
@@ -278,6 +279,9 @@
                         approver_list.append("<span id='approver-{{ user.id }}'>{{ user.username }}</span>");
                         review_badge.remove();
                         reviewer.hide();
+                        if (data.all_reviewed) {
+                            $('#review-badge-' + inv_id).remove();
+                        }
                     }
                 });
             }

@@ -81,7 +81,7 @@
                         - {{ inv.serial_number }}
                         {% logged_user_is_reviewer inv user as user_is_reviewer %}
                         {% if user_is_reviewer %}
-                            <span id="review-badge" class="badge badge-pill badge-secondary">Review Requested</span>
+                            <span id="review-badge-{{inv.id}}" class="badge badge-pill badge-secondary">Review Requested</span>
                         {% endif %}
                  
 

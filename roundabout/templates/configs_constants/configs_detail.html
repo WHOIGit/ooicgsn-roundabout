@@ -230,6 +230,7 @@
         let deployment = '{{ inventory_item.build.current_deployment }}';
         let user_id = '{{ user.id }}';
         let part_has_configs = '{{ part_has_configs }}';
+        let inv_id = '{{ inventory_item.id }}';
 
         $('#conf-template').on('click', 'button[id^=expander]', function(e) {
             e.preventDefault();
@@ -251,6 +252,9 @@
                         approver_list.append("<span id='approver-{{ user.id }}'>{{ user.username }}</span>");
                         review_badge.remove();
                         reviewer.hide();
+                        if (data.all_reviewed) {
+                            $('#review-badge-' + inv_id).remove();
+                        }
                     }
                 });
             }
