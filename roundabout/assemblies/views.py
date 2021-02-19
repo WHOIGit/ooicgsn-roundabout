@@ -251,6 +251,8 @@ class AssemblyAjaxCopyView(AssemblyAjaxCreateView):
     def form_valid(self, form, documentation_form, **kwargs):
         self.object = form.save()
         copy_default_configs = form.cleaned_data['copy_default_configs']
+        assembly_revision_to_copy = form.cleaned_data['assembly_revision_to_copy']
+
         # Create an initial Revision for this Assembly
         revision_code = form.cleaned_data['revision_code']
         revision = AssemblyRevision.objects.create(revision_code=revision_code, assembly=self.object)
@@ -264,8 +266,6 @@ class AssemblyAjaxCopyView(AssemblyAjaxCreateView):
         documentation_form.save()
 
         # Need to copy the current Revision template to new Revision
-        assembly_to_copy = Assembly.objects.get(pk=self.kwargs['assembly_to_copy_pk'])
-        assembly_revision_to_copy = assembly_to_copy.assembly_revisions.latest()
         assembly_parts = assembly_revision_to_copy.assembly_parts.all()
 
         for ap in assembly_parts:
@@ -375,10 +375,19 @@ class AssemblyRevisionAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin
 
     def get_context_data(self, **kwargs):
         context = super(AssemblyRevisionAjaxCreateView, self).get_context_data(**kwargs)
-        assembly_revision_pk = self.kwargs['assembly_revision_pk']
-        copy_revision = AssemblyRevision.objects.get(id=assembly_revision_pk)
+        assembly_pk = self.kwargs.get('assembly_pk', None)
+        assembly_revision_pk = self.kwargs.get('assembly_revision_pk', None)
+
+        assembly = None
+        if assembly_pk:
+            assembly = Assembly.objects.get(id=assembly_pk)
+
+        copy_revision = None
+        if assembly_revision_pk:
+            copy_revision = AssemblyRevision.objects.get(id=assembly_revision_pk)
 
         context.update({
+            'assembly': assembly,
             'copy_revision': copy_revision,
         })
         return context
@@ -404,31 +413,39 @@ class AssemblyRevisionAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin
     def get_initial(self):
         #Returns the initial data from current revision
         initial = super(AssemblyRevisionAjaxCreateView, self).get_initial()
-        # get the current revision object, prepopolate fields
-        assembly_revision_pk = self.kwargs['assembly_revision_pk']
-        assembly_revision = AssemblyRevision.objects.get(id=assembly_revision_pk)
-        initial['assembly'] = assembly_revision.assembly
+        # get the current Assembly object, prepopolate fields
+        assembly_pk = self.kwargs['assembly_pk']
+
+        try:
+            assembly = Assembly.objects.get(id=assembly_pk)
+        except Assembly.DoesNotExist:
+            assembly = None
+
+        initial['assembly'] = assembly
         initial['revision_code'] = None
 
         return initial
 
     def get_form_kwargs(self):
         kwargs = super(AssemblyRevisionAjaxCreateView, self).get_form_kwargs()
+
+        if 'assembly_pk' in self.kwargs:
+            kwargs['assembly_pk'] = self.kwargs['assembly_pk']
+
         if 'assembly_revision_pk' in self.kwargs:
             kwargs['assembly_revision_pk'] = self.kwargs['assembly_revision_pk']
+
         return kwargs
 
     def form_valid(self, form, documentation_form):
         self.object = form.save()
         copy_default_configs = form.cleaned_data['copy_default_configs']
-        
+        assembly_revision_to_copy = form.cleaned_data['assembly_revision_to_copy']
+
         documentation_form.instance = self.object
         documentation_form.save()
 
-        # Need to copy the current Revision template to new Revision
-        assembly_revision_pk = self.kwargs['assembly_revision_pk']
-        assembly_revision = AssemblyRevision.objects.get(id=assembly_revision_pk)
-        assembly_parts = assembly_revision.assembly_parts.all()
+        assembly_parts = assembly_revision_to_copy.assembly_parts.all()
 
         for ap in assembly_parts:
             if ap.is_root_node():
