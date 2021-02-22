@@ -596,20 +596,30 @@ class EventCoeffNameDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteVi
 
 
 # Swap reviewers to approvers
-def event_review_approve(request, pk, user_pk):
+def event_review_toggle(request, pk, user_pk):
     event = CalibrationEvent.objects.get(id=pk)
     user = User.objects.get(id=user_pk)
     reviewers = event.user_draft.all()
-    if user in reviewers:
+    approvers = event.user_approver.all()
+    user_in = False
+    if user in approvers:
+        event.user_draft.add(user)
+        event.user_approver.remove(user)
+        user_in = 'approvers'
+    elif user in reviewers:
         event.user_draft.remove(user)
         event.user_approver.add(user)
+        user_in = 'reviewers'
         _create_action_history(event, Action.REVIEWAPPROVE, user)
-    if len(event.user_draft.all()) == 0:
-        event.approved = True
-        _create_action_history(event, Action.EVENTAPPROVE, user)
+    if event.user_approver.exists():
+        if len(event.user_approver.all()) >= 2:
+            event.approved = True
+            _create_action_history(event, Action.EVENTAPPROVE, user)
+        else:
+            event.approved = False
     event.save()
     all_reviewed = user_ccc_reviews(event, user)
-    data = {'approved':event.approved, 'all_reviewed': all_reviewed}
+    data = {'approved':event.approved, 'all_reviewed': all_reviewed, 'user_in': user_in}
     return JsonResponse(data)
 
 

@@ -38,6 +38,7 @@
                     aria-controls="event-{{ event.id }}"
                     aria-expanded="false"
                     role="button"
+                    id = 'badge_tag'
                 >
                     <i class="fa" aria-hidden="true"></i>
                     <span class="sr-only">Expand/Collapse Calibration {{ event.calibration_date }}</span>
@@ -65,8 +66,12 @@
                 <div class="collapse mt-3" id="event-{{ event.id }}">
                     <hr>
                     {% if user in event.user_draft.all %}
-                        <button class="btn btn-success btn-sm mr-2" id='expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_delete' event.id user.id %}">
+                        <button class="btn btn-success btn-sm mr-2" id='expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id %}">
                             Approve
+                        </button>
+                    {% elif user in event.user_approver.all %}
+                        <button class="btn btn-warning btn-sm mr-2" id='expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id %}">
+                            Unapprove
                         </button>
                     {% endif %}
                     {% if not user|has_group:"inventory only" %}
@@ -262,29 +267,49 @@
         // Swap Reviewers as Approvers
         $('#calibration-template').on('click', 'button[id^=expander]', function(e) {
             e.preventDefault();
+            let thisBtn = $(this)
+            let grandParent = $(this).parent().parent();
             let url = $(this).attr('data-reviewer-url');
-            let review_badge = $(this).parent().parent().find('#review-badge');
-            let progress_badge = $(this).parent().parent().find('#progress-badge');
-            let reviewer = $(this).parent().parent().find('#reviewer-' + user_id)
-            let approver_list = $(this).parent().parent().find('#approvers');
-            if (review_badge.length) {
-                $.ajax({
-                    url: url,
-                    success: function (data) {
-                        if (data.approved) {
-                            review_badge.after('<span id = "approve-badge" class = "badge badge-pill badge-success">Approved</span>');
-                            progress_badge.hide();
-                        }
-                        $(this).remove();
+            let reviewer_list = grandParent.find('#reviewers');
+            let logged_user_reviewer = grandParent.find('#reviewer-' + user_id);
+            let review_badge = grandParent.find('#review-badge');
+            let approver_list = grandParent.find('#approvers');
+            let logged_user_approver = grandParent.find('#approver-' + user_id);
+            let approve_badge = grandParent.find('#approve-badge');
+            let progress_badge = grandParent.find('#progress-badge');
+            let badge_tag = grandParent.find('#badge_tag')
+            $.ajax({
+                url: url,
+                success: function (data) {
+                    if (data.user_in == 'reviewers') {
                         approver_list.append("<span id='approver-{{ user.id }}'>{{ user.username }}</span>");
                         review_badge.remove();
-                        reviewer.hide();
-                        if (data.all_reviewed) {
-                            $('#review-badge-' + inv_id).remove();
-                        }
+                        logged_user_reviewer.remove();
+                        thisBtn.addClass('btn-warning').removeClass('btn-success')
+                        thisBtn.text('Unapprove')
                     }
-                });
-            }
+                    if (data.user_in == 'approvers') {
+                        reviewer_list.append("<span id='reviewer-{{ user.id }}'>{{ user.username }}</span>");
+                        badge_tag.after('<span id = "review-badge" class = "badge badge-pill badge-secondary">Review Requested</span>');
+                        review_badge.show();
+                        logged_user_approver.remove();
+                        thisBtn.addClass('btn-success').removeClass('btn-warning')
+                        thisBtn.text('Approve')
+                    }
+                    if (data.approved) {
+                        badge_tag.after('<span id = "approve-badge" class = "badge badge-pill badge-success">Approved</span>');
+                        progress_badge.hide();
+                    } else {
+                        approve_badge.hide();
+                        progress_badge.show();
+                    }
+                    if (data.all_reviewed) {
+                        $('#review-badge-' + inv_id).hide();
+                    } else {
+                        $('#review-badge-' + inv_id).show();
+                    }
+                }
+            });
         });
     });
 </script>
