@@ -30,7 +30,7 @@ volumes:
 
 services:
   django: &django
-    image: eandrewswhoi/ooicgsn-roundabout:latest
+    image: ghcr.io/whoigit/ooicgsn-roundabout:stable
     #container_name: django
     depends_on:
       - postgres
@@ -47,7 +47,7 @@ services:
       - roundabout-network
 
   postgres:
-    image: eandrewswhoi/postgres-django-cookiecutter:10.5
+    image: ghcr.io/whoigit/postgres-docker-scripts:10.5
     container_name: postgres
     volumes:
       - production_postgres_data:/var/lib/postgresql/data
