@@ -43,7 +43,16 @@
                              {% loop %}
 
                                      <li data-jstree='{"icon":"fa fa-bolt"}'>
-                                         {% if key %}<a href="{% url 'parts:parts_detail' key.id location_pk %}"><span>{{ key.name }}</span></a>{% endif %}{% value %}
+                                         {% if key %
+                                            <a href="{% url 'parts:parts_detail' key.id location_pk %}">
+                                                <span>{{ key.name }}</span> 
+                                                {% logged_user_is_reviewer part user as user_is_reviewer %}
+                                                {% if user_is_reviewer %}
+                                                    <span id="review-badge-{{part.id}}" class="badge badge-pill badge-secondary">Review Requested</span>
+                                                {% endif %}
+                                            </a>
+                                        {% endif %}
+                                        {% value %}
                                      </li>
 
                              {% endloop %}

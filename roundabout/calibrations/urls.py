@@ -32,6 +32,6 @@ urlpatterns = [
     path('ajax/calname/add/<int:pk>/', view=views.EventCoeffNameAdd.as_view(), name='event_coeffname_add'),
     path('ajax/calname/edit/<int:pk>/', view=views.EventCoeffNameUpdate.as_view(), name='event_coeffname_update'),
     path('ajax/calname/delete/<int:pk>/', view=views.EventCoeffNameDelete.as_view(), name='event_coeffname_delete'),
-    path('ajax/eventreview/delete/<int:pk>/<int:user_pk>/', view=views.event_review_toggle, name='event_review_toggle'),
+    path('ajax/eventreview/delete/<int:pk>/<int:user_pk>/<str:evt_type>/', view=views.event_review_toggle, name='event_review_toggle'),
     path('ajax/eventcoeff/delete/<int:pk>/<int:user_pk>/', view=views.event_coeffname_approve, name='event_coeffname_approve'),
 ]
