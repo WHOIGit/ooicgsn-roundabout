@@ -38,7 +38,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.forms.models import inlineformset_factory, BaseInlineFormSet
 from roundabout.inventory.utils import _create_action_history
-from roundabout.calibrations.utils import handle_reviewers
+from roundabout.calibrations.utils import handle_reviewers, user_ccc_reviews
 from roundabout.calibrations.tasks import check_events
 
 # Handles creation of Configuration / Constant Events, along with Name/Value formsets
@@ -1065,7 +1065,8 @@ def event_value_approve(request, pk, user_pk):
         event.approved = True
         _create_action_history(event, Action.EVENTAPPROVE, user)
     event.save()
-    data = {'approved':event.approved}
+    all_reviewed = user_ccc_reviews(event, user)
+    data = {'approved':event.approved, 'all_reviewed':all_reviewed}
     return JsonResponse(data)
 
 

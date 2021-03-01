@@ -30,6 +30,7 @@ from django.urls import reverse, reverse_lazy
 from roundabout.parts.models import Part
 from roundabout.parts.forms import PartForm
 from roundabout.users.models import User
+from roundabout.configs_constants.models import ConfigEvent, ConfigNameEvent, ConstDefaultEvent, ConfigDefaultEvent
 from roundabout.inventory.models import Inventory, Action
 from roundabout.inventory.utils import _create_action_history
 from django.core import validators
@@ -37,7 +38,7 @@ from sigfig import round
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.forms.models import inlineformset_factory, BaseInlineFormSet
-from .utils import handle_reviewers
+from .utils import handle_reviewers, user_ccc_reviews
 from .tasks import check_events
 
 # Handles creation of Calibration Events, Names,and Coefficients
@@ -596,19 +597,41 @@ class EventCoeffNameDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteVi
 
 
 # Swap reviewers to approvers
-def event_review_approve(request, pk, user_pk):
-    event = CalibrationEvent.objects.get(id=pk)
+def event_review_toggle(request, pk, user_pk, evt_type):
+    if evt_type == 'calibration_event':
+        event = CalibrationEvent.objects.get(id=pk)
+    if evt_type == 'config_event':
+        event = ConfigEvent.objects.get(id=pk)
+    if evt_type == 'coefficient_name_event':
+        event = CoefficientNameEvent.objects.get(id=pk)
+    if evt_type == 'config_name_event':
+        event = ConfigNameEvent.objects.get(id=pk)
+    if evt_type == 'constant_default_event':
+        event = ConstDefaultEvent.objects.get(id=pk)
+    if evt_type == 'config_default_event':
+        event = ConfigDefaultEvent.objects.get(id=pk)
     user = User.objects.get(id=user_pk)
     reviewers = event.user_draft.all()
-    if user in reviewers:
+    approvers = event.user_approver.all()
+    user_in = False
+    if user in approvers:
+        event.user_draft.add(user)
+        event.user_approver.remove(user)
+        user_in = 'approvers'
+    elif user in reviewers:
         event.user_draft.remove(user)
         event.user_approver.add(user)
+        user_in = 'reviewers'
         _create_action_history(event, Action.REVIEWAPPROVE, user)
-    if len(event.user_draft.all()) == 0:
-        event.approved = True
-        _create_action_history(event, Action.EVENTAPPROVE, user)
+    if event.user_approver.exists():
+        if len(event.user_approver.all()) >= 2:
+            event.approved = True
+            _create_action_history(event, Action.EVENTAPPROVE, user)
+        else:
+            event.approved = False
     event.save()
-    data = {'approved':event.approved}
+    all_reviewed = user_ccc_reviews(event, user)
+    data = {'approved':event.approved, 'all_reviewed': all_reviewed, 'user_in': user_in}
     return JsonResponse(data)
 
 

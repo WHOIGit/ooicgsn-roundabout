@@ -82,14 +82,21 @@ def load_inventory_navtree(request):
     if node_id == '#' or not node_id:
         locations = Location.objects.prefetch_related('inventory__part__part_type')
 
-        return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations})
+        return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations, 'user': request.user})
     else:
         build_pk = node_id.split('_')[1]
         build = Build.objects.prefetch_related('assembly_revision__assembly_parts').prefetch_related('inventory').get(id=build_pk)
-        return render(request, 'builds/build_tree_assembly.html', {'assembly_parts': build.assembly_revision.assembly_parts,
-                                                                   'inventory_qs': build.inventory,
-                                                                   'location_pk': build.location_id,
-                                                                   'build_pk': build_pk, })
+        return render(
+            request, 
+            'builds/build_tree_assembly.html', 
+            {
+                'assembly_parts': build.assembly_revision.assembly_parts,
+                'inventory_qs': build.inventory,
+                'location_pk': build.location_id,
+                'build_pk': build_pk, 
+                'user': request.user,
+            }
+        )
 
 
 # Function to filter navtree by Part Type
