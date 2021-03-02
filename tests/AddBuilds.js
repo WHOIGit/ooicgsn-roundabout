@@ -441,7 +441,7 @@ var password;
 	   console.log("Wait 2 seconds for Inventory2.");
 	}
         await driver.findElement(By.id("action")).click();
-	await new Promise(r => setTimeout(r, 2000)); 
+	await new Promise(r => setTimeout(r, 4000)); 
         await driver.findElement(By.linkText("Recover from Deployment")).click();
 
         // Get current date
