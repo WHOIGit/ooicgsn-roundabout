@@ -20,6 +20,7 @@
 -->
 
 {% load mptt_tags %}
+{% load parts_tags %}
 
 {% for assembly_part,structure in assembly_parts.all|tree_info %}
 
@@ -66,7 +67,17 @@
                {% endif %}
            {% endif %}
            ">
-                {% if assembly_part.part.friendly_name %} {{ assembly_part.part.friendly_name}} {% else %} {{ assembly_part.part.name }} {% endif %}</a>
+                {% if assembly_part.part.friendly_name %} 
+                    {{ assembly_part.part.friendly_name}} 
+                {% else %} 
+                    {{ assembly_part.part.name }} 
+                {% endif %}
+                {% logged_user_is_reviewer assembly_part.part user as user_is_reviewer %}
+                {% if user_is_reviewer %}
+                    <span id="review-badge-{{assembly_part.part.id}}" class="badge badge-pill badge-secondary">Review Requested</span>
+                {% endif %}
+            
+            </a>
 
      {% for level in structure.closed_levels %}</li></ul>{% endfor %}
 

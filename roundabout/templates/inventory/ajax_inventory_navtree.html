@@ -65,8 +65,8 @@
 
                             {% if location.inventory.exists %}
 
-                                    {% include "inventory/inventory_tree_assigned_destination.html" with location=location part_types=part_types %}
-                                    {% include "inventory/inventory_tree_unassigned.html" with location=location part_types=part_types %}
+                                    {% include "inventory/inventory_tree_assigned_destination.html" with location=location part_types=part_types user=user %}
+                                    {% include "inventory/inventory_tree_unassigned.html" with location=location part_types=part_types user=user %}
 
                             {% endif %}
 

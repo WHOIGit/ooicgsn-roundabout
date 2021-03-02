@@ -101,7 +101,10 @@
                    data-part-type-id="{{ assembly_part.part.part_type.id }}"
                    data-node-type="assembly_part" class="grey">
                     {% if assembly_part.part.friendly_name %} {{ assembly_part.part.friendly_name}} {% else %} {{ assembly_part.part.name }} {% endif %} -
-                    {{ assembly_part.part.part_number }} </a>
+                    {{ assembly_part.part.part_number }} 
+                    
+                
+                </a>
             {% endif %}
 
          {% for level in structure.closed_levels %}</li></ul>{% endfor %}
