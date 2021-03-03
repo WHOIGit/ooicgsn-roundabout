@@ -44,7 +44,7 @@ def trunc_render(length=100, safe=False, showable=True, targets=None, bold_targe
     def render_func(value):
 
         if targets and isinstance(targets, list):  # just use the first match
-            target = [t for t in targets if t.lower() in value.lower()]
+            target = [t for t in targets if isinstance(t,str) and t.lower() in value.lower()]
             if target:
                 target = target[0]
             else:
@@ -212,6 +212,16 @@ class ActionTable(SearchTable):
 
     def render_user__name(self,record):
         return record.user.name or record.user.username
+
+    def value_object(self,record):
+        parent_obj = record.get_parent()
+        if isinstance(parent_obj,(CalibrationEvent,ConfigEvent,ConstDefaultEvent)):
+            parent_obj = parent_obj.inventory
+        elif isinstance(parent_obj,(ConfigNameEvent,CoefficientNameEvent)):
+            parent_obj = parent_obj.part
+        elif isinstance(parent_obj,ConfigDefaultEvent):
+            parent_obj = parent_obj.assembly_part
+        return str(parent_obj)
 
     def render_object(self,record):
         html_string = '<a href={url}>{text}</a>'

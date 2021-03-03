@@ -384,6 +384,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
                     col_args['verbose_name'] = field['text']
 
                 render_func = col_args.pop('render',None)
+                value_func = col_args.pop('value',None)
 
                 if 'DATE_LOOKUP' == field['legal_lookup']:
                     col = tables.DateTimeColumn(accessor=field['value'], **col_args)
@@ -409,6 +410,16 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
                         col.render = render_func(*render_args,**render_kwargs)
                     else:
                         col.render = render_func
+
+                if value_func:
+                    if value_func=='value': # reset to default/base output-value instead of render'd value
+                        col.value = lambda *args,**kwargs:kwargs['value']
+                    elif isinstance(render_func,dict):
+                        value_args = value_func['args'] if 'args' in value_func else []
+                        value_kwargs = value_func['kwargs'] if 'kwargs' in value_func else {}
+                        col.value = render_func['hofunc'](*value_args,**value_kwargs)
+                    else:
+                        col.value = value_func
 
                 extra_cols.append( (safename,col) )
 
@@ -455,7 +466,7 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="actions__latest__created_at",     text="Latest Action: Time",     legal_lookup='DATE_LOOKUP'),
                         dict(value="actions__latest__location__name", text="Latest Action: Location", legal_lookup='STR_LOOKUP'),
                         dict(value="actions__latest__detail",         text="Latest Action: Notes",    legal_lookup='STR_LOOKUP',
-                             col_args=dict(render=dict(hofunc=trunc_render,kwargs={'safe':True}) )),
+                             col_args=dict(render=dict(hofunc=trunc_render,kwargs={'safe':True}), value='value')),
                         dict(value="actions__count",                  text="Total Action Count",      legal_lookup='NUM_LOOKUP'),
 
                         dict(value=None, text="--Calibrations--", disabled=True),
@@ -534,7 +545,7 @@ class PartTableView(GenericSearchTableView):
                         dict(value="unit_cost",              text="Unit Cost", legal_lookup='NUM_LOOKUP'),
                         dict(value="refurbishment_cost",   text="Refurb Cost", legal_lookup='NUM_LOOKUP'),
                         dict(value="note",                       text="Notes", legal_lookup='STR_LOOKUP',
-                             col_args=dict( render=dict(hofunc=trunc_render,kwargs={'safe':True}) )),
+                             col_args=dict( render=dict(hofunc=trunc_render,kwargs={'safe':True}), value='value')),
                         dict(value="inventory__count", text="Inventory Count", legal_lookup='NUM_LOOKUP',
                              col_args=dict(linkify=lambda record: reverse(viewname="search:inventory")+\
                                       '?f=.0.part__part_number&l=.0.exact&q=.0.{}'.format(record.part_number))),
@@ -595,9 +606,9 @@ class BuildTableView(GenericSearchTableView):
                         dict(value="assembly__assembly_type__name", text="Type", legal_lookup='STR_LOOKUP'),
                         dict(value="location__name",            text="Location", legal_lookup='STR_LOOKUP'),
                         dict(value="assembly__description",  text="Description", legal_lookup='STR_LOOKUP',
-                             col_args=dict( render=dict(hofunc=trunc_render,kwargs={'safe':True}) )),
+                             col_args=dict(render=dict(hofunc=trunc_render,kwargs={'safe':True}), value='value')),
                         dict(value="build_notes",                  text="Notes", legal_lookup='STR_LOOKUP',
-                             col_args=dict( render=dict(hofunc=trunc_render,kwargs={'safe':True}) )),
+                             col_args=dict(render=dict(hofunc=trunc_render,kwargs={'safe':True}), value='value')),
                        #dict(value="time_at_sea",            text="Time at Sea", legal_lookup='NUM_LOOKUP'),
                         dict(value="is_deployed",           text="is-deployed?", legal_lookup='BOOL_LOOKUP'),
                         dict(value="flag",                   text="is-flagged?", legal_lookup='BOOL_LOOKUP'),
@@ -611,7 +622,7 @@ class BuildTableView(GenericSearchTableView):
                         dict(value="actions__latest__created_at",     text="Latest Action: Time",     legal_lookup='DATE_LOOKUP'),
                         dict(value="actions__latest__location__name", text="Latest Action: Location", legal_lookup='STR_LOOKUP'),
                         dict(value="actions__latest__detail",         text="Latest Action: Notes",    legal_lookup='STR_LOOKUP',
-                             col_args=dict(render=dict(hofunc=trunc_render,kwargs={'safe':True}) )),
+                             col_args=dict(render=dict(hofunc=trunc_render,kwargs={'safe':True}), value='value')),
                         dict(value="actions__count",                  text="Total Action Count",      legal_lookup='NUM_LOOKUP'),
                         ]
         return avail_fields
@@ -643,7 +654,7 @@ class AssemblyTableView(GenericSearchTableView):
                         dict(value="assembly_type__name", text="Type", legal_lookup='STR_LOOKUP',
                              col_args=dict(verbose_name='Type')),
                         dict(value="description",  text="Description", legal_lookup='STR_LOOKUP',
-                             col_args=dict( render=dict(hofunc=trunc_render,kwargs={'safe':True}) )),
+                             col_args=dict(render=dict(hofunc=trunc_render,kwargs={'safe':True}), value='value')),
                         ]
         return avail_fields
 
@@ -670,7 +681,7 @@ class ActionTableView(GenericSearchTableView):
                         dict(value="user__name", text="User", legal_lookup='STR_LOOKUP'),
                         dict(value="created_at", text="Timestamp", legal_lookup='DATE_LOOKUP'),
                         dict(value="detail", text="Detail", legal_lookup='STR_LOOKUP',
-                             col_args=dict( render=dict(hofunc=trunc_render,kwargs={'safe':True}))),
+                             col_args=dict(render=dict(hofunc=trunc_render,kwargs={'safe':True}), value='value')),
                         dict(value="location__name",text="Location",legal_lookup='STR_LOOKUP'),
                         dict(value="inventory__serial_number", text="Inventory: Serial Number", legal_lookup='STR_LOOKUP'),
                         dict(value="inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
@@ -703,7 +714,7 @@ class CalibrationTableView(GenericSearchTableView):
                         #dict(value="calibration_event__created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
                         dict(value="value_set", text="Value", legal_lookup='STR_LOOKUP'),
                         dict(value="notes", text="Notes", legal_lookup='STR_LOOKUP',
-                             col_args=dict( render=dict(hofunc=trunc_render,kwargs={'safe':True}) )),
+                             col_args=dict(render=dict(hofunc=trunc_render,kwargs={'safe':True}), value='value')),
                         #dict(value="calibration_event__is_current", text="Latest Only", legal_lookup='BOOL_LOOKUP'),
                         ]
         return avail_fields
@@ -747,7 +758,7 @@ class ConfigConstTableView(GenericSearchTableView):
                         #dict(value="config_event__created_at", text="Date Entered", legal_lookup='DATE_LOOKUP'),
                         dict(value="config_value", text="Value", legal_lookup='STR_LOOKUP'),
                         dict(value="notes", text="Notes", legal_lookup='STR_LOOKUP',
-                             col_args=dict( render=dict(hofunc=trunc_render,kwargs={'safe':True}) )),
+                             col_args=dict(render=dict(hofunc=trunc_render,kwargs={'safe':True}), value='value')),
                         ]
         return avail_fields
     def get_context_data(self, **kwargs):

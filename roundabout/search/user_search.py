@@ -57,6 +57,8 @@ class CCCUserTableBase(UserTableBase):
     detail = Column(verbose_name='Note', accessor='detail')
     def render_detail(self,value):
         return trunc_render()(value)
+    def value_detail(self,value):
+        return value
 
 # ========= TABLES ========== #
 
@@ -136,6 +138,8 @@ class ActionUserTable(UserTableBase):
 
     def render_detail(self,value):
         return trunc_render()(value)
+    def value_detail(self,value):
+        return value
 
     render_object = ActionTable.render_object
 
