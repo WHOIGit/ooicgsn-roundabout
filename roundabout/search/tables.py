@@ -26,11 +26,11 @@ from django.utils.html import format_html, mark_safe
 from django_tables2.columns import Column, DateColumn, DateTimeColumn, ManyToManyColumn
 from django_tables2_column_shifter.tables import ColumnShiftTable
 
-from roundabout.assemblies.models import Assembly
+from roundabout.assemblies.models import Assembly, AssemblyPart
 from roundabout.builds.models import Build
 from roundabout.calibrations.models import CalibrationEvent, CoefficientNameEvent
 from roundabout.configs_constants.models import ConfigEvent, ConstDefaultEvent, ConfigNameEvent, ConfigDefaultEvent
-from roundabout.inventory.models import Inventory, Action
+from roundabout.inventory.models import Inventory, Action, Deployment, InventoryDeployment
 from roundabout.parts.models import Part
 
 
@@ -206,7 +206,7 @@ class ActionTable(SearchTable):
         model = Action
         fields = ['object_type', 'object', 'action_type', 'user__name', 'created_at', 'detail']
         base_shown_cols = fields
-        
+
     user__name = Column(verbose_name='User')
     object = Column(verbose_name='Associated Object', accessor='object_type')
 
