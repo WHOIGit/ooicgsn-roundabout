@@ -32,7 +32,7 @@ labels = set_app_labels()
 
 # Function to handle creating new Action records with meta data for different Action.OBJECT_TYPES
 # Current objects available = Inventory, Build
-def _create_action_history(obj, action_type, user, referring_obj=None, referring_action='', action_date=None):
+def _create_action_history(obj, action_type, user, referring_obj=None, referring_action='', action_date=None, dep_obj=None):
     # Set default variables
     object_type = obj._meta.model_name
     detail = ''
@@ -68,7 +68,12 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
     if object_type == Action.BUILD:
         obj_label = labels['label_builds_app_singular']
         action_record.build = obj
-        deployment = obj.current_deployment()
+        if dep_obj:
+            deployment = dep_obj
+            obj_label = 'Deployment'
+            detail = dep_obj.deployment_number
+        else:
+            deployment = obj.current_deployment()
         # Set extra meta data fields
         action_record.deployment = deployment
 
@@ -317,11 +322,11 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
         action_record.save()
 
     elif action_type == Action.REVIEWAPPROVE:
-        action_record.detail = 'Reviewer approved %s. %s' % (obj_label, detail)
+        action_record.detail = 'Reviewer approved %s %s' % (obj_label, detail)
         action_record.save()
 
     elif action_type == Action.EVENTAPPROVE:
-        action_record.detail = '%s Approved. %s' % (obj_label, detail)
+        action_record.detail = '%s Approved %s' % (obj_label, detail)
         action_record.save()
 
     elif action_type == Action.CALCSVIMPORT:

@@ -271,6 +271,10 @@ class DeploymentBase(models.Model):
 
 
 class Deployment(DeploymentBase):
+    APPROVAL_STATUS = (
+        (True, "Approved"),
+        (False, "Draft"),
+    )
     deployment_number = models.CharField(max_length=255, unique=False)
     location = TreeForeignKey(Location, related_name='deployments',
                               on_delete=models.SET_NULL, null=True, blank=True)
@@ -291,6 +295,9 @@ class Deployment(DeploymentBase):
                                         MinValueValidator(-180)
                                     ])
     depth = models.PositiveIntegerField(null=True, blank=True)
+    user_draft = models.ManyToManyField(User, related_name='deployments_reviewer', blank=True)
+    user_approver = models.ManyToManyField(User, related_name='deployments_approver')
+    approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
 
     def __str__(self):
         if self.deployed_location:
@@ -300,6 +307,12 @@ class Deployment(DeploymentBase):
     def get_actions(self):
         actions = self.actions.filter(object_type=Action.BUILD)
         return actions
+
+    def get_sorted_reviewers(self):
+        return self.user_draft.all().order_by('username')
+
+    def get_sorted_approvers(self):
+        return self.user_approver.all().order_by('username')
 
 
 class InventoryDeployment(DeploymentBase):

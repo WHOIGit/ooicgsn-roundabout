@@ -31,7 +31,7 @@ from roundabout.parts.models import Part
 from roundabout.parts.forms import PartForm
 from roundabout.users.models import User
 from roundabout.configs_constants.models import ConfigEvent, ConfigNameEvent, ConstDefaultEvent, ConfigDefaultEvent
-from roundabout.inventory.models import Inventory, Action
+from roundabout.inventory.models import Inventory, Action, Deployment
 from roundabout.inventory.utils import _create_action_history
 from django.core import validators
 from sigfig import round
@@ -598,6 +598,7 @@ class EventCoeffNameDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteVi
 
 # Swap reviewers to approvers
 def event_review_toggle(request, pk, user_pk, evt_type):
+    deployment = None
     if evt_type == 'calibration_event':
         event = CalibrationEvent.objects.get(id=pk)
     if evt_type == 'config_event':
@@ -610,6 +611,8 @@ def event_review_toggle(request, pk, user_pk, evt_type):
         event = ConstDefaultEvent.objects.get(id=pk)
     if evt_type == 'config_default_event':
         event = ConfigDefaultEvent.objects.get(id=pk)
+    if evt_type == 'deployment':
+        event = Deployment.objects.get(id=pk)
     user = User.objects.get(id=user_pk)
     reviewers = event.user_draft.all()
     approvers = event.user_approver.all()
@@ -622,11 +625,17 @@ def event_review_toggle(request, pk, user_pk, evt_type):
         event.user_draft.remove(user)
         event.user_approver.add(user)
         user_in = 'reviewers'
-        _create_action_history(event, Action.REVIEWAPPROVE, user)
+        if evt_type == 'deployment':
+            _create_action_history(event.build, Action.REVIEWAPPROVE, user, dep_obj=event)
+        else:
+            _create_action_history(event, Action.REVIEWAPPROVE, user)
     if event.user_approver.exists():
         if len(event.user_approver.all()) >= 2:
             event.approved = True
-            _create_action_history(event, Action.EVENTAPPROVE, user)
+            if evt_type == 'deployment':
+                _create_action_history(event.build, Action.EVENTAPPROVE, user, dep_obj=event)
+            else:
+                _create_action_history(event, Action.EVENTAPPROVE, user)
         else:
             event.approved = False
     event.save()

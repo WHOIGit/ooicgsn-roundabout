@@ -29,6 +29,7 @@ from bootstrap_datepicker_plus import DatePickerInput
 from sigfig import round
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from roundabout.calibrations.utils import reviewer_users
 
 
 
@@ -52,7 +53,7 @@ class ConfigEventForm(forms.ModelForm):
         }
     def __init__(self, *args, **kwargs):
         super(ConfigEventForm, self).__init__(*args, **kwargs)
-        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username')
+        self.fields['user_draft'].queryset = reviewer_users()
         self.fields['deployment'].required = False
 
     def save(self, commit = True):
@@ -114,7 +115,7 @@ class ConfigNameEventForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ConfigNameEventForm, self).__init__(*args, **kwargs)
-        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username')
+        self.fields['user_draft'].queryset = reviewer_users()
 
     def clean_user_draft(self):
         user_draft = self.cleaned_data.get('user_draft')
@@ -210,7 +211,7 @@ class ConstDefaultEventForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ConstDefaultEventForm, self).__init__(*args, **kwargs)
-        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username')
+        self.fields['user_draft'].queryset = reviewer_users()
 
     def clean_user_draft(self):
         user_draft = self.cleaned_data.get('user_draft')
@@ -243,7 +244,7 @@ class ConfigDefaultEventForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ConfigDefaultEventForm, self).__init__(*args, **kwargs)
-        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username')
+        self.fields['user_draft'].queryset = reviewer_users()
 
     def clean_user_draft(self):
         user_draft = self.cleaned_data.get('user_draft')
