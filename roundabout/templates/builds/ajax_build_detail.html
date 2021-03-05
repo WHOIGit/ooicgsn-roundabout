@@ -580,6 +580,11 @@
                         approve_badge.hide();
                         progress_badge.show();
                     }
+                    if (data.all_reviewed) {
+                        $('#review-badge-{{build.id}}').hide();
+                    } else {
+                        $('#review-badge-{{build.id}}').show();
+                    }
                 }
             });
         });
