@@ -142,12 +142,8 @@
 
         $(document).ready(function() {
 
-            // Handles ConfigValues form instance generation
-            $('#conf_const-table tbody tr').formset({
-                prefix: 'config_values',
-                addText: {% if cfg_type == 1 %}"Add Constants"{% else %}"Add Configurations"{% endif %},
-                deleteText: 'Remove',
-            });
+            // Hide default form delete checkboxes
+            $('[id$=-DELETE]').hide();
 
             // hyperlinks formset
             $('#hyperlink-table tbody tr').formset({

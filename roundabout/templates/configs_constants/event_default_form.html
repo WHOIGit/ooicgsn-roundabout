@@ -97,21 +97,8 @@
 
         $(document).ready(function() {
             
-            // Handles CoefficientValueSet form instance generation
-            $('.constdefault-form tbody tr').formset({
-                prefix: 'constant_defaults',
-                addText: 'Add Calibration',
-                deleteText: 'Remove',
-                added: function(row) {
-
-                    let remove_button = row.find('.delete-row');
-                    remove_button.addClass('pull-right');
-                }
-            });
-
-            $('.delete-row').addClass('pull-right');
-            $('.delete-row').hide();
-            $('.add-row').hide();
+            // Hide default form delete checkboxes
+            $('[id$=-DELETE]').hide();
         })
 
     </script>

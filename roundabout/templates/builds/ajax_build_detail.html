@@ -261,7 +261,18 @@
                 class="btn btn-primary btn-sm"
                 role="button">Edit Deployment Details</a>
         </div>
-        <h5>Current {{ label_deployments_app_singular }} Data</h5>
+        <h5>
+            Current {{ label_deployments_app_singular }} Data
+            {% if user in current_deployment.user_draft.all %}
+                <span id="review-badge" class="badge badge-pill badge-secondary">Review Requested</span>
+            {% endif %}
+            {% if current_deployment.approved %}
+                <span id="approve-badge" class="badge badge-pill badge-success">Approved</span>
+            {% else %}
+                <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span>
+            {% endif %}
+        </h5>
+        
         <h6>{{ label_deployments_app_singular }} Status</h6>
 
         <div class="progress mb-3" style="height: 20px;">
