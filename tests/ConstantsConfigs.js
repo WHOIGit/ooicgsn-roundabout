@@ -275,12 +275,12 @@ await fs.writeFileSync('/tests/cscreen.png', encodedString, 'base64');
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/i")).click();
         await new Promise(r => setTimeout(r, 6000));
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/ul/li/i")).click(); 
-   	while ((await driver.findElements(By.linkText("sewing"))).length == 0)
+   	while ((await driver.findElements(By.partialLinkText("sewing"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Search.");
 	}
-        await driver.findElement(By.linkText("sewing")).click();
+        await driver.findElement(By.partialLinkText("sewing")).click();
    	while ((await driver.findElements(By.id("action"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
