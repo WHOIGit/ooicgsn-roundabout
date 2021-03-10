@@ -22,7 +22,8 @@ from random import randint
 
 import django_tables2 as tables
 from django.urls import reverse
-from django.utils.html import format_html, mark_safe
+from django.utils.html import format_html, mark_safe, strip_tags
+from django.utils.text import Truncator
 from django_tables2.columns import Column, DateColumn, DateTimeColumn, ManyToManyColumn
 from django_tables2_column_shifter.tables import ColumnShiftTable
 
@@ -57,24 +58,25 @@ def trunc_render(length=100, safe=False, showable=True, targets=None, bold_targe
             else: output_str = value
         else:
             if target and target.lower() in value.lower():
-                target_idx = value.lower().index(target.lower())
+                value_stripped = strip_tags(value)
+                target_idx = value_stripped.lower().index(target.lower())
                 start_idx,end_idx = target_idx-int(length/2),target_idx+int(length/2)
                 start_idx,end_idx = start_idx+int(len(target)/2), end_idx+int(len(target)/2)
-                if start_idx>0 and end_idx<len(value):
-                    shown_txt = value[start_idx:end_idx]
+                if start_idx>0 and end_idx<len(value_stripped):
+                    shown_txt = value_stripped[start_idx:end_idx]
                     start,end = '▴…','…▾'
                 elif end_idx > len(value):
-                    shown_txt = value[-length:]
+                    shown_txt = value_stripped[-length:]
                     start,end = '▴…',''
                 else:
-                    shown_txt = value[:length]
+                    shown_txt = Truncator(value).chars(length,'',html=True)
                     start,end = '','…▾'
 
                 if bold_target: shown_txt = boldify(shown_txt,target)
 
             else:
                 start,end = '','…▾'
-                shown_txt = value[:length]
+                shown_txt = Truncator(value).chars(length,'',html=True)
 
             if showable: # insert some javascript to show truncated text
                 hidden_id = 'trunc{:05}'.format(randint(0,100000))
