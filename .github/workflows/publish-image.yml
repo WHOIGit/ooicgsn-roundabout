@@ -29,7 +29,6 @@ jobs:
     runs-on: ubuntu-16.04
     needs: build
     steps:
-      - uses: actions/checkout@v2
       - name: Starting Docker application
         run: docker-compose --file local.yml up --detach
 
