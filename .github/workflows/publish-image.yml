@@ -80,8 +80,9 @@ jobs:
     if: github.event_name == 'push'
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+      - name: Checkout
+      - uses: actions/checkout@v2
+
       - name: Log into Github Container registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
@@ -94,6 +95,3 @@ jobs:
 
           # Strip git ref prefix from version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-
-#echo 3ecda5560630e800debe0795b7cb2650f938063c | docker login ghcr.io -u joannekoch --password-stdin &&
-#docker image push ghcr.io/whoigit/ooicgsn-roundabout:test
