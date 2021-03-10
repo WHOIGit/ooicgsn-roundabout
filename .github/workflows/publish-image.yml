@@ -1,0 +1,99 @@
+name: Create and publish a package
+on:
+  push:
+#    branches: ['release']
+    branches: ['automated_tests']
+#  pull_request:
+#    branches: [ main ]
+
+env:
+  IMAGE_NAME: ooicgsn-roundabout
+
+jobs:
+  build:
+    runs-on: ubuntu-1604:202007-01
+    steps:
+      - uses: actions/checkout@v2
+      - name: Building Docker application
+        run: |
+            mv .envs.example .envs &&
+            docker-compose --file local.yml build
+
+  run:
+    runs-on: ubuntu-1604:202007-01
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+      - name: Starting Docker application
+        run: docker-compose --file local.yml up --detach
+
+  migrations:
+    runs-on: ubuntu-1604:202007-01
+    needs: run
+    steps:
+      - uses: actions/checkout@v2
+      - name: Check for missing migrations
+        run: docker-compose --file local.yml run --rm django \
+              python manage.py makemigrations --check
+  checks:
+    runs-on: ubuntu-1604:202007-01
+    needs: migrations
+    steps:
+      - uses: actions/checkout@v2
+      - name: Running Django system checks
+        run: docker-compose --file local.yml run --rm django \
+              python manage.py check
+
+  tests:
+    runs-on: ubuntu-1604:202007-01
+    needs: checks
+    steps:
+      - uses: actions/checkout@v2
+      - name: Running Django tests
+        run: docker-compose --file local.yml run --rm django \
+              python manage.py test
+
+  automated_tests:
+    runs-on: ubuntu-1604:202007-01
+    needs: tests
+    steps:
+      - uses: actions/checkout@v2
+      - name: Running Automated tests
+        run:  docker-compose -f docker-compose-testing.yml run --rm tests \
+              sh -c "until curl -Is http://localhost:8000; do echo 'sleeping'; sleep 10; done  &&
+                  google-chrome --version && chromedriver --version &&
+                  nodejs -v &&
+                  ./RunAllTests-Chrome-Linux.bat
+  stop:
+    runs-on: ubuntu-1604:202007-01
+    needs: automated_tests
+    steps:
+      - uses: actions/checkout@v2
+      - name: Stopping Docker application
+        run:  docker-compose --file local.yml down
+
+  push:
+    runs-on: ubuntu-1604:202007-01
+    # Ensure automated test job passes before pushing image.
+    needs: automated_tests
+
+    if: github.event_name == 'push'
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      - name: Log into Github Container registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: Push image
+        run: |
+          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
+
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+#echo 3ecda5560630e800debe0795b7cb2650f938063c | docker login ghcr.io -u joannekoch --password-stdin &&
+#docker image push ghcr.io/whoigit/ooicgsn-roundabout:test
