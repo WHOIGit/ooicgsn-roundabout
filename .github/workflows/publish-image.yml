@@ -32,6 +32,12 @@ jobs:
       - name: Starting Docker application
         run: docker-compose --file local.yml up --detach
 
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+
       - name: Check for missing migrations
         run: docker-compose --file local.yml run --rm django \
               python manage.py makemigrations --check
