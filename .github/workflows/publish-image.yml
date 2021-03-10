@@ -80,7 +80,6 @@ jobs:
     if: github.event_name == 'push'
 
     steps:
-      - name: Checkout
       - uses: actions/checkout@v2
 
       - name: Log into Github Container registry
