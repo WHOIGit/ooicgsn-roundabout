@@ -3,6 +3,12 @@ on:
   push:
 #    branches: ['release']
     branches: ['automated_tests']
+
+# Publish `v1.2.3` tags as releases.
+    tags:
+       - test
+#      - v*
+
 #  pull_request:
 #    branches: [ main ]
 
@@ -11,7 +17,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-1604
+    runs-on: ubuntu-16.04
     steps:
       - uses: actions/checkout@v2
       - name: Building Docker application
@@ -20,7 +26,7 @@ jobs:
             docker-compose --file local.yml build
 
   run:
-    runs-on: ubuntu-1604
+    runs-on: ubuntu-16.04
     needs: build
     steps:
       - uses: actions/checkout@v2
@@ -28,7 +34,7 @@ jobs:
         run: docker-compose --file local.yml up --detach
 
   migrations:
-    runs-on: ubuntu-1604
+    runs-on: ubuntu-16.04
     needs: run
     steps:
       - uses: actions/checkout@v2
@@ -36,7 +42,7 @@ jobs:
         run: docker-compose --file local.yml run --rm django \
               python manage.py makemigrations --check
   checks:
-    runs-on: ubuntu-1604
+    runs-on: ubuntu-16.04
     needs: migrations
     steps:
       - uses: actions/checkout@v2
@@ -45,7 +51,7 @@ jobs:
               python manage.py check
 
   tests:
-    runs-on: ubuntu-1604
+    runs-on: ubuntu-16.04
     needs: checks
     steps:
       - uses: actions/checkout@v2
@@ -54,7 +60,7 @@ jobs:
               python manage.py test
 
   automated_tests:
-    runs-on: ubuntu-1604
+    runs-on: ubuntu-16.04
     needs: tests
     steps:
       - uses: actions/checkout@v2
@@ -65,7 +71,7 @@ jobs:
                   nodejs -v &&
                   ./RunAllTests-Chrome-Linux.bat
   stop:
-    runs-on: ubuntu-1604
+    runs-on: ubuntu-16.04
     needs: automated_tests
     steps:
       - uses: actions/checkout@v2
@@ -73,7 +79,7 @@ jobs:
         run:  docker-compose --file local.yml down
 
   push:
-    runs-on: ubuntu-1604
+    runs-on: ubuntu-16.04
     # Ensure automated test job passes before pushing image.
     needs: automated_tests
 
