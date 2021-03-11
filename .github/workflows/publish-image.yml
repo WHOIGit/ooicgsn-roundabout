@@ -48,11 +48,11 @@ jobs:
 #          python manage.py test
 
       - name: Running Automated tests
-        working-directory: tests
         run:  |
           docker-compose -f docker-compose-testing.yml run --rm tests
           sh -c "until curl -Is http://localhost:8000; do echo 'sleeping'; sleep 10; done &&
                  google-chrome --version && chromedriver --version"
+          cd tests
           ls -a
           ./RunAllTests-Chrome-Linux.bat
 
