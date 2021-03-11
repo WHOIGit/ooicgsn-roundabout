@@ -31,7 +31,7 @@ services:
       context: .
       dockerfile: ./compose/local/django/Dockerfile
 #    image: roundabout_local_django
-    image: ghcr.io/whoigit/ooicgsn-roundabout
+    image: ooicgsn-roundabout
     depends_on:
       - postgres
     volumes:
