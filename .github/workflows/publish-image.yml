@@ -32,8 +32,10 @@ jobs:
       - name: Starting Docker application
         run: docker-compose --file local.yml up --detach
 
-      - name: Check for missing migrations
-        run: python manage.py makemigrations --check
+#      - name: Check for missing migrations
+#        run: |
+#          docker-compose --file local.yml run --rm django 
+#          python manage.py makemigrations --check
 
       - name: Running Django system checks
         run: |
