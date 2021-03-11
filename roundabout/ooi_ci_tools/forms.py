@@ -284,6 +284,7 @@ def validate_import_config_deployments(import_config,reader, filename):
 # Cruise CSV import config validator
 def validate_import_config_cruises(import_config, reader, filename):
     for idx, row in enumerate(reader):
+        idx = idx + 2
         try:
             ship_name = row['ShipName']
         except:

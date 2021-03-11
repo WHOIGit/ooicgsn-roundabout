@@ -399,6 +399,8 @@ class EventCoeffNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMix
             self.request.POST,
             part_id = self.kwargs['pk']
         )
+        if len(self.request.POST['coefficient_names-0-calibration_name']) == 0 and len(self.request.POST['part_select']) == 0:
+            part_calname_form.forms[0].add_error('calibration_name', 'Name cannot be blank')
         if (form.is_valid() and part_calname_form.is_valid() and part_cal_copy_form.is_valid()):
             return self.form_valid(form, part_calname_form, part_cal_copy_form)
         return self.form_invalid(form, part_calname_form, part_cal_copy_form)
