@@ -26,40 +26,34 @@ jobs:
 
       - name: Building Docker application
         run: |
-            mv .envs.example .envs &&
+            mv .envs.example .envs
             docker-compose --file local.yml build
 
       - name: Starting Docker application
         run: docker-compose --file local.yml up --detach
 
-#      - name: Set up Python
-#        uses: actions/setup-python@v2
-#        with:
-#          python-version: '3.8-alpine'
-#      - name: Install dependencies
-#        run: |
-#          python -m pip install --upgrade pip
-#          pip install setuptools wheel 
-
       - name: Check for missing migrations
         run: |
-          docker-compose --file local.yml run --rm django 
+#          docker-compose --file local.yml run --rm django 
           python manage.py makemigrations --check
 
       - name: Running Django system checks
-        run: docker-compose --file local.yml run --rm django \
-              python manage.py check
+        run: |
+          docker-compose --file local.yml run --rm django 
+          python manage.py check
 
       - name: Running Django tests
-        run: docker-compose --file local.yml run --rm django \
-              python manage.py test
+        run: |
+          docker-compose --file local.yml run --rm django
+          python manage.py test
 
       - name: Running Automated tests
-        run:  docker-compose -f docker-compose-testing.yml run --rm tests \
-              sh -c "until curl -Is http://localhost:8000; do echo 'sleeping'; sleep 10; done  &&
-                  google-chrome --version && chromedriver --version &&
-                  nodejs -v &&
-                  ./RunAllTests-Chrome-Linux.bat
+        run:  |
+          docker-compose -f docker-compose-testing.yml run --rm tests
+          sh -c "until curl -Is http://localhost:8000; do echo 'sleeping'; sleep 10; done &&
+                 google-chrome --version && chromedriver --version &&
+                 nodejs -v &&
+                 ./RunAllTests-Chrome-Linux.bat
 
       - name: Stopping Docker application
         run:  docker-compose --file local.yml down
