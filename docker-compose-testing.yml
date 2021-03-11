@@ -49,7 +49,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/local/tests/Dockerfile
-    image: roundabout_production_tests
+      image: roundabout_production_tests
     depends_on:
       - django
     network_mode: "service:django"
@@ -59,7 +59,6 @@ services:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
     image: roundabout_production_postgres
-#     image: ghcr.io/whoigit/ooicgsn-roundabout
     volumes:
       - local_postgres_data:/var/lib/postgresql/data
       - local_postgres_data_backups:/backups

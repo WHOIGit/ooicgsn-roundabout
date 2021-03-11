@@ -53,7 +53,7 @@ jobs:
           sh -c "until curl -Is http://localhost:8000; do echo 'sleeping'; sleep 10; done &&
                  google-chrome --version && chromedriver --version &&
                  nodejs -v &&
-                 ./RunAllTests-Chrome-Linux.bat
+                 ./RunAllTests-Chrome-Linux.bat"
 
       - name: Stopping Docker application
         run:  docker-compose --file local.yml down
