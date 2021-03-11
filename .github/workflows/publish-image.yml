@@ -37,15 +37,15 @@ jobs:
 #          docker-compose --file local.yml run --rm django 
 #          python manage.py makemigrations --check
 
-      - name: Running Django system checks
-        run: |
-          docker-compose --file local.yml run --rm django 
-          python manage.py check
+#      - name: Running Django system checks
+#        run: |
+#          docker-compose --file local.yml run --rm django 
+#          python manage.py check
 
-      - name: Running Django tests
-        run: |
-          docker-compose --file local.yml run --rm django
-          python manage.py test
+#      - name: Running Django tests
+#        run: |
+#          docker-compose --file local.yml run --rm django
+#          python manage.py test
 
       - name: Running Automated tests
         run:  |
