@@ -49,15 +49,12 @@ jobs:
 
       - name: Running Automated tests
         run:  |
-          docker-compose -f docker-compose-testing.yml run --rm tests
+          docker-compose -f docker-compose-testing.yml run --rm tests ./RunAllTests-Chrome-Linux.bat
           sh -c "until curl -Is http://localhost:8000; do echo 'sleeping'; sleep 10; done &&
                  google-chrome --version && chromedriver --version"
-          cd tests
-          ls -a
-          ./RunAllTests-Chrome-Linux.bat
-
-#                 ./RunAllTests-Chrome-Linux.bat"
-#                 nodejs -v &&
+          
+          
+#                 nodejs -v (build tests?)
 
       - name: Stopping Docker application
         run:  docker-compose --file local.yml down
