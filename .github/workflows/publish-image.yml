@@ -49,12 +49,10 @@ jobs:
 
       - name: Running Automated tests
         run:  |
+          google-chrome --version
+          chromedriver --version
+          node -v
           docker-compose -f docker-compose-testing.yml run --rm tests ./RunAllTests-Chrome-Linux.bat
-          sh -c "until curl -Is http://localhost:8000; do echo 'sleeping'; sleep 10; done &&
-                 google-chrome --version && chromedriver --version"
-          
-          
-#                 nodejs -v (build tests?)
 
       - name: Stopping Docker application
         run:  docker-compose --file local.yml down
@@ -81,3 +79,13 @@ jobs:
 
           # Strip git ref prefix from version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "main" ] && VERSION=latest
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+#          docker push $IMAGE_ID:$VERSION
