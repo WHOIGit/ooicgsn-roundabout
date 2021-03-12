@@ -154,7 +154,7 @@
                 data-node-type="{{ node_type }}">Edit Inventory Details</a>
 
             {% if not user|has_group:"inventory only" %}
-                {% if inventory_item.part.coefficient_name_events.exists and inventory_item.part.part_type.ccc_toggle %}
+                {% if part_has_cals and inventory_item.part.part_type.ccc_toggle %}
                     <a  id="add_coefficient_action"
                         class="dropdown-item"
                         href="#"

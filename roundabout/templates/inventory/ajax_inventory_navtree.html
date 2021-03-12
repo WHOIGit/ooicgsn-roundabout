@@ -21,6 +21,7 @@
 
 {% load mptt_tags %}
 {% load inventory_tags %}
+{% load build_tags %}
 
             {% for location,structure in locations|tree_info %}
                 {% if structure.new_level %}
@@ -43,18 +44,22 @@
                                                   data-node-id="{{ build.id }}"
                                                   data-location-id="{{ location.id }}"
                                                   data-node-type="builds">{{ build }}
-                                                  {% if build.current_deployment.current_status == 'deploymenttofield' %}
-                                                      <span class="badge badge-pill badge-primary">Deployed - {{ build.current_deployment.deployment_number }}</span>
-                                                  {% endif %}
-                                                  {% if build.current_deployment.current_status == 'deploymentrecover' %}
-                                                      <span class="badge badge-pill badge-warning">Recovered - {{ build.current_deployment.deployment_number }}</span>
-                                                  {% endif %}
-                                                  {% if build.current_deployment.current_status == 'deploymentburnin' %}
-                                                      <span class="badge badge-pill badge-danger">Burn In - {{ build.current_deployment.deployment_number }}</span>
-                                                  {% endif %}
-                                                  {% if build.current_deployment.current_status == 'startdeployment' %}
-                                                      <span class="badge badge-pill badge-success">Initial Deployment - {{ build.current_deployment.deployment_number }} </span>
-                                                  {% endif %}
+                                                    {% if build.current_deployment.current_status == 'deploymenttofield' %}
+                                                        <span class="badge badge-pill badge-primary">Deployed - {{ build.current_deployment.deployment_number }}</span>
+                                                    {% endif %}
+                                                    {% if build.current_deployment.current_status == 'deploymentrecover' %}
+                                                        <span class="badge badge-pill badge-warning">Recovered - {{ build.current_deployment.deployment_number }}</span>
+                                                    {% endif %}
+                                                    {% if build.current_deployment.current_status == 'deploymentburnin' %}
+                                                        <span class="badge badge-pill badge-danger">Burn In - {{ build.current_deployment.deployment_number }}</span>
+                                                    {% endif %}
+                                                    {% if build.current_deployment.current_status == 'startdeployment' %}
+                                                        <span class="badge badge-pill badge-success">Initial Deployment - {{ build.current_deployment.deployment_number }} </span>
+                                                    {% endif %}
+                                                    {% user_is_deploy_reviewer build user as user_is_reviewer %}
+                                                    {% if user_is_reviewer %}
+                                                        <span id="review-badge-{{build.id}}" class="badge badge-pill badge-secondary">Review Requested</span>
+                                                    {% endif %}
                                               </a>
 
                                            </li>

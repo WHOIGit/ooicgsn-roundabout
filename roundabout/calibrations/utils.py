@@ -19,8 +19,11 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
+from django.db.models import Count
+from roundabout.users.models import User
 from roundabout.calibrations.models import CalibrationEvent
 from roundabout.configs_constants.models import ConfigEvent, ConfigDefaultEvent, ConstDefaultEvent
+
 
 def handle_reviewers(form):
     if form.instance.user_approver.exists():
@@ -61,6 +64,7 @@ def handle_reviewers(form):
 def user_ccc_reviews(event, user):
     found_cal_events = False
     found_conf_events = False
+    found_deploy_events = False
     all_reviewed = False
     if hasattr(event,'inventory'):
         if user.calibration_events_drafter.exists():
@@ -81,4 +85,14 @@ def user_ccc_reviews(event, user):
             found_conf_events = event.assembly_part.config_default_events.filter(user_draft__in=[user])
         if not found_conf_events:
             all_reviewed = True
+    if hasattr(event,'build'):
+        if user.deployments_reviewer.exists():
+            found_deploy_events = event.build.deployments.filter(user_draft__in=[user])
+        if not found_deploy_events:
+            all_reviewed = True
     return all_reviewed
+
+
+def reviewer_users():
+    reviewers = User.objects.all().annotate(group_count = Count('groups')).exclude(groups__name = 'inventory only', group_count = 1).order_by('username')
+    return reviewers

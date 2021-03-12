@@ -30,6 +30,7 @@ from roundabout.inventory.models import Inventory
 from roundabout.parts.models import Part
 from roundabout.users.models import User
 from .models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientValue, CoefficientNameEvent, CalibrationEventHyperlink
+from .utils import reviewer_users
 
 
 # Event form
@@ -56,7 +57,7 @@ class CalibrationEventForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(CalibrationEventForm, self).__init__(*args, **kwargs)
-        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username')
+        self.fields['user_draft'].queryset = reviewer_users()
 
     def clean_user_draft(self):
         user_draft = self.cleaned_data.get('user_draft')
@@ -89,7 +90,7 @@ class CoefficientNameEventForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(CoefficientNameEventForm, self).__init__(*args, **kwargs)
-        self.fields['user_draft'].queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username')
+        self.fields['user_draft'].queryset = reviewer_users()
 
     def clean_user_draft(self):
         user_draft = self.cleaned_data.get('user_draft')

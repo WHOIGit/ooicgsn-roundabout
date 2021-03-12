@@ -33,6 +33,7 @@ from roundabout.inventory.models import Deployment, DeploymentAction, Action
 from roundabout.locations.models import Location
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
+from roundabout.calibrations.utils import reviewer_users
 labels = set_app_labels()
 
 class BuildForm(forms.ModelForm):
@@ -232,7 +233,8 @@ class DeploymentForm(forms.ModelForm):
         fields = [
             'deployment_number', 'build', 'deployed_location', 'cruise_deployed', 'cruise_recovered', \
             'deployment_start_date', 'deployment_burnin_date', 'deployment_to_field_date', \
-            'deployment_recovery_date', 'deployment_retire_date', 'latitude', 'longitude', 'depth',
+            'deployment_recovery_date', 'deployment_retire_date', 'latitude', 'longitude', 'depth', \
+            'user_draft'
         ]
 
         labels = {
@@ -242,14 +244,18 @@ class DeploymentForm(forms.ModelForm):
             'cruise_deployed': 'Cruise Deployed On',
             'latitude': 'Latitude (+/- degrees N)',
             'longitude': 'Longitude (+/-  degrees E)',
+            'user_draft': 'Reviewers'
         }
 
         widgets = {
             'build': forms.HiddenInput(),
+            'user_draft': forms.SelectMultiple()
         }
 
     def __init__(self, *args, **kwargs):
         super(DeploymentForm, self).__init__(*args, **kwargs)
+        self.fields['user_draft'].queryset = reviewer_users()
+        self.fields['user_draft'].required = False
         if self.instance.pk:
             print(self.instance.current_status)
             if self.instance.current_status == Action.STARTDEPLOYMENT or self.instance.current_status == Action.DEPLOYMENTBURNIN:
