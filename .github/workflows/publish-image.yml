@@ -57,6 +57,28 @@ jobs:
           docker-compose -f docker-compose-testing.yml build tests
           docker-compose -f docker-compose-testing.yml run --rm tests ./RunAllTests-Chrome-Linux.bat
 
+      - name: Push
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+          IMAGE_ID=ghcr.io/${{ github.repository }}
+        
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "main" ] && VERSION=latest
+            echo $IMAGE_ID
+            echo $VERSION
+            docker image ls
+            docker tag $IMAGE_ID $IMAGE_ID:$VERSION
+
+#          docker push $IMAGE_ID:$VERSION
       - name: Stopping Docker application
         run:  docker-compose --file local.yml down
 
