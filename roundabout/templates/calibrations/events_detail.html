@@ -160,14 +160,26 @@
                                                         <i class="fa" aria-hidden="true"></i>
                                                         <span class="sr-only">Expand/Collapse Calibration {{ value_set.coefficient_name }}</span>
                                                     </a>
-                                                    {% if value_set.coefficient_name.value_set_type != '2d' and not user|has_group:"inventory only" %}
+                                                    {% if value_set.coefficient_name.value_set_type != '2d' %}
                                                         <div class = 'ajax-detail-link float-right'>
                                                             <a  href="#"
                                                                 class="btn btn-primary btn-sm mr-2"
                                                                 role="button"
-                                                                data-detail-url="{% url 'calibrations:valueset_value_update' value_set.id %}"
+                                                                data-detail-url="{% url 'calibrations:valueset_value_update' value_set.id  %}"
                                                                 data-node-id="{{ value_set.id }}"
                                                                 data-node-type="{{ value_set.get_object_type }}">
+                                                                    Edit Coefficient Metadata
+                                                            </a>
+                                                        </div>
+                                                    {% else %}
+                                                        <div class = 'ajax-detail-link float-right'>
+                                                            <a  href="#"
+                                                                class="btn btn-primary btn-sm mr-2"
+                                                                role="button"
+                                                                data-detail-url="{% url 'calibrations:valueset_value_update' value_set.id  %}"
+                                                                data-node-id="{{ value_set.id }}"
+                                                                data-node-type="{{ value_set.get_object_type }}"
+                                                                id = '2d-coeff-edit-{{ value_set.id }}'>
                                                                     Edit Coefficient Metadata
                                                             </a>
                                                         </div>
@@ -186,7 +198,7 @@
                                                                     <tr style = 'display: block;'>
                                                                         {% for val in row.list %}
                                                                             <td style = 'white-space: nowrap'>
-                                                                                <div style = 'width: 100px; text-align: center;'>{{ val }}</div>
+                                                                                <div data-val-id = '{{val.id}}' id = 'coeff_val-{{ val.id }}' style = 'width: 100px; text-align: center;'>{{ val }}</div>
                                                                             </td>
                                                                         {% endfor %}
                                                                     </tr>
@@ -308,6 +320,41 @@
                     } else {
                         $('#review-badge-' + inv_id).show();
                     }
+                }
+            });
+        });
+
+
+        $('[id^=2d-coeff-edit]').hide();
+
+        let selected_coeff_val_id_array = []
+
+        $('#calibration-template').on('click', 'div[id^=coeff_val]', function(e) {
+            e.preventDefault();
+            let val = $(this);
+            let coeff_edit_btn = val.parent().parent().parent().parent().parent().parent().find('[id^=2d-coeff-edit]');
+            if (coeff_edit_btn.length) {
+                if (val.css('background-color') == 'rgb(255, 255, 0)') {
+                    val.css('background-color', '');
+                    let val_id = val.data('val-id')
+                    selected_coeff_val_id_array = selected_coeff_val_id_array.filter(val => val !== val_id)
+                } else {
+                    val.css('background-color', 'yellow')
+                    selected_coeff_val_id_array.push(val.data('val-id'))
+                    coeff_edit_btn.show()
+                }
+            }
+            
+        });
+
+        $('#calibration-template').on('click', 'a[id^=2d-coeff-edit]', function(e) {
+            e.preventDefault();
+            let edit_btn = $(this);
+            let url = edit_btn.attr('data-detail-url')
+            $.ajax({
+                url: url,
+                data: {
+                    'coeff_val_id_array': selected_coeff_val_id_array
                 }
             });
         });

@@ -23,7 +23,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView
-from .models import CoefficientName, CalibrationEvent, CoefficientValueSet, CoefficientNameEvent
+from .models import CoefficientName, CalibrationEvent, CoefficientValueSet, CoefficientNameEvent, CoefficientValue
 from .forms import CalibrationEventForm, EventValueSetFormset, CoefficientValueForm, CoefficientValueSetForm, ValueSetValueFormset, CoefficientNameForm, PartCalNameFormset, CalPartCopyForm, CoefficientNameEventForm, CalibrationEventHyperlinkFormset
 from common.util.mixins import AjaxFormMixin
 from django.urls import reverse, reverse_lazy
@@ -297,9 +297,12 @@ class ValueSetValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         self.object = self.get_object()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
+        coeff_val_list = self.request.GET.getlist('coeff_val_id_array[]')
         valueset_value_form = ValueSetValueFormset(
             instance=self.object,
-            form_kwargs={'valset_id': self.object.id}
+            form_kwargs={
+                'valset_id': self.object.id
+            }
         )
         return self.render_to_response(
             self.get_context_data(
