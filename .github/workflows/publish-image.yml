@@ -33,8 +33,7 @@ jobs:
       - name: Check for missing migrations
         run: |
           docker container ls
-          docker-compose --file local.yml run --rm django
-          python manage.py makemigrations --check
+          docker-compose --file local.yml run --rm django python manage.py makemigrations --check
 
 #      - name: Running Django system checks
 #        run: |
