@@ -24,10 +24,18 @@
     {{ deployment.build }} - {{ label_deployments_app_singular }}: {{ deployment }}
 </a>
 
-<a data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ deployment.id }}-{{ deployment_type }}" aria-controls="deployment-{{ deployment.id }}-{{ deployment_type }}" aria-expanded="false" role="button">
+<a id = 'badge_tag' data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ deployment.id }}-{{ deployment_type }}" aria-controls="deployment-{{ deployment.id }}-{{ deployment_type }}" aria-expanded="false" role="button">
     <i class="fa" aria-hidden="true"></i>
     <span class="sr-only">Expand/Collapse Revision {{ deployment }}</span>
 </a>
+{% if user in deployment.user_draft.all %}
+    <span id="review-badge" class="badge badge-pill badge-secondary">Review Requested</span>
+{% endif %}
+{% if deployment.approved %}
+    <span id="approve-badge" class="badge badge-pill badge-success">Approved</span>
+{% else %}
+    <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span>
+{% endif %}
 <div class="progress" style="height: 20px;">
     <div class="progress-bar {{ deployment.deployment_progress_bar|get_item:'bar_class' }}" role="progressbar" style="width: {{ deployment.deployment_progress_bar|get_item:'bar_width' }}%;" aria-valuenow="{{ deployment.deployment_progress_bar|get_item:'bar_width' }}" aria-valuemin="0" aria-valuemax="100">
         <span>{{ deployment.deployment_progress_bar|get_item:'status_label' }}</span>
@@ -35,6 +43,26 @@
 </div>
 
 <div class="collapse mt-3" id="deployment-{{ deployment.id }}-{{ deployment_type }}">
+    <hr>
+    {% if user in deployment.user_draft.all %}
+        <button class="btn btn-success btn-sm mr-2" id='expander-date-{{deployment.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' deployment.id user.id 'deployment' %}">
+            Approve
+        </button>
+    {% elif user in deployment.user_approver.all %}
+        <button class="btn btn-warning btn-sm mr-2" id='expander-date-{{deployment.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' deployment.id user.id 'deployment' %}">
+            Unapprove
+        </button>
+    {% endif %}
+    <p id = 'approvers'>Approvers:
+        {% for user in deployment.get_sorted_approvers.all %}
+            <span id='approver-{{ user.id }}'>{{ user.username }}</span>
+        {% endfor %}
+    </p>
+    <p id = 'reviewers'>Reviewers:
+        {% for user in deployment.get_sorted_reviewers.all %}
+            <span id='reviewer-{{ user.id }}'>{{ user.username }}</span>
+        {% endfor %}
+    </p>
 
     <table class="table item-data-table">
         <tbody>

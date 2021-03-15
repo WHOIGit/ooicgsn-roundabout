@@ -360,6 +360,9 @@ class EventConfigNameAdd(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
             part_id = self.kwargs['pk'],
             part_type=part_type
         )
+        print(self.request.POST)
+        if len(self.request.POST['config_names-0-name']) == 0 and len(self.request.POST['from_part']) == 0:
+            part_confname_form.forms[0].add_error('name', 'Name cannot be blank')
         if (form.is_valid() and part_confname_form.is_valid() and part_conf_copy_form.is_valid()):
             return self.form_valid(form, part_confname_form, part_conf_copy_form)
         return self.form_invalid(form, part_confname_form, part_conf_copy_form)

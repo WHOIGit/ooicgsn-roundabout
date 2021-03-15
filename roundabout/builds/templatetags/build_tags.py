@@ -34,3 +34,15 @@ register = template.Library()
 def tomorrow(format):
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)
     return tomorrow.strftime(format)
+
+
+
+@register.simple_tag
+def user_is_deploy_reviewer(build,logged_user):
+    if build:
+        if build.deployments.exists():
+            if logged_user.deployments_reviewer.exists():
+                found_events = build.deployments.filter(user_draft__in=[logged_user])
+                if found_events:
+                    return True
+    return False

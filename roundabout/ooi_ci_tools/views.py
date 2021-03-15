@@ -640,6 +640,8 @@ def import_calibrations(cal_files, user, user_draft):
 # Activates parsing tasks based on selected files
 def import_csv(request):
     confirm = ""
+    if not ImportConfig.objects.exists():
+        ImportConfig.objects.create()
     if request.method == "POST":
         cal_form = ImportCalibrationForm(request.POST, request.FILES)
         dep_form = ImportDeploymentsForm(request.POST, request.FILES)

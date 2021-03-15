@@ -120,12 +120,9 @@
 
         $(document).ready(function() {
 
-          // Handles CoefficientValueSet form instance generation
-            $('#calibrations-table tbody tr').formset({
-                prefix: 'coefficient_value_sets',
-                addText: 'Add Coefficient',
-                deleteText: 'Remove',
-            });
+            // Hide default form delete checkboxes
+            $('[id$=-DELETE]').hide();
+            
 
             // hyperlinks formset
             $('#hyperlink-table tbody tr').formset({

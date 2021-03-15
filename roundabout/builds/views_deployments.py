@@ -31,6 +31,7 @@ from .forms import *
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory, Action, Deployment, DeploymentAction, InventoryDeployment
 from roundabout.inventory.utils import _create_action_history
+from roundabout.calibrations.utils import handle_reviewers
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
 labels = set_app_labels()
@@ -161,6 +162,9 @@ class DeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
     def form_valid(self, form):
         action_type = Action.DEPLOYMENTDETAILS
         previous_deployment = Deployment.objects.get(id=self.object.pk)
+        form.instance.approved = False
+        form.save()
+        handle_reviewers(form)
         self.object = form.save()
         self.object.build.detail = '%s Details changed.' % (self.object.deployment_number)
         self.object.build.save()

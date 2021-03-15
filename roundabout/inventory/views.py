@@ -410,17 +410,23 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         else:
             custom_fields = None
 
+        part_has_cals = False
+        part_has_configs = False
+        part_has_consts = False
+
         if self.object.calibration_events.exists():
             coeff_events = self.object.calibration_events.prefetch_related('coefficient_value_sets__coefficient_values')
         else:
             coeff_events = None
 
-        part_has_configs = False
-        part_has_consts = False
+        if self.object.part.coefficient_name_events.exists():
+            if self.object.part.coefficient_name_events.first().coefficient_names.filter(deprecated=False).exists():
+                part_has_cals = True
+
         if self.object.part.config_name_events.exists():
-            if self.object.part.config_name_events.first().config_names.filter(config_type='conf').exists():
+            if self.object.part.config_name_events.first().config_names.filter(config_type='conf', deprecated=False).exists():
                 part_has_configs = True
-            if self.object.part.config_name_events.first().config_names.filter(config_type='cnst').exists():
+            if self.object.part.config_name_events.first().config_names.filter(config_type='cnst', deprecated=False).exists():
                 part_has_consts = True
 
 
@@ -435,6 +441,7 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
                 inventory_location_data.append(data)
 
         context.update({
+            'part_has_cals': part_has_cals,
             'part_has_configs': part_has_configs,
             'part_has_consts': part_has_consts,
             'coeff_events': coeff_events,
