@@ -78,5 +78,3 @@ jobs:
       - name: Stopping Docker application
         run:  docker-compose --file local.yml down
 
-
-
