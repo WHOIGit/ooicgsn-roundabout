@@ -30,10 +30,11 @@ jobs:
             docker-compose --file local.yml build
 
       - name: Starting Docker application
-        run: docker-compose --file local.yml up --detach
+        run: docker-compose --file local.yml up
 
       - name: Check for missing migrations
         run: |
+          docker-compose --file local.yml run --rm django
           docker container ls
           python manage.py makemigrations --check
 
@@ -82,5 +83,7 @@ jobs:
 
       - name: Stopping Docker application
         run:  docker-compose --file local.yml down
+
+#        run: docker-compose --file local.yml up --detach
 
 
