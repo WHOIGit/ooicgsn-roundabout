@@ -30,7 +30,7 @@ jobs:
             docker-compose --file local.yml build
 
       - name: Starting Docker application
-        run: docker-compose --file local.yml up
+        run: docker-compose --file local.yml up --detach
 
       - name: Check for missing migrations
         run: |
@@ -84,6 +84,5 @@ jobs:
       - name: Stopping Docker application
         run:  docker-compose --file local.yml down
 
-#        run: docker-compose --file local.yml up --detach
 
 
