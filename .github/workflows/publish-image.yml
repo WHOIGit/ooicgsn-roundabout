@@ -32,8 +32,8 @@ jobs:
       - name: Starting Docker application
         run: docker-compose --file local.yml up --detach
 
-#      - name: Check for missing migrations
-#        run: |
+      - name: Check for missing migrations
+        run: |
           docker container ls
           python manage.py makemigrations --check
 
