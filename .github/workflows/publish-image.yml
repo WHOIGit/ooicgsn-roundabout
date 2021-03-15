@@ -9,9 +9,6 @@ on:
        - test
 #      - v*
 
-#  pull_request:
-#    branches: [ main ]
-
 env:
   IMAGE_NAME: ooicgsn-roundabout
 
@@ -30,12 +27,13 @@ jobs:
             docker-compose --file local.yml build
 
       - name: Starting Docker application
+        # The Django start script will run migrations for us
         run: docker-compose --file local.yml up --detach
 
       - name: Check for missing migrations
         run: |
-          docker-compose --file local.yml run --rm django
           docker container ls
+          docker-compose --file local.yml run --rm django
           python manage.py makemigrations --check
 
 #      - name: Running Django system checks
