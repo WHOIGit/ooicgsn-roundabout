@@ -69,7 +69,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: setup-build-publish
 
       - name: Log into Github Container registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
@@ -91,6 +90,7 @@ jobs:
           [ "$VERSION" == "main" ] && VERSION=latest
             echo $IMAGE_ID
             echo $VERSION
+            docker image ls
             docker tag $IMAGE_ID $IMAGE_ID:$VERSION
 
 #          docker push $IMAGE_ID:$VERSION
