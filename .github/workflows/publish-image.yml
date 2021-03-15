@@ -34,7 +34,6 @@ jobs:
 
 #      - name: Check for missing migrations
 #        run: |
-#          docker-compose --file local.yml run --rm django 
           docker container ls
           python manage.py makemigrations --check
 
