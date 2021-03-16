@@ -47,7 +47,7 @@ jobs:
           docker-compose -f docker-compose-testing.yml build tests
 #          docker-compose -f docker-compose-testing.yml run --rm tests ./RunAllTests-Chrome-Linux.bat
 
-      - name: Push
+      - name: Tag Image
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           IMAGE_ID=ghcr.io/${{ github.repository }}
@@ -55,33 +55,25 @@ jobs:
           # Change all uppercase to lowercase
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
 
-          echo $VERSION
-
-          # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          # Strip git ref prefix from branch
+          BRANCH=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
 
           echo "${{ github.ref }}"
 
           echo $IMAGE_ID
-          echo $VERSION
-          VERSION="release-1.70"
-          echo $VERSION
+          echo $BRANCH
 
-          # Strip release- prefix from version
-          VERSION=$(echo $VERSION | sed -e 's/.*-//')
-          echo $VERSION
+          # Strip "release-" prefix from version
+          VERSION=$(echo $BRANCH | sed -e 's/.*-//')
             
           docker tag $IMAGE_ID $IMAGE_ID:$VERSION
 
+          echo $VERSION
           docker image ls
 
-          # Push release branches only
-#          [ $VERSION == "release*" ] && docker push $IMAGE_ID:$VERSION
-
-#          docker push $IMAGE_ID:$VERSION
-
-          # Push release branches only
-#          [ startsWith( "$VERSION", "release" ) ] && docker push $IMAGE_ID:$VERSION
+      - name: Push Release Images only
+        if: contains(BRANCH, "release")
+        run: docker push $IMAGE_ID:$VERSION
 
       - name: Stopping Docker application
         run:  docker-compose --file local.yml down
