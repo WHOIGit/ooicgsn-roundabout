@@ -59,12 +59,10 @@ jobs:
           # Change all uppercase to lowercase
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
 
-          echo $VERSION
-
           # Strip git ref prefix from version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
 
-          echo $VERSION
+          echo $github.ref
 
           # Strip "v" prefix from tag name
           [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
@@ -75,7 +73,7 @@ jobs:
           docker tag $IMAGE_ID $IMAGE_ID:$VERSION
           docker image ls
           # Push release branches only
-          [ startsWith( "$VERSION", "automated" ) ] && docker push $IMAGE_ID:$VERSION
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && docker push $IMAGE_ID:$VERSION
 
 #          docker push $IMAGE_ID:$VERSION
 
