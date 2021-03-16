@@ -68,7 +68,7 @@ jobs:
           echo $VERSION
 
           # Strip release- prefix from version
-          VERSION=$(echo $VERSION | sed -e 's/.*://')
+          VERSION=$(echo $VERSION | sed -e 's/.*-//')
           echo $VERSION
             
           docker tag $IMAGE_ID $IMAGE_ID:$VERSION
