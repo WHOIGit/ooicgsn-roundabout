@@ -64,7 +64,9 @@ jobs:
             
           docker tag $IMAGE_ID $IMAGE_ID:$VERSION
 
-      - name: Push Release Images
+          docker image ls
+
+      - name: Push Release Image
         if: contains(github.ref, 'release')
         run: docker push $IMAGE_ID:$VERSION
 
