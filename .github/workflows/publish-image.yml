@@ -74,8 +74,10 @@ jobs:
             
           docker tag $IMAGE_ID $IMAGE_ID:$VERSION
           docker image ls
+          # Push release branches only
+          [ startsWith( "$VERSION", "automated" ) ] && docker push $IMAGE_ID:$VERSION
 
-          docker push $IMAGE_ID:$VERSION
+#          docker push $IMAGE_ID:$VERSION
 
           # Push release branches only
 #          [ startsWith( "$VERSION", "release" ) ] && docker push $IMAGE_ID:$VERSION
