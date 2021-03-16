@@ -66,10 +66,11 @@ jobs:
           echo $VERSION
             
           docker tag $IMAGE_ID $IMAGE_ID:$VERSION
+
           docker image ls
 
           # Push release branches only
-          [[ "${{ github.ref }}" == "release"* ]] && docker push $IMAGE_ID:$VERSION
+          [[ $VERSION == "release"* ]] && docker push $IMAGE_ID:$VERSION
 
 #          docker push $IMAGE_ID:$VERSION
 
