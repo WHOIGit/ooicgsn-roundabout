@@ -72,7 +72,7 @@ jobs:
           docker image ls
 
       - name: Push Release Images only
-        if: contains($BRANCH, "release")
+        if: contains(github.ref, "release")
         run: docker push $IMAGE_ID:$VERSION
 
       - name: Stopping Docker application
