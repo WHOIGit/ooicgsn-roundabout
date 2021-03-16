@@ -1,7 +1,7 @@
 name: Create and publish a package
 on:
   push:
-#    branches: ['release']
+    branches: ['release']
     branches: ['automated_tests']
 
 env:
@@ -45,7 +45,7 @@ jobs:
           node -v
           echo
           docker-compose -f docker-compose-testing.yml build tests
-#          docker-compose -f docker-compose-testing.yml run --rm tests ./RunAllTests-Chrome-Linux.bat
+          docker-compose -f docker-compose-testing.yml run --rm tests ./RunAllTests-Chrome-Linux.bat
 
       - name: Tag Image
         run: |
@@ -58,20 +58,12 @@ jobs:
           # Strip git ref prefix from branch
           BRANCH=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
 
-          echo "${{ github.ref }}"
-
-          echo $IMAGE_ID
-          echo $BRANCH
-
           # Strip "release-" prefix from version
           VERSION=$(echo $BRANCH | sed -e 's/.*-//')
             
           docker tag $IMAGE_ID $IMAGE_ID:$VERSION
 
-          echo $VERSION
-          docker image ls
-
-      - name: Push Release Images only
+      - name: Push Release Images
         if: contains(github.ref, 'release')
         run: docker push $IMAGE_ID:$VERSION
 
