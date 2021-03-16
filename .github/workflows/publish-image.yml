@@ -64,13 +64,19 @@ jobs:
 
           echo $IMAGE_ID
           echo $VERSION
+          VERSION="release-1.70"
+          echo $VERSION
+
+          # Strip release- prefix from version
+          VERSION=$(echo $VERSION | sed -e 's/.*://')
+          echo $VERSION
             
           docker tag $IMAGE_ID $IMAGE_ID:$VERSION
 
           docker image ls
 
           # Push release branches only
-          [ "$VERSION" == "release*" ] && docker push $IMAGE_ID:$VERSION
+#          [ $VERSION == "release*" ] && docker push $IMAGE_ID:$VERSION
 
 #          docker push $IMAGE_ID:$VERSION
 
