@@ -75,10 +75,10 @@ jobs:
           docker tag $IMAGE_ID $IMAGE_ID:$VERSION
           docker image ls
 
+          docker push $IMAGE_ID:$VERSION
+
           # Push release branches only
 #          [ startsWith( "$VERSION", "release" ) ] && docker push $IMAGE_ID:$VERSION
-
-          docker push $IMAGE_ID:$VERSION
 
       - name: Stopping Docker application
         run:  docker-compose --file local.yml down
