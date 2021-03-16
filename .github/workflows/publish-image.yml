@@ -1,8 +1,9 @@
 name: Create and publish a package
 on:
   push:
-    branches: ['release']
-    branches: ['automated_tests']
+    branches: 
+      - 'release-*****'
+      - 'automated_tests'
 
 env:
   IMAGE_NAME: ooicgsn-roundabout
