@@ -60,7 +60,7 @@ jobs:
           # Strip git ref prefix from version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
 
-          echo "{{$github.ref}}"
+          echo "${{ github.ref }}"
 
           echo $IMAGE_ID
           echo $VERSION
@@ -69,7 +69,7 @@ jobs:
           docker image ls
 
           # Push release branches only
-          [[ "${{ github.ref }}" == "release-"* ]] && docker push $IMAGE_ID:$VERSION
+          [[ "${{ github.ref }}" == "release"* ]] && docker push $IMAGE_ID:$VERSION
 
 #          docker push $IMAGE_ID:$VERSION
 
