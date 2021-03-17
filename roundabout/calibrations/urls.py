@@ -28,7 +28,7 @@ urlpatterns = [
     path('ajax/add/<int:pk>/', view=views.EventValueSetAdd.as_view(), name='event_valueset_add'),
     path('ajax/edit/<int:pk>/', view=views.EventValueSetUpdate.as_view(), name='event_valueset_update'),
     path('ajax/delete/<int:pk>/', view=views.EventValueSetDelete.as_view(), name='event_valueset_delete'),
-    path('ajax/value/edit/<int:pk>/', view=views.ValueSetValueUpdate.as_view(), name='valueset_value_update'),
+    path('ajax/value/edit/<int:pk>/<str:sel_ids>/', view=views.ValueSetValueUpdate.as_view(), name='valueset_value_update'),
     path('ajax/calname/add/<int:pk>/', view=views.EventCoeffNameAdd.as_view(), name='event_coeffname_add'),
     path('ajax/calname/edit/<int:pk>/', view=views.EventCoeffNameUpdate.as_view(), name='event_coeffname_update'),
     path('ajax/calname/delete/<int:pk>/', view=views.EventCoeffNameDelete.as_view(), name='event_coeffname_delete'),

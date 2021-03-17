@@ -297,13 +297,16 @@ class ValueSetValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         self.object = self.get_object()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        coeff_val_list = self.request.GET.getlist('coeff_val_id_array[]')
+        coeff_val_list = self.kwargs['sel_ids']
         valueset_value_form = ValueSetValueFormset(
             instance=self.object,
             form_kwargs={
                 'valset_id': self.object.id
-            }
+            },
         )
+        if coeff_val_list != 'none':
+            coeff_ids = [int(id) for id in coeff_val_list.split(',')]
+            valueset_value_form.queryset = CoefficientValue.objects.filter(coeff_value_set = self.object, id__in = coeff_ids)
         return self.render_to_response(
             self.get_context_data(
                 valueset_value_form=valueset_value_form
