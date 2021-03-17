@@ -40,6 +40,8 @@ from roundabout.inventory.utils import _create_action_history
 from roundabout.locations.models import Location
 from roundabout.parts.models import Revision, Documentation, PartType
 from roundabout.userdefinedfields.models import FieldValue, Field
+from roundabout.configs_constants.models import *
+from roundabout.users.models import User
 from .forms import PrinterForm, ImportInventoryForm, ImportCalibrationForm
 from .models import *
 
@@ -405,17 +407,48 @@ class ImportInventoryUploadSuccessView(TemplateView):
 # Makes a copy of the Assembly Revisiontree starting at "root_part",
 # move to new Revision, reparenting it to "parent"
 def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent=None):
-    params = {'expand': 'part'}
+    params = {'expand': 'part.config_name_events,config_default_events.config_defaults'}
     assembly_part_request = requests.get(root_part_url, params=params, headers=headers, verify=False)
     assembly_part_data = assembly_part_request.json()
     # Need to validate that the Part template exists before creating AssemblyPart
     try:
         part_obj = Part.objects.get(part_number=assembly_part_data['part']['part_number'])
+
+
+        if assembly_part_data['part']['config_name_events']:
+            # Check if Part has all current Config Names: ConfigNameEvent -> ConfigName(s)
+            # First get existing Parts list of ConfigNames
+            existing_config_names = []
+            config_events_qs = part_obj.config_name_events.all()
+
+            if config_events_qs:
+                for config_event in config_events_qs:
+                    config_names = list(config_event.config_names.values_list('name', flat=True))
+                    existing_config_names = existing_config_names + config_names
+                print(existing_config_names)
+
+            # Then check against the importing RDB instance's list of config names
+            params = {'expand': 'config_name_events.config_names'}
+            part_configs_request = requests.get(assembly_part_data['part']['url'], params=params, headers=headers, verify=False)
+            part_configs_data = part_configs_request.json()
+
+            if part_configs_data['config_name_events']:
+                importing_config_names = []
+                for config_event in part_configs_data['config_name_events']:
+                    missing_config_names = [config_name['name'] for config_name in config_event['config_names'] if config_name['name'] not in existing_config_names]
+                    print(missing_config_names)
+                    #importing_config_names = importing_config_names + config_names
+                #print(importing_config_names)
+
+            #compare the two lists to see if any Config Name is missing
+            #existing_set = set(existing_config_names)
+            #missing_config_names = [x for x in importing_config_names if x not in existing_set]
+            #print(missing_config_names)
+
     except Part.DoesNotExist:
         params = {'expand': 'part_type,revisions.documentation'}
         part_request = requests.get(assembly_part_data['part']['url'], params=params, headers=headers, verify=False)
         part_data = part_request.json()
-        print(part_data)
 
         try:
             part_type = PartType.objects.get(name=part_data['part_type']['name'])
@@ -458,6 +491,9 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
         note = assembly_part_data['note'],
         order = assembly_part_data['order']
     )
+
+    # Add all Config data for the Assembly Part
+    config_default_events = assembly_part_data['config_default_events']
     # Loop through the tree
     for child_url in assembly_part_data['children']:
         _api_import_assembly_parts_tree(headers, child_url, new_revision, assembly_part_obj)
