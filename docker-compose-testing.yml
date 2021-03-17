@@ -49,7 +49,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/local/tests/Dockerfile
-      image: roundabout_production_tests
+      #image: roundabout_production_tests
     depends_on:
       - django
     network_mode: "service:django"
