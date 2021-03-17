@@ -37,6 +37,7 @@
           {# 5 #} <option value="assembly">{{ label_assemblies_app_singular }} Templates</option>
           {# 6 #} <option value="action">Actions</option>
           {# 7 #} <option value="user">User</option>
+          {# 8 #} <option value="change">Change</option>
                 </select>
               </div>
 
@@ -59,6 +60,7 @@
   else if (domain.startsWith('assem')) { select_idx = 5 }
   else if (domain.startsWith('action')){ select_idx = 6 }
   else if (domain.startsWith('user'))  { select_idx = 7 }
+  else if (domain.startsWith('change')){ select_idx = 8 }
   else { select_idx = 0 } // inventory, the default
 
   document.getElementById("searchbar-modelselect").selectedIndex = select_idx
