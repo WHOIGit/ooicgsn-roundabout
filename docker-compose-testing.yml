@@ -30,8 +30,8 @@ services:
     build:
       context: .
       dockerfile: ./compose/local/django/Dockerfile
-#    image: roundabout_local_django
-    image: ooicgsn-roundabout
+    image: roundabout_local_django
+#    image: ooicgsn-roundabout
     depends_on:
       - postgres
     volumes:
@@ -49,7 +49,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/local/tests/Dockerfile
-#      image: roundabout_production_tests - gcr error
+      image: roundabout_production_tests
     depends_on:
       - django
     network_mode: "service:django"
