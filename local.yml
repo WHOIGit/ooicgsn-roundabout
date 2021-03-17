@@ -49,8 +49,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
-#    image: roundabout_production_postgres
-    image: ghcr.io/whoigit/ooicgsn-roundabout
+    image: roundabout_production_postgres
     volumes:
       - local_postgres_data:/var/lib/postgresql/data
       - local_postgres_data_backups:/backups
