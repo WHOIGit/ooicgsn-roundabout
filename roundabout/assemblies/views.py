@@ -220,13 +220,16 @@ class AssemblyAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
             return response
 
     def form_invalid(self, form, documentation_form):
-        form_errors = documentation_form.errors
-
         if self.request.is_ajax():
-            data = form.errors
-            return JsonResponse(data, status=400)
+            if not form.is_valid():
+                # show form errors before formset errors
+                return JsonResponse(form.errors, status=400)
+            else:
+                # only show formset errors if there are no form errors
+                # because it is unclear how to combine form and formset errors in a way that doesnt break project.js:handleFormError()
+                return JsonResponse(documentation_form.errors, status=400, safe=False)
         else:
-            return self.render_to_response(self.get_context_data(form=form, revision_form=revision_form, documentation_form=documentation_form, form_errors=form_errors))
+            return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form))
 
     def get_success_url(self):
         return reverse('assemblies:ajax_assemblies_detail', args=(self.object.id,))
@@ -472,13 +475,16 @@ class AssemblyRevisionAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin
             return response
 
     def form_invalid(self, form, documentation_form):
-        form_errors = documentation_form.errors
-
         if self.request.is_ajax():
-            data = form.errors
-            return JsonResponse(data, status=400)
+            if not form.is_valid():
+                # show form errors before formset errors
+                return JsonResponse(form.errors, status=400)
+            else:
+                # only show formset errors if there are no form errors
+                # because it is unclear how to combine form and formset errors in a way that doesnt break project.js:handleFormError()
+                return JsonResponse(documentation_form.errors, status=400, safe=False)
         else:
-            return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form, form_errors=form_errors))
+            return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form))
 
     def get_success_url(self):
         return reverse('assemblies:ajax_assemblyrevision_detail', args=(self.object.id,))
@@ -529,13 +535,16 @@ class AssemblyRevisionAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin
             return response
 
     def form_invalid(self, form, documentation_form):
-        form_errors = documentation_form.errors
-
         if self.request.is_ajax():
-            data = form.errors
-            return JsonResponse(data, status=400)
+            if not form.is_valid():
+                # show form errors before formset errors
+                return JsonResponse(form.errors, status=400)
+            else:
+                # only show formset errors if there are no form errors
+                # because it is unclear how to combine form and formset errors in a way that doesnt break project.js:handleFormError()
+                return JsonResponse(documentation_form.errors, status=400, safe=False)
         else:
-            return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form, form_errors=form_errors))
+            return self.render_to_response(self.get_context_data(form=form, documentation_form=documentation_form))
 
     def get_success_url(self):
         return reverse('assemblies:ajax_assemblyrevision_detail', args=(self.object.id,))
