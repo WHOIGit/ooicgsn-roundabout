@@ -89,6 +89,18 @@ class ConfigNameEventSerializer(FlexFieldsModelSerializer):
         read_only = True,
         lookup_field = 'pk',
     )
+    user_draft = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':users-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+    user_approver = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':users-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
 
     class Meta:
         model = ConfigNameEvent
@@ -107,7 +119,9 @@ class ConfigNameEventSerializer(FlexFieldsModelSerializer):
 
         expandable_fields = {
             'part': 'roundabout.parts.api.serializers.PartSerializer',
-            'config_names': ('roundabout.configs_constants.api.serializers.ConfigNameSerializer', {'many': True})
+            'config_names': ('roundabout.configs_constants.api.serializers.ConfigNameSerializer', {'many': True}),
+            'user_draft': ('roundabout.users.api.serializers.UserSerializer', {'many': True}),
+            'user_approver': ('roundabout.users.api.serializers.UserSerializer', {'many': True}),
         }
 
 

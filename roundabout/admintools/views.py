@@ -406,14 +406,13 @@ class ImportInventoryUploadSuccessView(TemplateView):
 # Import an existing Assembly template from a separate RDB instance
 # Makes a copy of the Assembly Revisiontree starting at "root_part",
 # move to new Revision, reparenting it to "parent"
-def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent=None):
+def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent=None, importing_user=None):
     params = {'expand': 'part.config_name_events,config_default_events.config_defaults'}
     assembly_part_request = requests.get(root_part_url, params=params, headers=headers, verify=False)
     assembly_part_data = assembly_part_request.json()
     # Need to validate that the Part template exists before creating AssemblyPart
     try:
         part_obj = Part.objects.get(part_number=assembly_part_data['part']['part_number'])
-
 
         if assembly_part_data['part']['config_name_events']:
             # Check if Part has all current Config Names: ConfigNameEvent -> ConfigName(s)
@@ -428,7 +427,7 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
                 print(existing_config_names)
 
             # Then check against the importing RDB instance's list of config names
-            params = {'expand': 'config_name_events.config_names'}
+            params = {'expand': 'config_name_events.config_names,config_name_events.user_draft,config_name_events.user_approver'}
             part_configs_request = requests.get(assembly_part_data['part']['url'], params=params, headers=headers, verify=False)
             part_configs_data = part_configs_request.json()
 
@@ -437,6 +436,46 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
                 for config_event in part_configs_data['config_name_events']:
                     missing_config_names = [config_name['name'] for config_name in config_event['config_names'] if config_name['name'] not in existing_config_names]
                     print(missing_config_names)
+
+                    if missing_config_names:
+                        # create ConfigNameEvent parent object
+                        config_event_obj = ConfigEvent.objects.create(
+                            created_at = config_event['created_at'],
+                            updated_at = config_event['updated_at'],
+                            part = part_obj,
+                            approved = config_event['approved'],
+                            detail = config_event['detail'],
+                        )
+
+                        # get Users for draft/approval fields. Use importing User if no match
+                        for user in config_event['user_draft']:
+                            try:
+                                user_obj = User.objects.filter(username=user['username'])
+                            except User.DoesNotExist:
+                                user_obj = importing_user
+                            # add to ManyToManyField
+                            config_event_obj.user_draft.add(user_obj)
+
+                        for user in config_event['user_approver']:
+                            try:
+                                user_obj = User.objects.filter(username=user['username'])
+                            except User.DoesNotExist:
+                                user_obj = importing_user
+                            # add to ManyToManyField
+                            config_event_obj.user_approver.add(user_obj)
+
+                        for config_name in missing_config_names:
+                            # Create Missing Config Names
+                            config_name_obj = ConfigName.objects.create(
+                                part = part_obj,
+                                config_name_event = config_event_obj,
+                                name = config_name['name'],
+                                config_type = config_name['config_type'],
+                                created_at = config_name['created_at'],
+                                deprecated = config_name['deprecated'],
+                                include_with_calibrations = config_name['include_with_calibrations'],
+                            )
+
                     #importing_config_names = importing_config_names + config_names
                 #print(importing_config_names)
 
@@ -548,7 +587,7 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
             print(assembly_revision_obj)
 
             for root_url in rev['assembly_parts_roots']:
-                tree_created = _api_import_assembly_parts_tree(headers, root_url, assembly_revision_obj)
+                tree_created = _api_import_assembly_parts_tree(headers, root_url, assembly_revision_obj, None, self.request.user)
 
             print(tree_created)
             #AssemblyPart._tree_manager.rebuild()
