@@ -407,7 +407,7 @@ class ImportInventoryUploadSuccessView(TemplateView):
 # Makes a copy of the Assembly Revisiontree starting at "root_part",
 # move to new Revision, reparenting it to "parent"
 def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent=None, importing_user=None):
-    params = {'expand': 'part.config_name_events,config_default_events.config_defaults'}
+    params = {'expand': 'part,config_default_events.config_defaults,config_default_events.config_defaults.config_name,config_default_events.user_draft,config_default_events.user_approver'}
     assembly_part_request = requests.get(root_part_url, params=params, headers=headers, verify=False)
     assembly_part_data = assembly_part_request.json()
     # Need to validate that the Part template exists before creating AssemblyPart
@@ -415,7 +415,7 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
         part_obj = Part.objects.get(part_number=assembly_part_data['part']['part_number'])
 
         if assembly_part_data['part']['config_name_events']:
-            # Check if Part has all current Config Names: ConfigNameEvent -> ConfigName(s)
+            # Check if local Part has all current Config Names: ConfigNameEvent -> ConfigName(s)
             # First get existing Parts list of ConfigNames
             existing_config_names = []
             config_events_qs = part_obj.config_name_events.all()
@@ -424,7 +424,6 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
                 for config_event in config_events_qs:
                     config_names = list(config_event.config_names.values_list('name', flat=True))
                     existing_config_names = existing_config_names + config_names
-                print(existing_config_names)
 
             # Then check against the importing RDB instance's list of config names
             params = {'expand': 'config_name_events.config_names,config_name_events.user_draft,config_name_events.user_approver'}
@@ -476,16 +475,8 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
                                 include_with_calibrations = config_name['include_with_calibrations'],
                             )
 
-                    #importing_config_names = importing_config_names + config_names
-                #print(importing_config_names)
-
-            #compare the two lists to see if any Config Name is missing
-            #existing_set = set(existing_config_names)
-            #missing_config_names = [x for x in importing_config_names if x not in existing_set]
-            #print(missing_config_names)
-
     except Part.DoesNotExist:
-        params = {'expand': 'part_type,revisions.documentation'}
+        params = {'expand': 'part_type,revisions.documentation,config_name_events.config_names,config_name_events.user_draft,config_name_events.user_approver'}
         part_request = requests.get(assembly_part_data['part']['url'], params=params, headers=headers, verify=False)
         part_data = part_request.json()
 
@@ -522,7 +513,48 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
                     doc_link =  doc['doc_link'],
                     revision = revision_obj,
                 )
-    # Now create the Assembly Part
+
+        # Import all existing ConfigEvents/ConfigName
+        if part_data['config_name_events']:
+            for config_event in part_data['config_name_events']:
+                config_event_obj = ConfigEvent.objects.create(
+                    created_at = config_event['created_at'],
+                    updated_at = config_event['updated_at'],
+                    part = part_obj,
+                    approved = config_event['approved'],
+                    detail = config_event['detail'],
+                )
+
+                # get Users for draft/approval fields. Use importing User if no match
+                for user in config_event['user_draft']:
+                    try:
+                        user_obj = User.objects.get(username=user['username'])
+                    except User.DoesNotExist:
+                        user_obj = importing_user
+                    # add to ManyToManyField
+                    config_event_obj.user_draft.add(user_obj)
+
+                for user in config_event['user_approver']:
+                    try:
+                        user_obj = User.objects.get(username=user['username'])
+                    except User.DoesNotExist:
+                        user_obj = importing_user
+                    # add to ManyToManyField
+                    config_event_obj.user_approver.add(user_obj)
+
+                for config_name in config_event['config_names']:
+                    # Create All Config Names
+                    config_name_obj = ConfigName.objects.create(
+                        part = part_obj,
+                        config_name_event = config_event_obj,
+                        name = config_name['name'],
+                        config_type = config_name['config_type'],
+                        created_at = config_name['created_at'],
+                        deprecated = config_name['deprecated'],
+                        include_with_calibrations = config_name['include_with_calibrations'],
+                    )
+
+    # Create the Assembly Part
     assembly_part_obj = AssemblyPart.objects.create(
         assembly_revision = new_revision,
         part = part_obj,
@@ -532,7 +564,46 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
     )
 
     # Add all Config data for the Assembly Part
-    config_default_events = assembly_part_data['config_default_events']
+    if assembly_part_data['config_default_events']:
+        for config_event in assembly_part_data['config_default_events']:
+            config_event_obj = ConfigDefaultEvent.objects.create(
+                created_at = config_event['created_at'],
+                updated_at = config_event['updated_at'],
+                assembly_part = assembly_part_obj,
+                approved = config_event['approved'],
+                detail = config_event['detail'],
+            )
+
+            # get Users for draft/approval fields. Use importing User if no match
+            for user in config_event['user_draft']:
+                try:
+                    user_obj = User.objects.get(username=user['username'])
+                except User.DoesNotExist:
+                    user_obj = importing_user
+                # add to ManyToManyField
+                config_event_obj.user_draft.add(user_obj)
+
+            for user in config_event['user_approver']:
+                try:
+                    user_obj = User.objects.get(username=user['username'])
+                except User.DoesNotExist:
+                    user_obj = importing_user
+                # add to ManyToManyField
+                config_event_obj.user_approver.add(user_obj)
+
+            for config_default in config_event['config_defaults']:
+                # Get the matching local ConfigName object for this ConfigDefault
+                config_name_obj = ConfigName.objects.filter(
+                    name=config_default['config_name']['name'],
+                    part=part_obj
+                ).first()
+                # Create Config Default
+                config_default_obj = ConfigDefault.objects.create(
+                    conf_def_event = config_event_obj,
+                    default_value = config_default['default_value'],
+                    created_at = config_default['created_at'],
+                    config_name = config_name_obj,
+                )
     # Loop through the tree
     for child_url in assembly_part_data['children']:
         _api_import_assembly_parts_tree(headers, child_url, new_revision, assembly_part_obj)
