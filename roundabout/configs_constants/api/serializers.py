@@ -235,6 +235,18 @@ class ConstDefaultEventSerializer(FlexFieldsModelSerializer):
         read_only = True,
         lookup_field = 'pk',
     )
+    user_draft = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':users-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+    user_approver = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':users-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
 
     class Meta:
         model = ConstDefaultEvent
@@ -254,6 +266,8 @@ class ConstDefaultEventSerializer(FlexFieldsModelSerializer):
         expandable_fields = {
             'constant_defaults': ('roundabout.configs_constants.api.serializers.ConstDefaultSerializer', {'many': True}),
             'inventory': 'roundabout.inventory.api.serializers.InventorySerializer',
+            'user_draft': ('roundabout.users.api.serializers.UserSerializer', {'many': True}),
+            'user_approver': ('roundabout.users.api.serializers.UserSerializer', {'many': True}),
         }
 
 
@@ -306,6 +320,18 @@ class ConfigDefaultEventSerializer(FlexFieldsModelSerializer):
         read_only = True,
         lookup_field = 'pk',
     )
+    user_draft = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':users-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
+    user_approver = serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':users-detail',
+        many = True,
+        read_only = True,
+        lookup_field = 'pk',
+    )
 
     class Meta:
         model = ConfigDefaultEvent
@@ -325,6 +351,8 @@ class ConfigDefaultEventSerializer(FlexFieldsModelSerializer):
         expandable_fields = {
             'config_defaults': ('roundabout.configs_constants.api.serializers.ConfigDefaultSerializer', {'many': True}),
             'assembly_part': 'roundabout.assemblies.api.serializers.AssemblyPartSerializer',
+            'user_draft': ('roundabout.users.api.serializers.UserSerializer', {'many': True}),
+            'user_approver': ('roundabout.users.api.serializers.UserSerializer', {'many': True}),
         }
 
 
