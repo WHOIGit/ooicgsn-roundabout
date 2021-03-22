@@ -433,12 +433,12 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
             if part_configs_data['config_name_events']:
                 importing_config_names = []
                 for config_event in part_configs_data['config_name_events']:
-                    missing_config_names = [config_name['name'] for config_name in config_event['config_names'] if config_name['name'] not in existing_config_names]
+                    missing_config_names = [config_name for config_name in config_event['config_names'] if config_name['name'] not in existing_config_names]
                     print(missing_config_names)
 
                     if missing_config_names:
                         # create ConfigNameEvent parent object
-                        config_event_obj = ConfigEvent.objects.create(
+                        config_event_obj = ConfigNameEvent.objects.create(
                             created_at = config_event['created_at'],
                             updated_at = config_event['updated_at'],
                             part = part_obj,
@@ -449,7 +449,7 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
                         # get Users for draft/approval fields. Use importing User if no match
                         for user in config_event['user_draft']:
                             try:
-                                user_obj = User.objects.filter(username=user['username'])
+                                user_obj = User.objects.get(username=user['username'])
                             except User.DoesNotExist:
                                 user_obj = importing_user
                             # add to ManyToManyField
@@ -457,7 +457,7 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
 
                         for user in config_event['user_approver']:
                             try:
-                                user_obj = User.objects.filter(username=user['username'])
+                                user_obj = User.objects.get(username=user['username'])
                             except User.DoesNotExist:
                                 user_obj = importing_user
                             # add to ManyToManyField
