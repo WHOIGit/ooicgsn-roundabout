@@ -29,9 +29,9 @@ from dateutil import parser
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.http import HttpResponse
 from django.urls import reverse, reverse_lazy
-from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, \
-    TemplateView, FormView
-
+from django.views.generic import (
+    View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
+)
 from roundabout.assemblies.models import Assembly, AssemblyPart, AssemblyRevision
 from roundabout.calibrations.forms import parse_valid_coeff_vals
 from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
@@ -50,7 +50,8 @@ from .models import *
 def trigger_error(request):
     division_by_zero = 1 / 0
 
-def parse_cal_file(self,form,cal_csv,ext_files):
+
+def parse_cal_file(self, form, cal_csv, ext_files):
     cal_csv_filename = cal_csv.name[:-4]
     cal_csv.seek(0)
     reader = csv.DictReader(io.StringIO(cal_csv.read().decode('utf-8')))
@@ -61,8 +62,8 @@ def parse_cal_file(self,form,cal_csv,ext_files):
     inventory_item = Inventory.objects.get(serial_number=inv_serial)
     cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
     csv_event = CalibrationEvent.objects.create(
-        calibration_date = cal_date_date,
-        inventory = inventory_item
+        calibration_date=cal_date_date,
+        inventory=inventory_item
     )
     for idx, row in enumerate(reader):
         row_data = row.items()
@@ -70,8 +71,8 @@ def parse_cal_file(self,form,cal_csv,ext_files):
             if key == 'name':
                 calibration_name = value.strip()
                 cal_name_item = CoefficientName.objects.get(
-                    calibration_name = calibration_name,
-                    coeff_name_event =  inventory_item.part.coefficient_name_events.first()
+                    calibration_name=calibration_name,
+                    coeff_name_event=inventory_item.part.coefficient_name_events.first()
                 )
             elif key == 'value':
                 valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
@@ -80,7 +81,7 @@ def parse_cal_file(self,form,cal_csv,ext_files):
                 if '[' in raw_valset:
                     raw_valset = raw_valset[1:-1]
                 if 'SheetRef' in raw_valset:
-                    ext_finder_filename = "__".join((cal_csv_filename,calibration_name))
+                    ext_finder_filename = "__".join((cal_csv_filename, calibration_name))
                     ref_file = [file for file in ext_files if ext_finder_filename in file.name][0]
                     ref_file.seek(0)
                     reader = io.StringIO(ref_file.read().decode('utf-8'))
@@ -89,9 +90,9 @@ def parse_cal_file(self,form,cal_csv,ext_files):
             elif key == 'notes':
                 notes = value.strip()
                 coeff_val_set = CoefficientValueSet(
-                    coefficient_name = cal_name_item,
-                    value_set = raw_valset,
-                    notes = notes
+                    coefficient_name=cal_name_item,
+                    value_set=raw_valset,
+                    notes=notes
                 )
                 coeff_val_sets.append(coeff_val_set)
     if form.cleaned_data['user_draft'].exists():
@@ -105,6 +106,8 @@ def parse_cal_file(self,form,cal_csv,ext_files):
     _create_action_history(csv_event, Action.CALCSVIMPORT, self.request.user)
 
 # CSV File Uploader for GitHub Calibration Coefficients
+
+
 class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
     form_class = ImportCalibrationForm
     template_name = 'admintools/import_calibrations_upload_form.html'
@@ -120,7 +123,7 @@ class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
             if ext == 'csv':
                 csv_files.append(file)
         for cal_csv in csv_files:
-            parse_cal_file(self,form,cal_csv,ext_files)
+            parse_cal_file(self, form, cal_csv, ext_files)
         return super(ImportCalibrationsUploadView, self).form_valid(form)
 
     def get_success_url(self):
@@ -188,7 +191,8 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                     if not item:
                         data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
                     else:
-                        data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
+                        data.append({'field_name': key, 'field_value': value.strip(),
+                                    'error': True, 'error_msg': error_msg})
 
                 elif key == 'Part Number':
                     # Check if Part template exists
@@ -201,7 +205,8 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                     if part:
                         data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
                     else:
-                        data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
+                        data.append({'field_name': key, 'field_value': value.strip(),
+                                    'error': True, 'error_msg': error_msg})
 
                 elif key == 'Location':
                     # Check if Location exists and if there's multiple Locations with same name
@@ -220,10 +225,11 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                     if location:
                         data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
                     else:
-                        data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
+                        data.append({'field_name': key, 'field_value': value.strip(),
+                                    'error': True, 'error_msg': error_msg})
 
                 elif key == 'Notes':
-                        data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
+                    data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
 
                 # Now run through all the Custom Fields, validate type, add to JSON
                 else:
@@ -241,7 +247,8 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                                     data.append({'field_name': key, 'field_value': value, 'error': False})
                                 except ValueError:
                                     error_msg = "Validation Error. Needs to be an integer."
-                                    data.append({'field_name': key, 'field_value': value, 'error': True, 'error_msg': error_msg})
+                                    data.append({'field_name': key, 'field_value': value,
+                                                'error': True, 'error_msg': error_msg})
 
                             elif custom_field.field_type == 'DecimalField':
                                 try:
@@ -249,7 +256,8 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                                     data.append({'field_name': key, 'field_value': value, 'error': False})
                                 except ValueError:
                                     error_msg = "Validation Error. Needs to be a decimal."
-                                    data.append({'field_name': key, 'field_value': value, 'error': True, 'error_msg': error_msg})
+                                    data.append({'field_name': key, 'field_value': value,
+                                                'error': True, 'error_msg': error_msg})
 
                             elif custom_field.field_type == 'BooleanField':
                                 # function to check if various versions of Boolean pass
@@ -262,10 +270,12 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
 
                                 if check_if_bool(self, value.strip()):
                                     print('Boolean!')
-                                    data.append({'field_name': key, 'field_value': str_to_bool(self, value.strip()), 'error': False})
+                                    data.append({'field_name': key, 'field_value': str_to_bool(
+                                        self, value.strip()), 'error': False})
                                 else:
                                     error_msg = "Validation Error. Needs to be a True/False boolean."
-                                    data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
+                                    data.append({'field_name': key, 'field_value': value.strip(),
+                                                'error': True, 'error_msg': error_msg})
 
                             elif custom_field.field_type == 'DateField':
                                 try:
@@ -274,7 +284,8 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                                     data.append({'field_name': key, 'field_value': value, 'error': False})
                                 except:
                                     error_msg = "Validation Error. Needs to be a valid Date Format (ex. mm/dd/yyyy)."
-                                    data.append({'field_name': key, 'field_value': value, 'error': True, 'error_msg': error_msg})
+                                    data.append({'field_name': key, 'field_value': value,
+                                                'error': True, 'error_msg': error_msg})
                             else:
                                 data.append({'field_name': key, 'field_value': value, 'error': False})
                         else:
@@ -297,7 +308,7 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
 class ImportInventoryPreviewDetailView(LoginRequiredMixin, DetailView):
     model = TempImport
     context_object_name = 'tempimport'
-    template_name='admintools/import_tempimport_detail.html'
+    template_name = 'admintools/import_tempimport_detail.html'
 
     def get_context_data(self, **kwargs):
         context = super(ImportInventoryPreviewDetailView, self).get_context_data(**kwargs)
@@ -364,10 +375,10 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                     for note in note_list:
                         if note:
                             note_record = Action.objects.create(action_type='note',
-                                                                  detail=note,
-                                                                  location=location,
-                                                                  user=self.request.user,
-                                                                  inventory=inventory_obj)
+                                                                detail=note,
+                                                                location=location,
+                                                                user=self.request.user,
+                                                                inventory=inventory_obj)
 
                 # Add the Custom Fields
                 for col in item_obj.data:
@@ -390,10 +401,10 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                                 # Drop any fields that don't match a custom field into a History Note
                                 note_detail = col['field_name'] + ': ' + col['field_value']
                                 note_record = Action.objects.create(action_type='note',
-                                                                      detail=note_detail,
-                                                                      location=location,
-                                                                      user=self.request.user,
-                                                                      inventory=inventory_obj)
+                                                                    detail=note_detail,
+                                                                    location=location,
+                                                                    user=self.request.user,
+                                                                    inventory=inventory_obj)
 
         return reverse('admintools:import_inventory_upload_success', )
 
@@ -427,23 +438,25 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
 
             # Then check against the importing RDB instance's list of config names
             params = {'expand': 'config_name_events.config_names,config_name_events.user_draft,config_name_events.user_approver'}
-            part_configs_request = requests.get(assembly_part_data['part']['url'], params=params, headers=headers, verify=False)
+            part_configs_request = requests.get(
+                assembly_part_data['part']['url'], params=params, headers=headers, verify=False)
             part_configs_data = part_configs_request.json()
 
             if part_configs_data['config_name_events']:
                 importing_config_names = []
                 for config_event in part_configs_data['config_name_events']:
-                    missing_config_names = [config_name for config_name in config_event['config_names'] if config_name['name'] not in existing_config_names]
+                    missing_config_names = [config_name for config_name in config_event['config_names']
+                                            if config_name['name'] not in existing_config_names]
                     print(missing_config_names)
 
                     if missing_config_names:
                         # create ConfigNameEvent parent object
                         config_event_obj = ConfigNameEvent.objects.create(
-                            created_at = config_event['created_at'],
-                            updated_at = config_event['updated_at'],
-                            part = part_obj,
-                            approved = config_event['approved'],
-                            detail = config_event['detail'],
+                            created_at=config_event['created_at'],
+                            updated_at=config_event['updated_at'],
+                            part=part_obj,
+                            approved=config_event['approved'],
+                            detail=config_event['detail'],
                         )
 
                         # get Users for draft/approval fields. Use importing User if no match
@@ -466,13 +479,13 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
                         for config_name in missing_config_names:
                             # Create Missing Config Names
                             config_name_obj = ConfigName.objects.create(
-                                part = part_obj,
-                                config_name_event = config_event_obj,
-                                name = config_name['name'],
-                                config_type = config_name['config_type'],
-                                created_at = config_name['created_at'],
-                                deprecated = config_name['deprecated'],
-                                include_with_calibrations = config_name['include_with_calibrations'],
+                                part=part_obj,
+                                config_name_event=config_event_obj,
+                                name=config_name['name'],
+                                config_type=config_name['config_type'],
+                                created_at=config_name['created_at'],
+                                deprecated=config_name['deprecated'],
+                                include_with_calibrations=config_name['include_with_calibrations'],
                             )
 
     except Part.DoesNotExist:
@@ -487,42 +500,42 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
             part_type = PartType.objects.create(name=part_data['part_type']['name'])
 
         part_obj = Part.objects.create(
-            name = part_data['name'],
-            friendly_name = part_data['friendly_name'],
-            part_type = part_type,
-            part_number = part_data['part_number'],
-            unit_cost = part_data['unit_cost'],
-            refurbishment_cost = part_data['refurbishment_cost'],
-            note = part_data['note'],
-            cal_dec_places = part_data['cal_dec_places'],
+            name=part_data['name'],
+            friendly_name=part_data['friendly_name'],
+            part_type=part_type,
+            part_number=part_data['part_number'],
+            unit_cost=part_data['unit_cost'],
+            refurbishment_cost=part_data['refurbishment_cost'],
+            note=part_data['note'],
+            cal_dec_places=part_data['cal_dec_places'],
         )
         # Create all Revisions objects for this Part
         for revision in part_data['revisions']:
             revision_obj = Revision.objects.create(
-                revision_code = revision['revision_code'],
-                unit_cost = revision['unit_cost'],
-                refurbishment_cost = revision['refurbishment_cost'],
-                created_at = revision['created_at'],
-                part = part_obj,
+                revision_code=revision['revision_code'],
+                unit_cost=revision['unit_cost'],
+                refurbishment_cost=revision['refurbishment_cost'],
+                created_at=revision['created_at'],
+                part=part_obj,
             )
             # Create all Documentation objects for this Revision
             for doc in revision['documentation']:
                 doc_obj = Documentation.objects.create(
-                    name = doc['name'],
-                    doc_type = doc['doc_type'],
-                    doc_link =  doc['doc_link'],
-                    revision = revision_obj,
+                    name=doc['name'],
+                    doc_type=doc['doc_type'],
+                    doc_link=doc['doc_link'],
+                    revision=revision_obj,
                 )
 
         # Import all existing ConfigEvents/ConfigName
         if part_data['config_name_events']:
             for config_event in part_data['config_name_events']:
                 config_event_obj = ConfigEvent.objects.create(
-                    created_at = config_event['created_at'],
-                    updated_at = config_event['updated_at'],
-                    part = part_obj,
-                    approved = config_event['approved'],
-                    detail = config_event['detail'],
+                    created_at=config_event['created_at'],
+                    updated_at=config_event['updated_at'],
+                    part=part_obj,
+                    approved=config_event['approved'],
+                    detail=config_event['detail'],
                 )
 
                 # get Users for draft/approval fields. Use importing User if no match
@@ -545,33 +558,33 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
                 for config_name in config_event['config_names']:
                     # Create All Config Names
                     config_name_obj = ConfigName.objects.create(
-                        part = part_obj,
-                        config_name_event = config_event_obj,
-                        name = config_name['name'],
-                        config_type = config_name['config_type'],
-                        created_at = config_name['created_at'],
-                        deprecated = config_name['deprecated'],
-                        include_with_calibrations = config_name['include_with_calibrations'],
+                        part=part_obj,
+                        config_name_event=config_event_obj,
+                        name=config_name['name'],
+                        config_type=config_name['config_type'],
+                        created_at=config_name['created_at'],
+                        deprecated=config_name['deprecated'],
+                        include_with_calibrations=config_name['include_with_calibrations'],
                     )
 
     # Create the Assembly Part
     assembly_part_obj = AssemblyPart.objects.create(
-        assembly_revision = new_revision,
-        part = part_obj,
+        assembly_revision=new_revision,
+        part=part_obj,
         parent=parent,
-        note = assembly_part_data['note'],
-        order = assembly_part_data['order']
+        note=assembly_part_data['note'],
+        order=assembly_part_data['order']
     )
 
     # Add all Config data for the Assembly Part
     if assembly_part_data['config_default_events']:
         for config_event in assembly_part_data['config_default_events']:
             config_event_obj = ConfigDefaultEvent.objects.create(
-                created_at = config_event['created_at'],
-                updated_at = config_event['updated_at'],
-                assembly_part = assembly_part_obj,
-                approved = config_event['approved'],
-                detail = config_event['detail'],
+                created_at=config_event['created_at'],
+                updated_at=config_event['updated_at'],
+                assembly_part=assembly_part_obj,
+                approved=config_event['approved'],
+                detail=config_event['detail'],
             )
 
             # get Users for draft/approval fields. Use importing User if no match
@@ -599,10 +612,10 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
                 ).first()
                 # Create Config Default
                 config_default_obj = ConfigDefault.objects.create(
-                    conf_def_event = config_event_obj,
-                    default_value = config_default['default_value'],
-                    created_at = config_default['created_at'],
-                    config_name = config_name_obj,
+                    conf_def_event=config_event_obj,
+                    default_value=config_default['default_value'],
+                    created_at=config_default['created_at'],
+                    config_name=config_name_obj,
                 )
     # Loop through the tree
     for child_url in assembly_part_data['children']:
@@ -650,18 +663,19 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
         # Create all Revisions
         for rev in new_assembly['assembly_revisions']:
             assembly_revision_obj = AssemblyRevision.objects.create(
-                revision_code = rev['revision_code'],
-                revision_note = rev['revision_note'],
-                created_at = rev['created_at'],
-                assembly = assembly_obj,
+                revision_code=rev['revision_code'],
+                revision_note=rev['revision_note'],
+                created_at=rev['created_at'],
+                assembly=assembly_obj,
             )
             print(assembly_revision_obj)
 
             for root_url in rev['assembly_parts_roots']:
-                tree_created = _api_import_assembly_parts_tree(headers, root_url, assembly_revision_obj, None, self.request.user)
+                tree_created = _api_import_assembly_parts_tree(
+                    headers, root_url, assembly_revision_obj, None, self.request.user)
 
             print(tree_created)
-            #AssemblyPart._tree_manager.rebuild()
+            # AssemblyPart._tree_manager.rebuild()
         return HttpResponse('<h1>New Assembly Template Imported! - %s</h1>' % (assembly_obj))
 
 

@@ -26,26 +26,27 @@ from ..models import *
 
 API_VERSION = 'api_v1'
 
+
 class ConfigEventSerializer(FlexFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name = API_VERSION + ':configs-constants/config-events-detail',
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':configs-constants/config-events-detail',
+        lookup_field='pk',
     )
     inventory = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':inventory-detail',
-        lookup_field = 'pk',
-        queryset = Inventory.objects
+        view_name=API_VERSION + ':inventory-detail',
+        lookup_field='pk',
+        queryset=Inventory.objects
     )
     deployment = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':deployments-detail',
-        lookup_field = 'pk',
-        queryset = Deployment.objects
+        view_name=API_VERSION + ':deployments-detail',
+        lookup_field='pk',
+        queryset=Deployment.objects
     )
     config_values = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':configs-constants/config-values-detail',
-        many = True,
-        read_only = True,
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':configs-constants/config-values-detail',
+        many=True,
+        read_only=True,
+        lookup_field='pk',
     )
 
     class Meta:
@@ -75,31 +76,37 @@ class ConfigEventSerializer(FlexFieldsModelSerializer):
 
 class ConfigNameEventSerializer(FlexFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name = API_VERSION + ':configs-constants/config-name-events-detail',
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':configs-constants/config-name-events-detail',
+        lookup_field='pk',
     )
     part = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':part-templates/parts-detail',
-        lookup_field = 'pk',
-        queryset = Part.objects
+        view_name=API_VERSION + ':part-templates/parts-detail',
+        lookup_field='pk',
+        queryset=Part.objects
     )
     config_names = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':configs-constants/config-names-detail',
-        many = True,
-        read_only = True,
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':configs-constants/config-names-detail',
+        many=True,
+        read_only=True,
+        lookup_field='pk',
     )
     user_draft = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':users-detail',
-        many = True,
-        read_only = True,
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':users-detail',
+        many=True,
+        read_only=True,
+        lookup_field='pk',
     )
     user_approver = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':users-detail',
-        many = True,
-        read_only = True,
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':users-detail',
+        many=True,
+        read_only=True,
+        lookup_field='pk',
+    )
+    actions = serializers.HyperlinkedRelatedField(
+        view_name=API_VERSION + ':actions-detail',
+        many=True,
+        read_only=True,
+        lookup_field='pk',
     )
 
     class Meta:
@@ -114,7 +121,8 @@ class ConfigNameEventSerializer(FlexFieldsModelSerializer):
             'part',
             'approved',
             'detail',
-            'config_names'
+            'config_names',
+            'actions',
         ]
 
         expandable_fields = {
@@ -122,41 +130,42 @@ class ConfigNameEventSerializer(FlexFieldsModelSerializer):
             'config_names': ('roundabout.configs_constants.api.serializers.ConfigNameSerializer', {'many': True}),
             'user_draft': ('roundabout.users.api.serializers.UserSerializer', {'many': True}),
             'user_approver': ('roundabout.users.api.serializers.UserSerializer', {'many': True}),
+            'actions': ('roundabout.inventory.api.serializers.ActionSerializer', {'many': True}),
         }
 
 
 class ConfigNameSerializer(FlexFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name = API_VERSION + ':configs-constants/config-names-detail',
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':configs-constants/config-names-detail',
+        lookup_field='pk',
     )
     config_name_event = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':configs-constants/config-name-events-detail',
-        lookup_field = 'pk',
-        queryset = ConfigNameEvent.objects
+        view_name=API_VERSION + ':configs-constants/config-name-events-detail',
+        lookup_field='pk',
+        queryset=ConfigNameEvent.objects
     )
     config_values = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':configs-constants/config-values-detail',
-        many = True,
-        read_only = True,
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':configs-constants/config-values-detail',
+        many=True,
+        read_only=True,
+        lookup_field='pk',
     )
     constant_defaults = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':configs-constants/const-defaults-detail',
-        many = True,
-        read_only = True,
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':configs-constants/const-defaults-detail',
+        many=True,
+        read_only=True,
+        lookup_field='pk',
     )
     config_defaults = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':configs-constants/config-defaults-detail',
-        many = True,
-        read_only = True,
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':configs-constants/config-defaults-detail',
+        many=True,
+        read_only=True,
+        lookup_field='pk',
     )
     part = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':part-templates/parts-detail',
-        lookup_field = 'pk',
-        queryset = Part.objects
+        view_name=API_VERSION + ':part-templates/parts-detail',
+        lookup_field='pk',
+        queryset=Part.objects
     )
 
     class Meta:
@@ -187,18 +196,18 @@ class ConfigNameSerializer(FlexFieldsModelSerializer):
 
 class ConfigValueSerializer(FlexFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name = API_VERSION + ':configs-constants/config-values-detail',
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':configs-constants/config-values-detail',
+        lookup_field='pk',
     )
     config_name = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':configs-constants/config-names-detail',
-        lookup_field = 'pk',
-        queryset = ConfigName.objects
+        view_name=API_VERSION + ':configs-constants/config-names-detail',
+        lookup_field='pk',
+        queryset=ConfigName.objects
     )
     config_event = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':configs-constants/config-events-detail',
-        lookup_field = 'pk',
-        queryset = ConfigEvent.objects
+        view_name=API_VERSION + ':configs-constants/config-events-detail',
+        lookup_field='pk',
+        queryset=ConfigEvent.objects
     )
 
     class Meta:
@@ -221,31 +230,31 @@ class ConfigValueSerializer(FlexFieldsModelSerializer):
 
 class ConstDefaultEventSerializer(FlexFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name = API_VERSION + ':configs-constants/const-default-events-detail',
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':configs-constants/const-default-events-detail',
+        lookup_field='pk',
     )
     inventory = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':inventory-detail',
-        lookup_field = 'pk',
-        queryset = Inventory.objects
+        view_name=API_VERSION + ':inventory-detail',
+        lookup_field='pk',
+        queryset=Inventory.objects
     )
     constant_defaults = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':configs-constants/const-defaults-detail',
-        many = True,
-        read_only = True,
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':configs-constants/const-defaults-detail',
+        many=True,
+        read_only=True,
+        lookup_field='pk',
     )
     user_draft = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':users-detail',
-        many = True,
-        read_only = True,
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':users-detail',
+        many=True,
+        read_only=True,
+        lookup_field='pk',
     )
     user_approver = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':users-detail',
-        many = True,
-        read_only = True,
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':users-detail',
+        many=True,
+        read_only=True,
+        lookup_field='pk',
     )
 
     class Meta:
@@ -273,18 +282,18 @@ class ConstDefaultEventSerializer(FlexFieldsModelSerializer):
 
 class ConstDefaultSerializer(FlexFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name = API_VERSION + ':configs-constants/const-defaults-detail',
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':configs-constants/const-defaults-detail',
+        lookup_field='pk',
     )
     config_name = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':configs-constants/config-names-detail',
-        lookup_field = 'pk',
-        queryset = ConfigName.objects
+        view_name=API_VERSION + ':configs-constants/config-names-detail',
+        lookup_field='pk',
+        queryset=ConfigName.objects
     )
     const_event = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':configs-constants/const-default-events-detail',
-        lookup_field = 'pk',
-        queryset = ConstDefaultEvent.objects
+        view_name=API_VERSION + ':configs-constants/const-default-events-detail',
+        lookup_field='pk',
+        queryset=ConstDefaultEvent.objects
     )
 
     class Meta:
@@ -306,31 +315,37 @@ class ConstDefaultSerializer(FlexFieldsModelSerializer):
 
 class ConfigDefaultEventSerializer(FlexFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name = API_VERSION + ':configs-constants/config-default-events-detail',
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':configs-constants/config-default-events-detail',
+        lookup_field='pk',
     )
     assembly_part = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':inventory-detail',
-        lookup_field = 'pk',
-        queryset = AssemblyPart.objects
+        view_name=API_VERSION + ':inventory-detail',
+        lookup_field='pk',
+        queryset=AssemblyPart.objects
     )
     config_defaults = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':configs-constants/config-defaults-detail',
-        many = True,
-        read_only = True,
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':configs-constants/config-defaults-detail',
+        many=True,
+        read_only=True,
+        lookup_field='pk',
     )
     user_draft = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':users-detail',
-        many = True,
-        read_only = True,
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':users-detail',
+        many=True,
+        read_only=True,
+        lookup_field='pk',
     )
     user_approver = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':users-detail',
-        many = True,
-        read_only = True,
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':users-detail',
+        many=True,
+        read_only=True,
+        lookup_field='pk',
+    )
+    actions = serializers.HyperlinkedRelatedField(
+        view_name=API_VERSION + ':actions-detail',
+        many=True,
+        read_only=True,
+        lookup_field='pk',
     )
 
     class Meta:
@@ -346,6 +361,7 @@ class ConfigDefaultEventSerializer(FlexFieldsModelSerializer):
             'approved',
             'detail',
             'config_defaults',
+            'actions',
         ]
 
         expandable_fields = {
@@ -353,23 +369,24 @@ class ConfigDefaultEventSerializer(FlexFieldsModelSerializer):
             'assembly_part': 'roundabout.assemblies.api.serializers.AssemblyPartSerializer',
             'user_draft': ('roundabout.users.api.serializers.UserSerializer', {'many': True}),
             'user_approver': ('roundabout.users.api.serializers.UserSerializer', {'many': True}),
+            'actions': ('roundabout.inventory.api.serializers.ActionSerializer', {'many': True}),
         }
 
 
 class ConfigDefaultSerializer(FlexFieldsModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name = API_VERSION + ':configs-constants/config-defaults-detail',
-        lookup_field = 'pk',
+        view_name=API_VERSION + ':configs-constants/config-defaults-detail',
+        lookup_field='pk',
     )
     config_name = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':configs-constants/config-names-detail',
-        lookup_field = 'pk',
-        queryset = ConfigName.objects
+        view_name=API_VERSION + ':configs-constants/config-names-detail',
+        lookup_field='pk',
+        queryset=ConfigName.objects
     )
     conf_def_event = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':configs-constants/config-default-events-detail',
-        lookup_field = 'pk',
-        queryset = ConfigEvent.objects
+        view_name=API_VERSION + ':configs-constants/config-default-events-detail',
+        lookup_field='pk',
+        queryset=ConfigEvent.objects
     )
 
     class Meta:
