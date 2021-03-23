@@ -683,6 +683,7 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
     def get(self, request, *args, **kwargs):
         import_url = request.GET.get('import_url')
         api_token = request.GET.get('api_token')
+        assembly_revisions = request.GET.get('assembly_revisions')
 
         if not import_url:
             return HttpResponse("No import_url query paramater data")
@@ -713,6 +714,11 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
 
         # Create all Revisions
         for rev in new_assembly['assembly_revisions']:
+            if assembly_revisions:
+                assembly_revisions_list = assembly_revisions.split(',')
+                if rev['revision_code'] not in assembly_revisions_list:
+                    continue
+
             assembly_revision_obj = AssemblyRevision.objects.create(
                 revision_code=rev['revision_code'],
                 revision_note=rev['revision_note'],
