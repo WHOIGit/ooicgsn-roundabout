@@ -415,10 +415,10 @@ class ImportInventoryUploadSuccessView(TemplateView):
 
 # Assembly Template import tool
 # Import an existing Assembly template from a separate RDB instance
-# Makes a copy of the Assembly Revisiontree starting at "root_part",
+# Makes a copy of the Assembly Revision tree starting at "root_part",
 # move to new Revision, reparenting it to "parent"
 def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent=None, importing_user=None):
-    params = {'expand': 'part,config_default_events.config_defaults,config_default_events.config_defaults.config_name,config_default_events.user_draft,config_default_events.user_approver'}
+    params = {'expand': 'part,config_default_events.config_defaults,config_default_events.config_defaults.config_name,config_default_events.user_draft,config_default_events.user_approver,config_default_events.actions.user'}
     assembly_part_request = requests.get(root_part_url, params=params, headers=headers, verify=False)
     assembly_part_data = assembly_part_request.json()
     # Need to validate that the Part template exists before creating AssemblyPart
@@ -437,7 +437,7 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
                     existing_config_names = existing_config_names + config_names
 
             # Then check against the importing RDB instance's list of config names
-            params = {'expand': 'config_name_events.config_names,config_name_events.user_draft,config_name_events.user_approver'}
+            params = {'expand': 'config_name_events.config_names,config_name_events.user_draft,config_name_events.user_approver,config_name_events.actions.user'}
             part_configs_request = requests.get(
                 assembly_part_data['part']['url'], params=params, headers=headers, verify=False)
             part_configs_data = part_configs_request.json()
@@ -487,9 +487,25 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
                                 deprecated=config_name['deprecated'],
                                 include_with_calibrations=config_name['include_with_calibrations'],
                             )
+                        # add Action history for this event
+                        for action in config_event['actions']:
+                            # get User for Action. Use importing User if no match
+                            try:
+                                user_obj = User.objects.get(username=action['user']['username'])
+                            except User.DoesNotExist:
+                                user_obj = importing_user
+
+                            action_obj = Action.objects.create(
+                                config_name_event=config_event_obj,
+                                action_type=action['action_type'],
+                                object_type=action['object_type'],
+                                created_at=action['created_at'],
+                                detail=action['detail'],
+                                user=user_obj
+                            )
 
     except Part.DoesNotExist:
-        params = {'expand': 'part_type,revisions.documentation,config_name_events.config_names,config_name_events.user_draft,config_name_events.user_approver'}
+        params = {'expand': 'part_type,revisions.documentation,config_name_events.config_names,config_name_events.user_draft,config_name_events.user_approver,config_name_events.actions.user'}
         part_request = requests.get(assembly_part_data['part']['url'], params=params, headers=headers, verify=False)
         part_data = part_request.json()
 
@@ -567,6 +583,23 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
                         include_with_calibrations=config_name['include_with_calibrations'],
                     )
 
+                # add Action history for this event
+                for action in config_event['actions']:
+                    # get User for Action. Use importing User if no match
+                    try:
+                        user_obj = User.objects.get(username=action['user']['username'])
+                    except User.DoesNotExist:
+                        user_obj = importing_user
+
+                    action_obj = Action.objects.create(
+                        config_name_event=config_event_obj,
+                        action_type=action['action_type'],
+                        object_type=action['object_type'],
+                        created_at=action['created_at'],
+                        detail=action['detail'],
+                        user=user_obj
+                    )
+
     # Create the Assembly Part
     assembly_part_obj = AssemblyPart.objects.create(
         assembly_revision=new_revision,
@@ -617,6 +650,23 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
                     created_at=config_default['created_at'],
                     config_name=config_name_obj,
                 )
+
+            # add Action history for this event
+            for action in config_event['actions']:
+                # get User for Action. Use importing User if no match
+                try:
+                    user_obj = User.objects.get(username=action['user']['username'])
+                except User.DoesNotExist:
+                    user_obj = importing_user
+
+                action_obj = Action.objects.create(
+                    config_default_event=config_event_obj,
+                    action_type=action['action_type'],
+                    object_type=action['object_type'],
+                    created_at=action['created_at'],
+                    detail=action['detail'],
+                    user=user_obj
+                )
     # Loop through the tree
     for child_url in assembly_part_data['children']:
         _api_import_assembly_parts_tree(headers, child_url, new_revision, assembly_part_obj)
@@ -625,6 +675,8 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
 
 
 # View to make API request to a separate RDB instance and copy an Assembly Template
+# url params: import_url = 'https://rdb-demo.whoi.edu/api/v1/assembly-templates/assemblies/8/'
+#             api_token = string
 class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'assemblies.add_assembly'
 
@@ -637,13 +689,12 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
 
         if not api_token:
             return HttpResponse("No api_token query paramater data")
-        #api_token = '92e4efc1731d7ed2c31bf76c8d08ab2a34d3ce6d'
+
         headers = {
             'Authorization': 'Token ' + api_token,
         }
         params = {'expand': 'assembly_type,assembly_revisions'}
         # Get the Assembly data from RDB API
-        #import_url = 'https://rdb-demo.whoi.edu/api/v1/assembly-templates/assemblies/8/'
         assembly_request = requests.get(import_url, params=params, headers=headers, verify=False)
         new_assembly = assembly_request.json()
         # Get or create new parent Temp Assembly
