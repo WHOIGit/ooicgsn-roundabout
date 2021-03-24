@@ -23,23 +23,31 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
+from django.forms.models import inlineformset_factory, BaseInlineFormSet
+from django.core import validators
+from django.urls import reverse, reverse_lazy
+from common.util.mixins import AjaxFormMixin
+from django.core.cache import cache
+
+from sigfig import round
+
 from .models import CoefficientName, CalibrationEvent, CoefficientValueSet, CoefficientNameEvent, CoefficientValue
 from .forms import CalibrationEventForm, EventValueSetFormset, CoefficientValueForm, CoefficientValueSetForm, ValueSetValueFormset, CoefficientNameForm, PartCalNameFormset, CalPartCopyForm, CoefficientNameEventForm, CalibrationEventHyperlinkFormset
-from common.util.mixins import AjaxFormMixin
-from django.urls import reverse, reverse_lazy
+from .utils import handle_reviewers, user_ccc_reviews
+from .tasks import check_events
+
 from roundabout.parts.models import Part
 from roundabout.parts.forms import PartForm
 from roundabout.users.models import User
 from roundabout.configs_constants.models import ConfigEvent, ConfigNameEvent, ConstDefaultEvent, ConfigDefaultEvent
 from roundabout.inventory.models import Inventory, Action, Deployment
 from roundabout.inventory.utils import _create_action_history
-from django.core import validators
-from sigfig import round
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
-from django.forms.models import inlineformset_factory, BaseInlineFormSet
-from .utils import handle_reviewers, user_ccc_reviews
-from .tasks import check_events
+from roundabout.ooi_ci_tools.tasks import async_update_cal_thresholds
+
+
+
 
 # Handles creation of Calibration Events, Names,and Coefficients
 class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
@@ -116,6 +124,8 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
         _create_action_history(self.object, Action.ADD, self.request.user)
         job = check_events.delay()
+        cache.set('thrsh_evnt', self.object)
+        thrsh_job = async_update_cal_thresholds.delay()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -212,7 +222,8 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
                     link.save()
 
         _create_action_history(self.object, Action.UPDATE, self.request.user)
-
+        cache.set('thrsh_evnt', self.object)
+        thrsh_job = async_update_cal_thresholds.delay()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
@@ -264,6 +275,7 @@ class EventValueSetDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteVie
             'object_type': self.object.get_object_type(),
         }
         self.object.delete()
+        thrsh_job = async_update_cal_thresholds.delay()
         return JsonResponse(data)
 
     def get_success_url(self):

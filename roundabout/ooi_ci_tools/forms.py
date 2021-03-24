@@ -50,37 +50,45 @@ from django.forms.models import inlineformset_factory
 
 # # Calibration CSV import config validator
 def validate_import_config_calibrations(import_config, reader, filename):
-    for idx, row in enumerate(reader):
-        row_data = row.items()
-        for key, value in row_data:
-            if key == 'value':
-                try:
-                    raw_valset = str(value)
-                except:
-                    raise ValidationError(
-                        _('File: %(filename)s, Row %(row)s: Unable to parse Calibration Coefficient value(s)'),
-                        params={'row': idx, 'filename': filename},
-                    )
-                if import_config.require_calibration_coefficient_values:
-                    if len(raw_valset) == 0:
+    if import_config:
+        for idx, row in enumerate(reader):
+            row_data = row.items()
+            for key, value in row_data:
+                if key == 'value':
+                    try:
+                        raw_valset = str(value)
+                    except:
                         raise ValidationError(
-                            _('File: %(filename)s, Row %(row)s: Import Config disallows blank Calibration Coefficient value(s)'),
-                            params={'row': idx, 'filename': filename}
+                            _('File: %(filename)s, Row %(row)s: Unable to parse Calibration Coefficient value(s)'),
+                            params={'row': idx, 'filename': filename},
                         )
-            if key == 'notes':
-                try:
-                    notes = value.strip()
-                except:
-                    raise ValidationError(
-                        _('File: %(filename)s, Row %(row)s: Unable to parse Calibration Notes'),
-                        params={'row': idx, 'filename': filename},
-                    )
-                if import_config.require_calibration_notes:
-                    if len(notes) == 0:
+                    else:
+                        if import_config.require_calibration_coefficient_values:
+                            try:
+                                assert len(raw_valset) == 0
+                            except:
+                                raise ValidationError(
+                                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank Calibration Coefficient value(s)'),
+                                    params={'row': idx, 'filename': filename}
+                                )
+                if key == 'notes':
+                    try:
+                        notes = value.strip()
+                    except:
                         raise ValidationError(
-                            _('File: %(filename)s, Row %(row)s: Import Config disallows blank Calibration Notes'),
-                            params={'row': idx, 'filename': filename}
+                            _('File: %(filename)s, Row %(row)s: Unable to parse Calibration Notes'),
+                            params={'row': idx, 'filename': filename},
                         )
+                    else:
+                        if import_config.require_calibration_notes:
+                            try:
+                                assert len(notes) == 0
+                            except:
+                                raise ValidationError(
+                                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank Calibration Notes'),
+                                    params={'row': idx, 'filename': filename}
+                                )
+                            
 
 # Deployment CSV import config validator
 def validate_import_config_deployments(import_config,reader, filename):
@@ -813,8 +821,6 @@ def validate_cal_files(csv_files,ext_files):
                 _('File: %(filename)s, %(value)s: More than one existing Deployment associated with File Deployment Date'),
                 params={'value': cal_date_string, 'filename': cal_csv.name},
             )
-        if import_config:
-            validate_import_config_calibrations(import_config, reader, cal_csv.name)
         try:
             custom_field = Field.objects.get(field_name='Manufacturer Serial Number')
         except:
@@ -872,6 +878,18 @@ def validate_cal_files(csv_files,ext_files):
                             _('File: %(filename)s, Calibration Name: %(value)s, Row %(row)s, %(value)s: Unable to parse Calibration Coefficient value(s)'),
                             params={'value': calibration_name,'row': idx, 'filename': cal_csv.name},
                         )
+                    if import_config.require_calibration_coefficient_values:
+                        try:
+                            assert len(raw_valset) == 0
+                        except:
+                            raise ValidationError(
+                                _('File: %(filename)s, Row %(row)s: Import Config disallows blank Calibration Coefficient value(s)'),
+                                params={'row': idx, 'filename': cal_csv.name}
+                            )
+                    if hasattr(cal_name_item,'thresholds'):
+                        threshold = cal_name_item.thresholds.first()
+                    else:
+                        threshold = None
                     if '[' in raw_valset:
                         raw_valset = raw_valset[1:-1]
                         cal_name_item.value_set_type = '1d'
@@ -890,9 +908,9 @@ def validate_cal_files(csv_files,ext_files):
                         reader = io.StringIO(ref_file.read().decode('utf-8'))
                         contents = reader.getvalue()
                         raw_valset = contents
-                        validate_coeff_vals(mock_valset_instance, cal_name_item.value_set_type, raw_valset, filename = ref_file.name, cal_name = calibration_name)
+                        validate_coeff_vals(mock_valset_instance, cal_name_item.value_set_type, raw_valset, filename = ref_file.name, cal_name = calibration_name, threshold = threshold)
                     else:
-                        validate_coeff_vals(mock_valset_instance, cal_name_item.value_set_type, raw_valset, filename = cal_csv.name, cal_name = calibration_name)
+                        validate_coeff_vals(mock_valset_instance, cal_name_item.value_set_type, raw_valset, filename = cal_csv.name, cal_name = calibration_name, threshold = threshold)
                 elif key == 'notes':
                     try:
                         notes = value.strip()
@@ -901,6 +919,14 @@ def validate_cal_files(csv_files,ext_files):
                             _('File: %(filename)s, Calibration Name: %(value)s, Row %(row)s: Unable to parse Calibration Coefficient note(s)'),
                             params={'value': calibration_name, 'row': idx, 'filename': cal_csv.name},
                         )
+                    if import_config.require_calibration_notes:
+                        try:
+                            assert len(notes) == 0
+                        except:
+                            raise ValidationError(
+                                _('File: %(filename)s, Row %(row)s: Import Config disallows blank Calibration Notes'),
+                                params={'row': idx, 'filename': cal_csv.name}
+                            )
 
 # 
 class ImportCalibrationForm(forms.Form):
