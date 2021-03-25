@@ -67,6 +67,7 @@ class ImportConfig(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     require_calibration_coefficient_values = models.BooleanField(blank=False, default=True)
     require_calibration_notes = models.BooleanField(blank=False, default=False)
+    require_calibration_coefficient_threshold = models.BooleanField(blank=False, default=False)
     require_deployment_sensor_uid = models.BooleanField(blank=False, default=True)
     require_deployment_startDateTime = models.BooleanField(blank=False, default=True)
     require_deployment_stopDateTime = models.BooleanField(blank=False, default=True)
