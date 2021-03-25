@@ -48,46 +48,6 @@ from roundabout.userdefinedfields.models import Field, FieldValue
 from .models import *
 from django.forms.models import inlineformset_factory
 
-# # Calibration CSV import config validator
-def validate_import_config_calibrations(import_config, reader, filename):
-    if import_config:
-        for idx, row in enumerate(reader):
-            row_data = row.items()
-            for key, value in row_data:
-                if key == 'value':
-                    try:
-                        raw_valset = str(value)
-                    except:
-                        raise ValidationError(
-                            _('File: %(filename)s, Row %(row)s: Unable to parse Calibration Coefficient value(s)'),
-                            params={'row': idx, 'filename': filename},
-                        )
-                    else:
-                        if import_config.require_calibration_coefficient_values:
-                            try:
-                                assert len(raw_valset) == 0
-                            except:
-                                raise ValidationError(
-                                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank Calibration Coefficient value(s)'),
-                                    params={'row': idx, 'filename': filename}
-                                )
-                if key == 'notes':
-                    try:
-                        notes = value.strip()
-                    except:
-                        raise ValidationError(
-                            _('File: %(filename)s, Row %(row)s: Unable to parse Calibration Notes'),
-                            params={'row': idx, 'filename': filename},
-                        )
-                    else:
-                        if import_config.require_calibration_notes:
-                            try:
-                                assert len(notes) == 0
-                            except:
-                                raise ValidationError(
-                                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank Calibration Notes'),
-                                    params={'row': idx, 'filename': filename}
-                                )
                             
 
 # Deployment CSV import config validator
@@ -880,7 +840,7 @@ def validate_cal_files(csv_files,ext_files):
                         )
                     if import_config.require_calibration_coefficient_values:
                         try:
-                            assert len(raw_valset) == 0
+                            assert len(raw_valset) > 0
                         except:
                             raise ValidationError(
                                 _('File: %(filename)s, Row %(row)s: Import Config disallows blank Calibration Coefficient value(s)'),
@@ -921,7 +881,7 @@ def validate_cal_files(csv_files,ext_files):
                         )
                     if import_config.require_calibration_notes:
                         try:
-                            assert len(notes) == 0
+                            assert len(notes) > 0
                         except:
                             raise ValidationError(
                                 _('File: %(filename)s, Row %(row)s: Import Config disallows blank Calibration Notes'),
