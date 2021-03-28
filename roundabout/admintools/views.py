@@ -546,7 +546,7 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
         # Import all existing ConfigEvents/ConfigName
         if part_data['config_name_events']:
             for config_event in part_data['config_name_events']:
-                config_event_obj = ConfigEvent.objects.create(
+                config_event_obj = ConfigNameEvent.objects.create(
                     created_at=config_event['created_at'],
                     updated_at=config_event['updated_at'],
                     part=part_obj,
@@ -608,7 +608,7 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
         note=assembly_part_data['note'],
         order=assembly_part_data['order']
     )
-
+    print(assembly_part_obj)
     # Add all Config data for the Assembly Part
     if assembly_part_data['config_default_events']:
         for config_event in assembly_part_data['config_default_events']:
@@ -641,8 +641,9 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
                 # Get the matching local ConfigName object for this ConfigDefault
                 config_name_obj = ConfigName.objects.filter(
                     name=config_default['config_name']['name'],
-                    part=part_obj
+                    config_name_event__part=part_obj
                 ).first()
+                print(config_name_obj)
                 # Create Config Default
                 config_default_obj = ConfigDefault.objects.create(
                     conf_def_event=config_event_obj,
@@ -701,7 +702,7 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
         # Get or create new parent Temp Assembly
         assembly_obj, created = Assembly.objects.get_or_create(name=new_assembly['name'],
                                                                assembly_number=new_assembly['assembly_number'],
-                                                               description=new_assembly['description'],)
+                                                               defaults={'description': new_assembly['description']},)
         print(assembly_obj)
         try:
             assembly_type = AssemblyType.objects.get(name=new_assembly['assembly_type']['name'])
