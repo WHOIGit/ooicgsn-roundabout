@@ -105,9 +105,8 @@ def parse_cal_file(self, form, cal_csv, ext_files):
         parse_valid_coeff_vals(valset)
     _create_action_history(csv_event, Action.CALCSVIMPORT, self.request.user)
 
+
 # CSV File Uploader for GitHub Calibration Coefficients
-
-
 class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
     form_class = ImportCalibrationForm
     template_name = 'admintools/import_calibrations_upload_form.html'
@@ -735,6 +734,77 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
             print(tree_created)
             # AssemblyPart._tree_manager.rebuild()
         return HttpResponse('<h1>New Assembly Template Imported! - %s</h1>' % (assembly_obj))
+
+
+# import Gliders from rdb-demo
+class ImportGliderAssembliesView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = 'assemblies.add_assembly'
+
+    def get(self, request, *args, **kwargs):
+        import_url = "https://rdb-demo.whoi.edu/api/v1/assembly-templates/assembly-types/2/"
+        api_token = request.GET.get('api_token')
+        mooring_id = request.GET.get('mooring_id')
+
+        if not mooring_id:
+            return HttpResponse("No mooring_id query paramater data")
+
+        if not api_token:
+            return HttpResponse("No api_token query paramater data")
+
+        headers = {
+            'Authorization': 'Token ' + api_token,
+        }
+        params = {"expand": "assemblies"}
+
+        # Get the Assembly data from RDB API
+        assembly_request = requests.get(
+            import_url, params=params, headers=headers, verify=False
+        )
+        gliders = assembly_request.json()
+        assemblies = [assembly for assembly in gliders["assemblies"] if mooring_id in assembly['name']]
+
+        for assembly in assemblies:
+            print(assembly["url"])
+            import_url = assembly["url"]
+
+            headers = {
+                'Authorization': 'Token ' + api_token,
+            }
+            params = {'expand': 'assembly_type,assembly_revisions'}
+            # Get the Assembly data from RDB API
+            assembly_request = requests.get(import_url, params=params, headers=headers, verify=False)
+            new_assembly = assembly_request.json()
+            # Get or create new parent Temp Assembly
+            assembly_obj, created = Assembly.objects.get_or_create(name=new_assembly['name'],
+                                                                   assembly_number=new_assembly['assembly_number'],
+                                                                   defaults={'description': new_assembly['description']},)
+            print(assembly_obj)
+            try:
+                assembly_type = AssemblyType.objects.get(name=new_assembly['assembly_type']['name'])
+            except AssemblyType.DoesNotExist:
+                # No matching AssemblyType, add it from the API request data
+                assembly_type = AssemblyType.objects.create(name=new_assembly['assembly_type']['name'])
+            print(assembly_type)
+            assembly_obj.assembly_type = assembly_type
+            assembly_obj.save()
+
+            # Create all Revisions
+            for rev in new_assembly['assembly_revisions']:
+                assembly_revision_obj = AssemblyRevision.objects.create(
+                    revision_code=rev['revision_code'],
+                    revision_note=rev['revision_note'],
+                    created_at=rev['created_at'],
+                    assembly=assembly_obj,
+                )
+                print(assembly_revision_obj)
+
+                for root_url in rev['assembly_parts_roots']:
+                    tree_created = _api_import_assembly_parts_tree(
+                        headers, root_url, assembly_revision_obj, None, self.request.user)
+
+                print(tree_created)
+
+        return HttpResponse('<h1>Gliders imported</h1>')
 
 
 # Printer functionality
