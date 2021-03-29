@@ -94,6 +94,18 @@ class PartSerializer(FlexFieldsModelSerializer):
         many = True,
         read_only = True,
     )
+    config_name_events= serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':configs-constants/config-name-events-detail',
+        lookup_field = 'pk',
+        many = True,
+        read_only = True,
+    )
+    config_names= serializers.HyperlinkedRelatedField(
+        view_name = API_VERSION + ':configs-constants/config-names-detail',
+        lookup_field = 'pk',
+        many = True,
+        read_only = True,
+    )
 
     class Meta:
         model = Part
@@ -112,6 +124,8 @@ class PartSerializer(FlexFieldsModelSerializer):
             'cal_dec_places',
             'coefficient_name_events',
             'coefficient_names',
+            'config_name_events',
+            'config_names',
         ]
 
         expandable_fields = {
@@ -120,6 +134,8 @@ class PartSerializer(FlexFieldsModelSerializer):
             'user_defined_fields': ('roundabout.userdefinedfields.api.serializers.FieldSerializer', {'many': True}),
             'coefficient_name_events': ('roundabout.calibrations.api.serializers.CoefficientNameEventSerializer', {'many': True}),
             'coefficient_names': ('roundabout.calibrations.api.serializers.CoefficientNameSerializer', {'many': True}),
+            'config_name_events': ('roundabout.configs_constants.api.serializers.ConfigNameEventSerializer', {'many': True}),
+            'config_names': ('roundabout.configs_constants.api.serializers.ConfigNameSerializer', {'many': True}),
         }
 
 
