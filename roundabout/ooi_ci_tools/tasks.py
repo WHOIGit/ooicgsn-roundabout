@@ -30,6 +30,8 @@ from types import SimpleNamespace
 from celery import shared_task
 from dateutil import parser
 from django.core.cache import cache
+from sigfig import round
+from statistics import mean, stdev
 
 from roundabout.calibrations.forms import parse_valid_coeff_vals
 from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientNameEvent
@@ -38,9 +40,38 @@ from roundabout.cruises.models import Cruise, Vessel
 from roundabout.inventory.models import Inventory, Action, Deployment
 from roundabout.inventory.utils import _create_action_history
 from roundabout.userdefinedfields.models import Field, FieldValue
+from roundabout.ooi_ci_tools.models import Threshold
 
+@shared_task(bind = True, soft_time_limit = 3600)
+def async_update_cal_thresholds(self):
+    event = cache.get('thrsh_evnt')
+    if event:
+        cal_names = event.inventory.part.coefficient_name_events.first().coefficient_names.all()
+    else:
+        cal_names = CoefficientName.objects.all()
+    for name in cal_names:
+        if name.coefficient_value_sets.exists():
+            valsets = name.coefficient_value_sets.all()
+            raw_vals = []
+            for valset in valsets:
+                vals = valset.coefficient_values.all()
+                for val in vals:
+                    regular_val = round(val.original_value, notation = 'std', output_type=float)
+                    raw_vals.append(regular_val)
+            if len(raw_vals) >= 2:
+                name_avg = mean(raw_vals)
+                name_stdev = stdev(raw_vals)
+                Threshold.objects.update_or_create(
+                    coefficient_name = name,
+                    defaults = {
+                        'low': name_avg - (name_stdev * 3),
+                        'high': name_avg + (name_stdev * 3)
+                    }
+                )
+    cache.delete('thrsh_evnt')
+    
 
-@shared_task(bind = True)
+@shared_task(bind = True, soft_time_limit = 3600)
 def parse_cal_files(self):
     self.update_state(state='PROGRESS', meta = {'key': 'started',})
     user = cache.get('user')
@@ -229,6 +260,7 @@ def parse_cal_files(self):
                 _create_action_history(cnst_event, Action.CALCSVUPDATE, user)
         else:
             cnst_event.delete()
+    async_update_cal_thresholds.delay()
     cache.delete('user')
     cache.delete('user_draft')
     cache.delete('ext_files')

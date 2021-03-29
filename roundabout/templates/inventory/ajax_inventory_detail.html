@@ -718,6 +718,36 @@
 
         });
 
+        let part_has_cals = '{{part_has_cals}}'
+        let part_has_configs = '{{part_has_configs}}'
+        let part_has_consts = '{{part_has_consts}}'
+        let ccc_toggle = '{{inventory_item.part.part_type.ccc_toggle}}'
+        let const_def_exists = '{{inventory_item.constant_default_events.exists}}'
+
+        if (part_has_cals == 'True' && ccc_toggle == 'True') {
+            $('#add_coefficient_action').show()
+        } else {
+            $('#add_coefficient_action').hide()
+        }
+
+        if (part_has_consts == 'True' && const_def_exists == 'False'  && ccc_toggle == 'True') {
+            $('#add_constdefault_action').show()
+        } else {
+            $('#add_constdefault_action').hide()
+        }
+
+        if (part_has_consts == 'True'  && ccc_toggle == 'True') {
+            $('#add_const_action').show()
+        } else {
+            $('#add_const_action').hide()
+        }
+
+        if (part_has_configs == 'True'  && ccc_toggle == 'True') {
+            $('#add_conf_action').show()
+        } else {
+            $('#add_conf_action').hide()
+        }
+
     });
 </script>
 {% endblock javascript %}

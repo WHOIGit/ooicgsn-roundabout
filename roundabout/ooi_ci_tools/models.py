@@ -24,7 +24,22 @@ from django.db import models
 from mptt.models import MPTTModel, TreeForeignKey
 from roundabout.inventory.models import Action
 from roundabout.users.models import User
+from roundabout.calibrations.models import CoefficientName
+from roundabout.configs_constants.models import ConfigName
 
+class Threshold(models.Model):
+    class Meta:
+        ordering = ['created_at']
+    def __str__(self):
+        return self.detail
+    def get_object_type(self):
+        return 'comment'
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    low = models.CharField(max_length = 255, unique = False, db_index = False)
+    high = models.CharField(max_length = 255, unique = False, db_index = False)
+    coefficient_name = models.ForeignKey(CoefficientName, related_name='thresholds', on_delete=models.CASCADE, null=True)
+    config_name = models.ForeignKey(ConfigName, related_name='thresholds', on_delete=models.CASCADE, null=True)
 
 # Comment model
 class Comment(models.Model):
@@ -52,6 +67,7 @@ class ImportConfig(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     require_calibration_coefficient_values = models.BooleanField(blank=False, default=True)
     require_calibration_notes = models.BooleanField(blank=False, default=False)
+    require_calibration_coefficient_threshold = models.BooleanField(blank=False, default=False)
     require_deployment_sensor_uid = models.BooleanField(blank=False, default=True)
     require_deployment_startDateTime = models.BooleanField(blank=False, default=True)
     require_deployment_stopDateTime = models.BooleanField(blank=False, default=True)
