@@ -54,6 +54,7 @@ def run_v1_5_content_updates():
     _update_inv_actions()
     print("Step 5")
     _update_builds_actions()
+
     print("Step 6")
     _import_old_build_actions()
     print("Step 7")
