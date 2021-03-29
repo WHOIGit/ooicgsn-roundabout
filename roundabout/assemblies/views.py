@@ -53,7 +53,8 @@ def _make_revision_tree_copy(root_part, new_revision, parent=None, user=None, co
     new_ap = AssemblyPart.objects.create(
         assembly_revision=new_revision,
         part=root_part.part,
-        parent=parent, order=root_part.order
+        parent=parent,
+        order=root_part.order
     )
     # Copy ConfigDefaults for this Assembly Part
     if copy_default_configs and root_part.config_default_events.exists():
