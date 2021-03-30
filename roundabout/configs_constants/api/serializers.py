@@ -319,7 +319,7 @@ class ConfigDefaultEventSerializer(FlexFieldsModelSerializer):
         lookup_field='pk',
     )
     assembly_part = serializers.HyperlinkedRelatedField(
-        view_name=API_VERSION + ':inventory-detail',
+        view_name=API_VERSION + ':assembly-templates/assembly-parts-detail',
         lookup_field='pk',
         queryset=AssemblyPart.objects
     )
