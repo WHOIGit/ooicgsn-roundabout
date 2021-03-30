@@ -619,6 +619,7 @@ class EventCoeffNameDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteVi
 # Swap reviewers to approvers
 def event_review_toggle(request, pk, user_pk, evt_type):
     deployment = None
+    is_current_deployment = False
     if evt_type == 'calibration_event':
         event = CalibrationEvent.objects.get(id=pk)
     if evt_type == 'config_event':
@@ -633,6 +634,8 @@ def event_review_toggle(request, pk, user_pk, evt_type):
         event = ConfigDefaultEvent.objects.get(id=pk)
     if evt_type == 'deployment':
         event = Deployment.objects.get(id=pk)
+        if event.build.current_deployment() == event:
+            is_current_deployment = True
     user = User.objects.get(id=user_pk)
     reviewers = event.user_draft.all()
     approvers = event.user_approver.all()
@@ -660,7 +663,7 @@ def event_review_toggle(request, pk, user_pk, evt_type):
             event.approved = False
     event.save()
     all_reviewed = user_ccc_reviews(event, user)
-    data = {'approved':event.approved, 'all_reviewed': all_reviewed, 'user_in': user_in}
+    data = {'approved':event.approved, 'all_reviewed': all_reviewed, 'user_in': user_in, 'is_current_deployment': is_current_deployment}
     return JsonResponse(data)
 
 
