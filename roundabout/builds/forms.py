@@ -338,7 +338,7 @@ class DeploymentStartForm(forms.ModelForm):
     class Meta:
         model = Deployment
         fields = [
-            'location', 'deployment_number', 'build', 'deployed_location', 'cruise_deployed',
+            'location', 'deployment_number', 'build', 'deployed_location', 'cruise_deployed', 'user_draft',
         ]
 
         labels = {
@@ -346,12 +346,17 @@ class DeploymentStartForm(forms.ModelForm):
             'deployment_number': '%s Number' % (labels['label_deployments_app_singular']),
             'deployed_location': 'Final %s Location' % (labels['label_deployments_app_singular']),
             'cruise_deployed': 'Cruise Deployed On',
+            'user_draft': 'Reviewers',
         }
 
         widgets = {
             'build': forms.HiddenInput(),
         }
-
+    
+    def __init__(self, *args, **kwargs):
+        super(DeploymentStartForm, self).__init__(*args, **kwargs)
+        self.fields['user_draft'].queryset = reviewer_users()
+        self.fields['user_draft'].required = False
 
 class DeploymentActionBurninForm(forms.ModelForm):
 
