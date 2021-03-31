@@ -126,7 +126,7 @@ class UDF_Column(ManyToManyColumn):
         if qs:
             return [qs[0].field_default_value]
         else:
-            return ['―']
+            return ['n/a']
 
     def fieldvalues_filter(self, qs):
         return qs.filter(field__id=self.udf.id, is_current=True)
