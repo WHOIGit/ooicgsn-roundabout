@@ -314,8 +314,14 @@ ValueSetValueFormset = inlineformset_factory(
 )
 
 # Validator for 1-D, comma-separated Coefficient value arrays
-def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0, filename = '', cal_name = ''):
+def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0, filename = '', cal_name = '', threshold = None):
     error_row_index = val_set_index + 1
+    if threshold:
+        low = float(threshold.low)
+        high = float(threshold.high)
+    else:
+        low = float(-1000000000)
+        high = float(1000000000)
     for idx, val in enumerate(coeff_1d_array):
         val = val.strip()
         error_col_index = idx + 1
@@ -345,13 +351,22 @@ def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0, filenam
                         params={'row': error_row_index, 'column': error_col_index, 'value': val, 'filename': filename, 'cal_name': cal_name},
                     )
                 else:
-                    continue
+                    try:
+                        std_val = round(val, format = 'std', output_type = float)
+                        assert low <= std_val <= high
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s, Calibration Name: %(cal_name)s, Row: %(row)s, Column: %(column)s, %(value)s Coefficient value falls outside of threshold (%(low)s,%(high)s)'),
+                            params={'row': error_row_index, 'column': error_col_index, 'value': val, 'filename': filename, 'cal_name': cal_name, 'low': low, 'high': high},
+                        )
+                    else:
+                        continue
 
 
 # Validator for Coefficient values within a CoefficientValueSet
 # Checks for numeric-type, part-based decimal place limit, number of digits limit
 # Displays array index/value of invalid input
-def validate_coeff_vals(valset_inst, set_type, coeff_val_set, filename = '', cal_name = ''):
+def validate_coeff_vals(valset_inst, set_type, coeff_val_set, filename = '', cal_name = '', threshold = None):
     if set_type == 'sl':
         try:
             coeff_batch = coeff_val_set.split(',')
@@ -361,7 +376,7 @@ def validate_coeff_vals(valset_inst, set_type, coeff_val_set, filename = '', cal
                 _('More than 1 value associated with Single input type')
             )
         else:
-            validate_coeff_array(coeff_batch, valset_inst, 0, filename, cal_name)
+            validate_coeff_array(coeff_batch, valset_inst, 0, filename, cal_name, threshold)
             return coeff_val_set
 
     elif set_type == '1d':
@@ -372,7 +387,7 @@ def validate_coeff_vals(valset_inst, set_type, coeff_val_set, filename = '', cal
                 _('Unable to parse 1D array')
             )
         else:
-            validate_coeff_array(coeff_batch, valset_inst, 0, filename, cal_name)
+            validate_coeff_array(coeff_batch, valset_inst, 0, filename, cal_name, threshold)
             return coeff_val_set
 
     elif set_type == '2d':
@@ -385,7 +400,7 @@ def validate_coeff_vals(valset_inst, set_type, coeff_val_set, filename = '', cal
         else:
             for row_index, row_set in enumerate(coeff_2d_array):
                 coeff_1d_array = row_set.split(',')
-                validate_coeff_array(coeff_1d_array, valset_inst, row_index, filename, cal_name)
+                validate_coeff_array(coeff_1d_array, valset_inst, row_index, filename, cal_name, threshold)
     return coeff_val_set
 
 
