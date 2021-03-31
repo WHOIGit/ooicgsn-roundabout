@@ -206,8 +206,8 @@ class AssemblyTable(SearchTable):
 class ActionTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Action
-        fields = ['object_type', 'object', 'action_type', 'user__name', 'created_at', 'detail']
-        base_shown_cols = fields
+        fields = ['object_type', 'object', 'action_type', 'user__name', 'created_at', 'detail','data']
+        base_shown_cols = fields[:-1]
 
     user__name = Column(verbose_name='User')
     object = Column(verbose_name='Associated Object', accessor='object_type')

@@ -243,9 +243,26 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
             if latest_deploy_date:
                 form.instance.configuration_date = latest_deploy_date.created_at
         self.object = form.save()
-
+        orig_ConfigValues = self.object.config_values.all()
         config_event_value_form.instance = self.object
-        config_event_value_form.save()
+
+        # ConfigEvent action history json data field
+        data = {}
+        updated_values = {}
+        updated_notes = {}
+        updated_ConfigValues = config_event_value_form.save(commit=False)
+        # record value/note changes for action history json data field
+        for updated_ConfigValue in updated_ConfigValues:
+            orig_ConfigValue = orig_ConfigValues.get(config_name__name=updated_ConfigValue.config_name.name)
+            if orig_ConfigValue.config_value != updated_ConfigValue.config_value:
+                updated_values[updated_ConfigValue.config_name.name] = {'from':orig_ConfigValue.config_value, 'to':updated_ConfigValue.config_value}
+            if orig_ConfigValue.notes != updated_ConfigValue.notes:
+                updated_notes[updated_ConfigValue.config_name.name] = {'from':orig_ConfigValue.notes, 'to':updated_ConfigValue.notes}
+        if updated_values: data['updated_values'] = updated_values
+        if updated_notes:  data['updated_notes'] = updated_notes
+
+        # Commiting changes to db
+        config_event_value_form.save(commit=True)
 
         # Adding ConfigEvent to hyperlink objects
         for link_form in link_formset:
@@ -257,7 +274,7 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
                     link.parent = self.object
                     link.save()
 
-        _create_action_history(self.object, Action.UPDATE, self.request.user)
+        _create_action_history(self.object, Action.UPDATE, self.request.user, data=data)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {

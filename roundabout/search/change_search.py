@@ -24,7 +24,7 @@ from django import forms
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.urls import reverse
-from django.utils.html import format_html
+from django.utils.html import format_html, mark_safe
 from django.views.generic import TemplateView
 from django_tables2.columns import Column, DateTimeColumn, ManyToManyColumn, BooleanColumn
 from django_tables2_column_shifter.tables import ColumnShiftTable
@@ -37,7 +37,6 @@ from roundabout.parts.models import Part
 from roundabout.assemblies.models import AssemblyPart
 from roundabout.users.models import User
 from roundabout.search.tables import trunc_render, ActionTable
-
 
 ## === TABLES === ##
 
@@ -64,6 +63,40 @@ class ConfConsChangeTable(ChangeTableBase):
         title = 'Configuration/Constant Events'
     inventory__serial_number = Column(verbose_name='Inventory', linkify=dict(viewname="inventory:inventory_detail", args=[tables2.A('inventory__pk')]))
     value_names = ManyToManyColumn(verbose_name='Config/Constant Names', accessor='config_values', transform=lambda x: x.config_name)
+
+class ConfChangeActionTable(ChangeTableBase):
+    class Meta(ChangeTableBase.Meta):
+        model = Action
+        title = 'Actions'
+        fields = ['object_type', 'object', 'action_type', 'user', 'created_at', 'detail', 'data']
+    object = Column(verbose_name='Associated Object', accessor='object_type')
+
+    def render_user(self,value):
+        return value.name or value.username
+
+    def render_detail(self,value):
+        return trunc_render()(value)
+    def value_detail(self,value):
+        return value
+    '''
+    def render_data(self,value):
+        template = '"{KEY}" to: {TO}\n{GAP} from: {FROM}\n'
+        output_str = ''
+        try:
+            if 'updated_values' in value:
+                #output_str += 'UPDATED VALUES\n'
+                for key,val in value['updated_values'].items():
+                    to_val,from_val = val['to'],val['from']
+                    if len(to_val) > 10: to_val = to_val[:10]+'…'
+                    if len(from_val)>10: to_val = from_val[:10]+'…'
+                    output_str += template.format(KEY=key,FROM=from_val,TO=to_val,GAP=' '*len(key))
+            return mark_safe('<pre>'+output_str[:-1]+'</pre>')
+        except:
+            return value
+    def value_data(self,value):
+        return value
+    '''
+    render_object = ActionTable.render_object
 
 # ========= FORM STUFF ========= #
 
@@ -101,7 +134,7 @@ class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView
     form_class = SearchForm
     table_pagination = {"per_page": 10}
 
-    tables = [#CalChangeTable,
+    tables = [ConfChangeActionTable,
               ConfConsChangeTable,
               ]
 
@@ -129,10 +162,16 @@ class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView
         config_event_matches = ConfigValue.objects.filter(config_value__exact=query).values_list('config_event__pk',flat=True)
         conf_Q = Q(pk__in=config_event_matches)
 
+        conf_action_Q = Q(config_event__pk__in=config_event_matches)
+
         qs_list = []
         for table in self.tables:
-            action_qs = table.Meta.model.objects.filter(conf_Q)
-            qs_list.append(action_qs)
+            if table.Meta.model == Action:
+                action_qs = Action.objects.filter(conf_action_Q)
+                qs_list.append(action_qs)
+            else:
+                action_qs = table.Meta.model.objects.filter(conf_Q)
+                qs_list.append(action_qs)
 
         return qs_list
 

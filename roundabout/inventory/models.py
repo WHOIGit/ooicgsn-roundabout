@@ -322,7 +322,7 @@ class InventoryDeployment(DeploymentBase):
                                   on_delete=models.CASCADE, null=False)
     assembly_part = models.ForeignKey('assemblies.AssemblyPart', related_name='inventory_deployments',
                                       on_delete=models.SET_NULL, null=True)
-                                      
+
     objects = InventoryDeploymentQuerySet.as_manager()
 
     def __str__(self):
@@ -523,6 +523,7 @@ class Action(models.Model):
                                     ])
     depth = models.PositiveIntegerField(null=True, blank=True)
     deployment_type = models.CharField(max_length=20, choices=DEPLOYMENT_TYPES, null=False, blank=True, default='')
+    data = models.JSONField(null=True)
 
     objects = ActionQuerySet.as_manager()
 
