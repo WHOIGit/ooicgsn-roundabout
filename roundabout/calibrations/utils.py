@@ -97,5 +97,5 @@ def user_ccc_reviews(event, user):
 
 
 def reviewer_users():
-    reviewers = User.objects.all().annotate(group_count = Count('groups')).exclude(groups__name = 'inventory only', group_count = 1).order_by('username')
+    reviewers = User.objects.filter(groups__name__in = ['admin','technician']).order_by('username').distinct()
     return reviewers
