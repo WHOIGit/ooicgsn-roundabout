@@ -737,11 +737,12 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
 
 
 # import Gliders from rdb-demo
-class ImportGliderAssembliesView(LoginRequiredMixin, PermissionRequiredMixin, View):
+class ImportAllAssemblyTypeView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'assemblies.add_assembly'
 
     def get(self, request, *args, **kwargs):
-        import_url = "https://rdb-demo.whoi.edu/api/v1/assembly-templates/assembly-types/2/"
+        #import_url = "https://rdb-demo.whoi.edu/api/v1/assembly-templates/assembly-types/2/"
+        import_url = request.GET.get('import_url')
         api_token = request.GET.get('api_token')
         mooring_id = request.GET.get('mooring_id')
 
@@ -760,8 +761,8 @@ class ImportGliderAssembliesView(LoginRequiredMixin, PermissionRequiredMixin, Vi
         assembly_request = requests.get(
             import_url, params=params, headers=headers, verify=False
         )
-        gliders = assembly_request.json()
-        assemblies = [assembly for assembly in gliders["assemblies"] if mooring_id in assembly['name']]
+        all_assemblies = assembly_request.json()
+        assemblies = [assembly for assembly in all_assemblies["assemblies"] if mooring_id in assembly['name']]
 
         for assembly in assemblies:
             print(assembly["url"])

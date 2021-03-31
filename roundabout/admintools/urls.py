@@ -43,5 +43,5 @@ urlpatterns = [
          name='import_inventory_upload_success'),
     # API service requests
     path('import/assembly/api-request/', view=views.ImportAssemblyAPIRequestCopyView.as_view(), name='import_assembly_api_request'),
-    path('import/assembly/gliders/', view=views.ImportGliderAssembliesView.as_view(), name='import_assembly_gliders'),
+    path('import/assembly/gliders/', view=views.ImportAllAssemblyTypeView.as_view(), name='import_all_assembly_type'),
 ]
