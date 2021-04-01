@@ -79,6 +79,8 @@
                     <th>Type</th>
                     <th>Significant Figures</th>
                     <th>Deprecated</th>
+                    <th>Coefficient Threshold (low)</th>
+                    <th>Coefficient Threshold (high)</th>
                     <th>Delete</th>
                 </thead>
                 <tbody>
@@ -89,6 +91,8 @@
                         <td>{{ cal.id }} {{ cal.value_set_type }}</td>
                         <td>{{ cal.id }} {{ cal.sigfig_override }} <small class = 'form-text text-muted'>{{cal.sigfig_override.help_text}}</small></td>
                         <td>{{ cal.id }} {{ cal.deprecated }}</td>
+                        <td>{{ cal.id }} {{ cal.threshold_low }} <small class = 'form-text text-muted'>{{cal.threshold_low.help_text}}</small></td>
+                        <td>{{ cal.id }} {{ cal.threshold_high }} <small class = 'form-text text-muted'>{{cal.threshold_high.help_text}}</small></td>
                         <td>
                             {{cal.id}}  {{cal.DELETE}}
                             <button id = 'delete_button-{{forloop.counter}}' data-row_num='{{forloop.counter}}' type="button" class="btn btn-primary" data-toggle="modal" data-target="#warningModal" data-whatever="{{ event_template.coefficient_name }}">Delete</button>

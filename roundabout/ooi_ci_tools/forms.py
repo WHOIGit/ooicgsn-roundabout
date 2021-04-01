@@ -846,10 +846,12 @@ def validate_cal_files(csv_files,ext_files):
                                 _('File: %(filename)s, Row %(row)s: Import Config disallows blank Calibration Coefficient value(s)'),
                                 params={'row': idx, 'filename': cal_csv.name}
                             )
+                    threshold = None
                     if hasattr(cal_name_item,'thresholds') and import_config.require_calibration_coefficient_threshold:
                         threshold = cal_name_item.thresholds.first()
-                    else:
-                        threshold = None
+                    if cal_name_item.threshold_low and cal_name_item.threshold_high and import_config.require_calibration_coefficient_threshold:
+                        threshold_keys = {'low': cal_name_item.threshold_low, 'high': cal_name_item.threshold_high}
+                        threshold = SimpleNamespace(**threshold_keys)
                     if '[' in raw_valset:
                         raw_valset = raw_valset[1:-1]
                         cal_name_item.value_set_type = '1d'
