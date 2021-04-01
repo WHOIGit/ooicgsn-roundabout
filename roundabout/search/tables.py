@@ -200,14 +200,14 @@ class BuildTable(SearchTable):
 class AssemblyTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Assembly
-        base_shown_cols = ['assembly_number', 'name', 'assembly_type__name']
+        base_shown_cols = ['name', 'assembly_type__name', 'description']
 
 
 class ActionTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Action
-        fields = ['object_type', 'object', 'action_type', 'user__name', 'created_at', 'detail','data']
-        base_shown_cols = fields[:-1]
+        fields = ['object_type', 'object', 'action_type', 'user__name', 'created_at', 'detail']#,'data']
+        base_shown_cols = fields#[:-1]
 
     user__name = Column(verbose_name='User')
     object = Column(verbose_name='Associated Object', accessor='object_type')

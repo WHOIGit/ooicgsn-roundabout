@@ -78,7 +78,7 @@ class ConfChangeActionTable(ChangeTableBase):
         return trunc_render()(value)
     def value_detail(self,value):
         return value
-    '''
+
     def render_data(self,value):
         template = '"{KEY}" to: {TO}\n{GAP} from: {FROM}\n'
         output_str = ''
@@ -95,7 +95,7 @@ class ConfChangeActionTable(ChangeTableBase):
             return value
     def value_data(self,value):
         return value
-    '''
+
     render_object = ActionTable.render_object
 
 # ========= FORM STUFF ========= #
