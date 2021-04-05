@@ -146,11 +146,15 @@
                                                                 <thead>
                                                                     <th>Type</th>
                                                                     <th>Significant Figures</th>
+                                                                    <th>Coefficient Threshold (Low)</th>
+                                                                    <th>Coefficient Threshold (High)</th>
                                                                 </thead>
                                                                 <tbody class = 'coefficient_name-tbody' id = 'coefficient_name-val-tbody' style = 'overflow: auto; max-height: 200px'>
                                                                     <tr style = 'text-align: center;'>
                                                                         <td>{{ name.value_set_type }}</td>
                                                                         <td>{{ name.sigfig_override }}</td>
+                                                                        <td>{{ name.threshold_low }}</td>
+                                                                        <td>{{ name.threshold_high }}</td>
                                                                     </tr>
                                                                 </tbody>
                                                             </table>
