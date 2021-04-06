@@ -32,6 +32,8 @@ labels = set_app_labels()
 
 # Function to handle creating new Action records with meta data for different Action.OBJECT_TYPES
 # Current objects available = Inventory, Build
+
+
 def _create_action_history(obj, action_type, user, referring_obj=None, referring_action='', action_date=None):
     # Set default variables
     object_type = obj._meta.model_name
@@ -131,14 +133,16 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
         if referring_obj:
             if object_type == Action.INVENTORY:
                 if obj.is_leaf_node():
-                    action_record.detail = 'Sub-%s %s removed.' % (labels['label_assemblies_app_singular'], referring_obj)
+                    action_record.detail = 'Sub-%s %s removed.' % (
+                        labels['label_assemblies_app_singular'], referring_obj)
                 else:
                     action_record.detail = 'Sub-%s %s added.' % (labels['label_assemblies_app_singular'], referring_obj)
             else:
                 if referring_action == Action.ADDTOBUILD:
                     action_record.detail = 'Sub-%s %s added.' % (labels['label_assemblies_app_singular'], referring_obj)
                 else:
-                    action_record.detail = 'Sub-%s %s removed.' % (labels['label_assemblies_app_singular'], referring_obj)
+                    action_record.detail = 'Sub-%s %s removed.' % (
+                        labels['label_assemblies_app_singular'], referring_obj)
         else:
             if obj.parent:
                 action_record.detail = 'Added to %s.' % (obj.parent)
@@ -215,7 +219,7 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
                 deployment=deployment,
                 inventory=obj,
                 assembly_part=obj.assembly_part,
-                deployment_start_date = action_date
+                deployment_start_date=action_date
             )
             action_record.inventory_deployment = inventory_deployment
         action_record.save()
@@ -288,7 +292,8 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
             # Only update date/cruise on full Build deployment, not individual item
             if deployment_type == Action.BUILD_DEPLOYMENT:
                 inventory_deployment.deployment_recovery_date = action_date
-                inventory_deployment.cruise_recovered = deployment.cruise_recovered
+                if deployment:
+                    inventory_deployment.cruise_recovered = deployment.cruise_recovered
             inventory_deployment.save()
             action_record.inventory_deployment = inventory_deployment
             action_record.build = obj.get_latest_build()
@@ -306,7 +311,8 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
     elif action_type == Action.DEPLOYMENTRETIRE:
         deployment = obj.get_latest_deployment()
         action_record.deployment = deployment
-        action_record.detail = '%s %s ended for this %s.' % (labels['label_deployments_app_singular'], deployment, obj_label)
+        action_record.detail = '%s %s ended for this %s.' % (
+            labels['label_deployments_app_singular'], deployment, obj_label)
         # update InventoryDeployment record
         if isinstance(obj, Inventory):
             inventory_deployment = obj.inventory_deployments.get_active_deployment()

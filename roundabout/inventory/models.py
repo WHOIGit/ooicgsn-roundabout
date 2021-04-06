@@ -40,11 +40,11 @@ from .managers import *
 labels = set_app_labels()
 
 # Private functions for use in Models
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 
 # Inventory/Deployment models
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class Inventory(MPTTModel):
     INCOMING = 'incoming'
     OUTGOING = 'outgoing'
@@ -54,21 +54,21 @@ class Inventory(MPTTModel):
     )
 
     TEST_RESULTS = (
-            (None, "-"),
-            (True, "Pass"),
-            (False, "Fail"),
+        (None, "-"),
+        (True, "Pass"),
+        (False, "Fail"),
     )
 
     FLAG_TYPES = (
-            (True, "Flagged"),
-            (False, "Unflagged"),
+        (True, "Flagged"),
+        (False, "Unflagged"),
     )
     serial_number = models.CharField(max_length=255, unique=True, db_index=True)
     old_serial_number = models.CharField(max_length=255, unique=False, blank=True)
     part = models.ForeignKey(Part, related_name='inventory',
                              on_delete=models.CASCADE, null=True, blank=False, db_index=True)
     revision = models.ForeignKey(Revision, related_name='inventory',
-                             on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
+                                 on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
     location = TreeForeignKey(Location, related_name='inventory',
                               on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
     parent = TreeForeignKey('self', related_name='children',
@@ -109,7 +109,7 @@ class Inventory(MPTTModel):
         return 'inventory'
 
     def get_absolute_url(self):
-        return reverse('inventory:ajax_inventory_detail', kwargs={ 'pk': self.pk })
+        return reverse('inventory:ajax_inventory_detail', kwargs={'pk': self.pk})
 
     def get_descendants_with_self(self):
         tree = self.get_descendants(include_self=True)
@@ -153,8 +153,8 @@ class Inventory(MPTTModel):
 
     def get_latest_deployment(self):
         try:
-            action = self.actions.filter(inventory_deployment__isnull=False).latest()
-            return action.deployment
+            latest_deployment = self.inventory_deployments.latest().deployment
+            return latest_deployment
         except:
             return None
 
@@ -173,9 +173,9 @@ class DeploymentBase(models.Model):
         (DEPLOYMENTRETIRE, '%s Retired' % (labels['label_deployments_app_singular'])),
     )
     cruise_deployed = models.ForeignKey(Cruise, related_name='%(class)ss',
-                             on_delete=models.SET_NULL, null=True, blank=True)
+                                        on_delete=models.SET_NULL, null=True, blank=True)
     cruise_recovered = models.ForeignKey(Cruise, related_name='recovered_%(class)ss',
-                                 on_delete=models.SET_NULL, null=True, blank=True)
+                                         on_delete=models.SET_NULL, null=True, blank=True)
     deployment_start_date = models.DateTimeField(default=timezone.now)
     deployment_burnin_date = models.DateTimeField(null=True, blank=True)
     deployment_to_field_date = models.DateTimeField(null=True, blank=True)
@@ -270,16 +270,16 @@ class Deployment(DeploymentBase):
     location = TreeForeignKey(Location, related_name='deployments',
                               on_delete=models.SET_NULL, null=True, blank=True)
     final_location = TreeForeignKey(Location, related_name='final_deployments',
-                              on_delete=models.SET_NULL, null=True, blank=True)
+                                    on_delete=models.SET_NULL, null=True, blank=True)
     deployed_location = TreeForeignKey(Location, related_name='deployed_deployments',
-                              on_delete=models.SET_NULL, null=True, blank=True)
+                                       on_delete=models.SET_NULL, null=True, blank=True)
     build = models.ForeignKey('builds.Build', related_name='deployments', on_delete=models.CASCADE,
                               null=True, blank=True, db_index=True)
     latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
-                                    validators=[
-                                        MaxValueValidator(90),
-                                        MinValueValidator(-90)
-                                    ])
+                                   validators=[
+                                       MaxValueValidator(90),
+                                       MinValueValidator(-90)
+                                   ])
     longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
                                     validators=[
                                         MaxValueValidator(180),
@@ -303,7 +303,7 @@ class InventoryDeployment(DeploymentBase):
     inventory = models.ForeignKey(Inventory, related_name='inventory_deployments',
                                   on_delete=models.CASCADE, null=False)
     assembly_part = models.ForeignKey('assemblies.AssemblyPart', related_name='inventory_deployments',
-                                  on_delete=models.SET_NULL, null=True)
+                                      on_delete=models.SET_NULL, null=True)
 
     objects = InventoryDeploymentQuerySet.as_manager()
 
@@ -323,7 +323,8 @@ class InventoryDeployment(DeploymentBase):
             elif not self.deployment_time_in_field:
                 deployment_percentage = 0
             else:
-                deployment_percentage = int(self.deployment_time_in_field / self.deployment.deployment_time_in_field * 100)
+                deployment_percentage = int(self.deployment_time_in_field /
+                                            self.deployment.deployment_time_in_field * 100)
             if deployment_percentage >= 99:
                 deployment_percentage = 100
             return deployment_percentage
@@ -339,7 +340,7 @@ class DeploymentSnapshot(models.Model):
     location = TreeForeignKey(Location, related_name='deployment_snapshot',
                               on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
     snapshot_location = TreeForeignKey(Location, related_name='deployment_snapshot_location',
-                              on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
+                                       on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
     created_at = models.DateTimeField(default=timezone.now)
     notes = models.TextField(blank=True)
 
@@ -355,7 +356,7 @@ class DeploymentSnapshot(models.Model):
 
 class InventorySnapshot(MPTTModel):
     inventory = models.ForeignKey(Inventory, related_name='inventory_snapshot',
-                                 on_delete=models.SET_NULL, null=True, blank=True)
+                                  on_delete=models.SET_NULL, null=True, blank=True)
     parent = TreeForeignKey('self', related_name='children',
                             on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
     deployment = models.ForeignKey(DeploymentSnapshot, related_name='inventory_snapshot',
@@ -464,19 +465,19 @@ class Action(models.Model):
     inventory = models.ForeignKey(Inventory, related_name='actions',
                                   on_delete=models.CASCADE, null=True, blank=True)
     calibration_event = models.ForeignKey('calibrations.CalibrationEvent', related_name='actions',
-                                  on_delete=models.CASCADE, null=True, blank=True)
+                                          on_delete=models.CASCADE, null=True, blank=True)
     const_default_event = models.ForeignKey('configs_constants.ConstDefaultEvent', related_name='actions',
-                                  on_delete=models.CASCADE, null=True, blank=True)
+                                            on_delete=models.CASCADE, null=True, blank=True)
     config_event = models.ForeignKey('configs_constants.ConfigEvent', related_name='actions',
-                                  on_delete=models.CASCADE, null=True, blank=True)
+                                     on_delete=models.CASCADE, null=True, blank=True)
     config_default_event = models.ForeignKey('configs_constants.ConfigDefaultEvent', related_name='actions',
-                                  on_delete=models.CASCADE, null=True, blank=True)
+                                             on_delete=models.CASCADE, null=True, blank=True)
     coefficient_name_event = models.ForeignKey('calibrations.CoefficientNameEvent', related_name='actions',
-                                  on_delete=models.CASCADE, null=True, blank=True)
+                                               on_delete=models.CASCADE, null=True, blank=True)
     config_name_event = models.ForeignKey('configs_constants.ConfigNameEvent', related_name='actions',
-                                  on_delete=models.CASCADE, null=True, blank=True)
+                                          on_delete=models.CASCADE, null=True, blank=True)
     action_type = models.CharField(max_length=20, choices=ACTION_TYPES, db_index=True)
-    object_type =  models.CharField(max_length=20, choices=OBJECT_TYPES, null=False, blank=True, db_index=True)
+    object_type = models.CharField(max_length=20, choices=OBJECT_TYPES, null=False, blank=True, db_index=True)
     created_at = models.DateTimeField(default=timezone.now)
     detail = models.TextField(blank=True)
     user = models.ForeignKey(User, related_name='actions',
@@ -486,7 +487,7 @@ class Action(models.Model):
     deployment = models.ForeignKey(Deployment, related_name='actions',
                                    on_delete=models.SET_NULL, null=True, blank=True)
     inventory_deployment = models.ForeignKey(InventoryDeployment, related_name='actions',
-                                   on_delete=models.SET_NULL, null=True, blank=True)
+                                             on_delete=models.SET_NULL, null=True, blank=True)
     build = models.ForeignKey('builds.Build', related_name='actions',
                               on_delete=models.SET_NULL, null=True, blank=True)
     parent = models.ForeignKey(Inventory, related_name='parent_actions',
@@ -494,10 +495,10 @@ class Action(models.Model):
     cruise = models.ForeignKey(Cruise, related_name='actions',
                                on_delete=models.SET_NULL, null=True, blank=True)
     latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
-                                    validators=[
-                                        MaxValueValidator(90),
-                                        MinValueValidator(0)
-                                    ])
+                                   validators=[
+                                       MaxValueValidator(90),
+                                       MinValueValidator(0)
+                                   ])
     longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
                                     validators=[
                                         MaxValueValidator(180),
@@ -542,13 +543,14 @@ class Action(models.Model):
         elif self.object_type == self.CONFNAMEEVENT:
             return self.config_name_event
 
+
 class PhotoNote(models.Model):
     photo = models.FileField(upload_to='notes/',
                              validators=[FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg', 'gif', 'csv'])])
     inventory = models.ForeignKey(Inventory, related_name='photos',
-                                 on_delete=models.CASCADE, null=True, blank=True)
+                                  on_delete=models.CASCADE, null=True, blank=True)
     action = models.ForeignKey(Action, related_name='photos',
-                                 on_delete=models.CASCADE, null=True, blank=True)
+                               on_delete=models.CASCADE, null=True, blank=True)
     user = models.ForeignKey(User, related_name='photos',
                              on_delete=models.SET_NULL, null=True, blank=False)
 
@@ -591,12 +593,12 @@ class DeploymentAction(models.Model):
     location = TreeForeignKey(Location, related_name='deployment_actions',
                               on_delete=models.SET_NULL, null=True, blank=False)
     deployment = models.ForeignKey(Deployment, related_name='deployment_actions',
-                                 on_delete=models.CASCADE, null=True, blank=True)
+                                   on_delete=models.CASCADE, null=True, blank=True)
     latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
-                                    validators=[
-                                        MaxValueValidator(90),
-                                        MinValueValidator(0)
-                                    ])
+                                   validators=[
+                                       MaxValueValidator(90),
+                                       MinValueValidator(0)
+                                   ])
     longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
                                     validators=[
                                         MaxValueValidator(180),
