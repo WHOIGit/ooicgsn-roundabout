@@ -30,10 +30,7 @@ volumes:
 
 services:
   django: &django
-    build:
-      context: .
-      dockerfile: ./compose/production/django/Dockerfile
-    image: roundabout_production_django
+    image: ghcr.io/whoigit/ooicgsn-roundabout:stable
     #container_name: django
     depends_on:
       - postgres
@@ -50,10 +47,7 @@ services:
       - roundabout-network
 
   postgres:
-    build:
-      context: .
-      dockerfile: ./compose/production/postgres/Dockerfile
-    image: roundabout_production_postgres
+    image: ghcr.io/whoigit/postgres-docker-scripts:10.5
     container_name: postgres
     volumes:
       - production_postgres_data:/var/lib/postgresql/data
@@ -72,7 +66,6 @@ services:
 
   celeryworker:
     <<: *django
-    image: roundabout_production_celeryworker
     depends_on:
       - redis
       - postgres
@@ -82,7 +75,6 @@ services:
 
   celerybeat:
     <<: *django
-    image: roundabout_production_celerybeat
     depends_on:
       - redis
       - postgres
@@ -92,20 +84,17 @@ services:
 
   flower:
     <<: *django
-    image: roundabout_production_flower
     command: /start-flower
 
   nginx:
-    build:
-      context: .
-      dockerfile: ./compose/production/nginx/Dockerfile
-    image: roundabout_production_nginx
+    image: nginx:1.15
     container_name: nginx
     depends_on:
       - django
     volumes:
-      - production_nginx:/var/log/nginx
-      - ./.ssl/certs:/etc/ssl/certs/ # bind a local directory with the WHOI SSL certs
+      - production_nginx:/var/log/nginx # logs
+      - ./nginx:/etc/nginx/conf.d:ro
+      - ./.ssl/certs:/etc/ssl/certs:ro # bind a local directory with the WHOI SSL certs
     ports:
       - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"

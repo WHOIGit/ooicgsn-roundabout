@@ -29,9 +29,9 @@ from dateutil import parser
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.http import HttpResponse
 from django.urls import reverse, reverse_lazy
-from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, \
-    TemplateView, FormView
-
+from django.views.generic import (
+    View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
+)
 from roundabout.assemblies.models import Assembly, AssemblyPart, AssemblyRevision
 from roundabout.calibrations.forms import parse_valid_coeff_vals
 from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
@@ -40,6 +40,8 @@ from roundabout.inventory.utils import _create_action_history
 from roundabout.locations.models import Location
 from roundabout.parts.models import Revision, Documentation, PartType
 from roundabout.userdefinedfields.models import FieldValue, Field
+from roundabout.configs_constants.models import *
+from roundabout.users.models import User
 from .forms import PrinterForm, ImportInventoryForm, ImportCalibrationForm
 from .models import *
 
@@ -48,7 +50,8 @@ from .models import *
 def trigger_error(request):
     division_by_zero = 1 / 0
 
-def parse_cal_file(self,form,cal_csv,ext_files):
+
+def parse_cal_file(self, form, cal_csv, ext_files):
     cal_csv_filename = cal_csv.name[:-4]
     cal_csv.seek(0)
     reader = csv.DictReader(io.StringIO(cal_csv.read().decode('utf-8')))
@@ -59,8 +62,8 @@ def parse_cal_file(self,form,cal_csv,ext_files):
     inventory_item = Inventory.objects.get(serial_number=inv_serial)
     cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
     csv_event = CalibrationEvent.objects.create(
-        calibration_date = cal_date_date,
-        inventory = inventory_item
+        calibration_date=cal_date_date,
+        inventory=inventory_item
     )
     for idx, row in enumerate(reader):
         row_data = row.items()
@@ -68,8 +71,8 @@ def parse_cal_file(self,form,cal_csv,ext_files):
             if key == 'name':
                 calibration_name = value.strip()
                 cal_name_item = CoefficientName.objects.get(
-                    calibration_name = calibration_name,
-                    coeff_name_event =  inventory_item.part.coefficient_name_events.first()
+                    calibration_name=calibration_name,
+                    coeff_name_event=inventory_item.part.coefficient_name_events.first()
                 )
             elif key == 'value':
                 valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
@@ -78,7 +81,7 @@ def parse_cal_file(self,form,cal_csv,ext_files):
                 if '[' in raw_valset:
                     raw_valset = raw_valset[1:-1]
                 if 'SheetRef' in raw_valset:
-                    ext_finder_filename = "__".join((cal_csv_filename,calibration_name))
+                    ext_finder_filename = "__".join((cal_csv_filename, calibration_name))
                     ref_file = [file for file in ext_files if ext_finder_filename in file.name][0]
                     ref_file.seek(0)
                     reader = io.StringIO(ref_file.read().decode('utf-8'))
@@ -87,9 +90,9 @@ def parse_cal_file(self,form,cal_csv,ext_files):
             elif key == 'notes':
                 notes = value.strip()
                 coeff_val_set = CoefficientValueSet(
-                    coefficient_name = cal_name_item,
-                    value_set = raw_valset,
-                    notes = notes
+                    coefficient_name=cal_name_item,
+                    value_set=raw_valset,
+                    notes=notes
                 )
                 coeff_val_sets.append(coeff_val_set)
     if form.cleaned_data['user_draft'].exists():
@@ -101,6 +104,7 @@ def parse_cal_file(self,form,cal_csv,ext_files):
         valset.save()
         parse_valid_coeff_vals(valset)
     _create_action_history(csv_event, Action.CALCSVIMPORT, self.request.user)
+
 
 # CSV File Uploader for GitHub Calibration Coefficients
 class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
@@ -118,7 +122,7 @@ class ImportCalibrationsUploadView(LoginRequiredMixin, FormView):
             if ext == 'csv':
                 csv_files.append(file)
         for cal_csv in csv_files:
-            parse_cal_file(self,form,cal_csv,ext_files)
+            parse_cal_file(self, form, cal_csv, ext_files)
         return super(ImportCalibrationsUploadView, self).form_valid(form)
 
     def get_success_url(self):
@@ -186,7 +190,8 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                     if not item:
                         data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
                     else:
-                        data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
+                        data.append({'field_name': key, 'field_value': value.strip(),
+                                    'error': True, 'error_msg': error_msg})
 
                 elif key == 'Part Number':
                     # Check if Part template exists
@@ -199,7 +204,8 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                     if part:
                         data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
                     else:
-                        data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
+                        data.append({'field_name': key, 'field_value': value.strip(),
+                                    'error': True, 'error_msg': error_msg})
 
                 elif key == 'Location':
                     # Check if Location exists and if there's multiple Locations with same name
@@ -218,10 +224,11 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                     if location:
                         data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
                     else:
-                        data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
+                        data.append({'field_name': key, 'field_value': value.strip(),
+                                    'error': True, 'error_msg': error_msg})
 
                 elif key == 'Notes':
-                        data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
+                    data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
 
                 # Now run through all the Custom Fields, validate type, add to JSON
                 else:
@@ -239,7 +246,8 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                                     data.append({'field_name': key, 'field_value': value, 'error': False})
                                 except ValueError:
                                     error_msg = "Validation Error. Needs to be an integer."
-                                    data.append({'field_name': key, 'field_value': value, 'error': True, 'error_msg': error_msg})
+                                    data.append({'field_name': key, 'field_value': value,
+                                                'error': True, 'error_msg': error_msg})
 
                             elif custom_field.field_type == 'DecimalField':
                                 try:
@@ -247,7 +255,8 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                                     data.append({'field_name': key, 'field_value': value, 'error': False})
                                 except ValueError:
                                     error_msg = "Validation Error. Needs to be a decimal."
-                                    data.append({'field_name': key, 'field_value': value, 'error': True, 'error_msg': error_msg})
+                                    data.append({'field_name': key, 'field_value': value,
+                                                'error': True, 'error_msg': error_msg})
 
                             elif custom_field.field_type == 'BooleanField':
                                 # function to check if various versions of Boolean pass
@@ -260,10 +269,12 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
 
                                 if check_if_bool(self, value.strip()):
                                     print('Boolean!')
-                                    data.append({'field_name': key, 'field_value': str_to_bool(self, value.strip()), 'error': False})
+                                    data.append({'field_name': key, 'field_value': str_to_bool(
+                                        self, value.strip()), 'error': False})
                                 else:
                                     error_msg = "Validation Error. Needs to be a True/False boolean."
-                                    data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
+                                    data.append({'field_name': key, 'field_value': value.strip(),
+                                                'error': True, 'error_msg': error_msg})
 
                             elif custom_field.field_type == 'DateField':
                                 try:
@@ -272,7 +283,8 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                                     data.append({'field_name': key, 'field_value': value, 'error': False})
                                 except:
                                     error_msg = "Validation Error. Needs to be a valid Date Format (ex. mm/dd/yyyy)."
-                                    data.append({'field_name': key, 'field_value': value, 'error': True, 'error_msg': error_msg})
+                                    data.append({'field_name': key, 'field_value': value,
+                                                'error': True, 'error_msg': error_msg})
                             else:
                                 data.append({'field_name': key, 'field_value': value, 'error': False})
                         else:
@@ -295,7 +307,7 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
 class ImportInventoryPreviewDetailView(LoginRequiredMixin, DetailView):
     model = TempImport
     context_object_name = 'tempimport'
-    template_name='admintools/import_tempimport_detail.html'
+    template_name = 'admintools/import_tempimport_detail.html'
 
     def get_context_data(self, **kwargs):
         context = super(ImportInventoryPreviewDetailView, self).get_context_data(**kwargs)
@@ -362,10 +374,10 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                     for note in note_list:
                         if note:
                             note_record = Action.objects.create(action_type='note',
-                                                                  detail=note,
-                                                                  location=location,
-                                                                  user=self.request.user,
-                                                                  inventory=inventory_obj)
+                                                                detail=note,
+                                                                location=location,
+                                                                user=self.request.user,
+                                                                inventory=inventory_obj)
 
                 # Add the Custom Fields
                 for col in item_obj.data:
@@ -388,10 +400,10 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                                 # Drop any fields that don't match a custom field into a History Note
                                 note_detail = col['field_name'] + ': ' + col['field_value']
                                 note_record = Action.objects.create(action_type='note',
-                                                                      detail=note_detail,
-                                                                      location=location,
-                                                                      user=self.request.user,
-                                                                      inventory=inventory_obj)
+                                                                    detail=note_detail,
+                                                                    location=location,
+                                                                    user=self.request.user,
+                                                                    inventory=inventory_obj)
 
         return reverse('admintools:import_inventory_upload_success', )
 
@@ -402,20 +414,99 @@ class ImportInventoryUploadSuccessView(TemplateView):
 
 # Assembly Template import tool
 # Import an existing Assembly template from a separate RDB instance
-# Makes a copy of the Assembly Revisiontree starting at "root_part",
+# Makes a copy of the Assembly Revision tree starting at "root_part",
 # move to new Revision, reparenting it to "parent"
-def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent=None):
-    params = {'expand': 'part'}
+def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent=None, importing_user=None):
+    params = {'expand': 'part,config_default_events.config_defaults,config_default_events.config_defaults.config_name,config_default_events.user_draft,config_default_events.user_approver,config_default_events.actions.user'}
     assembly_part_request = requests.get(root_part_url, params=params, headers=headers, verify=False)
     assembly_part_data = assembly_part_request.json()
     # Need to validate that the Part template exists before creating AssemblyPart
     try:
         part_obj = Part.objects.get(part_number=assembly_part_data['part']['part_number'])
+
+        if assembly_part_data['part']['config_name_events']:
+            # Check if local Part has all current Config Names: ConfigNameEvent -> ConfigName(s)
+            # First get existing Parts list of ConfigNames
+            existing_config_names = []
+            config_events_qs = part_obj.config_name_events.all()
+
+            if config_events_qs:
+                for config_event in config_events_qs:
+                    config_names = list(config_event.config_names.values_list('name', flat=True))
+                    existing_config_names = existing_config_names + config_names
+
+            # Then check against the importing RDB instance's list of config names
+            params = {'expand': 'config_name_events.config_names,config_name_events.user_draft,config_name_events.user_approver,config_name_events.actions.user'}
+            part_configs_request = requests.get(
+                assembly_part_data['part']['url'], params=params, headers=headers, verify=False)
+            part_configs_data = part_configs_request.json()
+
+            if part_configs_data['config_name_events']:
+                importing_config_names = []
+                for config_event in part_configs_data['config_name_events']:
+                    missing_config_names = [config_name for config_name in config_event['config_names']
+                                            if config_name['name'] not in existing_config_names]
+                    print(missing_config_names)
+
+                    if missing_config_names:
+                        # create ConfigNameEvent parent object
+                        config_event_obj = ConfigNameEvent.objects.create(
+                            created_at=config_event['created_at'],
+                            updated_at=config_event['updated_at'],
+                            part=part_obj,
+                            approved=config_event['approved'],
+                            detail=config_event['detail'],
+                        )
+
+                        # get Users for draft/approval fields. Use importing User if no match
+                        for user in config_event['user_draft']:
+                            try:
+                                user_obj = User.objects.get(username=user['username'])
+                            except User.DoesNotExist:
+                                user_obj = importing_user
+                            # add to ManyToManyField
+                            config_event_obj.user_draft.add(user_obj)
+
+                        for user in config_event['user_approver']:
+                            try:
+                                user_obj = User.objects.get(username=user['username'])
+                            except User.DoesNotExist:
+                                user_obj = importing_user
+                            # add to ManyToManyField
+                            config_event_obj.user_approver.add(user_obj)
+
+                        for config_name in missing_config_names:
+                            # Create Missing Config Names
+                            config_name_obj = ConfigName.objects.create(
+                                part=part_obj,
+                                config_name_event=config_event_obj,
+                                name=config_name['name'],
+                                config_type=config_name['config_type'],
+                                created_at=config_name['created_at'],
+                                deprecated=config_name['deprecated'],
+                                include_with_calibrations=config_name['include_with_calibrations'],
+                            )
+                        # add Action history for this event
+                        for action in config_event['actions']:
+                            # get User for Action. Use importing User if no match
+                            try:
+                                user_obj = User.objects.get(username=action['user']['username'])
+                            except User.DoesNotExist:
+                                user_obj = importing_user
+
+                            action_obj = Action.objects.create(
+                                config_name_event=config_event_obj,
+                                action_type=action['action_type'],
+                                object_type=action['object_type'],
+                                created_at=action['created_at'],
+                                detail=action['detail'],
+                                user=user_obj
+                            )
+
     except Part.DoesNotExist:
-        params = {'expand': 'part_type,revisions.documentation'}
+        params = {'expand': 'part_type,revisions.documentation,config_name_events.config_names,config_name_events.user_draft,config_name_events.user_approver,config_name_events.actions.user'}
         part_request = requests.get(assembly_part_data['part']['url'], params=params, headers=headers, verify=False)
         part_data = part_request.json()
-        print(part_data)
 
         try:
             part_type = PartType.objects.get(name=part_data['part_type']['name'])
@@ -424,40 +515,158 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
             part_type = PartType.objects.create(name=part_data['part_type']['name'])
 
         part_obj = Part.objects.create(
-            name = part_data['name'],
-            friendly_name = part_data['friendly_name'],
-            part_type = part_type,
-            part_number = part_data['part_number'],
-            unit_cost = part_data['unit_cost'],
-            refurbishment_cost = part_data['refurbishment_cost'],
-            note = part_data['note'],
-            cal_dec_places = part_data['cal_dec_places'],
+            name=part_data['name'],
+            friendly_name=part_data['friendly_name'],
+            part_type=part_type,
+            part_number=part_data['part_number'],
+            unit_cost=part_data['unit_cost'],
+            refurbishment_cost=part_data['refurbishment_cost'],
+            note=part_data['note'],
+            cal_dec_places=part_data['cal_dec_places'],
         )
         # Create all Revisions objects for this Part
         for revision in part_data['revisions']:
             revision_obj = Revision.objects.create(
-                revision_code = revision['revision_code'],
-                unit_cost = revision['unit_cost'],
-                refurbishment_cost = revision['refurbishment_cost'],
-                created_at = revision['created_at'],
-                part = part_obj,
+                revision_code=revision['revision_code'],
+                unit_cost=revision['unit_cost'],
+                refurbishment_cost=revision['refurbishment_cost'],
+                created_at=revision['created_at'],
+                part=part_obj,
             )
             # Create all Documentation objects for this Revision
             for doc in revision['documentation']:
                 doc_obj = Documentation.objects.create(
-                    name = doc['name'],
-                    doc_type = doc['doc_type'],
-                    doc_link =  doc['doc_link'],
-                    revision = revision_obj,
+                    name=doc['name'],
+                    doc_type=doc['doc_type'],
+                    doc_link=doc['doc_link'],
+                    revision=revision_obj,
                 )
-    # Now create the Assembly Part
+
+        # Import all existing ConfigEvents/ConfigName
+        if part_data['config_name_events']:
+            for config_event in part_data['config_name_events']:
+                config_event_obj = ConfigNameEvent.objects.create(
+                    created_at=config_event['created_at'],
+                    updated_at=config_event['updated_at'],
+                    part=part_obj,
+                    approved=config_event['approved'],
+                    detail=config_event['detail'],
+                )
+
+                # get Users for draft/approval fields. Use importing User if no match
+                for user in config_event['user_draft']:
+                    try:
+                        user_obj = User.objects.get(username=user['username'])
+                    except User.DoesNotExist:
+                        user_obj = importing_user
+                    # add to ManyToManyField
+                    config_event_obj.user_draft.add(user_obj)
+
+                for user in config_event['user_approver']:
+                    try:
+                        user_obj = User.objects.get(username=user['username'])
+                    except User.DoesNotExist:
+                        user_obj = importing_user
+                    # add to ManyToManyField
+                    config_event_obj.user_approver.add(user_obj)
+
+                for config_name in config_event['config_names']:
+                    # Create All Config Names
+                    config_name_obj = ConfigName.objects.create(
+                        part=part_obj,
+                        config_name_event=config_event_obj,
+                        name=config_name['name'],
+                        config_type=config_name['config_type'],
+                        created_at=config_name['created_at'],
+                        deprecated=config_name['deprecated'],
+                        include_with_calibrations=config_name['include_with_calibrations'],
+                    )
+
+                # add Action history for this event
+                for action in config_event['actions']:
+                    # get User for Action. Use importing User if no match
+                    try:
+                        user_obj = User.objects.get(username=action['user']['username'])
+                    except User.DoesNotExist:
+                        user_obj = importing_user
+
+                    action_obj = Action.objects.create(
+                        config_name_event=config_event_obj,
+                        action_type=action['action_type'],
+                        object_type=action['object_type'],
+                        created_at=action['created_at'],
+                        detail=action['detail'],
+                        user=user_obj
+                    )
+
+    # Create the Assembly Part
     assembly_part_obj = AssemblyPart.objects.create(
-        assembly_revision = new_revision,
-        part = part_obj,
+        assembly_revision=new_revision,
+        part=part_obj,
         parent=parent,
-        note = assembly_part_data['note'],
-        order = assembly_part_data['order']
+        note=assembly_part_data['note'],
+        order=assembly_part_data['order']
     )
+    print(assembly_part_obj)
+    # Add all Config data for the Assembly Part
+    if assembly_part_data['config_default_events']:
+        for config_event in assembly_part_data['config_default_events']:
+            config_event_obj = ConfigDefaultEvent.objects.create(
+                created_at=config_event['created_at'],
+                updated_at=config_event['updated_at'],
+                assembly_part=assembly_part_obj,
+                approved=config_event['approved'],
+                detail=config_event['detail'],
+            )
+
+            # get Users for draft/approval fields. Use importing User if no match
+            for user in config_event['user_draft']:
+                try:
+                    user_obj = User.objects.get(username=user['username'])
+                except User.DoesNotExist:
+                    user_obj = importing_user
+                # add to ManyToManyField
+                config_event_obj.user_draft.add(user_obj)
+
+            for user in config_event['user_approver']:
+                try:
+                    user_obj = User.objects.get(username=user['username'])
+                except User.DoesNotExist:
+                    user_obj = importing_user
+                # add to ManyToManyField
+                config_event_obj.user_approver.add(user_obj)
+
+            for config_default in config_event['config_defaults']:
+                # Get the matching local ConfigName object for this ConfigDefault
+                config_name_obj = ConfigName.objects.filter(
+                    name=config_default['config_name']['name'],
+                    config_name_event__part=part_obj
+                ).first()
+                print(config_name_obj)
+                # Create Config Default
+                config_default_obj = ConfigDefault.objects.create(
+                    conf_def_event=config_event_obj,
+                    default_value=config_default['default_value'],
+                    created_at=config_default['created_at'],
+                    config_name=config_name_obj,
+                )
+
+            # add Action history for this event
+            for action in config_event['actions']:
+                # get User for Action. Use importing User if no match
+                try:
+                    user_obj = User.objects.get(username=action['user']['username'])
+                except User.DoesNotExist:
+                    user_obj = importing_user
+
+                action_obj = Action.objects.create(
+                    config_default_event=config_event_obj,
+                    action_type=action['action_type'],
+                    object_type=action['object_type'],
+                    created_at=action['created_at'],
+                    detail=action['detail'],
+                    user=user_obj
+                )
     # Loop through the tree
     for child_url in assembly_part_data['children']:
         _api_import_assembly_parts_tree(headers, child_url, new_revision, assembly_part_obj)
@@ -466,31 +675,33 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
 
 
 # View to make API request to a separate RDB instance and copy an Assembly Template
+# url params: import_url = 'https://rdb-demo.whoi.edu/api/v1/assembly-templates/assemblies/8/'
+#             api_token = string
 class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'assemblies.add_assembly'
 
     def get(self, request, *args, **kwargs):
         import_url = request.GET.get('import_url')
         api_token = request.GET.get('api_token')
+        assembly_revisions = request.GET.get('assembly_revisions')
 
         if not import_url:
             return HttpResponse("No import_url query paramater data")
 
         if not api_token:
             return HttpResponse("No api_token query paramater data")
-        #api_token = '92e4efc1731d7ed2c31bf76c8d08ab2a34d3ce6d'
+
         headers = {
             'Authorization': 'Token ' + api_token,
         }
         params = {'expand': 'assembly_type,assembly_revisions'}
         # Get the Assembly data from RDB API
-        #import_url = 'https://rdb-demo.whoi.edu/api/v1/assembly-templates/assemblies/8/'
         assembly_request = requests.get(import_url, params=params, headers=headers, verify=False)
         new_assembly = assembly_request.json()
         # Get or create new parent Temp Assembly
         assembly_obj, created = Assembly.objects.get_or_create(name=new_assembly['name'],
                                                                assembly_number=new_assembly['assembly_number'],
-                                                               description=new_assembly['description'],)
+                                                               defaults={'description': new_assembly['description']},)
         print(assembly_obj)
         try:
             assembly_type = AssemblyType.objects.get(name=new_assembly['assembly_type']['name'])
@@ -503,20 +714,98 @@ class ImportAssemblyAPIRequestCopyView(LoginRequiredMixin, PermissionRequiredMix
 
         # Create all Revisions
         for rev in new_assembly['assembly_revisions']:
+            if assembly_revisions:
+                assembly_revisions_list = assembly_revisions.split(',')
+                if rev['revision_code'] not in assembly_revisions_list:
+                    continue
+
             assembly_revision_obj = AssemblyRevision.objects.create(
-                revision_code = rev['revision_code'],
-                revision_note = rev['revision_note'],
-                created_at = rev['created_at'],
-                assembly = assembly_obj,
+                revision_code=rev['revision_code'],
+                revision_note=rev['revision_note'],
+                created_at=rev['created_at'],
+                assembly=assembly_obj,
             )
             print(assembly_revision_obj)
 
             for root_url in rev['assembly_parts_roots']:
-                tree_created = _api_import_assembly_parts_tree(headers, root_url, assembly_revision_obj)
+                tree_created = _api_import_assembly_parts_tree(
+                    headers, root_url, assembly_revision_obj, None, self.request.user)
 
             print(tree_created)
-            #AssemblyPart._tree_manager.rebuild()
+            # AssemblyPart._tree_manager.rebuild()
         return HttpResponse('<h1>New Assembly Template Imported! - %s</h1>' % (assembly_obj))
+
+
+# import Gliders from rdb-demo
+class ImportAllAssemblyTypeView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = 'assemblies.add_assembly'
+
+    def get(self, request, *args, **kwargs):
+        #import_url = "https://rdb-demo.whoi.edu/api/v1/assembly-templates/assembly-types/2/"
+        import_url = request.GET.get('import_url')
+        api_token = request.GET.get('api_token')
+        mooring_id = request.GET.get('mooring_id')
+
+        if not mooring_id:
+            return HttpResponse("No mooring_id query paramater data")
+
+        if not api_token:
+            return HttpResponse("No api_token query paramater data")
+
+        headers = {
+            'Authorization': 'Token ' + api_token,
+        }
+        params = {"expand": "assemblies"}
+
+        # Get the Assembly data from RDB API
+        assembly_request = requests.get(
+            import_url, params=params, headers=headers, verify=False
+        )
+        all_assemblies = assembly_request.json()
+        assemblies = [assembly for assembly in all_assemblies["assemblies"] if mooring_id in assembly['name']]
+
+        for assembly in assemblies:
+            print(assembly["url"])
+            import_url = assembly["url"]
+
+            headers = {
+                'Authorization': 'Token ' + api_token,
+            }
+            params = {'expand': 'assembly_type,assembly_revisions'}
+            # Get the Assembly data from RDB API
+            assembly_request = requests.get(import_url, params=params, headers=headers, verify=False)
+            new_assembly = assembly_request.json()
+            # Get or create new parent Temp Assembly
+            assembly_obj, created = Assembly.objects.get_or_create(name=new_assembly['name'],
+                                                                   assembly_number=new_assembly['assembly_number'],
+                                                                   defaults={'description': new_assembly['description']},)
+            print(assembly_obj)
+            try:
+                assembly_type = AssemblyType.objects.get(name=new_assembly['assembly_type']['name'])
+            except AssemblyType.DoesNotExist:
+                # No matching AssemblyType, add it from the API request data
+                assembly_type = AssemblyType.objects.create(name=new_assembly['assembly_type']['name'])
+            print(assembly_type)
+            assembly_obj.assembly_type = assembly_type
+            assembly_obj.save()
+
+            # Create all Revisions
+            for rev in new_assembly['assembly_revisions']:
+                assembly_revision_obj = AssemblyRevision.objects.create(
+                    revision_code=rev['revision_code'],
+                    revision_note=rev['revision_note'],
+                    created_at=rev['created_at'],
+                    assembly=assembly_obj,
+                )
+                print(assembly_revision_obj)
+
+                for root_url in rev['assembly_parts_roots']:
+                    tree_created = _api_import_assembly_parts_tree(
+                        headers, root_url, assembly_revision_obj, None, self.request.user)
+
+                print(tree_created)
+
+        return HttpResponse('<h1>Gliders imported</h1>')
 
 
 # Printer functionality

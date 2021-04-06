@@ -24,12 +24,13 @@ from roundabout.builds.models import Build, BuildAction
 
 
 # Functions to update legacy content to match new model updates
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 # v.1.6.1 upgrades
 # v1.5 upgrades
 def run_v1_6_1_content_updates():
     _update_inventory_deployments()
+
 
 def _update_inventory_deployments():
     inventory_deployments = InventoryDeployment.objects.all()
@@ -40,14 +41,25 @@ def _update_inventory_deployments():
         inv.save()
 
 # v1.5 upgrades
+
+
 def run_v1_5_content_updates():
+    print("Step 1")
     _update_deployment_actions()
+    print("Step 2")
     _update_deployment_details()
+    print("Step 3")
     _update_action_types()
+    print("Step 4")
     _update_inv_actions()
+    print("Step 5")
     _update_builds_actions()
+
+    print("Step 6")
     _import_old_build_actions()
+    print("Step 7")
     _update_build_dep_actions()
+    print("Step 8")
     _create_inv_deployments()
 
 
@@ -76,17 +88,23 @@ def _update_deployment_details():
     deployments = Deployment.objects.all()
     for deployment in deployments:
         # get the latest 'Deploy' action record to initial
-        start_record = DeploymentAction.objects.filter(deployment=deployment).filter(action_type='startdeployment').first()
+        start_record = DeploymentAction.objects.filter(
+            deployment=deployment).filter(action_type='startdeployment').first()
         # get the latest 'Deploy' action record to initial
-        burnin_record = DeploymentAction.objects.filter(deployment=deployment).filter(action_type='deploymentburnin').first()
+        burnin_record = DeploymentAction.objects.filter(
+            deployment=deployment).filter(action_type='deploymentburnin').first()
         # get the latest 'Deploy' action record to initial
-        deploy_record = DeploymentAction.objects.filter(deployment=deployment).filter(action_type='deploymenttofield').first()
+        deploy_record = DeploymentAction.objects.filter(
+            deployment=deployment).filter(action_type='deploymenttofield').first()
         # get the latest 'Detail' action record to find last lat/long/depth data
-        detail_record = DeploymentAction.objects.filter(deployment=deployment).filter(action_type='deploymentdetails').first()
+        detail_record = DeploymentAction.objects.filter(
+            deployment=deployment).filter(action_type='deploymentdetails').first()
         # get the latest 'Detail' action record to find last lat/long/depth data
-        recover_record = DeploymentAction.objects.filter(deployment=deployment).filter(action_type='deploymentrecover').first()
+        recover_record = DeploymentAction.objects.filter(
+            deployment=deployment).filter(action_type='deploymentrecover').first()
         # get the latest 'Detail' action record to find last lat/long/depth data
-        retire_record = DeploymentAction.objects.filter(deployment=deployment).filter(action_type='deploymentretire').first()
+        retire_record = DeploymentAction.objects.filter(
+            deployment=deployment).filter(action_type='deploymentretire').first()
 
         if start_record:
             deployment.deployment_start_date = start_record.created_at
@@ -118,7 +136,7 @@ def _update_deployment_details():
 
 
 # Action model updates for v1.5 upgrade
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 def _update_action_types():
     actions = Action.objects.only('action_type')
 
@@ -134,7 +152,7 @@ def _update_action_types():
 
 
 # Inventory model updates for v1.5 upgrade
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Update legacy Inventory Actions to add Build/Parent metadata
 def _update_inv_actions():
     items = Inventory.objects.all()
@@ -149,10 +167,13 @@ def _update_inv_actions():
             last_action.parent = item.parent
 
         last_action.save()
+        print(item)
 
 # Build model updates for v1.5 upgrade
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Update Build action_types
+
+
 def _update_builds_actions():
     actions = BuildAction.objects.all()
 
@@ -166,6 +187,7 @@ def _update_builds_actions():
         elif action.action_type == 'startdeploy':
             action.action_type = 'startdeployment'
         action.save()
+        print(action)
 
 
 # Import old BuildAction objs to Action
@@ -186,7 +208,8 @@ def _import_old_build_actions():
 # Update legacy Build Actions if they're Deployment actions
 def _update_build_dep_actions():
     builds = Build.objects.all()
-    dep_action_list = ['startdeployment', 'deploymentburnin', 'deploymenttofield', 'deploymentdetails', 'deploymentrecover', 'deploymentretire']
+    dep_action_list = ['startdeployment', 'deploymentburnin', 'deploymenttofield',
+                       'deploymentdetails', 'deploymentrecover', 'deploymentretire']
     for build in builds:
         actions = build.get_actions()
         dep_actions = actions.filter(action_type__in=dep_action_list)
@@ -208,10 +231,10 @@ def _create_inv_deployments():
             inventory_deployment = InventoryDeployment.objects.create(
                 deployment=build.current_deployment(),
                 inventory=item,
-                deployment_start_date = build.current_deployment().deployment_start_date,
-                deployment_burnin_date = build.current_deployment().deployment_burnin_date,
-                deployment_to_field_date = build.current_deployment().deployment_to_field_date,
-                deployment_recovery_date = build.current_deployment().deployment_recovery_date,
-                current_status = build.current_deployment().current_status,
+                deployment_start_date=build.current_deployment().deployment_start_date,
+                deployment_burnin_date=build.current_deployment().deployment_burnin_date,
+                deployment_to_field_date=build.current_deployment().deployment_to_field_date,
+                deployment_recovery_date=build.current_deployment().deployment_recovery_date,
+                current_status=build.current_deployment().current_status,
             )
             print(inventory_deployment, inventory_deployment.current_status)

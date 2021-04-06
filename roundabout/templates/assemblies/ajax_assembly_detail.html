@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -39,7 +39,7 @@
                     data-node-type="{{ node_type }}">Edit {{ label_assemblies_app_singular }} Details</a>
                 <hr>
                 <a class="dropdown-item" href="#"
-                    data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly.assembly_revisions.first.id %}"
+                    data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly.id %}"
                     data-node-id="{{ assembly.id }}"
                     data-node-type="{{ node_type }}">Create New Revision</a>
                 <a class="dropdown-item" href="#"
@@ -146,7 +146,7 @@
             but keep existing {{ label_builds_app_plural }} unchanged, please create a
             <span class="ajax-detail-link">
                 <a href="#"
-                data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly.assembly_revisions.first.id %}"
+                data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly.id %}"
                 data-node-id="{{ assembly.id }}"
                 data-node-type="{{ assembly.get_object_type }}"><b>NEW REVISION</b></a>
             </span> of this {{ label_assemblies_app_singular }}  instead.

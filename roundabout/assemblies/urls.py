@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -39,7 +39,8 @@ urlpatterns = [
     path('ajax/load-navtree/', views.load_assemblies_navtree, name='ajax_load_assemblies_navtree'),
     # Revision paths
     path('ajax/revision/detail/<int:pk>/', view=views.AssemblyRevisionAjaxDetailView.as_view(), name='ajax_assemblyrevision_detail'),
-    path('ajax/revision/create/<int:assembly_revision_pk>/', view=views.AssemblyRevisionAjaxCreateView.as_view(), name='ajax_assemblies_create_revision'),
+    path('ajax/revision/create/<int:assembly_pk>/', view=views.AssemblyRevisionAjaxCreateView.as_view(), name='ajax_assemblies_create_revision'),
+    path('ajax/revision/create/<int:assembly_pk>/<int:assembly_revision_pk>/', view=views.AssemblyRevisionAjaxCreateView.as_view(), name='ajax_assemblies_create_revision'),
     path('ajax/revision/edit/<int:pk>/', view=views.AssemblyRevisionAjaxUpdateView.as_view(), name='ajax_assemblies_update_revision'),
     path('ajax/revision/delete/<int:pk>/', view=views.AssemblyRevisionAjaxDeleteView.as_view(), name='ajax_assemblies_delete_revision'),
     # AssemblyPart paths

@@ -19,6 +19,7 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 from pprint import pprint
+from copy import deepcopy
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
@@ -30,6 +31,8 @@ from .models import Assembly, AssemblyPart, AssemblyType, AssemblyDocument, Asse
 from .forms import AssemblyForm, AssemblyPartForm, AssemblyTypeForm, AssemblyRevisionForm, AssemblyRevisionFormset, AssemblyDocumentationFormset, AssemblyTypeDeleteForm
 from roundabout.parts.models import PartType, Part
 from roundabout.inventory.models import Action
+from roundabout.inventory.utils import _create_action_history
+from roundabout.configs_constants.models import ConfigDefaultEvent, ConfigDefault
 from common.util.mixins import AjaxFormMixin
 
 
@@ -44,13 +47,41 @@ def _make_tree_copy(root_part, new_assembly, parent=None):
         _make_tree_copy(child, new_assembly, new_ap)
 
 
-# Makes a copy of the Assembly Revisiontree starting at "root_part",
+# Makes a copy of the Assembly Revision tree starting at "root_part",
 # move to new Revision, reparenting it to "parent"
-def _make_revision_tree_copy(root_part, new_revision, parent=None):
-    new_ap = AssemblyPart.objects.create(assembly_revision=new_revision, part=root_part.part, parent=parent, order=root_part.order)
+def _make_revision_tree_copy(root_part, new_revision, parent=None, user=None, copy_default_configs=True):
+    new_ap = AssemblyPart.objects.create(
+        assembly_revision=new_revision,
+        part=root_part.part,
+        parent=parent,
+        order=root_part.order
+    )
+    # Copy ConfigDefaults for this Assembly Part
+    if copy_default_configs and root_part.config_default_events.exists():
+        for event in root_part.config_default_events.all():
+            new_event = ConfigDefaultEvent.objects.create(
+                assembly_part = new_ap,
+                created_at = event.created_at,
+                updated_at = event.updated_at,
+                approved = event.approved,
+                detail = event.detail,
+            )
+            # add ManyToManyFields
+            new_event.user_draft.add(*event.user_draft.all())
+            new_event.user_approver.add(*event.user_approver.all())
+            # add new Action History for event
+            _create_action_history(new_event, Action.ADD, user)
+
+            for config in event.config_defaults.all():
+                print(config)
+                # just copy ConfigDefault by setting id to None
+                config.id = None
+                config.conf_def_event = new_event
+                config.save()
+
 
     for child in root_part.get_children():
-        _make_revision_tree_copy(child, new_revision, new_ap)
+        _make_revision_tree_copy(child, new_revision, new_ap, user, copy_default_configs)
 
 
 # Load the javascript navtree
@@ -220,6 +251,9 @@ class AssemblyAjaxCopyView(AssemblyAjaxCreateView):
 
     def form_valid(self, form, documentation_form, **kwargs):
         self.object = form.save()
+        copy_default_configs = form.cleaned_data['copy_default_configs']
+        assembly_revision_to_copy = form.cleaned_data['assembly_revision_to_copy']
+
         # Create an initial Revision for this Assembly
         revision_code = form.cleaned_data['revision_code']
         revision = AssemblyRevision.objects.create(revision_code=revision_code, assembly=self.object)
@@ -233,13 +267,11 @@ class AssemblyAjaxCopyView(AssemblyAjaxCreateView):
         documentation_form.save()
 
         # Need to copy the current Revision template to new Revision
-        assembly_to_copy = Assembly.objects.get(pk=self.kwargs['assembly_to_copy_pk'])
-        assembly_revision_to_copy = assembly_to_copy.assembly_revisions.latest()
         assembly_parts = assembly_revision_to_copy.assembly_parts.all()
 
         for ap in assembly_parts:
             if ap.is_root_node():
-                _make_revision_tree_copy(ap, revision, ap.parent)
+                _make_revision_tree_copy(ap, revision, ap.parent, self.request.user, copy_default_configs)
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -344,10 +376,19 @@ class AssemblyRevisionAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin
 
     def get_context_data(self, **kwargs):
         context = super(AssemblyRevisionAjaxCreateView, self).get_context_data(**kwargs)
-        assembly_revision_pk = self.kwargs['assembly_revision_pk']
-        copy_revision = AssemblyRevision.objects.get(id=assembly_revision_pk)
+        assembly_pk = self.kwargs.get('assembly_pk', None)
+        assembly_revision_pk = self.kwargs.get('assembly_revision_pk', None)
+
+        assembly = None
+        if assembly_pk:
+            assembly = Assembly.objects.get(id=assembly_pk)
+
+        copy_revision = None
+        if assembly_revision_pk:
+            copy_revision = AssemblyRevision.objects.get(id=assembly_revision_pk)
 
         context.update({
+            'assembly': assembly,
             'copy_revision': copy_revision,
         })
         return context
@@ -373,33 +414,49 @@ class AssemblyRevisionAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin
     def get_initial(self):
         #Returns the initial data from current revision
         initial = super(AssemblyRevisionAjaxCreateView, self).get_initial()
-        # get the current revision object, prepopolate fields
-        assembly_revision_pk = self.kwargs['assembly_revision_pk']
-        assembly_revision = AssemblyRevision.objects.get(id=assembly_revision_pk)
-        initial['assembly'] = assembly_revision.assembly
+        # get the current Assembly object, prepopolate fields
+        assembly_pk = self.kwargs['assembly_pk']
+
+        try:
+            assembly = Assembly.objects.get(id=assembly_pk)
+        except Assembly.DoesNotExist:
+            assembly = None
+
+        initial['assembly'] = assembly
         initial['revision_code'] = None
 
         return initial
 
     def get_form_kwargs(self):
         kwargs = super(AssemblyRevisionAjaxCreateView, self).get_form_kwargs()
+
+        if 'assembly_pk' in self.kwargs:
+            kwargs['assembly_pk'] = self.kwargs['assembly_pk']
+
         if 'assembly_revision_pk' in self.kwargs:
             kwargs['assembly_revision_pk'] = self.kwargs['assembly_revision_pk']
+
         return kwargs
 
     def form_valid(self, form, documentation_form):
         self.object = form.save()
+        copy_default_configs = form.cleaned_data['copy_default_configs']
+        assembly_revision_to_copy = form.cleaned_data['assembly_revision_to_copy']
+
         documentation_form.instance = self.object
         documentation_form.save()
 
-        # Need to copy the current Revision template to new Revision
-        assembly_revision_pk = self.kwargs['assembly_revision_pk']
-        assembly_revision = AssemblyRevision.objects.get(id=assembly_revision_pk)
-        assembly_parts = assembly_revision.assembly_parts.all()
+        assembly_parts = assembly_revision_to_copy.assembly_parts.all()
 
         for ap in assembly_parts:
             if ap.is_root_node():
-                _make_revision_tree_copy(ap, self.object, ap.parent)
+                _make_revision_tree_copy(
+                    ap,
+                    self.object,
+                    ap.parent,
+                    self.request.user,
+                    copy_default_configs,
+                )
 
         response = HttpResponseRedirect(self.get_success_url())
 

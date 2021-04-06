@@ -141,18 +141,18 @@ var password;
 	}
         // Create Configurations / Constants | 
         await driver.findElement(By.linkText("Create Configurations / Constants")).click();
-   	while ((await driver.findElements(By.linkText("Add Configurations/Constants"))).length == 0)
+	while ((await driver.findElements(By.id("add_button"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add CC.");
+	   console.log("Wait 2 seconds for Add Row.");
 	}
-        await driver.findElement(By.linkText("Add Configurations/Constants")).click();
+        await driver.findElement(By.id("add_button")).click();
         await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.linkText("Add Configurations/Constants")).click();
+        await driver.findElement(By.id("add_button")).click();
         await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.linkText("Add Configurations/Constants")).click();
+        await driver.findElement(By.id("add_button")).click();
         await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.linkText("Add Configurations/Constants")).click();
+        await driver.findElement(By.id("add_button")).click();
         // 23 | type | id=id_config_names-0-name | scon1
        
         // 24 | click | linkText=Add Configurations/Constants | 

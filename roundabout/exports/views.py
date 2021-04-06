@@ -305,7 +305,7 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
         return qs
 
     @classmethod
-    def build_zip(cls, zf, objs, subdir=None, verbose=None):
+    def build_zip(cls, zf, objs, subdir=None, verbose='CalibrationsWithConfigs_EXPORTLOG.txt'):
         # objs here is a dict-of-dicts, not a queryset.
         # Each top-level key is an inst_id.
         # Per inst_id there is (a) a "calibs" key containing a CalibrationEvent Queryset
@@ -392,9 +392,13 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
                         bundle = (None,*configs_qs)
                     else:
                         cc_date = max([evt.date for evt in configs_qs])
-                        calib_evt = calibs_qs.filter(date__lte=cc_date).order_by('-date','-id')[0]
-                        calibs_avail = {cv_set.coefficient_name.calibration_name for cv_set in calib_evt.coefficient_value_sets.all()}
+                        calib_evt = calibs_qs.filter(date__lte=cc_date).order_by('-date','-id')
+                        if not calib_evt.exists():
+                            print('    calib selected: FAIL - None available', file=out)
+                            continue
+                        calib_evt = calib_evt[0]
                         print('    calib selected: <CalibrationEvent: {}>'.format(calib_evt), file=out)
+                        calibs_avail = {cv_set.coefficient_name.calibration_name for cv_set in calib_evt.coefficient_value_sets.all()}
                         print('    calib approved:   {}'.format('PASS' if calib_evt.approved else 'FAIL'), file=out)
                         print('    calib validation: {}'.format('PASS' if calibs_to_match.issubset(calibs_avail) else 'FAIL. Present={} Missing={}'.format(calibs_avail, calibs_to_match-calibs_avail)), file=out)
                         bundle = (calib_evt, *configs_qs)

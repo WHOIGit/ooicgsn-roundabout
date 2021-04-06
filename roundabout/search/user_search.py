@@ -23,15 +23,18 @@ import django_tables2 as tables2
 from django import forms
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
+from django.urls import reverse
 from django.utils.html import format_html
 from django.views.generic import TemplateView
 from django_tables2.columns import Column, DateTimeColumn, ManyToManyColumn, BooleanColumn
 from django_tables2_column_shifter.tables import ColumnShiftTable
 
-from roundabout.builds.models import BuildAction
+from roundabout.builds.models import BuildAction, Build, Deployment
 from roundabout.calibrations.models import CalibrationEvent, CoefficientNameEvent
 from roundabout.configs_constants.models import ConfigEvent, ConfigNameEvent, ConstDefaultEvent, ConfigDefaultEvent
-from roundabout.inventory.models import Action, DeploymentAction
+from roundabout.inventory.models import Action, DeploymentAction, Inventory, InventoryDeployment
+from roundabout.parts.models import Part
+from roundabout.assemblies.models import AssemblyPart
 from roundabout.users.models import User
 
 
@@ -52,11 +55,6 @@ class CCCUserTableBase(UserTableBase):
     user_draft = ManyToManyColumn(verbose_name='Reviewers', accessor='user_draft', transform=lambda x: x.name, default='')
     created_at = DateTimeColumn(verbose_name='Date Entered', accessor='created_at', format='Y-m-d H:i')
     detail = Column(verbose_name='Note', accessor='detail')
-
-class ActionUserTableBase(UserTableBase):
-    class Meta(UserTableBase.Meta):
-        fields = ['action_type', 'user__name', 'created_at', 'detail']
-    user__name = Column(verbose_name='User')
 
 # ========= TABLES ========== #
 
@@ -124,32 +122,54 @@ class ConstDefaultEventTable(CCCUserTableBase):
 
 ## Actions ##
 
-class ActionTable(ActionUserTableBase):
-    class Meta(ActionUserTableBase.Meta):
+class ActionUserTable(UserTableBase):
+    class Meta(UserTableBase.Meta):
         model = Action
-        title = 'Misc. Actions'
+        title = 'Actions'
+        fields = ['object_type', 'object', 'action_type', 'user', 'created_at', 'detail']
+    object = Column(verbose_name='Associated Object', accessor='object_type')
 
-class BuildActionTable(ActionUserTableBase):
-    class Meta(ActionUserTableBase.Meta):
-        model = BuildAction
-        title = 'Build Actions'
-        fields = ['build'] + ActionUserTableBase.Meta.fields
-    build = Column(linkify=dict(viewname="builds:builds_detail", args=[tables2.A('build__pk')]))
+    def render_user(self,value):
+        return value.name or value.username
 
-class DeploymentActionTable(ActionUserTableBase):
-    class Meta(ActionUserTableBase.Meta):
-        model = DeploymentAction
-        title = 'Deployment Actions'
-        fields = ['deployment'] + ActionUserTableBase.Meta.fields
+    def render_object(self,record):
+        html_string = '<a href={url}>{text}</a>'
+        parent_obj = record.get_parent()
+        if isinstance(parent_obj,(CalibrationEvent,ConfigEvent,ConstDefaultEvent)):
+            parent_obj = parent_obj.inventory
+        elif isinstance(parent_obj,(ConfigNameEvent,CoefficientNameEvent)):
+            parent_obj = parent_obj.part
+        elif isinstance(parent_obj,ConfigDefaultEvent):
+            parent_obj = parent_obj.assembly_part
 
-    # workaround linking to deployment.
-    def render_deployment(self, record):
-        from django.urls import reverse
-        build_url = reverse("builds:builds_detail", args=[record.deployment.build.pk])
-        deployment_anchor = '#deployment-{}-'.format(record.deployment.pk)  # doesn't work, anchor doesn't exist
-        deployment_anchor = '#deployments'  # next best anchor that does work
-        html_string = '<a href={}>{}</a>'.format(build_url+deployment_anchor, record.deployment)
-        return format_html(html_string)
+        if isinstance(parent_obj, Inventory):
+            inv_url = reverse("inventory:inventory_detail", args=[parent_obj.pk])
+            html_string = html_string.format(url=inv_url, text=parent_obj)
+            return format_html(html_string)
+        elif isinstance(parent_obj,Build):
+            build_url = reverse("builds:builds_detail", args=[parent_obj.pk])
+            html_string = html_string.format(url=build_url, text=parent_obj)
+            return format_html(html_string)
+        elif isinstance(parent_obj,Deployment):
+            build_url = reverse("builds:builds_detail", args=[record.deployment.build.pk])
+            deployment_anchor = '#deployment-{}-'.format(record.deployment.pk)  # doesn't work, anchor doesn't exist
+            deployment_anchor = '#deployments'  # next best anchor that does work
+            html_string = html_string.format(url=build_url+deployment_anchor, text=parent_obj)
+            return format_html(html_string)
+        elif isinstance(parent_obj,InventoryDeployment):
+            inv_url = reverse("inventory:inventory_detail", args=[parent_obj.inventory.pk])
+            html_string = html_string.format(url=inv_url, text=parent_obj)
+            return format_html(html_string)
+        elif isinstance(parent_obj,Part):
+            build_url = reverse("parts:parts_detail", args=[parent_obj.pk])
+            html_string = html_string.format(url=build_url, text=parent_obj)
+            return format_html(html_string)
+        elif isinstance(parent_obj,AssemblyPart):
+            assy_url = reverse("assemblies:assemblypart_detail", args=[parent_obj.pk])
+            html_string = html_string.format(url=assy_url, text=parent_obj)
+            return format_html(html_string)
+        else:
+            return ''
 
 
 # ========= FORM STUFF ========= #
@@ -174,6 +194,9 @@ class UserSearchForm(forms.Form):
     q = forms.CharField(required=True, label='Name')
     ccc_role = forms.ChoiceField(label='CCC Role',choices=[('both','Both'),('app','Approver'),('rev','Reviewer')])
     ccc_status = forms.ChoiceField(label='CCC Status',choices=[('all','Show All'),('app','Show Approved'),('uapp','Show UnApproved')])
+    action_object_options = list(Action.OBJECT_TYPES)
+    action_object_options = [('all','All'), ('bid','Build + Inventory + Deployment'),('ccc',"CCCs Only")]+action_object_options
+    action_object = forms.ChoiceField(label='Action Object', choices=action_object_options, required=False)
 
     def __init__(self, *args, **kwargs):
         default_userlist = User.objects.all().values_list('username',flat=True)
@@ -189,15 +212,14 @@ class UserSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView):
     form_class = UserSearchForm
     table_pagination = {"per_page": 10}
 
-    tables = [CalibrationTable,
+    tables = [ActionUserTable,
+              CalibrationTable,
               ConfigConstTable,
               CoefficientNameEventTable,
               ConfigNameEventTable,
               ConfigDefaultEventTable,
               ConstDefaultEventTable,
-              DeploymentActionTable,
-              BuildActionTable,
-              ActionTable]
+              ]
 
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
@@ -218,10 +240,12 @@ class UserSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView):
             user_query = self.request.GET.get('q')
             ccc_role = self.request.GET.get('ccc_role',None)
             ccc_status = self.request.GET.get('ccc_status',None)
+            action_object = self.request.GET.get('action_object',None)
         else: # defaults
             user_query = self.request.user.username
             ccc_role = 'both'
             ccc_status = 'all'
+            action_object = 'all'
 
         ccc_Q_approver = Q(user_approver__username__icontains=user_query) | Q(user_approver__name__icontains=user_query)
         ccc_Q_draft = Q(user_draft__username__icontains=user_query) | Q(user_draft__name__icontains=user_query)
@@ -238,6 +262,15 @@ class UserSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView):
         elif ccc_status=='app':
             ccc_Q = ccc_Q & Q(approved=True)
         # else show all CCCs regardless of approval status
+
+        if action_object == 'bid':
+            action_Q = action_Q & Q(object_type__in=['build','inventory','deployment'])
+        elif action_object == 'ccc':
+            action_Q = action_Q & Q(object_type__in=list(zip(*Action.OBJECT_TYPES))[0][3:])
+        elif action_object is None or action_object == 'all':
+            pass
+        else:
+            action_Q = action_Q & Q(object_type__exact=action_object)
 
         qs_list = []
         for table in self.tables:
