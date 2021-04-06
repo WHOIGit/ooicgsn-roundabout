@@ -34,7 +34,7 @@ from .forms import *
 from roundabout.assemblies.models import Assembly, AssemblyPart, AssemblyRevision
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory, Action
-from roundabout.inventory.utils import _create_action_history
+from roundabout.inventory.utils import _create_action_history, logged_user_review_items
 from roundabout.admintools.models import Printer
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
@@ -49,17 +49,20 @@ node_type = 'builds'
 def load_builds_navtree(request):
     node_id = request.GET.get('id')
 
+    reviewer_list = logged_user_review_items(request.user, 'inv')
+
     if node_id == '#' or not node_id:
         locations = Location.objects.prefetch_related('builds__assembly__assembly_parts__part__part_type') \
                     .prefetch_related('builds__inventory__part__part_type').prefetch_related('builds__deployments')
-        return render(request, 'builds/ajax_build_navtree.html', {'locations': locations})
+        return render(request, 'builds/ajax_build_navtree.html', {'locations': locations, 'reviewer_list': reviewer_list})
     else:
         build_pk = node_id.split('_')[1]
         build = Build.objects.prefetch_related('assembly_revision__assembly_parts').prefetch_related('inventory').get(id=build_pk)
         return render(request, 'builds/build_tree_assembly.html', {'assembly_parts': build.assembly_revision.assembly_parts,
                                                                    'inventory_qs': build.inventory,
                                                                    'location_pk': build.location_id,
-                                                                   'build_pk': build_pk, })
+                                                                   'build_pk': build_pk, 
+                                                                   'reviewer_list': reviewer_list})
 
 
 # Internal function to copy Inventory items for Build Snapshots

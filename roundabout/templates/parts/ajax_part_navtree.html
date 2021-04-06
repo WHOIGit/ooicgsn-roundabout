@@ -35,7 +35,7 @@
                             data-node-type="part_type">{{ type.name }}</a>
                     {% if type.parts.exists %}
 
-                        {% include "parts/part_tree_parts.html" with parts=type.parts.all %}
+                        {% include "parts/part_tree_parts.html" with parts=type.parts.all reviewer_list=reviewer_list %}
 
                     {% endif %}
 

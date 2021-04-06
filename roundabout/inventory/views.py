@@ -36,7 +36,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 
 from .models import Inventory, Deployment, InventoryDeployment, Action, DeploymentAction, InventorySnapshot, DeploymentSnapshot
 from .forms import *
-from .utils import _create_action_history
+from .utils import _create_action_history, logged_user_review_items
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, PartType, Revision
 from roundabout.admintools.models import Printer
@@ -79,10 +79,12 @@ class InventoryNavTreeMixin(LoginRequiredMixin, object):
 def load_inventory_navtree(request):
     node_id = request.GET.get('id')
 
+    ccc_review_id_list = logged_user_review_items(request.user, 'inv')
+
     if node_id == '#' or not node_id:
         locations = Location.objects.prefetch_related('inventory__part__part_type')
 
-        return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations, 'user': request.user})
+        return render(request, 'inventory/ajax_inventory_navtree.html', {'locations': locations, 'user': request.user, 'reviewer_list': ccc_review_id_list})
     else:
         build_pk = node_id.split('_')[1]
         build = Build.objects.prefetch_related('assembly_revision__assembly_parts').prefetch_related('inventory').get(id=build_pk)
@@ -95,6 +97,7 @@ def load_inventory_navtree(request):
                 'location_pk': build.location_id,
                 'build_pk': build_pk, 
                 'user': request.user,
+                'reviewer_list': ccc_review_id_list
             }
         )
 

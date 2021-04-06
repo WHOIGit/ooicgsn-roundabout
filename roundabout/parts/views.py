@@ -35,6 +35,7 @@ from .forms import PartForm, PartTypeForm, RevisionForm, DocumentationFormset, R
 from roundabout.calibrations.forms import PartCalNameFormset
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory
+from roundabout.inventory.utils import logged_user_review_items
 from roundabout.userdefinedfields.models import Field, FieldValue
 
 from common.util.mixins import AjaxFormMixin
@@ -107,7 +108,8 @@ def check_ccc_enabled(request):
 
 def load_parts_navtree(request):
     part_types = PartType.objects.prefetch_related('parts')
-    return render(request, 'parts/ajax_part_navtree.html', {'part_types': part_types})
+    reviewer_list = logged_user_review_items(request.user,'part')
+    return render(request, 'parts/ajax_part_navtree.html', {'part_types': part_types, 'reviewer_list': reviewer_list})
 
 
 # Base views

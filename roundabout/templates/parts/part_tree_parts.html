@@ -40,10 +40,10 @@
                         data-node-id="{{ part.id }}"
                         data-node-type="parts">
                         {{ part }}
-                        {% logged_user_is_reviewer part user as user_is_reviewer %}
-                        {% if user_is_reviewer %}
+                        {% if part.id in reviewer_list %}
                             <span id="review-badge-{{part.id}}" class="badge badge-pill badge-secondary">Review Requested</span>
                         {% endif %}
+                        
                     </a>
                 </li>
 
