@@ -136,14 +136,16 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
         if referring_obj:
             if object_type == Action.INVENTORY:
                 if obj.is_leaf_node():
-                    action_record.detail = 'Sub-%s %s removed.' % (labels['label_assemblies_app_singular'], referring_obj)
+                    action_record.detail = 'Sub-%s %s removed.' % (
+                        labels['label_assemblies_app_singular'], referring_obj)
                 else:
                     action_record.detail = 'Sub-%s %s added.' % (labels['label_assemblies_app_singular'], referring_obj)
             else:
                 if referring_action == Action.ADDTOBUILD:
                     action_record.detail = 'Sub-%s %s added.' % (labels['label_assemblies_app_singular'], referring_obj)
                 else:
-                    action_record.detail = 'Sub-%s %s removed.' % (labels['label_assemblies_app_singular'], referring_obj)
+                    action_record.detail = 'Sub-%s %s removed.' % (
+                        labels['label_assemblies_app_singular'], referring_obj)
         else:
             if obj.parent:
                 action_record.detail = 'Added to %s.' % (obj.parent)
@@ -220,7 +222,7 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
                 deployment=deployment,
                 inventory=obj,
                 assembly_part=obj.assembly_part,
-                deployment_start_date = action_date
+                deployment_start_date=action_date
             )
             action_record.inventory_deployment = inventory_deployment
         action_record.save()
@@ -293,7 +295,8 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
             # Only update date/cruise on full Build deployment, not individual item
             if deployment_type == Action.BUILD_DEPLOYMENT:
                 inventory_deployment.deployment_recovery_date = action_date
-                inventory_deployment.cruise_recovered = deployment.cruise_recovered
+                if deployment:
+                    inventory_deployment.cruise_recovered = deployment.cruise_recovered
             inventory_deployment.save()
             action_record.inventory_deployment = inventory_deployment
             action_record.build = obj.get_latest_build()
@@ -311,7 +314,8 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
     elif action_type == Action.DEPLOYMENTRETIRE:
         deployment = obj.get_latest_deployment()
         action_record.deployment = deployment
-        action_record.detail = '%s %s ended for this %s.' % (labels['label_deployments_app_singular'], deployment, obj_label)
+        action_record.detail = '%s %s ended for this %s.' % (
+            labels['label_deployments_app_singular'], deployment, obj_label)
         # update InventoryDeployment record
         if isinstance(obj, Inventory):
             inventory_deployment = obj.inventory_deployments.get_active_deployment()
@@ -346,3 +350,28 @@ def _create_action_history(obj, action_type, user, referring_obj=None, referring
                 _create_action_history(child, action_type, user, obj)
     """
     return action_record
+
+
+# Return inventory/part/assembly-part item id's where logged-in user is a CCC-reviewer
+def logged_user_review_items(logged_user, template_type):
+    full_list = []
+    if template_type == 'inv':
+        inv_id_from_cal_events = [inv_id['inventory_id'] for inv_id in logged_user.calibration_events_drafter.values('inventory_id')]
+        inv_id_from_config_events = [inv_id['inventory_id'] for inv_id in logged_user.config_events_reviewer.values('inventory_id')]
+        inv_id_from_const_def_events = [inv_id['inventory_id'] for inv_id in logged_user.constant_default_events_reviewer.values('inventory_id')]
+        build_id_from_dep_events = [build_id['build_id'] for build_id in logged_user.deployments_reviewer.values('build_id')]
+        full_inv_list = set(inv_id_from_cal_events + inv_id_from_config_events + inv_id_from_const_def_events + build_id_from_dep_events)
+        full_list = list(full_inv_list)
+
+    if template_type == 'part':
+        parts_from_config_name_events = [part_id['part_id'] for part_id in logged_user.config_name_events_reviewers.values('part_id')]
+        parts_from_cal_name_events = [part_id['part_id'] for part_id in logged_user.coefficient_name_events_reviewers.values('part_id')]
+        full_part_list = set(parts_from_config_name_events + parts_from_cal_name_events)
+        full_list = list(full_part_list)
+    
+    if template_type == 'assm':
+        assmparts_from_config_def_events = [part_id['assembly_part__part_id'] for part_id in logged_user.config_default_events_reviewer.values('assembly_part__part_id')]
+        full_assm_list = set(assmparts_from_config_def_events)
+        full_list = list(full_assm_list)
+    
+    return full_list
