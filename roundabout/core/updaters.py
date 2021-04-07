@@ -22,6 +22,16 @@
 from roundabout.inventory.models import Inventory, Action, DeploymentAction, Deployment, InventoryDeployment
 from roundabout.builds.models import Build, BuildAction
 
+def remove_double_actions():
+    builds = Build.objects.all()
+    for build in builds:
+        print(build)
+        build_actions = build.get_actions()
+        for action in build_actions:
+            dup_action = build_actions.filter(detail=action.detail).exclude(id=action.id)
+            if dup_action:
+                for d in dup_action:
+                    print(f'{d.detail}: {d.id}')
 
 # Functions to update legacy content to match new model updates
 # ------------------------------------------------------------------------------
