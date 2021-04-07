@@ -31,7 +31,7 @@ from .models import Assembly, AssemblyPart, AssemblyType, AssemblyDocument, Asse
 from .forms import AssemblyForm, AssemblyPartForm, AssemblyTypeForm, AssemblyRevisionForm, AssemblyRevisionFormset, AssemblyDocumentationFormset, AssemblyTypeDeleteForm
 from roundabout.parts.models import PartType, Part
 from roundabout.inventory.models import Action
-from roundabout.inventory.utils import _create_action_history
+from roundabout.inventory.utils import _create_action_history, logged_user_review_items
 from roundabout.configs_constants.models import ConfigDefaultEvent, ConfigDefault
 from common.util.mixins import AjaxFormMixin
 
@@ -88,13 +88,15 @@ def _make_revision_tree_copy(root_part, new_revision, parent=None, user=None, co
 def load_assemblies_navtree(request):
     node_id = request.GET.get('id')
 
+    reviewer_list = logged_user_review_items(request.user,'assm')
+
     if node_id == '#' or not node_id:
         assembly_types = AssemblyType.objects.prefetch_related('assemblies__assembly_revisions')
-        return render(request, 'assemblies/ajax_assembly_navtree.html', {'assembly_types': assembly_types})
+        return render(request, 'assemblies/ajax_assembly_navtree.html', {'assembly_types': assembly_types, 'reviewer_list': reviewer_list})
     else:
         revision_pk = node_id.split('_')[1]
         revision_obj = AssemblyRevision.objects.prefetch_related('assembly_parts').get(id=revision_pk)
-        return render(request, 'assemblies/assembly_tree_parts.html', {'assembly_parts': revision_obj.assembly_parts})
+        return render(request, 'assemblies/assembly_tree_parts.html', {'assembly_parts': revision_obj.assembly_parts, 'reviewer_list': reviewer_list})
 
 
 # Function to load Parts based on Part Type filter
