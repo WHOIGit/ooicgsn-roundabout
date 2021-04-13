@@ -669,3 +669,71 @@ var getUrlParameter = function getUrlParameter(sParam) {
         }
     }
 };
+
+let handleReviewBadges = (templateTag, approveTag, userID, userName, itemID) => {
+    $(templateTag).on('click', approveTag, function(e) {
+        e.preventDefault();
+        let thisBtn = $(approveTag)
+        let grandParent = thisBtn.parent().parent();
+        let url = thisBtn.attr('data-reviewer-url');
+        let reviewer_list = grandParent.find('#reviewers');
+        let logged_user_reviewer = grandParent.find('#reviewer-' + userID);
+        let review_badge = grandParent.find('#review-badge');
+        let review_badge_current = $('#review-badge-current');
+        let approver_list = grandParent.find('#approvers');
+        let logged_user_approver = grandParent.find('#approver-' + userID);
+        let approve_badge = grandParent.find('#approve-badge');
+        let progress_badge = grandParent.find('#progress-badge');
+        let approve_badge_current = $('#approve-badge-current');
+        let progress_badge_current = $('#progress-badge-current');
+        let badge_tag = grandParent.find('#badge_tag')
+        let badge_tag_current = $('#badge_tag-current')
+        $.ajax({
+            url: url,
+            success: function (data) {
+                if (data.user_in == 'reviewers') {
+                    approver_list.append("<span id='approver-" + userID + "'>" + userName + "</span>");
+                    review_badge.remove();
+                    logged_user_reviewer.remove();
+                    thisBtn.addClass('btn-warning').removeClass('btn-success')
+                    thisBtn.text('Unapprove')
+                    if (data.is_current_deployment) {
+                        review_badge_current.remove()
+                    }
+                }
+                if (data.user_in == 'approvers') {
+                    reviewer_list.append("<span id='reviewer-" + userID + "'>" + userName + "</span>");
+                    badge_tag.after('<span id = "review-badge" class = "badge badge-pill badge-secondary">Review Requested</span>');
+                    review_badge.show();
+                    logged_user_approver.remove();
+                    thisBtn.addClass('btn-success').removeClass('btn-warning')
+                    thisBtn.text('Approve')
+                    if (data.is_current_deployment) {
+                        badge_tag_current.after('<span id = "review-badge-current" class = "badge badge-pill badge-secondary">Review Requested</span>');
+                        review_badge_current.show();
+                    }
+                }
+                if (data.approved) {
+                    badge_tag.after('<span id = "approve-badge" class = "badge badge-pill badge-success">Approved</span>');
+                    progress_badge.hide();
+                    if (data.is_current_deployment) {
+                        badge_tag_current.after('<span id = "approve-badge-current" class = "badge badge-pill badge-success">Approved</span>');
+                        progress_badge_current.hide();
+                    }
+                } else {
+                    approve_badge.hide();
+                    progress_badge.show();
+                    if (data.is_current_deployment) {
+                        approve_badge_current.hide();
+                        progress_badge_current.show();
+                    }
+                }
+                if (data.all_reviewed) {
+                    $('#review-badge-' + itemID).hide();
+                } else {
+                    $('#review-badge-' + itemID).show();
+                }
+            }
+        });
+    });
+}
