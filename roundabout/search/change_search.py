@@ -31,7 +31,7 @@ from django_tables2_column_shifter.tables import ColumnShiftTable
 
 from roundabout.builds.models import BuildAction, Build, Deployment
 from roundabout.calibrations.models import CalibrationEvent, CoefficientNameEvent
-from roundabout.configs_constants.models import ConfigEvent, ConfigNameEvent, ConstDefaultEvent, ConfigDefaultEvent, ConfigValue
+from roundabout.configs_constants.models import ConfigEvent, ConfigNameEvent, ConstDefaultEvent, ConfigDefaultEvent, ConfigValue, ConfigName
 from roundabout.inventory.models import Action, DeploymentAction, Inventory, InventoryDeployment
 from roundabout.parts.models import Part
 from roundabout.assemblies.models import AssemblyPart
@@ -40,45 +40,52 @@ from roundabout.search.tables import trunc_render, ActionTable
 
 ## === TABLES === ##
 
-class ChangeTableBase(tables2.Table):
+class CCC_ValueColumn(Column):
+    def __init__(self, ccc_name, note=False, **kwargs):
+        self.ccc_name = ccc_name
+        self.is_note = note
+        col_name = '{} note'.format(ccc_name) if note else ccc_name
+        super().__init__(accessor='data', verbose_name=col_name, default='',**kwargs)
+
+    def render(self,value):
+        key = 'updated_notes' if self.is_note else 'updated_values'
+        try: return value[key][self.ccc_name]['to']
+        except KeyError:
+            print(value)
+            return ''
+
+
+class ChangeTableBase(ColumnShiftTable):
     class Meta:
         template_name = "django_tables2/bootstrap4.html"
         attrs = {'style': 'display: block; overflow-x: auto;'}
-        model = None
-        title = None
-
-
-class CalChangeTable(ChangeTableBase):
-    class Meta(ChangeTableBase.Meta):
-        model = CalibrationEvent
-        title = 'Calibration Events'
-    inventory__serial_number = Column(verbose_name='Inventory', linkify=dict(viewname="inventory:inventory_detail",
-                                                                             args=[tables2.A('inventory__pk')]))
-    value_names = ManyToManyColumn(verbose_name='Coefficient Names', accessor='coefficient_value_sets',
-                                   transform=lambda x: x.coefficient_name)
-
-class ConfConsChangeTable(ChangeTableBase):
-    class Meta(ChangeTableBase.Meta):
-        model = ConfigEvent
-        title = 'Configuration/Constant Events'
-    inventory__serial_number = Column(verbose_name='Inventory', linkify=dict(viewname="inventory:inventory_detail", args=[tables2.A('inventory__pk')]))
-    value_names = ManyToManyColumn(verbose_name='Config/Constant Names', accessor='config_values', transform=lambda x: x.config_name)
-
-class ConfChangeActionTable(ChangeTableBase):
-    class Meta(ChangeTableBase.Meta):
         model = Action
-        title = 'Actions'
-        fields = ['object_type', 'object', 'action_type', 'user', 'created_at', 'detail', 'data']
-    object = Column(verbose_name='Associated Object', accessor='object_type')
+        orderable = False
+        fields = ['created_at','action_type','user']
+        title = None
+    created_at = DateTimeColumn(orderable=True)
 
+    def set_column_default_show(self):
+        notnote_cols = [col for col in self.sequence if not col.endswith('_note')]
+        self.column_default_show = notnote_cols
     def render_user(self,value):
         return value.name or value.username
 
-    def render_detail(self,value):
-        return trunc_render()(value)
-    def value_detail(self,value):
-        return value
+class ConfChangeActionTable(ChangeTableBase):
+    class Meta(ChangeTableBase.Meta):
+        title = 'Configuration Change Actions'
+        fields = ['created_at', 'action_type', 'inventory', 'config_event', 'config_event__approved', 'user', 'config_event__deployment']  #,'data']
+        object_type = Action.CONFEVENT
+    created_at = DateTimeColumn(verbose_name='Action Timestamp')
+    inventory = Column(verbose_name='Inventory SN', accessor='config_event__inventory',
+                linkify=dict(viewname="inventory:inventory_detail", args=[tables2.A('config_event__inventory__pk')]))
 
+    # TODO action history data for when config event gets APPROVED by a user
+    # TODO action history data for when config event gets ADDED to DB
+
+    def render_action_type(self,record):
+        return '{}: {}'.format(record.object_type,record.action_type)
+    '''
     def render_data(self,value):
         template = '"{KEY}" to: {TO}\n{GAP} from: {FROM}\n'
         output_str = ''
@@ -95,8 +102,7 @@ class ConfChangeActionTable(ChangeTableBase):
             return value
     def value_data(self,value):
         return value
-
-    render_object = ActionTable.render_object
+    '''
 
 # ========= FORM STUFF ========= #
 
@@ -118,6 +124,7 @@ class ListTextWidget(forms.TextInput):
 
 class SearchForm(forms.Form):
     q = forms.CharField(required=True, label='Reference Designator')
+    approved = forms.BooleanField(required=False, label='Approved Only')
 
     def __init__(self, *args, **kwargs):
         default_refdeslist = ConfigValue.objects.filter(config_name__name__exact='Reference Designator').values_list('config_value',flat=True)
@@ -135,45 +142,16 @@ class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView
     table_pagination = {"per_page": 10}
 
     tables = [ConfChangeActionTable,
-              ConfConsChangeTable,
-              ]
+
+             ]
 
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
 
-        # disable ColumnShiftTable behavior
+        # enable ColumnShiftTable behavior
         for table in self.tables:
             if issubclass(table,ColumnShiftTable):
-                table.shift_table_column = False
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['model'] = 'change'
-        for table in context['tables']:
-            table.attrs['title'] = table.Meta.title if hasattr(table.Meta,'title') else table.__name__.replace('Table','s')
-        return context
-
-    def get_tables_data(self):
-        if 'q' in self.request.GET:
-            query = self.request.GET.get('q')
-        else: # defaults
-            query = ''
-
-        config_event_matches = ConfigValue.objects.filter(config_value__exact=query).values_list('config_event__pk',flat=True)
-        conf_Q = Q(pk__in=config_event_matches)
-
-        conf_action_Q = Q(config_event__pk__in=config_event_matches)
-
-        qs_list = []
-        for table in self.tables:
-            if table.Meta.model == Action:
-                action_qs = Action.objects.filter(conf_action_Q)
-                qs_list.append(action_qs)
-            else:
-                action_qs = table.Meta.model.objects.filter(conf_Q)
-                qs_list.append(action_qs)
-
-        return qs_list
+                table.shift_table_column = True
 
     def get(self, request, *args, **kwargs):
         initial = dict(q='')
@@ -184,3 +162,83 @@ class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView
         context = self.get_context_data()
         context['form'] = form
         return self.render_to_response(context)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)  # <-- get_tables, get_tables_data, get_tables_kwargs happens here!
+        context['model'] = 'change'
+        for table in context['tables']:
+            table.attrs['title'] = table.Meta.title if hasattr(table.Meta,'title') else table.__name__.replace('Table','s')
+            table.set_column_default_show()
+        return context
+
+    def get_tables_kwargs(self):
+        if 'q' in self.request.GET:
+            query = self.request.GET.get('q')
+        else: return len(self.tables)*[{}]
+
+        kwargss = []
+        for table in self.tables:
+            extra_cols = []
+            if table.Meta.object_type == Action.CONFEVENT:
+                cc_events = ConfigValue.objects.filter(config_value__exact=query).values_list('config_event__pk',flat=True)
+                cc_names = ConfigName.objects.filter(config_values__config_event__pk__in=cc_events).values_list('name',flat=True)
+                cc_names = sorted(set(cc_names))
+                for cc_name in cc_names:
+                    safename = cc_name.replace(' ','-')
+                    col = safename, CCC_ValueColumn(cc_name)
+                    col_note = safename +'_note', CCC_ValueColumn(cc_name, note=True)
+                    extra_cols.append(col)
+                    extra_cols.append(col_note)
+            kwargss.append( {'extra_columns':extra_cols} )
+        return kwargss
+
+    def get_tables_data(self):
+        if 'q' in self.request.GET:
+            query = self.request.GET.get('q')
+        else: # defaults
+            return None
+        approved_only = 'approved' in self.request.GET
+
+        config_event_matches = ConfigValue.objects.filter(config_value__exact=query).values_list('config_event__pk',flat=True)
+        if approved_only:
+            conf_action_Q = Q(config_event__pk__in=config_event_matches, config_event__approved=True)
+        else:
+            conf_action_Q = Q(config_event__pk__in=config_event_matches)
+        #conf_Q = Q(pk__in=config_event_matches)
+
+        #calib_event_matches = CalibrationEvent.objects.filter(inventory__).values_list('pk',flat=True)
+        #calib_action_Q = Q(config_event__pk__in=calib_event_matches)
+        #calib_Q = Q(pk__in=calib_event_matches)
+
+        qs_list = []
+        for table in self.tables:
+            if table.Meta.object_type == Action.CONFEVENT:
+                action_qs = Action.objects.filter(conf_action_Q)
+                if approved_only:
+                    pass # TODO compile Action data to show all approved changes per approval
+                qs_list.append(action_qs)
+            #elif table.Meta.object_type == Action.CALEVENT:
+            #    action_qs = Action.objects.filter(calib_action_Q)
+            #    qs_list.append(action_qs)
+
+        return qs_list
+
+    def get_tables(self):
+        """
+        Return an array of table instances containing data.
+        """
+        if self.tables is None:
+            klass = type(self).__name__
+            raise tables2.views.ImproperlyConfigured("No tables were specified. Define {}.tables".format(klass))
+        data = self.get_tables_data()
+        kwargss = self.get_tables_kwargs()
+
+        if data is None:
+            return self.tables
+
+        if len(data) != len(self.tables) != len(kwargss):
+            klass = type(self).__name__
+            raise tables2.views.ImproperlyConfigured("len({}.tables_data) != len({}.tables)".format(klass, klass))
+        return list(Table(data[i],**kwargss[i]) for i, Table in enumerate(self.tables))
+
+
