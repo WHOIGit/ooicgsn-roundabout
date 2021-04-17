@@ -156,25 +156,24 @@ class DeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
 
         actions = obj_to_update.get_actions()
         actions = actions.filter(action_type__in=actions_list)
+
         for action in actions:
-            try:
-                if action.action_type == Action.STARTDEPLOYMENT:
-                    action.created_at = obj_to_copy.deployment_start_date
+            if action.action_type == Action.STARTDEPLOYMENT and obj_to_copy.deployment_start_date:
+                action.created_at = obj_to_copy.deployment_start_date
 
-                if action.action_type == Action.DEPLOYMENTBURNIN:
-                    action.created_at = obj_to_copy.deployment_burnin_date
+            if action.action_type == Action.DEPLOYMENTBURNIN and obj_to_copy.deployment_burnin_date:
+                action.created_at = obj_to_copy.deployment_burnin_date
 
-                if action.action_type == Action.DEPLOYMENTTOFIELD:
-                    action.created_at = obj_to_copy.deployment_to_field_date
+            if action.action_type == Action.DEPLOYMENTTOFIELD and obj_to_copy.deployment_to_field_date:
+                action.created_at = obj_to_copy.deployment_to_field_date
 
-                if action.action_type == Action.DEPLOYMENTRECOVER:
-                    action.created_at = obj_to_copy.deployment_recovery_date
+            if action.action_type == Action.DEPLOYMENTRECOVER and obj_to_copy.deployment_recovery_date:
+                action.created_at = obj_to_copy.deployment_recovery_date
 
-                if action.action_type == Action.DEPLOYMENTRETIRE:
-                    action.created_at = obj_to_copy.deployment_retire_date
-                action.save()
-            except:
-                continue
+            if action.action_type == Action.DEPLOYMENTRETIRE and obj_to_copy.deployment_retire_date:
+                action.created_at = obj_to_copy.deployment_retire_date
+            action.save()
+            
         return actions
 
     def form_valid(self, form):
