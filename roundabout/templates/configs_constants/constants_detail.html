@@ -67,7 +67,7 @@
                     <div class="collapse mt-3" id="conf_event-{{ event.id }}">
                         <hr>
                         {% if user in event.user_draft.all %}
-                            <button class="btn btn-success btn-sm mr-2" id='expander-date-{{event.id}}' data-reviewer-url="{% url 'configs_constants:event_value_approve' event.id user.id %}">
+                            <button class="btn btn-success btn-sm mr-2" id='expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
                                 Approve
                             </button>
                         {% endif %}
@@ -232,33 +232,8 @@
         let part_has_consts = '{{ part_has_consts }}';
         let inv_id = '{{ inventory_item.id }}';
 
-        $('#const-template').on('click', 'button[id^=expander]', function(e) {
-            e.preventDefault();
-            let url = $(this).attr('data-reviewer-url');
-            let grandParent = $(this).parent().parent()
-            let review_badge = grandParent.find('#review-badge');
-            let progress_badge = grandParent.find('#progress-badge');
-            let reviewer = grandParent.find('#reviewer-' + user_id)
-            let approver_list = grandParent.find('#approvers');
-            if (review_badge.length) {
-                $.ajax({
-                    url: url,
-                    success: function (data) {
-                        if (data.approved) {
-                            review_badge.after('<span id = "approve-badge" class = "badge badge-pill badge-success">Approved</span>');
-                            progress_badge.hide();
-                        }
-                        $(this).remove();
-                        approver_list.append("<span id='approver-{{ user.id }}'>{{ user.username }}</span>");
-                        review_badge.remove();
-                        reviewer.hide();
-                        if (data.all_reviewed) {
-                            $('#review-badge-' + inv_id).remove();
-                        }
-                    }
-                });
-            }
-        });
+        handleReviewBadges('#const-template', 'button[id^=expander]', '{{ user.id }}', '{{ user.username }}', inv_id)
+        
     });
 </script>
 {% endblock javascript %}
