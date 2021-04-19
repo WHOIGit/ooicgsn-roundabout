@@ -27,6 +27,7 @@ from roundabout.users.models import User
 from roundabout.calibrations.models import CoefficientName
 from roundabout.configs_constants.models import ConfigName
 
+# Numerical Coefficient threshold by Calibration 
 class Threshold(models.Model):
     class Meta:
         ordering = ['created_at']

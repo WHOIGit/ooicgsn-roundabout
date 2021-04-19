@@ -237,52 +237,8 @@
         let part_has_configs = '{{ part_has_configs }}';
         let inv_id = '{{ inventory_item.id }}';
 
-        $('#conf-template').on('click', 'button[id^=expander]', function(e) {
-            e.preventDefault();
-            let thisBtn = $(this)
-            let grandParent = $(this).parent().parent();
-            let url = $(this).attr('data-reviewer-url');
-            let reviewer_list = grandParent.find('#reviewers');
-            let logged_user_reviewer = grandParent.find('#reviewer-' + user_id);
-            let review_badge = grandParent.find('#review-badge');
-            let approver_list = grandParent.find('#approvers');
-            let logged_user_approver = grandParent.find('#approver-' + user_id);
-            let approve_badge = grandParent.find('#approve-badge');
-            let progress_badge = grandParent.find('#progress-badge');
-            let badge_tag = grandParent.find('#badge_tag')
-            $.ajax({
-                url: url,
-                success: function (data) {
-                    if (data.user_in == 'reviewers') {
-                        approver_list.append("<span id='approver-{{ user.id }}'>{{ user.username }}</span>");
-                        review_badge.remove();
-                        logged_user_reviewer.remove();
-                        thisBtn.addClass('btn-warning').removeClass('btn-success')
-                        thisBtn.text('Unapprove')
-                    }
-                    if (data.user_in == 'approvers') {
-                        reviewer_list.append("<span id='reviewer-{{ user.id }}'>{{ user.username }}</span>");
-                        badge_tag.after('<span id = "review-badge" class = "badge badge-pill badge-secondary">Review Requested</span>');
-                        review_badge.show();
-                        logged_user_approver.remove();
-                        thisBtn.addClass('btn-success').removeClass('btn-warning')
-                        thisBtn.text('Approve')
-                    }
-                    if (data.approved) {
-                        badge_tag.after('<span id = "approve-badge" class = "badge badge-pill badge-success">Approved</span>');
-                        progress_badge.hide();
-                    } else {
-                        approve_badge.hide();
-                        progress_badge.show();
-                    }
-                    if (data.all_reviewed) {
-                        $('#review-badge-' + inv_id).hide();
-                    } else {
-                        $('#review-badge-' + inv_id).show();
-                    }
-                }
-            });
-        });
+        handleReviewBadges('#conf-template', 'button[id^=expander]', '{{ user.id }}', '{{ user.username }}', inv_id)
+        
     });
 </script>
 {% endblock javascript %}
