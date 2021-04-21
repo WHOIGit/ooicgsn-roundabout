@@ -23,23 +23,128 @@ from django.shortcuts import render
 from django.conf import settings
 from django.urls import reverse, reverse_lazy
 from django.http import HttpResponse
-from django.views.generic import View, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView, FormView
+from django.views.generic import (
+    View,
+    DetailView,
+    ListView,
+    RedirectView,
+    UpdateView,
+    CreateView,
+    DeleteView,
+    TemplateView,
+    FormView,
+)
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
-
-from .requests import field_instance_sync_main
 from .models import *
 from .forms import *
+from roundabout.inventory.models import Action
+from roundabout.locations.api.serializers import LocationSerializer
+
+# Import environment variables from .env files
+import environ
+
+env = environ.Env()
+
 
 # Views to handle syncing requests
 # --------------------------------
-class FieldInstanceSyncToHomeView(View):
+base_url = env("RDB_SITE_URL")
+api_version_url = "/api/v1"
+api_token = "7de11f0cd61a6d50899192c0d02a975b2b204c16"
+headers = {
+    "Authorization": "Token " + api_token,
+}
+serializer_mappings = {"LocationSerializer": LocationSerializer}
 
+
+def field_instance_sync_main(request, field_instance):
+    status_code = 401
+    pk_mappings = []
+    # Get all Actions performed on this FieldInstance
+    actions = obj.actions.filter(object_type=object_type).filter(
+        created_at__gte=field_instance.start_date
+    )
+    # perform sync operations on each Action based on object_type/action_type
+    for action in actions:
+        if action.action_type == Action.ADD:
+            pk_map_obj = _sync_new_object(action, pk_mappings)
+            pk_mappings.append(pk_map_obj)
+    return pk_mappings
+
+
+def _sync_new_object(action_obj, pk_mappings):
+    field_name = action.object_type
+    obj = getattr(action, field_name)
+
+    if obj:
+        object_type = obj._meta.model_name
+        serializer_name = obj._meta.model_name + "Serializer"
+        serializer = serializer_mappings[serializer_name]
+
+        old_pk = obj.id
+        # serialize data for JSON request
+        serializer_results = serializer(obj)
+        data_dict = serializer_results.data
+        # Need to remap any Parent items that have new PKs
+        new_key = next(
+            (pk for pk in pk_mappings if pk["old_pk"] == data_dict["parent"]), False
+        )
+        if new_key:
+            print("NEW KEY: " + new_key)
+            data_dict["parent"] = new_key["new_pk"]
+        # These will be POST as new item, so remove id
+        data_dict.pop("id")
+        response = requests.post(api_url, json=data_dict)
+        print(f"{object_type} CODE: {response.status_code}")
+        new_obj = response.json()[object_type]
+        pk_mapping[object_type].append({"old_pk": old_pk, "new_pk": new_obj["id"]})
+    return pk_mapping
+
+
+def _sync_request_actions(request, field_instance, obj, inventory_pk_mappings=None):
+    action_url = base_url + reverse("api_v1:actions-list")
+    photo_url = base_url + reverse("api_v1:photos-list")
+    # Get all actions for this object
+    object_type = obj._meta.model_name
+    actions = obj.actions.filter(object_type=object_type).filter(
+        created_at__gte=field_instance.start_date
+    )
+
+    for action in actions:
+        # serialize data for JSON request
+        action_serializer = function_mappings = {
+            "add": add,
+        }(action)
+        action_dict = action_serializer.data
+        # These will be POST as new, so remove id
+        action_dict.pop("id")
+        response = requests.post(action_url, json=action_dict)
+        print("ACTION RESPONSE:", response.text)
+        print("ACTION CODE: ", response.status_code)
+        new_action = response.json()
+        # Upload any photos for new Action notes
+        if action.photos.exists():
+            for photo in action.photos.all():
+                multipart_form_data = {
+                    "photo": (photo.photo.name, photo.photo.file),
+                    #'inventory': (None, photo.inventory.id),
+                    "action": (None, new_action["action"]["id"]),
+                    "user": (None, photo.user.id),
+                }
+                response = requests.post(photo_url, files=multipart_form_data)
+                print("PHOTO RESPONSE:", response.text)
+                print("PHOTO CODE: ", response.status_code)
+
+    return "ACTIONS COMPLETE"
+
+
+class FieldInstanceSyncToHomeView(View):
     def get(self, request, *args, **kwargs):
         # Get the FieldInstance object that is current
         field_instance = FieldInstance.objects.filter(is_this_instance=True).first()
         if not field_instance:
-            return HttpResponse('ERROR. This is not a Field Instance of RDB.')
+            return HttpResponse("ERROR. This is not a Field Instance of RDB.")
 
         sync_code = field_instance_sync_main(request, field_instance)
         print(sync_code)
@@ -53,38 +158,43 @@ class FieldInstanceSyncToHomeView(View):
 # Basic CBVs to handle CRUD operations
 # -----------------------------------
 
+
 class FieldInstanceListView(LoginRequiredMixin, ListView):
     model = FieldInstance
-    template_name = 'field_instances/field_instance_list.html'
-    context_object_name = 'field_instances'
+    template_name = "field_instances/field_instance_list.html"
+    context_object_name = "field_instances"
 
 
 class FieldInstanceCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = FieldInstance
     form_class = FieldInstanceForm
-    template_name = 'field_instances/field_instance_form.html'
-    context_object_name = 'field_instance'
-    permission_required = 'field_instances.add_fieldinstance'
-    redirect_field_name = 'home'
+    template_name = "field_instances/field_instance_form.html"
+    context_object_name = "field_instance"
+    permission_required = "field_instances.add_fieldinstance"
+    redirect_field_name = "home"
 
     def get_success_url(self):
-        return reverse('field_instances:field_instances_home', )
+        return reverse(
+            "field_instances:field_instances_home",
+        )
 
 
 class FieldInstanceUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = FieldInstance
     form_class = FieldInstanceForm
-    template_name = 'field_instances/field_instance_form.html'
-    context_object_name = 'field_instance'
-    permission_required = 'field_instances.add_fieldinstance'
-    redirect_field_name = 'home'
+    template_name = "field_instances/field_instance_form.html"
+    context_object_name = "field_instance"
+    permission_required = "field_instances.add_fieldinstance"
+    redirect_field_name = "home"
 
     def get_success_url(self):
-        return reverse('field_instances:field_instances_home', )
+        return reverse(
+            "field_instances:field_instances_home",
+        )
 
 
 class FieldInstanceDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = FieldInstance
-    success_url = reverse_lazy('field_instances:field_instances_home')
-    permission_required = 'field_instances.delete_fieldinstance'
-    redirect_field_name = 'home'
+    success_url = reverse_lazy("field_instances:field_instances_home")
+    permission_required = "field_instances.delete_fieldinstance"
+    redirect_field_name = "home"

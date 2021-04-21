@@ -37,6 +37,7 @@ from roundabout.builds.models import BuildAction
 from roundabout.inventory.models import Action
 from .forms import LocationForm, LocationDeleteForm
 from .models import Location
+from roundabout.inventory.utils import _create_action_history
 
 
 # AJAX functions for Forms and Navtree
@@ -83,8 +84,9 @@ class LocationsAjaxUpdateView(
 
     def form_valid(self, form):
         self.object = form.save()
-        # Rebuild the Location MPTT tree
-        # Location._tree_manager.rebuild()
+        # store action history
+        _create_action_history(self.object, Action.UPDATE, self.request.user)
+
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
@@ -115,7 +117,7 @@ class LocationsAjaxCreateView(
     def form_valid(self, form):
         self.object = form.save()
         # store action history
-        self.object.record_action_history(Action.ADD, self.request.user)
+        _create_action_history(self.object, Action.ADD, self.request.user)
 
         response = HttpResponseRedirect(self.get_success_url())
 
