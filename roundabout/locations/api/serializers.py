@@ -24,74 +24,91 @@ from rest_framework import serializers
 
 from ..models import Location
 
-API_VERSION = 'api_v1'
+API_VERSION = "api_v1"
 
-class LocationSerializer(serializers.HyperlinkedModelSerializer, FlexFieldsModelSerializer):
+
+class LocationSerializer(
+    serializers.HyperlinkedModelSerializer, FlexFieldsModelSerializer
+):
     url = serializers.HyperlinkedIdentityField(
-        view_name = API_VERSION + ':locations-detail',
-        lookup_field = 'pk',
+        view_name=API_VERSION + ":locations-detail",
+        lookup_field="pk",
     )
     parent = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':locations-detail',
-        lookup_field = 'pk',
-        queryset = Location.objects
+        view_name=API_VERSION + ":locations-detail",
+        lookup_field="pk",
+        queryset=Location.objects,
     )
     children = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':locations-detail',
-        many = True,
-        read_only = True,
-        lookup_field = 'pk',
+        view_name=API_VERSION + ":locations-detail",
+        many=True,
+        read_only=True,
+        lookup_field="pk",
     )
     inventory = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':inventory-detail',
-        many = True,
-        read_only = True,
-        lookup_field = 'pk',
+        view_name=API_VERSION + ":inventory-detail",
+        many=True,
+        read_only=True,
+        lookup_field="pk",
     )
     builds = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':builds-detail',
-        many = True,
-        read_only = True,
-        lookup_field = 'pk',
+        view_name=API_VERSION + ":builds-detail",
+        many=True,
+        read_only=True,
+        lookup_field="pk",
     )
     deployments = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':deployments-detail',
-        many = True,
-        read_only = True,
-        lookup_field = 'pk',
+        view_name=API_VERSION + ":deployments-detail",
+        many=True,
+        read_only=True,
+        lookup_field="pk",
     )
     deployed_deployments = serializers.HyperlinkedRelatedField(
-        view_name = API_VERSION + ':deployments-detail',
-        many = True,
-        read_only = True,
-        lookup_field = 'pk',
+        view_name=API_VERSION + ":deployments-detail",
+        many=True,
+        read_only=True,
+        lookup_field="pk",
     )
 
     class Meta:
         model = Location
         fields = [
-            'id',
-            'url',
-            'name',
-            'parent',
-            'children',
-            'weight',
-            'location_type',
-            'location_code',
-            'root_type',
-            'created_at',
-            'updated_at',
-            'inventory',
-            'builds',
-            'deployments',
-            'deployed_deployments',
+            "id",
+            "url",
+            "name",
+            "parent",
+            "children",
+            "weight",
+            "location_code",
+            "root_type",
+            "created_at",
+            "updated_at",
+            "inventory",
+            "builds",
+            "deployments",
+            "deployed_deployments",
         ]
 
         expandable_fields = {
-            'parent': 'roundabout.locations.api.serializers.LocationSerializer',
-            'children': ('roundabout.locations.api.serializers.LocationSerializer', {'many': True}),
-            'inventory': ('roundabout.inventory.api.serializers.InventorySerializer', {'many': True}),
-            'builds': ('roundabout.builds.api.serializers.BuildSerializer', {'many': True}),
-            'deployments': ('roundabout.builds.api.serializers.DeploymentSerializer', {'many': True}),
-            'deployed_deployments': ('roundabout.builds.api.serializers.DeploymentSerializer', {'many': True}),
+            "parent": "roundabout.locations.api.serializers.LocationSerializer",
+            "children": (
+                "roundabout.locations.api.serializers.LocationSerializer",
+                {"many": True},
+            ),
+            "inventory": (
+                "roundabout.inventory.api.serializers.InventorySerializer",
+                {"many": True},
+            ),
+            "builds": (
+                "roundabout.builds.api.serializers.BuildSerializer",
+                {"many": True},
+            ),
+            "deployments": (
+                "roundabout.builds.api.serializers.DeploymentSerializer",
+                {"many": True},
+            ),
+            "deployed_deployments": (
+                "roundabout.builds.api.serializers.DeploymentSerializer",
+                {"many": True},
+            ),
         }

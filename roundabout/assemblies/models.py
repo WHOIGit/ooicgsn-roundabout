@@ -24,7 +24,6 @@ from django.utils import timezone
 from mptt.models import MPTTModel, TreeForeignKey
 from model_utils import FieldTracker
 
-from roundabout.locations.models import Location
 from roundabout.parts.models import Part
 
 # Assembly Types model
@@ -32,7 +31,7 @@ class AssemblyType(models.Model):
     name = models.CharField(max_length=255, unique=False)
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
@@ -41,39 +40,56 @@ class AssemblyType(models.Model):
 # Assembly base model
 class Assembly(models.Model):
     name = models.CharField(max_length=255, unique=True, db_index=True)
-    assembly_type = models.ForeignKey(AssemblyType, related_name='assemblies',
-                                    on_delete=models.SET_NULL, null=True, blank=True)
-    assembly_number = models.CharField(max_length=100, unique=False, db_index=True, null=False, blank=True)
+    assembly_type = models.ForeignKey(
+        AssemblyType,
+        related_name="assemblies",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    assembly_number = models.CharField(
+        max_length=100, unique=False, db_index=True, null=False, blank=True
+    )
     description = models.TextField(blank=True)
 
     class Meta:
-        ordering = ['name',]
+        ordering = [
+            "name",
+        ]
 
     def __str__(self):
         return self.name
 
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
-        return 'assemblies'
+        return "assemblies"
 
 
 class AssemblyRevision(models.Model):
-    revision_code = models.CharField(max_length=255, unique=False, db_index=True, default='A')
+    revision_code = models.CharField(
+        max_length=255, unique=False, db_index=True, default="A"
+    )
     revision_note = models.TextField(blank=True)
-    created_at = models.DateTimeField(default=timezone.now, verbose_name='Release Date')
-    assembly = models.ForeignKey(Assembly, related_name='assembly_revisions',
-                          on_delete=models.CASCADE, null=False, blank=False, db_index=True)
+    created_at = models.DateTimeField(default=timezone.now, verbose_name="Release Date")
+    assembly = models.ForeignKey(
+        Assembly,
+        related_name="assembly_revisions",
+        on_delete=models.CASCADE,
+        null=False,
+        blank=False,
+        db_index=True,
+    )
 
     class Meta:
-        ordering = ['-id', '-revision_code']
-        get_latest_by = 'created_at'
+        ordering = ["-id", "-revision_code"]
+        get_latest_by = "created_at"
 
     def __str__(self):
-        return 'Revision %s - %s' % (self.revision_code, self.assembly.name)
+        return "Revision %s - %s" % (self.revision_code, self.assembly.name)
 
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
-        return 'assemblyrevisions'
+        return "assemblyrevisions"
 
     def get_assembly_total_cost(self):
         tree = self.assembly_parts.all()
@@ -90,17 +106,22 @@ class AssemblyRevision(models.Model):
 # Assembly documentation model
 class AssemblyDocument(models.Model):
     DOC_TYPES = (
-        ('Test', 'Test Documentation'),
-        ('Design', 'Design Documentation'),
+        ("Test", "Test Documentation"),
+        ("Design", "Design Documentation"),
     )
     name = models.CharField(max_length=255, unique=False)
     doc_type = models.CharField(max_length=20, choices=DOC_TYPES)
     doc_link = models.CharField(max_length=1000)
-    assembly_revision = models.ForeignKey(AssemblyRevision, related_name='assembly_documents',
-                             on_delete=models.CASCADE, null=True, blank=True)
+    assembly_revision = models.ForeignKey(
+        AssemblyRevision,
+        related_name="assembly_documents",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
 
     class Meta:
-        ordering = ['doc_type', 'name']
+        ordering = ["doc_type", "name"]
 
     def __str__(self):
         return self.name
@@ -108,28 +129,56 @@ class AssemblyDocument(models.Model):
 
 # Assembly parts model
 class AssemblyPart(MPTTModel):
-    assembly = models.ForeignKey(Assembly, related_name='assembly_parts',
-                          on_delete=models.CASCADE, null=True, blank=True, db_index=True)
-    assembly_revision = models.ForeignKey(AssemblyRevision, related_name='assembly_parts',
-                          on_delete=models.CASCADE, null=True, blank=True, db_index=True)
-    part = models.ForeignKey(Part, related_name='assembly_parts',
-                          on_delete=models.CASCADE, null=False, blank=False, db_index=True)
-    parent = TreeForeignKey('self', related_name='children',
-                            on_delete=models.CASCADE, null=True, blank=True, db_index=True)
+    assembly = models.ForeignKey(
+        Assembly,
+        related_name="assembly_parts",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    assembly_revision = models.ForeignKey(
+        AssemblyRevision,
+        related_name="assembly_parts",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    part = models.ForeignKey(
+        Part,
+        related_name="assembly_parts",
+        on_delete=models.CASCADE,
+        null=False,
+        blank=False,
+        db_index=True,
+    )
+    parent = TreeForeignKey(
+        "self",
+        related_name="children",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
     note = models.TextField(blank=True)
     order = models.CharField(max_length=255, null=False, blank=True, db_index=True)
 
-    tracker = FieldTracker(fields=['part',])
+    tracker = FieldTracker(
+        fields=[
+            "part",
+        ]
+    )
 
     class MPTTMeta:
-        order_insertion_by = ['order']
+        order_insertion_by = ["order"]
 
     def __str__(self):
         return self.part.name
 
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
-        return 'assemblyparts'
+        return "assemblyparts"
 
     def get_subassembly_total_cost(self):
         tree = self.get_descendants(include_self=True)

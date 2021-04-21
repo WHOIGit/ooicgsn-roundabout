@@ -126,6 +126,11 @@ def _create_action_history(
         obj_label = "Configuration(s)"
         action_record.config_name_event = obj
 
+    elif object_type == Action.LOCATION:
+        obj_label = "Location"
+        action_record.location = obj
+        action_record.location_parent = obj.parent
+
     # Run through the discrete Actions, set up details text and extra records if needed.
     if action_type == Action.ADD:
         action_record.detail = "%s first added to RDB. %s" % (obj_label, detail)

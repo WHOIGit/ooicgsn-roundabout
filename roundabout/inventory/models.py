@@ -719,6 +719,13 @@ class Action(models.Model):
         null=True,
         blank=False,
     )
+    location_parent = TreeForeignKey(
+        Location,
+        related_name="location_parent_actions",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
     deployment = models.ForeignKey(
         Deployment,
         related_name="actions",
