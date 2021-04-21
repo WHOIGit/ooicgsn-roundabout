@@ -364,8 +364,8 @@ def logged_user_review_items(logged_user, template_type):
         full_list = list(full_inv_list)
 
     if template_type == 'part':
-        parts_from_config_name_events = [part_id['part_id'] for part_id in logged_user.config_name_events_reviewers.values('part_id')]
-        parts_from_cal_name_events = [part_id['part_id'] for part_id in logged_user.coefficient_name_events_reviewers.values('part_id')]
+        parts_from_config_name_events = [part_id['part_id'] for part_id in logged_user.confignameevent_reviewers.values('part_id')]
+        parts_from_cal_name_events = [part_id['part_id'] for part_id in logged_user.coefficientnameevent_reviewers.values('part_id')]
         full_part_list = set(parts_from_config_name_events + parts_from_cal_name_events)
         full_list = list(full_part_list)
     

@@ -53,9 +53,9 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
         cfg_type = self.kwargs['cfg_type']
         if cfg_type == 1:
-            names = ConfigName.objects.filter(config_name_event = inv_inst.part.config_name_events.first(), config_type = 'cnst')
+            names = ConfigName.objects.filter(config_name_event = inv_inst.part.part_confignameevents.first(), config_type = 'cnst')
         else:
-            names = ConfigName.objects.filter(config_name_event = inv_inst.part.config_name_events.first(), config_type = 'conf')
+            names = ConfigName.objects.filter(config_name_event = inv_inst.part.part_confignameevents.first(), config_type = 'conf')
         names = names.exclude(deprecated = True)
         form_class = self.get_form_class()
         form = self.get_form(form_class)
@@ -572,7 +572,7 @@ class EventDefaultAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
     def get(self, request, *args, **kwargs):
         self.object = None
         inv_inst = Inventory.objects.get(id=self.kwargs['pk'])
-        conf_name_event = inv_inst.part.config_name_events.first()
+        conf_name_event = inv_inst.part.part_confignameevents.first()
         const_names = conf_name_event.config_names.filter(config_type='cnst', deprecated = False)
         form_class = self.get_form_class()
         form = self.get_form(form_class)
@@ -677,7 +677,7 @@ class EventDefaultUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         inv_inst = Inventory.objects.get(id=self.object.inventory.id)
-        conf_name_event = inv_inst.part.config_name_events.first()
+        conf_name_event = inv_inst.part.part_confignameevents.first()
         const_names = conf_name_event.config_names.filter(config_type='cnst', deprecated = False).order_by('created_at')
         form.fields['user_draft'].required = False
         EventDefaultAddFormset = inlineformset_factory(
@@ -802,7 +802,7 @@ class EventConfigDefaultAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
     def get(self, request, *args, **kwargs):
         self.object = None
         assm_part_inst = AssemblyPart.objects.get(id=self.kwargs['pk'])
-        conf_name_event = assm_part_inst.part.config_name_events.first()
+        conf_name_event = assm_part_inst.part.part_confignameevents.first()
         conf_names = conf_name_event.config_names.filter(config_type='conf', deprecated = False)
         form_class = self.get_form_class()
         form = self.get_form(form_class)
@@ -908,7 +908,7 @@ class EventConfigDefaultUpdate(LoginRequiredMixin, AjaxFormMixin, CreateView):
         form = self.get_form(form_class)
         form.fields['user_draft'].required = False
         assm_part_inst = AssemblyPart.objects.get(id=self.object.assembly_part.id)
-        conf_name_event = assm_part_inst.part.config_name_events.first()
+        conf_name_event = assm_part_inst.part.part_confignameevents.first()
         conf_names = conf_name_event.config_names.filter(config_type='conf', deprecated = False).order_by('created_at')
         EventConfigDefaultAddFormset = inlineformset_factory(
             ConfigDefaultEvent,

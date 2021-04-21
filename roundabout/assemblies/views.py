@@ -602,8 +602,8 @@ class AssemblyPartAjaxDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super(AssemblyPartAjaxDetailView, self).get_context_data(**kwargs)
         part_has_configs = False
-        if self.object.part.config_name_events.exists():
-            if self.object.part.config_name_events.first().config_names.filter(config_type='conf').exists():
+        if self.object.part.part_confignameevents.exists():
+            if self.object.part.part_confignameevents.first().config_names.filter(config_type='conf').exists():
                 part_has_configs = True
         context.update({
             'node_type': self.object.get_object_type(),

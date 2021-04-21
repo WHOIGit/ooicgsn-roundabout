@@ -64,7 +64,7 @@ def validate_cal_file(self,cal_csv,ext_files):
                 try:
                     cal_name_item = CoefficientName.objects.get(
                         calibration_name = calibration_name,
-                        coeff_name_event =  inventory_item.part.coefficient_name_events.first()
+                        coeff_name_event =  inventory_item.part.part_confignameevents.first()
                     )
                 except:
                     raise ValidationError(

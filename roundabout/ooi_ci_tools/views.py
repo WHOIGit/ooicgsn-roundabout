@@ -151,33 +151,27 @@ def action_comment(request, pk):
     })
 
 # Sub-comment create view
-def comment_comment(request, pk):
-    comment = Comment.objects.get(id=pk)
+def sub_comment(request, pk, crud=None):
+    comment= Comment.objects.get(id=pk)
     if request.method == "POST":
-        comment_form = CommentForm(request.POST)
+        if crud == 'add':
+            comment_form = CommentForm(request.POST)
+        else:
+            comment_form = CommentForm(request.POST, instance=comment)
         if comment_form.is_valid():
-            comment_form.instance.parent = comment
-            comment_form.instance.action = comment.action
-            comment_form.instance.user = request.user
-            comment_form.instance.detail = comment_form.cleaned_data['detail']
+            if crud == 'add':
+                comment_form.instance.parent = comment
+                comment_form.instance.action = comment.action
+                comment_form.instance.user = request.user
+                comment_form.instance.detail = comment_form.cleaned_data['detail']
+            else:
+                comment_form.instance.detail = comment_form.cleaned_data['detail']
             comment_form.save()
     else:
-        comment_form = CommentForm()
-    return render(request, 'ooi_ci_tools/comment_comment.html', {
-        "comment_form": comment_form,
-        "parent_comment": comment
-    })
-
-# Sub-comment edit view
-def comment_comment_edit(request, pk):
-    comment = Comment.objects.get(id=pk)
-    if request.method == "POST":
-        comment_form = CommentForm(request.POST, instance=comment)
-        if comment_form.is_valid():
-            comment_form.instance.detail = comment_form.cleaned_data['detail']
-            comment_form.save()
-    else:
-        comment_form = CommentForm(instance=comment)
+        if crud == 'add':
+            comment_form = CommentForm()
+        else:
+            comment_form = CommentForm(instance=comment)
     return render(request, 'ooi_ci_tools/comment_comment.html', {
         "comment_form": comment_form,
         "parent_comment": comment

@@ -422,14 +422,14 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         else:
             coeff_events = None
 
-        if self.object.part.coefficient_name_events.exists():
-            if self.object.part.coefficient_name_events.first().coefficient_names.filter(deprecated=False).exists():
+        if self.object.part.part_coefficientnameevents.exists():
+            if self.object.part.part_coefficientnameevents.first().coefficient_names.filter(deprecated=False).exists():
                 part_has_cals = True
 
-        if self.object.part.config_name_events.exists():
-            if self.object.part.config_name_events.first().config_names.filter(config_type='conf', deprecated=False).exists():
+        if self.object.part.part_confignameevents.exists():
+            if self.object.part.part_confignameevents.first().config_names.filter(config_type='conf', deprecated=False).exists():
                 part_has_configs = True
-            if self.object.part.config_name_events.first().config_names.filter(config_type='cnst', deprecated=False).exists():
+            if self.object.part.part_confignameevents.first().config_names.filter(config_type='cnst', deprecated=False).exists():
                 part_has_consts = True
 
 
