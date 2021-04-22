@@ -156,12 +156,12 @@ class CoefficientValueSetForm(forms.ModelForm):
         else:
             return validate_coeff_vals(self.instance, set_type, raw_set)
 
-    def save(self, commit = True):
+    def save(self, commit=True):
         value_set = super(CoefficientValueSetForm, self).save(commit = False)
         if commit:
             value_set.save()
             parse_valid_coeff_vals(value_set)
-            return value_set
+        return value_set
 
 
 # CalibrationName Form

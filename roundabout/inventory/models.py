@@ -775,6 +775,7 @@ class Action(models.Model):
     deployment_type = models.CharField(
         max_length=20, choices=DEPLOYMENT_TYPES, null=False, blank=True, default=""
     )
+    data = models.JSONField(null=True)
 
     objects = ActionQuerySet.as_manager()
 

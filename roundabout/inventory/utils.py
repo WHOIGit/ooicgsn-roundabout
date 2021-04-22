@@ -42,6 +42,7 @@ def _create_action_history(
     referring_action="",
     action_date=None,
     dep_obj=None,
+    data=None,
 ):
     # Set default variables
     object_type = obj._meta.model_name
@@ -71,6 +72,8 @@ def _create_action_history(
         action_record.location = obj.location
     action_record.detail = detail
     action_record.created_at = action_date
+    if data:
+        action_record.data = data
 
     # set deployment_type by checking if a Build object started the action
     if isinstance(obj, Build) or isinstance(referring_obj, Build):
@@ -134,10 +137,16 @@ def _create_action_history(
     # Run through the discrete Actions, set up details text and extra records if needed.
     if action_type == Action.ADD:
         action_record.detail = "%s first added to RDB. %s" % (obj_label, detail)
+        # TODO add data to action record IF it's from a CCC
         action_record.save()
 
     elif action_type == Action.UPDATE:
         action_record.detail = "%s details updated." % (obj_label)
+        # TODO add data to action record IF it's from a CCC
+        if object_type == Action.CALEVENT:
+            pass
+        elif object_type == Action.CONFEVENT:
+            pass
         action_record.save()
 
     elif action_type == Action.LOCATIONCHANGE or action_type == Action.MOVETOTRASH:

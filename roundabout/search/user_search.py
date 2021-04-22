@@ -180,7 +180,7 @@ class UserSearchForm(forms.Form):
 # ========= VIEWS ========= #
 
 class UserSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView):
-    template_name = 'search/ReviewerApproverSearch.html'
+    template_name = 'search/form_search_multitable.html'
     form_class = UserSearchForm
     table_pagination = {"per_page": 10}
 
@@ -203,6 +203,7 @@ class UserSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['model'] = 'User'
         for table in context['tables']:
             table.attrs['title'] = table.Meta.title if hasattr(table.Meta,'title') else table.__name__.replace('Table','s')
         return context

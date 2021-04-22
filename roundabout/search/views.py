@@ -471,8 +471,10 @@ class InventoryTableView(GenericSearchTableView):
 
                         dict(value=None, text="--Calibrations--", disabled=True),
                         dict(value="calibration_events__latest__calibration_date", text="Latest Calibration Event: Date", legal_lookup='DATE_LOOKUP',
-                             col_args = dict(format='Y-m-d', linkify=lambda record,value: reverse(viewname="exports:calibration",
-                                                                args=[record.calibration_events.latest().pk]) if value else None)),
+                             col_args = dict(format='Y-m-d', value='value', # must specify value for csv download here because of linkify render
+                                             linkify=lambda record,value: reverse(viewname="exports:calibration",
+                                                                     args=[record.calibration_events.latest().pk]) if value else None,
+                                             )),
                         dict(value="calibration_events__latest__user_approver__any__username", text="Latest Calibration Event: Approvers", legal_lookup='ITER_LOOKUP'),
                         dict(value="calibration_events__latest__user_draft__any__username", text="Latest Calibration Event: Reviewers", legal_lookup='ITER_LOOKUP'),
                         dict(value="calibration_events__latest__approved", text="Latest Calibration Event: Approved", legal_lookup='BOOL_LOOKUP'),
@@ -525,6 +527,7 @@ class InventoryTableView(GenericSearchTableView):
         trashtog = 'checked' if 'on' in self.request.GET.getlist('trashtog') else 'unchecked'
         context['trashtog'] = json.dumps(trashtog)
         return context
+
 
 class PartTableView(GenericSearchTableView):
     model = Part
@@ -647,10 +650,10 @@ class AssemblyTableView(GenericSearchTableView):
 
     @staticmethod
     def get_avail_fields():
-        avail_fields = [dict(value="name",                text="Name", legal_lookup='STR_LOOKUP'),
-                        dict(value="assembly_number",   text="Number", legal_lookup='STR_LOOKUP',
-                             col_args=dict(verbose_name='Assembly Number', attrs={'style':'white-space: nowrap;'},
-                                           linkify=dict(viewname='assemblies:assembly_detail',args=[tables.A('pk')]))),
+        avail_fields = [dict(value="name",                text="Name", legal_lookup='STR_LOOKUP',
+                             col_args=dict(verbose_name='Name', attrs={'style': 'white-space: nowrap;'},
+                                           linkify=dict(viewname='assemblies:assembly_detail', args=[tables.A('pk')]))),
+                        dict(value="assembly_number",   text="Number", legal_lookup='STR_LOOKUP'),
                         dict(value="assembly_type__name", text="Type", legal_lookup='STR_LOOKUP',
                              col_args=dict(verbose_name='Type')),
                         dict(value="description",  text="Description", legal_lookup='STR_LOOKUP',
