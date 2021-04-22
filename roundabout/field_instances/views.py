@@ -61,7 +61,8 @@ def field_instance_sync_main(request, field_instance):
     api_token = request.GET.get("api_token")
 
     if not api_token:
-        return HttpResponse("No api_token query paramater data")
+        error = "No api_token query paramater data"
+        return error
 
     headers = {
         "Authorization": "Token " + api_token,
@@ -83,15 +84,17 @@ def field_instance_sync_main(request, field_instance):
 def _sync_new_object(action_obj, pk_mappings, headers):
     field_name = action.object_type
     obj = getattr(action, field_name)
-
+    print(obj)
     if obj:
         object_type = obj._meta.model_name
+        print(object_type)
         serializer = serializer_mappings[object_type]
 
         old_pk = obj.id
         # serialize data for JSON request
         serializer_results = serializer(obj)
         data_dict = serializer_results.data
+        print(data_dict)
         # Need to remap any Parent items that have new PKs
         new_key = next(
             (
@@ -124,9 +127,7 @@ def _sync_request_actions(request, field_instance, obj, inventory_pk_mappings=No
 
     for action in actions:
         # serialize data for JSON request
-        action_serializer = function_mappings = {
-            "add": add,
-        }(action)
+        action_serializer = function_mappings[action]
         action_dict = action_serializer.data
         # These will be POST as new, so remove id
         action_dict.pop("id")
@@ -157,13 +158,13 @@ class FieldInstanceSyncToHomeView(View):
         if not field_instance:
             return HttpResponse("ERROR. This is not a Field Instance of RDB.")
 
-        sync_code = field_instance_sync_main(request, field_instance)
-        print(sync_code)
+        status_response = field_instance_sync_main(request, field_instance)
+        print(status_response)
 
-        if sync_code == 200:
+        if status_response == 200:
             return HttpResponse("Code 200")
         else:
-            return HttpResponse("API error")
+            return HttpResponse(status_response)
 
 
 # Basic CBVs to handle CRUD operations
