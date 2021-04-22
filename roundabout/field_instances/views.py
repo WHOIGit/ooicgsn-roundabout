@@ -18,11 +18,11 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 """
-
+import requests
 from django.shortcuts import render
 from django.conf import settings
-from django.urls import reverse, reverse_lazy
 from django.http import HttpResponse
+
 from django.views.generic import (
     View,
     DetailView,
@@ -35,7 +35,8 @@ from django.views.generic import (
     FormView,
 )
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-
+from rest_framework.views import APIView
+from rest_framework.reverse import reverse, reverse_lazy
 from .models import *
 from .forms import *
 from roundabout.inventory.models import Action
@@ -50,14 +51,17 @@ env = environ.Env()
 
 # Views to handle syncing requests
 # --------------------------------
-base_url = env("RDB_SITE_URL")
-api_version_url = "/api/v1"
+BASE_URL = env("RDB_SITE_URL")
+API_VERSION = "/api/v1"
 serializer_mappings = {"location": LocationSerializer, "action": ActionSerializer}
+api_url = BASE_URL + API_VERSION + "/locations/"
+api_url_mappings = {"location": api_url}
+print(api_url_mappings)
 
 
 def field_instance_sync_main(request, field_instance):
     status_code = 401
-    pk_mappings = [{"location": []}]
+    pk_mappings = {"location": []}
     api_token = request.GET.get("api_token")
 
     if not api_token:
@@ -69,19 +73,19 @@ def field_instance_sync_main(request, field_instance):
     }
 
     # Get all Actions performed on this FieldInstance
-    actions = obj.actions.filter(
-        object_type=object_type, created_at__gte=field_instance.start_date
-    )
+    actions = Action.objects.filter(created_at__gte=field_instance.start_date)
     # perform sync operations on each Action based on object_type/action_type
     for action in actions:
         if action.action_type == Action.ADD:
-            pk_map_obj = _sync_new_object(action, pk_mappings, headers)
-            pk_mappings.append(pk_map_obj)
+            mappings_data = _sync_new_object(action, pk_mappings, headers, request)
+            pk_mappings[mappings_data["object_type"]].append(
+                mappings_data["pk_mapping"]
+            )
     print(pk_mappings)
     return pk_mappings
 
 
-def _sync_new_object(action_obj, pk_mappings, headers):
+def _sync_new_object(action, pk_mappings, headers, request):
     field_name = action.object_type
     obj = getattr(action, field_name)
     print(obj)
@@ -92,7 +96,7 @@ def _sync_new_object(action_obj, pk_mappings, headers):
 
         old_pk = obj.id
         # serialize data for JSON request
-        serializer_results = serializer(obj)
+        serializer_results = serializer(obj, context={"request": request})
         data_dict = serializer_results.data
         print(data_dict)
         # Need to remap any Parent items that have new PKs
@@ -109,11 +113,16 @@ def _sync_new_object(action_obj, pk_mappings, headers):
             data_dict["parent"] = new_key["new_pk"]
         # These will be POST as new item, so remove id
         data_dict.pop("id")
+        data_dict["location_type"] = ""
+        print(api_url)
         response = requests.post(api_url, json=data_dict, headers=headers)
         print(f"{object_type} CODE: {response.status_code}")
-        new_obj = response.json()[object_type]
+        print(response.json())
+        new_obj = response.json()
         pk_mapping = {"old_pk": old_pk, "new_pk": new_obj["id"]}
-    return pk_mapping
+        response = {"pk_mapping": pk_mapping, "object_type": object_type}
+
+    return response
 
 
 def _sync_request_actions(request, field_instance, obj, inventory_pk_mappings=None):
@@ -151,7 +160,7 @@ def _sync_request_actions(request, field_instance, obj, inventory_pk_mappings=No
     return "ACTIONS COMPLETE"
 
 
-class FieldInstanceSyncToHomeView(View):
+class FieldInstanceSyncToHomeView(APIView):
     def get(self, request, *args, **kwargs):
         # Get the FieldInstance object that is current
         field_instance = FieldInstance.objects.filter(is_this_instance=True).first()
