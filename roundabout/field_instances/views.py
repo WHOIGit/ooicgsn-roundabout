@@ -39,6 +39,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from .models import *
 from .forms import *
 from roundabout.inventory.models import Action
+from roundabout.inventory.api.serializers import ActionSerializer
 from roundabout.locations.api.serializers import LocationSerializer
 
 # Import environment variables from .env files
@@ -51,36 +52,41 @@ env = environ.Env()
 # --------------------------------
 base_url = env("RDB_SITE_URL")
 api_version_url = "/api/v1"
-api_token = "7de11f0cd61a6d50899192c0d02a975b2b204c16"
-headers = {
-    "Authorization": "Token " + api_token,
-}
-serializer_mappings = {"LocationSerializer": LocationSerializer}
+serializer_mappings = {"location": LocationSerializer, "action": ActionSerializer}
 
 
 def field_instance_sync_main(request, field_instance):
     status_code = 401
-    pk_mappings = []
+    pk_mappings = [{"location": []}]
+    api_token = request.GET.get("api_token")
+
+    if not api_token:
+        return HttpResponse("No api_token query paramater data")
+
+    headers = {
+        "Authorization": "Token " + api_token,
+    }
+
     # Get all Actions performed on this FieldInstance
-    actions = obj.actions.filter(object_type=object_type).filter(
-        created_at__gte=field_instance.start_date
+    actions = obj.actions.filter(
+        object_type=object_type, created_at__gte=field_instance.start_date
     )
     # perform sync operations on each Action based on object_type/action_type
     for action in actions:
         if action.action_type == Action.ADD:
-            pk_map_obj = _sync_new_object(action, pk_mappings)
+            pk_map_obj = _sync_new_object(action, pk_mappings, headers)
             pk_mappings.append(pk_map_obj)
+    print(pk_mappings)
     return pk_mappings
 
 
-def _sync_new_object(action_obj, pk_mappings):
+def _sync_new_object(action_obj, pk_mappings, headers):
     field_name = action.object_type
     obj = getattr(action, field_name)
 
     if obj:
         object_type = obj._meta.model_name
-        serializer_name = obj._meta.model_name + "Serializer"
-        serializer = serializer_mappings[serializer_name]
+        serializer = serializer_mappings[object_type]
 
         old_pk = obj.id
         # serialize data for JSON request
@@ -88,17 +94,22 @@ def _sync_new_object(action_obj, pk_mappings):
         data_dict = serializer_results.data
         # Need to remap any Parent items that have new PKs
         new_key = next(
-            (pk for pk in pk_mappings if pk["old_pk"] == data_dict["parent"]), False
+            (
+                pk
+                for pk in pk_mappings[object_type]
+                if pk["old_pk"] == data_dict["parent"]
+            ),
+            False,
         )
         if new_key:
             print("NEW KEY: " + new_key)
             data_dict["parent"] = new_key["new_pk"]
         # These will be POST as new item, so remove id
         data_dict.pop("id")
-        response = requests.post(api_url, json=data_dict)
+        response = requests.post(api_url, json=data_dict, headers=headers)
         print(f"{object_type} CODE: {response.status_code}")
         new_obj = response.json()[object_type]
-        pk_mapping[object_type].append({"old_pk": old_pk, "new_pk": new_obj["id"]})
+        pk_mapping = {"old_pk": old_pk, "new_pk": new_obj["id"]}
     return pk_mapping
 
 

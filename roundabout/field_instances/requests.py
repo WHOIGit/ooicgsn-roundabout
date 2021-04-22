@@ -30,10 +30,6 @@ import environ
 env = environ.Env()
 base_url = env("RDB_SITE_URL")
 api_version_url = "/api/v1"
-api_token = "7de11f0cd61a6d50899192c0d02a975b2b204c16"
-headers = {
-    "Authorization": "Token " + api_token,
-}
 """
 Main sync function to coordinate the different models
 """
