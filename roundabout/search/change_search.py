@@ -142,7 +142,8 @@ class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView
     table_pagination = {"per_page": 10}
 
     tables = [ConfChangeActionTable,
-
+             # TODO CalibChangeActionTable: needs action_history update.
+             #                              needs a way to figure out what CalibEvent falls within a given ref-des
              ]
 
     def __init__(self,*args,**kwargs):
@@ -195,8 +196,8 @@ class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView
     def get_tables_data(self):
         if 'q' in self.request.GET:
             query = self.request.GET.get('q')
-        else: # defaults
-            return None
+        else:  # defaults
+            return [[]]*len(self.tables)
         approved_only = 'approved' in self.request.GET
 
         config_event_matches = ConfigValue.objects.filter(config_value__exact=query).values_list('config_event__pk',flat=True)
