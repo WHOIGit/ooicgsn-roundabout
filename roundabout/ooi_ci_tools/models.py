@@ -123,8 +123,8 @@ class CCCEvent(models.Model):
     detail = models.TextField(blank=True)
     part = models.ForeignKey(Part, related_name='part_%(class)ss', on_delete=models.CASCADE, null=True)
 
-    def get_actions(self, evt_type):
-        return self.actions.filter(object_type=evt_type)
+    def get_actions(self):
+        return self.actions.filter(object_type='%(class)s')
 
     def get_sorted_reviewers(self):
         return self.user_draft.all().order_by('username')
