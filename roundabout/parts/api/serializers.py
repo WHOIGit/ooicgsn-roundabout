@@ -82,7 +82,7 @@ class PartSerializer(FlexFieldsModelSerializer):
         many = True,
         read_only = True,
     )
-    part_confignameevents= serializers.HyperlinkedRelatedField(
+    part_coefficientnameevents= serializers.HyperlinkedRelatedField(
         view_name = API_VERSION + ':calibrations/coefficent-name-events-detail',
         lookup_field = 'pk',
         many = True,

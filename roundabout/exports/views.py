@@ -339,7 +339,7 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
                 print('FAIL:',the_inv, 'does not have an associated assembly_part!', file=out)
                 continue
             the_part = the_inv.assembly_part.part
-            calibs_to_match = set(the_part.part_confignameevents.first().coefficient_names.all()) if the_part.part_confignameevents.first() else set()
+            calibs_to_match = set(the_part.part_coefficientnameevents.first().coefficient_names.all()) if the_part.part_coefficientnameevents.first() else set()
             calibs_to_match = {field.calibration_name for field in calibs_to_match}
             confconsts_to_match = set(the_part.part_confignameevents.first().config_names.filter(include_with_calibrations=True)) if the_part.part_confignameevents.first() else set()
             confconsts_to_match = {field.name for field in confconsts_to_match}
