@@ -65,7 +65,9 @@ jobs:
             
           docker tag $IMAGE_ID $IMAGE_ID:$VERSION
 
+          echo "IMAGE_ID:"
           echo $IMAGE_ID
+          echo "VERSION:"
           echo $VERSION
           docker image ls
 
