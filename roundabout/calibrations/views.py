@@ -679,6 +679,10 @@ def event_review_toggle(request, pk, user_pk, evt_type):
         event.user_draft.add(user)
         event.user_approver.remove(user)
         user_in = 'approvers'
+        if evt_type == 'deployment':
+            _create_action_history(event.build, Action.REVIEWUNAPPROVE, user, dep_obj=event)
+        else:
+            _create_action_history(event, Action.REVIEWUNAPPROVE, user)
     elif user in reviewers:
         event.user_draft.remove(user)
         event.user_approver.add(user)
@@ -696,6 +700,10 @@ def event_review_toggle(request, pk, user_pk, evt_type):
                 _create_action_history(event, Action.EVENTAPPROVE, user)
         else:
             event.approved = False
+            if evt_type == 'deployment':
+                _create_action_history(event.build, Action.EVENTUNAPPROVE, user, dep_obj=event)
+            else:
+                _create_action_history(event, Action.EVENTUNAPPROVE, user)
     event.save()
     all_reviewed = user_ccc_reviews(event, user)
     data = {'approved':event.approved, 'all_reviewed': all_reviewed, 'user_in': user_in, 'is_current_deployment': is_current_deployment}

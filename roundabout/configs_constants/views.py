@@ -1091,13 +1091,20 @@ def event_value_approve(request, pk, user_pk):
     event = ConfigEvent.objects.get(id=pk)
     user = User.objects.get(id=user_pk)
     reviewers = event.user_draft.all()
+    approvers = event.user_approver.all()
     if user in reviewers:
         event.user_draft.remove(user)
         event.user_approver.add(user)
         _create_action_history(event, Action.REVIEWAPPROVE, user)
+    elif user in approvers:
+        event.user_approver.remove(user)
+        event.user_draft.add(user)
+        _create_action_history(event, Action.REVIEWUNAPPROVE, user)
     if len(event.user_draft.all()) == 0:
         event.approved = True
         _create_action_history(event, Action.EVENTAPPROVE, user)
+    else:
+        _create_action_history(event, Action.EVENTUNAPPROVE, user)
     event.save()
     all_reviewed = user_ccc_reviews(event, user)
     data = {'approved':event.approved, 'all_reviewed':all_reviewed}

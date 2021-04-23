@@ -417,7 +417,9 @@ class Action(models.Model):
     MOVETOTRASH = 'movetotrash'
     RETIREBUILD = 'retirebuild'
     REVIEWAPPROVE = 'reviewapprove'
+    REVIEWUNAPPROVE = 'reviewunapprove'
     EVENTAPPROVE = 'eventapprove'
+    EVENTUNAPPROVE = 'eventunapprove'
     CALCSVIMPORT = 'calcsvimport'
     CALCSVUPDATE = 'calcsvupdate'
     ACTION_TYPES = (
@@ -446,7 +448,9 @@ class Action(models.Model):
         (MOVETOTRASH, 'Move to Trash'),
         (RETIREBUILD, 'Retire Build'),
         (REVIEWAPPROVE, 'Reviewer approved Event'),
+        (REVIEWUNAPPROVE, 'Reviewer unapproved Event'),
         (EVENTAPPROVE, 'Event Approved'),
+        (EVENTUNAPPROVE, 'Event Unapproved'),
         (CALCSVIMPORT, 'Calibration CSV Uploaded'),
         (CALCSVUPDATE, 'Updated by Calibration CSV'),
     )
