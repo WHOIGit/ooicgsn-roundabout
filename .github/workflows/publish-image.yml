@@ -48,8 +48,8 @@ jobs:
           docker-compose -f docker-compose-testing.yml build tests
           docker-compose -f docker-compose-testing.yml run --rm tests ./RunAllTests-Chrome-Linux.bat
 
-      - name: Tag Image & Push Release Image
-#        if: contains(github.ref, 'release')
+      - name: Tag & Push Release Image
+        if: contains(github.ref, 'release')
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           IMAGE_ID=ghcr.io/${{ github.repository }}
