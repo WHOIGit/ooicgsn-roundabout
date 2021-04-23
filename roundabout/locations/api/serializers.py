@@ -27,9 +27,8 @@ from ..models import Location
 API_VERSION = "api_v1"
 
 
-class LocationSerializer(
-    serializers.HyperlinkedModelSerializer, FlexFieldsModelSerializer
-):
+class LocationSerializer(FlexFieldsModelSerializer):
+    id = serializers.ReadOnlyField()
     url = serializers.HyperlinkedIdentityField(
         view_name=API_VERSION + ":locations-detail",
         lookup_field="pk",

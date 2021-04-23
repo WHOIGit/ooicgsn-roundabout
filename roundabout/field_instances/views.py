@@ -59,12 +59,11 @@ api_url_mappings = {
     "action": f"{BASE_URL}{API_VERSION}/actions/",
     "photo": f"{BASE_URL}{API_VERSION}/photos/",
 }
-print(api_url_mappings)
 
 
 def field_instance_sync_main(request, field_instance):
     status_code = 401
-    pk_mappings = {"location": []}
+    pk_mappings = {"location": [], "inventory": [], "build": []}
     api_token = request.GET.get("api_token")
 
     if not api_token:
@@ -76,7 +75,9 @@ def field_instance_sync_main(request, field_instance):
     }
 
     # Get all Actions performed on this FieldInstance
-    actions = Action.objects.filter(created_at__gte=field_instance.start_date)
+    actions = Action.objects.filter(created_at__gte=field_instance.start_date).order_by(
+        "created_at"
+    )
     # perform sync operations on each Action based on object_type/action_type
     for action in actions:
         if action.action_type == Action.ADD:
@@ -105,37 +106,47 @@ def _sync_new_object(action, pk_mappings, headers, request, sync_action=False):
         object_type = obj._meta.model_name
         serializer = serializer_mappings[object_type]
 
-        old_pk = obj.id
         # serialize data for JSON request
         serializer_results = serializer(obj, context={"request": request})
         data_dict = serializer_results.data
-        print(data_dict)
+
         # Need to remap any Related Fields that may have new PKs
         related_fields_list = ["parent", "location", "build", "inventory"]
 
         for field in related_fields_list:
             if hasattr(obj, field):
+                # reset the mapping dict key to the current object_type if "parent" tree field
+                if field == "parent":
+                    if sync_action:
+                        pk_mapping_key = "inventory"
+                    else:
+                        pk_mapping_key = object_type
+                else:
+                    pk_mapping_key = field
+
                 new_key = next(
                     (
                         pk
-                        for pk in pk_mappings[object_type]
+                        for pk in pk_mappings[pk_mapping_key]
                         if pk["old_pk"] == data_dict[field]
                     ),
                     False,
                 )
                 if new_key:
-                    print("NEW KEY: " + new_key)
+                    print(new_key)
                     data_dict[field] = new_key["new_pk"]
         # These will be POST as new item, so remove id
         data_dict.pop("id")
+        print(data_dict)
         response = requests.post(
             api_url_mappings[object_type], json=data_dict, headers=headers
         )
         print(f"{object_type} CODE: {response.status_code}")
         print(response.json())
         new_obj = response.json()
+        old_pk = data_dict["url"]
         # map the old "local" PK to the new PK saved in the Home Base RDB
-        pk_mapping = {"old_pk": old_pk, "new_pk": new_obj["id"]}
+        pk_mapping = {"old_pk": old_pk, "new_pk": new_obj["url"]}
         response = {"pk_mapping": pk_mapping, "object_type": object_type}
 
         # run extra sync request required for specific Models
@@ -146,8 +157,8 @@ def _sync_new_object(action, pk_mappings, headers, request, sync_action=False):
                     multipart_form_data = {
                         "photo": (photo.photo.name, photo.photo.file),
                         #'inventory': (None, photo.inventory.id),
-                        "action": (None, new_obj["id"]),
-                        "user": (None, photo.user.id),
+                        "action": (None, new_obj["url"]),
+                        "user": (None, new_obj["user"]),
                     }
                     response = requests.post(
                         api_url_mappings["photo"],
