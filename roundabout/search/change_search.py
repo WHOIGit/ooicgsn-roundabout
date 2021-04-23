@@ -67,7 +67,7 @@ class ChangeTableBase(ColumnShiftTable):
     created_at = DateTimeColumn(orderable=True)
 
     def set_column_default_show(self):
-        notnote_cols = [col for col in self.sequence if not col.endswith('_note')]
+        notnote_cols = [col for col in self.sequence if not col.endswith('_note') and not col.endswith('__approved')]
         self.column_default_show = notnote_cols
     def render_user(self,value):
         return value.name or value.username
@@ -75,7 +75,7 @@ class ChangeTableBase(ColumnShiftTable):
 class CalibChangeActionTable(ChangeTableBase):
     class Meta(ChangeTableBase.Meta):
         title = 'CalibrationEvent History'
-        fields = ['created_at', 'action_type', 'inventory', 'calibration_event', 'calibration_event__approved', 'user']  #, 'calibration_event__inventory__config_event__deployment']
+        fields = ['created_at', 'action_type', 'inventory', 'calibration_event', 'calibration_event__approved', 'user']
         object_type = Action.CALEVENT
     created_at = DateTimeColumn(verbose_name='Action Timestamp')
     inventory = Column(verbose_name='Inventory SN', accessor='calibration_event__inventory',
@@ -85,34 +85,12 @@ class CalibChangeActionTable(ChangeTableBase):
 class ConfChangeActionTable(ChangeTableBase):
     class Meta(ChangeTableBase.Meta):
         title = 'ConfigurationEvent History'
-        fields = ['created_at', 'action_type', 'inventory', 'config_event', 'config_event__approved', 'user', 'config_event__deployment']  #,'data']
+        fields = ['created_at', 'action_type', 'inventory', 'config_event', 'config_event__approved', 'user', 'config_event__deployment']
         object_type = Action.CONFEVENT
     created_at = DateTimeColumn(verbose_name='Action Timestamp')
     inventory = Column(verbose_name='Inventory SN', accessor='config_event__inventory',
                 linkify=dict(viewname="inventory:inventory_detail", args=[tables2.A('config_event__inventory__pk')]))
 
-    #def render_action_type(self,record):
-    #    action_types = dict(Action.ACTION_TYPES)
-    #    object_types = dict(Action.OBJECT_TYPES)
-    #    return '{}: {}'.format(record.object_type,action_types[record.action_type])
-    '''
-    def render_data(self,value):
-        template = '"{KEY}" to: {TO}\n{GAP} from: {FROM}\n'
-        output_str = ''
-        try:
-            if 'updated_values' in value:
-                #output_str += 'UPDATED VALUES\n'
-                for key,val in value['updated_values'].items():
-                    to_val,from_val = val['to'],val['from']
-                    if len(to_val) > 10: to_val = to_val[:10]+'…'
-                    if len(from_val)>10: to_val = from_val[:10]+'…'
-                    output_str += template.format(KEY=key,FROM=from_val,TO=to_val,GAP=' '*len(key))
-            return mark_safe('<pre>'+output_str[:-1]+'</pre>')
-        except:
-            return value
-    def value_data(self,value):
-        return value
-    '''
 
 # ========= FORM STUFF ========= #
 
@@ -134,7 +112,6 @@ class ListTextWidget(forms.TextInput):
 
 class SearchForm(forms.Form):
     q = forms.CharField(required=True, label='Reference Designator')
-    approved = forms.BooleanField(required=False, label='Approved Only')
 
     def __init__(self, *args, **kwargs):
         default_refdeslist = ConfigValue.objects.filter(config_name__name__exact='Reference Designator').values_list('config_value',flat=True)
@@ -166,7 +143,6 @@ class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView
                 table.shift_table_column = True
 
     def get(self, request, *args, **kwargs):
-        print('get')
         initial = dict(q='')
         if 'q' in request.GET:
             form = self.form_class(request.GET)
@@ -177,7 +153,6 @@ class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView
         return self.render_to_response(context)
 
     def get_context_data(self, **kwargs):
-        print('get_context_data')
         context = super().get_context_data(**kwargs)  # <-- get_tables, get_tables_data, get_tables_kwargs happens here!
         context['model'] = 'change'
         for table in context['tables']:
@@ -189,7 +164,6 @@ class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView
         """
         Return an array of table instances containing data.
         """
-        print('get_tables')
         if self.tables is None:
             klass = type(self).__name__
             raise tables2.views.ImproperlyConfigured("No tables were specified. Define {}.tables".format(klass))
@@ -205,19 +179,14 @@ class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView
         return list(Table(data[i],**kwargss[i]) for i, Table in enumerate(self.tables))
 
     def get_tables_data(self):
-        print('get_table_data')
         if 'q' in self.request.GET:
             query = self.request.GET.get('q')
         else:  # defaults
             return len(self.tables)*[[]]
-        approved_only = 'approved' in self.request.GET
 
         # Fetch all ConfigEvents with a matching RefDes field
         self.config_event_matches = ConfigValue.objects.filter(config_value__exact=query).values_list('config_event__pk',flat=True)
-        if approved_only:
-            conf_action_Q = Q(config_event__pk__in=self.config_event_matches, config_event__approved=True)
-        else:
-            conf_action_Q = Q(config_event__pk__in=self.config_event_matches)
+        conf_action_Q = Q(config_event__pk__in=self.config_event_matches)
 
         # Fetch all CalibEvents with an inventory that has ever had a config_event with the matching RefDes (this needs to be further reduced)
         self.calib_event_matches = CalibrationEvent.objects.filter(inventory__config_events__pk__in=self.config_event_matches).values_list('pk',flat=True)
@@ -246,8 +215,6 @@ class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView
         for table in self.tables:
             if table.Meta.object_type == Action.CONFEVENT:
                 action_qs = Action.objects.filter(conf_action_Q)
-                if approved_only:
-                    pass # TODO compile Action data to show all approved changes per approval
                 qs_list.append(action_qs)
             elif table.Meta.object_type == Action.CALEVENT:
                 action_qs = Action.objects.filter(calib_action_Q)
@@ -256,7 +223,6 @@ class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView
         return qs_list
 
     def get_tables_kwargs(self):
-        print('get_table_kwargs')
         if not self.config_event_matches:
             return len(self.tables)*[{}]
 
