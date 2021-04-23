@@ -113,7 +113,21 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         self.object = form.save()
 
         event_valueset_form.instance = self.object
-        event_valueset_form.save()
+
+        # CalibrationEvent action history json data field
+        data = {}
+        updated_values = {}
+        updated_notes = {}
+        updated_CoefficientValueSets = event_valueset_form.save(commit=False)
+        # record value/note changes for action history json data field
+        for updated_CoefficientValueSet in updated_CoefficientValueSets:
+            updated_values[updated_CoefficientValueSet.coefficient_name.calibration_name] = {'from':None, 'to':updated_CoefficientValueSet.value_set}
+            updated_notes[updated_CoefficientValueSet.coefficient_name.calibration_name] = {'from':None, 'to':updated_CoefficientValueSet.notes}
+        if updated_values: data['updated_values'] = updated_values
+        if updated_notes:  data['updated_notes'] = updated_notes
+
+        # Commiting changes to db
+        event_valueset_form.save(commit=True)
 
         # Adding ConfigEvent to hyperlink objects
         for link_form in link_formset:
@@ -122,7 +136,7 @@ class EventValueSetAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
                 link.parent = self.object
                 link.save()
 
-        _create_action_history(self.object, Action.ADD, self.request.user)
+        _create_action_history(self.object, Action.ADD, self.request.user, data=data)
         job = check_events.delay()
         cache.set('thrsh_evnt', self.object)
         thrsh_job = async_update_cal_thresholds.delay()
