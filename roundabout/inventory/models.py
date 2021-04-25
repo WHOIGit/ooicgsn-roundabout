@@ -645,6 +645,7 @@ class Action(models.Model):
         (CONFDEFEVENT, "Configuration Default Event"),
         (COEFFNAMEEVENT, "Coefficient Name Event"),
         (CONFNAMEEVENT, "Configuration Name Event"),
+        (LOCATION, "Location"),
     )
     # deployment_type choices
     BUILD_DEPLOYMENT = "build_deployment"
