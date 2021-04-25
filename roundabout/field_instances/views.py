@@ -85,6 +85,7 @@ def field_instance_sync_main(request, field_instance):
             pk_mappings[mappings_data["object_type"]].append(
                 mappings_data["pk_mapping"]
             )
+            print(pk_mappings)
         else:
             status_code = _sync_existing_objects(action, pk_mappings, headers, request)
 
@@ -92,6 +93,38 @@ def field_instance_sync_main(request, field_instance):
         mappings_data = _sync_new_object(action, pk_mappings, headers, request, True)
     print(pk_mappings)
     return status_code
+
+
+def _handle_new_pk_check(obj, data_dict, pk_mappings, sync_action=False):
+    # Need to remap any Related Fields that may have new PKs
+    related_fields_list = ["parent", "location", "build", "inventory"]
+
+    for field in related_fields_list:
+        print(f"FIELD: {field}")
+        print(f"OBJECT_TYPE: {obj._meta.model_name}")
+        print(pk_mappings)
+        if hasattr(obj, field):
+            # reset the mapping dict key to the current object_type if "parent" tree field
+            if field == "parent":
+                if sync_action:
+                    pk_mapping_key = "inventory"
+                else:
+                    pk_mapping_key = obj._meta.model_name
+            else:
+                pk_mapping_key = field
+
+            new_key = next(
+                (
+                    pk
+                    for pk in pk_mappings[pk_mapping_key]
+                    if pk["old_pk"] == data_dict[field]
+                ),
+                False,
+            )
+            if new_key:
+                print(new_key)
+                data_dict[field] = new_key["new_pk"]
+    return data_dict
 
 
 def _sync_new_object(action, pk_mappings, headers, request, sync_action=False):
@@ -111,40 +144,18 @@ def _sync_new_object(action, pk_mappings, headers, request, sync_action=False):
         data_dict = serializer_results.data
 
         # Need to remap any Related Fields that may have new PKs
-        related_fields_list = ["parent", "location", "build", "inventory"]
+        new_data_dict = _handle_new_pk_check(obj, data_dict, pk_mappings, sync_action)
 
-        for field in related_fields_list:
-            if hasattr(obj, field):
-                # reset the mapping dict key to the current object_type if "parent" tree field
-                if field == "parent":
-                    if sync_action:
-                        pk_mapping_key = "inventory"
-                    else:
-                        pk_mapping_key = object_type
-                else:
-                    pk_mapping_key = field
-
-                new_key = next(
-                    (
-                        pk
-                        for pk in pk_mappings[pk_mapping_key]
-                        if pk["old_pk"] == data_dict[field]
-                    ),
-                    False,
-                )
-                if new_key:
-                    print(new_key)
-                    data_dict[field] = new_key["new_pk"]
-        # These will be POST as new item, so remove id
-        data_dict.pop("id")
-        print(data_dict)
+        # These will be POST as new item, so remove id, send request
+        new_data_dict.pop("id")
+        print(new_data_dict)
         response = requests.post(
-            api_url_mappings[object_type], json=data_dict, headers=headers
+            api_url_mappings[object_type], json=new_data_dict, headers=headers
         )
         print(f"{object_type} CODE: {response.status_code}")
         print(response.json())
         new_obj = response.json()
-        old_pk = data_dict["url"]
+        old_pk = new_data_dict["url"]
         # map the old "local" PK to the new PK saved in the Home Base RDB
         pk_mapping = {"old_pk": old_pk, "new_pk": new_obj["url"]}
         response = {"pk_mapping": pk_mapping, "object_type": object_type}
@@ -181,61 +192,15 @@ def _sync_existing_objects(action, pk_mappings, headers, request):
         serializer = serializer_mappings[object_type]
         serializer_results = serializer(obj, context={"request": request})
         data_dict = serializer_results.data
-        print(data_dict)
-        # Need to remap any Parent items that have new PKs
-        new_key = next(
-            (
-                pk
-                for pk in pk_mappings[object_type]
-                if pk["old_pk"] == data_dict["parent"]
-            ),
-            False,
-        )
-        if new_key:
-            print("NEW KEY: " + new_key)
-            data_dict["parent"] = new_key["new_pk"]
-
+        # Need to remap any Related Fields that may have new PKs
+        new_data_dict = _handle_new_pk_check(obj, data_dict, pk_mappings)
+        print(new_data_dict)
         url = f"{api_url_mappings[object_type]}{obj.id}/"
-        response = requests.patch(url, json=data_dict, headers=headers)
+        response = requests.patch(url, json=new_data_dict, headers=headers)
         print(f"{object_type} RESPONSE: {response.text}")
         print(f"{object_type} CODE: {response.status_code}")
         status = response.status_code
     return status
-
-
-def _sync_request_actions(request, field_instance, obj, inventory_pk_mappings=None):
-    action_url = base_url + reverse("api_v1:actions-list")
-    photo_url = base_url + reverse("api_v1:photos-list")
-    # Get all actions for this object
-    object_type = obj._meta.model_name
-    actions = obj.actions.filter(object_type=object_type).filter(
-        created_at__gte=field_instance.start_date
-    )
-
-    for action in actions:
-        # serialize data for JSON request
-        action_serializer = function_mappings[action]
-        action_dict = action_serializer.data
-        # These will be POST as new, so remove id
-        action_dict.pop("id")
-        response = requests.post(action_url, json=action_dict)
-        print("ACTION RESPONSE:", response.text)
-        print("ACTION CODE: ", response.status_code)
-        new_action = response.json()
-        # Upload any photos for new Action notes
-        if action.photos.exists():
-            for photo in action.photos.all():
-                multipart_form_data = {
-                    "photo": (photo.photo.name, photo.photo.file),
-                    #'inventory': (None, photo.inventory.id),
-                    "action": (None, new_action["action"]["id"]),
-                    "user": (None, photo.user.id),
-                }
-                response = requests.post(photo_url, files=multipart_form_data)
-                print("PHOTO RESPONSE:", response.text)
-                print("PHOTO CODE: ", response.status_code)
-
-    return "ACTIONS COMPLETE"
 
 
 class FieldInstanceSyncToHomeView(APIView):
