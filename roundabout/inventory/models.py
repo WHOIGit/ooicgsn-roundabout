@@ -23,12 +23,17 @@ import datetime
 import os
 from datetime import timedelta
 
-from django.core.validators import MaxValueValidator, MinValueValidator, FileExtensionValidator
+from django.core.validators import (
+    MaxValueValidator,
+    MinValueValidator,
+    FileExtensionValidator,
+)
 from django.urls import reverse
 from django.utils import timezone
 from mptt.models import MPTTModel, TreeForeignKey
 
 from roundabout.assemblies.models import Assembly, AssemblyPart
+
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
 from roundabout.cruises.models import Cruise
@@ -40,58 +45,103 @@ from .managers import *
 labels = set_app_labels()
 
 # Private functions for use in Models
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 
 # Inventory/Deployment models
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class Inventory(MPTTModel):
-    INCOMING = 'incoming'
-    OUTGOING = 'outgoing'
+    INCOMING = "incoming"
+    OUTGOING = "outgoing"
     TEST_TYPES = (
-        (INCOMING, 'Incoming Test'),
-        (OUTGOING, 'Outgoing Test'),
+        (INCOMING, "Incoming Test"),
+        (OUTGOING, "Outgoing Test"),
     )
 
     TEST_RESULTS = (
-            (None, "-"),
-            (True, "Pass"),
-            (False, "Fail"),
+        (None, "-"),
+        (True, "Pass"),
+        (False, "Fail"),
     )
 
     FLAG_TYPES = (
-            (True, "Flagged"),
-            (False, "Unflagged"),
+        (True, "Flagged"),
+        (False, "Unflagged"),
     )
     serial_number = models.CharField(max_length=255, unique=True, db_index=True)
     old_serial_number = models.CharField(max_length=255, unique=False, blank=True)
-    part = models.ForeignKey(Part, related_name='inventory',
-                             on_delete=models.CASCADE, null=True, blank=False, db_index=True)
-    revision = models.ForeignKey(Revision, related_name='inventory',
-                             on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
-    location = TreeForeignKey(Location, related_name='inventory',
-                              on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
-    parent = TreeForeignKey('self', related_name='children',
-                            on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
-    build = models.ForeignKey('builds.Build', related_name='inventory',
-                              on_delete=models.SET_NULL, null=True, blank=True)
-    assembly_part = TreeForeignKey(AssemblyPart, related_name='inventory',
-                                   on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
-    assigned_destination_root = TreeForeignKey('self', related_name='assigned_children',
-                                               on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
+    part = models.ForeignKey(
+        Part,
+        related_name="inventory",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=False,
+        db_index=True,
+    )
+    revision = models.ForeignKey(
+        Revision,
+        related_name="inventory",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False,
+        db_index=True,
+    )
+    location = TreeForeignKey(
+        Location,
+        related_name="inventory",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False,
+        db_index=True,
+    )
+    parent = TreeForeignKey(
+        "self",
+        related_name="children",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    build = models.ForeignKey(
+        "builds.Build",
+        related_name="inventory",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    assembly_part = TreeForeignKey(
+        AssemblyPart,
+        related_name="inventory",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    assigned_destination_root = TreeForeignKey(
+        "self",
+        related_name="assigned_children",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     detail = models.TextField(blank=True)
     test_result = models.BooleanField(null=True, blank=False, choices=TEST_RESULTS)
-    test_type = models.CharField(max_length=20, choices=TEST_TYPES, null=True, blank=True)
+    test_type = models.CharField(
+        max_length=20, choices=TEST_TYPES, null=True, blank=True
+    )
     flag = models.BooleanField(choices=FLAG_TYPES, blank=False, default=False)
     # Deprecated as of v1.5
-    _time_at_sea = models.DurationField(default=timedelta(minutes=0), null=True, blank=True)
+    _time_at_sea = models.DurationField(
+        default=timedelta(minutes=0), null=True, blank=True
+    )
 
-    #tracker = FieldTracker(fields=['location', 'build'])
+    # tracker = FieldTracker(fields=['location', 'build'])
 
     class MPTTMeta:
-        order_insertion_by = ['serial_number']
+        order_insertion_by = ["serial_number"]
 
     def __str__(self):
         return self.serial_number
@@ -106,10 +156,10 @@ class Inventory(MPTTModel):
 
     # method to set the object_type variable to send to Javascript AJAX functions
     def get_object_type(self):
-        return 'inventory'
+        return "inventory"
 
     def get_absolute_url(self):
-        return reverse('inventory:ajax_inventory_detail', kwargs={ 'pk': self.pk })
+        return reverse("inventory:ajax_inventory_detail", kwargs={"pk": self.pk})
 
     def get_descendants_with_self(self):
         tree = self.get_descendants(include_self=True)
@@ -153,45 +203,64 @@ class Inventory(MPTTModel):
 
     def get_latest_deployment(self):
         try:
-            action = self.actions.filter(inventory_deployment__isnull=False).latest()
-            return action.deployment
+            latest_deployment = self.inventory_deployments.latest().deployment
+            return latest_deployment
         except:
             return None
+
 
 class InventoryHyperlink(models.Model):
     text = models.CharField(max_length=255, unique=False, blank=False, null=False)
     url = models.CharField(max_length=1000)
-    parent = models.ForeignKey(Inventory, related_name='hyperlinks',
-                 on_delete=models.CASCADE, null=False, blank=False)
+    parent = models.ForeignKey(
+        Inventory,
+        related_name="hyperlinks",
+        on_delete=models.CASCADE,
+        null=False,
+        blank=False,
+    )
+
 
 class DeploymentBase(models.Model):
-    STARTDEPLOYMENT = 'startdeployment'
-    DEPLOYMENTBURNIN = 'deploymentburnin'
-    DEPLOYMENTTOFIELD = 'deploymenttofield'
-    DEPLOYMENTRECOVER = 'deploymentrecover'
-    DEPLOYMENTRETIRE = 'deploymentretire'
+    STARTDEPLOYMENT = "startdeployment"
+    DEPLOYMENTBURNIN = "deploymentburnin"
+    DEPLOYMENTTOFIELD = "deploymenttofield"
+    DEPLOYMENTRECOVER = "deploymentrecover"
+    DEPLOYMENTRETIRE = "deploymentretire"
     DEPLOYMENT_STATUS = (
-        (STARTDEPLOYMENT, 'Start %s' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTTOFIELD, '%s to Field' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTRECOVER, '%s Recovery' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTRETIRE, '%s Retired' % (labels['label_deployments_app_singular'])),
+        (STARTDEPLOYMENT, "Start %s" % (labels["label_deployments_app_singular"])),
+        (DEPLOYMENTBURNIN, "%s Burnin" % (labels["label_deployments_app_singular"])),
+        (DEPLOYMENTTOFIELD, "%s to Field" % (labels["label_deployments_app_singular"])),
+        (DEPLOYMENTRECOVER, "%s Recovery" % (labels["label_deployments_app_singular"])),
+        (DEPLOYMENTRETIRE, "%s Retired" % (labels["label_deployments_app_singular"])),
     )
-    cruise_deployed = models.ForeignKey(Cruise, related_name='%(class)ss',
-                             on_delete=models.SET_NULL, null=True, blank=True)
-    cruise_recovered = models.ForeignKey(Cruise, related_name='recovered_%(class)ss',
-                                 on_delete=models.SET_NULL, null=True, blank=True)
+    cruise_deployed = models.ForeignKey(
+        Cruise,
+        related_name="%(class)ss",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    cruise_recovered = models.ForeignKey(
+        Cruise,
+        related_name="recovered_%(class)ss",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
     deployment_start_date = models.DateTimeField(default=timezone.now)
     deployment_burnin_date = models.DateTimeField(null=True, blank=True)
     deployment_to_field_date = models.DateTimeField(null=True, blank=True)
     deployment_recovery_date = models.DateTimeField(null=True, blank=True)
     deployment_retire_date = models.DateTimeField(null=True, blank=True)
-    current_status = models.CharField(max_length=20, choices=DEPLOYMENT_STATUS, db_index=True, default=STARTDEPLOYMENT)
+    current_status = models.CharField(
+        max_length=20, choices=DEPLOYMENT_STATUS, db_index=True, default=STARTDEPLOYMENT
+    )
 
     class Meta:
         abstract = True
-        ordering = ['-deployment_start_date']
-        get_latest_by = 'deployment_start_date'
+        ordering = ["-deployment_start_date"]
+        get_latest_by = "deployment_start_date"
 
     def save(self, *args, **kwargs):
         # set the current_status by date actions
@@ -213,7 +282,9 @@ class DeploymentBase(models.Model):
     def deployment_time_in_field(self):
         if self.deployment_to_field_date:
             if self.deployment_recovery_date:
-                time_on_deployment = self.deployment_recovery_date - self.deployment_to_field_date
+                time_on_deployment = (
+                    self.deployment_recovery_date - self.deployment_to_field_date
+                )
                 return time_on_deployment
             # If no recovery, item is still at sea
             now = timezone.now()
@@ -226,7 +297,9 @@ class DeploymentBase(models.Model):
     def deployment_total_time(self):
         if self.deployment_start_date:
             if self.deployment_retire_date:
-                time_on_deployment = self.deployment_retire_date - self.deployment_start_date
+                time_on_deployment = (
+                    self.deployment_retire_date - self.deployment_start_date
+                )
                 return time_on_deployment
             # If no retirement, deployment still active
             now = timezone.now()
@@ -239,33 +312,33 @@ class DeploymentBase(models.Model):
         # Set variables for Deployment/Inventory Deployment Status bar in Bootstrap
         if self.current_status == DeploymentBase.STARTDEPLOYMENT:
             deployment_progress_bar = {
-                'bar_class': 'bg-success',
-                'bar_width': 20,
-                'status_label': 'Deployment Started'
+                "bar_class": "bg-success",
+                "bar_width": 20,
+                "status_label": "Deployment Started",
             }
         elif self.current_status == DeploymentBase.DEPLOYMENTBURNIN:
             deployment_progress_bar = {
-                'bar_class': 'bg-danger',
-                'bar_width': 40,
-                'status_label': 'Deployment Burn In'
+                "bar_class": "bg-danger",
+                "bar_width": 40,
+                "status_label": "Deployment Burn In",
             }
         elif self.current_status == DeploymentBase.DEPLOYMENTTOFIELD:
             deployment_progress_bar = {
-                'bar_class': None,
-                'bar_width': 60,
-                'status_label': 'Deployed to Field'
+                "bar_class": None,
+                "bar_width": 60,
+                "status_label": "Deployed to Field",
             }
         elif self.current_status == DeploymentBase.DEPLOYMENTRECOVER:
             deployment_progress_bar = {
-                'bar_class': 'bg-warning',
-                'bar_width': 80,
-                'status_label': 'Deployment Recovered'
+                "bar_class": "bg-warning",
+                "bar_width": 80,
+                "status_label": "Deployment Recovered",
             }
         elif self.current_status == DeploymentBase.DEPLOYMENTRETIRE:
             deployment_progress_bar = {
-                'bar_class': 'bg-info',
-                'bar_width': 100,
-                'status_label': 'Deployment Retired'
+                "bar_class": "bg-info",
+                "bar_width": 100,
+                "status_label": "Deployment Retired",
             }
         return deployment_progress_bar
 
@@ -276,59 +349,106 @@ class Deployment(DeploymentBase):
         (False, "Draft"),
     )
     deployment_number = models.CharField(max_length=255, unique=False)
-    location = TreeForeignKey(Location, related_name='deployments',
-                              on_delete=models.SET_NULL, null=True, blank=True)
-    final_location = TreeForeignKey(Location, related_name='final_deployments',
-                              on_delete=models.SET_NULL, null=True, blank=True)
-    deployed_location = TreeForeignKey(Location, related_name='deployed_deployments',
-                              on_delete=models.SET_NULL, null=True, blank=True)
-    build = models.ForeignKey('builds.Build', related_name='deployments', on_delete=models.CASCADE,
-                              null=True, blank=True, db_index=True)
-    latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
-                                    validators=[
-                                        MaxValueValidator(90),
-                                        MinValueValidator(-90)
-                                    ])
-    longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
-                                    validators=[
-                                        MaxValueValidator(180),
-                                        MinValueValidator(-180)
-                                    ])
+    location = TreeForeignKey(
+        Location,
+        related_name="deployments",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    final_location = TreeForeignKey(
+        Location,
+        related_name="final_deployments",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    deployed_location = TreeForeignKey(
+        Location,
+        related_name="deployed_deployments",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    build = models.ForeignKey(
+        "builds.Build",
+        related_name="deployments",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    latitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+        validators=[MaxValueValidator(90), MinValueValidator(-90)],
+    )
+    longitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+        validators=[MaxValueValidator(180), MinValueValidator(-180)],
+    )
     depth = models.PositiveIntegerField(null=True, blank=True)
-    user_draft = models.ManyToManyField(User, related_name='deployments_reviewer', blank=True)
-    user_approver = models.ManyToManyField(User, related_name='deployments_approver')
+    user_draft = models.ManyToManyField(
+        User, related_name="deployments_reviewer", blank=True
+    )
+    user_approver = models.ManyToManyField(User, related_name="deployments_approver")
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
 
     def __str__(self):
         if self.deployed_location:
-            return '%s - %s' % (self.deployment_number, self.deployed_location)
-        return '%s - %s' % (self.deployment_number, self.location.name)
+            return "%s - %s" % (self.deployment_number, self.deployed_location)
+        return "%s - %s" % (self.deployment_number, self.location.name)
 
     def get_actions(self):
         actions = self.actions.filter(object_type=Action.BUILD)
         return actions
 
     def get_sorted_reviewers(self):
-        return self.user_draft.all().order_by('username')
+        return self.user_draft.all().order_by("username")
 
     def get_sorted_approvers(self):
-        return self.user_approver.all().order_by('username')
+        return self.user_approver.all().order_by("username")
 
 
 class InventoryDeployment(DeploymentBase):
-    deployment = models.ForeignKey(Deployment, related_name='inventory_deployments',
-                                   on_delete=models.CASCADE, null=False)
-    inventory = models.ForeignKey(Inventory, related_name='inventory_deployments',
-                                  on_delete=models.CASCADE, null=False)
-    assembly_part = models.ForeignKey('assemblies.AssemblyPart', related_name='inventory_deployments',
-                                      on_delete=models.SET_NULL, null=True)
+    deployment = models.ForeignKey(
+        Deployment,
+        related_name="inventory_deployments",
+        on_delete=models.CASCADE,
+        null=False,
+    )
+    inventory = models.ForeignKey(
+        Inventory,
+        related_name="inventory_deployments",
+        on_delete=models.CASCADE,
+        null=False,
+    )
+    assembly_part = models.ForeignKey(
+        "assemblies.AssemblyPart",
+        related_name="inventory_deployments",
+        on_delete=models.SET_NULL,
+        null=True,
+    )
 
     objects = InventoryDeploymentQuerySet.as_manager()
 
     def __str__(self):
         if self.deployment.deployed_location:
-            return '%s - %s - %s' % (self.deployment.deployment_number, self.deployment.deployed_location, self.inventory)
-        return '%s - %s - %s' % (self.deployment.deployment_number, self.deployment.location, self.inventory)
+            return "%s - %s - %s" % (
+                self.deployment.deployment_number,
+                self.deployment.deployed_location,
+                self.inventory,
+            )
+        return "%s - %s - %s" % (
+            self.deployment.deployment_number,
+            self.deployment.location,
+            self.inventory,
+        )
 
     @property
     def deployment_percentage_vs_build(self):
@@ -341,50 +461,101 @@ class InventoryDeployment(DeploymentBase):
             elif not self.deployment_time_in_field:
                 deployment_percentage = 0
             else:
-                deployment_percentage = int(self.deployment_time_in_field / self.deployment.deployment_time_in_field * 100)
+                deployment_percentage = int(
+                    self.deployment_time_in_field
+                    / self.deployment.deployment_time_in_field
+                    * 100
+                )
             if deployment_percentage >= 99:
                 deployment_percentage = 100
             return deployment_percentage
 
     def get_actions(self):
-        actions = self.inventory.actions.filter(object_type=Action.INVENTORY).filter(inventory_deployment=self)
+        actions = self.inventory.actions.filter(object_type=Action.INVENTORY).filter(
+            inventory_deployment=self
+        )
         return actions
 
 
 class DeploymentSnapshot(models.Model):
-    deployment = models.ForeignKey(Deployment, related_name='deployment_snapshot',
-                                   on_delete=models.CASCADE, null=True, blank=True)
-    location = TreeForeignKey(Location, related_name='deployment_snapshot',
-                              on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
-    snapshot_location = TreeForeignKey(Location, related_name='deployment_snapshot_location',
-                              on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
+    deployment = models.ForeignKey(
+        Deployment,
+        related_name="deployment_snapshot",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    location = TreeForeignKey(
+        Location,
+        related_name="deployment_snapshot",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False,
+        db_index=True,
+    )
+    snapshot_location = TreeForeignKey(
+        Location,
+        related_name="deployment_snapshot_location",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False,
+        db_index=True,
+    )
     created_at = models.DateTimeField(default=timezone.now)
     notes = models.TextField(blank=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
     def __str__(self):
-        return '%s (%s)' % (self.deployment.deployment_number, self.deployment.final_location.location_id)
+        return "%s (%s)" % (
+            self.deployment.deployment_number,
+            self.deployment.final_location.location_id,
+        )
 
     def get_deployment_label(self):
-        return '%s (%s)' % (self.deployment.deployment_number, self.deployment.final_location.location_id)
+        return "%s (%s)" % (
+            self.deployment.deployment_number,
+            self.deployment.final_location.location_id,
+        )
 
 
 class InventorySnapshot(MPTTModel):
-    inventory = models.ForeignKey(Inventory, related_name='inventory_snapshot',
-                                 on_delete=models.SET_NULL, null=True, blank=True)
-    parent = TreeForeignKey('self', related_name='children',
-                            on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
-    deployment = models.ForeignKey(DeploymentSnapshot, related_name='inventory_snapshot',
-                                   on_delete=models.CASCADE, null=True, blank=True)
-    location = TreeForeignKey(Location, related_name='inventory_snapshot',
-                              on_delete=models.SET_NULL, null=True, blank=False, db_index=True)
+    inventory = models.ForeignKey(
+        Inventory,
+        related_name="inventory_snapshot",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    parent = TreeForeignKey(
+        "self",
+        related_name="children",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    deployment = models.ForeignKey(
+        DeploymentSnapshot,
+        related_name="inventory_snapshot",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    location = TreeForeignKey(
+        Location,
+        related_name="inventory_snapshot",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False,
+        db_index=True,
+    )
     created_at = models.DateTimeField(default=timezone.now)
     order = models.CharField(max_length=255, null=False, blank=True, db_index=True)
 
     class MPTTMeta:
-        order_insertion_by = ['order']
+        order_insertion_by = ["order"]
 
     def __str__(self):
         return self.inventory.serial_number
@@ -392,148 +563,230 @@ class InventorySnapshot(MPTTModel):
 
 class Action(models.Model):
     # action_type choices
-    ADD = 'add'
-    UPDATE = 'update'
-    LOCATIONCHANGE = 'locationchange'
-    SUBCHANGE = 'subchange'
-    ADDTOBUILD = 'addtobuild'
-    REMOVEFROMBUILD = 'removefrombuild'
-    STARTDEPLOYMENT = 'startdeployment'
-    REMOVEFROMDEPLOYMENT = 'removefromdeployment'
-    DEPLOYMENTBURNIN = 'deploymentburnin'
-    DEPLOYMENTTOFIELD = 'deploymenttofield'
-    DEPLOYMENTUPDATE = 'deploymentupdate'
-    DEPLOYMENTRECOVER = 'deploymentrecover'
-    DEPLOYMENTRETIRE = 'deploymentretire'
-    DEPLOYMENTDETAILS = 'deploymentdetails'
-    ASSIGNDEST = 'assigndest'
-    REMOVEDEST = 'removedest'
-    TEST = 'test'
-    NOTE = 'note'
-    HISTORYNOTE = 'historynote'
-    TICKET = 'ticket'
-    FIELDCHANGE = 'fieldchange'
-    FLAG = 'flag'
-    MOVETOTRASH = 'movetotrash'
-    RETIREBUILD = 'retirebuild'
-    REVIEWAPPROVE = 'reviewapprove'
-    REVIEWUNAPPROVE = 'reviewunapprove'
-    EVENTAPPROVE = 'eventapprove'
-    EVENTUNAPPROVE = 'eventunapprove'
-    CALCSVIMPORT = 'calcsvimport'
-    CALCSVUPDATE = 'calcsvupdate'
+    ADD = "add"
+    UPDATE = "update"
+    LOCATIONCHANGE = "locationchange"
+    SUBCHANGE = "subchange"
+    ADDTOBUILD = "addtobuild"
+    REMOVEFROMBUILD = "removefrombuild"
+    STARTDEPLOYMENT = "startdeployment"
+    REMOVEFROMDEPLOYMENT = "removefromdeployment"
+    DEPLOYMENTBURNIN = "deploymentburnin"
+    DEPLOYMENTTOFIELD = "deploymenttofield"
+    DEPLOYMENTUPDATE = "deploymentupdate"
+    DEPLOYMENTRECOVER = "deploymentrecover"
+    DEPLOYMENTRETIRE = "deploymentretire"
+    DEPLOYMENTDETAILS = "deploymentdetails"
+    ASSIGNDEST = "assigndest"
+    REMOVEDEST = "removedest"
+    TEST = "test"
+    NOTE = "note"
+    HISTORYNOTE = "historynote"
+    TICKET = "ticket"
+    FIELDCHANGE = "fieldchange"
+    FLAG = "flag"
+    MOVETOTRASH = "movetotrash"
+    RETIREBUILD = "retirebuild"
+    REVIEWAPPROVE = "reviewapprove"
+    REVIEWUNAPPROVE = "reviewunapprove"
+    EVENTAPPROVE = "eventapprove"
+    EVENTUNAPPROVE = "eventunapprove"
+    CALCSVIMPORT = "calcsvimport"
+    CALCSVUPDATE = "calcsvupdate"
     ACTION_TYPES = (
-        (ADD, 'Added to RDB'),
-        (UPDATE, 'Details updated'),
-        (LOCATIONCHANGE, 'Location Change'),
-        (SUBCHANGE, 'Sub-%s Change' % (labels['label_assemblies_app_singular'])),
-        (ADDTOBUILD, 'Add to %s' % (labels['label_builds_app_singular'])),
-        (REMOVEFROMBUILD, 'Remove from %s' % (labels['label_builds_app_singular'])),
-        (STARTDEPLOYMENT, 'Start %s' % (labels['label_deployments_app_singular'])),
-        (REMOVEFROMDEPLOYMENT, '%s Ended' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTTOFIELD, '%s to Field' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTUPDATE, '%s Update' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTRECOVER, '%s Recovery' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTRETIRE, '%s Retired' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTDETAILS, '%s Details Updated' % (labels['label_deployments_app_singular'])),
-        (ASSIGNDEST, 'Assign Destination'),
-        (REMOVEDEST, 'Remove Destination'),
-        (TEST, 'Test'),
-        (NOTE, 'Note'),
-        (HISTORYNOTE, 'Historical Note'),
-        (TICKET, 'Work Ticket'),
-        (FIELDCHANGE, 'Field Change'),
-        (FLAG, 'Flag'),
-        (MOVETOTRASH, 'Move to Trash'),
-        (RETIREBUILD, 'Retire Build'),
-        (REVIEWAPPROVE, 'Reviewer approved Event'),
+        (ADD, "Added to RDB"),
+        (UPDATE, "Details updated"),
+        (LOCATIONCHANGE, "Location Change"),
+        (SUBCHANGE, "Sub-%s Change" % (labels["label_assemblies_app_singular"])),
+        (ADDTOBUILD, "Add to %s" % (labels["label_builds_app_singular"])),
+        (REMOVEFROMBUILD, "Remove from %s" % (labels["label_builds_app_singular"])),
+        (STARTDEPLOYMENT, "Start %s" % (labels["label_deployments_app_singular"])),
+        (REMOVEFROMDEPLOYMENT, "%s Ended" % (labels["label_deployments_app_singular"])),
+        (DEPLOYMENTBURNIN, "%s Burnin" % (labels["label_deployments_app_singular"])),
+        (DEPLOYMENTTOFIELD, "%s to Field" % (labels["label_deployments_app_singular"])),
+        (DEPLOYMENTUPDATE, "%s Update" % (labels["label_deployments_app_singular"])),
+        (DEPLOYMENTRECOVER, "%s Recovery" % (labels["label_deployments_app_singular"])),
+        (DEPLOYMENTRETIRE, "%s Retired" % (labels["label_deployments_app_singular"])),
+        (
+            DEPLOYMENTDETAILS,
+            "%s Details Updated" % (labels["label_deployments_app_singular"]),
+        ),
+        (ASSIGNDEST, "Assign Destination"),
+        (REMOVEDEST, "Remove Destination"),
+        (TEST, "Test"),
+        (NOTE, "Note"),
+        (HISTORYNOTE, "Historical Note"),
+        (TICKET, "Work Ticket"),
+        (FIELDCHANGE, "Field Change"),
+        (FLAG, "Flag"),
+        (MOVETOTRASH, "Move to Trash"),
+        (RETIREBUILD, "Retire Build"),
+        (REVIEWAPPROVE, "Reviewer approved Event"),
         (REVIEWUNAPPROVE, 'Reviewer unapproved Event'),
-        (EVENTAPPROVE, 'Event Approved'),
+        (EVENTAPPROVE, "Event Approved"),
         (EVENTUNAPPROVE, 'Event Unapproved'),
-        (CALCSVIMPORT, 'Calibration CSV Uploaded'),
-        (CALCSVUPDATE, 'Updated by Calibration CSV'),
+        (CALCSVIMPORT, "Calibration CSV Uploaded"),
+        (CALCSVUPDATE, "Updated by Calibration CSV"),
     )
     # object_type choices
-    BUILD = 'build'
-    INVENTORY = 'inventory'
-    DEPLOYMENT = 'deployment'
-    CALEVENT = 'calibrationevent'
-    CONSTDEFEVENT = 'constdefaultevent'
-    CONFEVENT = 'configevent'
-    CONFDEFEVENT = 'configdefaultevent'
-    COEFFNAMEEVENT = 'coefficientnameevent'
-    CONFNAMEEVENT = 'confignameevent'
+    BUILD = "build"
+    INVENTORY = "inventory"
+    DEPLOYMENT = "deployment"
+    CALEVENT = "calibrationevent"
+    CONSTDEFEVENT = "constdefaultevent"
+    CONFEVENT = "configevent"
+    CONFDEFEVENT = "configdefaultevent"
+    COEFFNAMEEVENT = "coefficientnameevent"
+    CONFNAMEEVENT = "confignameevent"
+    LOCATION = "location"
     OBJECT_TYPES = (
-        (BUILD, 'Build'),
-        (INVENTORY, 'Inventory'),
-        (DEPLOYMENT, 'Deployment'),
-        (CALEVENT, 'Calibration Event'),
-        (CONSTDEFEVENT, 'Constant Default Event'),
-        (CONFEVENT, 'Configuration/Constant Event'),
-        (CONFDEFEVENT, 'Configuration Default Event'),
-        (COEFFNAMEEVENT, 'Coefficient Name Event'),
-        (CONFNAMEEVENT, 'Configuration Name Event'),
+        (BUILD, "Build"),
+        (INVENTORY, "Inventory"),
+        (DEPLOYMENT, "Deployment"),
+        (CALEVENT, "Calibration Event"),
+        (CONSTDEFEVENT, "Constant Default Event"),
+        (CONFEVENT, "Configuration/Constant Event"),
+        (CONFDEFEVENT, "Configuration Default Event"),
+        (COEFFNAMEEVENT, "Coefficient Name Event"),
+        (CONFNAMEEVENT, "Configuration Name Event"),
+        (LOCATION, "Location"),
     )
     # deployment_type choices
-    BUILD_DEPLOYMENT = 'build_deployment'
-    INVENTORY_DEPLOYMENT = 'inventory_deployment'
+    BUILD_DEPLOYMENT = "build_deployment"
+    INVENTORY_DEPLOYMENT = "inventory_deployment"
     DEPLOYMENT_TYPES = (
-        (BUILD_DEPLOYMENT, 'Build Deployment'),
-        (INVENTORY_DEPLOYMENT, 'Inventory Deployment'),
+        (BUILD_DEPLOYMENT, "Build Deployment"),
+        (INVENTORY_DEPLOYMENT, "Inventory Deployment"),
     )
 
-    inventory = models.ForeignKey(Inventory, related_name='actions',
-                                  on_delete=models.CASCADE, null=True, blank=True)
-    calibration_event = models.ForeignKey('calibrations.CalibrationEvent', related_name='actions',
-                                  on_delete=models.CASCADE, null=True, blank=True)
-    const_default_event = models.ForeignKey('configs_constants.ConstDefaultEvent', related_name='actions',
-                                  on_delete=models.CASCADE, null=True, blank=True)
-    config_event = models.ForeignKey('configs_constants.ConfigEvent', related_name='actions',
-                                  on_delete=models.CASCADE, null=True, blank=True)
-    config_default_event = models.ForeignKey('configs_constants.ConfigDefaultEvent', related_name='actions',
-                                  on_delete=models.CASCADE, null=True, blank=True)
-    coefficient_name_event = models.ForeignKey('calibrations.CoefficientNameEvent', related_name='actions',
-                                  on_delete=models.CASCADE, null=True, blank=True)
-    config_name_event = models.ForeignKey('configs_constants.ConfigNameEvent', related_name='actions',
-                                  on_delete=models.CASCADE, null=True, blank=True)
+    inventory = models.ForeignKey(
+        Inventory,
+        related_name="actions",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    calibration_event = models.ForeignKey(
+        "calibrations.CalibrationEvent",
+        related_name="actions",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    const_default_event = models.ForeignKey(
+        "configs_constants.ConstDefaultEvent",
+        related_name="actions",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    config_event = models.ForeignKey(
+        "configs_constants.ConfigEvent",
+        related_name="actions",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    config_default_event = models.ForeignKey(
+        "configs_constants.ConfigDefaultEvent",
+        related_name="actions",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    coefficient_name_event = models.ForeignKey(
+        "calibrations.CoefficientNameEvent",
+        related_name="actions",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    config_name_event = models.ForeignKey(
+        "configs_constants.ConfigNameEvent",
+        related_name="actions",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
     action_type = models.CharField(max_length=20, choices=ACTION_TYPES, db_index=True)
-    object_type =  models.CharField(max_length=20, choices=OBJECT_TYPES, null=False, blank=True, db_index=True)
+    object_type = models.CharField(
+        max_length=20, choices=OBJECT_TYPES, null=False, blank=True, db_index=True
+    )
     created_at = models.DateTimeField(default=timezone.now)
     detail = models.TextField(blank=True)
-    user = models.ForeignKey(User, related_name='actions',
-                             on_delete=models.SET_NULL, null=True, blank=False)
-    location = TreeForeignKey(Location, related_name='actions',
-                              on_delete=models.SET_NULL, null=True, blank=False)
-    deployment = models.ForeignKey(Deployment, related_name='actions',
-                                   on_delete=models.SET_NULL, null=True, blank=True)
-    inventory_deployment = models.ForeignKey(InventoryDeployment, related_name='actions',
-                                   on_delete=models.SET_NULL, null=True, blank=True)
-    build = models.ForeignKey('builds.Build', related_name='actions',
-                              on_delete=models.SET_NULL, null=True, blank=True)
-    parent = models.ForeignKey(Inventory, related_name='parent_actions',
-                               on_delete=models.SET_NULL, null=True, blank=True)
-    cruise = models.ForeignKey(Cruise, related_name='actions',
-                               on_delete=models.SET_NULL, null=True, blank=True)
-    latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
-                                    validators=[
-                                        MaxValueValidator(90),
-                                        MinValueValidator(0)
-                                    ])
-    longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
-                                    validators=[
-                                        MaxValueValidator(180),
-                                        MinValueValidator(0)
-                                    ])
+    user = models.ForeignKey(
+        User, related_name="actions", on_delete=models.SET_NULL, null=True, blank=False
+    )
+    location = TreeForeignKey(
+        Location,
+        related_name="actions",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False,
+    )
+    location_parent = TreeForeignKey(
+        Location,
+        related_name="location_parent_actions",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    deployment = models.ForeignKey(
+        Deployment,
+        related_name="actions",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    inventory_deployment = models.ForeignKey(
+        InventoryDeployment,
+        related_name="actions",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    build = models.ForeignKey(
+        "builds.Build",
+        related_name="actions",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    parent = models.ForeignKey(
+        Inventory,
+        related_name="parent_actions",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    cruise = models.ForeignKey(
+        Cruise, related_name="actions", on_delete=models.SET_NULL, null=True, blank=True
+    )
+    latitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+        validators=[MaxValueValidator(90), MinValueValidator(0)],
+    )
+    longitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+        validators=[MaxValueValidator(180), MinValueValidator(0)],
+    )
     depth = models.PositiveIntegerField(null=True, blank=True)
-    deployment_type = models.CharField(max_length=20, choices=DEPLOYMENT_TYPES, null=False, blank=True, default='')
+    deployment_type = models.CharField(
+        max_length=20, choices=DEPLOYMENT_TYPES, null=False, blank=True, default=""
+    )
     data = models.JSONField(null=True)
 
     objects = ActionQuerySet.as_manager()
 
     class Meta:
-        ordering = ['-created_at', '-id']
-        get_latest_by = 'created_at'
+        ordering = ["-created_at", "-id"]
+        get_latest_by = "created_at"
 
     def __str__(self):
         return self.get_action_type_display()
@@ -565,71 +818,115 @@ class Action(models.Model):
         elif self.object_type == self.CONFNAMEEVENT:
             return self.config_name_event
 
+
 class PhotoNote(models.Model):
-    photo = models.FileField(upload_to='notes/',
-                             validators=[FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg', 'gif', 'csv'])])
-    inventory = models.ForeignKey(Inventory, related_name='photos',
-                                 on_delete=models.CASCADE, null=True, blank=True)
-    action = models.ForeignKey(Action, related_name='photos',
-                                 on_delete=models.CASCADE, null=True, blank=True)
-    user = models.ForeignKey(User, related_name='photos',
-                             on_delete=models.SET_NULL, null=True, blank=False)
+    photo = models.FileField(
+        upload_to="notes/",
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=[
+                    "pdf",
+                    "doc",
+                    "docx",
+                    "xls",
+                    "xlsx",
+                    "png",
+                    "jpg",
+                    "jpeg",
+                    "gif",
+                    "csv",
+                ]
+            )
+        ],
+    )
+    inventory = models.ForeignKey(
+        Inventory,
+        related_name="photos",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    action = models.ForeignKey(
+        Action, related_name="photos", on_delete=models.CASCADE, null=True, blank=True
+    )
+    user = models.ForeignKey(
+        User, related_name="photos", on_delete=models.SET_NULL, null=True, blank=False
+    )
 
     def file_type(self):
         # get the file extension from file name
         name, extension = os.path.splitext(self.photo.name)
         # set the possible extensions for docs and images
-        doc_types = ['.pdf', '.doc', '.docx', '.xls', '.xlsx']
-        image_types = ['.png', '.jpg', '.jpeg', '.gif']
+        doc_types = [".pdf", ".doc", ".docx", ".xls", ".xlsx"]
+        image_types = [".png", ".jpg", ".jpeg", ".gif"]
 
         if extension in doc_types:
-            return 'document'
+            return "document"
         if extension in image_types:
-            return 'image'
-        return 'other'
+            return "image"
+        return "other"
 
 
 class DeploymentAction(models.Model):
-    STARTDEPLOYMENT = 'startdeployment'
-    DEPLOYMENTBURNIN = 'deploymentburnin'
-    DEPLOYMENTTOFIELD = 'deploymenttofield'
-    DEPLOYMENTUPDATE = 'deploymentupdate'
-    DEPLOYMENTRECOVER = 'deploymentrecover'
-    DEPLOYMENTRETIRE = 'deploymentretire'
-    DEPLOYMENTDETAILS = 'deploymentdetails'
+    STARTDEPLOYMENT = "startdeployment"
+    DEPLOYMENTBURNIN = "deploymentburnin"
+    DEPLOYMENTTOFIELD = "deploymenttofield"
+    DEPLOYMENTUPDATE = "deploymentupdate"
+    DEPLOYMENTRECOVER = "deploymentrecover"
+    DEPLOYMENTRETIRE = "deploymentretire"
+    DEPLOYMENTDETAILS = "deploymentdetails"
     ACT_TYPES = (
-        (STARTDEPLOYMENT, 'Start %s' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTBURNIN, '%s Burnin' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTTOFIELD, '%s to Field' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTUPDATE, '%s Update' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTRECOVER, '%s Recovery' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTRETIRE, '%s Retired' % (labels['label_deployments_app_singular'])),
-        (DEPLOYMENTDETAILS, '%s Details' % (labels['label_deployments_app_singular'])),
+        (STARTDEPLOYMENT, "Start %s" % (labels["label_deployments_app_singular"])),
+        (DEPLOYMENTBURNIN, "%s Burnin" % (labels["label_deployments_app_singular"])),
+        (DEPLOYMENTTOFIELD, "%s to Field" % (labels["label_deployments_app_singular"])),
+        (DEPLOYMENTUPDATE, "%s Update" % (labels["label_deployments_app_singular"])),
+        (DEPLOYMENTRECOVER, "%s Recovery" % (labels["label_deployments_app_singular"])),
+        (DEPLOYMENTRETIRE, "%s Retired" % (labels["label_deployments_app_singular"])),
+        (DEPLOYMENTDETAILS, "%s Details" % (labels["label_deployments_app_singular"])),
     )
     action_type = models.CharField(max_length=20, choices=ACT_TYPES)
     created_at = models.DateTimeField(default=timezone.now)
     detail = models.TextField(blank=True)
-    user = models.ForeignKey(User, related_name='deployment_actions',
-                             on_delete=models.SET_NULL, null=True, blank=False)
-    location = TreeForeignKey(Location, related_name='deployment_actions',
-                              on_delete=models.SET_NULL, null=True, blank=False)
-    deployment = models.ForeignKey(Deployment, related_name='deployment_actions',
-                                 on_delete=models.CASCADE, null=True, blank=True)
-    latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
-                                    validators=[
-                                        MaxValueValidator(90),
-                                        MinValueValidator(0)
-                                    ])
-    longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True,
-                                    validators=[
-                                        MaxValueValidator(180),
-                                        MinValueValidator(0)
-                                    ])
+    user = models.ForeignKey(
+        User,
+        related_name="deployment_actions",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False,
+    )
+    location = TreeForeignKey(
+        Location,
+        related_name="deployment_actions",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False,
+    )
+    deployment = models.ForeignKey(
+        Deployment,
+        related_name="deployment_actions",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    latitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+        validators=[MaxValueValidator(90), MinValueValidator(0)],
+    )
+    longitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+        validators=[MaxValueValidator(180), MinValueValidator(0)],
+    )
     depth = models.PositiveIntegerField(null=True, blank=True)
 
     class Meta:
-        ordering = ['-created_at', 'action_type']
-        get_latest_by = 'created_at'
+        ordering = ["-created_at", "action_type"]
+        get_latest_by = "created_at"
 
     def __str__(self):
         return self.get_action_type_display()

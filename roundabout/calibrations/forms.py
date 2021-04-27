@@ -169,12 +169,14 @@ class CoefficientValueSetForm(forms.ModelForm):
 class CoefficientNameForm(forms.ModelForm):
     class Meta:
         model = CoefficientName
-        fields = ['calibration_name', 'value_set_type', 'sigfig_override', 'deprecated']
+        fields = ['calibration_name', 'value_set_type', 'sigfig_override', 'deprecated', 'threshold_low','threshold_high']
         labels = {
             'calibration_name': 'Name',
             'value_set_type': 'Type',
             'sigfig_override': 'Significant Figures',
-            'deprecated': 'Deprecated'
+            'deprecated': 'Deprecated',
+            'threshold_low': 'Coefficient Threshold (Low)',
+            'threshold_high': 'Coefficient Threshold (High)'
         }
         widgets = {
             'deprecated': forms.CheckboxInput()
@@ -200,6 +202,28 @@ class CoefficientNameForm(forms.ModelForm):
                 )
         else:
             return raw_sigfig
+
+    def clean_threshold_low(self):
+        threshold_low = self.cleaned_data.get('threshold_low')
+        try:
+            regular_val = round(threshold_low.strip(), notation = 'std', output_type=float)
+        except:
+            raise ValidationError(
+                    _('Input cannot be coerced into a number')
+                )
+        else:
+            return threshold_low
+
+    def clean_threshold_high(self):
+        threshold_high = self.cleaned_data.get('threshold_high')
+        try:
+            regular_val = round(threshold_high.strip(), notation = 'std', output_type=float)
+        except:
+            raise ValidationError(
+                    _('Input cannot be coerced into a number')
+                )
+        else:
+            return threshold_high
 
 
 # CoefficientValue form
@@ -298,7 +322,7 @@ PartCalNameFormset = inlineformset_factory(
     CoefficientNameEvent,
     CoefficientName,
     form=CoefficientNameForm,
-    fields=('calibration_name', 'value_set_type', 'sigfig_override', 'deprecated'),
+    fields=('calibration_name', 'value_set_type', 'sigfig_override', 'deprecated', 'threshold_low', 'threshold_high'),
     extra=1,
     can_delete=True
 )

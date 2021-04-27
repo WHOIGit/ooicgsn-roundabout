@@ -72,10 +72,10 @@
                 {% else %} 
                     {{ assembly_part.part.name }} 
                 {% endif %}
-                {% logged_user_is_reviewer assembly_part.part user as user_is_reviewer %}
-                {% if user_is_reviewer %}
+                {% if assembly_part.part.id in reviewer_list %}
                     <span id="review-badge-{{assembly_part.part.id}}" class="badge badge-pill badge-secondary">Review Requested</span>
                 {% endif %}
+                
             
             </a>
 

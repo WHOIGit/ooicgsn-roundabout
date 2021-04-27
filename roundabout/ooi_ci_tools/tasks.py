@@ -50,6 +50,17 @@ def async_update_cal_thresholds(self):
     else:
         cal_names = CoefficientName.objects.all()
     for name in cal_names:
+        if name.threshold_low and name.threshold_high:
+            std_low = round(name.threshold_low, notation = 'std', output_type=float)
+            std_high = round(name.threshold_high, notation = 'std', output_type=float)
+            Threshold.objects.update_or_create(
+                coefficient_name = name,
+                defaults = {
+                    'low': std_low,
+                    'high': std_high
+                }
+            )
+            continue
         if name.coefficient_value_sets.exists():
             valsets = name.coefficient_value_sets.all()
             raw_vals = []
