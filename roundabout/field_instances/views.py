@@ -61,38 +61,57 @@ api_url_mappings = {
 }
 
 
-def field_instance_sync_main(request, field_instance):
-    status_code = 401
-    pk_mappings = {"location": [], "inventory": [], "build": []}
-    api_token = request.GET.get("api_token")
+class FieldInstanceSyncToHomeView(APIView):
+    def get(self, request, *args, **kwargs):
+        # Get the FieldInstance object that is current
+        field_instance = FieldInstance.objects.filter(is_this_instance=True).first()
+        if not field_instance:
+            return HttpResponse("ERROR. This is not a Field Instance of RDB.")
 
-    if not api_token:
-        error = "No api_token query paramater data"
-        return error
+        status_response = self.field_instance_sync_main(request, field_instance)
+        print(status_response)
 
-    headers = {
-        "Authorization": "Token " + api_token,
-    }
-
-    # Get all Actions performed on this FieldInstance
-    actions = Action.objects.filter(created_at__gte=field_instance.start_date).order_by(
-        "created_at"
-    )
-    # perform sync operations on each Action based on object_type/action_type
-    for action in actions:
-        if action.action_type == Action.ADD:
-            mappings_data = _sync_new_object(action, pk_mappings, headers, request)
-            pk_mappings[mappings_data["object_type"]].append(
-                mappings_data["pk_mapping"]
-            )
-            print(pk_mappings)
+        if status_response == 200:
+            return HttpResponse("Code 200")
         else:
-            status_code = _sync_existing_objects(action, pk_mappings, headers, request)
+            return HttpResponse(status_response)
 
-        # add the Action history object
-        mappings_data = _sync_new_object(action, pk_mappings, headers, request, True)
-    print(pk_mappings)
-    return status_code
+    def field_instance_sync_main(self, request, field_instance):
+        status_code = 401
+        pk_mappings = {"location": [], "inventory": [], "build": []}
+        api_token = request.GET.get("api_token")
+
+        if not api_token:
+            error = "No api_token query paramater data"
+            return error
+
+        headers = {
+            "Authorization": "Token " + api_token,
+        }
+
+        # Get all Actions performed on this FieldInstance
+        actions = Action.objects.filter(
+            created_at__gte=field_instance.start_date
+        ).order_by("created_at")
+        # perform sync operations on each Action based on object_type/action_type
+        for action in actions:
+            if action.action_type == Action.ADD:
+                mappings_data = _sync_new_object(action, pk_mappings, headers, request)
+                pk_mappings[mappings_data["object_type"]].append(
+                    mappings_data["pk_mapping"]
+                )
+                print(pk_mappings)
+            else:
+                status_code = _sync_existing_objects(
+                    action, pk_mappings, headers, request
+                )
+
+            # add the Action history object
+            mappings_data = _sync_new_object(
+                action, pk_mappings, headers, request, True
+            )
+        print(pk_mappings)
+        return status_code
 
 
 def _handle_new_pk_check(obj, data_dict, pk_mappings, sync_action=False):
@@ -203,22 +222,7 @@ def _sync_existing_objects(action, pk_mappings, headers, request):
     return status
 
 
-class FieldInstanceSyncToHomeView(APIView):
-    def get(self, request, *args, **kwargs):
-        # Get the FieldInstance object that is current
-        field_instance = FieldInstance.objects.filter(is_this_instance=True).first()
-        if not field_instance:
-            return HttpResponse("ERROR. This is not a Field Instance of RDB.")
-
-        status_response = field_instance_sync_main(request, field_instance)
-        print(status_response)
-
-        if status_response == 200:
-            return HttpResponse("Code 200")
-        else:
-            return HttpResponse(status_response)
-
-
+# -----------------------------------
 # Basic CBVs to handle CRUD operations
 # -----------------------------------
 
