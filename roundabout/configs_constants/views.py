@@ -88,8 +88,8 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
                         'config_name': name
                     }
             else:
-                if inv_inst.assembly_part.config_default_events.exists():
-                    conf_def_event = inv_inst.assembly_part.config_default_events.first()
+                if inv_inst.assembly_part.assemblypart_configdefaultevents.exists():
+                    conf_def_event = inv_inst.assembly_part.assemblypart_configdefaultevents.first()
                     try:
                         default_value = ConfigDefault.objects.get(conf_def_event = conf_def_event, config_name = name).default_value
                     except ConfigDefault.DoesNotExist:

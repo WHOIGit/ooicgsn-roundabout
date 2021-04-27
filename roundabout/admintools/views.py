@@ -417,7 +417,7 @@ class ImportInventoryUploadSuccessView(TemplateView):
 # Makes a copy of the Assembly Revision tree starting at "root_part",
 # move to new Revision, reparenting it to "parent"
 def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent=None, importing_user=None):
-    params = {'expand': 'part,config_default_events.config_defaults,config_default_events.config_defaults.config_name,config_default_events.user_draft,config_default_events.user_approver,config_default_events.actions.user'}
+    params = {'expand': 'part,assemblypart_configdefaultevents.config_defaults,assemblypart_configdefaultevents.config_defaults.config_name,assemblypart_configdefaultevents.user_draft,assemblypart_configdefaultevents.user_approver,assemblypart_configdefaultevents.actions.user'}
     assembly_part_request = requests.get(root_part_url, params=params, headers=headers, verify=False)
     assembly_part_data = assembly_part_request.json()
     # Need to validate that the Part template exists before creating AssemblyPart
@@ -609,8 +609,8 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
     )
     print(assembly_part_obj)
     # Add all Config data for the Assembly Part
-    if assembly_part_data['config_default_events']:
-        for config_event in assembly_part_data['config_default_events']:
+    if assembly_part_data['assemblypart_configdefaultevents']:
+        for config_event in assembly_part_data['assemblypart_configdefaultevents']:
             config_event_obj = ConfigDefaultEvent.objects.create(
                 created_at=config_event['created_at'],
                 updated_at=config_event['updated_at'],

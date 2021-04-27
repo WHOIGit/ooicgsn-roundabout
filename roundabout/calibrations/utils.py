@@ -77,15 +77,15 @@ def user_ccc_reviews(event, user):
         if not found_cal_events and not found_conf_events:
             all_reviewed = True
     if hasattr(event,'part'):
-        if user.coefficientnameevent_reviewers.exists():
+        if user.reviewer_coefficientnameevents.exists():
             found_cal_events = event.part.part_coefficientnameevents.filter(user_draft__in=[user])
-        if user.confignameevent_reviewers.exists():
+        if user.reviewer_confignameevents.exists():
             found_conf_events = event.part.part_confignameevents.filter(user_draft__in=[user])
         if not found_cal_events and not found_conf_events:
             all_reviewed = True
     if hasattr(event,'assembly_part'):
-        if user.config_default_events_reviewer.exists():
-            found_conf_events = event.assembly_part.config_default_events.filter(user_draft__in=[user])
+        if user.reviewer_configdefaultevents.exists():
+            found_conf_events = event.assembly_part.assemblypart_configdefaultevents.filter(user_draft__in=[user])
         if not found_conf_events:
             all_reviewed = True
     if hasattr(event,'build'):

@@ -117,11 +117,12 @@ class CCCEvent(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    user_draft = models.ManyToManyField(User, related_name='%(class)s_reviewers', blank=True)
-    user_approver = models.ManyToManyField(User, related_name='%(class)s_approvers')
+    user_draft = models.ManyToManyField(User, related_name='reviewer_%(class)ss', blank=True)
+    user_approver = models.ManyToManyField(User, related_name='approver_%(class)ss')
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
     detail = models.TextField(blank=True)
     part = models.ForeignKey(Part, related_name='part_%(class)ss', on_delete=models.CASCADE, null=True)
+    assembly_part = models.ForeignKey(AssemblyPart, related_name='assemblypart_%(class)ss', on_delete=models.CASCADE, null=True)
 
     def get_actions(self):
         return self.actions.filter(object_type='%(class)s')
