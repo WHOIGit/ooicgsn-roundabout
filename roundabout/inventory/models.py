@@ -33,10 +33,9 @@ from django.utils import timezone
 from mptt.models import MPTTModel, TreeForeignKey
 
 from roundabout.assemblies.models import Assembly, AssemblyPart
-
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
-from roundabout.cruises.models import Cruise
+from roundabout.cruises.models import Cruise, Vessel
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, Revision
 from roundabout.users.models import User
@@ -639,6 +638,8 @@ class Action(models.Model):
     COEFFNAMEEVENT = "coefficientnameevent"
     CONFNAMEEVENT = "confignameevent"
     LOCATION = "location"
+    VESSEL = "vessel"
+    CRUISE = "cruise"
     OBJECT_TYPES = (
         (BUILD, "Build"),
         (INVENTORY, "Inventory"),
@@ -650,6 +651,8 @@ class Action(models.Model):
         (COEFFNAMEEVENT, "Coefficient Name Event"),
         (CONFNAMEEVENT, "Configuration Name Event"),
         (LOCATION, "Location"),
+        (VESSEL, "Vessel"),
+        (CRUISE, "Cruise"),
     )
     # deployment_type choices
     BUILD_DEPLOYMENT = "build_deployment"
@@ -761,6 +764,9 @@ class Action(models.Model):
     )
     cruise = models.ForeignKey(
         Cruise, related_name="actions", on_delete=models.SET_NULL, null=True, blank=True
+    )
+    vessel = models.ForeignKey(
+        Vessel, related_name="actions", on_delete=models.SET_NULL, null=True, blank=True
     )
     latitude = models.DecimalField(
         max_digits=10,

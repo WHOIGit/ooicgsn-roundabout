@@ -29,6 +29,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from .models import *
 from .forms import VesselForm, CruiseForm, VesselHyperlinkFormset, CruiseHyperlinkFormset
 from roundabout.inventory.models import Action
+from roundabout.inventory.utils import _create_action_history
 from common.util.mixins import AjaxFormMixin
 
 # Private functions for use in other Views
@@ -163,6 +164,13 @@ class CruiseAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
 
     def form_valid(self, form, formset):
         self.object = form.save()
+
+        data = dict(updated_values=dict())
+        for field in form.fields:
+            val = getattr(self.object,field,None)
+            if val: data['updated_values'][field] = {'from':None,'to':str(val)}
+        _create_action_history(self.object, Action.ADD, self.request.user, data=data)
+
         for link_form in formset:
             link = link_form.save(commit=False)
             if link.text and link.url:
@@ -222,7 +230,18 @@ class CruiseAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         return self.form_invalid(form,link_formset)
 
     def form_valid(self, form, formset):
-        self.object = form.save()
+        orig_obj = self.object
+        new_obj = form.save(commit=False)
+
+        data = dict(updated_values=dict())
+        for field in form.fields:
+            orig_val = getattr(orig_obj,field,None)
+            new_val = getattr(new_obj,field,None)
+            if orig_val!=new_val:
+                data['updated_values'][field] = {'from':str(orig_val),'to':str(new_val)}
+        self.object = form.save(commit=True)
+        _create_action_history(self.object, Action.UPDATE, self.request.user, data=data)
+
         for link_form in formset:
             link = link_form.save(commit=False)
             if link.text and link.url:
@@ -313,11 +332,18 @@ class VesselCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
         return self.form_invalid(form,link_formset)
 
     def form_valid(self, form, formset):
-        vessel = form.save()
+        self.object = form.save()
+
+        data = dict(updated_values=dict())
+        for field in form.fields:
+            val = getattr(self.object,field,None)
+            if val: data['updated_values'][field] = {'from':None,'to':str(val)}
+        _create_action_history(self.object, Action.ADD, self.request.user, data=data)
+
         for link_form in formset:
             link = link_form.save(commit=False)
             if link.text and link.url:
-                link.parent = vessel
+                link.parent = self.object
                 link.save()
         return HttpResponseRedirect(self.get_success_url())
 
@@ -351,15 +377,26 @@ class VesselUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
             return self.form_valid(form,link_formset)
         return self.form_invalid(form,link_formset)
 
-    def form_valid(self, vessel_form, link_formset):
-        vessel = vessel_form.save()
+    def form_valid(self, form, link_formset):
+        orig_obj = self.object
+        new_obj = form.save(commit=False)
+
+        data = dict(updated_values=dict())
+        for field in form.fields:
+            orig_val = getattr(orig_obj,field,None)
+            new_val = getattr(new_obj,field,None)
+            if orig_val!=new_val:
+                data['updated_values'][field] = {'from':str(orig_val),'to':str(new_val)}
+        self.object = form.save(commit=True)
+        _create_action_history(self.object, Action.UPDATE, self.request.user, data=data)
+
         for link_form in link_formset:
             link = link_form.save(commit=False)
             if link.text and link.url:
                 if link_form['DELETE'].data:
                     link.delete()
                 else:
-                    link.parent = vessel
+                    link.parent = self.object
                     link.save()
         return HttpResponseRedirect(self.get_success_url())
 
