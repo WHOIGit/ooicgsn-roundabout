@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -20,42 +20,33 @@
 -->
 
 <ul>
-{% for assembly_type in assembly_types %}
+  {% for assembly_type in assembly_types %}
 
-    <li data-jstree='{"icon":"fa fa-cubes"}' id="assemblytype_{{ assembly_type.id }}">
-            <a href="#"
-                    data-detail-url="{% url 'assemblies:ajax_assembly_type_detail' assembly_type.id %}"
-                    data-node-id='{{ assembly_type.id }}'
-                    data-node-type="assemblytype">{{ assembly_type.name }}s</a>
+  <li data-jstree='{"icon":"fa fa-cubes"}' id="assemblytype_{{ assembly_type.id }}">
+    <a href="#" data-detail-url="{% url 'assemblies:ajax_assembly_type_detail' assembly_type.id %}" data-node-id='{{ assembly_type.id }}' data-node-type="assemblytype">{{ assembly_type.name }}</a>
 
-            <ul>
-            {% for assembly in assembly_type.assemblies.all %}
+    <ul>
+      {% for assembly in assembly_type.assemblies.all %}
 
-                <li data-jstree='{"icon":"fa fa-rocket"}' id="assemblies_{{ assembly.id }}">
-                        <a href="#"
-                                data-detail-url="{% url 'assemblies:ajax_assemblies_detail' assembly.id %}"
-                                data-node-id='{{ assembly.id }}'
-                                data-node-type="assemblies">{{ assembly.name }}</a>
+      <li data-jstree='{"icon":"fa fa-rocket"}' id="assemblies_{{ assembly.id }}">
+        <a href="#" data-detail-url="{% url 'assemblies:ajax_assemblies_detail' assembly.id %}" data-node-id='{{ assembly.id }}' data-node-type="assemblies">{{ assembly.name }}</a>
 
-                        <ul>
-                        {% for revision in assembly.assembly_revisions.all %}
+        <ul>
+          {% for revision in assembly.assembly_revisions.all %}
 
-                            <li data-jstree='{"icon":"far fa-dot-circle"}' id="assemblyrevisions_{{ revision.id }}" class="jstree-closed">
-                                    <a href="#"
-                                            data-detail-url="{% url 'assemblies:ajax_assemblyrevision_detail' revision.id %}"
-                                            data-node-id='{{ revision.id }}'
-                                            data-node-type="assemblyrevisions">Revision {{ revision.revision_code }}</a>
-                             </li>
+          <li data-jstree='{"icon":"far fa-dot-circle"}' id="assemblyrevisions_{{ revision.id }}" class="jstree-closed">
+            <a href="#" data-detail-url="{% url 'assemblies:ajax_assemblyrevision_detail' revision.id %}" data-node-id='{{ revision.id }}' data-node-type="assemblyrevisions">Revision {{ revision.revision_code }}</a>
+          </li>
 
-                        {% endfor %}
-                        </ul>
+          {% endfor %}
+        </ul>
 
-                 </li>
+      </li>
 
-            {% endfor %}
-            </ul>
+      {% endfor %}
+    </ul>
 
-     </li>
+  </li>
 
-{% endfor %}
+  {% endfor %}
 </ul>
