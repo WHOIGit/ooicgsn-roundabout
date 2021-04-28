@@ -19,7 +19,7 @@
 # If not, see <http://www.gnu.org/licenses/>.
 -->
 {% load common_tags %}
-{% if assembly_part.config_default_events.exists %}
+{% if assembly_part.assemblypart_configdefaultevents.exists %}
     <ul class="nav nav-tabs" id="config-tabs-nav" role="tablist">
         <li class="nav-item">
             <a  class="nav-link active" 
@@ -35,7 +35,7 @@
     </ul>
     <div id="config_default-template" aria-labelledby="config_default-template-tab">
         <ul class="list-group">
-            {% for event in assembly_part.config_default_events.all %}
+            {% for event in assembly_part.assemblypart_configdefaultevents.all %}
                 <li class="list-group-item">
                     <a  class="collapsed" 
                         data-toggle="collapse" 

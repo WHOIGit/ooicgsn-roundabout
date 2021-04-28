@@ -24,8 +24,9 @@ from django.db import models
 from mptt.models import MPTTModel, TreeForeignKey
 from roundabout.inventory.models import Action
 from roundabout.users.models import User
-from roundabout.calibrations.models import CoefficientName
-from roundabout.configs_constants.models import ConfigName
+from roundabout.parts.models import Part
+from roundabout.assemblies.models import AssemblyPart
+from roundabout.inventory.models import Inventory, Deployment
 
 # Numerical Coefficient threshold by Calibration 
 class Threshold(models.Model):
@@ -39,8 +40,8 @@ class Threshold(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     low = models.CharField(max_length = 255, unique = False, db_index = False)
     high = models.CharField(max_length = 255, unique = False, db_index = False)
-    coefficient_name = models.ForeignKey(CoefficientName, related_name='thresholds', on_delete=models.CASCADE, null=True)
-    config_name = models.ForeignKey(ConfigName, related_name='thresholds', on_delete=models.CASCADE, null=True)
+    coefficient_name = models.ForeignKey('calibrations.CoefficientName', related_name='thresholds', on_delete=models.CASCADE, null=True)
+    config_name = models.ForeignKey('configs_constants.ConfigName', related_name='thresholds', on_delete=models.CASCADE, null=True)
 
 # Comment model
 class Comment(models.Model):
@@ -102,3 +103,32 @@ class ImportConfig(models.Model):
     require_vessel_designation = models.BooleanField(blank=False, default=True)
     require_vessel_active = models.BooleanField(blank=False, default=True)
     require_vessel_R2R = models.BooleanField(blank=False, default=True)
+    
+class CCCEvent(models.Model):
+    class Meta:
+        abstract = True
+    def __str__(self):
+        return self.detail
+    def get_object_type(self):
+        return 'ccc_event'
+    APPROVAL_STATUS = (
+        (True, "Approved"),
+        (False, "Draft"),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    user_draft = models.ManyToManyField(User, related_name='reviewer_%(class)ss', blank=True)
+    user_approver = models.ManyToManyField(User, related_name='approver_%(class)ss')
+    approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
+    detail = models.TextField(blank=True)
+    part = models.ForeignKey(Part, related_name='part_%(class)ss', on_delete=models.CASCADE, null=True)
+    assembly_part = models.ForeignKey(AssemblyPart, related_name='assemblypart_%(class)ss', on_delete=models.CASCADE, null=True)
+
+    def get_actions(self):
+        return self.actions.filter(object_type='%(class)s')
+
+    def get_sorted_reviewers(self):
+        return self.user_draft.all().order_by('username')
+
+    def get_sorted_approvers(self):
+        return self.user_approver.all().order_by('username')
