@@ -662,7 +662,7 @@ def event_review_toggle(request, pk, user_pk, evt_type):
         else:
             event.approved = False
     event.save()
-    all_reviewed = user_ccc_reviews(event, user)
+    all_reviewed = user_ccc_reviews(event, user, evt_type)
     data = {'approved':event.approved, 'all_reviewed': all_reviewed, 'user_in': user_in, 'is_current_deployment': is_current_deployment}
     return JsonResponse(data)
 
