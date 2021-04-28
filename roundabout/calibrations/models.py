@@ -26,6 +26,7 @@ from django.utils import timezone
 from roundabout.inventory.models import Inventory, Deployment, Action
 from roundabout.parts.models import Part
 from roundabout.users.models import User
+from roundabout.ooi_ci_tools.models import CCCEvent
 
 # Tracks Calibration Coefficient event history across Inventory Parts
 class CalibrationEvent(models.Model):
@@ -86,33 +87,13 @@ class CalibrationEventHyperlink(models.Model):
     def __str__(self): return self.text
 
 # Tracks Coefficient Name Event history across Parts
-class CoefficientNameEvent(models.Model):
+class CoefficientNameEvent(CCCEvent):
     class Meta:
         ordering = ['-created_at']
     def __str__(self):
         return self.created_at.strftime("%m/%d/%Y")
     def get_object_type(self):
         return 'coefficient_name_event'
-    APPROVAL_STATUS = (
-        (True, "Approved"),
-        (False, "Draft"),
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    user_draft = models.ManyToManyField(User, related_name='coefficient_name_events_reviewers', blank=True)
-    user_approver = models.ManyToManyField(User, related_name='coefficient_name_events_approvers')
-    part = models.ForeignKey(Part, related_name='coefficient_name_events', on_delete=models.CASCADE, null=True)
-    approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
-    detail = models.TextField(blank=True)
-
-    def get_actions(self):
-        return self.actions.filter(object_type=Action.COEFFNAMEEVENT)
-
-    def get_sorted_reviewers(self):
-        return self.user_draft.all().order_by('username')
-
-    def get_sorted_approvers(self):
-        return self.user_approver.all().order_by('username')
 
 
 # Tracks Calibrations across Parts

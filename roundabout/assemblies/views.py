@@ -57,8 +57,8 @@ def _make_revision_tree_copy(root_part, new_revision, parent=None, user=None, co
         order=root_part.order
     )
     # Copy ConfigDefaults for this Assembly Part
-    if copy_default_configs and root_part.config_default_events.exists():
-        for event in root_part.config_default_events.all():
+    if copy_default_configs and root_part.assemblypart_configdefaultevents.exists():
+        for event in root_part.assemblypart_configdefaultevents.all():
             new_event = ConfigDefaultEvent.objects.create(
                 assembly_part = new_ap,
                 created_at = event.created_at,
@@ -602,8 +602,8 @@ class AssemblyPartAjaxDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super(AssemblyPartAjaxDetailView, self).get_context_data(**kwargs)
         part_has_configs = False
-        if self.object.part.config_name_events.exists():
-            if self.object.part.config_name_events.first().config_names.filter(config_type='conf').exists():
+        if self.object.part.part_confignameevents.exists():
+            if self.object.part.part_confignameevents.first().config_names.filter(config_type='conf').exists():
                 part_has_configs = True
         context.update({
             'node_type': self.object.get_object_type(),

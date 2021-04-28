@@ -300,7 +300,7 @@ class ConfPartCopyForm(forms.Form):
         self.part_id = kwargs.pop('part_id')
         self.part_type = kwargs.pop('part_type')
         super(ConfPartCopyForm, self).__init__(*args, **kwargs)
-        self.fields['from_part'].queryset = Part.objects.filter(part_type__name=self.part_type, config_name_events__gt=0).exclude(id__in=str(self.part_id))
+        self.fields['from_part'].queryset = Part.objects.filter(part_type__name=self.part_type, part_confignameevents__gt=0).exclude(id__in=str(self.part_id))
 
     def clean_from_part(self):
         from_part = self.cleaned_data.get('from_part')
@@ -371,9 +371,9 @@ EventConfigDefaultFormset = inlineformset_factory(
 def copy_confignames(to_id, from_id):
     to_part = Part.objects.get(id=to_id)
     from_part = Part.objects.get(id=from_id)
-    if from_part.config_name_events.exists():
-        from_event = from_part.config_name_events.first()
-        to_event = to_part.config_name_events.first()
+    if from_part.part_confignameevents.exists():
+        from_event = from_part.part_confignameevents.first()
+        to_event = to_part.part_confignameevents.first()
         for name in from_event.config_names.all():
             ConfigName.objects.create(
                 name = name.name,

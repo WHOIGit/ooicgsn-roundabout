@@ -823,7 +823,7 @@ def validate_cal_files(csv_files,ext_files):
                     try:
                         cal_name_item = CoefficientName.objects.get(
                             calibration_name = calibration_name,
-                            coeff_name_event =  inventory_item.part.coefficient_name_events.first()
+                            coeff_name_event =  inventory_item.part.part_coefficientnameevents.first()
                         )
                     except CoefficientName.DoesNotExist:
                         calname_keys = {'value_set_type': 'sl'}
