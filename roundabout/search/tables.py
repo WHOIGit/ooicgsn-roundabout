@@ -153,6 +153,9 @@ class SearchTable(ColumnShiftTable):
             extra_cols = [col for col in self.sequence if col.startswith('extracol-')]
             self.column_default_show = self.Meta.base_shown_cols + search_cols
 
+    def render_detail(self,value):
+        return trunc_render()(value)
+
 
 class InventoryTable(SearchTable):
     class Meta(SearchTable.Meta):
