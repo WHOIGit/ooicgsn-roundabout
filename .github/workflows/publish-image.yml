@@ -48,7 +48,8 @@ jobs:
           docker-compose -f docker-compose-testing.yml build tests
           docker-compose -f docker-compose-testing.yml run --rm tests ./RunAllTests-Chrome-Linux.bat
 
-      - name: Tag Image
+      - name: Tag & Push Release Image
+        if: contains(github.ref, 'release')
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           IMAGE_ID=ghcr.io/${{ github.repository }}
@@ -64,11 +65,13 @@ jobs:
             
           docker tag $IMAGE_ID $IMAGE_ID:$VERSION
 
+          echo "IMAGE_ID:"
+          echo $IMAGE_ID
+          echo "VERSION:"
+          echo $VERSION
           docker image ls
 
-      - name: Push Release Image
-        if: contains(github.ref, 'release')
-        run: docker push $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
 
       - name: Stopping Docker application
         run:  docker-compose --file local.yml down

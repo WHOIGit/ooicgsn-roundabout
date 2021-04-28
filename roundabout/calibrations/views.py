@@ -206,10 +206,30 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         form.instance.inventory = inv_inst
         form.instance.approved = False
         handle_reviewers(form)
-        self.object = form.save()
 
+        self.object = form.save()
+        orig_CoefficientValueSets = self.object.coefficient_value_sets.all()
         event_valueset_form.instance = self.object
-        event_valueset_form.save()
+
+        # CalibrationEvent action history json data field
+        data = {}
+        updated_values = {}
+        updated_notes = {}
+        updated_CoefficientValueSets = event_valueset_form.save(commit=False)
+        # record value/note changes for action history json data field
+        for updated_CoefficientValueSet in updated_CoefficientValueSets:
+            orig_CoefficientValueSet = orig_CoefficientValueSets.get(coefficient_name__calibration_name=updated_CoefficientValueSet.coefficient_name.calibration_name)
+            if orig_CoefficientValueSet.value_set != updated_CoefficientValueSet.value_set:
+                updated_values[updated_CoefficientValueSet.coefficient_name.calibration_name] = {'from': orig_CoefficientValueSet.value_set,
+                                                                                                 'to':   updated_CoefficientValueSet.value_set}
+            if orig_CoefficientValueSet.notes != updated_CoefficientValueSet.notes:
+                updated_notes[updated_CoefficientValueSet.coefficient_name.calibration_name] = {'from': orig_CoefficientValueSet.notes,
+                                                                                                'to':   updated_CoefficientValueSet.notes}
+        if updated_values: data['updated_values'] = updated_values
+        if updated_notes:  data['updated_notes'] = updated_notes
+
+        # Commiting changes to db
+        event_valueset_form.save(commit=True)
 
         # Adding CalEvent to hyperlink objects
         for link_form in link_formset:
@@ -221,9 +241,10 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
                     link.parent = self.object
                     link.save()
 
-        _create_action_history(self.object, Action.UPDATE, self.request.user)
+        _create_action_history(self.object, Action.UPDATE, self.request.user, data=data)
         cache.set('thrsh_evnt', self.object)
         thrsh_job = async_update_cal_thresholds.delay()
+
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
