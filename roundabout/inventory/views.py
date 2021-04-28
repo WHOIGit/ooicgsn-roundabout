@@ -1293,7 +1293,7 @@ class InventoryAjaxAddToBuildListView(LoginRequiredMixin, TemplateView):
                 if not x:
                     builds = builds.exclude(id=build.id)
 
-        builds = builds.prefetch_related("assembly_revision__assembly_parts__part")
+        builds = builds.prefetch_related("assembly_revision__assembly_parts")
 
         if inventory_item.assembly_part:
             assembly_parts = AssemblyPart.objects.filter(
@@ -1303,7 +1303,6 @@ class InventoryAjaxAddToBuildListView(LoginRequiredMixin, TemplateView):
             assembly_parts = (
                 AssemblyPart.objects.filter(part=inventory_item.part)
                 .filter(assembly_revision__builds__in=builds)
-                .select_related()
                 .distinct()
             )
 
