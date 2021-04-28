@@ -145,12 +145,10 @@ def _create_action_history(
     # Run through the discrete Actions, set up details text and extra records if needed.
     if action_type == Action.ADD:
         action_record.detail = "%s first added to RDB. %s" % (obj_label, detail)
-        # TODO add data to action record IF it's from a CCC
         action_record.save()
 
     elif action_type == Action.UPDATE:
         action_record.detail = "%s details updated." % (obj_label)
-        # TODO add data to action record IF it's from a CCC
         if object_type == Action.CALEVENT:
             pass
         elif object_type == Action.CONFEVENT:

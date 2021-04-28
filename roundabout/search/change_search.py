@@ -122,8 +122,8 @@ class SearchForm(forms.Form):
 
 
 ## === VIEWS === ##
-
-class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView):
+from django_tables2.export.views import ExportMixin
+class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView, ExportMixin):
     template_name = 'search/form_search_multitable.html'
     form_class = SearchForm
     table_pagination = {"per_page": 10}

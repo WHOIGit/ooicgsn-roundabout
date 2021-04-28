@@ -25,7 +25,10 @@ from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import View, DetailView, ListView, UpdateView, CreateView, DeleteView, TemplateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django_tables2 import SingleTableMixin
+from django_tables2.export.views import ExportMixin
 
+from .tables import *
 from .models import *
 from .forms import VesselForm, CruiseForm, VesselHyperlinkFormset, CruiseHyperlinkFormset
 from roundabout.inventory.models import Action
@@ -69,6 +72,8 @@ class CruiseHomeView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
         if cruise_pk:
             try:
                 cruise = Cruise.objects.get(id=cruise_pk)
+                history_table_qs = Action.objects.filter(cruise__pk__exact=cruise_pk, object_type__exact=Action.CRUISE)
+                context['history_table'] = CruiseActionTable(history_table_qs)
             except Cruise.DoesNotExist:
                 pass
 
@@ -103,10 +108,16 @@ class CruiseHomeView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
 # ------------------------------------------------------------------------------
 # AJAX Views
 
-class CruiseAjaxDetailView(LoginRequiredMixin, DetailView):
+class CruiseAjaxDetailView(LoginRequiredMixin, DetailView, SingleTableMixin):
     model = Cruise
     context_object_name = 'cruise'
     template_name='cruises/ajax_cruise_detail.html'
+    table_class = CruiseActionTable
+
+    def get_table_data(self):
+        cruise_pk = self.kwargs.get('pk')
+        qs = Action.objects.filter(cruise__pk__exact=cruise_pk, object_type__exact=Action.CRUISE)
+        return qs
 
     def get_context_data(self, **kwargs):
         context = super(CruiseAjaxDetailView, self).get_context_data(**kwargs)
@@ -118,6 +129,7 @@ class CruiseAjaxDetailView(LoginRequiredMixin, DetailView):
             'inventory_deployed': inventory_deployed,
             'inventory_recovered': inventory_recovered,
         })
+        context['history_table'] = self.get_table(**self.get_table_kwargs())
         return context
 
 
@@ -230,7 +242,7 @@ class CruiseAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         return self.form_invalid(form,link_formset)
 
     def form_valid(self, form, formset):
-        orig_obj = self.object
+        orig_obj = Cruise.objects.get(pk=self.object.pk)
         new_obj = form.save(commit=False)
 
         data = dict(updated_values=dict())
@@ -378,7 +390,7 @@ class VesselUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
         return self.form_invalid(form,link_formset)
 
     def form_valid(self, form, link_formset):
-        orig_obj = self.object
+        orig_obj = Vessel.objects.get(pk=self.object.pk)
         new_obj = form.save(commit=False)
 
         data = dict(updated_values=dict())
@@ -412,3 +424,19 @@ class VesselDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     success_url = reverse_lazy('cruises:vessels_home')
     permission_required = 'cruises.delete_vessel'
     redirect_field_name = 'home'
+
+
+class VesselActionTableView(LoginRequiredMixin, SingleTableMixin, TemplateView, ExportMixin):
+    template_name = 'cruises/vessel_actionhistory.html'
+    table_class = VesselActionTable
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        vessel = Vessel.objects.get(pk=self.kwargs.get('pk'))
+        context['table_title'] = 'Vessel Action History: {}'.format(vessel)
+        return context
+
+    def get_table_data(self):
+        vessel_pk = self.kwargs.get('pk')
+        qs = Action.objects.filter(vessel__pk__exact=vessel_pk)
+        return qs
