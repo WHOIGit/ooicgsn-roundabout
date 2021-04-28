@@ -354,7 +354,7 @@ class Deployment(DeploymentBase):
         related_name="deployments",
         on_delete=models.SET_NULL,
         null=True,
-        blank=True,
+        blank=False,
     )
     final_location = TreeForeignKey(
         Location,
