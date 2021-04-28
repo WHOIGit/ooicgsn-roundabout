@@ -309,7 +309,7 @@ var token;
             console.log(rsp.statusText, "  ", json);
 
         // CRUISES
-        // There are 10 pages of cruises, get the header link field and verify 10 pages returned
+        // There are 9 pages of cruises, get the header link field and verify 10 pages returned
         var link = ' ';
         rsp = await fetch(url + 'cruises', {
             method: 'GET',
@@ -323,9 +323,9 @@ var token;
                 }
             }        
 
-            if (link.includes("page=10")) {
+            if (link.includes("page=9")) {
                 // Get the last Cruise Page
-                rsp = await fetch(url + 'cruises/?page=10', {
+                rsp = await fetch(url + 'cruises/?page=9', {
                     method: 'GET',
                     headers: header,
                 });

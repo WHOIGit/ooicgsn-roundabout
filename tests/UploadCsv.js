@@ -91,6 +91,7 @@ var filename, filename_ext;
         var $ = require('jquery')(window);
         $.csv = require('jquery-csv');
         var data;
+        var erroridx = 0;
 
 	// Import Cruise CSV - CI Version
         await driver.findElement(By.id("navbarAdmintools")).click()
@@ -110,69 +111,79 @@ var filename, filename_ext;
             if (bodyText.includes("Import Complete")) {
                 break;
             }
+            else if (bodyText.includes("File: CruiseInformation-import")) {
+                // Import error occurred
+                erroridx = bodyText.indexOf("File: CruiseInformation-import");
+                var error = bodyText.substring(erroridx, erroridx + 70);
+                console.log("Import Error Occurred: " + error);
+                break;
+            }
             else {
                 await new Promise(r => setTimeout(r, 2000));
                 console.log("Wait 2 seconds for Import Cruises.");
             }
         }
 
-        // Don't trust Import Complete has actually imported all the Cruises
-        await new Promise(r => setTimeout(r, 20000));
+        // If no import error, export the Cruise file
+        if (erroridx == 0) {
 
-        // Export Cruises - CI Version
-        await driver.findElement(By.id("navbarAdmintools")).click()
-        await driver.findElement(By.linkText("Bulk Download Tool")).click()
-	// CI download button associated with Cruises
-        await driver.findElement(By.css(".btn:nth-child(3)")).click()
+           // Don't trust Import Complete has actually imported all the Cruises
+           await new Promise(r => setTimeout(r, 20000));
 
-        // Access Downloaded Cruise file
-        if (myArgs[1] == 'headless') {
-            // Docker/Circleci puts file in the current dir
-            var rdb_cruise = process.cwd() + "//CruiseInformation.csv";
-        }
-        else {
-            // Windows command line puts file in the User's default Downloads dir
-            const execSync = require('child_process').execSync;
-            var username = execSync('echo %username%', { encoding: 'utf-8' });
-            username = username.replace(/[\n\r]+/g, '');
-            var rdb_cruise = "C:\\Users\\" + username + "\\Downloads\\CruiseInformation.csv";
-        }
+           // Export Cruises - CI Version
+           await driver.findElement(By.id("navbarAdmintools")).click()
+           await driver.findElement(By.linkText("Bulk Download Tool")).click()
+	   // CI download button associated with Cruises
+           await driver.findElement(By.css(".btn:nth-child(3)")).click()
 
-        while (!fs.existsSync(rdb_cruise)) // wait for file download
-        {
-            await new Promise(r => setTimeout(r, 2000));
-            console.log("Wait 2 seconds for File Download.");
-        }
-        await new Promise(r => setTimeout(r, 20000));  //wait for file write to finish
+           // Access Downloaded Cruise file
+           if (myArgs[1] == 'headless') {
+               // Docker/Circleci puts file in the current dir
+               var rdb_cruise = process.cwd() + "//CruiseInformation.csv";
+           }
+           else {
+               // Windows command line puts file in the User's default Downloads dir
+               const execSync = require('child_process').execSync;
+               var username = execSync('echo %username%', { encoding: 'utf-8' });
+               username = username.replace(/[\n\r]+/g, '');
+               var rdb_cruise = "C:\\Users\\" + username + "\\Downloads\\CruiseInformation.csv";
+           }
 
-        // Compare Uploaded & Exported Cruise files
-        // read a line from upload file and find it in exported buffer to verify Cruise was created properly
-        // my local file has been modified to remove extra spaces and an extra dash in a time field and to fix R/V naming
-        var upload = fs.readFileSync(filename, 'utf8');
-        var exported = fs.readFileSync(rdb_cruise, 'utf8');
+           while (!fs.existsSync(rdb_cruise)) // wait for file download
+           {
+               await new Promise(r => setTimeout(r, 2000));
+               console.log("Wait 2 seconds for File Download.");
+           }
+           await new Promise(r => setTimeout(r, 20000));  //wait for file write to finish
 
-        var uploaded_data = $.csv.toArrays(upload);
+           // Compare Uploaded & Exported Cruise files
+           // read a line from upload file and find it in exported buffer to verify Cruise was created properly
+           // my local file has been modified to remove extra spaces and an extra dash in a time field and to fix R/V naming
+           var upload = fs.readFileSync(filename, 'utf8');
+           var exported = fs.readFileSync(rdb_cruise, 'utf8');
 
-        // Skip  line
-        for (var i = 2, len = uploaded_data.length; i < len; i++) {
-            var cruise_str = uploaded_data[i];
-	    // Strip off any trailing blanks in cruise name imported data
-	    cruise_str[1] = cruise_str[1].toString().trim();
-	    // Remove extra dash in Timestamp
-	    cruise_str[2] = cruise_str[2].toString().replace('-T', 'T');
-	    cruise_str[3] = cruise_str[3].toString().replace('-T', 'T');
-            // This is the only way to compare the double quotes in the notes field
-            if (cruise_str[4].includes(",")) {
-                if (!(exported.includes(cruise_str[0]) && exported.includes(cruise_str[1])
-                    && exported.includes(cruise_str[2]) && exported.includes(cruise_str[3])))
-                    console.log("Cruise Export Missing: " + cruise_str)
-                if (!exported.includes(cruise_str[4]))
-                    console.log("Cruise Export Missing: " + cruise_str[4])
-            }
-            else if (!exported.includes(cruise_str)) {
-                console.log("Cruise Export Missing: "+cruise_str)
-            }
+           var uploaded_data = $.csv.toArrays(upload);
 
+           // Skip  line
+           for (var i = 2, len = uploaded_data.length; i < len; i++) {
+               var cruise_str = uploaded_data[i];
+      	       // Strip off any trailing blanks in cruise name imported data
+	       cruise_str[1] = cruise_str[1].toString().trim();
+	       // Remove extra dash in Timestamp
+	       cruise_str[2] = cruise_str[2].toString().replace('-T', 'T');
+	       cruise_str[3] = cruise_str[3].toString().replace('-T', 'T');
+               // This is the only way to compare the double quotes in the notes field
+               if (cruise_str[4].includes(",")) {
+                    if (!(exported.includes(cruise_str[0]) && exported.includes(cruise_str[1])
+                       && exported.includes(cruise_str[2]) && exported.includes(cruise_str[3])))
+                       console.log("Cruise Export Missing: " + cruise_str)
+                    if (!exported.includes(cruise_str[4]))
+                       console.log("Cruise Export Missing: " + cruise_str[4])
+               }
+               else if (!exported.includes(cruise_str)) {
+                   console.log("Cruise Export Missing: "+cruise_str)
+               }
+           }
         }
 
         // Import Vessel CSV - CI Version
@@ -188,10 +199,17 @@ var filename, filename_ext;
         await driver.findElement(By.id("id_vessels_csv")).sendKeys(filename)
         await driver.findElement(By.id("submit")).click()
         // Wait for upload to Complete
-        var bodyText;
+        erroridx = 0;
         for (var j = 0; j < 5; j++) {
             bodyText = await driver.findElement(By.tagName("Body")).getText();
             if (bodyText.includes("Import Complete")) {
+                break;
+            }
+            else if (bodyText.includes("File: shiplist-import")) {
+                // Import error occurred (asset mgmt file has only prefix, designation, vessel name for all vessels)
+                erroridx = bodyText.indexOf("File: shiplist-import");
+                var error = bodyText.substring(erroridx, erroridx + 70);
+                console.log("Import Error Occurred: " + error);
                 break;
             }
             else {
@@ -199,67 +217,70 @@ var filename, filename_ext;
                 console.log("Wait 2 seconds for Import Cruises.");
             }
         }
-        // Don't trust Import Complete has actually imported all the Vessels
-        await new Promise(r => setTimeout(r, 20000));
 
-        // Export Vessels - CI Version
-        await driver.findElement(By.id("navbarAdmintools")).click()
-        await driver.findElement(By.linkText("Bulk Download Tool")).click()
-	// CI download button associated with Vessels
-        await driver.findElement(By.css(".btn:nth-child(7)")).click()
+        // If no import error, export the Vessel file
+        if (erroridx == 0) {
+           // Don't trust Import Complete has actually imported all the Vessels
+           await new Promise(r => setTimeout(r, 20000));
 
-        // Access Downloaded Vessel file
-        if (myArgs[1] == 'headless') {
-            // Docker/Circleci puts file in the current dir
-            var rdb_vessel = process.cwd() + "//shiplist.csv";
+           // Export Vessels - CI Version
+           await driver.findElement(By.id("navbarAdmintools")).click()
+           await driver.findElement(By.linkText("Bulk Download Tool")).click()
+	   // CI download button associated with Vessels
+           await driver.findElement(By.css(".btn:nth-child(7)")).click()
+
+           // Access Downloaded Vessel file
+           if (myArgs[1] == 'headless') {
+               // Docker/Circleci puts file in the current dir
+               var rdb_vessel = process.cwd() + "//shiplist.csv";
+           }
+           else {
+               // Windows command line puts file in the User's default Downloads dir
+               const execSync = require('child_process').execSync;
+               var username = execSync('echo %username%', { encoding: 'utf-8' });
+               username = username.replace(/[\n\r]+/g, '');
+               var rdb_vessel = "C:\\Users\\" + username + "\\Downloads\\shiplist.csv";
+           }
+
+           while (!fs.existsSync(rdb_vessel)) // wait for file download
+           {
+               await new Promise(r => setTimeout(r, 2000));
+               console.log("Wait 2 seconds for File Download.");
+           }
+
+           await new Promise(r => setTimeout(r, 20000));  //wait for file write to finish
+
+           // Compare Uploaded & Exported Vessel files
+           upload = fs.readFileSync(filename, 'utf8');
+           exported = fs.readFileSync(rdb_vessel, 'utf8');
+
+           // Strip .0 off all numbers in exported data to match imported data
+           // exported = exported.replace("/(\.[0-9]*[1-9]+)[0]+/", "$1",);
+           // console.log(exported);
+
+           var uploaded_data = $.csv.toArrays(upload);
+
+           // Skip header line
+           for (var i = 1, len = uploaded_data.length; i < len; i++)
+           {
+               var vessel_str = uploaded_data[i];
+	       // Strip off any trailing blanks in vessel name imported data
+   	       vessel_str[2] = vessel_str[2].toString().trim();
+
+               for (var j = 0, lth = vessel_str.length; j < lth; j++)
+               {
+                   if (!(exported.includes(vessel_str[j])))
+                   {
+                       console.log("Vessel Export Missing: " + vessel_str +" at index:  "+ j +"  "+ vessel_str[j] );
+                       break;
+                   }
+               } 
+           }
         }
-        else {
-            // Windows command line puts file in the User's default Downloads dir
-            const execSync = require('child_process').execSync;
-            var username = execSync('echo %username%', { encoding: 'utf-8' });
-            username = username.replace(/[\n\r]+/g, '');
-            var rdb_vessel = "C:\\Users\\" + username + "\\Downloads\\shiplist.csv";
-        }
-
-        while (!fs.existsSync(rdb_vessel)) // wait for file download
-        {
-            await new Promise(r => setTimeout(r, 2000));
-            console.log("Wait 2 seconds for File Download.");
-        }
-
-        await new Promise(r => setTimeout(r, 20000));  //wait for file write to finish
-
-        // Compare Uploaded & Exported Vessel files
-        upload = fs.readFileSync(filename, 'utf8');
-        exported = fs.readFileSync(rdb_vessel, 'utf8');
-
-        // Strip .0 off all numbers in exported data to match imported data
-        // exported = exported.replace("/(\.[0-9]*[1-9]+)[0]+/", "$1",);
-        // console.log(exported);
-
-        var uploaded_data = $.csv.toArrays(upload);
-
-        // Skip header line
-        // WAIT FOR #210 ISSUE FIX - ALLOW R2R AND ACTIVE BLANK
-        for (var i = 1, len = uploaded_data.length; i < len; i++)
-        {
-            var vessel_str = uploaded_data[i];
-	    // Strip off any trailing blanks in vessel name imported data
-	    vessel_str[2] = vessel_str[2].toString().trim();
-
-            for (var j = 0, lth = vessel_str.length; j < lth; j++)
-            {
-                if (!(exported.includes(vessel_str[j])))
-                {
-                    console.log("Vessel Export Missing: " + vessel_str +" at index:  "+ j +"  "+ vessel_str[j] );
-                    break;
-                }
-            } 
-        }
 
 
-         // Upload Calibration CSV with a single calibration and a 2D calibration
-	        // Test depends on Manufacturer Serial Number previously defined in Import Export Inventory
+        // Upload Calibration CSV with a single calibration and a 2D calibration
+	// Test depends on Manufacturer Serial Number previously defined in Import Export Inventory
         await driver.findElement(By.id("navbarAdmintools")).click()
         await driver.findElement(By.linkText("Upload GitHub CSVs")).click()
         if (myArgs[1] == 'headless') {
@@ -289,7 +310,7 @@ var filename, filename_ext;
             }
             else {
                 await new Promise(r => setTimeout(r, 2000));
-                console.log("Wait 2 seconds fr Import Calibrations.");
+                console.log("Wait 2 seconds for Import Calibrations.");
             }
         }
         // Don't trust Import Complete has actually imported all the Calibrations
