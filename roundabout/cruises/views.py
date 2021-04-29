@@ -25,7 +25,7 @@ from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import View, DetailView, ListView, UpdateView, CreateView, DeleteView, TemplateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django_tables2 import SingleTableMixin
+from django_tables2 import SingleTableMixin, SingleTableView
 from django_tables2.export.views import ExportMixin
 
 from .tables import *
@@ -57,11 +57,14 @@ def load_cruises_navtree(request):
 
 # Cruise Base Views
 # Landing page template view to contain AJAX templates and handle direct links
-class CruiseHomeView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+class CruiseHomeView(LoginRequiredMixin, PermissionRequiredMixin, SingleTableMixin, ExportMixin, TemplateView):
     template_name = 'cruises/cruise_home.html'
     context_object_name = 'cruises'
     permission_required = 'cruises.view_cruise'
     redirect_field_name = 'home'
+    model = Cruise
+    table_class = CruiseActionTable
+    export_name = 'cruise_history__{cruise}'
 
     def get_context_data(self, **kwargs):
         context = super(CruiseHomeView, self).get_context_data(**kwargs)
@@ -103,6 +106,16 @@ class CruiseHomeView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
 
+    def get_table_data(self):
+        cruise_pk = self.kwargs.get('pk')
+        qs = Action.objects.filter(cruise__pk__exact=cruise_pk, object_type__exact=Action.CRUISE)
+        return qs
+
+    def get_export_filename(self, export_format):
+        cruise = Cruise.objects.get(pk=self.kwargs['pk'])
+        cruise_name = str(cruise).replace('/','').replace(' ','_')
+        export_name = self.export_name.format(cruise=cruise_name)
+        return "{}.{}".format(export_name, export_format)
 
 # Cruise CBV Views for CRUD operations and menu Actions
 # ------------------------------------------------------------------------------
@@ -426,17 +439,24 @@ class VesselDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     redirect_field_name = 'home'
 
 
-class VesselActionTableView(LoginRequiredMixin, SingleTableMixin, TemplateView, ExportMixin):
+class VesselActionTableView(LoginRequiredMixin, ExportMixin, SingleTableMixin, TemplateView):
     template_name = 'cruises/vessel_actionhistory.html'
     table_class = VesselActionTable
+    export_name = "vessel_actionhistory__{vessel}"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         vessel = Vessel.objects.get(pk=self.kwargs.get('pk'))
-        context['table_title'] = 'Vessel Action History: {}'.format(vessel)
+        context['vessel'] = vessel
         return context
 
     def get_table_data(self):
         vessel_pk = self.kwargs.get('pk')
         qs = Action.objects.filter(vessel__pk__exact=vessel_pk)
         return qs
+
+    def get_export_filename(self, export_format):
+        vessel = Vessel.objects.get(pk=self.kwargs['pk'])
+        vessel_name = str(vessel).replace('/','').replace(' ','_')
+        export_name = self.export_name.format(vessel=vessel_name)
+        return "{}.{}".format(export_name, export_format)
