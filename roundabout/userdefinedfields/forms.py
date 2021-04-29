@@ -1,7 +1,7 @@
 """
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -20,8 +20,11 @@
 """
 import json
 from django import forms
+from django.db import models
+from django.core import validators
 from django.contrib.postgres.forms.jsonb import JSONField
 from django.core.exceptions import ValidationError
+from dateutil import parser
 
 from .models import Field
 
@@ -91,3 +94,37 @@ class UserDefinedFieldForm(forms.ModelForm):
                     line_value = line_value + '\n'
                     field_value = field_value + line_value
                 self.initial['choice_field_options'] = field_value
+
+    def clean(self):
+        cleaned_data = super().clean()
+        field_type = cleaned_data.get("field_type")
+        field_default_value = cleaned_data.get("field_default_value")
+        choice_field_options = cleaned_data.get("choice_field_options")
+
+        if field_type == "ChoiceField":
+            if not choice_field_options:
+                self.add_error('choice_field_options', 'Field options must have at least one line')
+
+        # Validate the default value based on field type
+        if field_default_value:
+            msg = ''
+            if field_type == "ChoiceField" and 'option' in choice_field_options:
+                choice_field_option_values = [d['value'] for d in choice_field_options['options']]
+                if field_default_value not in choice_field_option_values:
+                    msg = "Default value not in options list"
+            elif field_type == "DateField":
+                try:
+                    parser.parse(field_default_value)
+                    if len(field_default_value)<6: raise ValueError
+                except ValueError: msg = "Default value could not be parsed as a valid date"
+            elif field_type == "IntegerField":
+                try: int(field_default_value)
+                except: msg = "Default value could not coerced to an integer"
+            elif field_type == "DecimalField":
+                try: float(field_default_value)
+                except: msg = "Default value could not coerced to a float"
+            elif field_type == "BooleanField":
+                if field_default_value not in ['True','False']:
+                    msg = 'Default value must be either "True" or "False"'
+
+            if msg: self.add_error('field_default_value', msg)

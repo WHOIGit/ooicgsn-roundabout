@@ -149,7 +149,21 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         self.object = form.save()
 
         config_event_value_form.instance = self.object
-        config_event_value_form.save()
+
+        # ConfigEvent action history json data field
+        data = {}
+        updated_values = {}
+        updated_notes = {}
+        updated_ConfigValues = config_event_value_form.save(commit=False)
+        # record value/note changes for action history json data field
+        for updated_ConfigValue in updated_ConfigValues:
+            updated_values[updated_ConfigValue.config_name.name] = {'from':None, 'to':updated_ConfigValue.config_value}
+            updated_notes[updated_ConfigValue.config_name.name] = {'from':None, 'to':updated_ConfigValue.notes}
+        if updated_values: data['updated_values'] = updated_values
+        if updated_notes:  data['updated_notes'] = updated_notes
+
+        # Commiting changes to db
+        config_event_value_form.save(commit=True)
 
         # Adding ConfigEvent to hyperlink objects
         for link_form in link_formset:
@@ -158,7 +172,7 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
                 link.parent = self.object
                 link.save()
 
-        _create_action_history(self.object, Action.ADD, self.request.user)
+        _create_action_history(self.object, Action.ADD, self.request.user, data=data)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {

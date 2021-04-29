@@ -18,11 +18,12 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 """
+from itertools import chain
 
 import django_tables2 as tables2
 from django import forms
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Q
+from django.db.models import Q,F
 from django.urls import reverse
 from django.utils.html import format_html, mark_safe
 from django.views.generic import TemplateView
@@ -30,8 +31,8 @@ from django_tables2.columns import Column, DateTimeColumn, ManyToManyColumn, Boo
 from django_tables2_column_shifter.tables import ColumnShiftTable
 
 from roundabout.builds.models import BuildAction, Build, Deployment
-from roundabout.calibrations.models import CalibrationEvent, CoefficientNameEvent
-from roundabout.configs_constants.models import ConfigEvent, ConfigNameEvent, ConstDefaultEvent, ConfigDefaultEvent, ConfigValue, ConfigName
+from roundabout.calibrations.models import CalibrationEvent, CoefficientValueSet, CoefficientName
+from roundabout.configs_constants.models import ConfigEvent, ConfigValue, ConfigName
 from roundabout.inventory.models import Action, DeploymentAction, Inventory, InventoryDeployment
 from roundabout.parts.models import Part
 from roundabout.assemblies.models import AssemblyPart
@@ -66,43 +67,30 @@ class ChangeTableBase(ColumnShiftTable):
     created_at = DateTimeColumn(orderable=True)
 
     def set_column_default_show(self):
-        notnote_cols = [col for col in self.sequence if not col.endswith('_note')]
+        notnote_cols = [col for col in self.sequence if not col.endswith('_note') and not col.endswith('__approved')]
         self.column_default_show = notnote_cols
     def render_user(self,value):
         return value.name or value.username
 
+class CalibChangeActionTable(ChangeTableBase):
+    class Meta(ChangeTableBase.Meta):
+        title = 'CalibrationEvent History'
+        fields = ['created_at', 'action_type', 'inventory', 'calibration_event', 'calibration_event__approved', 'user']
+        object_type = Action.CALEVENT
+    created_at = DateTimeColumn(verbose_name='Action Timestamp')
+    inventory = Column(verbose_name='Inventory SN', accessor='calibration_event__inventory',
+                linkify=dict(viewname="inventory:inventory_detail", args=[tables2.A('calibration_event__inventory__pk')]))
+
+
 class ConfChangeActionTable(ChangeTableBase):
     class Meta(ChangeTableBase.Meta):
-        title = 'Configuration Change Actions'
-        fields = ['created_at', 'action_type', 'inventory', 'config_event', 'config_event__approved', 'user', 'config_event__deployment']  #,'data']
+        title = 'ConfigurationEvent History'
+        fields = ['created_at', 'action_type', 'inventory', 'config_event', 'config_event__approved', 'user', 'config_event__deployment']
         object_type = Action.CONFEVENT
     created_at = DateTimeColumn(verbose_name='Action Timestamp')
     inventory = Column(verbose_name='Inventory SN', accessor='config_event__inventory',
                 linkify=dict(viewname="inventory:inventory_detail", args=[tables2.A('config_event__inventory__pk')]))
 
-    # TODO action history data for when config event gets APPROVED by a user
-    # TODO action history data for when config event gets ADDED to DB
-
-    def render_action_type(self,record):
-        return '{}: {}'.format(record.object_type,record.action_type)
-    '''
-    def render_data(self,value):
-        template = '"{KEY}" to: {TO}\n{GAP} from: {FROM}\n'
-        output_str = ''
-        try:
-            if 'updated_values' in value:
-                #output_str += 'UPDATED VALUES\n'
-                for key,val in value['updated_values'].items():
-                    to_val,from_val = val['to'],val['from']
-                    if len(to_val) > 10: to_val = to_val[:10]+'…'
-                    if len(from_val)>10: to_val = from_val[:10]+'…'
-                    output_str += template.format(KEY=key,FROM=from_val,TO=to_val,GAP=' '*len(key))
-            return mark_safe('<pre>'+output_str[:-1]+'</pre>')
-        except:
-            return value
-    def value_data(self,value):
-        return value
-    '''
 
 # ========= FORM STUFF ========= #
 
@@ -124,7 +112,6 @@ class ListTextWidget(forms.TextInput):
 
 class SearchForm(forms.Form):
     q = forms.CharField(required=True, label='Reference Designator')
-    approved = forms.BooleanField(required=False, label='Approved Only')
 
     def __init__(self, *args, **kwargs):
         default_refdeslist = ConfigValue.objects.filter(config_name__name__exact='Reference Designator').values_list('config_value',flat=True)
@@ -135,16 +122,17 @@ class SearchForm(forms.Form):
 
 
 ## === VIEWS === ##
-
-class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView):
+from django_tables2.export.views import ExportMixin
+class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView, ExportMixin):
     template_name = 'search/form_search_multitable.html'
     form_class = SearchForm
     table_pagination = {"per_page": 10}
 
-    tables = [ConfChangeActionTable,
-             # TODO CalibChangeActionTable: needs action_history update.
-             #                              needs a way to figure out what CalibEvent falls within a given ref-des
+    tables = [CalibChangeActionTable,  # needs a way to figure out what CalibEvent falls within a given ref-des
+              ConfChangeActionTable,
              ]
+    config_event_matches = None
+    calib_event_matches = None
 
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
@@ -172,58 +160,6 @@ class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView
             table.set_column_default_show()
         return context
 
-    def get_tables_kwargs(self):
-        if 'q' in self.request.GET:
-            query = self.request.GET.get('q')
-        else: return len(self.tables)*[{}]
-
-        kwargss = []
-        for table in self.tables:
-            extra_cols = []
-            if table.Meta.object_type == Action.CONFEVENT:
-                cc_events = ConfigValue.objects.filter(config_value__exact=query).values_list('config_event__pk',flat=True)
-                cc_names = ConfigName.objects.filter(config_values__config_event__pk__in=cc_events).values_list('name',flat=True)
-                cc_names = sorted(set(cc_names))
-                for cc_name in cc_names:
-                    safename = cc_name.replace(' ','-')
-                    col = safename, CCC_ValueColumn(cc_name)
-                    col_note = safename +'_note', CCC_ValueColumn(cc_name, note=True)
-                    extra_cols.append(col)
-                    extra_cols.append(col_note)
-            kwargss.append( {'extra_columns':extra_cols} )
-        return kwargss
-
-    def get_tables_data(self):
-        if 'q' in self.request.GET:
-            query = self.request.GET.get('q')
-        else:  # defaults
-            return [[]]*len(self.tables)
-        approved_only = 'approved' in self.request.GET
-
-        config_event_matches = ConfigValue.objects.filter(config_value__exact=query).values_list('config_event__pk',flat=True)
-        if approved_only:
-            conf_action_Q = Q(config_event__pk__in=config_event_matches, config_event__approved=True)
-        else:
-            conf_action_Q = Q(config_event__pk__in=config_event_matches)
-        #conf_Q = Q(pk__in=config_event_matches)
-
-        #calib_event_matches = CalibrationEvent.objects.filter(inventory__).values_list('pk',flat=True)
-        #calib_action_Q = Q(config_event__pk__in=calib_event_matches)
-        #calib_Q = Q(pk__in=calib_event_matches)
-
-        qs_list = []
-        for table in self.tables:
-            if table.Meta.object_type == Action.CONFEVENT:
-                action_qs = Action.objects.filter(conf_action_Q)
-                if approved_only:
-                    pass # TODO compile Action data to show all approved changes per approval
-                qs_list.append(action_qs)
-            #elif table.Meta.object_type == Action.CALEVENT:
-            #    action_qs = Action.objects.filter(calib_action_Q)
-            #    qs_list.append(action_qs)
-
-        return qs_list
-
     def get_tables(self):
         """
         Return an array of table instances containing data.
@@ -241,5 +177,72 @@ class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView
             klass = type(self).__name__
             raise tables2.views.ImproperlyConfigured("len({}.tables_data) != len({}.tables)".format(klass, klass))
         return list(Table(data[i],**kwargss[i]) for i, Table in enumerate(self.tables))
+
+    def get_tables_data(self):
+        if 'q' in self.request.GET:
+            query = self.request.GET.get('q')
+        else:  # defaults
+            return len(self.tables)*[[]]
+
+        # Fetch all ConfigEvents with a matching RefDes field
+        self.config_event_matches = ConfigValue.objects.filter(config_value__exact=query).values_list('config_event__pk',flat=True)
+        conf_action_Q = Q(config_event__pk__in=self.config_event_matches)
+
+        # Fetch all CalibEvents with an inventory that has ever had a config_event with the matching RefDes (this needs to be further reduced)
+        self.calib_event_matches = CalibrationEvent.objects.filter(inventory__config_events__pk__in=self.config_event_matches).values_list('pk',flat=True)
+        calib_action_Q = Q(calibration_event__pk__in=self.calib_event_matches)
+
+        # further reduce calib_action_Q: currently calib_action_Q returns ALL CalEvents for a given instrument which has EVER had the matching RefDes is returned.
+        config_events = ConfigEvent.objects.filter(pk__in=self.config_event_matches).annotate(date=F('configuration_date'))
+        calib_events = CalibrationEvent.objects.filter(pk__in=self.calib_event_matches).annotate(date=F('calibration_date'))
+        combined = sorted(chain(config_events, calib_events), key=lambda q: q.date, reverse=True) # sort conf and calib events, most recent first
+        groups = {} # group calibrations leading up to any given config/ref-des together, most recent prior to config/ref-des first
+        prev_conf = None
+        for evt in combined:
+            if isinstance(evt,ConfigEvent):
+                groups[evt] = []
+                prev_conf = evt
+            elif prev_conf is not None:
+                if prev_conf.inventory == evt.inventory: # make sure the ConfigEvent and CalibEvent actually do refer to the same inventory item
+                    groups[prev_conf].append(evt)
+        self.calib_event_matches = []
+        for key,val in groups.items():
+            if val:  # keep just the most recent previous CalibEvent
+                self.calib_event_matches.append(val[0].pk)
+        calib_action_Q = Q(calibration_event__pk__in=self.calib_event_matches)
+
+        qs_list = []
+        for table in self.tables:
+            if table.Meta.object_type == Action.CONFEVENT:
+                action_qs = Action.objects.filter(conf_action_Q)
+                qs_list.append(action_qs)
+            elif table.Meta.object_type == Action.CALEVENT:
+                action_qs = Action.objects.filter(calib_action_Q)
+                qs_list.append(action_qs)
+
+        return qs_list
+
+    def get_tables_kwargs(self):
+        if not self.config_event_matches:
+            return len(self.tables)*[{}]
+
+        kwargss = []
+        for table in self.tables:
+            extra_cols = []
+            if table.Meta.object_type == Action.CONFEVENT:
+                cc_names = ConfigName.objects.filter(config_values__config_event__pk__in=self.config_event_matches).values_list('name',flat=True)
+            elif table.Meta.object_type == Action.CALEVENT:
+                cc_names = CoefficientName.objects.filter(coefficient_value_sets__calibration_event__pk__in=self.calib_event_matches).values_list('calibration_name',flat=True)
+            cc_names = sorted(set(cc_names))
+            for cc_name in cc_names:
+                safename = cc_name.replace(' ','-')
+                col = safename, CCC_ValueColumn(cc_name)
+                col_note = safename +'_note', CCC_ValueColumn(cc_name, note=True)
+                extra_cols.append(col)
+                extra_cols.append(col_note)
+
+            kwargss.append( {'extra_columns':extra_cols} )
+        return kwargss
+
 
 

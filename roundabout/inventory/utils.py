@@ -134,15 +134,21 @@ def _create_action_history(
         action_record.location = obj
         action_record.location_parent = obj.parent
 
+    elif object_type == Action.CRUISE:
+        obj_label = 'Cruise'
+        action_record.cruise = obj
+
+    elif object_type == Action.VESSEL:
+        obj_label = 'Vessel'
+        action_record.vessel = obj
+
     # Run through the discrete Actions, set up details text and extra records if needed.
     if action_type == Action.ADD:
         action_record.detail = "%s first added to RDB. %s" % (obj_label, detail)
-        # TODO add data to action record IF it's from a CCC
         action_record.save()
 
     elif action_type == Action.UPDATE:
         action_record.detail = "%s details updated." % (obj_label)
-        # TODO add data to action record IF it's from a CCC
         if object_type == Action.CALEVENT:
             pass
         elif object_type == Action.CONFEVENT:
@@ -210,9 +216,7 @@ def _create_action_history(
         if not referring_obj:
             if obj.parent:
                 _create_action_history(obj, Action.SUBCHANGE, user, "", "", action_date)
-                _create_action_history(
-                    obj.parent, Action.SUBCHANGE, user, obj, "", action_date
-                )
+                _create_action_history(obj.parent, Action.SUBCHANGE, user, obj, "", action_date)
 
         # If Build is deployed, need to add extra Action record to add to Deployment
         if obj.build.is_deployed:

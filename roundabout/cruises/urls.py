@@ -41,4 +41,5 @@ urlpatterns = [
     path('vessels/add/', view=views.VesselCreateView.as_view(), name='vessels_add'),
     path('vessels/edit/<int:pk>/', view=views.VesselUpdateView.as_view(), name='vessels_update'),
     path('vessels/delete/<int:pk>/', view=views.VesselDeleteView.as_view(), name='vessels_delete'),
+    path('vessels/actionhistory/<int:pk>/', view=views.VesselActionTableView.as_view(), name='vessel_actionhistory'),
 ]
