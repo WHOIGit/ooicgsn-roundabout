@@ -251,23 +251,23 @@ await fs.writeFileSync('/tests/cscreen.png', encodedString, 'base64');
         // 4 | click | linkText=Assemblies | 
         await driver.findElement(By.linkText("Assemblies")).click()
 
-   	while ((await driver.findElements(By.linkText("Electrics"))).length == 0)
+   	while ((await driver.findElements(By.linkText("Electric"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Electrics.");
+	   console.log("Wait 2 seconds for Electric.");
 	}
-        if ((await driver.findElements(By.xpath("//div/div/ul/li[*]/a[text()='Electrics']"))).length != 0) {
+        if ((await driver.findElements(By.xpath("//div/div/ul/li[*]/a[text()='Electric']"))).length != 0) {
             // Expand Revision B and Sewing Template
             var j = 1;
             while (true) {
-                if ((await driver.findElement(By.xpath("//div/div/ul/li[" + j + "]/a")).getText()) == "Electrics") {
+                if ((await driver.findElement(By.xpath("//div/div/ul/li[" + j + "]/a")).getText()) == "Electric") {
                     break;
                 }
                 j++;
             }
         }
         else
-            console.log("Constants & Configs failed: Electrics type not found");
+            console.log("Constants & Configs failed: Electric type not found");
 
         await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.xpath("//li[" + j + "]/i")).click();

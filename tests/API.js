@@ -99,14 +99,14 @@ var token;
                     }
                 }
                 if (j != json.length) {
-                    console.log("API failed: 4 Part Templates not returned.");
+                    console.log("API failed: 4 Locations not returned.");
                     console.log(json);
                 }
 		else
 		    console.log("Get Locations.");
             }
             else {
-                console.log("API failed: 4 Part Templates not returned.");
+                console.log("API failed: 4 Locations not returned.");
                 console.log(json);
             }
         }
@@ -119,11 +119,13 @@ var token;
             headers: header,
         });
         json = await rsp.json();
-        if ((rsp.ok) && (json.length == 1)) {
-            if ((json[0].children.length != 2) || (json[0].name != 'Test')) { 
+        if (rsp.ok) {
+            for (var i = 0; i < json.length; i++) {
+              if ((json[i].children.length != 2) && (json[i].name == 'Test')) { 
                 console.log("API failed: 2 Test Child Locations not returned.");
                 console.log(json);
-            }
+              }
+          }
         }
         else
             console.log(rsp.statusText, "  ", json);
@@ -309,7 +311,7 @@ var token;
             console.log(rsp.statusText, "  ", json);
 
         // CRUISES
-        // There are 10 pages of cruises, get the header link field and verify 10 pages returned
+        // There are 9 pages of cruises, get the header link field and verify 9 pages returned
         var link = ' ';
         rsp = await fetch(url + 'cruises', {
             method: 'GET',
@@ -323,16 +325,16 @@ var token;
                 }
             }        
 
-            if (link.includes("page=10")) {
+            if (link.includes("page=9")) {
                 // Get the last Cruise Page
-                rsp = await fetch(url + 'cruises/?page=10', {
+                rsp = await fetch(url + 'cruises/?page=9', {
                     method: 'GET',
                     headers: header,
                 });
                 json = await rsp.json();
                 if (rsp.ok) {
                     if (json.length == 0) {
-                        console.log("API failed: Cruise Page 10 data not returned.");
+                        console.log("API failed: Cruise Page 9 data not returned.");
                         console.log(json);
                     }
 		    else
@@ -343,7 +345,7 @@ var token;
                 }
             }
             else {
-                console.log("API failed: 10 Cruise Pages not returned.");
+                console.log("API failed: 9 Cruise Pages not returned.");
                 console.log(json);
             }
         }
