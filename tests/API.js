@@ -99,14 +99,14 @@ var token;
                     }
                 }
                 if (j != json.length) {
-                    console.log("API failed: 4 Part Templates not returned.");
+                    console.log("API failed: 4 Locations not returned.");
                     console.log(json);
                 }
 		else
 		    console.log("Get Locations.");
             }
             else {
-                console.log("API failed: 4 Part Templates not returned.");
+                console.log("API failed: 4 Locations not returned.");
                 console.log(json);
             }
         }
@@ -119,11 +119,13 @@ var token;
             headers: header,
         });
         json = await rsp.json();
-        if ((rsp.ok) && (json.length == 1)) {
-            if ((json[0].children.length != 2) || (json[0].name != 'Test')) { 
+        if (rsp.ok) {
+            for (var i = 0; i < json.length; i++) {
+              if ((json[i].children.length != 2) && (json[i].name == 'Test')) { 
                 console.log("API failed: 2 Test Child Locations not returned.");
                 console.log(json);
-            }
+              }
+          }
         }
         else
             console.log(rsp.statusText, "  ", json);
