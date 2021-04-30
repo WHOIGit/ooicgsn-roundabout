@@ -19,9 +19,9 @@ jobs:
 
       - name: Building Production Docker application
         run: |
-            mv .envs.example .envs
+            #mv .envs.example .envs
             #docker-compose --file local.yml build
-            docker build -f compose/production/django/Dockerfile -t ghcr.io/whoigit/$IMAGE_NAME .
+            
 
       #- name: Starting Docker application
         # The Django start script will run migrations for us
@@ -46,11 +46,12 @@ jobs:
           echo node.exe version
           node -v
           echo
-          docker-compose -f docker-compose-testing.yml build tests
-          docker-compose -f docker-compose-testing.yml run --rm tests ./RunAllTests-Chrome-Linux.bat
+          docker-compose -f docker-compose-testing.yml build
+          docker-compose -f docker-compose-testing.yml up --detach
+          docker-compose -f docker-compose-testing.yml run ./RunAllTests-Chrome-Linux.bat
 
       - name: Tag & Push Release Image
-        if: contains(github.ref, 'release')
+#        if: contains(github.ref, 'release')
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           IMAGE_ID=ghcr.io/${{ github.repository }}
@@ -63,7 +64,10 @@ jobs:
 
           # Strip "release-" prefix from version
           VERSION=$(echo $BRANCH | sed -e 's/.*-//')
-            
+
+          Build Production Django Container  
+          docker build -f compose/production/django/Dockerfile -t $IMAGE_ID .
+                        
           docker tag $IMAGE_ID $IMAGE_ID:$VERSION
 
           echo "IMAGE_ID:"
@@ -72,7 +76,7 @@ jobs:
           echo $VERSION
           docker image ls
 
-          docker push $IMAGE_ID:$VERSION
+#          docker push $IMAGE_ID:$VERSION
 
       - name: Stopping Docker application
         run:  docker-compose --file local.yml down
