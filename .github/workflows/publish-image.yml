@@ -46,8 +46,11 @@ jobs:
           echo node.exe version
           node -v
           echo
+          mv .envs.example .envs
+          # Build and run development version of Django to run automated tests
           docker-compose -f docker-compose-testing.yml build
           docker-compose -f docker-compose-testing.yml up --detach
+          # Run automated tests
           docker-compose -f docker-compose-testing.yml run ./RunAllTests-Chrome-Linux.bat
 
       - name: Tag & Push Release Image
