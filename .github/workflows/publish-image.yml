@@ -47,7 +47,7 @@ jobs:
           node -v
           echo
           mv .envs.example .envs
-          # Build and run development version of Django and Automated Tests
+          # Build and run development version of Django
           docker-compose -f docker-compose-testing.yml build
           docker-compose -f docker-compose-testing.yml up --detach
           sleep 30
@@ -69,16 +69,19 @@ jobs:
           # Strip "release-" prefix from version
           VERSION=$(echo $BRANCH | sed -e 's/.*-//')
 
-          Build Production Django Container  
-          docker build -f compose/production/django/Dockerfile -t $IMAGE_ID .
-                        
-          docker tag $IMAGE_ID $IMAGE_ID:$VERSION
-
           echo "IMAGE_ID:"
           echo $IMAGE_ID
           echo "VERSION:"
           echo $VERSION
+docker image ls
+
+          Build Production Django Container  
+#          docker build -f compose/production/django/Dockerfile -t $IMAGE_ID .
+          docker build -f compose/production/django/Dockerfile -t ghcr.io/whoigit/ooicgsn-roundabout .
+
           docker image ls
+                        
+          docker tag $IMAGE_ID $IMAGE_ID:$VERSION
 
 #          docker push $IMAGE_ID:$VERSION
 
