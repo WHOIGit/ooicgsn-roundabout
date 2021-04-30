@@ -76,7 +76,7 @@ jobs:
           docker image ls
 
           # Build Production Django Container
-#          docker build -f compose/production/django/Dockerfile -t $IMAGE_ID .
+          # docker build -f compose/production/django/Dockerfile -t $IMAGE_ID .
           docker build -f compose/production/django/Dockerfile -t ghcr.io/whoigit/ooicgsn-roundabout .
 
           docker image ls
