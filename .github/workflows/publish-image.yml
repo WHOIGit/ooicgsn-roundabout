@@ -17,26 +17,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Building Docker application
+      - name: Building Production Docker application
         run: |
             mv .envs.example .envs
-            docker-compose --file local.yml build
+            #docker-compose --file local.yml build
+            docker build -f compose/production/django/Dockerfile -t ghcr.io/whoigit/$IMAGE_NAME .
 
       - name: Starting Docker application
         # The Django start script will run migrations for us
-        run: docker-compose --file local.yml up --detach
+        #run: docker-compose --file local.yml up --detach
 
       - name: Check for missing migrations
         run: |
-          docker-compose --file local.yml run --rm django python manage.py makemigrations --check
+          #docker-compose --file local.yml run --rm django python manage.py makemigrations --check
 
       - name: Running Django system checks
         run: |
-          docker-compose --file local.yml run --rm django python manage.py check
+          #docker-compose --file local.yml run --rm django python manage.py check
 
       - name: Running Django tests
         run: |
-          docker-compose --file local.yml run --rm django python manage.py test
+          #docker-compose --file local.yml run --rm django python manage.py test
 
       - name: Running Automated tests
         run:  |
