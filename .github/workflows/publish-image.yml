@@ -73,7 +73,7 @@ jobs:
           echo $IMAGE_ID
           echo "VERSION:"
           echo $VERSION
-docker image ls
+          docker image ls
 
           # Build Production Django Container
 #          docker build -f compose/production/django/Dockerfile -t $IMAGE_ID .
