@@ -47,11 +47,11 @@ jobs:
           node -v
           echo
           mv .envs.example .envs
-          # Build and run development version of Django to run automated tests
-          docker-compose -f docker-compose-testing.yml build
+          # Build and run development version of Django and Automated Tests
+          docker-compose -f docker-compose-testing.yml build tests
           docker-compose -f docker-compose-testing.yml up --detach
           # Run automated tests
-          docker-compose -f docker-compose-testing.yml run ./RunAllTests-Chrome-Linux.bat
+          docker-compose -f docker-compose-testing.yml run --rm tests ./RunAllTests-Chrome-Linux.bat
 
       - name: Tag & Push Release Image
 #        if: contains(github.ref, 'release')
