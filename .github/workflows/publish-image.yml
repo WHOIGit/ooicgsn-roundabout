@@ -23,20 +23,20 @@ jobs:
             #docker-compose --file local.yml build
             docker build -f compose/production/django/Dockerfile -t ghcr.io/whoigit/$IMAGE_NAME .
 
-      - name: Starting Docker application
+      #- name: Starting Docker application
         # The Django start script will run migrations for us
         #run: docker-compose --file local.yml up --detach
 
-      - name: Check for missing migrations
-        run: |
+      #- name: Check for missing migrations
+      #  run: |
           #docker-compose --file local.yml run --rm django python manage.py makemigrations --check
 
-      - name: Running Django system checks
-        run: |
+      #- name: Running Django system checks
+       # run: |
           #docker-compose --file local.yml run --rm django python manage.py check
 
-      - name: Running Django tests
-        run: |
+     # - name: Running Django tests
+      #  run: |
           #docker-compose --file local.yml run --rm django python manage.py test
 
       - name: Running Automated tests
