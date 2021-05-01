@@ -33,6 +33,7 @@ class LocationSerializer(FlexFieldsModelSerializer):
         view_name=API_VERSION + ":locations-detail",
         lookup_field="pk",
     )
+    root_type = serializers.CharField(required=False, allow_blank=True)
     parent = serializers.HyperlinkedRelatedField(
         view_name=API_VERSION + ":locations-detail",
         lookup_field="pk",
@@ -43,6 +44,12 @@ class LocationSerializer(FlexFieldsModelSerializer):
     )
     children = serializers.HyperlinkedRelatedField(
         view_name=API_VERSION + ":locations-detail",
+        many=True,
+        read_only=True,
+        lookup_field="pk",
+    )
+    actions = serializers.HyperlinkedRelatedField(
+        view_name=API_VERSION + ":actions-detail",
         many=True,
         read_only=True,
         lookup_field="pk",
@@ -85,6 +92,7 @@ class LocationSerializer(FlexFieldsModelSerializer):
             "root_type",
             "created_at",
             "updated_at",
+            "actions",
             "inventory",
             "builds",
             "deployments",
