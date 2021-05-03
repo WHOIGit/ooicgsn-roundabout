@@ -94,6 +94,14 @@ class ActionSerializer(FlexFieldsModelSerializer):
         allow_null=True,
         default=None,
     )
+    location_parent = serializers.HyperlinkedRelatedField(
+        view_name=API_VERSION + ":locations-detail",
+        lookup_field="pk",
+        queryset=Location.objects,
+        required=False,
+        allow_null=True,
+        default=None,
+    )
     deployment = serializers.HyperlinkedRelatedField(
         view_name=API_VERSION + ":deployments-detail",
         lookup_field="pk",
@@ -204,6 +212,7 @@ class ActionSerializer(FlexFieldsModelSerializer):
             "created_at",
             "inventory",
             "location",
+            "location_parent",
             "deployment",
             "inventory_deployment",
             "deployment_type",
