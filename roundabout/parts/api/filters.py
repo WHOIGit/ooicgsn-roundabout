@@ -42,7 +42,7 @@ class PartFilter(filters.FilterSet):
             'part_type',
             'user_defined_fields',
             'cal_dec_places',
-            'coefficient_name_events',
+            'part_coefficientnameevents',
             'coefficient_names',
         ]
 

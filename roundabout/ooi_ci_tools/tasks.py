@@ -46,7 +46,7 @@ from roundabout.ooi_ci_tools.models import Threshold
 def async_update_cal_thresholds(self):
     event = cache.get('thrsh_evnt')
     if event:
-        cal_names = event.inventory.part.coefficient_name_events.first().coefficient_names.all()
+        cal_names = event.inventory.part.part_coefficientnameevents.first().coefficient_names.all()
     else:
         cal_names = CoefficientName.objects.all()
     for name in cal_names:
@@ -146,14 +146,14 @@ def parse_cal_files(self):
                     try:
                         cal_name_item = CoefficientName.objects.get(
                             calibration_name = calibration_name,
-                            coeff_name_event =  inventory_item.part.coefficient_name_events.first()
+                            coeff_name_event =  inventory_item.part.part_coefficientnameevents.first()
                         )
                     except CoefficientName.DoesNotExist:
                         cal_name_item = None
                     try:
                         config_name_item = ConfigName.objects.get(
                             name = calibration_name,
-                            config_name_event =  inventory_item.part.config_name_events.first()
+                            config_name_event =  inventory_item.part.part_confignameevents.first()
                         )
                     except ConfigName.DoesNotExist:
                         config_name_item = None
@@ -200,11 +200,11 @@ def parse_cal_files(self):
                             }
                             const_val_sets.append(const_val_set)
                     if not cal_name_item and not config_name_item:
-                        if not inventory_item.part.coefficient_name_events.exists():
+                        if not inventory_item.part.part_coefficientnameevents.exists():
                             coeff_name_event = CoefficientNameEvent.objects.create(part = inventory_item.part)
                             _create_action_history(coeff_name_event, Action.CALCSVIMPORT, user)
                         else:
-                            coeff_name_event = inventory_item.part.coefficient_name_events.first()
+                            coeff_name_event = inventory_item.part.part_coefficientnameevents.first()
                         cal_name_item = CoefficientName.objects.create(
                             calibration_name = calibration_name,
                             coeff_name_event =  coeff_name_event,

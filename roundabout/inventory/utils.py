@@ -486,27 +486,14 @@ def logged_user_review_items(logged_user, template_type):
         )
         full_list = list(full_inv_list)
 
-    if template_type == "part":
-        parts_from_config_name_events = [
-            part_id["part_id"]
-            for part_id in logged_user.config_name_events_reviewers.values("part_id")
-        ]
-        parts_from_cal_name_events = [
-            part_id["part_id"]
-            for part_id in logged_user.coefficient_name_events_reviewers.values(
-                "part_id"
-            )
-        ]
+    if template_type == 'part':
+        parts_from_config_name_events = [part_id['part_id'] for part_id in logged_user.reviewer_confignameevents.values('part_id')]
+        parts_from_cal_name_events = [part_id['part_id'] for part_id in logged_user.reviewer_coefficientnameevents.values('part_id')]
         full_part_list = set(parts_from_config_name_events + parts_from_cal_name_events)
         full_list = list(full_part_list)
-
-    if template_type == "assm":
-        assmparts_from_config_def_events = [
-            part_id["assembly_part__part_id"]
-            for part_id in logged_user.config_default_events_reviewer.values(
-                "assembly_part__part_id"
-            )
-        ]
+    
+    if template_type == 'assm':
+        assmparts_from_config_def_events = [part_id['assembly_part__part_id'] for part_id in logged_user.reviewer_configdefaultevents.values('assembly_part__part_id')]
         full_assm_list = set(assmparts_from_config_def_events)
         full_list = list(full_assm_list)
 

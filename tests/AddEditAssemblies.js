@@ -109,7 +109,6 @@ var password;
         // 5 | click | linkText=Assemblies |       
         await driver.findElement(By.linkText("Assemblies")).click();
         // 10 | click | linkText=Create New Assembly | 
-//        await new Promise(r => setTimeout(r, 2000));
 	while ((await driver.findElements(By.linkText("Create New Assembly"))).length == 0) // 1.6
 	{
 	   await new Promise(r => setTimeout(r, 2000));
@@ -141,7 +140,6 @@ var password;
         await driver.switchTo().defaultContent();
         // 17 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
-//	await new Promise(r => setTimeout(r, 6000));
 	while ((await driver.findElements(By.linkText("Test Assembly"))).length == 0) // 1.6
 	{
 	   await new Promise(r => setTimeout(r, 2000));
@@ -154,7 +152,6 @@ var password;
         // 19 | click | linkText=Create New Assembly |
         await driver.findElement(By.linkText("Create New Assembly")).click();
         // 20 | type | id=id_name | Test Assembly 2
-//        await new Promise(r => setTimeout(r, 2000));
 	while ((await driver.findElements(By.id("id_name"))).length == 0) // 1.6
 	{
 	   await new Promise(r => setTimeout(r, 2000));
@@ -182,7 +179,6 @@ var password;
         await driver.findElement(By.id("id_assembly_number")).sendKeys("123-002");
         // 27 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
-//	await new Promise(r => setTimeout(r, 6000));
 	while ((await driver.findElements(By.linkText("Test Assembly 2"))).length == 0) // 1.6
 	{
 	   await new Promise(r => setTimeout(r, 2000));
@@ -195,7 +191,6 @@ var password;
         // 29 | click | linkText=Create New Assembly |
 	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Create New Assembly")).click();
-//	await new Promise(r => setTimeout(r, 2000));
 	while ((await driver.findElements(By.id("id_assembly_type"))).length == 0) // 1.6
 	{
 	   await new Promise(r => setTimeout(r, 2000));
@@ -259,7 +254,6 @@ var password;
         await driver.switchTo().defaultContent();
         // 46 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
-//        await new Promise(r => setTimeout(r, 6000));
 	while ((await driver.findElements(By.linkText("Test Assembly 3"))).length == 0) // 1.6
 	{
 	   await new Promise(r => setTimeout(r, 2000));
@@ -336,7 +330,6 @@ var password;
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Assemblies")).click();
         // 5 | click | linkText=Create New Assembly | 
-//        await new Promise(r => setTimeout(r, 4000));
 	while ((await driver.findElements(By.linkText("Create New Assembly"))).length == 0) // 1.6
 	{
 	   await new Promise(r => setTimeout(r, 2000));
@@ -358,7 +351,6 @@ var password;
 
         // Create a Revision of an Assembly Template
         // 10 | click | id=action | 
-//        await new Promise(r => setTimeout(r, 6000));
 	while ((await driver.findElements(By.id("action"))).length == 0) 
 	{
 	   await new Promise(r => setTimeout(r, 2000));
@@ -381,7 +373,6 @@ var password;
 
         // Add top level part with non null part type and part template
         // 15 | click | id=action | 
-//        await new Promise(r => setTimeout(r, 6000));
 	while ((await driver.findElements(By.id("action"))).length == 0) 
 	{
 	   await new Promise(r => setTimeout(r, 2000));
@@ -391,7 +382,6 @@ var password;
         // 16 | click | linkText=Add Top Level Part | 
         await driver.findElement(By.linkText("Add Top Level Part")).click();
         // 18 | click | css=.controls > .btn-primary | 
-//        await new Promise(r => setTimeout(r, 4000));
 	while ((await driver.findElements(By.css(".controls > .btn-primary"))).length == 0) // 1.6
 	{
 	   await new Promise(r => setTimeout(r, 2000));
@@ -423,7 +413,6 @@ var password;
         
         // 26 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-//        await new Promise(r => setTimeout(r, 6000));
 	while ((await driver.findElements(By.id("action"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
@@ -476,29 +465,27 @@ var password;
         }
 	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-//        await new Promise(r => setTimeout(r, 8000));  //1.6
 	while ((await driver.findElements(By.linkText("Sewing Template"))).length == 0) // displayed after above command completes
 	{
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Add Wheel Subassembly.");
 	} 
 
-        if ((await driver.findElements(By.xpath("//div/div/ul/li[*]/a[text()='Electrics']"))).length != 0) {
+        if ((await driver.findElements(By.xpath("//div/div/ul/li[*]/a[text()='Electric']"))).length != 0) {
             // Expand Revision B and Sewing Template
             var j = 1;
             while (true) {
-                if ((await driver.findElement(By.xpath("//div/div/ul/li[" + j + "]/a")).getText()) == "Electrics") {
+                if ((await driver.findElement(By.xpath("//div/div/ul/li[" + j + "]/a")).getText()) == "Electric") {
                     break;
                 }
                 j++;
             }
         }
         else
-            console.log("Edit Assemblies failed: Electrics type not found");
+            console.log("Edit Assemblies failed: Electric type not found");
 
         await new Promise(r => setTimeout(r, 8000));
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/ul/li/i")).click();
-//        await new Promise(r => setTimeout(r, 8000));
 	while ((await driver.findElements(By.linkText("sewing"))).length == 0) // 1.6
 	{
 	   await new Promise(r => setTimeout(r, 2000));
@@ -521,7 +508,6 @@ var password;
         await driver.findElement(By.linkText("Add New Sub-Assembly")).click();
         await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-//        await new Promise(r => setTimeout(r, 6000));
 	while ((await driver.findElements(By.id("id_part_type"))).length == 0) // 1.6
 	{
 	   await new Promise(r => setTimeout(r, 2000));
@@ -544,7 +530,6 @@ var password;
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
         // Verify Top Level Part and Sub Assembly created in tree
-//        await new Promise(r => setTimeout(r, 6000));
 	while ((await driver.findElements(By.linkText("pin"))).length == 0) // 1.6
 	{
 	   await new Promise(r => setTimeout(r, 2000));

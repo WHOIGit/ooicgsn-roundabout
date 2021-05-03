@@ -72,7 +72,7 @@ def parse_cal_file(self, form, cal_csv, ext_files):
                 calibration_name = value.strip()
                 cal_name_item = CoefficientName.objects.get(
                     calibration_name=calibration_name,
-                    coeff_name_event=inventory_item.part.coefficient_name_events.first()
+                    coeff_name_event=inventory_item.part.part_confignameevents.first()
                 )
             elif key == 'value':
                 valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
@@ -417,18 +417,18 @@ class ImportInventoryUploadSuccessView(TemplateView):
 # Makes a copy of the Assembly Revision tree starting at "root_part",
 # move to new Revision, reparenting it to "parent"
 def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent=None, importing_user=None):
-    params = {'expand': 'part,config_default_events.config_defaults,config_default_events.config_defaults.config_name,config_default_events.user_draft,config_default_events.user_approver,config_default_events.actions.user'}
+    params = {'expand': 'part,assemblypart_configdefaultevents.config_defaults,assemblypart_configdefaultevents.config_defaults.config_name,assemblypart_configdefaultevents.user_draft,assemblypart_configdefaultevents.user_approver,assemblypart_configdefaultevents.actions.user'}
     assembly_part_request = requests.get(root_part_url, params=params, headers=headers, verify=False)
     assembly_part_data = assembly_part_request.json()
     # Need to validate that the Part template exists before creating AssemblyPart
     try:
         part_obj = Part.objects.get(part_number=assembly_part_data['part']['part_number'])
 
-        if assembly_part_data['part']['config_name_events']:
+        if assembly_part_data['part']['part_confignameevents']:
             # Check if local Part has all current Config Names: ConfigNameEvent -> ConfigName(s)
             # First get existing Parts list of ConfigNames
             existing_config_names = []
-            config_events_qs = part_obj.config_name_events.all()
+            config_events_qs = part_obj.part_confignameevents.all()
 
             if config_events_qs:
                 for config_event in config_events_qs:
@@ -436,14 +436,14 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
                     existing_config_names = existing_config_names + config_names
 
             # Then check against the importing RDB instance's list of config names
-            params = {'expand': 'config_name_events.config_names,config_name_events.user_draft,config_name_events.user_approver,config_name_events.actions.user'}
+            params = {'expand': 'part_confignameevents.config_names,part_confignameevents.user_draft,part_confignameevents.user_approver,part_confignameevents.actions.user'}
             part_configs_request = requests.get(
                 assembly_part_data['part']['url'], params=params, headers=headers, verify=False)
             part_configs_data = part_configs_request.json()
 
-            if part_configs_data['config_name_events']:
+            if part_configs_data['part_confignameevents']:
                 importing_config_names = []
-                for config_event in part_configs_data['config_name_events']:
+                for config_event in part_configs_data['part_confignameevents']:
                     missing_config_names = [config_name for config_name in config_event['config_names']
                                             if config_name['name'] not in existing_config_names]
                     print(missing_config_names)
@@ -504,7 +504,7 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
                             )
 
     except Part.DoesNotExist:
-        params = {'expand': 'part_type,revisions.documentation,config_name_events.config_names,config_name_events.user_draft,config_name_events.user_approver,config_name_events.actions.user'}
+        params = {'expand': 'part_type,revisions.documentation,part_confignameevents.config_names,part_confignameevents.user_draft,part_confignameevents.user_approver,part_confignameevents.actions.user'}
         part_request = requests.get(assembly_part_data['part']['url'], params=params, headers=headers, verify=False)
         part_data = part_request.json()
 
@@ -543,8 +543,8 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
                 )
 
         # Import all existing ConfigEvents/ConfigName
-        if part_data['config_name_events']:
-            for config_event in part_data['config_name_events']:
+        if part_data['part_confignameevents']:
+            for config_event in part_data['part_confignameevents']:
                 config_event_obj = ConfigNameEvent.objects.create(
                     created_at=config_event['created_at'],
                     updated_at=config_event['updated_at'],
@@ -609,8 +609,8 @@ def _api_import_assembly_parts_tree(headers, root_part_url, new_revision, parent
     )
     print(assembly_part_obj)
     # Add all Config data for the Assembly Part
-    if assembly_part_data['config_default_events']:
-        for config_event in assembly_part_data['config_default_events']:
+    if assembly_part_data['assemblypart_configdefaultevents']:
+        for config_event in assembly_part_data['assemblypart_configdefaultevents']:
             config_event_obj = ConfigDefaultEvent.objects.create(
                 created_at=config_event['created_at'],
                 updated_at=config_event['updated_at'],

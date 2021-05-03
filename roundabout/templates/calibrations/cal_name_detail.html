@@ -24,12 +24,12 @@
 <div id = 'calibrations-section'>
     <div class="ajax-detail-link float-right">
         {% if not user|has_group:"inventory only" %}
-            {% if part_template.coefficient_name_events.exists %}
+            {% if part_template.part_coefficientnameevents.exists %}
                 <div class = 'ajax-detail-link float-right'>
                     <a  href="#"
                         class="btn btn-primary btn-sm mr-2"
                         role="button"
-                        data-detail-url="{% url 'calibrations:event_coeffname_update' part_template.coefficient_name_events.first.id %}"
+                        data-detail-url="{% url 'calibrations:event_coeffname_update' part_template.part_coefficientnameevents.first.id %}"
                         data-node-id="{{ part_template.id }}"
                         data-node-type="parts">
                             Edit Calibrations
@@ -50,7 +50,7 @@
     <hr>
     <div id="coefficient_name-template" aria-labelledby="coefficient_name-template-tab">
         <ul class="list-group">
-            {% for event in part_template.coefficient_name_events.all %}
+            {% for event in part_template.part_coefficientnameevents.all %}
                 <li class="list-group-item">
                     <a  class="collapsed" 
                         data-toggle="collapse" 

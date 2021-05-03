@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -19,22 +19,23 @@
 # If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<div class="btn-group" id="filter-part-type" data-navtree-filter-url="{% url 'inventory:ajax_filter_inventory_navtree' %}">
+<div class="btn-group" id="filter-part-type" data-navtree-filter-url="{% url 'inventory:ajax_load_inventory_navtree' %}">
   <button class="btn btn-info btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
     Filter by Part Type
   </button>
   <div class="dropdown-menu">
 
-      {% for p_type in part_types %}
-      <div class="form-check dropdown-item">
-        <input class="form-check-input filter-checkbox" type="checkbox" value="{{ p_type.id }}" id="filter-{{ p_type.id }}">
-        <label class="form-check-label" for="filter-{{ p_type.id }}">
-          {{ p_type.name }}
-        </label>
-      </div>
-      {% endfor %}
-      <div class="form-check dropdown-item">
-          <small><a href="#" class="" id="filter-part-type-clear">CLEAR ALL</a></small>
-      </div>
+    {% for p_type in part_types %}
+    <div class="form-check dropdown-item">
+      <input class="form-check-input filter-checkbox" type="checkbox" value="{{ p_type.id }}" id="filter-
+      {{ p_type.id }}">
+      <label class="form-check-label" for="filter-{{ p_type.id }}">
+        {{ p_type.name }}
+      </label>
+    </div>
+    {% endfor %}
+    <div class="form-check dropdown-item">
+      <small><a href="#" class="" id="filter-part-type-clear">CLEAR ALL</a></small>
+    </div>
   </div>
 </div>

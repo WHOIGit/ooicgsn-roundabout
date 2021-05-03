@@ -104,9 +104,9 @@ var password;
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 18 | click | linkText=123-002 | 
 
-	if ((await driver.findElements(By.linkText("123-001"))).length != 0)
+	if ((await driver.findElements(By.linkText("Test Assembly"))).length != 0)
 	{
-            await driver.findElement(By.linkText("123-001")).click();
+            await driver.findElement(By.linkText("Test Assembly")).click();
  
  	    while ((await driver.findElements(By.linkText("Delete"))).length == 0)
 	    {
@@ -138,9 +138,9 @@ var password;
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 18 | click | linkText=123-002 | 
 
-	if ((await driver.findElements(By.linkText("123-002"))).length != 0)
+	if ((await driver.findElements(By.linkText("Test Assembly 2"))).length != 0)
 	{
-            await driver.findElement(By.linkText("123-002")).click();
+            await driver.findElement(By.linkText("Test Assembly 2")).click();
             // 22 | click | linkText=Delete | 
 	    while ((await driver.findElements(By.linkText("Delete"))).length == 0)
 	    {
@@ -172,9 +172,9 @@ var password;
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 27 | click | linkText=123-003 | 
 
-	if ((await driver.findElements(By.linkText("123-003"))).length != 0)
+	if ((await driver.findElements(By.linkText("Test Assembly 3"))).length != 0)
 	{
-            await driver.findElement(By.linkText("123-003")).click();
+            await driver.findElement(By.linkText("Test Assembly 3")).click();
             // 28 | click | linkText=Delete | 
 	    while ((await driver.findElements(By.linkText("Delete"))).length == 0)
 	    {
@@ -205,9 +205,9 @@ var password;
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         // 33 | click | linkText=000-654-987 | 
 
-	if ((await driver.findElements(By.linkText("000-654-987"))).length != 0)
+	if ((await driver.findElements(By.linkText("Singer"))).length != 0)
 	{
-            await driver.findElement(By.linkText("000-654-987")).click();
+            await driver.findElement(By.linkText("Singer")).click();
             // 34 | click | linkText=Delete | 
 	    while ((await driver.findElements(By.linkText("Delete"))).length == 0)
 	    {

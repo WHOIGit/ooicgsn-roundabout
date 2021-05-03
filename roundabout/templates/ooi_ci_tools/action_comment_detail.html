@@ -111,7 +111,7 @@
                                                 <a  href="#"
                                                     class="btn btn-outline-primary btn-sm mr-2"
                                                     role="button"
-                                                    data-detail-url="{% url 'ooi_ci_tools:comment_comment_add' comment.id %}"
+                                                    data-detail-url="{% url 'ooi_ci_tools:sub_comment' comment.id 'add' %}"
                                                     data-node-id="{{ inventory_item.id }}"
                                                     data-node-type="inventory">
                                                         Comment
@@ -122,7 +122,7 @@
                                                     <a  href="#"
                                                         class="btn btn-outline-info btn-sm mr-2"
                                                         role="button"
-                                                        data-detail-url="{% url 'ooi_ci_tools:comment_comment_edit' comment.id %}"
+                                                        data-detail-url="{% url 'ooi_ci_tools:sub_comment' comment.id 'edit' %}"
                                                         data-node-id="{{ inventory_item.id }}"
                                                         data-node-type="inventory">
                                                             Edit
