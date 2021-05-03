@@ -20,7 +20,6 @@
 """
 from itertools import chain
 
-import django_tables2 as tables2
 from django import forms
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q,F
@@ -29,15 +28,15 @@ from django.utils.html import format_html, mark_safe
 from django.views.generic import TemplateView
 from django_tables2.columns import Column, DateTimeColumn, ManyToManyColumn, BooleanColumn
 from django_tables2_column_shifter.tables import ColumnShiftTable
+from django_tables2.views import ImproperlyConfigured
+from django_tables2 import MultiTableMixin, A
 
 from roundabout.builds.models import BuildAction, Build, Deployment
 from roundabout.calibrations.models import CalibrationEvent, CoefficientValueSet, CoefficientName
 from roundabout.configs_constants.models import ConfigEvent, ConfigValue, ConfigName
 from roundabout.inventory.models import Action, DeploymentAction, Inventory, InventoryDeployment
-from roundabout.parts.models import Part
-from roundabout.assemblies.models import AssemblyPart
-from roundabout.users.models import User
-from roundabout.search.tables import trunc_render, ActionTable
+from roundabout.search.tables import trunc_render
+from roundabout.search.mixins import MultiExportMixin
 
 ## === TABLES === ##
 
@@ -79,7 +78,7 @@ class CalibChangeActionTable(ChangeTableBase):
         object_type = Action.CALEVENT
     created_at = DateTimeColumn(verbose_name='Action Timestamp')
     inventory = Column(verbose_name='Inventory SN', accessor='calibration_event__inventory',
-                linkify=dict(viewname="inventory:inventory_detail", args=[tables2.A('calibration_event__inventory__pk')]))
+                linkify=dict(viewname="inventory:inventory_detail", args=[A('calibration_event__inventory__pk')]))
 
 
 class ConfChangeActionTable(ChangeTableBase):
@@ -89,7 +88,7 @@ class ConfChangeActionTable(ChangeTableBase):
         object_type = Action.CONFEVENT
     created_at = DateTimeColumn(verbose_name='Action Timestamp')
     inventory = Column(verbose_name='Inventory SN', accessor='config_event__inventory',
-                linkify=dict(viewname="inventory:inventory_detail", args=[tables2.A('config_event__inventory__pk')]))
+                linkify=dict(viewname="inventory:inventory_detail", args=[A('config_event__inventory__pk')]))
 
 
 # ========= FORM STUFF ========= #
@@ -122,8 +121,8 @@ class SearchForm(forms.Form):
 
 
 ## === VIEWS === ##
-from django_tables2.export.views import ExportMixin
-class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView, ExportMixin):
+
+class ChangeSearchView(LoginRequiredMixin, MultiTableMixin, MultiExportMixin, TemplateView):
     template_name = 'search/form_search_multitable.html'
     form_class = SearchForm
     table_pagination = {"per_page": 10}
@@ -133,6 +132,7 @@ class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView
              ]
     config_event_matches = None
     calib_event_matches = None
+    export_name = '{table}__{refdes}'
 
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
@@ -166,7 +166,7 @@ class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView
         """
         if self.tables is None:
             klass = type(self).__name__
-            raise tables2.views.ImproperlyConfigured("No tables were specified. Define {}.tables".format(klass))
+            raise ImproperlyConfigured("No tables were specified. Define {}.tables".format(klass))
         data = self.get_tables_data()
         kwargss = self.get_tables_kwargs()
 
@@ -175,7 +175,7 @@ class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView
 
         if len(data) != len(self.tables) != len(kwargss):
             klass = type(self).__name__
-            raise tables2.views.ImproperlyConfigured("len({}.tables_data) != len({}.tables)".format(klass, klass))
+            raise ImproperlyConfigured("len({}.tables_data) != len({}.tables)".format(klass, klass))
         return list(Table(data[i],**kwargss[i]) for i, Table in enumerate(self.tables))
 
     def get_tables_data(self):
@@ -244,5 +244,13 @@ class ChangeSearchView(LoginRequiredMixin, tables2.MultiTableMixin, TemplateView
             kwargss.append( {'extra_columns':extra_cols} )
         return kwargss
 
+    def get_export_filename(self, export_format):
+        idx = self.request.GET.get(self.export_trigger_param_table)
+        refdes = self.request.GET.get('q')
+        table = self.get_tables()[int(idx)]
+        title = table.Meta.title
+        title = title.lower().replace(' ','_')
 
+        export_name = self.export_name.format(table=title,refdes=refdes)
+        return "{}.{}".format(export_name, export_format)
 
