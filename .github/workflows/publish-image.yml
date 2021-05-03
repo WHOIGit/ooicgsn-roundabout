@@ -17,28 +17,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Building Production Docker application
-        run: |
-            #mv .envs.example .envs
-            #docker-compose --file local.yml build
-            
-
-      #- name: Starting Docker application
-        # The Django start script will run migrations for us
-        #run: docker-compose --file local.yml up --detach
-
-      #- name: Check for missing migrations
-      #  run: |
-          #docker-compose --file local.yml run --rm django python manage.py makemigrations --check
-
-      #- name: Running Django system checks
-       # run: |
-          #docker-compose --file local.yml run --rm django python manage.py check
-
-     # - name: Running Django tests
-      #  run: |
-          #docker-compose --file local.yml run --rm django python manage.py test
-
       - name: Running Automated tests
         run:  |
           google-chrome --version
@@ -46,16 +24,18 @@ jobs:
           echo node.exe version
           node -v
           echo
-          mv .envs.example .envs
+
           # Build and run development version of Django
+          mv .envs.example .envs
           docker-compose -f docker-compose-testing.yml build
           docker-compose -f docker-compose-testing.yml up --detach
           sleep 30
+
           # Run automated tests
           docker-compose -f docker-compose-testing.yml run tests ./RunAllTests-Chrome-Linux.bat
 
-      - name: Tag & Push Release Image
-#        if: contains(github.ref, 'release')
+      - name: Build, Tag & Push Production Image
+        if: contains(github.ref, 'release')
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           IMAGE_ID=ghcr.io/${{ github.repository }}
@@ -73,7 +53,6 @@ jobs:
           echo $IMAGE_ID
           echo "VERSION:"
           echo $VERSION
-          docker image ls
 
           # Build Production Django Container
           # docker build -f compose/production/django/Dockerfile -t $IMAGE_ID .
@@ -83,8 +62,8 @@ jobs:
                         
           docker tag $IMAGE_ID $IMAGE_ID:$VERSION
 
-#          docker push $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
 
       - name: Stopping Docker application
-        run:  docker-compose --file local.yml down
+        run:  docker-compose --file docker-compose-testing.yml down
 
