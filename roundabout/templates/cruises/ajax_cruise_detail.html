@@ -21,6 +21,7 @@
 
 {% load common_tags %}
 {% load render_table from django_tables2 %}
+{% load export_url from django_tables2 %}
 
 <div class="card-header" data-object-id="{{ cruise.id }}">
     <h3>Cruise ID: {{ cruise.CUID }}</h3>
@@ -110,9 +111,10 @@
     <div class="tab-content" id="inventory-tabs">
 
         {% if cruise.get_actions.exists %}
-          <div class="tab-pane fade show active" id="history" role="tabpanel" aria-labelledby="history-tab">
+          <div class="tab-pane fade show active p-2" id="history" role="tabpanel" aria-labelledby="history-tab">
           {% if history_table %}
             {% render_table history_table %}
+            <a class="btn btn-primary btn-sm m-1 float-right" href="{% export_url "csv" %}">Download</a>
           {% endif %}
           </div>
         {% endif %}
