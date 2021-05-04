@@ -35,7 +35,7 @@ from roundabout.inventory.models import Inventory, Action, Deployment, Inventory
 from roundabout.parts.models import Part
 
 
-def trunc_render(length=100, safe=False, showable=True, targets=None, bold_target=True):
+def trunc_render(length=100, safe=False, showable=True, hideable=True, targets=None, bold_target=True):
     def boldify(text,target):
         if target and target.lower() in text.lower():
             target_idx = text.lower().index(target.lower())
@@ -79,15 +79,18 @@ def trunc_render(length=100, safe=False, showable=True, targets=None, bold_targe
                 shown_txt = Truncator(value).chars(length,'',html=True)
 
             if showable: # insert some javascript to show truncated text
+                unshow_txt = ' …▴' if hideable else ''
                 hidden_id = 'trunc{:05}'.format(randint(0,100000))
                 hidden_txt = value # all of it
                 if bold_target:
                     hidden_txt = boldify(hidden_txt,target)
-                hidden_html = '<div id="{}-full" style="display:none;">{}</div>'.format(hidden_id,hidden_txt)
-                onclick = 'document.getElementById("{id}-full").style.display="inline";document.getElementById("{id}").style.display="none"; return false;'.format(id=hidden_id)
-                a_start = '''<a href="#" onclick='{oc}'>{text}</a>'''.format(oc=onclick,text=start) if start else ''
-                a_end = '''<a href="#" onclick='{oc}'>{text}</a>'''.format(oc=onclick,text=end) if end else ''
-                shown_html = '''<div id="{id}">{a_start}{text}{a_end}</div>'''.format(id=hidden_id, text=shown_txt, oc=onclick, a_start=a_start, a_end=a_end)
+                onclick_show = 'document.getElementById("{id}-full").style.display="inline";document.getElementById("{id}").style.display="none"; return false;'.format(id=hidden_id)
+                onclick_hide = 'document.getElementById("{id}-full").style.display="none";document.getElementById("{id}").style.display="inline"; return false;'.format(id=hidden_id)
+                a_start = '''<a href="#" onclick='{oc}'>{text}</a>'''.format(oc=onclick_show,text=start) if start else ''
+                a_end = '''<a href="#" onclick='{oc}'>{text}</a>'''.format(oc=onclick_show,text=end) if end else ''
+                a_unshow = '''<a href="#" onclick='{oc}'>{text}</a>'''.format(oc=onclick_hide,text=unshow_txt) if unshow_txt else ''
+                shown_html = '''<div id="{id}">{a_start}{text}{a_end}</div>'''.format(id=hidden_id, text=shown_txt, oc=onclick_show, a_start=a_start, a_end=a_end)
+                hidden_html = '<div id="{id}-full" style="display:none;">{text}{a_unshow}</div>'.format(id=hidden_id,text=hidden_txt,a_unshow=a_unshow)
                 shown_html = mark_safe(shown_html)
                 hidden_html = mark_safe(hidden_html)
                 output_str = shown_html+hidden_html
