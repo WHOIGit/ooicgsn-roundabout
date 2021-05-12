@@ -38,7 +38,7 @@ from roundabout.assemblies.models import Assembly
 from roundabout.builds.models import Build
 from roundabout.calibrations.models import CalibrationEvent, CoefficientValueSet
 from roundabout.configs_constants.models import ConfigEvent, ConfigValue
-from roundabout.inventory.models import Inventory, Action
+from roundabout.inventory.models import Inventory, Action, Deployment
 from roundabout.parts.models import Part
 from roundabout.search.mixins import ExportStreamMixin
 from roundabout.userdefinedfields.models import Field
@@ -445,6 +445,9 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="build__assembly__name",         text="Build", legal_lookup='STR_LOOKUP'),
                         dict(value="created_at",             text="Date Created", legal_lookup='DATE_LOOKUP'),
                         dict(value="updated_at",            text="Date Modified", legal_lookup='DATE_LOOKUP'),
+                        dict(value="build__is_deployed", text="is-build-deployed?", legal_lookup='BOOL_LOOKUP'),
+                        dict(value="inventory_deployments__latest__deployment__current_status", text="Deployment Status", legal_lookup='STR_LOOKUP',
+                             col_args=dict(render=lambda value: dict(Deployment.DEPLOYMENT_STATUS).get(value, value))),
 
                         dict(value=None, text="--Part--", disabled=True),
                         dict(value="part__part_number",        text="Part Number", legal_lookup='STR_LOOKUP',
@@ -614,6 +617,8 @@ class BuildTableView(GenericSearchTableView):
                              col_args=dict(render=dict(hofunc=trunc_render,kwargs={'safe':True}), value='value')),
                        #dict(value="time_at_sea",            text="Time at Sea", legal_lookup='NUM_LOOKUP'),
                         dict(value="is_deployed",           text="is-deployed?", legal_lookup='BOOL_LOOKUP'),
+                        dict(value="deployments__latest__current_status", text="Deployment Status", legal_lookup='STR_LOOKUP',
+                             col_args=dict(render=lambda value: dict(Deployment.DEPLOYMENT_STATUS).get(value,value))),
                         dict(value="flag",                   text="is-flagged?", legal_lookup='BOOL_LOOKUP'),
                         dict(value="created_at",            text="Date Created", legal_lookup='DATE_LOOKUP'),
                         dict(value="updated_at",           text="Date Modified", legal_lookup='DATE_LOOKUP'),
