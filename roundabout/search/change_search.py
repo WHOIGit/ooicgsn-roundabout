@@ -233,6 +233,7 @@ class ChangeSearchView(LoginRequiredMixin, MultiTableMixin, MultiExportMixin, Te
                 cc_names = ConfigName.objects.filter(config_values__config_event__pk__in=self.config_event_matches).values_list('name',flat=True)
             elif table.Meta.object_type == Action.CALEVENT:
                 cc_names = CoefficientName.objects.filter(coefficient_value_sets__calibration_event__pk__in=self.calib_event_matches).values_list('calibration_name',flat=True)
+            else: cc_names = []
             cc_names = sorted(set(cc_names))
             for cc_name in cc_names:
                 safename = cc_name.replace(' ','-')
