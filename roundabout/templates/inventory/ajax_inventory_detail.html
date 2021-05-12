@@ -424,7 +424,7 @@
           <a class="nav-link" id="part-template-tab" data-toggle="tab" href="#part-template" role="tab" aria-controls="part-template" aria-selected="false">Part Specs</a>
         </li>
 
-        {% if inventory_item.calibration_events.exists and inventory_item.part.part_type.ccc_toggle %}
+        {% if inventory_item.inventory_calibrationevents.exists and inventory_item.part.part_type.ccc_toggle %}
             <li class="nav-item">
                 <a class="nav-link" id="calibration-template-tab" data-toggle="tab" href="#calibration-template" role="tab" aria-controls="calibration-template" aria-selected="false">Calibration Coefficient History</a>
             </li>

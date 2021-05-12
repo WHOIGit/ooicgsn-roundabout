@@ -89,6 +89,9 @@ class ConfigNameEvent(CCCEvent):
     def get_object_type(self):
         return 'config_name_event'
 
+    def get_actions(self):
+        return self.actions.filter(object_type='confignameevent')
+
 # Tracks Configurations across Parts
 class ConfigName(models.Model):
     class Meta:
@@ -184,6 +187,9 @@ class ConfigDefaultEvent(CCCEvent):
         return self.created_at.strftime("%m/%d/%Y")
     def get_object_type(self):
         return 'config_default_event'
+
+    def get_actions(self):
+        return self.actions.filter(object_type='configdefaultevent')
 
 
 # Tracks Config Defaults across ConstDefaultEvents

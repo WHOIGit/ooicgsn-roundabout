@@ -265,8 +265,8 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
             # need to get the CalibrationEvent that matches the Deployment date
             # calibration_date field sets the range for valid Calibration Events
             calibration_values = []
-            if inv.inventory.calibration_events.exists():
-                for event in inv.inventory.calibration_events.all():
+            if inv.inventory.inventory_calibrationevents.exists():
+                for event in inv.inventory.inventory_calibrationevents.all():
                     # find the CalibrationEvent valid date range that matches Deployment date
                     first_date, last_date = event.get_valid_calibration_range()
                     if inv.deployment_to_field_date and first_date < inv.deployment_to_field_date < last_date:

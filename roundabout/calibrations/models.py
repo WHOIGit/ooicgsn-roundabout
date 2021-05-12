@@ -29,7 +29,7 @@ from roundabout.users.models import User
 from roundabout.ooi_ci_tools.models import CCCEvent
 
 # Tracks Calibration Coefficient event history across Inventory Parts
-class CalibrationEvent(models.Model):
+class CalibrationEvent(CCCEvent):
     class Meta:
         ordering = ['-calibration_date']
         get_latest_by = 'calibration_date'
@@ -37,28 +37,10 @@ class CalibrationEvent(models.Model):
         return self.calibration_date.strftime("%m/%d/%Y")
     def get_object_type(self):
         return 'calibration_event'
-    APPROVAL_STATUS = (
-        (True, "Approved"),
-        (False, "Draft"),
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
     calibration_date = models.DateTimeField(default=timezone.now)
-    user_draft = models.ManyToManyField(User, related_name='calibration_events_drafter', blank=True)
-    user_approver = models.ManyToManyField(User, related_name='calibration_events_approver')
-    inventory = models.ForeignKey(Inventory, related_name='calibration_events', on_delete=models.CASCADE, null=False)
-    deployment = models.ForeignKey(Deployment, related_name='calibration_events', on_delete=models.CASCADE, null=True)
-    approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
-    detail = models.TextField(blank=True)
 
     def get_actions(self):
         return self.actions.filter(object_type=Action.CALEVENT)
-
-    def get_sorted_reviewers(self):
-        return self.user_draft.all().order_by('username')
-
-    def get_sorted_approvers(self):
-        return self.user_approver.all().order_by('username')
 
     # method to return a date range that corresponds to the period of time when this CalibrationEvent is valid
     # this range corresponds to this calibration_date -> next latest calibration_date.
@@ -94,6 +76,9 @@ class CoefficientNameEvent(CCCEvent):
         return self.created_at.strftime("%m/%d/%Y")
     def get_object_type(self):
         return 'coefficient_name_event'
+
+    def get_actions(self):
+        return self.actions.filter(object_type='coefficientnameevent')
 
 
 # Tracks Calibrations across Parts

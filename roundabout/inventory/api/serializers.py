@@ -311,7 +311,7 @@ class InventorySerializer(FlexFieldsModelSerializer):
         read_only=True,
         lookup_field="pk",
     )
-    calibration_events = serializers.HyperlinkedRelatedField(
+    inventory_calibrationevents = serializers.HyperlinkedRelatedField(
         view_name=API_VERSION + ":calibrations/calibration-events-detail",
         many=True,
         read_only=True,
@@ -352,7 +352,7 @@ class InventorySerializer(FlexFieldsModelSerializer):
             "test_type",
             "flag",
             "time_in_field",
-            "calibration_events",
+            "inventory_calibrationevents",
             "config_events",
             "constant_default_events",
             "actions",
@@ -372,7 +372,7 @@ class InventorySerializer(FlexFieldsModelSerializer):
                 "roundabout.inventory.api.serializers.InventorySerializer",
                 {"many": True},
             ),
-            "calibration_events": (
+            "inventory_calibrationevents": (
                 "roundabout.calibrations.api.serializers.CalibrationEventSerializer",
                 {"many": True},
             ),
