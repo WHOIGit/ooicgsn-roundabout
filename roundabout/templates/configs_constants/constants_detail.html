@@ -117,6 +117,7 @@
                                       Event History
                               </a>
                           </li>
+                          {% if event.hyperlinks.exists %}
                           <li class="nav-item">
                               <a  class="nav-link"
                                   id="links-{{ event.id }}-tab"
@@ -128,6 +129,7 @@
                                       Links
                               </a>
                           </li>
+                          {% endif %}
                         </ul>
 
                         <div class="tab-content" id="inventory-tabs">
@@ -205,6 +207,7 @@
                         </div>
 
                         {# LINKS TAB #}
+                        {% if event.hyperlinks.exists %}
                         <div class="tab-pane fade m-2 p-2" id="links-{{ event.id }}" role="tabpanel" aria-labelledby="links-{{ event.id }}-tab">
                           <ul>
                             {% for link in event.hyperlinks.all %}
@@ -212,6 +215,7 @@
                             {% endfor %}
                           </ul>
                         </div>
+                        {% endif %}
 
                     </div> {# end of collapsing section #}
                 </li>
@@ -233,7 +237,7 @@
         let inv_id = '{{ inventory_item.id }}';
 
         handleReviewBadges('#const-template', 'button[id^=expander]', '{{ user.id }}', '{{ user.username }}', inv_id)
-        
+
     });
 </script>
 {% endblock javascript %}
