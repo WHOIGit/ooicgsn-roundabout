@@ -62,9 +62,9 @@ def logged_user_is_reviewer(inv,logged_user):
             found_events = inv.inventory_calibrationevents.filter(user_draft__in=[logged_user])
             if found_events:
                 return True
-    if inv.config_events.exists():
-        if logged_user.config_events_reviewer.exists():
-            found_events = inv.config_events.filter(user_draft__in=[logged_user])
+    if inv.inventory_configevents.exists():
+        if logged_user.reviewer_configevents.exists():
+            found_events = inv.inventory_configevents.filter(user_draft__in=[logged_user])
             if found_events:
                 return True
     return False

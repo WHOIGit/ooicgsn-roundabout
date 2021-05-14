@@ -317,13 +317,13 @@ class InventorySerializer(FlexFieldsModelSerializer):
         read_only=True,
         lookup_field="pk",
     )
-    config_events = serializers.HyperlinkedRelatedField(
+    inventory_configevents = serializers.HyperlinkedRelatedField(
         view_name=API_VERSION + ":configs-constants/config-events-detail",
         many=True,
         read_only=True,
         lookup_field="pk",
     )
-    constant_default_events = serializers.HyperlinkedRelatedField(
+    inventory_constdefaultevents = serializers.HyperlinkedRelatedField(
         view_name=API_VERSION + ":configs-constants/const-default-events-detail",
         many=True,
         read_only=True,
@@ -353,8 +353,8 @@ class InventorySerializer(FlexFieldsModelSerializer):
             "flag",
             "time_in_field",
             "inventory_calibrationevents",
-            "config_events",
-            "constant_default_events",
+            "inventory_configevents",
+            "inventory_constdefaultevents",
             "actions",
             "fieldvalues",
             "inventory_deployments",
@@ -376,11 +376,11 @@ class InventorySerializer(FlexFieldsModelSerializer):
                 "roundabout.calibrations.api.serializers.CalibrationEventSerializer",
                 {"many": True},
             ),
-            "config_events": (
+            "inventory_configevents": (
                 "roundabout.configs_constants.api.serializers.ConfigEventSerializer",
                 {"many": True},
             ),
-            "constant_default_events": (
+            "inventory_constdefaultevents": (
                 "roundabout.configs_constants.api.serializers.ConstDefaultEventSerializer",
                 {"many": True},
             ),

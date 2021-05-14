@@ -22,7 +22,7 @@
 
 <div class="tab-pane fade" id="conf-template" role="tabpanel" aria-labelledby="conf-template-tab">
     <ul class="list-group">
-        {% for event in inventory_item.config_events.all %}
+        {% for event in inventory_item.inventory_configevents.all %}
             {% if event.config_type == 'conf' %}
                 <li class="list-group-item">
                     <a  class="collapsed"

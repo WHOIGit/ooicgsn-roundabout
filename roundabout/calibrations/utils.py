@@ -72,8 +72,8 @@ def user_ccc_reviews(event, user, evt_type):
     if evt_type in ['calibration_event','config_event', 'constant_default_event']:
         if user.reviewer_calibrationevents.exists():
             found_cal_events = event.inventory.inventory_calibrationevents.filter(user_draft__in=[user])
-        if user.config_events_reviewer.exists():
-            found_conf_events = event.inventory.config_events.filter(user_draft__in=[user])
+        if user.reviewer_configevents.exists():
+            found_conf_events = event.inventory.inventory_configevents.filter(user_draft__in=[user])
         if not found_cal_events and not found_conf_events:
             all_reviewed = True
     if evt_type in ['coefficient_name_event', 'config_name_event']:
