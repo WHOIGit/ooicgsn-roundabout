@@ -75,7 +75,7 @@ def searchbar_redirect(request):
         elif model=='part':         getstr = '?f=.0.part_number&f=.0.name&f=.0.friendly_name&l=.0.icontains&q=.0.{query}'
         elif model == 'build':      getstr = '?f=.0.build_number&f=.0.assembly__name&f=.0.assembly__assembly_type__name&f=.0.assembly__description&f=.0.build_notes&f=.0.location__name&l=.0.icontains&q=.0.{query}'
         elif model == 'assembly':   getstr = '?f=.0.assembly_number&f=.0.name&f=.0.assembly_type__name&f=.0.description&l=.0.icontains&q=.0.{query}'
-        elif model == 'action':     getstr = '?f=.0.action_type&f=.0.user__name&f=.0.detail&f=.0.location__name&f=.0.inventory__serial_number&f=.0.inventory__part__name&l=.0.icontains'+'&q=.0.{query}'
+        elif model == 'action':     getstr = '?f=.0.action_type&f=.0.user&f=.0.detail&f=.0.location__name&f=.0.inventory__serial_number&f=.0.inventory__part__name&l=.0.icontains'+'&q=.0.{query}'
         elif model == 'user':       getstr = '?ccc_role=both&ccc_status=all'+'&q={query}'
         getstr = getstr.format(query=query)
         resp['Location'] += getstr
@@ -91,7 +91,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
     query_prefetch = []
     choice_fields = {}
 
-    def get_search_cards(self):
+    def get_search_cards(self, usersearch_hack=False):
         fields = self.request.GET.getlist('f')
         lookups = self.request.GET.getlist('l')
         queries = self.request.GET.getlist('q')
@@ -114,7 +114,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
             secret_rows_ANDed =[]
             for row_id in row_IDs:
                 row_items = [(v,t) for c,r,v,t in card_things if r==row_id]
-                print(row_items)
+                #print(row_items)
                 fields = [v for v,t in row_items if t=='f']
                 lookup = [v for v,t in row_items if t=='l']
                 query = [v for v,t in row_items if t=='q']
@@ -138,10 +138,12 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
                     continue #skip empty
 
                 # hack: implicitly search for usernames in addition to a user's name
-                for f in fields[:]:
-                    if 'user__name' in f:
-                        extra_f = f.replace('user__name','user__username')
-                        fields.append(extra_f)
+                if usersearch_hack:
+                    for f in fields[:]:
+                        if f.endswith('user'):
+                            fields.append(f+'__name')
+                            fields.append(f+'__username')
+                            fields.remove(f)
 
                 row = dict( #row_id=row_id,
                     fields=fields,
@@ -239,7 +241,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
                 Q_kwarg = {'id__in': matched_model_IDs}
                 return Q_kwarg
 
-        cards = self.get_search_cards()
+        cards = self.get_search_cards(usersearch_hack=True)
 
         final_Qs = []
         for card in cards:
@@ -465,7 +467,8 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value=None, text="--Actions--", disabled=True),
                         dict(value="actions__latest__action_type",    text="Latest Action",           legal_lookup='STR_LOOKUP',
                              col_args=dict(render=lambda value: dict(Action.ACTION_TYPES).get(value,value) )),
-                        dict(value="actions__latest__user__name",     text="Latest Action: User",     legal_lookup='STR_LOOKUP'),
+                        dict(value="actions__latest__user",     text="Latest Action: User",     legal_lookup='STR_LOOKUP',
+                             col_args=dict(render=lambda value: value.name or value.username )),
                         dict(value="actions__latest__created_at",     text="Latest Action: Time",     legal_lookup='DATE_LOOKUP'),
                         dict(value="actions__latest__location__name", text="Latest Action: Location", legal_lookup='STR_LOOKUP'),
                         dict(value="actions__latest__detail",         text="Latest Action: Notes",    legal_lookup='STR_LOOKUP',
@@ -626,7 +629,8 @@ class BuildTableView(GenericSearchTableView):
                         dict(value=None, text="--Actions--", disabled=True),
                         dict(value="actions__latest__action_type",    text="Latest Action",           legal_lookup='STR_LOOKUP',
                              col_args=dict(render=lambda value: dict(Action.ACTION_TYPES).get(value,value))),
-                        dict(value="actions__latest__user__name",     text="Latest Action: User",     legal_lookup='STR_LOOKUP'),
+                        dict(value="actions__latest__user",     text="Latest Action: User",     legal_lookup='STR_LOOKUP',
+                             col_args=dict(render=lambda value: value.name or value.username )),
                         dict(value="actions__latest__created_at",     text="Latest Action: Time",     legal_lookup='DATE_LOOKUP'),
                         dict(value="actions__latest__location__name", text="Latest Action: Location", legal_lookup='STR_LOOKUP'),
                         dict(value="actions__latest__detail",         text="Latest Action: Notes",    legal_lookup='STR_LOOKUP',
@@ -686,7 +690,8 @@ class ActionTableView(GenericSearchTableView):
     def get_avail_fields():
         avail_fields = [dict(value="object_type", text="Object Type", legal_lookup='STR_LOOKUP'),
                         dict(value="action_type", text="Action Type", legal_lookup='STR_LOOKUP'),
-                        dict(value="user__name", text="User", legal_lookup='STR_LOOKUP'),
+                        dict(value="user", text="User", legal_lookup='STR_LOOKUP',
+                             col_args=dict(render=lambda value: value.name or value.username)),
                         dict(value="created_at", text="Timestamp", legal_lookup='DATE_LOOKUP'),
                         dict(value="detail", text="Detail", legal_lookup='STR_LOOKUP',
                              col_args=dict(render=dict(hofunc=trunc_render,kwargs={'safe':True}), value='value')),
