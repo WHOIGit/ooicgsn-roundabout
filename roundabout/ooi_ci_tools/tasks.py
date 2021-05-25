@@ -80,7 +80,7 @@ def async_update_cal_thresholds(self):
                     }
                 )
     cache.delete('thrsh_evnt')
-    
+
 
 @shared_task(bind = True, soft_time_limit = 3600)
 def parse_cal_files(self):
@@ -146,14 +146,14 @@ def parse_cal_files(self):
                     try:
                         cal_name_item = CoefficientName.objects.get(
                             calibration_name = calibration_name,
-                            coeff_name_event =  inventory_item.part.part_coefficientnameevents.first()
+                            coeff_name_event = inventory_item.part.part_coefficientnameevents.first()
                         )
                     except CoefficientName.DoesNotExist:
                         cal_name_item = None
                     try:
                         config_name_item = ConfigName.objects.get(
                             name = calibration_name,
-                            config_name_event =  inventory_item.part.part_confignameevents.first()
+                            config_name_event = inventory_item.part.part_confignameevents.first()
                         )
                     except ConfigName.DoesNotExist:
                         config_name_item = None
@@ -202,12 +202,12 @@ def parse_cal_files(self):
                     if not cal_name_item and not config_name_item:
                         if not inventory_item.part.part_coefficientnameevents.exists():
                             coeff_name_event = CoefficientNameEvent.objects.create(part = inventory_item.part)
-                            _create_action_history(coeff_name_event, Action.CALCSVIMPORT, user)
+                            _create_action_history(coeff_name_event, Action.CALCSVIMPORT, user, data=dict(csv_import=cal_csv.name))
                         else:
                             coeff_name_event = inventory_item.part.part_coefficientnameevents.first()
                         cal_name_item = CoefficientName.objects.create(
                             calibration_name = calibration_name,
-                            coeff_name_event =  coeff_name_event,
+                            coeff_name_event = coeff_name_event,
                             value_set_type = value_set_type
                         )
                         coeff_val_set = {
@@ -232,9 +232,9 @@ def parse_cal_files(self):
                 )
                 parse_valid_coeff_vals(coeff_val_set)
             if cal_created:
-                _create_action_history(csv_event, Action.CALCSVIMPORT, user)
+                _create_action_history(csv_event, Action.CALCSVIMPORT, user, data=dict(csv_import=cal_csv.name))
             else:
-                _create_action_history(csv_event, Action.CALCSVUPDATE, user)
+                _create_action_history(csv_event, Action.CALCSVUPDATE, user, data=dict(csv_import=cal_csv.name))
         else:
             csv_event.delete()
         if len(config_val_sets) >= 1:
@@ -249,9 +249,9 @@ def parse_cal_files(self):
                     }
                 )
             if conf_created:
-                _create_action_history(conf_event, Action.CALCSVIMPORT, user)
+                _create_action_history(conf_event, Action.CALCSVIMPORT, user, data=dict(csv_import=cal_csv.name))
             else:
-                _create_action_history(conf_event, Action.CALCSVUPDATE, user)
+                _create_action_history(conf_event, Action.CALCSVUPDATE, user, data=dict(csv_import=cal_csv.name))
         else:
             conf_event.delete()
         if len(const_val_sets) >= 1:
@@ -266,13 +266,12 @@ def parse_cal_files(self):
                     }
                 )
             if cnst_created:
-                _create_action_history(cnst_event, Action.CALCSVIMPORT, user)
+                _create_action_history(cnst_event, Action.CALCSVIMPORT, user, data=dict(csv_import=cal_csv.name))
             else:
-                _create_action_history(cnst_event, Action.CALCSVUPDATE, user)
+                _create_action_history(cnst_event, Action.CALCSVUPDATE, user, data=dict(csv_import=cal_csv.name))
         else:
             cnst_event.delete()
     async_update_cal_thresholds.delay()
-    cache.delete('user')
     cache.delete('user_draft')
     cache.delete('ext_files')
     cache.delete('csv_files')
@@ -282,6 +281,7 @@ def parse_cal_files(self):
 @shared_task(bind=True)
 def parse_cruise_files(self):
     cruises_files = cache.get('cruises_files')
+    user = cache.get('user')
     for csv_file in cruises_files:
         # Set up the Django file object for CSV DictReader
         csv_file.seek(0)
@@ -307,28 +307,43 @@ def parse_cruise_files(self):
                 vessel_obj, vessel_created = Vessel.objects.get_or_create(
                     vessel_name = vessel_name_csv,
                 )
+                if vessel_created:
+                    _create_action_history(vessel_obj, Action.ADD, user, data=dict(csv_import=csv_file.name))
 
             # update or create Cruise object based on CUID field
+            defaults = {'notes': row['notes'],
+                        'cruise_start_date': cruise_start_date,
+                        'cruise_stop_date': cruise_stop_date,
+                        'vessel': vessel_obj,
+                       }
+            try:
+                cruise_obj = Cruise.objects.get(CUID=cuid)
+                orig_default = {key:str(getattr(cruise_obj,key,None)) for key in defaults}
+            except (Cruise.DoesNotExist,Cruise.MultipleObjectsReturned): orig_default = None
             cruise_obj, created = Cruise.objects.update_or_create(
-                CUID = cuid,
-                defaults = {
-                    'notes': row['notes'],
-                    'cruise_start_date': cruise_start_date,
-                    'cruise_stop_date': cruise_stop_date,
-                    'vessel': vessel_obj,
-                },
+                CUID = cuid, defaults = defaults,
             )
 
+            action_data = dict(updated_values=dict(), csv_import=csv_file.name)
             if created:
                 cruises_created.append(cruise_obj)
+                for field,new_val in defaults.items():
+                    action_data["updated_values"][field] = {"from": None, "to": str(new_val)}
+                _create_action_history(cruise_obj,Action.ADD,user,data=action_data)
             else:
                 cruises_updated.append(cruise_obj)
+                for field,new_val in defaults.items():
+                    orig_val = orig_default[field] if orig_default else 'unknown'
+                    if orig_val != new_val:
+                        action_data["updated_values"][field] = {"from": str(orig_val), "to": str(new_val)}
+                _create_action_history(cruise_obj,Action.UPDATE,user,data=action_data)
     cache.delete('cruises_files')
 
 
 @shared_task(bind=True)
 def parse_vessel_files(self):
     vessels_files = cache.get('vessels_files')
+    user = cache.get('user')
     for csv_file in vessels_files:
         # Set up the Django file object for CSV DictReader
         csv_file.seek(0)
@@ -375,29 +390,42 @@ def parse_vessel_files(self):
                     R2R = False
 
             # update or create Vessel object based on vessel_name field
+            defaults = {
+                'prefix': row['Prefix'],
+                'vessel_designation': row['Vessel Designation'],
+                'ICES_code': row['ICES Code'],
+                'operator': row['Operator'],
+                'call_sign': row['Call Sign'],
+                'MMSI_number': MMSI_number,
+                'IMO_number': IMO_number,
+                'length': length,
+                'max_speed': max_speed,
+                'max_draft': max_draft,
+                'designation': row['Designation'],
+                'active': active,
+                'R2R': R2R,
+            }
+            try:
+                vessel_obj = Vessel.objects.get(vessel_name=vessel_name)
+                orig_default = {key:str(getattr(vessel_obj,key,None)) for key in defaults}
+            except (Vessel.DoesNotExist, Vessel.MultipleObjectsReturned): orig_default = None
             vessel_obj, created = Vessel.objects.update_or_create(
-                vessel_name = vessel_name,
-                defaults = {
-                    'prefix': row['Prefix'],
-                    'vessel_designation': row['Vessel Designation'],
-                    'ICES_code': row['ICES Code'],
-                    'operator': row['Operator'],
-                    'call_sign': row['Call Sign'],
-                    'MMSI_number': MMSI_number,
-                    'IMO_number': IMO_number,
-                    'length': length,
-                    'max_speed': max_speed,
-                    'max_draft': max_draft,
-                    'designation': row['Designation'],
-                    'active': active,
-                    'R2R': R2R,
-                },
+                vessel_name = vessel_name, defaults=defaults,
             )
 
+            action_data = dict(updated_values=dict(), csv_import=csv_file.name)
             if created:
                 vessels_created.append(vessel_obj)
+                for field,new_val in defaults.items():
+                    action_data["updated_values"][field] = {"from": None, "to": str(new_val)}
+                _create_action_history(vessel_obj,Action.ADD,user,data=action_data)
             else:
                 vessels_updated.append(vessel_obj)
+                for field,new_val in defaults.items():
+                    orig_val = orig_default[field] if orig_default else 'unknown'
+                    if orig_val != new_val:
+                        action_data["updated_values"][field] = {"from": str(orig_val), "to": str(new_val)}
+                _create_action_history(vessel_obj,Action.UPDATE,user,data=action_data)
     cache.delete('vessels_files')
 
 @shared_task(bind=True)

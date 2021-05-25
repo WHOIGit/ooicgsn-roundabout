@@ -21,18 +21,32 @@
 
 import django_tables2 as tables2
 from roundabout.inventory.models import Action
+from roundabout.search.tables import trunc_render
 
 class ActionData_Column(tables2.Column):
-    def __init__(self, field_name, **kwargs):
+    def __init__(self, field_name, trunc_func=None, **kwargs):
         self.field_name = field_name
+
+        if trunc_func is True: self.trunk_func = trunc_render()
+        elif isinstance(trunc_func,dict): self.trunk_func = trunc_render(**trunc_func)
+        elif callable(trunc_func): self.trunk_func = trunc_func
+        else: self.trunk_func = None
+
         if 'verbose_name' not in kwargs:
             kwargs['verbose_name'] = ' '.join([s.capitalize() for s in field_name.split('_')])
         super().__init__(accessor='data', default='',**kwargs)
 
     def render(self,value):
-        try: return value['updated_values'][self.field_name]['to']
+        try:
+            val = value['updated_values'][self.field_name]['to']
+            if self.trunk_func:
+                return self.trunk_func(val)
+            return val
         except KeyError:
             return ''
+    def value(self,value):
+        return value['updated_values'][self.field_name]['to']
+
 
 class ActionTableBase(tables2.Table):
     class Meta:
@@ -63,7 +77,8 @@ class VesselActionTable(ActionTableBase):
     designation = ActionData_Column('designation')
     active = ActionData_Column('active')
     R2R = ActionData_Column('R2R', verbose_name='R2R')
-    notes = ActionData_Column('notes')
+    notes = ActionData_Column('notes', trunc_func={'length':50})
+
 
 class CruiseActionTable(ActionTableBase):
     class Meta(ActionTableBase.Meta):
@@ -72,5 +87,5 @@ class CruiseActionTable(ActionTableBase):
     vessel = ActionData_Column('vessel')
     cruise_start_date = ActionData_Column('cruise_start_date')
     cruise_stop_date = ActionData_Column('cruise_stop_date')
-    notes = ActionData_Column('notes')
+    notes = ActionData_Column('notes', trunc_func={'length':50})
     location = ActionData_Column('location')

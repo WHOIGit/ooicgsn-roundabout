@@ -74,7 +74,7 @@ def import_vessels(vessels_files):
     job = parse_vessel_files.delay()
 
 # Calibration CSV Importer
-def import_calibrations(cal_files, user, user_draft):
+def import_calibrations(cal_files, user_draft):
     csv_files = []
     ext_files = []
     for file in cal_files:
@@ -83,7 +83,6 @@ def import_calibrations(cal_files, user, user_draft):
             ext_files.append(file)
         if ext == 'csv':
             csv_files.append(file)
-    cache.set('user', user, timeout=None)
     cache.set('user_draft', user_draft, timeout=None)
     cache.set('ext_files', ext_files, timeout=None)
     cache.set('csv_files', csv_files, timeout=None)
@@ -105,8 +104,9 @@ def import_csv(request):
         dep_files = request.FILES.getlist('deployments_csv')
         cruises_file = request.FILES.getlist('cruises_csv')
         vessels_file = request.FILES.getlist('vessels_csv')
+        cache.set('user', request.user, timeout=None)
         if cal_form.is_valid() and len(cal_files) >= 1:
-            import_calibrations(cal_files, request.user, cal_form.cleaned_data['user_draft'])
+            import_calibrations(cal_files, cal_form.cleaned_data['user_draft'])
             confirm = "True"
         if dep_form.is_valid() and len(dep_files) >= 1:
             import_deployments(dep_files)
@@ -117,6 +117,7 @@ def import_csv(request):
         if vessels_form.is_valid() and len(vessels_file) >= 1:
             import_vessels(vessels_file)
             confirm = "True"
+        cache.delete('user')
     else:
         cal_form = ImportCalibrationForm()
         dep_form = ImportDeploymentsForm()
@@ -217,7 +218,7 @@ class ImportConfigUpdate(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         form = self.get_form(form_class)
         return self.render_to_response(
             self.get_context_data(
-                form=form, 
+                form=form,
             )
         )
 
