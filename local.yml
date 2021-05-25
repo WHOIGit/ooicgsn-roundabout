@@ -19,7 +19,7 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 
-version: '3.7'
+version: "3.7"
 
 volumes:
   local_postgres_data: {}
@@ -43,15 +43,6 @@ services:
     command: /start
     networks:
       - roundabout-network
-
-  tests:
-    build:
-      context: .
-      dockerfile: ./compose/local/tests/Dockerfile
-    image: roundabout_production_tests
-    depends_on:
-      - django
-    network_mode: "service:django"
 
   postgres:
     build:
@@ -100,7 +91,6 @@ services:
     ports:
       - "5555:5555"
     command: /start-flower
-
 
 networks:
   roundabout-network:
