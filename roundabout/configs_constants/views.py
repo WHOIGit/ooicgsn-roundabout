@@ -73,8 +73,8 @@ class ConfigEventValueAdd(LoginRequiredMixin, AjaxFormMixin, CreateView):
         )
         for idx,name in enumerate(names):
             if cfg_type == 1:
-                if inv_inst.constant_default_events.exists():
-                    const_def_event = inv_inst.constant_default_events.first()
+                if inv_inst.inventory_constdefaultevents.exists():
+                    const_def_event = inv_inst.inventory_constdefaultevents.first()
                     try:
                         default_value = ConstDefault.objects.get(const_event = const_def_event, config_name = name).default_value
                     except ConstDefault.DoesNotExist:

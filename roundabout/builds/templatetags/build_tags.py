@@ -41,7 +41,7 @@ def tomorrow(format):
 def user_is_deploy_reviewer(build,logged_user):
     if build:
         if build.deployments.exists():
-            if logged_user.deployments_reviewer.exists():
+            if logged_user.reviewer_deployments.exists():
                 found_events = build.deployments.filter(user_draft__in=[logged_user])
                 if found_events:
                     return True

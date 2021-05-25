@@ -549,8 +549,8 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         part_has_configs = False
         part_has_consts = False
 
-        if self.object.calibration_events.exists():
-            coeff_events = self.object.calibration_events.prefetch_related(
+        if self.object.inventory_calibrationevents.exists():
+            coeff_events = self.object.inventory_calibrationevents.prefetch_related(
                 "coefficient_value_sets__coefficient_values"
             )
         else:
