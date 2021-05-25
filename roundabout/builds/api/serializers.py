@@ -252,7 +252,7 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
         for inv in inventory_dep_qs:
             # get all config_events for this Inventory/Deployment
             configuration_values = []
-            config_events = inv.inventory.config_events.filter(deployment=inv.deployment).prefetch_related('config_values')
+            config_events = inv.inventory.inventory_configevents.filter(deployment=inv.deployment).prefetch_related('config_values')
             if config_events:
                 for event in config_events:
                     for value in event.config_values.all():
@@ -265,8 +265,8 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
             # need to get the CalibrationEvent that matches the Deployment date
             # calibration_date field sets the range for valid Calibration Events
             calibration_values = []
-            if inv.inventory.calibration_events.exists():
-                for event in inv.inventory.calibration_events.all():
+            if inv.inventory.inventory_calibrationevents.exists():
+                for event in inv.inventory.inventory_calibrationevents.all():
                     # find the CalibrationEvent valid date range that matches Deployment date
                     first_date, last_date = event.get_valid_calibration_range()
                     if inv.deployment_to_field_date and first_date < inv.deployment_to_field_date < last_date:
@@ -279,8 +279,8 @@ class DeploymentOmsCustomSerializer(FlexFieldsModelSerializer):
 
             # get all constant_default_events for this Inventory/Deployment
             constant_default_values = []
-            if inv.inventory.constant_default_events.exists():
-                for event in inv.inventory.constant_default_events.all():
+            if inv.inventory.inventory_constdefaultevents.exists():
+                for event in inv.inventory.inventory_constdefaultevents.all():
                     for value in event.constant_defaults.all():
                         constant_default_values.append({
                             'name': value.config_name.name,

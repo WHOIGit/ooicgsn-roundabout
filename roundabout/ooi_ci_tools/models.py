@@ -123,9 +123,8 @@ class CCCEvent(models.Model):
     detail = models.TextField(blank=True)
     part = models.ForeignKey(Part, related_name='part_%(class)ss', on_delete=models.CASCADE, null=True)
     assembly_part = models.ForeignKey(AssemblyPart, related_name='assemblypart_%(class)ss', on_delete=models.CASCADE, null=True)
-
-    def get_actions(self):
-        return self.actions.filter(object_type='%(class)s')
+    inventory = models.ForeignKey(Inventory, related_name='inventory_%(class)ss', on_delete=models.CASCADE, null=True)
+    deployment = models.ForeignKey(Deployment, related_name='deployment_%(class)ss', on_delete=models.CASCADE, null=True)
 
     def get_sorted_reviewers(self):
         return self.user_draft.all().order_by('username')

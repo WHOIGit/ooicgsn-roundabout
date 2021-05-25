@@ -164,7 +164,7 @@
                         data-node-type="calibration_event">Add Calibration Coefficients</a>
                 {% endif %}
 
-                {% if not inventory_item.constant_default_events.exists and part_has_consts and inventory_item.part.part_type.ccc_toggle %}
+                {% if not inventory_item.inventory_constdefaultevents.exists and part_has_consts and inventory_item.part.part_type.ccc_toggle %}
                     <a  id="add_constdefault_action"
                         class="dropdown-item"
                         href="#"
@@ -424,19 +424,19 @@
           <a class="nav-link" id="part-template-tab" data-toggle="tab" href="#part-template" role="tab" aria-controls="part-template" aria-selected="false">Part Specs</a>
         </li>
 
-        {% if inventory_item.calibration_events.exists and inventory_item.part.part_type.ccc_toggle %}
+        {% if inventory_item.inventory_calibrationevents.exists and inventory_item.part.part_type.ccc_toggle %}
             <li class="nav-item">
                 <a class="nav-link" id="calibration-template-tab" data-toggle="tab" href="#calibration-template" role="tab" aria-controls="calibration-template" aria-selected="false">Calibration Coefficient History</a>
             </li>
         {% endif %}
 
-        {% if inventory_item.constant_default_events.exists and inventory_item.part.part_type.ccc_toggle %}
+        {% if inventory_item.inventory_constdefaultevents.exists and inventory_item.part.part_type.ccc_toggle %}
             <li class="nav-item">
                 <a class="nav-link" id="const_default-template-tab" data-toggle="tab" href="#const_default-template" role="tab" aria-controls="const_default-template" aria-selected="false">Constant Defaults</a>
             </li>
         {% endif %}
 
-        {% if inventory_item.config_events.exists and inventory_item.part.part_type.ccc_toggle %}
+        {% if inventory_item.inventory_configevents.exists and inventory_item.part.part_type.ccc_toggle %}
             <li class="nav-item">
                 <a class="nav-link" id="const-template-tab" data-toggle="tab" href="#const-template" role="tab" aria-controls="const-template" aria-selected="false">Constant History</a>
             </li>
@@ -722,7 +722,7 @@
         let part_has_configs = '{{part_has_configs}}'
         let part_has_consts = '{{part_has_consts}}'
         let ccc_toggle = '{{inventory_item.part.part_type.ccc_toggle}}'
-        let const_def_exists = '{{inventory_item.constant_default_events.exists}}'
+        let const_def_exists = '{{inventory_item.inventory_constdefaultevents.exists}}'
 
         if (part_has_cals == 'True' && ccc_toggle == 'True') {
             $('#add_coefficient_action').show()

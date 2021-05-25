@@ -40,7 +40,7 @@ class InventoryFilter(filters.FilterSet):
     children__isnull = filters.BooleanFilter(field_name='children', lookup_expr='isnull')
     is_root = filters.BooleanFilter(field_name='parent', lookup_expr='isnull')
     has_children = filters.BooleanFilter(field_name='children', lookup_expr='isnull', exclude=True)
-    calibration_events__isnull = filters.BooleanFilter(field_name='calibration_events', lookup_expr='isnull')
+    inventory_calibrationevents__isnull = filters.BooleanFilter(field_name='inventory_calibrationevents', lookup_expr='isnull')
     inventory_deployments__isnull = filters.BooleanFilter(field_name='inventory_deployments', lookup_expr='isnull')
 
     #is_deployed = filters.BooleanFilter(field_name='time_at_sea', method='filter_is_deployed')

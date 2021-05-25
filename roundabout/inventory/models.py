@@ -393,9 +393,9 @@ class Deployment(DeploymentBase):
     )
     depth = models.PositiveIntegerField(null=True, blank=True)
     user_draft = models.ManyToManyField(
-        User, related_name="deployments_reviewer", blank=True
+        User, related_name="reviewer_deployments", blank=True
     )
-    user_approver = models.ManyToManyField(User, related_name="deployments_approver")
+    user_approver = models.ManyToManyField(User, related_name="approver_deployments")
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
 
     def __str__(self):
@@ -823,6 +823,11 @@ class Action(models.Model):
             return self.coefficient_name_event
         elif self.object_type == self.CONFNAMEEVENT:
             return self.config_name_event
+
+        elif self.object_type == self.VESSEL:
+            return self.vessel
+        elif self.object_type == self.CRUISE:
+            return self.cruise
 
 
 class PhotoNote(models.Model):

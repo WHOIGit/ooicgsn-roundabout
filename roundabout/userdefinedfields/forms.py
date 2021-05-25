@@ -108,7 +108,7 @@ class UserDefinedFieldForm(forms.ModelForm):
         # Validate the default value based on field type
         if field_default_value:
             msg = ''
-            if field_type == "ChoiceField" and 'option' in choice_field_options:
+            if field_type == "ChoiceField" and 'options' in choice_field_options:
                 choice_field_option_values = [d['value'] for d in choice_field_options['options']]
                 if field_default_value not in choice_field_option_values:
                     msg = "Default value not in options list"

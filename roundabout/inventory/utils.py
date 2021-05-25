@@ -462,21 +462,21 @@ def logged_user_review_items(logged_user, template_type):
     if template_type == "inv":
         inv_id_from_cal_events = [
             inv_id["inventory_id"]
-            for inv_id in logged_user.calibration_events_drafter.values("inventory_id")
+            for inv_id in logged_user.reviewer_calibrationevents.values("inventory_id")
         ]
         inv_id_from_config_events = [
             inv_id["inventory_id"]
-            for inv_id in logged_user.config_events_reviewer.values("inventory_id")
+            for inv_id in logged_user.reviewer_configevents.values("inventory_id")
         ]
         inv_id_from_const_def_events = [
             inv_id["inventory_id"]
-            for inv_id in logged_user.constant_default_events_reviewer.values(
+            for inv_id in logged_user.reviewer_constdefaultevents.values(
                 "inventory_id"
             )
         ]
         build_id_from_dep_events = [
             build_id["build_id"]
-            for build_id in logged_user.deployments_reviewer.values("build_id")
+            for build_id in logged_user.reviewer_deployments.values("build_id")
         ]
         full_inv_list = set(
             inv_id_from_cal_events

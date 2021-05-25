@@ -311,19 +311,19 @@ class InventorySerializer(FlexFieldsModelSerializer):
         read_only=True,
         lookup_field="pk",
     )
-    calibration_events = serializers.HyperlinkedRelatedField(
+    inventory_calibrationevents = serializers.HyperlinkedRelatedField(
         view_name=API_VERSION + ":calibrations/calibration-events-detail",
         many=True,
         read_only=True,
         lookup_field="pk",
     )
-    config_events = serializers.HyperlinkedRelatedField(
+    inventory_configevents = serializers.HyperlinkedRelatedField(
         view_name=API_VERSION + ":configs-constants/config-events-detail",
         many=True,
         read_only=True,
         lookup_field="pk",
     )
-    constant_default_events = serializers.HyperlinkedRelatedField(
+    inventory_constdefaultevents = serializers.HyperlinkedRelatedField(
         view_name=API_VERSION + ":configs-constants/const-default-events-detail",
         many=True,
         read_only=True,
@@ -352,9 +352,9 @@ class InventorySerializer(FlexFieldsModelSerializer):
             "test_type",
             "flag",
             "time_in_field",
-            "calibration_events",
-            "config_events",
-            "constant_default_events",
+            "inventory_calibrationevents",
+            "inventory_configevents",
+            "inventory_constdefaultevents",
             "actions",
             "fieldvalues",
             "inventory_deployments",
@@ -372,15 +372,15 @@ class InventorySerializer(FlexFieldsModelSerializer):
                 "roundabout.inventory.api.serializers.InventorySerializer",
                 {"many": True},
             ),
-            "calibration_events": (
+            "inventory_calibrationevents": (
                 "roundabout.calibrations.api.serializers.CalibrationEventSerializer",
                 {"many": True},
             ),
-            "config_events": (
+            "inventory_configevents": (
                 "roundabout.configs_constants.api.serializers.ConfigEventSerializer",
                 {"many": True},
             ),
-            "constant_default_events": (
+            "inventory_constdefaultevents": (
                 "roundabout.configs_constants.api.serializers.ConstDefaultEventSerializer",
                 {"many": True},
             ),
