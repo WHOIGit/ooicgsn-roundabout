@@ -335,8 +335,11 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
             print('Inv calibs:', calibs_qs if calibs_qs.exists() else None, file=out)
             print('Inv confconst', configs_by_deployment, file=out)
 
-            if not the_inv.assembly_part:
-                print('FAIL:',the_inv, 'does not have an associated assembly_part!', file=out)
+            if the_inv.location.root_type=='Trash':
+                print('FAIL:', the_inv, 'is in the Trash. Skip-it.', file=out)
+                continue
+            elif not the_inv.assembly_part:
+                print('FAIL:', the_inv, 'does not have an associated assembly_part!', file=out)
                 continue
             the_part = the_inv.assembly_part.part
             calibs_to_match = set(the_part.part_coefficientnameevents.first().coefficient_names.all()) if the_part.part_coefficientnameevents.first() else set()
