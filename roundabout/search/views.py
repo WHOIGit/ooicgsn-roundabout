@@ -431,7 +431,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
 class InventoryTableView(GenericSearchTableView):
     model = Inventory
     table_class = InventoryTable
-    query_prefetch = ['fieldvalues', 'fieldvalues__field', 'part', 'actions', 'actions__user', 'actions__location']
+    query_prefetch = ['fieldvalues', 'fieldvalues__field', 'part', 'actions', 'actions__user', 'actions__location', 'build', 'calibration_events']
     avail_udf = set()
     choice_fields = {'actions__latest__action_type': Action.ACTION_TYPES}
 
@@ -445,7 +445,7 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="old_serial_number", text="Old Serial Number", legal_lookup='STR_LOOKUP'),
                         dict(value="location__name",             text="Location", legal_lookup='STR_LOOKUP'),
                         dict(value="build__assembly__name",    text="Build Name", legal_lookup='STR_LOOKUP'),
-                        dict(value="build__build_number  ",  text="Build Number", legal_lookup='STR_LOOKUP'),
+                        dict(value="build__build_number",    text="Build Number", legal_lookup='STR_LOOKUP'),
                         dict(value="created_at",             text="Date Created", legal_lookup='DATE_LOOKUP'),
                         dict(value="updated_at",            text="Date Modified", legal_lookup='DATE_LOOKUP'),
                         dict(value="build__is_deployed", text="is-build-deployed?", legal_lookup='BOOL_LOOKUP'),
