@@ -176,6 +176,7 @@ class ExportCalibrationEvents(ZipExport):
     @classmethod
     def build_zip(cls, zf, objs, subdir=None):
         objs = objs.select_related('inventory__part__part_type').exclude(inventory__part__part_type__ccc_toggle=False)
+        objs = objs.select_related('inventory__location').exclude(inventory__location__root_type='Trash')
         objs = objs.prefetch_related('inventory', 'inventory__fieldvalues', 'inventory__fieldvalues__field')
 
         for cal in objs:
@@ -231,6 +232,7 @@ class ExportConfigEvents(ZipExport):
     @classmethod
     def build_zip(cls, zf, objs, subdir=None):
         objs = objs.select_related('inventory__part__part_type').exclude(inventory__part__part_type__ccc_toggle=False)
+        objs = objs.select_related('inventory__location').exclude(inventory__location__root_type='Trash')
         objs = objs.prefetch_related('inventory', 'inventory__fieldvalues', 'inventory__fieldvalues__field')
 
         for confconst in objs:
