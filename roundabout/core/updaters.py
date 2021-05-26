@@ -21,6 +21,16 @@
 
 from roundabout.inventory.models import Inventory, Action, DeploymentAction, Deployment, InventoryDeployment
 from roundabout.builds.models import Build, BuildAction
+from roundabout.assemblies.models import AssemblyPart
+from roundabout.ooi_ci_tools.models import ReferenceDesignator
+
+def _create_reference_designators():
+    for assm_part in AssemblyPart.objects.all():
+        if assm_part.assemblypart_configdefaultevents.exists():
+            for dflt in assm_part.assemblypart_configdefaultevents.first().config_defaults.all():
+                if dflt.config_name == 'Reference Designator':
+                    if len(dflt.default_value) >= 1:
+                        ReferenceDesignator.objects.create(name=dflt.default_value, assembly_part=assm_part)
 
 def remove_extra_actions():
     builds = Build.objects.all()

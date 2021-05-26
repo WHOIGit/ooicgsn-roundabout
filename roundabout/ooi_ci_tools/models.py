@@ -131,3 +131,16 @@ class CCCEvent(models.Model):
 
     def get_sorted_approvers(self):
         return self.user_approver.all().order_by('username')
+
+
+class ReferenceDesignator(CCCEvent):
+    class Meta:
+        ordering = ['-created_at']
+    def __str__(self):
+        return self.name
+    def get_object_type(self):
+        return 'reference_designator'
+    name = models.CharField(max_length=255, unique=False, db_index=True)
+
+    def get_actions(self):
+        return self.actions.filter(object_type='referencedesignator')

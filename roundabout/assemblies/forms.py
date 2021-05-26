@@ -28,6 +28,8 @@ from django.core.exceptions import ValidationError
 from django_summernote.widgets import SummernoteWidget
 from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
 
+from roundabout.ooi_ci_tools.models import ReferenceDesignator
+
 from .models import Assembly, AssemblyPart, AssemblyType, AssemblyRevision, AssemblyDocument
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
@@ -170,10 +172,13 @@ AssemblyDocumentationFormset = inlineformset_factory(AssemblyRevision, AssemblyD
 
 class AssemblyPartForm(forms.ModelForm):
 
+    reference_designator = forms.ModelChoiceField(queryset = ReferenceDesignator.objects.all(), )
+
     class Meta:
         model = AssemblyPart
-        fields = ['assembly_revision', 'part', 'parent', 'note']
+        fields = ['reference_designator','assembly_revision', 'part', 'parent', 'note']
         labels = {
+            'reference_designator': 'Reference Designator',
             'part': 'Select Part Template',
             'parent': 'Parent %s Part' % (labels['label_assemblies_app_singular']),
             'note': 'Design Notes'
