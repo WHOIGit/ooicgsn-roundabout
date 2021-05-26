@@ -36,8 +36,8 @@
     <p>Cruise Stop Date: {{ cruise.cruise_stop_date }}</p>
     <p>Vessel: <a href="{% url 'cruises:vessels_home' %}">{{ cruise.vessel }}</a></p>
     <p>Notes: {{ cruise.notes }}</p>
+    {% if cruise.hyperlinks.exists %}
     <p>Links:</p>
-    {% if cruise.hyperlinks %}
       <ul>
       {% for link in cruise.hyperlinks.all %}
         <li><a target="_blank" href="{{ link.url }}">{{ link.text }}</a></li>

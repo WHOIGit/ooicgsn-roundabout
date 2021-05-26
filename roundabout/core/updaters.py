@@ -31,6 +31,8 @@ def _create_reference_designators():
                 if dflt.config_name == 'Reference Designator':
                     if len(dflt.default_value) >= 1:
                         ReferenceDesignator.objects.create(name=dflt.default_value, assembly_part=assm_part)
+from roundabout.cruises.models import Cruise, Vessel
+from roundabout.inventory.utils import _create_action_history
 
 def remove_extra_actions():
     builds = Build.objects.all()
@@ -44,6 +46,88 @@ def remove_extra_actions():
             if dup_action:
                 dup_action.delete()
                 actions_to_keep.append(action.id)
+
+# v.1.7.0 upgrades
+def run_v1_7_0_content_updates():
+    print('Running: v1.7.0 Content Updates')
+    _update_action_data()
+    print('\nCOMPLETE: v1.7.0 Content Updates')
+
+def _update_action_data():
+    print('\nVESSELS')
+    _update_action_data_vessels()
+    print('\nCRUISES')
+    _update_action_data_cruises()
+    print('\nCALEVENTS')
+    _update_action_data_CalEvts()
+    print('\nCONFEVENTS')
+    _update_action_data_ConfEvts()
+    #print('\nDEPLOYMENTS')
+    #_update_action_data_deployments()
+
+def _update_action_data_vessels():
+    vessels = Vessel.objects.filter(actions__isnull=True)
+    if not vessels: return print('  No Vessels to update')
+    fields = [field.name for field in Vessel._meta.fields if field.name != 'id']
+    print('fields:',','.join(fields))
+    for vessel in vessels:
+        print(' ',vessel.vessel_name)
+        updated_values=dict()
+        for field in fields:
+            val = getattr(vessel, field, None)
+            if val: updated_values[field] = {"from": None, "to": str(val)}
+        data = dict(updated_values=updated_values) if updated_values else None
+        _create_action_history(vessel, Action.ADD, user=None, data=data, action_date=vessel.cruises.first().cruise_start_date)
+
+def _update_action_data_cruises():
+    cruises = Cruise.objects.all()
+    cruises = [cruise for cruise in cruises if not cruise.actions.filter(action_type=Action.ADD).exists()]
+    if not cruises: return print('  No Cruises to update')
+    fields = [field.name for field in Cruise._meta.fields if field.name != 'id']
+    print('fields:',','.join(fields))
+    for cruise in cruises:
+        print(' ',cruise.CUID)
+        updated_values = dict()
+        for field in fields:
+            val = getattr(cruise, field, None)
+            if val: updated_values[field] = {"from": None, "to": str(val)}
+        data = dict(updated_values=updated_values) if updated_values else None
+        _create_action_history(cruise, Action.ADD, user=None, data=data, action_date=cruise.cruise_start_date)
+
+def _update_action_data_CalEvts():
+    cal_actions = Action.objects.filter(action_type=Action.ADD, object_type=Action.CALEVENT, data__isnull=True)
+    if not cal_actions: return print('  No CalibrationEvents to update')
+    for action in cal_actions:
+        print('  id:',action.calibration_event.id, action)
+        data = {}
+        updated_values = {}
+        updated_notes = {}
+        init_CoefficientValueSets = action.calibration_event.coefficient_value_sets.all()
+        for val in init_CoefficientValueSets:
+            if val.value_set: updated_values[val.coefficient_name.calibration_name] = {'from':None, 'to':val.value_set}
+            if val.notes: updated_notes[val.coefficient_name.calibration_name] = {'from':None, 'to':val.notes}
+        if updated_values: data['updated_values'] = updated_values
+        if updated_notes:  data['updated_notes'] = updated_notes
+        action.data = data
+        action.save()
+
+def _update_action_data_ConfEvts():
+    conf_actions = Action.objects.filter(action_type=Action.ADD, object_type=Action.CONFEVENT, data__isnull=True)
+    if not conf_actions: return print('  No ConfigEvents to update')
+    for action in conf_actions:
+        print('  id:',action.config_event.id, action)
+        data = {}
+        updated_values = {}
+        updated_notes = {}
+        init_ConfigValues = action.config_event.config_values.all()
+        for val in init_ConfigValues:
+            if val.config_value: updated_values[val.config_name.name] = {'from':None, 'to':val.config_value}
+            if val.notes: updated_notes[val.config_name.name] = {'from':None, 'to':val.notes}
+        if updated_values: data['updated_values'] = updated_values
+        if updated_notes:  data['updated_notes'] = updated_notes
+        action.data = data
+        action.save()
+
 
 # Functions to update legacy content to match new model updates
 # ------------------------------------------------------------------------------

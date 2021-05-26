@@ -824,6 +824,11 @@ class Action(models.Model):
         elif self.object_type == self.CONFNAMEEVENT:
             return self.config_name_event
 
+        elif self.object_type == self.VESSEL:
+            return self.vessel
+        elif self.object_type == self.CRUISE:
+            return self.cruise
+
 
 class PhotoNote(models.Model):
     photo = models.FileField(

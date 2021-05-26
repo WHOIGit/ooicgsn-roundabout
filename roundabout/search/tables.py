@@ -33,6 +33,7 @@ from roundabout.calibrations.models import CalibrationEvent, CoefficientNameEven
 from roundabout.configs_constants.models import ConfigEvent, ConstDefaultEvent, ConfigNameEvent, ConfigDefaultEvent
 from roundabout.inventory.models import Inventory, Action, Deployment, InventoryDeployment
 from roundabout.parts.models import Part
+from roundabout.cruises.models import Vessel, Cruise
 
 
 def trunc_render(length=100, safe=False, showable=True, hideable=True, targets=None, bold_target=True):
@@ -212,14 +213,10 @@ class AssemblyTable(SearchTable):
 class ActionTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Action
-        fields = ['object_type', 'object', 'action_type', 'user__name', 'created_at', 'detail']#,'data']
-        base_shown_cols = fields#[:-1]
+        fields = ['object_type', 'object', 'action_type', 'user', 'created_at', 'detail']#,'data']
+        base_shown_cols = fields
 
-    user__name = Column(verbose_name='User')
     object = Column(verbose_name='Associated Object', accessor='object_type')
-
-    def render_user__name(self,record):
-        return record.user.name or record.user.username
 
     def value_object(self,record):
         parent_obj = record.get_parent()
@@ -244,31 +241,35 @@ class ActionTable(SearchTable):
         if isinstance(parent_obj, Inventory):
             inv_url = reverse("inventory:inventory_detail", args=[parent_obj.pk])
             html_string = html_string.format(url=inv_url, text=parent_obj)
-            return format_html(html_string)
         elif isinstance(parent_obj,Build):
             build_url = reverse("builds:builds_detail", args=[parent_obj.pk])
             html_string = html_string.format(url=build_url, text=parent_obj)
-            return format_html(html_string)
         elif isinstance(parent_obj,Deployment):
             build_url = reverse("builds:builds_detail", args=[record.deployment.build.pk])
             deployment_anchor = '#deployment-{}-'.format(record.deployment.pk)  # doesn't work, anchor doesn't exist
             deployment_anchor = '#deployments'  # next best anchor that does work
             html_string = html_string.format(url=build_url+deployment_anchor, text=parent_obj)
-            return format_html(html_string)
         elif isinstance(parent_obj,InventoryDeployment):
             inv_url = reverse("inventory:inventory_detail", args=[parent_obj.inventory.pk])
             html_string = html_string.format(url=inv_url, text=parent_obj)
-            return format_html(html_string)
         elif isinstance(parent_obj,Part):
             build_url = reverse("parts:parts_detail", args=[parent_obj.pk])
             html_string = html_string.format(url=build_url, text=parent_obj)
-            return format_html(html_string)
         elif isinstance(parent_obj,AssemblyPart):
             assy_url = reverse("assemblies:assemblypart_detail", args=[parent_obj.pk])
             html_string = html_string.format(url=assy_url, text=parent_obj)
-            return format_html(html_string)
+        elif isinstance(parent_obj,Vessel):
+            vessel_url = reverse("cruises:vessels_home")
+            html_string = html_string.format(url=vessel_url, text=parent_obj)
+        elif isinstance(parent_obj,Cruise):
+            cruise_url = reverse("cruises:cruises_detail",args=[parent_obj.pk])
+            html_string = html_string.format(url=cruise_url, text=parent_obj)
         else:
-            return ''
+            html_string = ''
+
+        if html_string:
+            return format_html(html_string)
+        return ''
 
 
 class CalibrationTable(SearchTable):
