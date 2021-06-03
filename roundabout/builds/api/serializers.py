@@ -443,7 +443,12 @@ class DeploymentOmsCustom2Serializer(FlexFieldsModelSerializer):
         # Use the InventoryDeployment related model to get historical list of Inventory items
         # on each Deployment
         request = self.context.get("request")
-        assembly_parts_qs = obj.build.assembly_revision.assembly_parts.all()
+        try:
+            assembly_parts_qs = obj.build.assembly_revision.assembly_parts.all()
+        except Exception as e:
+            print(e)
+            return None
+
         assembly_parts = []
 
         for ap in assembly_parts_qs:
