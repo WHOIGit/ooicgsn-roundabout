@@ -171,21 +171,21 @@ AssemblyDocumentationFormset = inlineformset_factory(AssemblyRevision, AssemblyD
 
 
 class AssemblyPartForm(forms.ModelForm):
-
-    reference_designator = forms.ModelChoiceField(queryset = ReferenceDesignator.objects.all(), )
+    updated_refdes_name = forms.CharField(required = False)
 
     class Meta:
         model = AssemblyPart
-        fields = ['reference_designator','assembly_revision', 'part', 'parent', 'note']
+        fields = ['reference_designator', 'updated_refdes_name', 'assembly_revision', 'part', 'parent', 'note']
         labels = {
             'reference_designator': 'Reference Designator',
+            'updated_refdes_name': 'Create new or update existing Reference Designator',
             'part': 'Select Part Template',
             'parent': 'Parent %s Part' % (labels['label_assemblies_app_singular']),
             'note': 'Design Notes'
         }
 
         widgets = {
-            'assembly_revision': forms.HiddenInput(),
+            'assembly_revision': forms.HiddenInput()
         }
 
     class Media:
@@ -206,6 +206,7 @@ class AssemblyPartForm(forms.ModelForm):
         super(AssemblyPartForm, self).__init__(*args, **kwargs)
         #self.fields['parent'].queryset = MooringPart.objects.none()
         #self.fields['parent'].queryset = AssemblyPart.objects.filter(id=self.parent_pk)
+        self.fields['reference_designator'].required = False
         if self.assembly_revision_pk:
             self.fields['parent'].queryset = AssemblyPart.objects.filter(assembly_revision_id=self.assembly_revision_pk)
         elif self.instance.pk:

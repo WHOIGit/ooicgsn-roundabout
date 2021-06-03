@@ -33,6 +33,7 @@ from roundabout.parts.models import PartType, Part
 from roundabout.inventory.models import Action
 from roundabout.inventory.utils import _create_action_history, logged_user_review_items
 from roundabout.configs_constants.models import ConfigDefaultEvent, ConfigDefault
+from roundabout.ooi_ci_tools.models import ReferenceDesignator
 from common.util.mixins import AjaxFormMixin
 
 
@@ -653,6 +654,18 @@ class AssemblyPartAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
 
     def form_valid(self, form):
         self.object = form.save()
+        self.object.reference_designator = None
+        reference_designator = form.cleaned_data['reference_designator']
+        updated_name = form.cleaned_data['updated_refdes_name']
+        if reference_designator:
+            reference_designator.assembly_parts.remove(self.object)
+            self.object.reference_designator = reference_designator
+            if len(updated_name) >= 1 and updated_name != reference_designator.name:
+                reference_designator.name = updated_name
+                reference_designator.save()
+        if len(updated_name) >= 1 and not reference_designator:
+            new_refdes = ReferenceDesignator.objects.create(name = updated_name)
+            self.object.reference_designator = new_refdes
 
         if self.object.part.friendly_name:
             self.object.order = self.object.part.friendly_name
@@ -715,6 +728,18 @@ class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
         old_part_pk = self.object.tracker.previous('part')
 
         self.object = form.save()
+        self.object.reference_designator = None
+        reference_designator = form.cleaned_data['reference_designator']
+        updated_name = form.cleaned_data['updated_refdes_name']
+        if reference_designator:
+            reference_designator.assembly_parts.remove(self.object)
+            self.object.reference_designator = reference_designator
+            if len(updated_name) >= 1 and updated_name != reference_designator.name:
+                reference_designator.name = updated_name
+                reference_designator.save()
+        if len(updated_name) >= 1 and not reference_designator:
+            new_refdes = ReferenceDesignator.objects.create(name = updated_name)
+            self.object.reference_designator = new_refdes
 
         print(self.object.part.id)
         print(old_part_pk)

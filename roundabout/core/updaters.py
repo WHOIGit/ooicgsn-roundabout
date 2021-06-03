@@ -22,17 +22,22 @@
 from roundabout.inventory.models import Inventory, Action, DeploymentAction, Deployment, InventoryDeployment
 from roundabout.builds.models import Build, BuildAction
 from roundabout.assemblies.models import AssemblyPart
-from roundabout.ooi_ci_tools.models import ReferenceDesignator
+from roundabout.ooi_ci_tools.models import ReferenceDesignatorEvent, ReferenceDesignator
+from roundabout.cruises.models import Cruise, Vessel
+from roundabout.inventory.utils import _create_action_history
 
 def _create_reference_designators():
     for assm_part in AssemblyPart.objects.all():
         if assm_part.assemblypart_configdefaultevents.exists():
             for dflt in assm_part.assemblypart_configdefaultevents.first().config_defaults.all():
-                if dflt.config_name == 'Reference Designator':
+                if dflt.config_name.name == 'Reference Designator':
                     if len(dflt.default_value) >= 1:
-                        ReferenceDesignator.objects.create(name=dflt.default_value, assembly_part=assm_part)
-from roundabout.cruises.models import Cruise, Vessel
-from roundabout.inventory.utils import _create_action_history
+                        refdes_event, refdes_event_created = ReferenceDesignatorEvent.objects.get_or_create(assembly_part=assm_part)
+                        refdes_value, refdes_value_created = ReferenceDesignator.objects.get_or_create(name = dflt.default_value, refdes_event = refdes_event)
+                        assm_part.reference_designator = refdes_value
+                        assm_part.save()
+
+
 
 def remove_extra_actions():
     builds = Build.objects.all()
