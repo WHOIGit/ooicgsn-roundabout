@@ -28,7 +28,8 @@ from django.core.exceptions import ValidationError
 from django_summernote.widgets import SummernoteWidget
 from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
 
-from roundabout.ooi_ci_tools.models import ReferenceDesignator
+from roundabout.ooi_ci_tools.models import ReferenceDesignator, ReferenceDesignatorEvent
+from roundabout.calibrations.utils import reviewer_users
 
 from .models import Assembly, AssemblyPart, AssemblyType, AssemblyRevision, AssemblyDocument
 # Get the app label names from the core utility functions
@@ -243,3 +244,72 @@ class AssemblyTypeDeleteForm(forms.Form):
 
         # remove this object from the possible replacements
         self.fields['new_assembly_type'].queryset = AssemblyType.objects.exclude(id=assembly_type_to_delete.id)
+
+
+
+
+# Config Default Event form
+# Inputs: Reviewers
+class ReferenceDesignatorEventForm(forms.ModelForm):
+    class Meta:
+        model = ReferenceDesignatorEvent
+        fields = ['user_draft']
+        labels = {
+            'user_draft': 'Reviewers'
+        }
+        widgets = {
+            'user_draft': forms.SelectMultiple()
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(ReferenceDesignatorEventForm, self).__init__(*args, **kwargs)
+        self.fields['user_draft'].queryset = reviewer_users()
+
+    def clean_user_draft(self):
+        user_draft = self.cleaned_data.get('user_draft')
+        return user_draft
+
+    def save(self, commit = True):
+        event = super(ReferenceDesignatorEventForm, self).save(commit = False)
+        if commit:
+            event.save()
+            if event.user_approver.exists():
+                for user in event.user_approver.all():
+                    event.user_draft.add(user)
+                    event.user_approver.remove(user)
+            event.save()
+            return event
+
+# Reference Designator form
+# Inputs: Reference Designator values
+class ReferenceDesignatorForm(forms.ModelForm):
+    class Meta:
+        model = ReferenceDesignator
+        fields = ['name']
+        labels = {
+            'name': 'Reference Designator Name',
+        }
+        widgets = {
+            'name': forms.TextInput(
+                attrs = {
+                    'style': 'width: 350px;'
+                }
+            )
+        }
+    def __init__(self, *args, **kwargs):
+        super(ReferenceDesignatorForm, self).__init__(*args, **kwargs)
+
+    def clean_name(self):
+        name = self.cleaned_data.get('name')
+        return name
+
+
+# Reference Designator form instance generator for Assembly parts
+EventReferenceDesignatorFormset = inlineformset_factory(
+    ReferenceDesignatorEvent,
+    ReferenceDesignator,
+    form=ReferenceDesignatorForm,
+    fields=('name',),
+    extra=0,
+    can_delete=True
+)

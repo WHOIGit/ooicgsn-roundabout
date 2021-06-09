@@ -60,6 +60,7 @@ def _create_action_history(
         or object_type == Action.CONFDEFEVENT
         or object_type == Action.COEFFNAMEEVENT
         or object_type == Action.CONFNAMEEVENT
+        or object_type == Action.REFDESEVENT
     ) and not referring_obj:
         detail = obj.detail
 
@@ -141,6 +142,10 @@ def _create_action_history(
     elif object_type == Action.VESSEL:
         obj_label = 'Vessel'
         action_record.vessel = obj
+
+    elif object_type == Action.REFDESEVENT:
+        obj_label = "Reference Designator"
+        action_record.reference_designator_event = obj
 
     # Run through the discrete Actions, set up details text and extra records if needed.
     if action_type == Action.ADD:

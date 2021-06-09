@@ -28,12 +28,14 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.db import transaction
 
 from .models import Assembly, AssemblyPart, AssemblyType, AssemblyDocument, AssemblyRevision
-from .forms import AssemblyForm, AssemblyPartForm, AssemblyTypeForm, AssemblyRevisionForm, AssemblyRevisionFormset, AssemblyDocumentationFormset, AssemblyTypeDeleteForm
+from .forms import AssemblyForm, AssemblyPartForm, AssemblyTypeForm, AssemblyRevisionForm, AssemblyRevisionFormset, AssemblyDocumentationFormset, AssemblyTypeDeleteForm, ReferenceDesignatorEventForm, ReferenceDesignatorForm, EventReferenceDesignatorFormset
 from roundabout.parts.models import PartType, Part
 from roundabout.inventory.models import Action
 from roundabout.inventory.utils import _create_action_history, logged_user_review_items
 from roundabout.configs_constants.models import ConfigDefaultEvent, ConfigDefault
-from roundabout.ooi_ci_tools.models import ReferenceDesignator
+from roundabout.ooi_ci_tools.models import ReferenceDesignator, ReferenceDesignatorEvent
+from roundabout.calibrations.utils import handle_reviewers, user_ccc_reviews
+from roundabout.calibrations.tasks import check_events
 from common.util.mixins import AjaxFormMixin
 
 
@@ -732,7 +734,6 @@ class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
         reference_designator = form.cleaned_data['reference_designator']
         updated_name = form.cleaned_data['updated_refdes_name']
         if reference_designator:
-            reference_designator.assembly_parts.remove(self.object)
             self.object.reference_designator = reference_designator
             if len(updated_name) >= 1 and updated_name != reference_designator.name:
                 reference_designator.name = updated_name
@@ -903,3 +904,90 @@ class AssemblyTypeAjaxDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'assembly_type'
     template_name='assemblies/ajax_assembly_type_detail.html'
     redirect_field_name = 'home'
+
+
+
+
+# Handles updating of Reference Designators for AssemblyParts
+class EventReferenceDesignatorUpdate(LoginRequiredMixin, AjaxFormMixin, CreateView):
+    model = ReferenceDesignatorEvent
+    form_class = ReferenceDesignatorEventForm
+    context_object_name = 'event_template'
+    template_name='assemblies/event_referencedesignator_form.html'
+    permission_required = 'assemblies.add_referencedesignatorevent'
+    redirect_field_name = 'home'
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        form.fields['user_draft'].required = False
+        event_referencedesignator_form = EventReferenceDesignatorFormset(
+            instance=self.object
+        )
+        return self.render_to_response(
+            self.get_context_data(
+                form=form,
+                event_referencedesignator_form=event_referencedesignator_form,
+                assm_part_id=self.object.assembly_part.id
+            )
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        event_referencedesignator_form = EventReferenceDesignatorFormset(
+            self.request.POST,
+            instance=self.object
+        )
+        if (form.is_valid() and event_referencedesignator_form.is_valid()):
+            return self.form_valid(form, event_referencedesignator_form)
+        return self.form_invalid(form, event_referencedesignator_form)
+
+    def form_valid(self, form, event_referencedesignator_form):
+        form.instance.approved = False
+        handle_reviewers(form)
+        self.object = form.save()
+        event_referencedesignator_form.instance = self.object
+        event_referencedesignator_form.save()
+        _create_action_history(self.object, Action.UPDATE, self.request.user)
+        response = HttpResponseRedirect(self.get_success_url())
+        if self.request.is_ajax():
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def form_invalid(self, form, event_referencedesignator_form):
+        if self.request.is_ajax():
+            if form.errors:
+                data = form.errors
+                return JsonResponse(
+                    data,
+                    status=400,
+                    safe=False
+                )
+            if event_referencedesignator_form.errors:
+                data = event_referencedesignator_form.errors
+                return JsonResponse(
+                    data,
+                    status=400,
+                    safe=False
+                )
+        else:
+            return self.render_to_response(
+                self.get_context_data(
+                    form=form,
+                    event_referencedesignator_form=event_referencedesignator_form,
+                    form_errors=form_errors
+                )
+            )
+
+    def get_success_url(self):
+        return reverse('assemblies:ajax_assemblyparts_detail', args=(self.object.assembly_part.id, ))

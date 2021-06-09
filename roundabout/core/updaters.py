@@ -33,6 +33,8 @@ def _create_reference_designators():
                 if dflt.config_name.name == 'Reference Designator':
                     if len(dflt.default_value) >= 1:
                         refdes_event, refdes_event_created = ReferenceDesignatorEvent.objects.get_or_create(assembly_part=assm_part)
+                        if refdes_event_created:
+                            _create_action_history(refdes_event, Action.ADD, user=None)
                         refdes_value, refdes_value_created = ReferenceDesignator.objects.get_or_create(name = dflt.default_value, refdes_event = refdes_event)
                         assm_part.reference_designator = refdes_value
                         assm_part.save()

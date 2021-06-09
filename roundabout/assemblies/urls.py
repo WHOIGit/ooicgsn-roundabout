@@ -57,4 +57,5 @@ urlpatterns = [
     path('assemblytype/add/', view=views.AssemblyTypeCreateView.as_view(), name='assembly_type_add'),
     path('assemblytype/edit/<int:pk>/', view=views.AssemblyTypeUpdateView.as_view(), name='assembly_type_update'),
     path('assemblytype/delete/<int:pk>/', view=views.AssemblyTypeDeleteView.as_view(), name='assembly_type_delete'),
+    path('ajax/referencedesignator/edit/<int:pk>/', view=views.EventReferenceDesignatorUpdate.as_view(), name='event_referencedesignator_update'),
 ]

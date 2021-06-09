@@ -62,7 +62,7 @@
         <p>Part Number: <a href="{% url 'parts:parts_detail' assembly_part.part.id %}">{{ assembly_part.part.part_number }}</a> </p>
         <p>Part Type: {{ assembly_part.part.part_type }}</p>
         <p>Current Inventory: {{ assembly_part.part.get_part_inventory_count }}</p>
-        <p>Reference Designator: {{ assembly_part.reference_designator }}</p>
+        <p>Reference Designator: {{ assembly_part.reference_designator }} -- {{assembly_part.part.name}} -- {{assembly_part.assembly_revision}} -- {{assembly_part.inventory.build}} -- {{assembly_part.inventory.build.current_deployment}}</p>
         <p></p>
     <hr>
         {% if assembly_part.parent.id %}
@@ -144,7 +144,9 @@
                 </ul>
             </div>
         {% endif %}
+        {% include "assemblies/reference_designator_detail.html" with assembly_part=assembly_part user=user %}
         {% include "configs_constants/config_default_detail.html" with assembly_part=assembly_part user=user part_has_configs=part_has_configs %}
+        
 
     </div>
 
