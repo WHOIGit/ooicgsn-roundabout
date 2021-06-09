@@ -18,7 +18,7 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 """
-
+import environ
 import json
 import socket
 import os
@@ -68,36 +68,9 @@ from roundabout.core.utils import set_app_labels
 
 labels = set_app_labels()
 # Import environment variables from .env files
-import environ
-
 env = environ.Env()
 # Global variables for views.py functions
 node_type = "inventory"
-
-# Mixins
-# ------------------------------------------------------------------------------
-
-
-class InventoryNavTreeMixin(LoginRequiredMixin, object):
-    def get_context_data(self, **kwargs):
-        context = super(InventoryNavTreeMixin, self).get_context_data(**kwargs)
-        context.update(
-            {
-                "locations": Location.objects.exclude(root_type="Retired")
-                .prefetch_related(
-                    "builds__assembly_revision__assembly_parts__part__part_type"
-                )
-                .prefetch_related("inventory__part__part_type")
-                .prefetch_related("builds__inventory")
-                .prefetch_related("builds__deployments")
-            }
-        )
-        if "current_location" in self.kwargs:
-            context["current_location"] = self.kwargs["current_location"]
-        else:
-            context["current_location"] = 2
-
-        return context
 
 
 # General Functions for Inventory
@@ -557,13 +530,25 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
             coeff_events = None
 
         if self.object.part.part_coefficientnameevents.exists():
-            if self.object.part.part_coefficientnameevents.first().coefficient_names.filter(deprecated=False).exists():
+            if (
+                self.object.part.part_coefficientnameevents.first()
+                .coefficient_names.filter(deprecated=False)
+                .exists()
+            ):
                 part_has_cals = True
 
         if self.object.part.part_confignameevents.exists():
-            if self.object.part.part_confignameevents.first().config_names.filter(config_type='conf', deprecated=False).exists():
+            if (
+                self.object.part.part_confignameevents.first()
+                .config_names.filter(config_type="conf", deprecated=False)
+                .exists()
+            ):
                 part_has_configs = True
-            if self.object.part.part_confignameevents.first().config_names.filter(config_type='cnst', deprecated=False).exists():
+            if (
+                self.object.part.part_confignameevents.first()
+                .config_names.filter(config_type="cnst", deprecated=False)
+                .exists()
+            ):
                 part_has_consts = True
 
         # Get Inventory items by Root Locations
@@ -2097,23 +2082,9 @@ class InventoryHomeView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
 
 
-class InventoryHomeTestView(InventoryNavTreeMixin, TemplateView):
-    template_name = "inventory/inventory_list_test.html"
-    context_object_name = "inventory_item"
-
-    def get_context_data(self, **kwargs):
-        context = super(InventoryHomeTestView, self).get_context_data(**kwargs)
-        # Add Parts list to context to build navtree filter
-        context.update({"part_types": PartType.objects.all(), "node_type": "inventory"})
-        return context
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        context = self.get_context_data(object=self.object)
-        return self.render_to_response(context)
-
-
-####################### Deployment views ########################
+"""
+Deployment views
+"""
 
 
 class InventoryDeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):

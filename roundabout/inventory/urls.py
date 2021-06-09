@@ -27,9 +27,6 @@ app_name = "inventory"
 urlpatterns = [
     path("", view=views.InventoryHomeView.as_view(), name="inventory_home"),
     path(
-        "test/", view=views.InventoryHomeTestView.as_view(), name="inventory_home_test"
-    ),
-    path(
         "<int:pk>/", view=views.InventoryDetailView.as_view(), name="inventory_detail"
     ),
     # AJAX paths
