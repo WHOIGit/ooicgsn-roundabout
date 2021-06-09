@@ -26,27 +26,58 @@
 {% block title %}Exports{% endblock %}
 
 {% block content %}
+<div class="container">
   <h2>Bulk Exports</h2>
+  <p>Use this interface to bulk download certain DB content</p>
+  <p><a type=button class="btn btn-primary" href="{% url 'exports:vessels' %}">Export Vessels</a></p>
+  <p><a type=button class="btn btn-primary" href="{% url 'exports:cruises' %}">Export Cruises</a> Downloads a CruiseInformation.csv file</p>
+  <p><a type=button class="btn btn-primary" href="{% url 'exports:deployments' %}">Export Deployments</a> Downloads a shiplist.csv file</p>
+  <p><a type=button class="btn btn-primary" href="{% url 'exports:calibrations' %}">Export Calibrations</a> Downloads a zip of calibration csv files</p>
+  <p><a type=button class="btn btn-primary" href="{% url 'exports:configconsts' %}">Export Configurations & Constants</a> Downloads a zip of configuration event csv files (incl. constants)</p>
+  <hr>
+
   <div class="row">
-    <div class="col-md-5">
-          <br><a type=button class="btn btn-primary" href="{% url 'exports:cruises' %}">Export Cruises</a>
-              <a type=button class="btn btn-primary" href="{% url 'exports:cruises' %}?ci">CI</a>
+    <h2>Bulk Exports: CI spec</h2>
+    <p>Exports for CI require specific schema and requirements so as to match the OOI CI Asset Management GitHub CSVs.</p>
+  </div>
 
-      <br><br><a type=button class="btn btn-primary" href="{% url 'exports:vessels' %}">Export Vessels</a>
-              <a type=button class="btn btn-primary" href="{% url 'exports:vessels' %}?ci">CI</a>
+  <div class="row">
+    <div class="col-3"><p><a type=button class="btn btn-primary" href="{% url 'exports:CI' %}">Export All <span class="text-monospace">[CI]</span></a></p></div>
+    <div class="col-9"><p>Exports all the below assets to a single zip file named Asset-Management.zip</p></div>
+  </div>
 
-      <br><br><a type=button class="btn btn-primary" href="{% url 'exports:deployments' %}">Export Deployments</a>
+  <div class="row">
+    <div class="col-3"><p><a type=button class="btn btn-primary" href="{% url 'exports:vessels' %}?ci">Export Vessels <span class="text-monospace">[CI]</span></a></p></div>
+    <div class="col-9"><p>Vessels Export is congruous with its respective export function above, with the exception of an ommitted "Notes" column.</p></div>
+  </div>
 
-      <br><br><a type=button class="btn btn-primary" href="{% url 'exports:calibrations' %}">Export Calibrations</a>
-      <br><br><a type=button class="btn btn-primary" href="{% url 'exports:configconsts' %}">Export Configurations & Constants</a>
-      <br><br><a type=button class="btn btn-primary" href="{% url 'exports:calibrations_with_configs' %}">Export Calibrations with<br>Configurations and Constants [CI]</a>
+  <div class="row">
+    <div class="col-3"><p><a type=button class="btn btn-primary" href="{% url 'exports:cruises' %}?ci">Export Cruises <span class="text-monospace">[CI]</span></a></p></div>
+    <div class="col-9"><p>Cruises Export is congruous with its respective export function above, with the exception of ommitted "Friendly Name" and "Destination" columns.</p></div>
+  </div>
 
-      <br><br><a type=button class="btn btn-primary" href="{% url 'exports:CI' %}">Export All [CI]</a>
+  <div class="row">
+    <div class="col-3"><p><a type=button class="btn btn-primary" href="{% url 'exports:deployments' %}">Export Deployments</a></p></div>
+    <div class="col-9"><p>Deployment Exports is congruous its respective export function above.</p></div>
+  </div>
 
-    </div>
-    <div class="col-md-7">
-
+  <div class="row">
+    <div class="col-3"><p><a type=button class="btn btn-primary" href="{% url 'exports:calibrations_with_configs' %}">Export Calibrations with Configurations and Constants</a></p></div>
+    <div class="col-9"><p>This export function is highly specialized. The CalibrationEvents_withConfigs.zip will contain zero or more CI CCC csv files, and a CalibrationsWithConfigs_EXPORTLOG.txt logfile.</p>
+      <p>CCC events that pass <span class="font-italic">all</span> the following Requirements must featurefeature:</p>
+      <ul>
+        <li>CCCs must be reviewed/approved by at least two Users</li>
+        <li>CCCs defined for a Part must be found for the associated Inventory item</li>
+        <li>Inventory must have an associated Assembly part and not be in the Trash location</li>
+        <li>Calibration events must be dated before their associated configuration events</li>
+        <li>"Export with Calibrations" flag must be checked for Configurations and Constants for the Part</li>
+      </ul>
+      <p>In addition to CCC files, a CalibrationsWithConfigs_EXPORTLOG.txt log file describing the process of vetting CCC files for download is included. If you are not seeing a CCC file you were expectiong, check the CalibrationsWithConfigs_EXPORTLOG.txt for your expected file; it may well tell you why it did not export.</p>
+      <p>CalibrationsWithConfigs_EXPORTLOG.txt is not part of the OOI Asset Management GitHub CSV schema and so, before comparison, it will have to be removed so as not to create an error.</p>
     </div>
   </div>
 
+</div>
+
+</div>
 {% endblock %}
