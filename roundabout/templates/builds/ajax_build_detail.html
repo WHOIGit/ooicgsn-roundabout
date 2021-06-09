@@ -338,13 +338,13 @@
                     {% if current_deployment.latitude %}
                     <tr>
                         <th>Latitude</th>
-                        <td>{{ current_deployment.latitude }} &deg; N </td>
+                        <td>{{ current_deployment.latitude }}</td>
                     </tr>
                     {% endif %}
                     {% if current_deployment.longitude %}
                     <tr>
                         <th>Longitude</th>
-                        <td>{{ current_deployment.longitude }} &deg; E </td>
+                        <td>{{ current_deployment.longitude }}</td>
                     </tr>
                     {% endif %}
                     {% if current_deployment.depth %}
@@ -485,7 +485,6 @@
                             <h6>Snapshot Inventory:</h6>
                             <hr>
                             <ul>
-
                               {% recursetree snapshot.inventory_snapshots.all %}
                                   <li>
                                             <span>
@@ -501,11 +500,6 @@
                                   </li>
                               {% endrecursetree %}
                               </ul>
-
-
-
-
-
                         </div>
 
                     </li>
