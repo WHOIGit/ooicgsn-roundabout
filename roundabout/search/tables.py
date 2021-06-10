@@ -275,7 +275,7 @@ class ActionTable(SearchTable):
 class CalibrationTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = CalibrationEvent
-        fields = ['inventory__serial_number','inventory__part__name','calibration_date','deployment','approved','user_approver__all__name','user_draft__all__name','created_at']
+        fields = ['inventory__serial_number','inventory__part__name','inventory__location','calibration_date','deployment','approved','user_approver__all__name','user_draft__all__name','created_at']
         base_shown_cols = ['inventory__serial_number','calibration_date','approved']
 
     inventory__serial_number = Column(verbose_name='Inventory SN', attrs={'style':'white-space: nowrap;'},
@@ -300,7 +300,7 @@ class CalibrationTable(SearchTable):
 class ConfigConstTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = ConfigEvent
-        fields = ['inventory__serial_number','inventory__part__name','config_type','configuration_date','deployment','approved','user_approver__all__name','user_draft__all__name','created_at']
+        fields = ['inventory__serial_number','inventory__part__name','inventory__location','config_type','configuration_date','deployment','approved','user_approver__all__name','user_draft__all__name','created_at']
         base_shown_cols = ['inventory__serial_number','configuration_date','config_type','approved']
 
     inventory__serial_number = Column(verbose_name='Inventory SN', attrs={'style':'white-space: nowrap;'},
