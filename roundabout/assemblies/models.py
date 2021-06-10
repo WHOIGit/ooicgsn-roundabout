@@ -111,7 +111,7 @@ class AssemblyDocument(models.Model):
     )
     name = models.CharField(max_length=255, unique=False)
     doc_type = models.CharField(max_length=20, choices=DOC_TYPES)
-    doc_link = models.CharField(max_length=1000)
+    doc_link = models.URLField(max_length=1000)
     assembly_revision = models.ForeignKey(
         AssemblyRevision,
         related_name="assembly_documents",
