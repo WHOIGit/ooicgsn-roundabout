@@ -37,19 +37,19 @@ from roundabout.configs_constants.models import ConfigEvent, ConfigValue, Config
 from roundabout.inventory.models import Action, DeploymentAction, Inventory, InventoryDeployment
 from roundabout.search.tables import trunc_render
 from roundabout.search.mixins import MultiExportMixin
+from roundabout.exports.views import ExportDeployments
 
 ## === TABLES === ##
 
-class CCC_ValueColumn(Column):
-    def __init__(self, ccc_name, note=False, **kwargs):
-        self.ccc_name = ccc_name
+class ActionData_ValueUpdate_Column(Column):
+    def __init__(self, value_name, note=False, **kwargs):
+        self.value_name = value_name
         self.is_note = note
-        col_name = '{} note'.format(ccc_name) if note else ccc_name
-        super().__init__(accessor='data', verbose_name=col_name, default='',**kwargs)
+        super().__init__(accessor='data', default='', **kwargs)
 
     def render(self,value):
         key = 'updated_notes' if self.is_note else 'updated_values'
-        try: return value[key][self.ccc_name]['to']
+        try: return value[key][self.value_name]['to']
         except KeyError:
             print(value)
             return ''
@@ -63,7 +63,7 @@ class ChangeTableBase(ColumnShiftTable):
         orderable = False
         fields = ['created_at','action_type','user']
         title = None
-    created_at = DateTimeColumn(orderable=True)
+    created_at = DateTimeColumn(verbose_name='Action Timestamp', orderable=True)
 
     def set_column_default_show(self):
         notnote_cols = [col for col in self.sequence if not col.endswith('_note') and not col.endswith('__approved')]
@@ -76,7 +76,6 @@ class CalibChangeActionTable(ChangeTableBase):
         title = 'CalibrationEvent History'
         fields = ['created_at', 'action_type', 'inventory', 'calibration_event', 'calibration_event__approved', 'user']
         object_type = Action.CALEVENT
-    created_at = DateTimeColumn(verbose_name='Action Timestamp')
     inventory = Column(verbose_name='Inventory SN', accessor='calibration_event__inventory',
                 linkify=dict(viewname="inventory:inventory_detail", args=[A('calibration_event__inventory__pk')]))
 
@@ -86,9 +85,17 @@ class ConfChangeActionTable(ChangeTableBase):
         title = 'ConfigurationEvent History'
         fields = ['created_at', 'action_type', 'inventory', 'config_event', 'config_event__approved', 'user', 'config_event__deployment']
         object_type = Action.CONFEVENT
-    created_at = DateTimeColumn(verbose_name='Action Timestamp')
     inventory = Column(verbose_name='Inventory SN', accessor='config_event__inventory',
                 linkify=dict(viewname="inventory:inventory_detail", args=[A('config_event__inventory__pk')]))
+
+
+class DeployementChangeActionTable(ChangeTableBase):
+    class Meta(ChangeTableBase.Meta):
+        title = 'Deployment History'
+        fields = ['created_at', 'action_type', 'build', 'user']
+        object_type = Action.DEPLOYMENT
+    build = Column(verbose_name='Build', accessor='build',
+            linkify=dict(viewname="builds:builds_detail", args=[A('build__pk')]))
 
 
 # ========= FORM STUFF ========= #
@@ -129,6 +136,7 @@ class ChangeSearchView(LoginRequiredMixin, MultiTableMixin, MultiExportMixin, Te
 
     tables = [CalibChangeActionTable,  # needs a way to figure out what CalibEvent falls within a given ref-des
               ConfChangeActionTable,
+              DeployementChangeActionTable,
              ]
     config_event_matches = None
     calib_event_matches = None
@@ -189,7 +197,7 @@ class ChangeSearchView(LoginRequiredMixin, MultiTableMixin, MultiExportMixin, Te
         conf_action_Q = Q(config_event__pk__in=self.config_event_matches)
 
         # Fetch all CalibEvents with an inventory that has ever had a config_event with the matching RefDes (this needs to be further reduced)
-        self.calib_event_matches = CalibrationEvent.objects.filter(inventory__config_events__pk__in=self.config_event_matches).values_list('pk',flat=True)
+        self.calib_event_matches = CalibrationEvent.objects.filter(inventory__inventory_configevents__pk__in=self.config_event_matches).values_list('pk',flat=True)
         calib_action_Q = Q(calibration_event__pk__in=self.calib_event_matches)
 
         # further reduce calib_action_Q: currently calib_action_Q returns ALL CalEvents for a given instrument which has EVER had the matching RefDes is returned.
@@ -211,6 +219,12 @@ class ChangeSearchView(LoginRequiredMixin, MultiTableMixin, MultiExportMixin, Te
                 self.calib_event_matches.append(val[0].pk)
         calib_action_Q = Q(calibration_event__pk__in=self.calib_event_matches)
 
+        # Deployment QS
+        deployment_matches = Deployment.objects.filter(inventory_deployments__inventory__inventory_configevents__pk__in=self.config_event_matches).values_list('pk',flat=True)
+        #ideployment_matches = InventoryDeployment.objects.filter(inventory__inventory_configevents__pk__in=self.config_event_matches).values_list('deployment__pk',flat=True)
+        #deployment_matches = Deployment.objects.filter(pk__in=ideployment_matches).values_list('pk',flat=True)
+        deployment_action_Q = Q(deployment__pk__in=deployment_matches)
+
         qs_list = []
         for table in self.tables:
             if table.Meta.object_type == Action.CONFEVENT:
@@ -218,6 +232,9 @@ class ChangeSearchView(LoginRequiredMixin, MultiTableMixin, MultiExportMixin, Te
                 qs_list.append(action_qs)
             elif table.Meta.object_type == Action.CALEVENT:
                 action_qs = Action.objects.filter(calib_action_Q)
+                qs_list.append(action_qs)
+            elif table.Meta.object_type == Action.DEPLOYMENT:
+                action_qs = Action.objects.filter(deployment_action_Q, data__isnull=False)
                 qs_list.append(action_qs)
 
         return qs_list
@@ -229,18 +246,26 @@ class ChangeSearchView(LoginRequiredMixin, MultiTableMixin, MultiExportMixin, Te
         kwargss = []
         for table in self.tables:
             extra_cols = []
+            verbose_names = {}
             if table.Meta.object_type == Action.CONFEVENT:
-                cc_names = ConfigName.objects.filter(config_values__config_event__pk__in=self.config_event_matches).values_list('name',flat=True)
+                value_names = ConfigName.objects.filter(config_values__config_event__pk__in=self.config_event_matches).values_list('name',flat=True)
             elif table.Meta.object_type == Action.CALEVENT:
-                cc_names = CoefficientName.objects.filter(coefficient_value_sets__calibration_event__pk__in=self.calib_event_matches).values_list('calibration_name',flat=True)
-            else: cc_names = []
-            cc_names = sorted(set(cc_names))
-            for cc_name in cc_names:
-                safename = cc_name.replace(' ','-')
-                col = safename, CCC_ValueColumn(cc_name)
-                col_note = safename +'_note', CCC_ValueColumn(cc_name, note=True)
+                value_names = CoefficientName.objects.filter(coefficient_value_sets__calibration_event__pk__in=self.calib_event_matches).values_list('calibration_name',flat=True)
+            elif table.Meta.object_type == Action.DEPLOYMENT:
+                value_names = [a for h,a in ExportDeployments.header_att if a]
+                verbose_names = {a:h for h,a in ExportDeployments.header_att if a}
+            else: value_names = []
+
+            value_names = sorted(set(value_names))
+            for value_name in value_names:
+                safename = value_name.replace(' ','-')
+                verbose_name = verbose_names[value_name] if value_name in verbose_names else value_name
+                col = safename, ActionData_ValueUpdate_Column(value_name, verbose_name=verbose_name)
                 extra_cols.append(col)
-                extra_cols.append(col_note)
+                if table.Meta.object_type in [Action.CONFEVENT,Action.CALEVENT]:
+                    verbose_name = '{} note'.format(verbose_name)
+                    col_note = safename+'_note', ActionData_ValueUpdate_Column(value_name, verbose_name=verbose_name, note=True)
+                    extra_cols.append(col_note)
 
             kwargss.append( {'extra_columns':extra_cols} )
         return kwargss

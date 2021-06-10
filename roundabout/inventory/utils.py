@@ -142,6 +142,11 @@ def _create_action_history(
         obj_label = 'Vessel'
         action_record.vessel = obj
 
+    elif object_type == Action.DEPLOYMENT:
+        obj_label = "Deployment"
+        action_record.deployment = obj
+        action_record.build = obj.build
+
     # Run through the discrete Actions, set up details text and extra records if needed.
     if action_type == Action.ADD:
         action_record.detail = "%s first added to RDB. %s" % (obj_label, detail)
@@ -152,6 +157,8 @@ def _create_action_history(
         if object_type == Action.CALEVENT:
             pass
         elif object_type == Action.CONFEVENT:
+            pass
+        elif object_type == Action.DEPLOYMENT:
             pass
         action_record.save()
 
@@ -491,7 +498,7 @@ def logged_user_review_items(logged_user, template_type):
         parts_from_cal_name_events = [part_id['part_id'] for part_id in logged_user.reviewer_coefficientnameevents.values('part_id')]
         full_part_list = set(parts_from_config_name_events + parts_from_cal_name_events)
         full_list = list(full_part_list)
-    
+
     if template_type == 'assm':
         assmparts_from_config_def_events = [part_id['assembly_part__part_id'] for part_id in logged_user.reviewer_configdefaultevents.values('assembly_part__part_id')]
         full_assm_list = set(assmparts_from_config_def_events)

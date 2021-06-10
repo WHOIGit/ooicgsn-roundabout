@@ -606,10 +606,7 @@ class Action(models.Model):
         (DEPLOYMENTUPDATE, "%s Update" % (labels["label_deployments_app_singular"])),
         (DEPLOYMENTRECOVER, "%s Recovery" % (labels["label_deployments_app_singular"])),
         (DEPLOYMENTRETIRE, "%s Retired" % (labels["label_deployments_app_singular"])),
-        (
-            DEPLOYMENTDETAILS,
-            "%s Details Updated" % (labels["label_deployments_app_singular"]),
-        ),
+        (DEPLOYMENTDETAILS,"%s Details Updated" % (labels["label_deployments_app_singular"])),
         (ASSIGNDEST, "Assign Destination"),
         (REMOVEDEST, "Remove Destination"),
         (TEST, "Test"),
