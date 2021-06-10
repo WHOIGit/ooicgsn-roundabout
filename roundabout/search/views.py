@@ -172,7 +172,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
             Q_username = Q(**{'username__{}'.format(row['lookup']): row['query']})
             Q_userName = Q(**{'name__{}'.format(row['lookup']): row['query']})
             matching_user_IDs = User.objects.filter(Q_username|Q_userName).values_list('id', flat=True)
-            if field.startswith('calibration_events__latest__'):
+            if field.startswith('inventory_calibrationevents__latest__'):
                 cals_with_matching_users__qs = CalibrationEvent.objects.filter(**{approver_or_draft+'__in':matching_user_IDs})
                 inv_latest_cal__subQ = Subquery(CalibrationEvent.objects.filter(inventory=OuterRef('pk')).values('pk')[:1])
                 all_inv_latest_cal_IDs = Inventory.objects.all().annotate(latest_calib=inv_latest_cal__subQ).values_list('latest_calib', flat=True)
@@ -191,8 +191,8 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
             select_one = [s1 for s1 in select_ones if s1 in field]
             select_one = select_one[0] if select_one else None
 
-            userlist_cases = ['calibration_events__latest__user_approver__any__username',
-                              'calibration_events__latest__user_draft__any__username',
+            userlist_cases = ['inventory_calibrationevents__latest__user_approver__any__username',
+                              'inventory_calibrationevents__latest__user_draft__any__username',
                               'calibration_event__user_approver__any__username',
                               'calibration_event__user_draft__any__username',
                               'config_event__user_approver__any__username',
@@ -432,7 +432,7 @@ class InventoryTableView(GenericSearchTableView):
     model = Inventory
     table_class = InventoryTable
     query_prefetch = ['fieldvalues', 'fieldvalues__field', 'part', 'actions',
-                      'actions__user', 'actions__location', 'build', 'calibration_events']
+                      'actions__user', 'actions__location', 'build', 'inventory_calibrationevents']
     avail_udf = set()
     choice_fields = {'actions__latest__action_type': Action.ACTION_TYPES}
 
@@ -478,14 +478,14 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="actions__count",                  text="Total Action Count",      legal_lookup='NUM_LOOKUP'),
 
                         dict(value=None, text="--Calibrations--", disabled=True),
-                        dict(value="calibration_events__latest__calibration_date", text="Latest Calibration Event: Date", legal_lookup='DATE_LOOKUP',
+                        dict(value="inventory_calibrationevents__latest__calibration_date", text="Latest Calibration Event: Date", legal_lookup='DATE_LOOKUP',
                              col_args = dict(format='Y-m-d', value='value', # must specify value for csv download here because of linkify render
                                              linkify=lambda record,value: reverse(viewname="exports:calibration",
-                                                                     args=[record.calibration_events.latest().pk]) if value else None,
+                                                                     args=[record.inventory_calibrationevents.latest().pk]) if value else None,
                                              )),
-                        dict(value="calibration_events__latest__user_approver__any__username", text="Latest Calibration Event: Approvers", legal_lookup='ITER_LOOKUP'),
-                        dict(value="calibration_events__latest__user_draft__any__username", text="Latest Calibration Event: Reviewers", legal_lookup='ITER_LOOKUP'),
-                        dict(value="calibration_events__latest__approved", text="Latest Calibration Event: Approved", legal_lookup='BOOL_LOOKUP'),
+                        dict(value="inventory_calibrationevents__latest__user_approver__any__username", text="Latest Calibration Event: Approvers", legal_lookup='ITER_LOOKUP'),
+                        dict(value="inventory_calibrationevents__latest__user_draft__any__username", text="Latest Calibration Event: Reviewers", legal_lookup='ITER_LOOKUP'),
+                        dict(value="inventory_calibrationevents__latest__approved", text="Latest Calibration Event: Approved", legal_lookup='BOOL_LOOKUP'),
 
                         ]
         return avail_fields
