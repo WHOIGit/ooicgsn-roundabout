@@ -54,6 +54,14 @@
                             data-node-type="{{ node_type }}">Add Configuration Defaults</a>
                     {% endif %}
                 {% endif %}
+                {% if not assembly_part.assemblypart_referencedesignatorevents.exists %}
+                    <a  id="add_configdefault_action"
+                        class="dropdown-item"
+                        href="#"
+                        data-detail-url="{% url 'assemblies:event_referencedesignator_add' assembly_part.id %}"
+                        data-node-id="{{ assembly_part.id }}"
+                        data-node-type="{{ node_type }}">Add Reference Designator</a>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -62,7 +70,7 @@
         <p>Part Number: <a href="{% url 'parts:parts_detail' assembly_part.part.id %}">{{ assembly_part.part.part_number }}</a> </p>
         <p>Part Type: {{ assembly_part.part.part_type }}</p>
         <p>Current Inventory: {{ assembly_part.part.get_part_inventory_count }}</p>
-        <p>Reference Designator: {{ assembly_part.reference_designator }} -- {{assembly_part.part.name}} -- {{assembly_part.assembly_revision}} -- {{assembly_part.inventory.build}} -- {{assembly_part.inventory.build.current_deployment}}</p>
+        <p>Reference Designator: {{ assembly_part.assemblypart_referencedesignatorevents.first.reference_designators.first.name }} -- {{assembly_part.part.name}} -- {{assembly_part.assembly_revision}} -- {{assembly_part.inventory.build}} -- {{assembly_part.inventory.build.current_deployment}}</p>
         <p></p>
     <hr>
         {% if assembly_part.parent.id %}

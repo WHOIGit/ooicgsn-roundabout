@@ -278,6 +278,9 @@ class ReferenceDesignatorEventForm(forms.ModelForm):
                     event.user_draft.add(user)
                     event.user_approver.remove(user)
             event.save()
+            assm_obj = AssemblyPart.objects.get(id=event.assembly_part.id)
+            assm_obj.reference_designator = event.reference_designators.first()
+            assm_obj.save()
             return event
 
 # Reference Designator form
@@ -311,5 +314,14 @@ EventReferenceDesignatorFormset = inlineformset_factory(
     form=ReferenceDesignatorForm,
     fields=('name',),
     extra=0,
+    can_delete=True
+)
+
+EventReferenceDesignatorAddFormset = inlineformset_factory(
+    ReferenceDesignatorEvent,
+    ReferenceDesignator,
+    form=ReferenceDesignatorForm,
+    fields=('name',),
+    extra=1,
     can_delete=True
 )

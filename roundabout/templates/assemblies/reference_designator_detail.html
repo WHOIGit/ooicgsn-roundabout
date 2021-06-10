@@ -87,6 +87,17 @@
                                 Unapprove
                             </button>
                         {% endif %}
+                        <div class="ajax-detail-link float-right">
+                            <a  href="#" 
+                                class="btn btn-danger btn-sm mr-2"
+                                data-detail-url="{% url 'assemblies:event_referencedesignator_delete' event.id %}" 
+                                data-node-id="{{assembly_part.id}}"
+                                data-node-type="assemblyparts"
+                                role="button" 
+                            >
+                                    Delete
+                            </a>
+                        </div>
                         <p id = 'approvers'>Approvers: 
                             {% for user in event.get_sorted_approvers.all %}
                                 <span id='approver-{{ user.id }}'>{{ user.username }}</span>

@@ -97,6 +97,11 @@
             
             // Hide default form delete checkboxes
             $('[id$=-DELETE]').hide();
+
+            let assm_id = '{{assm_part_id}}'
+            $('#submit').on('click', function() {
+                location.href = '/assemblies/assemblypart/' + assm_id + '/';
+            })
         })
 
     </script>
