@@ -164,7 +164,7 @@ class AssemblyPart(MPTTModel):
     reference_designator = models.ForeignKey(
         'ooi_ci_tools.ReferenceDesignator',
         related_name="assembly_parts",
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         null=True
     )
     note = models.TextField(blank=True)
