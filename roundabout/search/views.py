@@ -172,7 +172,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
             Q_username = Q(**{'username__{}'.format(row['lookup']): row['query']})
             Q_userName = Q(**{'name__{}'.format(row['lookup']): row['query']})
             matching_user_IDs = User.objects.filter(Q_username|Q_userName).values_list('id', flat=True)
-            if field.startswith('calibration_events__latest__'):
+            if field.startswith('inventory_calibrationevents__latest__'):
                 cals_with_matching_users__qs = CalibrationEvent.objects.filter(**{approver_or_draft+'__in':matching_user_IDs})
                 inv_latest_cal__subQ = Subquery(CalibrationEvent.objects.filter(inventory=OuterRef('pk')).values('pk')[:1])
                 all_inv_latest_cal_IDs = Inventory.objects.all().annotate(latest_calib=inv_latest_cal__subQ).values_list('latest_calib', flat=True)
@@ -191,8 +191,8 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
             select_one = [s1 for s1 in select_ones if s1 in field]
             select_one = select_one[0] if select_one else None
 
-            userlist_cases = ['calibration_events__latest__user_approver__any__username',
-                              'calibration_events__latest__user_draft__any__username',
+            userlist_cases = ['inventory_calibrationevents__latest__user_approver__any__username',
+                              'inventory_calibrationevents__latest__user_draft__any__username',
                               'calibration_event__user_approver__any__username',
                               'calibration_event__user_draft__any__username',
                               'config_event__user_approver__any__username',
@@ -431,7 +431,8 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
 class InventoryTableView(GenericSearchTableView):
     model = Inventory
     table_class = InventoryTable
-    query_prefetch = ['fieldvalues', 'fieldvalues__field', 'part', 'actions', 'actions__user', 'actions__location']
+    query_prefetch = ['fieldvalues', 'fieldvalues__field', 'part', 'actions',
+                      'actions__user', 'actions__location', 'build', 'inventory_calibrationevents']
     avail_udf = set()
     choice_fields = {'actions__latest__action_type': Action.ACTION_TYPES}
 
@@ -445,7 +446,7 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="old_serial_number", text="Old Serial Number", legal_lookup='STR_LOOKUP'),
                         dict(value="location__name",             text="Location", legal_lookup='STR_LOOKUP'),
                         dict(value="build__assembly__name",    text="Build Name", legal_lookup='STR_LOOKUP'),
-                        dict(value="build__build_number  ",  text="Build Number", legal_lookup='STR_LOOKUP'),
+                        dict(value="build__build_number",    text="Build Number", legal_lookup='STR_LOOKUP'),
                         dict(value="created_at",             text="Date Created", legal_lookup='DATE_LOOKUP'),
                         dict(value="updated_at",            text="Date Modified", legal_lookup='DATE_LOOKUP'),
                         dict(value="build__is_deployed", text="is-build-deployed?", legal_lookup='BOOL_LOOKUP'),
@@ -477,14 +478,14 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="actions__count",                  text="Total Action Count",      legal_lookup='NUM_LOOKUP'),
 
                         dict(value=None, text="--Calibrations--", disabled=True),
-                        dict(value="calibration_events__latest__calibration_date", text="Latest Calibration Event: Date", legal_lookup='DATE_LOOKUP',
+                        dict(value="inventory_calibrationevents__latest__calibration_date", text="Latest Calibration Event: Date", legal_lookup='DATE_LOOKUP',
                              col_args = dict(format='Y-m-d', value='value', # must specify value for csv download here because of linkify render
                                              linkify=lambda record,value: reverse(viewname="exports:calibration",
-                                                                     args=[record.calibration_events.latest().pk]) if value else None,
+                                                                     args=[record.inventory_calibrationevents.latest().pk]) if value else None,
                                              )),
-                        dict(value="calibration_events__latest__user_approver__any__username", text="Latest Calibration Event: Approvers", legal_lookup='ITER_LOOKUP'),
-                        dict(value="calibration_events__latest__user_draft__any__username", text="Latest Calibration Event: Reviewers", legal_lookup='ITER_LOOKUP'),
-                        dict(value="calibration_events__latest__approved", text="Latest Calibration Event: Approved", legal_lookup='BOOL_LOOKUP'),
+                        dict(value="inventory_calibrationevents__latest__user_approver__any__username", text="Latest Calibration Event: Approvers", legal_lookup='ITER_LOOKUP'),
+                        dict(value="inventory_calibrationevents__latest__user_draft__any__username", text="Latest Calibration Event: Reviewers", legal_lookup='ITER_LOOKUP'),
+                        dict(value="inventory_calibrationevents__latest__approved", text="Latest Calibration Event: Approved", legal_lookup='BOOL_LOOKUP'),
 
                         ]
         return avail_fields
@@ -684,7 +685,8 @@ class AssemblyTableView(GenericSearchTableView):
 class ActionTableView(GenericSearchTableView):
     model = Action
     table_class = ActionTable
-    query_prefetch = ['user','inventory','inventory__part','cruise','build','build__assembly_revision__assembly','deployment']
+    query_prefetch = ['user','inventory','inventory__part','cruise',
+                      'build','build__assembly_revision__assembly','deployment']
     choice_fields = {'action_type': Action.ACTION_TYPES}
 
     @staticmethod
@@ -714,12 +716,15 @@ class ActionTableView(GenericSearchTableView):
 class CalibrationTableView(GenericSearchTableView):
     model = CoefficientValueSet
     table_class = CalibrationTable
-    query_prefetch = ['coefficient_name','calibration_event','calibration_event__inventory','calibration_event__inventory__part','calibration_event__user_approver','calibration_event__user_draft']
+    query_prefetch = ['coefficient_name','calibration_event','calibration_event__inventory',
+                      'calibration_event__inventory__part','calibration_event__inventory__location',
+                      'calibration_event__user_approver','calibration_event__user_draft']
 
     @staticmethod
     def get_avail_fields():
         avail_fields = [dict(value="calibration_event__inventory__serial_number", text="Inventory: SN", legal_lookup='STR_LOOKUP'),
                         dict(value="calibration_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
+                        dict(value="calibration_event__inventory__location__name", text="Inventory: Location", legal_lookup='STR_LOOKUP'),
                         dict(value="coefficient_name__calibration_name", text="Coefficient Name", legal_lookup='STR_LOOKUP'),
                         dict(value="calibration_event__calibration_date", text="Calibration Event: Date", legal_lookup='DATE_LOOKUP'),
                         dict(value="calibration_event__user_approver__any__username", text="Calibration Event: Approvers", legal_lookup='ITER_LOOKUP'),
@@ -758,12 +763,15 @@ class CalibrationTableView(GenericSearchTableView):
 class ConfigConstTableView(GenericSearchTableView):
     model = ConfigValue
     table_class = ConfigConstTable
-    query_prefetch = ['config_name','config_event','config_event__inventory','config_event__inventory__part','config_event__user_approver','config_event__user_draft']
+    query_prefetch = ['config_name','config_event','config_event__inventory',
+                      'config_event__inventory__part','config_event__inventory__location',
+                      'config_event__user_approver','config_event__user_draft']
 
     @staticmethod
     def get_avail_fields():
         avail_fields = [dict(value="config_event__inventory__serial_number", text="Inventory: SN", legal_lookup='STR_LOOKUP'),
                         dict(value="config_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
+                        dict(value="config_event__inventory__location__name", text="Inventory: Location", legal_lookup='STR_LOOKUP'),
                         dict(value="config_name__name", text="Config/Const Name", legal_lookup='STR_LOOKUP'),
                         dict(value="config_event__configuration_date", text="Config/Const Event: Date", legal_lookup='DATE_LOOKUP'),
                         dict(value="config_event__user_approver__any__username", text="Config/Const Event: Approvers", legal_lookup='ITER_LOOKUP'),

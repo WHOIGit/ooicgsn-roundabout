@@ -142,7 +142,7 @@ class Cruise(models.Model):
 
 class CruiseHyperlink(models.Model):
     text = models.CharField(max_length=255, unique=False)
-    url = models.CharField(max_length=1000)
+    url = models.URLField(max_length=1000)
     parent = models.ForeignKey(
         Cruise,
         related_name="hyperlinks",

@@ -210,7 +210,7 @@ class Inventory(MPTTModel):
 
 class InventoryHyperlink(models.Model):
     text = models.CharField(max_length=255, unique=False, blank=False, null=False)
-    url = models.CharField(max_length=1000)
+    url = models.URLField(max_length=1000)
     parent = models.ForeignKey(
         Inventory,
         related_name="hyperlinks",
