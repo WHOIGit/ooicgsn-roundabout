@@ -499,7 +499,8 @@ def logged_user_review_items(logged_user, template_type):
     
     if template_type == 'assm':
         assmparts_from_config_def_events = [part_id['assembly_part__part_id'] for part_id in logged_user.reviewer_configdefaultevents.values('assembly_part__part_id')]
-        full_assm_list = set(assmparts_from_config_def_events)
+        assmparts_from_refdes_events = [part_id['assembly_part__part_id'] for part_id in logged_user.reviewer_referencedesignatorevents.values('assembly_part__part_id')]
+        full_assm_list = set(assmparts_from_config_def_events + assmparts_from_refdes_events)
         full_list = list(full_assm_list)
 
     return full_list

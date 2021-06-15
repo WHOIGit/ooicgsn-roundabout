@@ -148,10 +148,10 @@ class ReferenceDesignatorEvent(CCCEvent):
 
 class ReferenceDesignator(models.Model):
     class Meta:
-        ordering = ['name']
+        ordering = ['refdes_name']
     def __str__(self):
-        return self.name
+        return self.refdes_name
     def get_object_type(self):
         return 'reference_designator'
-    name = models.CharField(max_length=255, unique=False, db_index=True)
+    refdes_name = models.CharField(max_length=255, unique=False, db_index=True)
     refdes_event = models.ForeignKey(ReferenceDesignatorEvent, related_name='reference_designators', on_delete=models.CASCADE, null=True)

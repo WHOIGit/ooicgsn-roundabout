@@ -59,7 +59,7 @@
                 {{ event_referencedesignator_form.management_form }}
                 {% for des in event_referencedesignator_form %}
                   <tr>
-                      <td>{% if des.id  %}{{ des.DELETE }}{% endif %} {{ des.id }} {{ des.name }}</td>
+                      <td>{% if des.id  %}{{ des.DELETE }}{% endif %} {{ des.id }} {{ des.refdes_name }}</td>
                   </tr>
               {% endfor %}
               </tbody>

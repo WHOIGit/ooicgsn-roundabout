@@ -24,6 +24,7 @@ from django import forms
 from django.shortcuts import get_object_or_404
 from django.forms.models import inlineformset_factory
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 from django_summernote.widgets import SummernoteWidget
 from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
@@ -288,12 +289,12 @@ class ReferenceDesignatorEventForm(forms.ModelForm):
 class ReferenceDesignatorForm(forms.ModelForm):
     class Meta:
         model = ReferenceDesignator
-        fields = ['name']
+        fields = ['refdes_name']
         labels = {
-            'name': 'Reference Designator Name',
+            'refdes_name': 'Reference Designator Name',
         }
         widgets = {
-            'name': forms.TextInput(
+            'refdes_name': forms.TextInput(
                 attrs = {
                     'style': 'width: 350px;'
                 }
@@ -302,8 +303,53 @@ class ReferenceDesignatorForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ReferenceDesignatorForm, self).__init__(*args, **kwargs)
 
-    def clean_name(self):
-        name = self.cleaned_data.get('name')
+    def clean_refdes_name(self):
+        name = self.cleaned_data.get('refdes_name')
+        assertion_sets = name.split('-')
+        try:
+            assert len(assertion_sets) == 4
+        except:
+            raise ValidationError(
+                _('Reference Designator: %(name)s: Entered string must contain four dash-separated sections.'),
+                params={'name': name}
+            )
+        try:
+            first_section = assertion_sets[0]
+            assert type(first_section) is str
+            assert len(first_section) == 8 
+        except:
+            raise ValidationError(
+                _('Reference Designator: %(name)s: First section should be an 8-character string'),
+                params={'name': name}
+            )
+        try:
+            second_section = assertion_sets[1]
+            assert type(second_section) is str
+            assert len(second_section) == 5
+        except:
+            raise ValidationError(
+                _('Reference Designator: %(name)s: Second section should be a 5-character string'),
+                params={'name': name}
+            )
+        try:
+            third_section = assertion_sets[2]
+            assert len(third_section) == 2
+            intable_2 = int(third_section)
+            assert type(intable_2) is int
+        except:
+            raise ValidationError(
+                _('Reference Designator: %(name)s: Third section should be a 2-digit integer'),
+                params={'name': name}
+            )
+        try:
+            fourth_section = assertion_sets[3]
+            assert type(fourth_section) is str
+            assert len(fourth_section) == 9
+        except:
+            raise ValidationError(
+                _('Reference Designator: %(name)s: Fourth section should be a 9-character string'),
+                params={'name': name}
+            )
         return name
 
 
@@ -312,7 +358,7 @@ EventReferenceDesignatorFormset = inlineformset_factory(
     ReferenceDesignatorEvent,
     ReferenceDesignator,
     form=ReferenceDesignatorForm,
-    fields=('name',),
+    fields=('refdes_name',),
     extra=0,
     can_delete=True
 )
@@ -321,7 +367,7 @@ EventReferenceDesignatorAddFormset = inlineformset_factory(
     ReferenceDesignatorEvent,
     ReferenceDesignator,
     form=ReferenceDesignatorForm,
-    fields=('name',),
+    fields=('refdes_name',),
     extra=1,
     can_delete=True
 )
