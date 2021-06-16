@@ -68,6 +68,7 @@ def user_ccc_reviews(event, user, evt_type):
     found_cal_events = False
     found_conf_events = False
     found_deploy_events = False
+    found_refdes_events = False
     all_reviewed = False
     if evt_type in ['calibration_event','config_event', 'constant_default_event']:
         if user.reviewer_calibrationevents.exists():
@@ -83,10 +84,12 @@ def user_ccc_reviews(event, user, evt_type):
             found_conf_events = event.part.part_confignameevents.filter(user_draft__in=[user])
         if not found_cal_events and not found_conf_events:
             all_reviewed = True
-    if evt_type in ['config_default_event']:
+    if evt_type in ['config_default_event', 'reference_designator_event']:
         if user.reviewer_configdefaultevents.exists():
             found_conf_events = event.assembly_part.assemblypart_configdefaultevents.filter(user_draft__in=[user])
-        if not found_conf_events:
+        if user.reviewer_referencedesignatorevents.exists():
+            found_refdes_events = event.assembly_part.assemblypart_referencedesignatorevents.filter(user_draft__in=[user])
+        if not found_conf_events and not found_refdes_events:
             all_reviewed = True
     if evt_type in ['deployment']:
         if user.reviewer_deployments.exists():

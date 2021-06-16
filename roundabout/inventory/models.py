@@ -637,6 +637,7 @@ class Action(models.Model):
     CONFDEFEVENT = "configdefaultevent"
     COEFFNAMEEVENT = "coefficientnameevent"
     CONFNAMEEVENT = "confignameevent"
+    REFDESEVENT = "referencedesignatorevent"
     LOCATION = "location"
     VESSEL = "vessel"
     CRUISE = "cruise"
@@ -653,6 +654,7 @@ class Action(models.Model):
         (LOCATION, "Location"),
         (VESSEL, "Vessel"),
         (CRUISE, "Cruise"),
+        (REFDESEVENT, "Reference Designator Event"),
     )
     # deployment_type choices
     BUILD_DEPLOYMENT = "build_deployment"
@@ -711,9 +713,16 @@ class Action(models.Model):
         null=True,
         blank=True,
     )
+    reference_designator_event = models.ForeignKey(
+        "ooi_ci_tools.ReferenceDesignatorEvent",
+        related_name="actions",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
     action_type = models.CharField(max_length=20, choices=ACTION_TYPES, db_index=True)
     object_type = models.CharField(
-        max_length=20, choices=OBJECT_TYPES, null=False, blank=True, db_index=True
+        max_length=25, choices=OBJECT_TYPES, null=False, blank=True, db_index=True
     )
     created_at = models.DateTimeField(default=timezone.now)
     detail = models.TextField(blank=True)

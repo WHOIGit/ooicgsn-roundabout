@@ -131,3 +131,27 @@ class CCCEvent(models.Model):
 
     def get_sorted_approvers(self):
         return self.user_approver.all().order_by('username')
+
+
+class ReferenceDesignatorEvent(CCCEvent):
+    class Meta:
+        ordering = ['-created_at']
+    def __str__(self):
+        return self.name
+    def get_object_type(self):
+        return 'reference_designator_event'
+
+    def get_actions(self):
+        return self.actions.filter(object_type='referencedesignatorevent')
+
+
+
+class ReferenceDesignator(models.Model):
+    class Meta:
+        ordering = ['refdes_name']
+    def __str__(self):
+        return self.refdes_name
+    def get_object_type(self):
+        return 'reference_designator'
+    refdes_name = models.CharField(max_length=255, unique=False, db_index=True)
+    refdes_event = models.ForeignKey(ReferenceDesignatorEvent, related_name='reference_designators', on_delete=models.CASCADE, null=True)
