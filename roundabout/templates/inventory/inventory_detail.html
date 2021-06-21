@@ -58,7 +58,7 @@
 
             <div class="card" id="detail-view">
 
-                {% include "inventory/ajax_inventory_detail.html" %}
+                {% include "inventory/ajax_inventory_detail.html" with part_has_cals=part_has_cals part_has_configs=part_has_configs part_has_consts=part_has_consts coeff_events=coeff_events inv_has_conf_events=inv_has_conf_events inv_has_const_events=inv_has_const_events %}
 
             </div>
         </div>

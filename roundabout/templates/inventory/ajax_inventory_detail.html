@@ -153,7 +153,7 @@
                 data-location-id="{{ inventory_item.location.id}}"
                 data-node-type="{{ node_type }}">Edit Inventory Details</a>
 
-            {% if not user|has_group:"inventory only" %}
+            {% if user|has_group:"admin" or user|has_group:"technician" %}
                 {% if part_has_cals and inventory_item.part.part_type.ccc_toggle %}
                     <a  id="add_coefficient_action"
                         class="dropdown-item"
@@ -436,11 +436,13 @@
             </li>
         {% endif %}
 
-        {% if inventory_item.inventory_configevents.exists and inventory_item.part.part_type.ccc_toggle %}
+        {% if inv_has_const_events and inventory_item.part.part_type.ccc_toggle %}
             <li class="nav-item">
                 <a class="nav-link" id="const-template-tab" data-toggle="tab" href="#const-template" role="tab" aria-controls="const-template" aria-selected="false">Constant History</a>
             </li>
+        {% endif %}
 
+        {% if inv_has_conf_events and inventory_item.part.part_type.ccc_toggle %}
             <li class="nav-item">
                 <a class="nav-link" id="conf-template-tab" data-toggle="tab" href="#conf-template" role="tab" aria-controls="conf-template" aria-selected="false">Configuration History</a>
             </li>

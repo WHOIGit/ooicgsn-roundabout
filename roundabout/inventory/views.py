@@ -521,6 +521,8 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         part_has_cals = False
         part_has_configs = False
         part_has_consts = False
+        inv_has_conf_events = False
+        inv_has_const_events = False
 
         if self.object.inventory_calibrationevents.exists():
             coeff_events = self.object.inventory_calibrationevents.prefetch_related(
@@ -551,6 +553,12 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
             ):
                 part_has_consts = True
 
+        if self.object.inventory_configevents.exists():
+            if self.object.inventory_configevents.filter(config_type='conf'):
+                inv_has_conf_events = True
+            if self.object.inventory_configevents.filter(config_type='const'):
+                inv_has_const_events = True
+
         # Get Inventory items by Root Locations
         inventory_location_data = []
         root_locations = Location.objects.root_nodes().exclude(root_type="Trash")
@@ -571,6 +579,8 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
                 "part_has_cals": part_has_cals,
                 "part_has_configs": part_has_configs,
                 "part_has_consts": part_has_consts,
+                'inv_has_conf_events': inv_has_conf_events,
+                'inv_has_const_events': inv_has_const_events,
                 "coeff_events": coeff_events,
                 "printers": printers,
                 "custom_fields": custom_fields,
@@ -2027,6 +2037,47 @@ class InventoryDetailView(LoginRequiredMixin, DetailView):
         else:
             custom_fields = None
 
+        part_has_cals = False
+        part_has_configs = False
+        part_has_consts = False
+        inv_has_conf_events = False
+        inv_has_const_events = False
+
+        if self.object.inventory_calibrationevents.exists():
+            coeff_events = self.object.inventory_calibrationevents.prefetch_related(
+                "coefficient_value_sets__coefficient_values"
+            )
+        else:
+            coeff_events = None
+
+        if self.object.part.part_coefficientnameevents.exists():
+            if (
+                self.object.part.part_coefficientnameevents.first()
+                .coefficient_names.filter(deprecated=False)
+                .exists()
+            ):
+                part_has_cals = True
+
+        if self.object.part.part_confignameevents.exists():
+            if (
+                self.object.part.part_confignameevents.first()
+                .config_names.filter(config_type="conf", deprecated=False)
+                .exists()
+            ):
+                part_has_configs = True
+            if (
+                self.object.part.part_confignameevents.first()
+                .config_names.filter(config_type="cnst", deprecated=False)
+                .exists()
+            ):
+                part_has_consts = True
+            
+        if self.object.inventory_configevents.exists():
+            if self.object.inventory_configevents.filter(config_type='conf'):
+                inv_has_conf_events = True
+            if self.object.inventory_configevents.filter(config_type='const'):
+                inv_has_const_events = True
+
         # Get Inventory items by Root Locations
         inventory_location_data = []
         root_locations = Location.objects.root_nodes().exclude(root_type="Trash")
@@ -2044,6 +2095,12 @@ class InventoryDetailView(LoginRequiredMixin, DetailView):
 
         context.update(
             {
+                "part_has_cals": part_has_cals,
+                "part_has_configs": part_has_configs,
+                "part_has_consts": part_has_consts,
+                'inv_has_conf_events': inv_has_conf_events,
+                'inv_has_const_events': inv_has_const_events,
+                "coeff_events": coeff_events,
                 "part_types": part_types,
                 "printers": printers,
                 "custom_fields": custom_fields,
