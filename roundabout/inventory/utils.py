@@ -60,6 +60,7 @@ def _create_action_history(
         or object_type == Action.CONFDEFEVENT
         or object_type == Action.COEFFNAMEEVENT
         or object_type == Action.CONFNAMEEVENT
+        or object_type == Action.REFDESEVENT
     ) and not referring_obj:
         detail = obj.detail
 
@@ -146,6 +147,10 @@ def _create_action_history(
         obj_label = "Deployment"
         action_record.deployment = obj
         action_record.build = obj.build
+
+    elif object_type == Action.REFDESEVENT:
+        obj_label = "Reference Designator"
+        action_record.reference_designator_event = obj
 
     # Run through the discrete Actions, set up details text and extra records if needed.
     if action_type == Action.ADD:
@@ -501,7 +506,8 @@ def logged_user_review_items(logged_user, template_type):
 
     if template_type == 'assm':
         assmparts_from_config_def_events = [part_id['assembly_part__part_id'] for part_id in logged_user.reviewer_configdefaultevents.values('assembly_part__part_id')]
-        full_assm_list = set(assmparts_from_config_def_events)
+        assmparts_from_refdes_events = [part_id['assembly_part__part_id'] for part_id in logged_user.reviewer_referencedesignatorevents.values('assembly_part__part_id')]
+        full_assm_list = set(assmparts_from_config_def_events + assmparts_from_refdes_events)
         full_list = list(full_assm_list)
 
     return full_list

@@ -24,9 +24,13 @@ from django import forms
 from django.shortcuts import get_object_or_404
 from django.forms.models import inlineformset_factory
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 from django_summernote.widgets import SummernoteWidget
 from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
+
+from roundabout.ooi_ci_tools.models import ReferenceDesignator, ReferenceDesignatorEvent
+from roundabout.calibrations.utils import reviewer_users
 
 from .models import Assembly, AssemblyPart, AssemblyType, AssemblyRevision, AssemblyDocument
 # Get the app label names from the core utility functions
@@ -169,18 +173,21 @@ AssemblyDocumentationFormset = inlineformset_factory(AssemblyRevision, AssemblyD
 
 
 class AssemblyPartForm(forms.ModelForm):
+    updated_refdes_name = forms.CharField(required = False)
 
     class Meta:
         model = AssemblyPart
-        fields = ['assembly_revision', 'part', 'parent', 'note']
+        fields = ['reference_designator', 'updated_refdes_name', 'assembly_revision', 'part', 'parent', 'note']
         labels = {
+            'reference_designator': 'Reference Designator',
+            'updated_refdes_name': 'Create new or update existing Reference Designator',
             'part': 'Select Part Template',
             'parent': 'Parent %s Part' % (labels['label_assemblies_app_singular']),
             'note': 'Design Notes'
         }
 
         widgets = {
-            'assembly_revision': forms.HiddenInput(),
+            'assembly_revision': forms.HiddenInput()
         }
 
     class Media:
@@ -201,6 +208,7 @@ class AssemblyPartForm(forms.ModelForm):
         super(AssemblyPartForm, self).__init__(*args, **kwargs)
         #self.fields['parent'].queryset = MooringPart.objects.none()
         #self.fields['parent'].queryset = AssemblyPart.objects.filter(id=self.parent_pk)
+        self.fields['reference_designator'].required = False
         if self.assembly_revision_pk:
             self.fields['parent'].queryset = AssemblyPart.objects.filter(assembly_revision_id=self.assembly_revision_pk)
         elif self.instance.pk:
@@ -237,3 +245,129 @@ class AssemblyTypeDeleteForm(forms.Form):
 
         # remove this object from the possible replacements
         self.fields['new_assembly_type'].queryset = AssemblyType.objects.exclude(id=assembly_type_to_delete.id)
+
+
+
+
+# Config Default Event form
+# Inputs: Reviewers
+class ReferenceDesignatorEventForm(forms.ModelForm):
+    class Meta:
+        model = ReferenceDesignatorEvent
+        fields = ['user_draft']
+        labels = {
+            'user_draft': 'Reviewers'
+        }
+        widgets = {
+            'user_draft': forms.SelectMultiple()
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(ReferenceDesignatorEventForm, self).__init__(*args, **kwargs)
+        self.fields['user_draft'].queryset = reviewer_users()
+
+    def clean_user_draft(self):
+        user_draft = self.cleaned_data.get('user_draft')
+        return user_draft
+
+    def save(self, commit = True):
+        event = super(ReferenceDesignatorEventForm, self).save(commit = False)
+        if commit:
+            event.save()
+            if event.user_approver.exists():
+                for user in event.user_approver.all():
+                    event.user_draft.add(user)
+                    event.user_approver.remove(user)
+            event.save()
+            assm_obj = AssemblyPart.objects.get(id=event.assembly_part.id)
+            assm_obj.reference_designator = event.reference_designators.first()
+            assm_obj.save()
+            return event
+
+# Reference Designator form
+# Inputs: Reference Designator values
+class ReferenceDesignatorForm(forms.ModelForm):
+    class Meta:
+        model = ReferenceDesignator
+        fields = ['refdes_name']
+        labels = {
+            'refdes_name': 'Reference Designator Name',
+        }
+        widgets = {
+            'refdes_name': forms.TextInput(
+                attrs = {
+                    'style': 'width: 350px;'
+                }
+            )
+        }
+    def __init__(self, *args, **kwargs):
+        super(ReferenceDesignatorForm, self).__init__(*args, **kwargs)
+
+    def clean_refdes_name(self):
+        name = self.cleaned_data.get('refdes_name')
+        assertion_sets = name.split('-')
+        try:
+            assert len(assertion_sets) == 4
+        except:
+            raise ValidationError(
+                _('Reference Designator: %(name)s: Entered string must contain four dash-separated sections.'),
+                params={'name': name}
+            )
+        try:
+            first_section = assertion_sets[0]
+            assert type(first_section) is str
+            assert len(first_section) == 8 
+        except:
+            raise ValidationError(
+                _('Reference Designator: %(name)s: First section should be an 8-character string'),
+                params={'name': name}
+            )
+        try:
+            second_section = assertion_sets[1]
+            assert type(second_section) is str
+            assert len(second_section) == 5
+        except:
+            raise ValidationError(
+                _('Reference Designator: %(name)s: Second section should be a 5-character string'),
+                params={'name': name}
+            )
+        try:
+            third_section = assertion_sets[2]
+            assert len(third_section) == 2
+            intable_2 = int(third_section)
+            assert type(intable_2) is int
+        except:
+            raise ValidationError(
+                _('Reference Designator: %(name)s: Third section should be a 2-digit integer'),
+                params={'name': name}
+            )
+        try:
+            fourth_section = assertion_sets[3]
+            assert type(fourth_section) is str
+            assert len(fourth_section) == 9
+        except:
+            raise ValidationError(
+                _('Reference Designator: %(name)s: Fourth section should be a 9-character string'),
+                params={'name': name}
+            )
+        return name
+
+
+# Reference Designator form instance generator for Assembly parts
+EventReferenceDesignatorFormset = inlineformset_factory(
+    ReferenceDesignatorEvent,
+    ReferenceDesignator,
+    form=ReferenceDesignatorForm,
+    fields=('refdes_name',),
+    extra=0,
+    can_delete=True
+)
+
+EventReferenceDesignatorAddFormset = inlineformset_factory(
+    ReferenceDesignatorEvent,
+    ReferenceDesignator,
+    form=ReferenceDesignatorForm,
+    fields=('refdes_name',),
+    extra=1,
+    can_delete=True
+)
