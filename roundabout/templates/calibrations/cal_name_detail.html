@@ -153,8 +153,16 @@
                                                                     <tr style = 'text-align: center;'>
                                                                         <td>{{ name.value_set_type }}</td>
                                                                         <td>{{ name.sigfig_override }}</td>
-                                                                        <td>{{ name.threshold_low }}</td>
-                                                                        <td>{{ name.threshold_high }}</td>
+                                                                        {% if name.threshold_low and name.threshold_high %}
+                                                                            <td>{{ name.threshold_low }}</td>
+                                                                            <td>{{ name.threshold_high }}</td>
+                                                                        {% elif name.thresholds.exists  %}
+                                                                            <td>{{ name.thresholds.first.low }}</td>
+                                                                            <td>{{ name.thresholds.first.high }}</td>
+                                                                        {% else %}
+                                                                            <td>0</td>
+                                                                            <td>0</td>
+                                                                        {% endif %}
                                                                     </tr>
                                                                 </tbody>
                                                             </table>
