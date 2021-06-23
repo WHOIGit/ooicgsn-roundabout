@@ -35,6 +35,7 @@ from roundabout.builds.models import BuildAction, Build, Deployment
 from roundabout.calibrations.models import CalibrationEvent, CoefficientValueSet, CoefficientName
 from roundabout.configs_constants.models import ConfigEvent, ConfigValue, ConfigName
 from roundabout.inventory.models import Action, DeploymentAction, Inventory, InventoryDeployment
+from roundabout.ooi_ci_tools.models import ReferenceDesignator
 from roundabout.search.tables import trunc_render
 from roundabout.search.mixins import MultiExportMixin
 from roundabout.exports.views import ExportDeployments
@@ -120,7 +121,8 @@ class SearchForm(forms.Form):
     q = forms.CharField(required=True, label='Reference Designator')
 
     def __init__(self, *args, **kwargs):
-        default_refdeslist = ConfigValue.objects.filter(config_name__name__exact='Reference Designator').values_list('config_value',flat=True)
+        default_refdeslist = ReferenceDesignator.objects.all().values_list('refdes_name',flat=True)
+        #default_refdeslist = ConfigValue.objects.filter(config_name__name__exact='Reference Designator').values_list('config_value',flat=True)
         default_refdeslist = sorted(set(default_refdeslist))
         refdeslist = kwargs.pop('data_list', default_refdeslist)
         super(SearchForm, self).__init__(*args, **kwargs)
@@ -138,8 +140,6 @@ class ChangeSearchView(LoginRequiredMixin, MultiTableMixin, MultiExportMixin, Te
               ConfChangeActionTable,
               DeployementChangeActionTable,
              ]
-    config_event_matches = None
-    calib_event_matches = None
     export_name = '{table}__{refdes}'
 
     def __init__(self,*args,**kwargs):
@@ -192,55 +192,27 @@ class ChangeSearchView(LoginRequiredMixin, MultiTableMixin, MultiExportMixin, Te
         else:  # defaults
             return len(self.tables)*[[]]
 
-        # Fetch all ConfigEvents with a matching RefDes field
-        self.config_event_matches = ConfigValue.objects.filter(config_value__exact=query).values_list('config_event__pk',flat=True)
-        conf_action_Q = Q(config_event__pk__in=self.config_event_matches)
-
-        # Fetch all CalibEvents with an inventory that has ever had a config_event with the matching RefDes (this needs to be further reduced)
-        self.calib_event_matches = CalibrationEvent.objects.filter(inventory__inventory_configevents__pk__in=self.config_event_matches).values_list('pk',flat=True)
-        calib_action_Q = Q(calibration_event__pk__in=self.calib_event_matches)
-
-        # further reduce calib_action_Q: currently calib_action_Q returns ALL CalEvents for a given instrument which has EVER had the matching RefDes is returned.
-        config_events = ConfigEvent.objects.filter(pk__in=self.config_event_matches).annotate(date=F('configuration_date'))
-        calib_events = CalibrationEvent.objects.filter(pk__in=self.calib_event_matches).annotate(date=F('calibration_date'))
-        combined = sorted(chain(config_events, calib_events), key=lambda q: q.date, reverse=True) # sort conf and calib events, most recent first
-        groups = {} # group calibrations leading up to any given config/ref-des together, most recent prior to config/ref-des first
-        prev_conf = None
-        for evt in combined:
-            if isinstance(evt,ConfigEvent):
-                groups[evt] = []
-                prev_conf = evt
-            elif prev_conf is not None:
-                if prev_conf.inventory == evt.inventory: # make sure the ConfigEvent and CalibEvent actually do refer to the same inventory item
-                    groups[prev_conf].append(evt)
-        self.calib_event_matches = []
-        for key,val in groups.items():
-            if val:  # keep just the most recent previous CalibEvent
-                self.calib_event_matches.append(val[0].pk)
-        calib_action_Q = Q(calibration_event__pk__in=self.calib_event_matches)
-
-        # Deployment QS
-        deployment_matches = Deployment.objects.filter(inventory_deployments__inventory__inventory_configevents__pk__in=self.config_event_matches).values_list('pk',flat=True)
-        #ideployment_matches = InventoryDeployment.objects.filter(inventory__inventory_configevents__pk__in=self.config_event_matches).values_list('deployment__pk',flat=True)
-        #deployment_matches = Deployment.objects.filter(pk__in=ideployment_matches).values_list('pk',flat=True)
-        deployment_action_Q = Q(deployment__pk__in=deployment_matches)
-
         qs_list = []
         for table in self.tables:
             if table.Meta.object_type == Action.CONFEVENT:
-                action_qs = Action.objects.filter(conf_action_Q)
+                action_qs = Action.objects.prefetch_related('config_event__inventory__assembly_part__reference_designator').\
+                    filter(config_event__inventory__assembly_part__reference_designator__refdes_name=query)
                 qs_list.append(action_qs)
             elif table.Meta.object_type == Action.CALEVENT:
-                action_qs = Action.objects.filter(calib_action_Q)
+                action_qs = Action.objects.prefetch_related('calibration_event__inventory__assembly_part__reference_designator').\
+                    filter(calibration_event__inventory__assembly_part__reference_designator__refdes_name=query)
                 qs_list.append(action_qs)
             elif table.Meta.object_type == Action.DEPLOYMENT:
-                action_qs = Action.objects.filter(deployment_action_Q, data__isnull=False)
+                action_qs = Action.objects.prefetch_related('deployment__inventory_deployments__assembly_part__reference_designator').\
+                    filter(deployment__inventory_deployments__assembly_part__reference_designator__refdes_name=query, data__isnull=False)
                 qs_list.append(action_qs)
 
         return qs_list
 
     def get_tables_kwargs(self):
-        if not self.config_event_matches:
+        if 'q' in self.request.GET:
+            query = self.request.GET.get('q')
+        else:
             return len(self.tables)*[{}]
 
         kwargss = []
@@ -248,9 +220,11 @@ class ChangeSearchView(LoginRequiredMixin, MultiTableMixin, MultiExportMixin, Te
             extra_cols = []
             verbose_names = {}
             if table.Meta.object_type == Action.CONFEVENT:
-                value_names = ConfigName.objects.filter(config_values__config_event__pk__in=self.config_event_matches).values_list('name',flat=True)
+                value_names = ConfigName.objects.prefetch_related('config_values__config_event__inventory__assembly_part__reference_designator').\
+                    filter(config_values__config_event__inventory__assembly_part__reference_designator__refdes_name=query).values_list('name',flat=True)
             elif table.Meta.object_type == Action.CALEVENT:
-                value_names = CoefficientName.objects.filter(coefficient_value_sets__calibration_event__pk__in=self.calib_event_matches).values_list('calibration_name',flat=True)
+                value_names = CoefficientName.objects.prefetch_related('coefficient_value_sets__calibration_event__inventory__assembly_part__reference_designator').\
+                    filter(coefficient_value_sets__calibration_event__inventory__assembly_part__reference_designator__refdes_name=query).values_list('calibration_name',flat=True)
             elif table.Meta.object_type == Action.DEPLOYMENT:
                 value_names = [a for h,a in ExportDeployments.header_att if a]
                 verbose_names = {a:h for h,a in ExportDeployments.header_att if a}
