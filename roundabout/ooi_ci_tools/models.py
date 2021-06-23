@@ -100,7 +100,6 @@ class ImportConfig(models.Model):
     require_vessel_length = models.BooleanField(blank=False, default=True)
     require_vessel_max_speed = models.BooleanField(blank=False, default=True)
     require_vessel_max_draft = models.BooleanField(blank=False, default=True)
-    require_vessel_designation = models.BooleanField(blank=False, default=True)
     require_vessel_active = models.BooleanField(blank=False, default=True)
     require_vessel_R2R = models.BooleanField(blank=False, default=True)
 
@@ -136,8 +135,6 @@ class CCCEvent(models.Model):
 class ReferenceDesignatorEvent(CCCEvent):
     class Meta:
         ordering = ['-created_at']
-    def __str__(self):
-        return self.name
     def get_object_type(self):
         return 'reference_designator_event'
 
