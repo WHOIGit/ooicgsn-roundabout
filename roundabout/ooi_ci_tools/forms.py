@@ -316,7 +316,7 @@ def validate_import_config_vessels(import_config, reader, filename):
                 _('File: %(filename)s, Row %(row)s: Unable to parse Prefix'),
                 params={'row': idx, 'filename': filename},
             )
-        if import_config.require_vessel_prefix:
+        if import_config.require_vessel_vesseldesignation:
             if len(prefix) == 0:
                 raise ValidationError(
                     _('File: %(filename)s, Row %(row)s: Import Config disallows blank Prefix'),
@@ -329,7 +329,7 @@ def validate_import_config_vessels(import_config, reader, filename):
                 _('File: %(filename)s, Row %(row)s: Unable to parse Vessel Designation'),
                 params={'row': idx, 'filename': filename},
             )
-        if import_config.require_vessel_vessel_designation:
+        if import_config.require_vessel_designation:
             if len(v_des) == 0:
                 raise ValidationError(
                     _('File: %(filename)s, Row %(row)s: Import Config disallows blank Vessel Designation'),
@@ -826,7 +826,7 @@ def validate_cal_files(csv_files,ext_files):
                             coeff_name_event =  inventory_item.part.part_coefficientnameevents.first()
                         )
                     except CoefficientName.DoesNotExist:
-                        calname_keys = {'value_set_type': 'sl'}
+                        calname_keys = {'value_set_type': 'sl', 'threshold_low': None, 'threshold_high': None}
                         cal_name_item = SimpleNamespace(**calname_keys)
                 elif key == 'value':
                     valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
@@ -963,8 +963,8 @@ class ImportConfigForm(forms.ModelForm):
             'require_cruise_cruise_start_date': 'Start Date',
             'require_cruise_cruise_end_date': 'Stop Date',
             'require_cruise_notes': 'Notes',
-            'require_vessel_prefix': 'Prefix',
-            'require_vessel_vessel_designation': 'Designation',
+            'require_vessel_vesseldesignation': 'Vessel Designation',
+            'require_vessel_designation': 'Designation',
             'require_vessel_vessel_name': 'Vessel Name',
             'require_vessel_ICES_code': 'ICES Code',
             'require_vessel_operator': 'Operator',
