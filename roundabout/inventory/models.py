@@ -835,6 +835,9 @@ class Action(models.Model):
         elif self.object_type == self.CRUISE:
             return self.cruise
 
+        elif self.object_type == self.REFDESEVENT:
+            return self.reference_designator_event
+
 
 class PhotoNote(models.Model):
     photo = models.FileField(

@@ -137,7 +137,6 @@ class ReferenceDesignatorEvent(CCCEvent):
         ordering = ['-created_at']
     def get_object_type(self):
         return 'reference_designator_event'
-
     def get_actions(self):
         return self.actions.filter(object_type='referencedesignatorevent')
 

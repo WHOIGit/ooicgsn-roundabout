@@ -34,6 +34,7 @@ from roundabout.configs_constants.models import ConfigEvent, ConstDefaultEvent, 
 from roundabout.inventory.models import Inventory, Action, Deployment, InventoryDeployment
 from roundabout.parts.models import Part
 from roundabout.cruises.models import Vessel, Cruise
+from roundabout.ooi_ci_tools.models import ReferenceDesignatorEvent
 
 
 def trunc_render(length=100, safe=False, showable=True, hideable=True, targets=None, bold_target=True):
@@ -267,6 +268,8 @@ class ActionTable(SearchTable):
         elif isinstance(parent_obj,Cruise):
             cruise_url = reverse("cruises:cruises_detail",args=[parent_obj.pk])
             html_string = html_string.format(url=cruise_url, text=parent_obj)
+        elif isinstance(parent_obj,ReferenceDesignatorEvent):
+            html_string = str(parent_obj.reference_designators.first())
         else:
             html_string = ''
 
@@ -299,6 +302,8 @@ class CalibrationTable(SearchTable):
     detail = Column(verbose_name='CalibrationEvent Note', accessor='detail')
     created_at = DateTimeColumn(verbose_name='Date Entered', accessor='created_at', format='Y-m-d H:i')
 
+    refdes = Column(verbose_name='Reference Designator', accessor='inventory__assembly_part__reference_designator__refdes_name')
+
 
 class ConfigConstTable(SearchTable):
     class Meta(SearchTable.Meta):
@@ -324,4 +329,6 @@ class ConfigConstTable(SearchTable):
 
     detail = Column(verbose_name='ConfigEvent Note', accessor='detail')
     created_at = DateTimeColumn(verbose_name='Date Entered', accessor='created_at', format='Y-m-d H:i')
+
+    refdes = Column(verbose_name='Reference Designator', accessor='inventory__assembly_part__reference_designator__refdes_name')
 
