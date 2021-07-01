@@ -42,6 +42,12 @@ def _create_reference_designators():
                         assm_part.reference_designator = refdes_value
                         assm_part.save()
 
+def _update_part_decimal_default():
+    for part in Part.objects.all():
+        if not part.cal_dec_places:
+            part.cal_dec_places = 32
+            part.save()
+
 
 # For Parts with zeroed-out Max Calibration Decimal Places, set default value to 32 places
 def _update_part_decimal_default():
