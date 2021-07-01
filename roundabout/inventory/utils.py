@@ -143,6 +143,11 @@ def _create_action_history(
         obj_label = 'Vessel'
         action_record.vessel = obj
 
+    elif object_type == Action.DEPLOYMENT:
+        obj_label = "Deployment"
+        action_record.deployment = obj
+        action_record.build = obj.build
+
     elif object_type == Action.REFDESEVENT:
         obj_label = "Reference Designator"
         action_record.reference_designator_event = obj
@@ -157,6 +162,8 @@ def _create_action_history(
         if object_type == Action.CALEVENT:
             pass
         elif object_type == Action.CONFEVENT:
+            pass
+        elif object_type == Action.DEPLOYMENT:
             pass
         action_record.save()
 
@@ -496,7 +503,7 @@ def logged_user_review_items(logged_user, template_type):
         parts_from_cal_name_events = [part_id['part_id'] for part_id in logged_user.reviewer_coefficientnameevents.values('part_id')]
         full_part_list = set(parts_from_config_name_events + parts_from_cal_name_events)
         full_list = list(full_part_list)
-    
+
     if template_type == 'assm':
         assmparts_from_config_def_events = [part_id['assembly_part__part_id'] for part_id in logged_user.reviewer_configdefaultevents.values('assembly_part__part_id')]
         assmparts_from_refdes_events = [part_id['assembly_part__part_id'] for part_id in logged_user.reviewer_referencedesignatorevents.values('assembly_part__part_id')]

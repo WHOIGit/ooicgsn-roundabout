@@ -606,10 +606,7 @@ class Action(models.Model):
         (DEPLOYMENTUPDATE, "%s Update" % (labels["label_deployments_app_singular"])),
         (DEPLOYMENTRECOVER, "%s Recovery" % (labels["label_deployments_app_singular"])),
         (DEPLOYMENTRETIRE, "%s Retired" % (labels["label_deployments_app_singular"])),
-        (
-            DEPLOYMENTDETAILS,
-            "%s Details Updated" % (labels["label_deployments_app_singular"]),
-        ),
+        (DEPLOYMENTDETAILS,"%s Details Updated" % (labels["label_deployments_app_singular"])),
         (ASSIGNDEST, "Assign Destination"),
         (REMOVEDEST, "Remove Destination"),
         (TEST, "Test"),
@@ -837,6 +834,9 @@ class Action(models.Model):
             return self.vessel
         elif self.object_type == self.CRUISE:
             return self.cruise
+
+        elif self.object_type == self.REFDESEVENT:
+            return self.reference_designator_event
 
 
 class PhotoNote(models.Model):

@@ -34,6 +34,7 @@ from roundabout.configs_constants.models import ConfigEvent, ConstDefaultEvent, 
 from roundabout.inventory.models import Inventory, Action, Deployment, InventoryDeployment
 from roundabout.parts.models import Part
 from roundabout.cruises.models import Vessel, Cruise
+from roundabout.ooi_ci_tools.models import ReferenceDesignatorEvent
 
 
 def trunc_render(length=100, safe=False, showable=True, hideable=True, targets=None, bold_target=True):
@@ -245,10 +246,13 @@ class ActionTable(SearchTable):
             build_url = reverse("builds:builds_detail", args=[parent_obj.pk])
             html_string = html_string.format(url=build_url, text=parent_obj)
         elif isinstance(parent_obj,Deployment):
-            build_url = reverse("builds:builds_detail", args=[record.deployment.build.pk])
-            deployment_anchor = '#deployment-{}-'.format(record.deployment.pk)  # doesn't work, anchor doesn't exist
-            deployment_anchor = '#deployments'  # next best anchor that does work
-            html_string = html_string.format(url=build_url+deployment_anchor, text=parent_obj)
+            try:
+                build_url = reverse("builds:builds_detail", args=[record.deployment.build.pk])
+                deployment_anchor = '#deployment-{}-'.format(record.deployment.pk)  # doesn't work, anchor doesn't exist
+                deployment_anchor = '#deployments'  # next best anchor that does work
+                html_string = html_string.format(url=build_url+deployment_anchor, text=parent_obj)
+            except AttributeError: # MANIFEST error, from import?
+                html_string = str(parent_obj)
         elif isinstance(parent_obj,InventoryDeployment):
             inv_url = reverse("inventory:inventory_detail", args=[parent_obj.inventory.pk])
             html_string = html_string.format(url=inv_url, text=parent_obj)
@@ -264,6 +268,8 @@ class ActionTable(SearchTable):
         elif isinstance(parent_obj,Cruise):
             cruise_url = reverse("cruises:cruises_detail",args=[parent_obj.pk])
             html_string = html_string.format(url=cruise_url, text=parent_obj)
+        elif isinstance(parent_obj,ReferenceDesignatorEvent):
+            html_string = str(parent_obj.reference_designators.first())
         else:
             html_string = ''
 
@@ -296,6 +302,8 @@ class CalibrationTable(SearchTable):
     detail = Column(verbose_name='CalibrationEvent Note', accessor='detail')
     created_at = DateTimeColumn(verbose_name='Date Entered', accessor='created_at', format='Y-m-d H:i')
 
+    refdes = Column(verbose_name='Reference Designator', accessor='inventory__assembly_part__reference_designator__refdes_name')
+
 
 class ConfigConstTable(SearchTable):
     class Meta(SearchTable.Meta):
@@ -321,4 +329,6 @@ class ConfigConstTable(SearchTable):
 
     detail = Column(verbose_name='ConfigEvent Note', accessor='detail')
     created_at = DateTimeColumn(verbose_name='Date Entered', accessor='created_at', format='Y-m-d H:i')
+
+    refdes = Column(verbose_name='Reference Designator', accessor='inventory__assembly_part__reference_designator__refdes_name')
 

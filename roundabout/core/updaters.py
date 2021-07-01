@@ -24,6 +24,7 @@ from roundabout.builds.models import Build, BuildAction
 from roundabout.assemblies.models import AssemblyPart
 from roundabout.ooi_ci_tools.models import ReferenceDesignatorEvent, ReferenceDesignator
 from roundabout.cruises.models import Cruise, Vessel
+from roundabout.exports.views import ExportDeployments
 from roundabout.inventory.utils import _create_action_history
 
 def _create_reference_designators():
@@ -35,7 +36,7 @@ def _create_reference_designators():
                         refdes_event, refdes_event_created = ReferenceDesignatorEvent.objects.get_or_create(assembly_part=assm_part)
                         if refdes_event_created:
                             _create_action_history(refdes_event, Action.ADD, user=None)
-                        refdes_value, refdes_value_created = ReferenceDesignator.objects.get_or_create(name = dflt.default_value, refdes_event = refdes_event)
+                        refdes_value, refdes_value_created = ReferenceDesignator.objects.get_or_create(refdes_name = dflt.default_value, refdes_event = refdes_event)
                         assm_part.reference_designator = refdes_value
                         assm_part.save()
 
@@ -69,8 +70,8 @@ def _update_action_data():
     _update_action_data_CalEvts()
     print('\nCONFEVENTS')
     _update_action_data_ConfEvts()
-    #print('\nDEPLOYMENTS')
-    #_update_action_data_deployments()
+    print('\nDEPLOYMENTS')
+    _update_action_data_deployments()
 
 def _update_action_data_vessels():
     vessels = Vessel.objects.filter(actions__isnull=True)
@@ -135,6 +136,24 @@ def _update_action_data_ConfEvts():
         action.data = data
         action.save()
 
+def _update_action_data_deployments():
+    deployments = Deployment.objects.all()
+    fields = [a for h,a in ExportDeployments.header_att if a]
+    print('fields:',','.join(fields))
+    any_updates = False
+    for deployment in deployments:
+        actions = Action.objects.filter(deployment__pk=deployment.pk).exclude(data__isnull=True)
+        if actions.exists(): continue  # this deployment already has some Action data, skip
+        else: any_updates = True
+        print(' ',deployment)
+        updated_values=dict()
+        for field in fields:
+            val = getattr(deployment, field, None)
+            if val: updated_values[field] = {"from": None, "to": str(val)}
+        data = dict(updated_values=updated_values) if updated_values else None
+        _create_action_history(deployment, Action.UPDATE, user=None, data=data)
+    if any_updates == False:
+        print('  No Deployments to update')
 
 # Functions to update legacy content to match new model updates
 # ------------------------------------------------------------------------------
