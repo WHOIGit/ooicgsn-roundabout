@@ -24,8 +24,11 @@ from roundabout.builds.models import Build, BuildAction
 from roundabout.assemblies.models import AssemblyPart
 from roundabout.ooi_ci_tools.models import ReferenceDesignatorEvent, ReferenceDesignator
 from roundabout.cruises.models import Cruise, Vessel
+from roundabout.parts.models import Part
 from roundabout.inventory.utils import _create_action_history
 
+
+# Generate Reference Designator Event and Reference Designator Values from Assemblyparts containing Configuration Defaults with populated Reference Designator Config Names
 def _create_reference_designators():
     for assm_part in AssemblyPart.objects.all():
         if assm_part.assemblypart_configdefaultevents.exists():
@@ -35,9 +38,17 @@ def _create_reference_designators():
                         refdes_event, refdes_event_created = ReferenceDesignatorEvent.objects.get_or_create(assembly_part=assm_part)
                         if refdes_event_created:
                             _create_action_history(refdes_event, Action.ADD, user=None)
-                        refdes_value, refdes_value_created = ReferenceDesignator.objects.get_or_create(name = dflt.default_value, refdes_event = refdes_event)
+                        refdes_value, refdes_value_created = ReferenceDesignator.objects.get_or_create(refdes_name = dflt.default_value, refdes_event = refdes_event)
                         assm_part.reference_designator = refdes_value
                         assm_part.save()
+
+
+# For Parts with zeroed-out Max Calibration Decimal Places, set default value to 32 places
+def _update_part_decimal_default():
+    for part in Part.objects.all():
+        if not part.cal_dec_places:
+            part.cal_dec_places = 32
+            part.save()
 
 
 
