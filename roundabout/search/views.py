@@ -432,7 +432,8 @@ class InventoryTableView(GenericSearchTableView):
     model = Inventory
     table_class = InventoryTable
     query_prefetch = ['fieldvalues', 'fieldvalues__field', 'part', 'actions',
-                      'actions__user', 'actions__location', 'build', 'inventory_calibrationevents']
+                      'actions__user', 'actions__location', 'build', 'inventory_calibrationevents',
+                      'inventory_deployments', 'assembly_part__reference_designator']
     avail_udf = set()
     choice_fields = {'actions__latest__action_type': Action.ACTION_TYPES}
 
@@ -452,6 +453,7 @@ class InventoryTableView(GenericSearchTableView):
                         dict(value="build__is_deployed", text="is-build-deployed?", legal_lookup='BOOL_LOOKUP'),
                         dict(value="inventory_deployments__latest__deployment__current_status", text="Deployment Status", legal_lookup='STR_LOOKUP',
                              col_args=dict(render=lambda value: dict(Deployment.DEPLOYMENT_STATUS).get(value, value))),
+                        dict(value="assembly_part__reference_designator__refdes_name", text="Reference Designator", legal_lookup='STR_LOOKUP'),
 
                         dict(value=None, text="--Part--", disabled=True),
                         dict(value="part__part_number",        text="Part Number", legal_lookup='STR_LOOKUP',
@@ -718,13 +720,16 @@ class CalibrationTableView(GenericSearchTableView):
     table_class = CalibrationTable
     query_prefetch = ['coefficient_name','calibration_event','calibration_event__inventory',
                       'calibration_event__inventory__part','calibration_event__inventory__location',
-                      'calibration_event__user_approver','calibration_event__user_draft']
+                      'calibration_event__user_approver','calibration_event__user_draft',
+                      'calibration_event__inventory__assembly_part__reference_designator']
 
     @staticmethod
     def get_avail_fields():
         avail_fields = [dict(value="calibration_event__inventory__serial_number", text="Inventory: SN", legal_lookup='STR_LOOKUP'),
                         dict(value="calibration_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
                         dict(value="calibration_event__inventory__location__name", text="Inventory: Location", legal_lookup='STR_LOOKUP'),
+                        dict(value="calibration_event__inventory__assembly_part__reference_designator__refdes_name",
+                             text="Reference Designator", legal_lookup='STR_LOOKUP'),
                         dict(value="coefficient_name__calibration_name", text="Coefficient Name", legal_lookup='STR_LOOKUP'),
                         dict(value="calibration_event__calibration_date", text="Calibration Event: Date", legal_lookup='DATE_LOOKUP'),
                         dict(value="calibration_event__user_approver__any__username", text="Calibration Event: Approvers", legal_lookup='ITER_LOOKUP'),
@@ -765,13 +770,16 @@ class ConfigConstTableView(GenericSearchTableView):
     table_class = ConfigConstTable
     query_prefetch = ['config_name','config_event','config_event__inventory',
                       'config_event__inventory__part','config_event__inventory__location',
-                      'config_event__user_approver','config_event__user_draft']
+                      'config_event__user_approver','config_event__user_draft',
+                      'config_event__inventory__assembly_part__reference_designator']
 
     @staticmethod
     def get_avail_fields():
         avail_fields = [dict(value="config_event__inventory__serial_number", text="Inventory: SN", legal_lookup='STR_LOOKUP'),
                         dict(value="config_event__inventory__part__name", text="Inventory: Name", legal_lookup='STR_LOOKUP'),
                         dict(value="config_event__inventory__location__name", text="Inventory: Location", legal_lookup='STR_LOOKUP'),
+                        dict(value="config_event__inventory__assembly_part__reference_designator__refdes_name",
+                             text="Reference Designator", legal_lookup='STR_LOOKUP'),
                         dict(value="config_name__name", text="Config/Const Name", legal_lookup='STR_LOOKUP'),
                         dict(value="config_event__configuration_date", text="Config/Const Event: Date", legal_lookup='DATE_LOOKUP'),
                         dict(value="config_event__user_approver__any__username", text="Config/Const Event: Approvers", legal_lookup='ITER_LOOKUP'),

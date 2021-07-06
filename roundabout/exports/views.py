@@ -499,24 +499,25 @@ class ExportVessels(CSVExport):
     fname = 'shiplist.csv'
     ordering = ['prefix']
     # see https://github.com/oceanobservatories/asset-management/tree/master/vessel
+    header_att = [('Prefix', 'prefix'),
+                  ('Vessel Designation', 'vessel_designation'),
+                  ('Vessel Name', 'vessel_name'),
+                  ('ICES Code', 'ICES_code'),
+                  ('Operator', 'operator'),
+                  ('Call Sign', 'call_sign'),
+                  ('MMSI#', 'MMSI_number'),
+                  ('IMO#', 'IMO_number'),
+                  ('Length (m)', 'length'),
+                  ('Max Speed (m/s)', 'max_speed'),
+                  ('Max Draft (m)', 'max_draft'),
+                  ('Designation', 'designation'),
+                  ('Active', 'active'),
+                  ('R2R', 'R2R'),
+                  ]
 
     @classmethod
     def build_csv(cls, csv, objs, CI_mode=False):
-        header_att = [('Prefix',                'prefix'),
-                      ('Vessel Designation',    'vessel_designation'),
-                      ('Vessel Name',           'vessel_name'),
-                      ('ICES Code',             'ICES_code'),
-                      ('Operator',              'operator'),
-                      ('Call Sign',             'call_sign'),
-                      ('MMSI#',                 'MMSI_number'),
-                      ('IMO#',                  'IMO_number'),
-                      ('Length (m)',            'length'),
-                      ('Max Speed (m/s)',       'max_speed'),
-                      ('Max Draft (m)',         'max_draft'),
-                      ('Designation',           'designation'),
-                      ('Active',                'active'),
-                      ('R2R',                   'R2R'),
-                      ]
+        header_att = cls.header_att.copy()
         if CI_mode==False:
             header_att.append( ('Notes', 'notes') )
 
@@ -539,28 +540,31 @@ class ExportVessels(CSVExport):
 class ExportDeployments(ZipExport):
     model = Deployment
     fname = 'Deployments.zip'
+    header_att = [('CUID_Deploy', 'cruise_deployed'),
+                  ('deployedBy', ''),
+                  ('CUID_Recover', 'cruise_recovered'),
+                  ('recoveredBy', ''),
+                  ('Reference Designator', ''),
+                  ('deploymentNumber', 'deployment_number'),
+                  ('versionNumber', ''),
+                  ('startDateTime', 'deployment_to_field_date'),
+                  ('stopDateTime', 'deployment_recovery_date'),
+                  ('mooring.uid', ''),
+                  ('node.uid', ''),
+                  ('sensor.uid', ''),
+                  ('lat', 'latitude'),
+                  ('lon', 'longitude'),
+                  ('orbit', ''),
+                  ('deployment_depth', 'depth'),
+                  ('water_depth', 'depth'),
+                  ('notes', ''),
+                  ('electrical.uid', ''),
+                  ('assembly_template_revision', ''),
+                  ]
 
     @classmethod
     def build_zip(cls, zf, objs, subdir=None):
-        header_att = [('CUID_Deploy',           'cruise_deployed'),
-                      ('deployedBy',            ''),
-                      ('CUID_Recover',          'cruise_recovered'),
-                      ('recoveredBy',           ''),
-                      ('Reference Designator',  ''),
-                      ('deploymentNumber',      'deployment_number'),
-                      ('versionNumber',         ''),
-                      ('startDateTime',         'deployment_to_field_date'),
-                      ('stopDateTime',          'deployment_recovery_date'),
-                      ('mooring.uid',           ''),
-                      ('node.uid',              ''),
-                      ('sensor.uid',            ''),
-                      ('lat',                   'latitude'),
-                      ('lon',                   'longitude'),
-                      ('orbit',                 ''),
-                      ('deployment_depth',      'depth'),
-                      ('water_depth',           'depth'),
-                      ('notes',                 ''), ]
-        headers, attribs = zip(*header_att)
+        headers, attribs = zip(*cls.header_att)
 
         def depl_row(depl_obj, attribs):
             row = []
