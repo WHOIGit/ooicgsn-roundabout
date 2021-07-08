@@ -556,7 +556,7 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         if self.object.inventory_configevents.exists():
             if self.object.inventory_configevents.filter(config_type='conf'):
                 inv_has_conf_events = True
-            if self.object.inventory_configevents.filter(config_type='const'):
+            if self.object.inventory_configevents.filter(config_type='cnst'):
                 inv_has_const_events = True
 
         # Get Inventory items by Root Locations
@@ -2075,7 +2075,7 @@ class InventoryDetailView(LoginRequiredMixin, DetailView):
         if self.object.inventory_configevents.exists():
             if self.object.inventory_configevents.filter(config_type='conf'):
                 inv_has_conf_events = True
-            if self.object.inventory_configevents.filter(config_type='const'):
+            if self.object.inventory_configevents.filter(config_type='cnst'):
                 inv_has_const_events = True
 
         # Get Inventory items by Root Locations
