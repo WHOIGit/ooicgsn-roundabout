@@ -103,6 +103,7 @@ class ImportConfig(models.Model):
     require_vessel_active = models.BooleanField(blank=False, default=True)
     require_vessel_R2R = models.BooleanField(blank=False, default=True)
 
+# Generic class to handle Calibration, Configuration, Constant, Comment, and Reference Designator Events
 class CCCEvent(models.Model):
     class Meta:
         abstract = True
@@ -132,6 +133,7 @@ class CCCEvent(models.Model):
         return self.user_approver.all().order_by('username')
 
 
+# Handles Reference Designator-related Events
 class ReferenceDesignatorEvent(CCCEvent):
     class Meta:
         ordering = ['-created_at']
@@ -141,7 +143,7 @@ class ReferenceDesignatorEvent(CCCEvent):
         return self.actions.filter(object_type='referencedesignatorevent')
 
 
-
+# Handles raw values set within the Event
 class ReferenceDesignator(models.Model):
     class Meta:
         ordering = ['refdes_name']

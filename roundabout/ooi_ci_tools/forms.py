@@ -492,6 +492,7 @@ def validate_import_config_vessels(import_config, reader, filename):
                     params={'row': idx, 'filename': filename}
                 )
 
+# Handles Deployment CSV file submission and field validation
 class ImportDeploymentsForm(forms.Form):
     deployments_csv = forms.FileField(
         widget=forms.ClearableFileInput(
@@ -562,6 +563,8 @@ class ImportDeploymentsForm(forms.Form):
         return deployments_csv
 
 
+
+# Handles Vessel CSV file submission and field validation
 class ImportVesselsForm(forms.Form):
     vessels_csv = forms.FileField(
         widget=forms.ClearableFileInput(
@@ -673,6 +676,8 @@ class ImportVesselsForm(forms.Form):
         return vessels_csv
 
 
+
+# Handles Cruise CSV file submission and field validation
 class ImportCruisesForm(forms.Form):
     cruises_csv = forms.FileField(
         widget=forms.ClearableFileInput(
@@ -735,7 +740,7 @@ class ImportCruisesForm(forms.Form):
         return cruises_csv
 
 
-
+# Validate Calibration CSV field submissions
 def validate_cal_files(csv_files,ext_files):
     counter = 0
     try:
@@ -890,7 +895,7 @@ def validate_cal_files(csv_files,ext_files):
                                 params={'row': idx, 'filename': cal_csv.name}
                             )
 
-# 
+# Handles Calibration CSV file submission and field validation
 class ImportCalibrationForm(forms.Form):
     calibration_csv = forms.FileField(
         widget=forms.ClearableFileInput(
@@ -920,7 +925,7 @@ class ImportCalibrationForm(forms.Form):
         return cal_files
 
 
-
+# Handles Comment form submission
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
@@ -929,6 +934,8 @@ class CommentForm(forms.ModelForm):
             'detail': 'Provide your comment here:'
         }
 
+
+# Handles Action-History-level Comment form submission
 class ActionForm(forms.ModelForm):
     class Meta:
         model = Action

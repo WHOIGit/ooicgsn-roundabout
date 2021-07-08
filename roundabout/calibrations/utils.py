@@ -28,6 +28,9 @@ from roundabout.calibrations.models import CalibrationEvent, CoefficientName
 from roundabout.configs_constants.models import ConfigEvent, ConfigDefaultEvent, ConstDefaultEvent
 from roundabout.ooi_ci_tools.models import Threshold
 
+
+
+# When an Event is updated, current Approvers reset to Reviewers
 def handle_reviewers(form):
     if form.instance.user_approver.exists():
         if form.cleaned_data['user_draft'].exists():
@@ -64,6 +67,8 @@ def handle_reviewers(form):
                 form.instance.user_draft.add(user)
 
 
+
+# When an Event Review is Approved or Unapproved, check if the User needs to Review Events elsewhere
 def user_ccc_reviews(event, user, evt_type):
     found_cal_events = False
     found_conf_events = False
@@ -99,6 +104,7 @@ def user_ccc_reviews(event, user, evt_type):
     return all_reviewed
 
 
+# Return Users containing either Technician or Admin group permissions
 def reviewer_users():
     reviewers = User.objects.filter(groups__name__in = ['admin','technician']).order_by('username').distinct()
     return reviewers
