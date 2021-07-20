@@ -550,7 +550,7 @@
         var buildID = 'builds_' + '{{ build.id }}';
 
         var _buildID = '{{ build.id }}'
-        handleReviewBadges('#deployments', 'button[id^=expander]', '{{ user.id }}', '{{ user.username }}', _buildID)        
+        handleReviewBadges('#deployments', 'button[id^=deploy_expander]', '{{ user.id }}', '{{ user.username }}', _buildID)        
         
     });
 </script>
