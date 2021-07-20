@@ -28,7 +28,7 @@ from roundabout.parts.models import Part
 from roundabout.assemblies.models import AssemblyPart
 from roundabout.inventory.models import Inventory, Deployment
 
-# Numerical Coefficient threshold by Calibration 
+# Numerical Coefficient threshold by Calibration
 class Threshold(models.Model):
     class Meta:
         ordering = ['created_at']
@@ -118,7 +118,6 @@ class ImportConfig(models.Model):
     require_vessel_active = models.BooleanField(blank=False, default=True)
     require_vessel_R2R = models.BooleanField(blank=False, default=True)
 
-
 # Generic class to handle Calibration, Configuration, Constant, Comment, and Reference Designator Events
 class CCCEvent(models.Model):
     class Meta:
@@ -153,11 +152,8 @@ class CCCEvent(models.Model):
 class ReferenceDesignatorEvent(CCCEvent):
     class Meta:
         ordering = ['-created_at']
-    def __str__(self):
-        return self.name
     def get_object_type(self):
         return 'reference_designator_event'
-
     def get_actions(self):
         return self.actions.filter(object_type='referencedesignatorevent')
 

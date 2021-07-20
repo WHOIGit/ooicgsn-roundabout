@@ -35,21 +35,22 @@ from roundabout.builds.models import BuildAction, Build, Deployment
 from roundabout.calibrations.models import CalibrationEvent, CoefficientValueSet, CoefficientName
 from roundabout.configs_constants.models import ConfigEvent, ConfigValue, ConfigName
 from roundabout.inventory.models import Action, DeploymentAction, Inventory, InventoryDeployment
+from roundabout.ooi_ci_tools.models import ReferenceDesignator
 from roundabout.search.tables import trunc_render
 from roundabout.search.mixins import MultiExportMixin
+from roundabout.exports.views import ExportDeployments
 
 ## === TABLES === ##
 
-class CCC_ValueColumn(Column):
-    def __init__(self, ccc_name, note=False, **kwargs):
-        self.ccc_name = ccc_name
+class ActionData_ValueUpdate_Column(Column):
+    def __init__(self, value_name, note=False, **kwargs):
+        self.value_name = value_name
         self.is_note = note
-        col_name = '{} note'.format(ccc_name) if note else ccc_name
-        super().__init__(accessor='data', verbose_name=col_name, default='',**kwargs)
+        super().__init__(accessor='data', default='', **kwargs)
 
     def render(self,value):
         key = 'updated_notes' if self.is_note else 'updated_values'
-        try: return value[key][self.ccc_name]['to']
+        try: return value[key][self.value_name]['to']
         except KeyError:
             print(value)
             return ''
@@ -63,7 +64,7 @@ class ChangeTableBase(ColumnShiftTable):
         orderable = False
         fields = ['created_at','action_type','user']
         title = None
-    created_at = DateTimeColumn(orderable=True)
+    created_at = DateTimeColumn(verbose_name='Action Timestamp', orderable=True)
 
     def set_column_default_show(self):
         notnote_cols = [col for col in self.sequence if not col.endswith('_note') and not col.endswith('__approved')]
@@ -76,7 +77,6 @@ class CalibChangeActionTable(ChangeTableBase):
         title = 'CalibrationEvent History'
         fields = ['created_at', 'action_type', 'inventory', 'calibration_event', 'calibration_event__approved', 'user']
         object_type = Action.CALEVENT
-    created_at = DateTimeColumn(verbose_name='Action Timestamp')
     inventory = Column(verbose_name='Inventory SN', accessor='calibration_event__inventory',
                 linkify=dict(viewname="inventory:inventory_detail", args=[A('calibration_event__inventory__pk')]))
 
@@ -86,9 +86,17 @@ class ConfChangeActionTable(ChangeTableBase):
         title = 'ConfigurationEvent History'
         fields = ['created_at', 'action_type', 'inventory', 'config_event', 'config_event__approved', 'user', 'config_event__deployment']
         object_type = Action.CONFEVENT
-    created_at = DateTimeColumn(verbose_name='Action Timestamp')
     inventory = Column(verbose_name='Inventory SN', accessor='config_event__inventory',
                 linkify=dict(viewname="inventory:inventory_detail", args=[A('config_event__inventory__pk')]))
+
+
+class DeployementChangeActionTable(ChangeTableBase):
+    class Meta(ChangeTableBase.Meta):
+        title = 'Deployment History'
+        fields = ['created_at', 'action_type', 'build', 'user']
+        object_type = Action.DEPLOYMENT
+    build = Column(verbose_name='Build', accessor='build',
+            linkify=dict(viewname="builds:builds_detail", args=[A('build__pk')]))
 
 
 # ========= FORM STUFF ========= #
@@ -113,7 +121,8 @@ class SearchForm(forms.Form):
     q = forms.CharField(required=True, label='Reference Designator')
 
     def __init__(self, *args, **kwargs):
-        default_refdeslist = ConfigValue.objects.filter(config_name__name__exact='Reference Designator').values_list('config_value',flat=True)
+        default_refdeslist = ReferenceDesignator.objects.all().values_list('refdes_name',flat=True)
+        #default_refdeslist = ConfigValue.objects.filter(config_name__name__exact='Reference Designator').values_list('config_value',flat=True)
         default_refdeslist = sorted(set(default_refdeslist))
         refdeslist = kwargs.pop('data_list', default_refdeslist)
         super(SearchForm, self).__init__(*args, **kwargs)
@@ -129,9 +138,8 @@ class ChangeSearchView(LoginRequiredMixin, MultiTableMixin, MultiExportMixin, Te
 
     tables = [CalibChangeActionTable,  # needs a way to figure out what CalibEvent falls within a given ref-des
               ConfChangeActionTable,
+              DeployementChangeActionTable,
              ]
-    config_event_matches = None
-    calib_event_matches = None
     export_name = '{table}__{refdes}'
 
     def __init__(self,*args,**kwargs):
@@ -184,63 +192,54 @@ class ChangeSearchView(LoginRequiredMixin, MultiTableMixin, MultiExportMixin, Te
         else:  # defaults
             return len(self.tables)*[[]]
 
-        # Fetch all ConfigEvents with a matching RefDes field
-        self.config_event_matches = ConfigValue.objects.filter(config_value__exact=query).values_list('config_event__pk',flat=True)
-        conf_action_Q = Q(config_event__pk__in=self.config_event_matches)
-
-        # Fetch all CalibEvents with an inventory that has ever had a config_event with the matching RefDes (this needs to be further reduced)
-        self.calib_event_matches = CalibrationEvent.objects.filter(inventory__config_events__pk__in=self.config_event_matches).values_list('pk',flat=True)
-        calib_action_Q = Q(calibration_event__pk__in=self.calib_event_matches)
-
-        # further reduce calib_action_Q: currently calib_action_Q returns ALL CalEvents for a given instrument which has EVER had the matching RefDes is returned.
-        config_events = ConfigEvent.objects.filter(pk__in=self.config_event_matches).annotate(date=F('configuration_date'))
-        calib_events = CalibrationEvent.objects.filter(pk__in=self.calib_event_matches).annotate(date=F('calibration_date'))
-        combined = sorted(chain(config_events, calib_events), key=lambda q: q.date, reverse=True) # sort conf and calib events, most recent first
-        groups = {} # group calibrations leading up to any given config/ref-des together, most recent prior to config/ref-des first
-        prev_conf = None
-        for evt in combined:
-            if isinstance(evt,ConfigEvent):
-                groups[evt] = []
-                prev_conf = evt
-            elif prev_conf is not None:
-                if prev_conf.inventory == evt.inventory: # make sure the ConfigEvent and CalibEvent actually do refer to the same inventory item
-                    groups[prev_conf].append(evt)
-        self.calib_event_matches = []
-        for key,val in groups.items():
-            if val:  # keep just the most recent previous CalibEvent
-                self.calib_event_matches.append(val[0].pk)
-        calib_action_Q = Q(calibration_event__pk__in=self.calib_event_matches)
-
         qs_list = []
         for table in self.tables:
             if table.Meta.object_type == Action.CONFEVENT:
-                action_qs = Action.objects.filter(conf_action_Q)
+                action_qs = Action.objects.prefetch_related('config_event__inventory__assembly_part__reference_designator').\
+                    filter(config_event__inventory__assembly_part__reference_designator__refdes_name=query)
                 qs_list.append(action_qs)
             elif table.Meta.object_type == Action.CALEVENT:
-                action_qs = Action.objects.filter(calib_action_Q)
+                action_qs = Action.objects.prefetch_related('calibration_event__inventory__assembly_part__reference_designator').\
+                    filter(calibration_event__inventory__assembly_part__reference_designator__refdes_name=query)
+                qs_list.append(action_qs)
+            elif table.Meta.object_type == Action.DEPLOYMENT:
+                action_qs = Action.objects.prefetch_related('deployment__inventory_deployments__assembly_part__reference_designator').\
+                    filter(deployment__inventory_deployments__assembly_part__reference_designator__refdes_name=query, data__isnull=False)
                 qs_list.append(action_qs)
 
         return qs_list
 
     def get_tables_kwargs(self):
-        if not self.config_event_matches:
+        if 'q' in self.request.GET:
+            query = self.request.GET.get('q')
+        else:
             return len(self.tables)*[{}]
 
         kwargss = []
         for table in self.tables:
             extra_cols = []
+            verbose_names = {}
             if table.Meta.object_type == Action.CONFEVENT:
-                cc_names = ConfigName.objects.filter(config_values__config_event__pk__in=self.config_event_matches).values_list('name',flat=True)
+                value_names = ConfigName.objects.prefetch_related('config_values__config_event__inventory__assembly_part__reference_designator').\
+                    filter(config_values__config_event__inventory__assembly_part__reference_designator__refdes_name=query).values_list('name',flat=True)
             elif table.Meta.object_type == Action.CALEVENT:
-                cc_names = CoefficientName.objects.filter(coefficient_value_sets__calibration_event__pk__in=self.calib_event_matches).values_list('calibration_name',flat=True)
-            else: cc_names = []
-            cc_names = sorted(set(cc_names))
-            for cc_name in cc_names:
-                safename = cc_name.replace(' ','-')
-                col = safename, CCC_ValueColumn(cc_name)
-                col_note = safename +'_note', CCC_ValueColumn(cc_name, note=True)
+                value_names = CoefficientName.objects.prefetch_related('coefficient_value_sets__calibration_event__inventory__assembly_part__reference_designator').\
+                    filter(coefficient_value_sets__calibration_event__inventory__assembly_part__reference_designator__refdes_name=query).values_list('calibration_name',flat=True)
+            elif table.Meta.object_type == Action.DEPLOYMENT:
+                value_names = [a for h,a in ExportDeployments.header_att if a]
+                verbose_names = {a:h for h,a in ExportDeployments.header_att if a}
+            else: value_names = []
+
+            value_names = sorted(set(value_names))
+            for value_name in value_names:
+                safename = value_name.replace(' ','-')
+                verbose_name = verbose_names[value_name] if value_name in verbose_names else value_name
+                col = safename, ActionData_ValueUpdate_Column(value_name, verbose_name=verbose_name)
                 extra_cols.append(col)
-                extra_cols.append(col_note)
+                if table.Meta.object_type in [Action.CONFEVENT,Action.CALEVENT]:
+                    verbose_name = '{} note'.format(verbose_name)
+                    col_note = safename+'_note', ActionData_ValueUpdate_Column(value_name, verbose_name=verbose_name, note=True)
+                    extra_cols.append(col_note)
 
             kwargss.append( {'extra_columns':extra_cols} )
         return kwargss
