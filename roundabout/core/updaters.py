@@ -22,7 +22,7 @@
 from roundabout.inventory.models import Inventory, Action, DeploymentAction, Deployment, InventoryDeployment
 from roundabout.builds.models import Build, BuildAction
 from roundabout.assemblies.models import AssemblyPart
-from roundabout.ooi_ci_tools.models import ReferenceDesignatorEvent, ReferenceDesignator
+from roundabout.ooi_ci_tools.models import ReferenceDesignatorEvent, ReferenceDesignator, Comment, MPTTComment
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.parts.models import Part
 from roundabout.exports.views import ExportDeployments
@@ -43,12 +43,37 @@ def _create_reference_designators():
                         assm_part.reference_designator = refdes_value
                         assm_part.save()
 
-def _update_part_decimal_default():
-    for part in Part.objects.all():
-        if not part.cal_dec_places:
-            part.cal_dec_places = 32
-            part.save()
 
+# Create MPTTComments based on existing Comment parent/child relationships
+# from roundabout.core.updaters import _create_mptt_comments
+# _create_mptt_comments()
+def _create_mptt_comments():
+    comments = Comment.objects.all()
+    MPTTComment.objects.all().delete()
+    for comment in comments:
+        MPTTComment.objects.create(
+            action=comment.action,
+            user=comment.user,
+            detail=comment.detail
+        )
+    for comment in comments:
+        if comment.parent:
+            parent = comment.parent
+            mptt_parent = MPTTComment.objects.get(
+                action=parent.action,
+                user=parent.user,
+                detail=parent.detail
+            )
+            mptt_child = MPTTComment.objects.get(
+                action=comment.action,
+                user=comment.user,
+                detail=comment.detail
+            )
+            mptt_child.parent = mptt_parent
+            mptt_child.save()
+            
+        
+        
 
 # For Parts with zeroed-out Max Calibration Decimal Places, set default value to 32 places
 def _update_part_decimal_default():
