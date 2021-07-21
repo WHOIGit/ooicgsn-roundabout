@@ -45,11 +45,11 @@
 <div class="collapse mt-3" id="deployment-{{ deployment.id }}-{{ deployment_type }}">
     <hr>
     {% if user in deployment.user_draft.all %}
-        <button class="btn btn-success btn-sm mr-2" id='expander-date-{{deployment.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' deployment.id user.id 'deployment' %}">
+        <button class="btn btn-success btn-sm mr-2" id='deploy_expander-date-{{deployment.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' deployment.id user.id 'deployment' %}">
             Approve
         </button>
     {% elif user in deployment.user_approver.all %}
-        <button class="btn btn-warning btn-sm mr-2" id='expander-date-{{deployment.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' deployment.id user.id 'deployment' %}">
+        <button class="btn btn-warning btn-sm mr-2" id='deploy_expander-date-{{deployment.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' deployment.id user.id 'deployment' %}">
             Unapprove
         </button>
     {% endif %}

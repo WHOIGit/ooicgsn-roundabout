@@ -82,11 +82,11 @@
                     <div class="collapse mt-3" id="conf_name-{{ event.id }}">
                         <hr>
                         {% if user in event.user_draft.all %}
-                            <button class="btn btn-success btn-sm mr-2" id='expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
+                            <button class="btn btn-success btn-sm mr-2" id='configname_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
                                 Approve
                             </button>
                         {% elif user in event.user_approver.all %}
-                            <button class="btn btn-warning btn-sm mr-2" id='expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
+                            <button class="btn btn-warning btn-sm mr-2" id='configname_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
                                 Unapprove
                             </button>
                         {% endif %}
@@ -229,7 +229,7 @@
             $('#configuration_constant-section').hide();
         }
 
-        handleReviewBadges('#config_name-template', 'button[id^=expander]', '{{ user.id }}', '{{ user.username }}', part_id)
+        handleReviewBadges('#config_name-template', 'button[id^=configname_expander]', '{{ user.id }}', '{{ user.username }}', part_id)
         
     });
 </script>

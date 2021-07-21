@@ -329,7 +329,7 @@ def validate_import_config_vessels(import_config, reader, filename):
                 _('File: %(filename)s, Row %(row)s: Unable to parse Vessel Designation'),
                 params={'row': idx, 'filename': filename},
             )
-        if import_config.require_vessel_designation:
+        if import_config.require_vessel_vesseldesignation:
             if len(v_des) == 0:
                 raise ValidationError(
                     _('File: %(filename)s, Row %(row)s: Import Config disallows blank Vessel Designation'),
@@ -981,7 +981,6 @@ class ImportConfigForm(forms.ModelForm):
             'require_vessel_length': 'Length (m)',
             'require_vessel_max_speed': 'Max Speed (m/s)',
             'require_vessel_max_draft': 'Max Draft (m)',
-            'require_vessel_designation': 'Designation',
             'require_vessel_active': 'Active',
             'require_vessel_R2R': 'R2R'
         }
