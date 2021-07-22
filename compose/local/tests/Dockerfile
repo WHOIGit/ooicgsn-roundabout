@@ -1,6 +1,11 @@
 FROM ubuntu:18.04
+
+# Required here for nodejs 15+ and npm - needs to go here
+WORKDIR /tests
+
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 RUN apt-get update
+
 RUN apt-get install curl -y && apt-get install npm -y
 # Tools for Circleci debugging
 RUN apt-get install iputils-ping -y && apt-get install net-tools -y
@@ -13,7 +18,7 @@ COPY ./tests/*.js /tests/
 COPY ./tests/*.csv /tests/
 COPY ./tests/*.ext /tests/
 
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash -
 RUN apt-get install -y nodejs
 RUN npm install jsdom
 RUN npm install jquery
@@ -40,5 +45,5 @@ RUN sed -i 's/\r//' /tests/Buildup-Docker.bat
 #RUN chmod +x /tests/RunAllTests-Firefox-Linux.bat
 #RUN sed -i 's/\r//' /tests/RunAllTests-Firefox-Linux.bat
 
-WORKDIR /tests
+
 

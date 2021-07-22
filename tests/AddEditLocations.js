@@ -35,7 +35,7 @@ var password;
    	    });
 
 	  firefoxOptions.addArguments("-headless");
-    } 
+    }
 
     // First argument specifies the Browser type
     if (myArgs[0] == 'chrome') {        
@@ -45,22 +45,28 @@ var password;
         driver = new Builder().forBrowser('firefox').setFirefoxOptions(firefoxOptions).build();
     } 
     else {
-	console.log('Error: Missing Arguments');
+       console.log('Error: Missing Arguments');
     }
 
-   if (myArgs[2] == 'admin')
-    {
+   try {
+      if (myArgs[2] == 'admin')
+       {
         await driver.get("http://localhost:8000/");
         user = "admin";
         password = "admin";
-    }
-    else
-    {
-//        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+       }
+       else
+       {
+        //await driver.get("https://ooi-cgrdb-staging.whoi.net/");
         await driver.get("https://rdb-testing.whoi.edu/");
         user = "jkoch";
         password = "Automatedtests";
+       }
     }
+    catch (e) {
+        console.log(e.message, e.stack);
+        console.log("Add Edit Locations failed.");
+	return 1; }
 
     // 2 | setWindowSize | 1304x834 | 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
@@ -163,7 +169,6 @@ var password;
 
         // Add child location with name in parent group
         // 26 | click | linkText=Add Location |
-//	await new Promise(r => setTimeout(r, 6000));
 	while ((await driver.findElements(By.linkText("Edit Location"))).length == 0) //Edit button appears after element created
 	{
 	   await new Promise(r => setTimeout(r, 2000));
