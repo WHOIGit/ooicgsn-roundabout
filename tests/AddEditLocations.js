@@ -45,7 +45,7 @@ var password;
         driver = new Builder().forBrowser('firefox').setFirefoxOptions(firefoxOptions).build();
     } 
     else {
-       console.log('Error: Missing Arguments');
+        console.log('Error: Missing Arguments');
     }
 
    try {
