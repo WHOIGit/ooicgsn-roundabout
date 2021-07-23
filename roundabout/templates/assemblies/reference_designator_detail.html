@@ -135,14 +135,51 @@
                                                             <span class="sr-only">Expand/Collapse Reference Designator</span>
                                                         </a>
                                                         <div class="collapse show mt-1" id="des-{{ des.refdes_name }}{{ event.id }}">
-                                                            <table id = 'reference_designator-val-table' class="table table-tight">
-                                                                <thead>
-                                                                    <th>Name</th>
-                                                                </thead>
-                                                                <tbody class = 'reference_designator-tbody' id = 'reference_designator-val-tbody' style = 'display:block; overflow: auto; max-height: 200px'>
-                                                                    <tr style = 'display: block;'>
-                                                                        <td style = 'white-space: nowrap'>
-                                                                            <div style = 'width: 100px; text-align: center;'>{{ des.refdes_name }}</div>
+                                                            <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+                                                                <li class="nav-item">
+                                                                    <a  class="nav-link active" 
+                                                                        id="refdes_event_history-tab" 
+                                                                        data-toggle="tab" 
+                                                                        href="#refdes_event_history" 
+                                                                        role="tab" 
+                                                                        aria-controls="refdes_event_history" 
+                                                                        aria-selected="false">
+                                                                            Attributes
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                            <table class="table table-tight">
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td> 
+                                                                            <li class = 'list-group-item' style = 'display:block; overflow: auto; max-height: 200px'>
+                                                                                <table class="table table-tight table-striped action-table">
+                                                                                    <thead>
+                                                                                        <th>Name</th>
+                                                                                        <th>TOC_L1</th>
+                                                                                        <th>TOC_L2</th>
+                                                                                        <th>TOC_L3</th>
+                                                                                        <th>Instrument</th>
+                                                                                        <th>Manufacturer</th>
+                                                                                        <th>Model</th>
+                                                                                        <th>Min Depth</th>
+                                                                                        <th>Max Depth</th>
+                                                                                    </thead>
+                                                                                    <tbody style = 'overflow: auto; max-height: 200px'>
+                                                                                        <tr>
+                                                                                            <td>{{ des.refdes_name }}</td>
+                                                                                            <td>{{ des.toc_l1 }}</td>
+                                                                                            <td>{{ des.toc_l2 }}</td>
+                                                                                            <td>{{ des.toc_l3 }}</td>
+                                                                                            <td>{{ des.instrument }}</td>
+                                                                                            <td>{{ des.manufacturer }}</td>
+                                                                                            <td>{{ des.model }}</td>
+                                                                                            <td>{{ des.min_depth }}</td>
+                                                                                            <td>{{ des.max_depth }}</td>
+                                                                                        </tr>
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </li>
                                                                         </td>
                                                                     </tr>
                                                                 </tbody>

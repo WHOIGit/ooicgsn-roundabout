@@ -73,6 +73,11 @@ def import_vessels(vessels_files):
     cache.set('vessels_files', vessels_files, timeout=None)
     job = parse_vessel_files.delay()
 
+# Vessel CSV Importer
+def import_refdes(refdes_files):
+    cache.set('refdes_files', refdes_files, timeout=None)
+    job = parse_refdes_files.delay()
+
 # Calibration CSV Importer
 def import_calibrations(cal_files, user_draft):
     csv_files = []
@@ -100,10 +105,12 @@ def import_csv(request):
         dep_form = ImportDeploymentsForm(request.POST, request.FILES)
         cruises_form = ImportCruisesForm(request.POST, request.FILES)
         vessels_form = ImportVesselsForm(request.POST, request.FILES)
+        refdes_form = ImportReferenceDesignatorForm(request.POST, request.FILES)
         cal_files = request.FILES.getlist('calibration_csv')
         dep_files = request.FILES.getlist('deployments_csv')
         cruises_file = request.FILES.getlist('cruises_csv')
         vessels_file = request.FILES.getlist('vessels_csv')
+        refdes_file = request.FILES.getlist('refdes_csv')
         cache.set('user', request.user, timeout=None)
         if cal_form.is_valid() and len(cal_files) >= 1:
             import_calibrations(cal_files, cal_form.cleaned_data['user_draft'])
@@ -117,17 +124,22 @@ def import_csv(request):
         if vessels_form.is_valid() and len(vessels_file) >= 1:
             import_vessels(vessels_file)
             confirm = "True"
+        if refdes_form.is_valid() and len(refdes_file) >= 1:
+            import_refdes(refdes_file)
+            confirm = "True"
         cache.delete('user')
     else:
         cal_form = ImportCalibrationForm()
         dep_form = ImportDeploymentsForm()
         cruises_form = ImportCruisesForm()
         vessels_form = ImportVesselsForm()
+        refdes_form = ImportReferenceDesignatorForm()
     return render(request, 'ooi_ci_tools/import_tool.html', {
         "form": cal_form,
         'dep_form': dep_form,
         'cruises_form': cruises_form,
         'vessels_form': vessels_form,
+        'refdes_form': refdes_form,
         'confirm': confirm
     })
 

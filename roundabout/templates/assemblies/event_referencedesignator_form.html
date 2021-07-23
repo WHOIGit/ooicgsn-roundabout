@@ -51,19 +51,8 @@
 
         <div class="col-md-12">
             <h5 id = '__all__'>Reference Designator</h5>
-            <table class="table table-tight referencedesignator-form" style = 'display:block; overflow: auto; max-height: 100vh'>
-              <thead>
-                  <th>Name</th>
-              </thead>
-              <tbody>
-                {{ event_referencedesignator_form.management_form }}
-                {% for des in event_referencedesignator_form %}
-                  <tr>
-                      <td>{% if des.id  %}{{ des.DELETE }}{% endif %} {{ des.id }} {{ des.refdes_name }}</td>
-                  </tr>
-              {% endfor %}
-              </tbody>
-            </table>
+            {{ event_referencedesignator_form.management_form }}
+            {{ event_referencedesignator_form|crispy }}
           </div>
 
         <div class="control-group">

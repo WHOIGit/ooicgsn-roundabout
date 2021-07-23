@@ -30,6 +30,7 @@ from django_summernote.widgets import SummernoteWidget
 from bootstrap_datepicker_plus import DatePickerInput, DateTimePickerInput
 
 from roundabout.ooi_ci_tools.models import ReferenceDesignator, ReferenceDesignatorEvent
+from roundabout.ooi_ci_tools.forms import validate_reference_designator
 from roundabout.calibrations.utils import reviewer_users
 
 from .models import Assembly, AssemblyPart, AssemblyType, AssemblyRevision, AssemblyDocument
@@ -289,67 +290,71 @@ class ReferenceDesignatorEventForm(forms.ModelForm):
 class ReferenceDesignatorForm(forms.ModelForm):
     class Meta:
         model = ReferenceDesignator
-        fields = ['refdes_name']
+        fields = ['refdes_name','toc_l1','toc_l2','toc_l3','instrument','manufacturer','model','min_depth','max_depth']
         labels = {
             'refdes_name': 'Reference Designator Name',
+            'toc_l1': 'TOC_L1',
+            'toc_l2': 'TOC_L2',
+            'toc_l3': 'TOC_L3',
+            'instrument': 'Instrument',
+            'manufacturer': 'Manufacturer',
+            'model': 'Model',
+            'min_depth': 'Min Depth',
+            'max_depth': 'Max Depth',
         }
         widgets = {
             'refdes_name': forms.TextInput(
                 attrs = {
                     'style': 'width: 350px;'
                 }
-            )
+            ),
+            'toc_l1': forms.TextInput(
+                attrs = {
+                    'style': 'width: 350px;'
+                }
+            ),
+            'toc_l2': forms.TextInput(
+                attrs = {
+                    'style': 'width: 350px;'
+                }
+            ),
+            'toc_l3': forms.TextInput(
+                attrs = {
+                    'style': 'width: 350px;'
+                }
+            ),
+            'instrument': forms.TextInput(
+                attrs = {
+                    'style': 'width: 350px;'
+                }
+            ),
+            'manufacturer': forms.TextInput(
+                attrs = {
+                    'style': 'width: 350px;'
+                }
+            ),
+            'model': forms.TextInput(
+                attrs = {
+                    'style': 'width: 350px;'
+                }
+            ),
+            'min_depth': forms.TextInput(
+                attrs = {
+                    'style': 'width: 350px;'
+                }
+            ),
+            'max_depth': forms.TextInput(
+                attrs = {
+                    'style': 'width: 350px;'
+                }
+            ),
         }
     def __init__(self, *args, **kwargs):
         super(ReferenceDesignatorForm, self).__init__(*args, **kwargs)
 
     def clean_refdes_name(self):
         name = self.cleaned_data.get('refdes_name')
-        assertion_sets = name.split('-')
-        try:
-            assert len(assertion_sets) == 4
-        except:
-            raise ValidationError(
-                _('Reference Designator: %(name)s: Entered string must contain four dash-separated sections.'),
-                params={'name': name}
-            )
-        try:
-            first_section = assertion_sets[0]
-            assert type(first_section) is str
-            assert len(first_section) == 8 
-        except:
-            raise ValidationError(
-                _('Reference Designator: %(name)s: First section should be an 8-character string'),
-                params={'name': name}
-            )
-        try:
-            second_section = assertion_sets[1]
-            assert type(second_section) is str
-            assert len(second_section) == 5
-        except:
-            raise ValidationError(
-                _('Reference Designator: %(name)s: Second section should be a 5-character string'),
-                params={'name': name}
-            )
-        try:
-            third_section = assertion_sets[2]
-            assert len(third_section) == 2
-            intable_2 = int(third_section)
-            assert type(intable_2) is int
-        except:
-            raise ValidationError(
-                _('Reference Designator: %(name)s: Third section should be a 2-digit integer'),
-                params={'name': name}
-            )
-        try:
-            fourth_section = assertion_sets[3]
-            assert type(fourth_section) is str
-            assert len(fourth_section) == 9
-        except:
-            raise ValidationError(
-                _('Reference Designator: %(name)s: Fourth section should be a 9-character string'),
-                params={'name': name}
-            )
+        validate_reference_designator(name)
         return name
 
 
@@ -358,7 +363,7 @@ EventReferenceDesignatorFormset = inlineformset_factory(
     ReferenceDesignatorEvent,
     ReferenceDesignator,
     form=ReferenceDesignatorForm,
-    fields=('refdes_name',),
+    fields=('refdes_name','toc_l1','toc_l2','toc_l3','instrument','manufacturer','model','min_depth','max_depth'),
     extra=0,
     can_delete=True
 )
@@ -367,7 +372,7 @@ EventReferenceDesignatorAddFormset = inlineformset_factory(
     ReferenceDesignatorEvent,
     ReferenceDesignator,
     form=ReferenceDesignatorForm,
-    fields=('refdes_name',),
+    fields=('refdes_name','toc_l1','toc_l2','toc_l3','instrument','manufacturer','model','min_depth','max_depth'),
     extra=1,
     can_delete=True
 )
