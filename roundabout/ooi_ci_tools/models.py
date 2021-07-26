@@ -58,6 +58,21 @@ class Comment(models.Model):
     user = models.ForeignKey(User, related_name='comments', on_delete=models.SET_NULL, null=True)
     detail = models.TextField(blank=True)
 
+# MPTT Comment model
+class MPTTComment(MPTTModel):
+    class MPTTMeta:
+        order_insertion_by = ["updated_at"]
+    def __str__(self):
+        return self.detail
+    def get_object_type(self):
+        return 'mptt_comment'
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    parent = TreeForeignKey("self",related_name="children",on_delete=models.SET_NULL,null=True,blank=True,db_index=True)
+    action = models.ForeignKey(Action, related_name='mptt_comments', on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey(User, related_name='mptt_comments', on_delete=models.SET_NULL, null=True)
+    detail = models.TextField(blank=True)
+
 
 # CSV Import configuration model
 class ImportConfig(models.Model):
@@ -103,6 +118,7 @@ class ImportConfig(models.Model):
     require_vessel_active = models.BooleanField(blank=False, default=True)
     require_vessel_R2R = models.BooleanField(blank=False, default=True)
 
+# Generic class to handle Calibration, Configuration, Constant, Comment, and Reference Designator Events
 class CCCEvent(models.Model):
     class Meta:
         abstract = True
@@ -132,6 +148,7 @@ class CCCEvent(models.Model):
         return self.user_approver.all().order_by('username')
 
 
+# Handles Reference Designator-related Events
 class ReferenceDesignatorEvent(CCCEvent):
     class Meta:
         ordering = ['-created_at']
@@ -141,7 +158,7 @@ class ReferenceDesignatorEvent(CCCEvent):
         return self.actions.filter(object_type='referencedesignatorevent')
 
 
-
+# Handles raw values set within the Event
 class ReferenceDesignator(models.Model):
     class Meta:
         ordering = ['refdes_name']

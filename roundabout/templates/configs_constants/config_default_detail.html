@@ -79,11 +79,11 @@
                     <div class="collapse mt-3" id="default-{{ event.id }}">
                         <hr>
                         {% if user in event.user_draft.all %}
-                            <button class="btn btn-success btn-sm mr-2" id='expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
+                            <button class="btn btn-success btn-sm mr-2" id='configdefault_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
                                 Approve
                             </button>
                         {% elif user in event.user_approver.all %}
-                            <button class="btn btn-warning btn-sm mr-2" id='expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
+                            <button class="btn btn-warning btn-sm mr-2" id='configdefault_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
                                 Unapprove
                             </button>
                         {% endif %}
@@ -217,7 +217,7 @@
         let part_has_configs = '{{ part_has_configs }}';
         let assmblypart_id = '{{assembly_part.part.id}}'
 
-        handleReviewBadges('#config_default-template', 'button[id^=expander]', '{{ user.id }}', '{{ user.username }}', assmblypart_id)
+        handleReviewBadges('#config_default-template', 'button[id^=configdefault_expander]', '{{ user.id }}', '{{ user.username }}', assmblypart_id)
         
     });
 </script>

@@ -91,7 +91,7 @@ class Part(models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(32)],
         null=False,
         blank=True,
-        default=15,
+        default=32,
     )
 
     class Meta:
