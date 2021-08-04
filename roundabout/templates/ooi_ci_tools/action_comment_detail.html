@@ -19,6 +19,7 @@
 # If not, see <http://www.gnu.org/licenses/>.
 -->
 {% load common_tags %}
+{% load mptt_tags %}
 
 {% if inventory_item.actions.exists %}
     <div class="tab-pane fade show active" id="history" role="tabpanel" aria-labelledby="history-tab">
@@ -81,84 +82,88 @@
                         </div>
                     </div>
                     <div class="collapse show mt-3" id="action-{{ action.id }}">
-                        <hr>
-                        <ul class="list-group">
-                            {% for comment in action.comments.all %}
-                                <li class="list-group-item">
-                                    <div class = 'row'>
-                                        <div class = 'col-md-9'>
-                                            <a  class="collapse show" 
-                                                data-toggle="collapse" 
-                                                href="#comment-{{ comment.id }}" 
-                                                aria-expanded="false" 
-                                                aria-controls="comment-{{ comment.id }}"
-                                            >
-                                                {{ comment.detail|safe|truncatechars:255 }}
-                                            </a>
-                                            <a  data-toggle="collapse" 
-                                                class="collapse show text-right" 
-                                                href="#comment-{{ comment.id }}" 
-                                                aria-controls="comment-{{ comment.id }}" 
-                                                aria-expanded="false" 
-                                                role="button"
-                                            >
-                                                <i class="fa" aria-hidden="true"></i>
-                                                <span class="sr-only">{{ comment.detail|safe|truncatechars:255 }}</span>
-                                            </a>
-                                        </div>
-                                        <div class = 'col-md-3'>
-                                            <div class = 'ajax-detail-link float-right'>
-                                                <a  href="#"
-                                                    class="btn btn-outline-primary btn-sm mr-2"
-                                                    role="button"
-                                                    data-detail-url="{% url 'ooi_ci_tools:sub_comment' comment.id 'add' %}"
-                                                    data-node-id="{{ inventory_item.id }}"
-                                                    data-node-type="inventory">
-                                                        Comment
-                                                </a>
-                                            </div>
-                                            {% if user == comment.user or user|has_group:"admin" %}
-                                                <div class = 'ajax-detail-link float-right'>
-                                                    <a  href="#"
-                                                        class="btn btn-outline-info btn-sm mr-2"
-                                                        role="button"
-                                                        data-detail-url="{% url 'ooi_ci_tools:sub_comment' comment.id 'edit' %}"
-                                                        data-node-id="{{ inventory_item.id }}"
-                                                        data-node-type="inventory">
-                                                            Edit
-                                                    </a>
-                                                </div>
-                                            {% endif %}
-                                            {% if user == comment.user or user|has_group:"admin" %}
-                                                <div class = 'ajax-detail-link float-right'>
-                                                    <a  href="#"
-                                                        class="btn btn-outline-danger btn-sm mr-2"
-                                                        role="button"
-                                                        data-detail-url="{% url 'ooi_ci_tools:comment_comment_delete' comment.id %}"
-                                                        data-node-id="{{ inventory_item.id }}"
-                                                        data-node-type="inventory">
-                                                            Delete
-                                                    </a>
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="collapse show mt-3" id="comment-{{ comment.id }}">
-                                        <small class = 'form-text text-muted'>
-                                            <span class='font-weight-light'><b>Date:</b> {{ comment.created_at|date:"n/j/y H:i" }}&nbsp;</span>
-                                            <span class='font-weight-light'><b>User:</b> {{ comment.user.username }}&nbsp;</span>
-                                        </small>
-                                        {% if comment.parent %}
-                                            <small class = 'form-text text-muted'>
-                                                <span class='font-weight-light'><b>In Response to:</b> {{ comment.parent.detail | safe | truncatechars:125 }}&nbsp;</span>
-                                                <span class='font-weight-light'><b>User:</b> {{ comment.parent.user.username | safe }}&nbsp;</span>
-                                            </small>
-                                        {% endif %}
-                                    </div>
+                        {% for comment,structure in action.mptt_comments.all|tree_info %}
+                            {% if structure.new_level %}
+                                <ul class = 'list-group'>
+                                    <li class = 'list-group-item'>
+                            {% else %}
                                 </li>
+                                <li class = 'list-group-item'>
+                            {% endif %}
+                            <div class = 'row'>
+                                <div class = 'col-md-9'>
+                                    <a  class="collapsed" 
+                                        data-toggle="collapse" 
+                                        href="#comment-{{ comment.id }}" 
+                                        aria-expanded="false" 
+                                        aria-controls="comment-{{ comment.id }}"
+                                    >
+                                        {{ comment.detail|safe|truncatechars:255 }}
+                                    </a>
+                                    <a  data-toggle="collapse" 
+                                        class="collapsed text-right" 
+                                        href="#comment-{{ comment.id }}" 
+                                        aria-controls="comment-{{ comment.id }}" 
+                                        aria-expanded="false" 
+                                        role="button"
+                                    >
+                                        <i class="fa" aria-hidden="true"></i>
+                                        <span class="sr-only">{{ comment.detail|safe|truncatechars:255 }}</span>
+                                    </a>
+                                    <small class = 'form-text text-muted'>
+                                        <span class='font-weight-light'><b>Date:</b> {{ comment.created_at|date:"n/j/y H:i" }}&nbsp;</span>
+                                        <span class='font-weight-light'><b>User:</b> {{ comment.user.username }}&nbsp;</span>
+                                    </small>
+                                </div>
+                                <div class = 'col-md-3'>
+                                    <div class = 'ajax-detail-link float-right'>
+                                        <a  href="#"
+                                            class="btn btn-outline-primary btn-sm mr-2"
+                                            role="button"
+                                            data-detail-url="{% url 'ooi_ci_tools:sub_comment' comment.id 'add' %}"
+                                            data-node-id="{{ inventory_item.id }}"
+                                            data-node-type="inventory">
+                                            <i class="far fa-comments"></i>
+                                        </a>
+                                    </div>
+                                    {% if user == comment.user or user|has_group:"admin" %}
+                                        <div class = 'ajax-detail-link float-right'>
+                                            <a  href="#"
+                                                class="btn btn-outline-info btn-sm mr-2"
+                                                role="button"
+                                                data-detail-url="{% url 'ooi_ci_tools:sub_comment' comment.id 'edit' %}"
+                                                data-node-id="{{ inventory_item.id }}"
+                                                data-node-type="inventory">
+                                                <i class="far fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                    {% if user == comment.user or user|has_group:"admin" %}
+                                        <div class = 'ajax-detail-link float-right'>
+                                            <a  href="#"
+                                                class="btn btn-outline-danger btn-sm mr-2"
+                                                role="button"
+                                                data-detail-url="{% url 'ooi_ci_tools:comment_comment_delete' comment.id %}"
+                                                data-node-id="{{ inventory_item.id }}"
+                                                data-node-type="inventory">
+                                                <i class="far fa-trash-alt"></i>
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                    
+                                </div>
+                            </div>
+                            {% if comment.children.exists %}
+                                <div class="collapse mt-3" id="comment-{{ comment.id }}">
+                            {% endif %}
+                            {% for level in structure.closed_levels %}
+                                    </li>
+                                </ul>
+                                {% if comment.children.exists %}
+                                    </div>
+                                {% endif %}
                             {% endfor %}
-                        </ul>
+                        {% endfor %}
                     </div>
                 </li>
             {% endfor %}
