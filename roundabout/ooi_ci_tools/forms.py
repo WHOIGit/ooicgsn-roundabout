@@ -992,3 +992,80 @@ class ImportConfigForm(forms.ModelForm):
         if commit:
             import_config.save()
             return import_config
+
+
+# Handles Calibration CSV file submission and field validation
+class ImportReferenceDesignatorForm(forms.Form):
+    refdes_csv = forms.FileField(
+        widget=forms.ClearableFileInput(
+            attrs={
+                'multiple': True
+            }
+        ),
+        required = False
+    )
+    user_draft = forms.ModelMultipleChoiceField(
+        queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username'),
+        required=False,
+        label = 'Select Reviewers'
+    )
+
+    def clean_refdes_csv(self):
+        refdes_files = self.files.getlist('refdes_csv')
+        # for csv_file in refdes_files:
+        #     csv_file.seek(0)
+        #     reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+        #     for idx, row in enumerate(reader):
+        #         row_idx = idx + 1
+        #         refdes_name = row['Reference_Designator']
+                # validate_reference_designator(refdes_name, row_idx)
+        return refdes_files
+
+
+# Handeles Reference Designator name validation
+def validate_reference_designator(name, row_idx = None):
+    assertion_sets = name.split('-')
+    try:
+        assert len(assertion_sets) == 4
+    except:
+        raise ValidationError(
+            _('Row: %(row_num)s, Reference Designator: %(name)s: Entered string must contain four dash-separated sections.'),
+            params={'name': name, 'row_num': row_idx}
+        )
+    try:
+        first_section = assertion_sets[0]
+        assert type(first_section) is str
+        assert len(first_section) == 8 
+    except:
+        raise ValidationError(
+            _('Row: %(row_num)s, Reference Designator: %(name)s: First section should be an 8-character string'),
+            params={'name': name, 'row_num': row_idx}
+        )
+    try:
+        second_section = assertion_sets[1]
+        assert type(second_section) is str
+        assert len(second_section) == 5
+    except:
+        raise ValidationError(
+            _('Row: %(row_num)s, Reference Designator: %(name)s: Second section should be a 5-character string'),
+            params={'name': name, 'row_num': row_idx}
+        )
+    try:
+        third_section = assertion_sets[2]
+        assert len(third_section) == 2
+        intable_2 = int(third_section)
+        assert type(intable_2) is int
+    except:
+        raise ValidationError(
+            _('Row: %(row_num)s, Reference Designator: %(name)s: Third section should be a 2-digit integer'),
+            params={'name': name, 'row_num': row_idx}
+        )
+    try:
+        fourth_section = assertion_sets[3]
+        assert type(fourth_section) is str
+        assert len(fourth_section) == 9
+    except:
+        raise ValidationError(
+            _('Row: %(row_num)s, Reference Designator: %(name)s: Fourth section should be a 9-character string'),
+            params={'name': name, 'row_num': row_idx}
+        )

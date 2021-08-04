@@ -167,4 +167,12 @@ class ReferenceDesignator(models.Model):
     def get_object_type(self):
         return 'reference_designator'
     refdes_name = models.CharField(max_length=255, unique=False, db_index=True)
+    toc_l1 = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
+    toc_l2 = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
+    toc_l3 = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
+    instrument = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
+    manufacturer = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
+    model = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
+    min_depth = models.IntegerField(null=False,blank=True,default=1)
+    max_depth = models.IntegerField(null=False,blank=True,default=1)
     refdes_event = models.ForeignKey(ReferenceDesignatorEvent, related_name='reference_designators', on_delete=models.CASCADE, null=True)

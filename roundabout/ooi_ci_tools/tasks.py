@@ -40,7 +40,7 @@ from roundabout.cruises.models import Cruise, Vessel
 from roundabout.inventory.models import Inventory, Action, Deployment
 from roundabout.inventory.utils import _create_action_history
 from roundabout.userdefinedfields.models import Field, FieldValue
-from roundabout.ooi_ci_tools.models import Threshold
+from roundabout.ooi_ci_tools.models import Threshold, ReferenceDesignator, ReferenceDesignatorEvent
 
 
 # Update Coefficient statistical Threshold values for a Part's Calibration Names
@@ -460,3 +460,54 @@ def parse_deployment_files(self):
         for row in deployments[0]['rows']:
             print(row)
     cache.delete('dep_files')
+
+
+# Parse Reference Designator vocab CSV file submission, generate and associate relevant Events 
+@shared_task(bind=True)
+def parse_refdes_files(self):
+    refdes_files = cache.get('refdes_files')
+    user = cache.get('user')
+    for csv_file in refdes_files:
+        # Set up the Django file object for CSV DictReader
+        csv_file.seek(0)
+        reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+        # Get the column headers to save with parent TempImport object
+        headers = reader.fieldnames
+
+        for row in reader:
+            refdes_name = row['Reference_Designator']
+            try:
+                refdes_obj, created = ReferenceDesignator.objects.update_or_create(
+                    refdes_name = refdes_name,
+                    defaults = {
+                        'toc_l1': row['TOC_L1'],
+                        'toc_l2': row['TOC_L2'],
+                        'toc_l3': row['TOC_L3'],
+                        'instrument': row['Instrument'],
+                        'manufacturer': row['Manufacturer'],
+                        'model': row['Model'],
+                        'min_depth': row['Min Depth'],
+                        'max_depth': row['Max Depth']
+                    }
+                )
+            except ReferenceDesignator.MultipleObjectsReturned:
+                refdes_obj = ReferenceDesignator.objects.filter(refdes_name=refdes_name).first()
+                refdes_obj.toc_l1 = row['TOC_L1']
+                refdes_obj.toc_l2 = row['TOC_L2']
+                refdes_obj.toc_l3 = row['TOC_L3']
+                refdes_obj.instrument = row['Instrument']
+                refdes_obj.manufacturer = row['Manufacturer']
+                refdes_obj.model = row['Model']
+                refdes_obj.min_depth = row['Min Depth']
+                refdes_obj.max_depth = row['Max Depth']
+                refdes_obj.save()
+            if created:
+                refdes_event = ReferenceDesignatorEvent.objects.create()
+                refdes_obj.refdes_event = refdes_event
+                refdes_obj.save()
+                _create_action_history(refdes_event,Action.ADD,user,data=dict(csv_import=csv_file.name))
+            else:
+                refdes_event = refdes_obj.refdes_event
+                if refdes_event:
+                    _create_action_history(refdes_event,Action.UPDATE,user,data=dict(csv_import=csv_file.name))
+    cache.delete('refdes_files')
