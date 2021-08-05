@@ -52,7 +52,8 @@ services:
       #image: roundabout_production_tests
     depends_on:
       - django
-    network_mode: "service:django"
+    network_mode: "host"
+#    network_mode: "service:django"
 
   postgres:
     build:
