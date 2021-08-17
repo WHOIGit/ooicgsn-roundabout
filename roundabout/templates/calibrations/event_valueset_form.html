@@ -40,7 +40,7 @@
     {% endif %}
     <form   class="form-horizontal ajax-form"
             method="post"
-            action=""
+            action="" novalidate
             id="calibration-action-form"
             enctype="multipart/form-data"
             data-url='{{ request.build_absolute_uri|safe }}'
@@ -122,7 +122,7 @@
 
             // Hide default form delete checkboxes
             $('[id$=-DELETE]').hide();
-            
+
 
             // hyperlinks formset
             $('#hyperlink-table tbody tr').formset({

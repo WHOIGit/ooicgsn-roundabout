@@ -165,7 +165,7 @@ def action_comment(request, pk):
 
 # Sub-comment create view
 def sub_comment(request, pk, crud=None):
-    comment= Comment.objects.get(id=pk)
+    comment= MPTTComment.objects.get(id=pk)
     if request.method == "POST":
         if crud == 'add':
             comment_form = CommentForm(request.POST)
@@ -192,7 +192,7 @@ def sub_comment(request, pk, crud=None):
 
 # Comment delete view
 class CommentDelete(LoginRequiredMixin, DeleteView):
-    model = Comment
+    model = MPTTComment
     context_object_name='comment_obj'
     template_name = 'ooi_ci_tools/comment_delete.html'
     permission_required = 'ooi_ci_tools.add_comments'

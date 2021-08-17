@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -41,7 +41,7 @@
         <p>OOI Property Number: {{ inventory_item.ooi_property_number }}</p>
     {% endif %}
     <p>Part Number: {{ inventory_item.part.part_number }}</p>
-    <p>Revision: {{ inventory_item.part.revision }}</p>
+    <p>Revision: {{ inventory_item.part.revisions.latest }}</p>
     <p>Current Location: {{ inventory_item.location.name }}</p>
 
     {% if inventory_item.deployment %}

@@ -928,7 +928,7 @@ class ImportCalibrationForm(forms.Form):
 # Handles Comment form submission
 class CommentForm(forms.ModelForm):
     class Meta:
-        model = Comment
+        model = MPTTComment
         fields = ['detail',]
         labels = {
             'detail': 'Provide your comment here:'

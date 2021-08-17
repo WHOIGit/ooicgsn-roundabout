@@ -477,6 +477,14 @@ def parse_refdes_files(self):
         for row in reader:
             refdes_name = row['Reference_Designator']
             try:
+                min_depth = Decimal(row['Min Depth'])
+            except:
+                min_depth = 0
+            try:
+                max_depth = Decimal(row['Max Depth'])
+            except:
+                max_depth = 0
+            try:
                 refdes_obj, created = ReferenceDesignator.objects.update_or_create(
                     refdes_name = refdes_name,
                     defaults = {
@@ -486,8 +494,8 @@ def parse_refdes_files(self):
                         'instrument': row['Instrument'],
                         'manufacturer': row['Manufacturer'],
                         'model': row['Model'],
-                        'min_depth': row['Min Depth'],
-                        'max_depth': row['Max Depth']
+                        'min_depth': min_depth,
+                        'max_depth': max_depth
                     }
                 )
             except ReferenceDesignator.MultipleObjectsReturned:
@@ -498,8 +506,8 @@ def parse_refdes_files(self):
                 refdes_obj.instrument = row['Instrument']
                 refdes_obj.manufacturer = row['Manufacturer']
                 refdes_obj.model = row['Model']
-                refdes_obj.min_depth = row['Min Depth']
-                refdes_obj.max_depth = row['Max Depth']
+                refdes_obj.min_depth = min_depth
+                refdes_obj.max_depth = max_depth
                 refdes_obj.save()
             if created:
                 refdes_event = ReferenceDesignatorEvent.objects.create()

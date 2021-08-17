@@ -93,7 +93,7 @@ class Vessel(models.Model):
 
 class VesselHyperlink(models.Model):
     text = models.CharField(max_length=255, unique=False)
-    url = models.CharField(max_length=1000)
+    url = models.URLField(max_length=1000)
     parent = models.ForeignKey(
         Vessel,
         related_name="hyperlinks",

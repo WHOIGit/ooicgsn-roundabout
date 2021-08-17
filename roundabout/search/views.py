@@ -554,7 +554,7 @@ class PartTableView(GenericSearchTableView):
                                            linkify=dict(viewname='parts:parts_detail',args=[tables.A('pk')]))),
                         dict(value="part_type__name",        text="Part Type", legal_lookup='STR_LOOKUP',
                              col_args=dict(verbose_name='Type')),
-                        dict(value="revision",           text="Part Revision", legal_lookup='STR_LOOKUP'),
+                        dict(value="revisions__last__revision_code", text="Latest Part Revision", legal_lookup='STR_LOOKUP'),
                         dict(value="unit_cost",              text="Unit Cost", legal_lookup='NUM_LOOKUP'),
                         dict(value="refurbishment_cost",   text="Refurb Cost", legal_lookup='NUM_LOOKUP'),
                         dict(value="note",                       text="Notes", legal_lookup='STR_LOOKUP',
