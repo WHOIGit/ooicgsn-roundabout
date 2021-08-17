@@ -88,7 +88,7 @@
     {% endif %}
 
     {% if latest_flag.detail %}<p><strong>Why Flagged:</strong> {{ latest_flag.detail }}</p>{% endif %}
-    <form class="form-horizontal ajax-form" method="post" action="" id="inventory-action-form" enctype="multipart/form-data"
+    <form class="form-horizontal ajax-form" method="post" action="" novalidate id="inventory-action-form" enctype="multipart/form-data"
           data-parents-url="{% url 'inventory:ajax_load_parents' %}"
           data-deployments-url="{% url 'inventory:ajax_load_deployments' %}"
           data-serialnumber-url="{% url 'inventory:ajax_load_new_serialnumber' %}"
