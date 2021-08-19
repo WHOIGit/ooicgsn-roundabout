@@ -114,7 +114,7 @@ var filename, filename_ext;
             else if (bodyText.includes("File: CruiseInformation-import")) {
                 // Import error occurred
                 erroridx = bodyText.indexOf("File: CruiseInformation-import");
-                var error = bodyText.substring(erroridx, erroridx + 70);
+                var error = bodyText.substring(erroridx, erroridx + 80);
                 console.log("Import Error Occurred: " + error);
                 break;
             }
