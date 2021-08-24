@@ -114,7 +114,7 @@ var filename, filename_ext;
             else if (bodyText.includes("File: CruiseInformation-import")) {
                 // Import error occurred
                 erroridx = bodyText.indexOf("File: CruiseInformation-import");
-                var error = bodyText.substring(erroridx, erroridx + 70);
+                var error = bodyText.substring(erroridx, erroridx + 80);
                 console.log("Import Error Occurred: " + error);
                 break;
             }
@@ -134,7 +134,7 @@ var filename, filename_ext;
            await driver.findElement(By.id("navbarAdmintools")).click()
            await driver.findElement(By.linkText("Bulk Download Tool")).click()
 	   // CI download button associated with Cruises
-           await driver.findElement(By.css(".btn:nth-child(3)")).click()
+           await driver.findElement(By.linkText("Export Cruises [CI]")).click()
 
            // Access Downloaded Cruise file
            if (myArgs[1] == 'headless') {
@@ -227,7 +227,7 @@ var filename, filename_ext;
            await driver.findElement(By.id("navbarAdmintools")).click()
            await driver.findElement(By.linkText("Bulk Download Tool")).click()
 	   // CI download button associated with Vessels
-           await driver.findElement(By.css(".btn:nth-child(7)")).click()
+           await driver.findElement(By.linkText("Export Vessels [CI]")).click()
 
            // Access Downloaded Vessel file
            if (myArgs[1] == 'headless') {
