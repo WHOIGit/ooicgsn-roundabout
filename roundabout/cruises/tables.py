@@ -45,7 +45,8 @@ class ActionData_Column(tables2.Column):
         except KeyError:
             return ''
     def value(self,value):
-        return value['updated_values'][self.field_name]['to']
+        try: return value['updated_values'][self.field_name]['to']
+        except KeyError: return ''
 
 
 class ActionTableBase(tables2.Table):

@@ -117,7 +117,6 @@ def import_csv(request):
         if vessels_form.is_valid() and len(vessels_file) >= 1:
             import_vessels(vessels_file)
             confirm = "True"
-        cache.delete('user')
     else:
         cal_form = ImportCalibrationForm()
         dep_form = ImportDeploymentsForm()
