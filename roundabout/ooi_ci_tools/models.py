@@ -68,7 +68,7 @@ class MPTTComment(MPTTModel):
         return 'mptt_comment'
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    parent = TreeForeignKey("self",related_name="children",on_delete=models.SET_NULL,null=True,blank=True,db_index=True)
+    parent = TreeForeignKey("self",related_name="children",on_delete=models.CASCADE,null=True,blank=True,db_index=True)
     action = models.ForeignKey(Action, related_name='mptt_comments', on_delete=models.CASCADE, null=True)
     user = models.ForeignKey(User, related_name='mptt_comments', on_delete=models.SET_NULL, null=True)
     detail = models.TextField(blank=True)
@@ -167,4 +167,22 @@ class ReferenceDesignator(models.Model):
     def get_object_type(self):
         return 'reference_designator'
     refdes_name = models.CharField(max_length=255, unique=False, db_index=True)
+    toc_l1 = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
+    toc_l2 = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
+    toc_l3 = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
+    instrument = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
+    manufacturer = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
+    model = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
+    min_depth = models.DecimalField(
+        max_digits=10,
+        decimal_places=5,
+        null=True,
+        blank=True,
+    )
+    max_depth = models.DecimalField(
+        max_digits=10,
+        decimal_places=5,
+        null=True,
+        blank=True,
+    )
     refdes_event = models.ForeignKey(ReferenceDesignatorEvent, related_name='reference_designators', on_delete=models.CASCADE, null=True)

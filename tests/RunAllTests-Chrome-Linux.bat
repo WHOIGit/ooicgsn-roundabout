@@ -6,7 +6,7 @@ set -e
 echo Running Chrome Tests
 
 val=$(node AddEditLocations.js chrome headless admin)
-echo $val 
+echo $val
 if [[ "$val" == *"failed."* ]]; then
   exit 1
 fi
