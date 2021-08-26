@@ -53,7 +53,7 @@ var password;
         password = "admin";
     }
     else {
-//        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+        //        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
         await driver.get("https://rdb-testing.whoi.edu/");
         user = "jkoch";
         password = "Automatedtests";
@@ -86,123 +86,112 @@ var password;
 
         // CALIBRATIONS AND COEFFICIENTS TEST
 
-       // Create Calibrations for Part Template - Tests Issue #147
+        // Create Calibrations for Part Template - Tests Issue #147
         // Search for Part Template
-        // 13 | type | id=searchbar-query | sewing
         await driver.findElement(By.id("searchbar-query")).sendKeys("sewing");
         await driver.findElement(By.id("searchbar-modelselect")).sendKeys("Part Templates");
-        // 14 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
-	while ((await driver.findElements(By.linkText("1232"))).length == 0) // 1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Search.");
-	}
-        // 15 | click | linkText=1232 | 
+        while ((await driver.findElements(By.linkText("1232"))).length == 0) // 1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Search.");
+        }
+        
         await driver.findElement(By.linkText("1232")).click();
-	while ((await driver.findElements(By.linkText("Create Calibrations"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Search Link.");
-	}
+        while ((await driver.findElements(By.linkText("Create Calibrations"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Search Link.");
+        }
         // Create Calibrations for Part Template
         await driver.findElement(By.linkText("Create Calibrations")).click();
 
-	// 1.6 Behavior of this screen is so tweeky!!! Values set are cleared before .btn-primary
-	// pushed. Doesn't happen stepping through the debugger. Fields MUST be set in this order!
-	// Wait on a link, not a field, or a Stale Element error will be thrown
-	while ((await driver.findElements(By.id("add_button"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Row.");
-	} 
-      
+        // 1.6 & 1.7 Behavior of this screen is so tweeky!!! Values set are cleared before .btn-primary
+        // pushed. Doesn't happen stepping through the debugger. Fields MUST be set in this order!
+        // Wait on a link, not a field, or a Stale Element error will be thrown
+        while ((await driver.findElements(By.id("add_button"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Row.");
+        }
+
         // 24 | click | linkText=Add Configurations/Constants | 
         await new Promise(r => setTimeout(r, 2000));
 
-    	await driver.findElement(By.id("add_button")).click();
-        await new Promise(r => setTimeout(r, 2000)); 
+        await driver.findElement(By.id("add_button")).click();
+        await new Promise(r => setTimeout(r, 2000));
 
         await driver.findElement(By.id("id_coefficient_names-1-value_set_type")).click();
         await driver.findElement(By.id("id_coefficient_names-1-value_set_type")).sendKeys("2-Dimensional Array");
         await driver.findElement(By.id("id_coefficient_names-1-calibration_name")).click();
         await driver.findElement(By.id("id_coefficient_names-1-calibration_name")).sendKeys("scalib2");
-        await driver.findElement(By.id("id_coefficient_names-1-sigfig_override")).click(); 
-        await driver.findElement(By.id("id_coefficient_names-1-sigfig_override")).clear(); 
+        await driver.findElement(By.id("id_coefficient_names-1-sigfig_override")).click();
+        await driver.findElement(By.id("id_coefficient_names-1-sigfig_override")).clear();
         await driver.findElement(By.id("id_coefficient_names-1-sigfig_override")).sendKeys("20");
-   
-	await new Promise(r => setTimeout(r, 2000));
-	await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).clear();
+
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).clear();
         await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1");
 
-	await driver.findElement(By.id("id_user_draft")).sendKeys("admin");  //dropdown doesn't work, this gets unchecked
-	await driver.findElement(By.id("id_user_draft")).sendKeys(user);  //dropdown doesn't work, this gets unchecked
-	//encodedString = await driver.takeScreenshot();
-	//await fs.writeFileSync('./ccscreen1.png', encodedString, 'base64');    
+        await driver.findElement(By.id("id_user_draft")).sendKeys("admin");  //dropdown doesn't work, this gets unchecked
+        await driver.findElement(By.id("id_user_draft")).sendKeys(user);  //dropdown doesn't work, this gets unchecked
+        //encodedString = await driver.takeScreenshot();
+        //await fs.writeFileSync('./ccscreen1.png', encodedString, 'base64');    
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
-	while ((await driver.findElements(By.id("action"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Action.");
-	}
+        while ((await driver.findElements(By.id("action"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Action.");
+        }
 
         //Edit Max Calibration Coeff decimal places for Sewing, but not Disk Drive Part Template - Issue #120
         await driver.findElement(By.id("action")).click();
-	while ((await driver.findElements(By.linkText("Edit Part Template"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Edit Part.");
-	}
+        while ((await driver.findElements(By.linkText("Edit Part Template"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Edit Part.");
+        }
         await driver.findElement(By.linkText("Edit Part Template")).click();
-//	while ((await driver.findElements(By.id("id_cal_dec_places"))).length == 0) //causing stale element v1.7.0
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-//	   console.log("Wait 2 seconds for Page Load.");
-	}
+        //	while ((await driver.findElements(By.id("id_cal_dec_places"))).length == 0) //causing stale element v1.7.0
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            //	   console.log("Wait 2 seconds for Page Load.");
+        }
         await driver.findElement(By.id("id_cal_dec_places")).clear();
         await driver.findElement(By.id("id_cal_dec_places")).sendKeys("20");
         await driver.findElement(By.css(".controls > .btn-primary")).click()
-	while ((await driver.findElements(By.id("action"))).length == 0) //after page update
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Action2.");
-	}
+        while ((await driver.findElements(By.id("action"))).length == 0) //after page update
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Action2.");
+        }
         await driver.findElement(By.id("searchbar-query")).sendKeys("disk drive");
         await driver.findElement(By.id("searchbar-modelselect")).sendKeys("Part Templates");
-        // 14 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
-	while ((await driver.findElements(By.partialLinkText("100"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Search2.");
-	}
+        while ((await driver.findElements(By.partialLinkText("100"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Search2.");
+        }
         await driver.findElement(By.partialLinkText("100")).click();
-	while ((await driver.findElements(By.id("action"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Action3.");
-	}
+        while ((await driver.findElements(By.id("action"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Action3.");
+        }
         await driver.findElement(By.id("action")).click();
         await driver.findElement(By.linkText("Edit Part Template")).click();
-	while ((await driver.findElements(By.id("id_part_number"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Edit Part Template.");
-	}
+        while ((await driver.findElements(By.id("id_part_number"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Edit Part Template.");
+        }
         try {
             await driver.findElement(By.id("id_cal_dec_places")).clear();
             console.log("Error: Max Calibration Coefficient decimal places should not be enabled for Disk Drive");
         }
-        catch (NoSuchElementException) { } 
+        catch (NoSuchElementException) { }
 
         // Navigate to Inventory Tree and click on associated Part Template - issue #147 cont.
         await driver.findElement(By.linkText("Inventory")).click();
-	while ((await driver.findElements(By.xpath("//div[2]/ul/li[*]/a[text()='Test']"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Navtree.");
-	}
+        while ((await driver.findElements(By.xpath("//div[2]/ul/li[*]/a[text()='Test']"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Navtree.");
+        }
         if ((await driver.findElements(By.xpath("//div[2]/ul/li[*]/a[text()='Test']"))).length != 0) {
             // Expand Revision B and Sewing Template
             var j = 1;
@@ -220,55 +209,48 @@ var password;
         await driver.findElement(By.xpath("//li[" + j + "]/i")).click();
         await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/i")).click();
-	while ((await driver.findElements(By.partialLinkText("1232"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Navtree2.");
-	}
+        while ((await driver.findElements(By.partialLinkText("1232"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Navtree2.");
+        }
         await driver.findElement(By.partialLinkText("1232")).click();
-	while ((await driver.findElements(By.id("action"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Action4.");
-	}
+        while ((await driver.findElements(By.id("action"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Action4.");
+        }
         await driver.findElement(By.id("action")).click()
-        // 35 | click | id=add_constdefault_action |
-	while ((await driver.findElements(By.id("add_coefficient_action"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Coef.");
-	}
+        while ((await driver.findElements(By.id("add_coefficient_action"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Coef.");
+        }
         await driver.findElement(By.id("add_coefficient_action")).click();
 
-	while ((await driver.findElements(By.id("id_user_draft"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for User.");
-	}
-        // 36 | addSelection | id=id_user_draft | label=admin
+        while ((await driver.findElements(By.id("id_user_draft"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for User.");
+        }
+        
         {
             const dropdown = await driver.findElement(By.id("id_user_draft"))
- 	    await dropdown.findElement(By.xpath("//option[. = '" + user + "']")).click();
+            await dropdown.findElement(By.xpath("//option[. = '" + user + "']")).click();
         }
-        // 38 | type | id=id_constant_defaults-0-default_value | 1
+        
         await driver.findElement(By.id("id_coefficient_value_sets-0-value_set")).sendKeys("55")
         await driver.findElement(By.id("id_coefficient_value_sets-1-value_set")).sendKeys("66")
         await driver.findElement(By.id("id_coefficient_value_sets-0-notes")).sendKeys("Notes for scalib1")
         await driver.findElement(By.id("id_coefficient_value_sets-1-notes")).sendKeys("Notes for scalib2")
-        // 39 | click | css=.controls > .btn-primary | 
+        
         await driver.findElement(By.css(".controls > .btn-primary")).click()
-	while ((await driver.findElements(By.id("calibration-template-tab"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Tab.");
-	}
-        // 40 | click | id=const_default-template-tab | 
+        while ((await driver.findElements(By.id("calibration-template-tab"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Tab.");
+        }
+        
         await driver.findElement(By.id("calibration-template-tab")).click()
-	while ((await driver.findElements(By.css("#calibration-template .collapsed > .fa"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Link.");
-	}
+        while ((await driver.findElements(By.css("#calibration-template .collapsed > .fa"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Link.");
+        }
 
         await driver.findElement(By.css("#calibration-template .collapsed > .fa")).click()
         await new Promise(r => setTimeout(r, 4000));
@@ -276,114 +258,103 @@ var password;
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
         assert(bodyText.includes("55"));
         assert(bodyText.includes("66"));
-	// Verify event in Event History
-	await driver.findElement(By.linkText("Event History")).click();
-	await new Promise(r => setTimeout(r, 4000));
+        // Verify event in Event History
+        await driver.findElement(By.linkText("Event History")).click();
+        await new Promise(r => setTimeout(r, 4000));
         bodyText = await driver.findElement(By.tagName("Body")).getText();
         assert(bodyText.includes("Calibration Event first added to RDB."));
 
         // Edit Coefficient Values and Metadata for Part Template on Inventory - Issues #151 and #96
         await driver.findElement(By.linkText("Edit Coefficient Values")).click();
-	while ((await driver.findElements(By.id("id_coefficient_value_sets-0-value_set"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Values.");
-	}
+        while ((await driver.findElements(By.id("id_coefficient_value_sets-0-value_set"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Values.");
+        }
         await driver.findElement(By.id("id_coefficient_value_sets-0-value_set")).clear();
         await driver.findElement(By.id("id_coefficient_value_sets-0-value_set")).sendKeys("555");
         await driver.findElement(By.id("id_coefficient_value_sets-0-notes")).clear();
         await driver.findElement(By.id("id_coefficient_value_sets-0-notes")).sendKeys("Updated Notes");
         await driver.findElement(By.css(".controls > .btn-primary")).click()
-	while ((await driver.findElements(By.id("calibration-template-tab"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Tab2.");
-	}
+        while ((await driver.findElements(By.id("calibration-template-tab"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Tab2.");
+        }
         await driver.findElement(By.id("calibration-template-tab")).click()
-	while ((await driver.findElements(By.css("#calibration-template .collapsed > .fa"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Link.");
-	}
+        while ((await driver.findElements(By.css("#calibration-template .collapsed > .fa"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Link.");
+        }
         await driver.findElement(By.css("#calibration-template .collapsed > .fa")).click()
-	while ((await driver.findElements(By.linkText("Edit Coefficient Metadata"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Metadata.");
-	}
+        while ((await driver.findElements(By.linkText("Edit Coefficient Metadata"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Metadata.");
+        }
         await driver.findElement(By.linkText("Edit Coefficient Metadata")).click();
-	while ((await driver.findElements(By.id("id_coefficient_values-0-sigfig"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Edit.");
-	}
+        while ((await driver.findElements(By.id("id_coefficient_values-0-sigfig"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Edit.");
+        }
         await driver.findElement(By.id("id_coefficient_values-0-sigfig")).clear();
         await driver.findElement(By.id("id_coefficient_values-0-sigfig")).sendKeys("19");
         await driver.findElement(By.id("id_coefficient_values-0-notation_format")).sendKeys("Scientific");
         await driver.findElement(By.css(".controls > .btn-primary")).click()
-   	while ((await driver.findElements(By.id("action"))).length == 0)  //after page update
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Action5.");
-	}
+        while ((await driver.findElements(By.id("action"))).length == 0)  //after page update
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Action5.");
+        }
 
         // Copy Calibrations from one Part Template to Another - Issue #146
-        await driver.findElement(By.id("searchbar-query")).sendKeys("pin");
+        await driver.findElement(By.id("searchbar-query")).sendKeys("wheel");
         await driver.findElement(By.id("searchbar-modelselect")).sendKeys("Part Templates");
         // 14 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
-	while ((await driver.findElements(By.partialLinkText("666"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Search.");
-	}
-        await driver.findElement(By.partialLinkText("666")).click();
-   	while ((await driver.findElements(By.linkText("Create Calibrations"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Create Calib.");
-	}
+        while ((await driver.findElements(By.partialLinkText("555"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Search.");
+        }
+        await driver.findElement(By.partialLinkText("555")).click();
+        while ((await driver.findElements(By.linkText("Create Calibrations"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Create Calib.");
+        }
         await driver.findElement(By.linkText("Create Calibrations")).click();
 
-	await new Promise(r => setTimeout(r, 6000)); // a wait for field present on screen causes fields not set, use timeout.
+        await new Promise(r => setTimeout(r, 6000)); // a wait for field present on screen causes fields not set, use timeout.
 
-	// This screen is so tweeky! Works 2/3 times. Add some waits.
+        // This screen is so tweeky! Works 2/3 times. Add some waits.
         {
             const dropdown = await driver.findElement(By.id("id_part_select"));
             await dropdown.findElement(By.xpath("//option[. = 'Sewing Template']")).click();
         }
-	await new Promise(r => setTimeout(r, 4000));
-        
-	await driver.findElement(By.id("id_user_draft")).sendKeys(user);
-	await new Promise(r => setTimeout(r, 4000));
+        await new Promise(r => setTimeout(r, 4000));
 
-	await driver.findElement(By.css(".controls > .btn-primary")).click();
+        await driver.findElement(By.id("id_user_draft")).sendKeys(user);
+        await new Promise(r => setTimeout(r, 4000));
 
-   	while ((await driver.findElements(By.linkText("Calibrations"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Calib.");
-	}
+        await driver.findElement(By.css(".controls > .btn-primary")).click();
+
+        while ((await driver.findElements(By.linkText("Calibrations"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Calib.");
+        }
         await driver.findElement(By.linkText("Calibrations")).click()
         await new Promise(r => setTimeout(r, 4000));
 
-	//let encodedString = await driver.takeScreenshot();
-	//await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');    
+        //let encodedString = await driver.takeScreenshot();
+        //await fs.writeFileSync('/tests/ccscreen.png', encodedString, 'base64');    
         // Verify values added in the History
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
         assert(bodyText.includes("scalib1"));
         assert(bodyText.includes("scalib2"));
 
         // Search for Calibration Data, click on the resulting link and verify the "Calibration Coefficient History" Tab is populated - #Issue 109
-        // 16 | select | id=searchbar-modelselect | label=-- Configs/Constants
         await driver.findElement(By.id("searchbar-modelselect")).sendKeys("-- Calibrations");
-        // 18 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click()
-   	while ((await driver.findElements(By.id("field-select_c_r0"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Search3.");
-	}
+        while ((await driver.findElements(By.id("field-select_c_r0"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Search3.");
+        }
         // Search for Name
         await driver.findElement(By.id("field-select_c_r0")).click()
         // 20 | select | id=field-select_c_r0 | label=Inventory: Name
@@ -391,39 +362,95 @@ var password;
             const dropdown = await driver.findElement(By.id("field-select_c_r0"))
             await dropdown.findElement(By.xpath("//option[. = 'Coefficient Name']")).click()
         }
-        // 23 | type | id=field-query_c_r0 | scnst
         await driver.findElement(By.id("field-query_c_r0")).sendKeys("scalib1")
-        // 24 | click | id=qfield-lookup_c_r0 | 
         {
             const dropdown = await driver.findElement(By.id("qfield-lookup_c_r0"))
             await dropdown.findElement(By.xpath("//option[. = 'Exact']")).click()
         }
-        // 27 | click | id=searchform-submit-button | 
         await driver.findElement(By.id("searchform-submit-button")).click()
-	while ((await driver.findElements(By.partialLinkText("1232"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Search.");
-	}
+        while ((await driver.findElements(By.partialLinkText("1232"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Search.");
+        }
         await driver.findElement(By.partialLinkText("1232")).click();
-	while ((await driver.findElements(By.id("calibration-template-tab"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Tab3.");
-	}
+        while ((await driver.findElements(By.id("calibration-template-tab"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Tab3.");
+        }
         await driver.findElement(By.id("calibration-template-tab")).click()
-	while ((await driver.findElements(By.css("#calibration-template .collapsed > .fa"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Link.");
-	}
+        while ((await driver.findElements(By.css("#calibration-template .collapsed > .fa"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Link.");
+        }
         await driver.findElement(By.css("#calibration-template .collapsed > .fa")).click()
         await new Promise(r => setTimeout(r, 4000));
         // Verify values added in the History
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
         assert(bodyText.includes("scalib1"));
         assert(bodyText.includes("scalib2"));
-        
+
+        // Test Calibration Coefficient Threshold Min and Max Values on a Part Template
+        // Create a second Calibration Coefficient event for the Single value coef to generate a min and max value
+        // Navigate to the Pin Inventory - the initial single and 2D values are imported in UploadCsv.js
+        await driver.findElement(By.id("searchbar-query")).sendKeys("pin");
+        await driver.findElement(By.id("searchbar-modelselect")).sendKeys("Inventory");
+        await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
+        while ((await driver.findElements(By.partialLinkText("3604"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Search.");
+        }
+        await driver.findElement(By.partialLinkText("3604")).click();
+
+        await driver.findElement(By.id("action")).click();
+        while ((await driver.findElements(By.linkText("Add Calibration Coefficients"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Calib Coefs Menu Item.");
+        }
+        await driver.findElement(By.linkText("Add Calibration Coefficients")).click();
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.id("id_user_draft")).sendKeys(user);
+        await driver.findElement(By.id("id_coefficient_value_sets-0-value_set")).sendKeys("125");
+        await driver.findElement(By.css(".controls > .btn-primary")).click();
+
+        // Navigate to Part Template and Verify the Calib Coef min and max values are within reasonable ranges
+        await driver.findElement(By.id("searchbar-query")).sendKeys("pin");
+        await driver.findElement(By.id("searchbar-modelselect")).sendKeys("Part Templates");
+        // 14 | click | css=.btn-outline-primary:nth-child(1) | 
+        await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
+        while ((await driver.findElements(By.partialLinkText("666"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Search Part.");
+        }
+        await driver.findElement(By.partialLinkText("666")).click();
+        while ((await driver.findElements(By.linkText("Calibrations"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Calibrations link.");
+        }
+        await driver.findElement(By.linkText("Calibrations")).click();
+        while ((await driver.findElements(By.linkText("scalib1"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Calibrations detail.");
+        }
+
+        // Verify min and max coef values
+        var scalib1_min = await driver.findElement(By.xpath("//td[3]")).getText();
+        var scalib1_max = await driver.findElement(By.xpath("//td[4]")).getText();
+        var scalib2_min = await driver.findElement(By.xpath("//tr[2]/td/li/div/table/tbody/tr/td[3]")).getText();
+        var scalib2_max = await driver.findElement(By.xpath("//tr[2]/td/li/div/table/tbody/tr/td[4]")).getText();
+
+        if ((scalib1_min < 0) || (scalib1_min > 125))
+        {
+            console.log("Error: Part Template Min Single Calib Coef not within valid range for coef values: ", scalib1_min);
+        }
+        if ((scalib1_max < 125) || (scalib1_max > 400)) {
+            console.log("Error: Part Template Max Single Calib Coef not within valid range for coef values: ", scalib1_max);
+        }
+        if ((scalib2_min < 0) || (scalib2_min > 2.3)) {
+            console.log("Error: Part Template Min 2D Calib Coef not within valid range for coef values: ", scalib2_min);
+        }
+        if ((scalib2_max < 2.3) || (scalib2_max > 4)) {
+            console.log("Error: Part Template Max 2D Calib Coef not within valid range for coef values: ", scalib2_max);
+        }
 
         // Close browser window
         driver.quit();
