@@ -64,7 +64,6 @@ class Part(models.Model):
         blank=False,
         db_index=True,
     )
-    revision = models.CharField(max_length=100, blank=True)
     part_number = models.CharField(max_length=100, unique=True, db_index=True)
     unit_cost = models.DecimalField(
         max_digits=9,

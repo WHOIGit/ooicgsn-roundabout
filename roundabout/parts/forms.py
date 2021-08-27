@@ -97,7 +97,7 @@ class PartSubassemblyAddForm(forms.ModelForm):
 
     class Meta:
         model = Part
-        fields = ['name', 'revision', 'part_number' ]
+        fields = ['name', 'part_number' ]
         labels = {
         'parent': 'Parent Assembly'
     }

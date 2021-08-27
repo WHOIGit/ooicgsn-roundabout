@@ -26,6 +26,7 @@ import warnings
 import zipfile
 from os.path import splitext, join
 from sys import stdout
+from operator import attrgetter
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import F, OuterRef, Exists
@@ -37,7 +38,8 @@ from django.views.generic import TemplateView, DetailView, ListView
 from roundabout.calibrations.models import CalibrationEvent
 from roundabout.configs_constants.models import ConfigEvent, ConfigValue
 from roundabout.cruises.models import Cruise, Vessel
-from roundabout.inventory.models import Inventory, Deployment
+from roundabout.inventory.models import Inventory, Deployment, InventoryDeployment
+from roundabout.ooi_ci_tools.models import ReferenceDesignatorEvent
 
 
 class HomeView(TemplateView):
@@ -540,26 +542,27 @@ class ExportVessels(CSVExport):
 class ExportDeployments(ZipExport):
     model = Deployment
     fname = 'Deployments.zip'
-    header_att = [('CUID_Deploy', 'cruise_deployed'),
-                  ('deployedBy', ''),
-                  ('CUID_Recover', 'cruise_recovered'),
-                  ('recoveredBy', ''),
-                  ('Reference Designator', ''),
-                  ('deploymentNumber', 'deployment_number'),
-                  ('versionNumber', ''),
-                  ('startDateTime', 'deployment_to_field_date'),
-                  ('stopDateTime', 'deployment_recovery_date'),
+    # header att are for InventoryDeployment objects
+    header_att = [('CUID_Deploy', 'cruise_deployed'),  # DeploymentBase
+                  ('deployedBy', ''), # todo text field
+                  ('CUID_Recover', 'cruise_recovered'),  # DeploymentBase
+                  ('recoveredBy', ''), # todo text field
+                  ('Reference Designator', 'assembly_part.reference_designator'),
+                  ('deploymentNumber', 'deployment.deployment_number'),
+                  ('versionNumber', '1'), # always1
+                  ('startDateTime', 'deployment_to_field_date'), # DeploymentBase
+                  ('stopDateTime', 'deployment_recovery_date'),  # DeploymentBase
                   ('mooring.uid', ''),
                   ('node.uid', ''),
-                  ('sensor.uid', ''),
-                  ('lat', 'latitude'),
-                  ('lon', 'longitude'),
+                  ('sensor.uid', 'inventory.serial_number'),
+                  ('lat', 'deployment.latitude'),
+                  ('lon', 'deployment.longitude'),
                   ('orbit', ''),
-                  ('deployment_depth', 'depth'),
-                  ('water_depth', 'depth'),
-                  ('notes', ''),
+                  ('deployment_depth', 'deployment.depth'),
+                  ('water_depth', 'deployment.depth'),
+                  ('notes', 'inventory.detail'),  # alternatively, "assembly_part.note"
                   ('electrical.uid', ''),
-                  ('assembly_template_revision', ''),
+                  ('assembly_template_revision', 'assembly_part.assembly_revision.revision_code'), # or blank
                   ]
 
     @classmethod
@@ -569,15 +572,25 @@ class ExportDeployments(ZipExport):
         def depl_row(depl_obj, attribs):
             row = []
             for att in attribs:
-                val = getattr(depl_obj, att, None)
-                if val is None:
-                    val = ''  # TODO check udf's
-                elif isinstance(val, dt.datetime):  # dates
+
+                if att=='1': val = 1  # versionNumber
+                else:
+                    try: val = attrgetter(att)(depl_obj)
+                    except AttributeError: val = None
+
+                if isinstance(val, dt.datetime):  # dates
                     val = val.replace(tzinfo=None)  # remove timezone awareness such that
                     val = val.isoformat(timespec='seconds')  # +00:00 doesn't appear in iso string
                 elif isinstance(val, float):  # lat,lon
                     val = '{:.5f}'.format(val)
-                row.append(str(val))
+                elif att in ['cruise_deployed','cruise_recovered'] and not val:
+                    # if CUID_deployed/recovered not recorded on InventoryDeployment, check parent deployment
+                    try: val = attrgetter('deployment.'+att)(depl_obj)
+                    except AttributeError: val = None
+
+                val = str(val) if val is not None else ''
+
+                row.append(val)
             return row
 
         objs = objs.prefetch_related('build__assembly_revision__assembly')
@@ -591,11 +604,11 @@ class ExportDeployments(ZipExport):
             csv = CSV.writer(csv_content)
             csv.writerow(headers)
             for depl in objs.filter(build__assembly_revision__assembly__name__exact=assy_name):
-                row = depl_row(depl,attribs)
-                csv.writerow(row)
-                #for inv_depl in depl.inventory_deployments.all():
-                #    row = self.depl_row(inv_depl,attribs)
-                #    csv.writerow(row)
+                #row = depl_row(depl,attribs)
+                #csv.writerow(row)
+                for inv_depl in depl.inventory_deployments.all():
+                    row = depl_row(inv_depl,attribs)
+                    csv.writerow(row)
             cls.zf_safewrite(zf, csv_fname, csv_content.getvalue())
 
 

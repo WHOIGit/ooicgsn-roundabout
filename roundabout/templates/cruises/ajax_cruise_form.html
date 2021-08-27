@@ -32,7 +32,7 @@
 <div class="card-body">
 
 
-    <form class="form-horizontal ajax-form" method="post" action="" id="cruise-form" data-url='{{ request.build_absolute_uri|safe }}'>
+    <form class="form-horizontal ajax-form" method="post" action="" novalidate id="cruise-form" data-url='{{ request.build_absolute_uri|safe }}'>
       {% csrf_token %}
       {{ form|crispy }}
       {{ form.media }}
@@ -54,36 +54,24 @@
           {% endif %}
       </div>
 
-      <div class="row">
-        <table class="table table-tight">
-          <thead>
-            <th>Hyperlink Text</th>
-            <th>URL</th>
-          </thead>
-          <tbody>
-            {{ link_formset.management_form }}
+    <div class="row">
+      <table class="table table-tight">
+        <thead>
+          <th>Hyperlink Text</th>
+          <th>URL</th>
+        </thead>
+        <tbody>
+          {{ link_formset.management_form }}
 
-            {% if link_formset.errors %}
+          {% for link in link_formset %}
             <tr>
-              <div class="alert alert-danger">
-              {% for dict in link_formset.errors %}
-                  {% for error in dict.values %}
-                    {{ error|escape }}
-                  {% endfor %}
-              {% endfor %}
-              </div>
+                <td {% if link.errors.text %} class="alert alert-danger"{% endif %}>{% if link.id  %}{{ link.DELETE }}{% endif %} {{ link.id }} {{ link.text }}</td>
+                <td {% if link.errors.url %} class="alert alert-danger"{% endif %}>{{ link.url }}</td>
             </tr>
-           {% endif %}
-
-            {% for link in link_formset %}
-              <tr>
-                  <td>{% if link.id  %}{{ link.DELETE }}{% endif %} {{ link.id }} {{ link.text }}</td>
-                  <td>{{ link.url }} </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
       <div class="control-group">
         <div class="controls">
