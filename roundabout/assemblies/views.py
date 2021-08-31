@@ -949,6 +949,7 @@ class EventReferenceDesignatorAdd(LoginRequiredMixin, AjaxFormMixin, CreateView)
         self.object = form.save()
         event_referencedesignator_form.instance = self.object
         event_referencedesignator_form.save()
+        handle_reviewers(form)
         _create_action_history(self.object, Action.ADD, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
