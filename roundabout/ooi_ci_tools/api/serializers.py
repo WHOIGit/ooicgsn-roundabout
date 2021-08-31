@@ -34,13 +34,11 @@ class ReferenceDesignatorSerializer(FlexFieldsModelSerializer):
         view_name=API_VERSION + ":reference-designators-detail",
         lookup_field="pk",
     )
-    assembly_part = serializers.HyperlinkedRelatedField(
-        view_name=API_VERSION + ":assembly-parts-detail",
+    assembly_parts = serializers.HyperlinkedRelatedField(
+        view_name=API_VERSION + ":assembly-templates/assembly-parts-detail",
+        many=True,
+        read_only=True,
         lookup_field="pk",
-        queryset=AssemblyPart.objects,
-        required=False,
-        allow_null=True,
-        default=None,
     )
 
     class Meta:
@@ -49,7 +47,7 @@ class ReferenceDesignatorSerializer(FlexFieldsModelSerializer):
             "id",
             "url",
             "refdes_name",
-            "assembly_part",
+            "assembly_parts",
             "toc_l1",
             "toc_l2",
             "toc_l3",
@@ -61,5 +59,8 @@ class ReferenceDesignatorSerializer(FlexFieldsModelSerializer):
         ]
 
         expandable_fields = {
-            "assembly_part": "roundabout.assemblies.api.serializers.AssemblyPartSerializer",
+            "assembly_part": (
+                "roundabout.assemblies.api.serializers.AssemblyPartSerializer",
+                {"many": True},
+            )
         }
