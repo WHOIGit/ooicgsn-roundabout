@@ -11,7 +11,7 @@ env:
 jobs:
   setup-build-publish:
     name: Setup, Build, and Publish
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
