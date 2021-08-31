@@ -53,6 +53,7 @@ from roundabout.parts.api.views import (
 )
 from roundabout.userdefinedfields.api.views import FieldViewSet, FieldValueViewSet
 from roundabout.users.api.views import UserViewSet
+from roundabout.ooi_ci_tools.api.views import ReferenceDesignatorViewSet
 
 # Create a router and register our viewsets with it.
 router = DefaultRouter()
@@ -180,6 +181,10 @@ router.register(
 )
 
 router.register(r"users", UserViewSet, "users")
+
+router.register(
+    r"reference-designators", ReferenceDesignatorViewSet, "reference-designators"
+)
 
 app_name = "api_v1"
 urlpatterns = [

@@ -31,46 +31,84 @@ from roundabout.inventory.models import Inventory, Deployment
 # Numerical Coefficient threshold by Calibration
 class Threshold(models.Model):
     class Meta:
-        ordering = ['created_at']
+        ordering = ["created_at"]
+
     def __str__(self):
         return self.detail
+
     def get_object_type(self):
-        return 'comment'
+        return "comment"
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    low = models.CharField(max_length = 255, unique = False, db_index = False)
-    high = models.CharField(max_length = 255, unique = False, db_index = False)
-    coefficient_name = models.ForeignKey('calibrations.CoefficientName', related_name='thresholds', on_delete=models.CASCADE, null=True)
-    config_name = models.ForeignKey('configs_constants.ConfigName', related_name='thresholds', on_delete=models.CASCADE, null=True)
+    low = models.CharField(max_length=255, unique=False, db_index=False)
+    high = models.CharField(max_length=255, unique=False, db_index=False)
+    coefficient_name = models.ForeignKey(
+        "calibrations.CoefficientName",
+        related_name="thresholds",
+        on_delete=models.CASCADE,
+        null=True,
+    )
+    config_name = models.ForeignKey(
+        "configs_constants.ConfigName",
+        related_name="thresholds",
+        on_delete=models.CASCADE,
+        null=True,
+    )
+
 
 # Comment model
 class Comment(models.Model):
     class Meta:
-        ordering = ['created_at']
+        ordering = ["created_at"]
+
     def __str__(self):
         return self.detail
+
     def get_object_type(self):
-        return 'comment'
+        return "comment"
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    parent = models.ForeignKey('self', related_name = 'comments', on_delete=models.CASCADE, null=True)
-    action = models.ForeignKey(Action, related_name='comments', on_delete=models.CASCADE, null=True)
-    user = models.ForeignKey(User, related_name='comments', on_delete=models.SET_NULL, null=True)
+    parent = models.ForeignKey(
+        "self", related_name="comments", on_delete=models.CASCADE, null=True
+    )
+    action = models.ForeignKey(
+        Action, related_name="comments", on_delete=models.CASCADE, null=True
+    )
+    user = models.ForeignKey(
+        User, related_name="comments", on_delete=models.SET_NULL, null=True
+    )
     detail = models.TextField(blank=True)
+
 
 # MPTT Comment model
 class MPTTComment(MPTTModel):
     class MPTTMeta:
         order_insertion_by = ["updated_at"]
+
     def __str__(self):
         return self.detail
+
     def get_object_type(self):
-        return 'mptt_comment'
+        return "mptt_comment"
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    parent = TreeForeignKey("self",related_name="children",on_delete=models.CASCADE,null=True,blank=True,db_index=True)
-    action = models.ForeignKey(Action, related_name='mptt_comments', on_delete=models.CASCADE, null=True)
-    user = models.ForeignKey(User, related_name='mptt_comments', on_delete=models.SET_NULL, null=True)
+    parent = TreeForeignKey(
+        "self",
+        related_name="children",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    action = models.ForeignKey(
+        Action, related_name="mptt_comments", on_delete=models.CASCADE, null=True
+    )
+    user = models.ForeignKey(
+        User, related_name="mptt_comments", on_delete=models.SET_NULL, null=True
+    )
     detail = models.TextField(blank=True)
 
 
@@ -78,13 +116,19 @@ class MPTTComment(MPTTModel):
 class ImportConfig(models.Model):
     def __str__(self):
         return self.created_at.strftime("%m/%d/%Y")
+
     def get_object_type(self):
-        return 'import_configuration'
+        return "import_configuration"
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    require_calibration_coefficient_values = models.BooleanField(blank=False, default=True)
+    require_calibration_coefficient_values = models.BooleanField(
+        blank=False, default=True
+    )
     require_calibration_notes = models.BooleanField(blank=False, default=False)
-    require_calibration_coefficient_threshold = models.BooleanField(blank=False, default=False)
+    require_calibration_coefficient_threshold = models.BooleanField(
+        blank=False, default=False
+    )
     require_deployment_sensor_uid = models.BooleanField(blank=False, default=True)
     require_deployment_startDateTime = models.BooleanField(blank=False, default=True)
     require_deployment_stopDateTime = models.BooleanField(blank=False, default=True)
@@ -118,60 +162,92 @@ class ImportConfig(models.Model):
     require_vessel_active = models.BooleanField(blank=False, default=True)
     require_vessel_R2R = models.BooleanField(blank=False, default=True)
 
+
 # Generic class to handle Calibration, Configuration, Constant, Comment, and Reference Designator Events
 class CCCEvent(models.Model):
     class Meta:
         abstract = True
+
     def __str__(self):
         return self.detail
+
     def get_object_type(self):
-        return 'ccc_event'
+        return "ccc_event"
+
     APPROVAL_STATUS = (
         (True, "Approved"),
         (False, "Draft"),
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    user_draft = models.ManyToManyField(User, related_name='reviewer_%(class)ss', blank=True)
-    user_approver = models.ManyToManyField(User, related_name='approver_%(class)ss')
+    user_draft = models.ManyToManyField(
+        User, related_name="reviewer_%(class)ss", blank=True
+    )
+    user_approver = models.ManyToManyField(User, related_name="approver_%(class)ss")
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
     detail = models.TextField(blank=True)
-    part = models.ForeignKey(Part, related_name='part_%(class)ss', on_delete=models.CASCADE, null=True)
-    assembly_part = models.ForeignKey(AssemblyPart, related_name='assemblypart_%(class)ss', on_delete=models.CASCADE, null=True)
-    inventory = models.ForeignKey(Inventory, related_name='inventory_%(class)ss', on_delete=models.CASCADE, null=True)
-    deployment = models.ForeignKey(Deployment, related_name='deployment_%(class)ss', on_delete=models.CASCADE, null=True)
+    part = models.ForeignKey(
+        Part, related_name="part_%(class)ss", on_delete=models.CASCADE, null=True
+    )
+    assembly_part = models.ForeignKey(
+        AssemblyPart,
+        related_name="assemblypart_%(class)ss",
+        on_delete=models.CASCADE,
+        null=True,
+    )
+    inventory = models.ForeignKey(
+        Inventory,
+        related_name="inventory_%(class)ss",
+        on_delete=models.CASCADE,
+        null=True,
+    )
+    deployment = models.ForeignKey(
+        Deployment,
+        related_name="deployment_%(class)ss",
+        on_delete=models.CASCADE,
+        null=True,
+    )
 
     def get_sorted_reviewers(self):
-        return self.user_draft.all().order_by('username')
+        return self.user_draft.all().order_by("username")
 
     def get_sorted_approvers(self):
-        return self.user_approver.all().order_by('username')
+        return self.user_approver.all().order_by("username")
 
 
 # Handles Reference Designator-related Events
 class ReferenceDesignatorEvent(CCCEvent):
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
+
     def get_object_type(self):
-        return 'reference_designator_event'
+        return "reference_designator_event"
+
     def get_actions(self):
-        return self.actions.filter(object_type='referencedesignatorevent')
+        return self.actions.filter(object_type="referencedesignatorevent")
 
 
 # Handles raw values set within the Event
 class ReferenceDesignator(models.Model):
     class Meta:
-        ordering = ['refdes_name']
+        ordering = ["refdes_name"]
+
     def __str__(self):
         return self.refdes_name
+
     def get_object_type(self):
-        return 'reference_designator'
+        return "reference_designator"
+
     refdes_name = models.CharField(max_length=255, unique=False, db_index=True)
     toc_l1 = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
     toc_l2 = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
     toc_l3 = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
-    instrument = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
-    manufacturer = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
+    instrument = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    manufacturer = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
     model = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
     min_depth = models.DecimalField(
         max_digits=10,
@@ -185,4 +261,9 @@ class ReferenceDesignator(models.Model):
         null=True,
         blank=True,
     )
-    refdes_event = models.ForeignKey(ReferenceDesignatorEvent, related_name='reference_designators', on_delete=models.CASCADE, null=True)
+    refdes_event = models.ForeignKey(
+        ReferenceDesignatorEvent,
+        related_name="reference_designators",
+        on_delete=models.CASCADE,
+        null=True,
+    )
