@@ -42,6 +42,8 @@ from roundabout.inventory.utils import _create_action_history
 from roundabout.userdefinedfields.models import Field, FieldValue
 from roundabout.ooi_ci_tools.models import Threshold, ReferenceDesignator, ReferenceDesignatorEvent
 
+import logging
+logger = logging.getLogger(__name__)
 
 # Update Coefficient statistical Threshold values for a Part's Calibration Names
 @shared_task(bind = True, soft_time_limit = 3600)
@@ -83,7 +85,7 @@ def async_update_cal_thresholds(self):
                 )
     cache.delete('thrsh_evnt')
 
-# Parse Calibration CSV file submissions, generate and associate relevant Events 
+# Parse Calibration CSV file submissions, generate and associate relevant Events
 @shared_task(bind = True, soft_time_limit = 3600)
 def parse_cal_files(self):
     self.update_state(state='PROGRESS', meta = {'key': 'started',})
@@ -280,7 +282,7 @@ def parse_cal_files(self):
 
 
 
-# Parse Cruise CSV file submissions, generate and associate relevant Events 
+# Parse Cruise CSV file submissions, generate and associate relevant Events
 @shared_task(bind=True)
 def parse_cruise_files(self):
     cruises_files = cache.get('cruises_files')
@@ -337,14 +339,14 @@ def parse_cruise_files(self):
                 cruises_updated.append(cruise_obj)
                 for field,new_val in defaults.items():
                     orig_val = orig_default[field] if orig_default else 'unknown'
-                    if orig_val != new_val:
-                        action_data["updated_values"][field] = {"from": str(orig_val), "to": str(new_val)}
+                    if str(orig_val).rstrip('+00:00') != str(new_val).rstrip('+00:00'):
+                        action_data["updated_values"][field] = {"from": str(orig_val).rstrip('+00:00'), "to": str(new_val).rstrip('+00:00')}
                 _create_action_history(cruise_obj,Action.UPDATE,user,data=action_data)
     cache.delete('cruises_files')
 
 
 
-# Parse Vessel CSV file submissions, generate and associate relevant Events 
+# Parse Vessel CSV file submissions, generate and associate relevant Events
 @shared_task(bind=True)
 def parse_vessel_files(self):
     vessels_files = cache.get('vessels_files')
@@ -428,13 +430,13 @@ def parse_vessel_files(self):
                 vessels_updated.append(vessel_obj)
                 for field,new_val in defaults.items():
                     orig_val = orig_default[field] if orig_default else 'unknown'
-                    if orig_val != new_val:
-                        action_data["updated_values"][field] = {"from": str(orig_val), "to": str(new_val)}
+                    if str(orig_val).rstrip('.0') != str(new_val).rstrip('.0'):
+                        action_data["updated_values"][field] = {"from": str(orig_val).rstrip('.0'), "to": str(new_val).rstrip('.0')}
                 _create_action_history(vessel_obj,Action.UPDATE,user,data=action_data)
     cache.delete('vessels_files')
 
 
-# Parse Deployment CSV file submissions, generate and associate relevant Events 
+# Parse Deployment CSV file submissions, generate and associate relevant Events
 @shared_task(bind=True)
 def parse_deployment_files(self):
     csv_files = cache.get('dep_files')

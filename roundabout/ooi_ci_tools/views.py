@@ -127,7 +127,6 @@ def import_csv(request):
         if refdes_form.is_valid() and len(refdes_file) >= 1:
             import_refdes(refdes_file)
             confirm = "True"
-        cache.delete('user')
     else:
         cal_form = ImportCalibrationForm()
         dep_form = ImportDeploymentsForm()
