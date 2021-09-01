@@ -15,6 +15,7 @@ RUN apt-get install -y wget && apt install -y unzip
 # At Circleci root dir
 COPY ./tests/*.bat /tests/
 COPY ./tests/*.js /tests/
+COPY ./tests/*.mjs /tests/
 COPY ./tests/*.csv /tests/
 COPY ./tests/*.ext /tests/
 
@@ -24,7 +25,8 @@ RUN npm install jsdom
 RUN npm install jquery
 RUN npm install jquery-csv
 RUN npm install unzipper
-RUN npm install node-fetch
+# node-fetch v3 errors with require(), needs import
+RUN npm install node-fetch@2.6.1
 
 RUN npm install selenium-webdriver
 

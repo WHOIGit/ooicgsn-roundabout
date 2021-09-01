@@ -28,6 +28,7 @@ node CalibrationsCoefs.js chrome headless admin
 
 node AdminUser.js chrome headless admin
 
+#node API.mjs chrome headless admin - use with node-fetch v3
 node API.js chrome headless admin
 
 exit 0
