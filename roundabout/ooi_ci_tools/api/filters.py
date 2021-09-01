@@ -22,7 +22,7 @@
 from django_filters import rest_framework as filters
 
 from ..models import ReferenceDesignator
-from roundabout.inventory.models import Deployment
+from roundabout.inventory.models import InventoryDeployment
 
 
 class ArticleFilter(filters.Filter):
@@ -43,20 +43,13 @@ class ReferenceDesignatorFilter(filters.FilterSet):
 
 
 class CiRefDesDeploymentCustomFilter(filters.FilterSet):
-    deployment_number = filters.CharFilter(lookup_expr="icontains")
-    build_number = filters.CharFilter(
-        field_name="build__build_number", lookup_expr="icontains"
-    )
     reference_designator = filters.CharFilter(
-        field_name="build__assembly_revision__assembly_parts__reference_designator__refdes_name",
-        lookup_expr="exact",
+        field_name="assembly_part__reference_designator__refdes_name",
+        lookup_expr="icontains",
     )
 
     class Meta:
-        model = Deployment
+        model = InventoryDeployment
         fields = [
             "reference_designator",
-            "deployment_number",
-            "build_number",
-            "build",
         ]

@@ -117,7 +117,7 @@ class ReferenceDesignatorSerializer(FlexFieldsModelSerializer):
 
 class CiRefDesDeploymentCustomSerializer(serializers.Serializer):
     deployment_url = serializers.HyperlinkedIdentityField(
-        view_name=API_VERSION + ":deployments-detail",
+        view_name=API_VERSION + ":inventory-deployments-detail",
         lookup_field="pk",
     )
     referenceDesignator = serializers.SerializerMethodField()
@@ -129,6 +129,7 @@ class CiRefDesDeploymentCustomSerializer(serializers.Serializer):
     eventStopTime = serializers.SerializerMethodField()
     deployCruiseInfo = serializers.SerializerMethodField()
     recoverCruiseInfo = serializers.SerializerMethodField()
+    sensor = serializers.SerializerMethodField()
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -170,6 +171,7 @@ class CiRefDesDeploymentCustomSerializer(serializers.Serializer):
                 ),
                 "eventStopTime": eventStopTime,
                 "uniqueCruiseIdentifier": obj.cruise_deployed.CUID,
+                "shipName": obj.cruise_deployed.vessel.vessel_name,
             }
             return deployCruiseInfo
         return None
@@ -191,9 +193,52 @@ class CiRefDesDeploymentCustomSerializer(serializers.Serializer):
                 ),
                 "eventStopTime": eventStopTime,
                 "uniqueCruiseIdentifier": obj.cruise_recovered.CUID,
+                "shipName": obj.cruise_recovered.vessel.vessel_name,
             }
             return recoverCruiseInfo
         return None
+
+    def get_sensor(self, obj):
+        sensor = obj.inventory
+
+        # get all calibration_events for this Inventory/Deployment
+        # need to get the CalibrationEvent that matches the Deployment date
+        # calibration_date field sets the range for valid Calibration Events
+        calibrations = []
+        if obj.inventory.inventory_calibrationevents.exists():
+            for event in obj.inventory.inventory_calibrationevents.all():
+                # find the CalibrationEvent valid date range that matches Deployment date
+                first_date, last_date = event.get_valid_calibration_range()
+                if (
+                    obj.deployment_to_field_date
+                    and first_date < obj.deployment_to_field_date < last_date
+                ):
+
+                    for value in event.coefficient_value_sets.all():
+                        coeff_obj = {
+                            "name": value.coefficient_name.calibration_name,
+                            "calData": [],
+                        }
+
+                        coeff_obj["calData"].append(
+                            {
+                                "eventName": value.coefficient_name.calibration_name,
+                                "eventStartTime": event.calibration_date,
+                                "eventStopTime": None,
+                                "value": value.value_set,
+                            }
+                        )
+                        calibrations.append(coeff_obj)
+
+        sensor_obj = {
+            "name": sensor.serial_number,
+            "uid": sensor.serial_number,
+            "serialNumber": sensor.serial_number,
+            "assetType": "Sensor",
+            "description": sensor.part.name,
+            "calibration": calibrations,
+        }
+        return sensor_obj
 
     def get_reference_designators(self, obj):
         # Use the InventoryDeployment related model to get historical list of Inventory items

@@ -22,7 +22,7 @@
 from rest_framework.permissions import IsAuthenticated
 
 from roundabout.core.api.views import FlexModelViewSet
-from roundabout.inventory.models import Deployment
+from roundabout.inventory.models import InventoryDeployment
 from ..models import ReferenceDesignator, ReferenceDesignatorEvent
 from .filters import (
     ReferenceDesignatorFilter,
@@ -54,8 +54,6 @@ class CiRefDesDeploymentCustomViewSet(FlexModelViewSet):
     filterset_class = CiRefDesDeploymentCustomFilter
 
     def get_queryset(self):
-        queryset = Deployment.objects.all()
-        queryset = queryset.prefetch_related("inventory_deployments").select_related(
-            "build"
-        )
+        queryset = InventoryDeployment.objects.all()
+        queryset = queryset.select_related("assembly_part")
         return queryset
