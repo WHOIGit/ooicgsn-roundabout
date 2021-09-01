@@ -29,7 +29,7 @@ jobs:
           mv .envs.example .envs
           docker-compose -f docker-compose-testing.yml build
           docker-compose -f docker-compose-testing.yml up --detach
-          sleep 30
+          sleep 60
 
           # Run automated tests
           docker-compose -f docker-compose-testing.yml run tests ./RunAllTests-Chrome-Linux.bat
