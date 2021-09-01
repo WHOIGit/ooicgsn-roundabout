@@ -438,7 +438,7 @@ var password;
         var scalib2_min = await driver.findElement(By.xpath("//tr[2]/td/li/div/table/tbody/tr/td[3]")).getText();
         var scalib2_max = await driver.findElement(By.xpath("//tr[2]/td/li/div/table/tbody/tr/td[4]")).getText();
 
-        if ((scalib1_min < 0) || (scalib1_min > 125))
+        if ((scalib1_min < 1000) || (scalib1_min > 125))
         {
             console.log("Error: Part Template Min Single Calib Coef not within valid range for coef values: ", scalib1_min);
         }
