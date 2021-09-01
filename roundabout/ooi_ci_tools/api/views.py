@@ -22,9 +22,17 @@
 from rest_framework.permissions import IsAuthenticated
 
 from roundabout.core.api.views import FlexModelViewSet
-from ..models import ReferenceDesignator
-from .filters import ReferenceDesignatorFilter
-from .serializers import ReferenceDesignatorSerializer
+from roundabout.inventory.models import Deployment
+from ..models import ReferenceDesignator, ReferenceDesignatorEvent
+from .filters import (
+    ReferenceDesignatorFilter,
+    CiRefDesDeploymentCustomFilter,
+)
+from .serializers import (
+    ReferenceDesignatorSerializer,
+    ReferenceDesignatorEventSerializer,
+    CiRefDesDeploymentCustomSerializer,
+)
 
 
 class ReferenceDesignatorViewSet(FlexModelViewSet):
@@ -32,3 +40,22 @@ class ReferenceDesignatorViewSet(FlexModelViewSet):
     permission_classes = (IsAuthenticated,)
     queryset = ReferenceDesignator.objects.all()
     filterset_class = ReferenceDesignatorFilter
+
+
+class ReferenceDesignatorEventViewSet(FlexModelViewSet):
+    serializer_class = ReferenceDesignatorEventSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = ReferenceDesignatorEvent.objects.all()
+
+
+class CiRefDesDeploymentCustomViewSet(FlexModelViewSet):
+    serializer_class = CiRefDesDeploymentCustomSerializer
+    permission_classes = (IsAuthenticated,)
+    filterset_class = CiRefDesDeploymentCustomFilter
+
+    def get_queryset(self):
+        queryset = Deployment.objects.all()
+        queryset = queryset.prefetch_related("inventory_deployments").select_related(
+            "build"
+        )
+        return queryset

@@ -28,6 +28,7 @@ from roundabout.parts.models import Part
 from roundabout.assemblies.models import AssemblyPart
 from roundabout.inventory.models import Inventory, Deployment
 
+
 # Numerical Coefficient threshold by Calibration
 class Threshold(models.Model):
     class Meta:
