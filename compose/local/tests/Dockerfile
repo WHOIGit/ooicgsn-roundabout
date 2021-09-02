@@ -1,7 +1,9 @@
-FROM ubuntu:18.04
+FROM ubuntu:latest
 
 # Required here for nodejs 15+ and npm - needs to go here
 WORKDIR /tests
+
+ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 RUN apt-get update

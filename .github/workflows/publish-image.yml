@@ -30,7 +30,7 @@ jobs:
           docker-compose -f docker-compose-testing.yml build
           docker-compose -f docker-compose-testing.yml up --detach
           #sleep 60
-          sh -c "until curl -Is http://localhost:8000; do echo 'sleeping'; sleep 10; done"
+          sh -c "until curl -Is http://localhost:8000; do echo 'waiting for http://localhost:8000'; sleep 10; done"
 
           # Run automated tests
           docker-compose -f docker-compose-testing.yml run tests ./RunAllTests-Chrome-Linux.bat
