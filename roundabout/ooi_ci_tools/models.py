@@ -148,14 +148,6 @@ class CCCEvent(models.Model):
         return self.user_approver.all().order_by('username')
 
 
-# Handles Reference Designator-related Events
-class ReferenceDesignatorEvent(CCCEvent):
-    class Meta:
-        ordering = ['-created_at']
-    def get_object_type(self):
-        return 'reference_designator_event'
-    def get_actions(self):
-        return self.actions.filter(object_type='referencedesignatorevent')
 
 
 # Handles raw values set within the Event
@@ -185,4 +177,14 @@ class ReferenceDesignator(models.Model):
         null=True,
         blank=True,
     )
-    refdes_event = models.ForeignKey(ReferenceDesignatorEvent, related_name='reference_designators', on_delete=models.CASCADE, null=True)
+
+
+    # Handles Reference Designator-related Events
+class ReferenceDesignatorEvent(CCCEvent):
+    class Meta:
+        ordering = ['-created_at']
+    def get_object_type(self):
+        return 'reference_designator_event'
+    def get_actions(self):
+        return self.actions.filter(object_type='referencedesignatorevent')
+    reference_designator = models.ForeignKey(ReferenceDesignator, related_name='refdes_events', on_delete=models.SET_NULL, null=True)

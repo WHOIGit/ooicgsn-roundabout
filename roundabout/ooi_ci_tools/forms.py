@@ -360,7 +360,7 @@ def validate_import_config_vessels(import_config, reader, filename):
                 params={'row': idx, 'filename': filename},
             )
         if import_config.require_vessel_ICES_code:
-            if len(ices) == 0:
+            if len(ices) == 0 or ices == '':
                 raise ValidationError(
                     _('File: %(filename)s, Row %(row)s: Import Config disallows blank ICES Code'),
                     params={'row': idx, 'filename': filename}
@@ -693,6 +693,13 @@ class ImportVesselsForm(forms.Form):
                     raise ValidationError(
                         _('File: %(filename)s: Unable to parse ICES Code'),
                         params={'filename': filename},
+                    )
+                try:
+                    assert len(ICES_code) > 0 and ICES_code != ''
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Row: %(row)s: Invalid ICES Code. Code must not be blank'),
+                        params={'filename': filename, 'row': idx},
                     )
                 try:
                     assert len(ICES_code) == 4

@@ -178,10 +178,8 @@ class AssemblyPartForm(forms.ModelForm):
 
     class Meta:
         model = AssemblyPart
-        fields = ['reference_designator', 'updated_refdes_name', 'assembly_revision', 'part', 'parent', 'note']
+        fields = ['assembly_revision', 'part', 'parent', 'note']
         labels = {
-            'reference_designator': 'Reference Designator',
-            'updated_refdes_name': 'Create new or update existing Reference Designator',
             'part': 'Select Part Template',
             'parent': 'Parent %s Part' % (labels['label_assemblies_app_singular']),
             'note': 'Design Notes'
@@ -209,7 +207,6 @@ class AssemblyPartForm(forms.ModelForm):
         super(AssemblyPartForm, self).__init__(*args, **kwargs)
         #self.fields['parent'].queryset = MooringPart.objects.none()
         #self.fields['parent'].queryset = AssemblyPart.objects.filter(id=self.parent_pk)
-        self.fields['reference_designator'].required = False
         if self.assembly_revision_pk:
             self.fields['parent'].queryset = AssemblyPart.objects.filter(assembly_revision_id=self.assembly_revision_pk)
         elif self.instance.pk:
@@ -255,9 +252,10 @@ class AssemblyTypeDeleteForm(forms.Form):
 class ReferenceDesignatorEventForm(forms.ModelForm):
     class Meta:
         model = ReferenceDesignatorEvent
-        fields = ['user_draft']
+        fields = ['user_draft', 'reference_designator']
         labels = {
-            'user_draft': 'Reviewers'
+            'user_draft': 'Reviewers',
+            'reference_designator': 'Reference Designator'
         }
         widgets = {
             'user_draft': forms.SelectMultiple()
@@ -266,6 +264,7 @@ class ReferenceDesignatorEventForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ReferenceDesignatorEventForm, self).__init__(*args, **kwargs)
         self.fields['user_draft'].queryset = reviewer_users()
+        self.fields['reference_designator'].required = False
 
     def clean_user_draft(self):
         user_draft = self.cleaned_data.get('user_draft')
@@ -281,7 +280,7 @@ class ReferenceDesignatorEventForm(forms.ModelForm):
                     event.user_approver.remove(user)
             event.save()
             assm_obj = AssemblyPart.objects.get(id=event.assembly_part.id)
-            assm_obj.reference_designator = event.reference_designators.first()
+            assm_obj.reference_designator = event.reference_designator
             assm_obj.save()
             return event
 
@@ -359,20 +358,6 @@ class ReferenceDesignatorForm(forms.ModelForm):
 
 
 # Reference Designator form instance generator for Assembly parts
-EventReferenceDesignatorFormset = inlineformset_factory(
-    ReferenceDesignatorEvent,
-    ReferenceDesignator,
-    form=ReferenceDesignatorForm,
-    fields=('refdes_name','toc_l1','toc_l2','toc_l3','instrument','manufacturer','model','min_depth','max_depth'),
-    extra=0,
-    can_delete=True
-)
+EventReferenceDesignatorFormset = ReferenceDesignatorForm
 
-EventReferenceDesignatorAddFormset = inlineformset_factory(
-    ReferenceDesignatorEvent,
-    ReferenceDesignator,
-    form=ReferenceDesignatorForm,
-    fields=('refdes_name','toc_l1','toc_l2','toc_l3','instrument','manufacturer','model','min_depth','max_depth'),
-    extra=1,
-    can_delete=True
-)
+EventReferenceDesignatorAddFormset = ReferenceDesignatorForm
