@@ -59,13 +59,13 @@ if [[ "$val" == *"failed."* ]]; then
   exit 1
 fi
 
-val=$(node CalibrationsCoefs.js chrome headless admin )
+val=$(node UploadCsv.js chrome headless admin )
 echo $val
 if [[ "$val" == *"failed."* ]]; then
   exit 1
 fi
 
-val=$(node UploadCsv.js chrome headless admin )
+val=$(node CalibrationsCoefs.js chrome headless admin )
 echo $val
 if [[ "$val" == *"failed."* ]]; then
   exit 1
