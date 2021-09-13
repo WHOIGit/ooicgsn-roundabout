@@ -17,7 +17,6 @@ RUN apt-get install -y wget && apt install -y unzip
 # At Circleci root dir
 COPY ./tests/*.bat /tests/
 COPY ./tests/*.js /tests/
-COPY ./tests/*.mjs /tests/
 COPY ./tests/*.csv /tests/
 COPY ./tests/*.ext /tests/
 
