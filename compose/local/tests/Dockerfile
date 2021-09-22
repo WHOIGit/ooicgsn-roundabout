@@ -1,7 +1,9 @@
-FROM ubuntu:18.04
+FROM ubuntu:latest
 
 # Required here for nodejs 15+ and npm - needs to go here
 WORKDIR /tests
+
+ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 RUN apt-get update
@@ -24,7 +26,8 @@ RUN npm install jsdom
 RUN npm install jquery
 RUN npm install jquery-csv
 RUN npm install unzipper
-RUN npm install node-fetch
+# node-fetch v3 errors with require(), needs import
+RUN npm install node-fetch@2.6.1
 
 RUN npm install selenium-webdriver
 
