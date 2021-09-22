@@ -351,6 +351,7 @@ def parse_cruise_files(self):
             action_data = dict(updated_values=dict(), csv_import=csv_file.name)
             if created:
                 cruises_created.append(cruise_obj)
+                action_data["updated_values"]["CUID"] = {"from": None, "to": cuid}
                 for field,new_val in defaults.items():
                     action_data["updated_values"][field] = {"from": None, "to": str(new_val)}
                 _create_action_history(cruise_obj,Action.ADD,user,data=action_data)
@@ -442,6 +443,7 @@ def parse_vessel_files(self):
             action_data = dict(updated_values=dict(), csv_import=csv_file.name)
             if created:
                 vessels_created.append(vessel_obj)
+                action_data["updated_values"]["vessel_name"] = {"from": None, "to": vessel_name}
                 for field,new_val in defaults.items():
                     action_data["updated_values"][field] = {"from": None, "to": str(new_val)}
                 _create_action_history(vessel_obj,Action.ADD,user,data=action_data)
@@ -850,7 +852,7 @@ def parse_deployment_files(self):
     cache.delete('dep_files')
 
 
-# Parse Reference Designator vocab CSV file submission, generate and associate relevant Events 
+# Parse Reference Designator vocab CSV file submission, generate and associate relevant Events
 @shared_task(bind=True)
 def parse_refdes_files(self):
     refdes_files = cache.get('refdes_files')
