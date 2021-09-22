@@ -23,7 +23,7 @@
     <div class="side-p">
         <h3>Are you sure?</h3>
         <p class='font-weight-light'><b>Date:</b> {{ refdes_obj.created_at|date:"n/j/y H:i" }}</p>
-        <p class='font-weight-light'><b>Name:</b> {{ refdes_obj.reference_designators.first }}</p>
+        <p class='font-weight-light'><b>Name:</b> {{ refdes_obj.reference_designator}}</p>
         <p class='font-weight-light'><b>Part:</b> {{ refdes_obj.assembly_part }}</p>
         <form action="" method="post" class="delete-form"
               id="delete-form" data-url='{{ request.build_absolute_uri|safe }}'>
