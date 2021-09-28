@@ -124,6 +124,13 @@ class Inventory(MPTTModel):
         blank=True,
         db_index=True,
     )
+    bulk_upload_event = models.ForeignKey(
+        "ooi_ci_tools.BulkUploadEvent",
+        related_name="inventory",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     detail = models.TextField(blank=True)
@@ -635,6 +642,7 @@ class Action(models.Model):
     COEFFNAMEEVENT = "coefficientnameevent"
     CONFNAMEEVENT = "confignameevent"
     REFDESEVENT = "referencedesignatorevent"
+    BULKUPLOAD = "bulkuploadevent"
     LOCATION = "location"
     VESSEL = "vessel"
     CRUISE = "cruise"
@@ -652,6 +660,7 @@ class Action(models.Model):
         (VESSEL, "Vessel"),
         (CRUISE, "Cruise"),
         (REFDESEVENT, "Reference Designator Event"),
+        (BULKUPLOAD, "Bulk Upload Event"),
     )
     # deployment_type choices
     BUILD_DEPLOYMENT = "build_deployment"
@@ -712,6 +721,13 @@ class Action(models.Model):
     )
     reference_designator_event = models.ForeignKey(
         "ooi_ci_tools.ReferenceDesignatorEvent",
+        related_name="actions",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    bulk_upload_event = models.ForeignKey(
+        "ooi_ci_tools.BulkUploadEvent",
         related_name="actions",
         on_delete=models.CASCADE,
         null=True,
@@ -837,6 +853,9 @@ class Action(models.Model):
 
         elif self.object_type == self.REFDESEVENT:
             return self.reference_designator_event
+
+        elif self.object_type == self.BULKUPLOAD:
+            return self.bulk_upload_event
 
 
 class PhotoNote(models.Model):

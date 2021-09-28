@@ -448,6 +448,12 @@
             </li>
         {% endif %}
 
+        {% if inventory_item.inventory_bulkuploadevents.exists and inventory_item.part.part_type.ccc_toggle %}
+            <li class="nav-item">
+                <a class="nav-link" id="bulkupload-template-tab" data-toggle="tab" href="#bulkupload-template" role="tab" aria-controls="bulkupload-template" aria-selected="false">Bulk Upload History</a>
+            </li>
+        {% endif %}
+
 
     </ul>
 
@@ -660,6 +666,7 @@
         {% include "configs_constants/const_default_detail.html" with inventory_item=inventory_item user=user  %}
         {% include "configs_constants/configs_detail.html" with inventory_item=inventory_item user=user  %}
         {% include "configs_constants/constants_detail.html" with inventory_item=inventory_item user=user  %}
+        {% include "ooi_ci_tools/bulkupload_detail.html" with inventory_item=inventory_item user=user record_type='asset' %}
 
     </div>
 
