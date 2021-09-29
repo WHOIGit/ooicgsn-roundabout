@@ -31,6 +31,6 @@ urlpatterns = [
     path('import/comments/comments/add/<int:pk>/<str:crud>/', view=views.sub_comment, name='sub_comment'),
     path('import/comments/comments/delete/<int:pk>/', view=views.CommentDelete.as_view(), name='comment_comment_delete'),
     path('configure_import/update/<int:pk>/', view=views.ImportConfigUpdate.as_view(), name='import_config_edit'),
-    path('bulkupload/update/<int:pk>/<str:file>/', view=views.BulkUploadEventUpdate.as_view(), name='bulkuploadevent_update'),
+    path('bulkupload/update/<int:pk>/<str:file>/<int:inv_id>', view=views.BulkUploadEventUpdate.as_view(), name='bulkuploadevent_update'),
     path('bulkupload/delete/<int:pk>/', view=views.BulkUploadEventDelete.as_view(), name='bulkuploadevent_delete'),
 ]

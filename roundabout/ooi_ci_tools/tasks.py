@@ -956,7 +956,9 @@ def parse_bulk_files(self):
                 )
                 inv = Inventory.objects.filter(serial_number = asset_uid).first()
                 if inv:
+                    print('found inventory ' + inv.serial_number + ' using asset uid ' + asset_uid)
                     inv.bulk_upload_event = bulk_event
+                    inv.save()
         if csv_file.name.endswith('vocab.csv'):
             for row in reader:
                 equip_desc = row['DESCRIPTION OF EQUIPMENT']

@@ -262,6 +262,7 @@ class BulkUploadEventUpdate(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         file_name = self.kwargs['file']
+        self.object.inv_id = self.kwargs['inv_id']
         bulk_file = BulkFile.objects.get(file_name = file_name)
         asset_records = BulkAssetRecord.objects.filter(bulk_file = bulk_file)
         bulk_asset_form = EventFileFormset(
@@ -271,12 +272,14 @@ class BulkUploadEventUpdate(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         return self.render_to_response(
             self.get_context_data(
                 form=form,
-                bulk_asset_form=bulk_asset_form
+                bulk_asset_form=bulk_asset_form,
+                inv_id=self.object.inv_id,
+                file_name=file_name
             )
         )
 
     def get_success_url(self):
-        return reverse('ooi_ci_tools:import_csv')
+        return reverse_lazy('inventory:ajax_inventory_detail', args=(self.kwargs['inv_id'], ))
 
 
 

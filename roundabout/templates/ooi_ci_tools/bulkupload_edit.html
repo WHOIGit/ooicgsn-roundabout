@@ -50,20 +50,20 @@
         {{ form|crispy }}
 
         <div class="col-md-12">
-            <h5 id = '__all__'>Bulk Upload Files</h5>
+            <h5 id = '__all__'>Bulk Upload Records ({{file_name}})</h5>
             <table class="table table-tight" id="calibrations-table">
               <thead>
-                  <th>File Name</th>
                   <th>Asset UID</th>
                   <th>Legacy Asset UID</th>
+                  <th>Asset Type</th>
               </thead>
               <tbody>
                 {{ bulk_asset_form.management_form }}
                 {% for asset_row in bulk_asset_form %}
                     <tr>
-                        <td {% if asset_row.errors.coefficient_name %} class="alert alert-danger"{% endif %}>{% if asset_row.id  %}{{ asset_row.DELETE }}{% endif %} {{ asset_row.id }} {{ asset_row.bulk_file }}</td>
-                        <td {% if asset_row.errors.asset_row %} class="alert alert-danger"{% endif %}>{{ asset_row.asset_uid }} <small class = 'form-text text-muted'>{{asset_row.asset_uid.help_text}}</small></td>
-                        <td {% if asset_row.errors.notes %} class="alert alert-danger"{% endif %}>{{ asset_row.legacy_asset_uid }}</td>
+                        <td {% if asset_row.errors.asset_uid %} class="alert alert-danger"{% endif %}>{{ asset_row.asset_uid }} <small class = 'form-text text-muted'>{{asset_row.asset_uid.help_text}}</small></td>
+                        <td {% if asset_row.errors.legacy_asset_uid %} class="alert alert-danger"{% endif %}>{{ asset_row.legacy_asset_uid }} <small class = 'form-text text-muted'>{{asset_row.legacy_asset_uid.help_text}}</small></td>
+                        <td {% if asset_row.errors.asset_type %} class="alert alert-danger"{% endif %}>{{ asset_row.asset_type }} <small class = 'form-text text-muted'>{{asset_row.asset_type.help_text}}</small></td>
                     </tr>
                 {% endfor %}
               </tbody>
@@ -98,7 +98,7 @@
                     {% if action_type == 'movetotrash' %}
                         <button type="submit" class="btn btn-danger">Confirm Move to Trash</button>
                     {% else %}
-                        <button type="submit" class="btn btn-primary">Update Calibration</button>
+                        <button type="submit" class="btn btn-primary">Update Records</button>
                     {% endif %}
                 {% else %}
                     <button type="submit" class="btn btn-primary">Add Calibration</button>
@@ -106,8 +106,8 @@
                 <input  class="btn btn-light cancel-btn"
                         type="button"
                         value="Cancel"
-                        data-detail-url="{% url 'inventory:ajax_inventory_detail' event_template.inventory.id %}"
-                        data-node-id="{{ event_template.inventory.id }}"
+                        data-detail-url="{% url 'inventory:ajax_inventory_detail' inv_id %}"
+                        data-node-id="{{ inv_id }}"
                 />
             </div>
         </div>
@@ -130,6 +130,11 @@
                 addText: 'add row',
                 deleteText: 'remove',
             });
+
+            let inv_id = '{{inv_id}}'
+            $('#submit').on('click', function() {
+                location.href = '/inventory/' + inv_id + '/';
+            })
 
         })
 

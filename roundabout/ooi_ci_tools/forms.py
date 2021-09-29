@@ -1165,7 +1165,8 @@ class BulkUploadEventForm(forms.ModelForm):
 class BulkAssetForm(forms.ModelForm):
     class Meta:
         model = BulkAssetRecord
-        fields = ['bulk_file', 'asset_uid', 'legacy_asset_uid','asset_type','mobile']
+        fields = '__all__'
+        exclude = ('bulk_file',)
         labels = {}
         widgets = {
             'bulk_file': forms.Select(
@@ -1190,7 +1191,7 @@ EventFileFormset = inlineformset_factory(
     BulkUploadEvent,
     BulkAssetRecord,
     form=BulkAssetForm,
-    fields=('bulk_file', 'asset_uid', 'legacy_asset_uid','asset_type','mobile'),
+    fields='__all__',
     extra=0,
     can_delete=True
 )
