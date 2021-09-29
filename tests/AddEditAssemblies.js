@@ -538,15 +538,15 @@ var password;
         await new Promise(r => setTimeout(r, 2000));
 
         await driver.findElement(By.xpath("//option[contains(.,'admin')]")).click();
-        await driver.findElement(By.id("id_reference_designators-0-refdes_name")).sendKeys("GA01SUMO-RII11-02-CTDMOQ011");
-        await driver.findElement(By.id("id_reference_designators-0-toc_l1")).sendKeys("alpha");
-        await driver.findElement(By.id("id_reference_designators-0-toc_l2")).sendKeys("beta");
-        await driver.findElement(By.id("id_reference_designators-0-toc_l3")).sendKeys("gamma");
-        await driver.findElement(By.id("id_reference_designators-0-instrument")).sendKeys("Buoy");
-        await driver.findElement(By.id("id_reference_designators-0-manufacturer")).sendKeys("Floaty");
-        await driver.findElement(By.id("id_reference_designators-0-model")).sendKeys("Sleek");
-        await driver.findElement(By.id("id_reference_designators-0-min_depth")).sendKeys("0.00");
-        await driver.findElement(By.id("id_reference_designators-0-max_depth")).sendKeys("100.00");
+        await driver.findElement(By.id("id_refdes_name")).sendKeys("GA01SUMO-RII11-02-CTDMOQ011");
+        await driver.findElement(By.id("id_toc_l1")).sendKeys("alpha");
+        await driver.findElement(By.id("id_toc_l2")).sendKeys("beta");
+        await driver.findElement(By.id("id_toc_l3")).sendKeys("gamma");
+        await driver.findElement(By.id("id_instrument")).sendKeys("Buoy");
+        await driver.findElement(By.id("id_manufacturer")).sendKeys("Floaty");
+        await driver.findElement(By.id("id_model")).sendKeys("Sleek");
+        await driver.findElement(By.id("id_min_depth")).sendKeys("0.00");
+        await driver.findElement(By.id("id_max_depth")).sendKeys("100.00");
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
         //Verify Reference Designator Added
