@@ -1018,6 +1018,8 @@ class EventReferenceDesignatorUpdate(LoginRequiredMixin, AjaxFormMixin, CreateVi
             if selected_refdes == self.object.reference_designator:
                 event_referencedesignator_form.save()
         _create_action_history(self.object, Action.UPDATE, self.request.user)
+        for assm in self.object.reference_designator.assembly_parts.all():
+            _create_action_history(assm.assemblypart_referencedesignatorevents.first(), Action.UPDATE, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {
