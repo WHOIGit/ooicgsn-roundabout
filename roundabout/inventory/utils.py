@@ -61,6 +61,7 @@ def _create_action_history(
         or object_type == Action.COEFFNAMEEVENT
         or object_type == Action.CONFNAMEEVENT
         or object_type == Action.REFDESEVENT
+        or object_type == Action.BULKUPLOAD
     ) and not referring_obj:
         detail = obj.detail
 
@@ -151,6 +152,10 @@ def _create_action_history(
     elif object_type == Action.REFDESEVENT:
         obj_label = "Reference Designator"
         action_record.reference_designator_event = obj
+
+    elif object_type == Action.BULKUPLOAD:
+        obj_label = "Bulk Upload"
+        action_record.bulk_upload_event = obj
 
     # Run through the discrete Actions, set up details text and extra records if needed.
     if action_type == Action.ADD:

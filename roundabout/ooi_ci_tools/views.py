@@ -25,11 +25,11 @@ import re
 from decimal import Decimal
 
 from dateutil import parser
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.cache import cache
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.utils.timezone import make_aware
 from django.views.generic import TemplateView, FormView
 from common.util.mixins import AjaxFormMixin
@@ -73,10 +73,15 @@ def import_vessels(vessels_files):
     cache.set('vessels_files', vessels_files, timeout=None)
     job = parse_vessel_files.delay()
 
-# Vessel CSV Importer
+# Reference Designator CSV Importer
 def import_refdes(refdes_files):
     cache.set('refdes_files', refdes_files, timeout=None)
     job = parse_refdes_files.delay()
+
+# Bulk Upload CSV Importer
+def import_bulk(bulk_files):
+    cache.set('bulk_files', bulk_files, timeout=None)
+    job = parse_bulk_files.delay()
 
 # Calibration CSV Importer
 def import_calibrations(cal_files, user_draft):
@@ -106,11 +111,13 @@ def import_csv(request):
         cruises_form = ImportCruisesForm(request.POST, request.FILES)
         vessels_form = ImportVesselsForm(request.POST, request.FILES)
         refdes_form = ImportReferenceDesignatorForm(request.POST, request.FILES)
+        bulk_form = ImportBulkUploadForm(request.POST, request.FILES)
         cal_files = request.FILES.getlist('calibration_csv')
         dep_files = request.FILES.getlist('deployments_csv')
         cruises_file = request.FILES.getlist('cruises_csv')
         vessels_file = request.FILES.getlist('vessels_csv')
         refdes_file = request.FILES.getlist('refdes_csv')
+        bulk_file = request.FILES.getlist('bulk_csv')
         cache.set('user', request.user, timeout=None)
         if cal_form.is_valid() and len(cal_files) >= 1:
             import_calibrations(cal_files, cal_form.cleaned_data['user_draft'])
@@ -127,18 +134,23 @@ def import_csv(request):
         if refdes_form.is_valid() and len(refdes_file) >= 1:
             import_refdes(refdes_file)
             confirm = "True"
+        if bulk_form.is_valid() and len(bulk_file) >= 1:
+            import_bulk(bulk_file)
+            confirm = "True"
     else:
         cal_form = ImportCalibrationForm()
         dep_form = ImportDeploymentsForm()
         cruises_form = ImportCruisesForm()
         vessels_form = ImportVesselsForm()
         refdes_form = ImportReferenceDesignatorForm()
+        bulk_form = ImportBulkUploadForm()
     return render(request, 'ooi_ci_tools/import_tool.html', {
         "form": cal_form,
         'dep_form': dep_form,
         'cruises_form': cruises_form,
         'vessels_form': vessels_form,
         'refdes_form': refdes_form,
+        'bulk_form': bulk_form,
         'confirm': confirm
     })
 
@@ -235,3 +247,59 @@ class ImportConfigUpdate(LoginRequiredMixin, AjaxFormMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('ooi_ci_tools:import_csv')
+
+
+
+# Handles import configurations of Calibration, Deployment, Cruises, and Vessels CSVs
+class BulkUploadEventUpdate(LoginRequiredMixin, AjaxFormMixin, UpdateView):
+    model = BulkUploadEvent
+    form_class = BulkUploadEventForm
+    context_object_name = 'event_template'
+    template_name='ooi_ci_tools/bulkupload_edit.html'
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        file_name = self.kwargs['file']
+        self.object.inv_id = self.kwargs['inv_id']
+        bulk_file = BulkFile.objects.get(file_name = file_name)
+        asset_records = BulkAssetRecord.objects.filter(bulk_file = bulk_file)
+        bulk_asset_form = EventFileFormset(
+            instance=self.object,
+            queryset=asset_records
+        )
+        return self.render_to_response(
+            self.get_context_data(
+                form=form,
+                bulk_asset_form=bulk_asset_form,
+                inv_id=self.object.inv_id,
+                file_name=file_name
+            )
+        )
+
+    def get_success_url(self):
+        return reverse_lazy('inventory:ajax_inventory_detail', args=(self.kwargs['inv_id'], ))
+
+
+
+# Handles deletion of CoefficientNameEvents
+class BulkUploadEventDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = BulkUploadEvent
+    context_object_name='event_template'
+    template_name = 'calibrations/bulkupload_delete.html'
+    permission_required = 'ooi_ci_tools.add_bulkuploadevent'
+    redirect_field_name = 'home'
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        data = {
+            'message': "Successfully submitted form data.",
+            'object_type': self.object.get_object_type(),
+        }
+        self.object.delete()
+        job = check_events.delay()
+        return JsonResponse(data)
+
+    def get_success_url(self):
+        return reverse_lazy('inventory:ajax_inventory_detail', args=(self.object.inventory.id, ))

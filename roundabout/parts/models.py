@@ -92,6 +92,13 @@ class Part(models.Model):
         blank=True,
         default=32,
     )
+    bulk_upload_event = models.ForeignKey(
+        "ooi_ci_tools.BulkUploadEvent",
+        related_name="parts",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         ordering = ["name"]
