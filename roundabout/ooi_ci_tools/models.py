@@ -202,6 +202,9 @@ class ReferenceDesignatorEvent(models.Model):
     detail = models.TextField(blank=True)
     assembly_part = models.ForeignKey(AssemblyPart, related_name='assemblypart_%(class)ss', on_delete=models.CASCADE, null=True)
 
+    def get_actions(self):
+        return self.actions.filter(object_type=Action.REFDESEVENT)
+
     def get_sorted_reviewers(self):
         return self.user_draft.all().order_by('username')
 
@@ -224,6 +227,9 @@ class BulkUploadEvent(models.Model):
     user_approver = models.ManyToManyField(User, related_name='approver_%(class)ss')
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
     detail = models.TextField(blank=True)
+
+    def get_actions(self):
+        return self.actions.filter(object_type=Action.BULKUPLOAD)
 
     def get_sorted_reviewers(self):
         return self.user_draft.all().order_by('username')
