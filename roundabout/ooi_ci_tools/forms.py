@@ -1166,7 +1166,7 @@ class BulkAssetForm(forms.ModelForm):
     class Meta:
         model = BulkAssetRecord
         fields = '__all__'
-        exclude = ('bulk_file',)
+        exclude = ('bulk_file','id')
         labels = {}
         widgets = {
             'bulk_file': forms.Select(
@@ -1183,7 +1183,7 @@ class BulkAssetForm(forms.ModelForm):
         bulk_asset = super(BulkAssetForm, self).save(commit = False)
         if commit:
             bulk_asset.save()
-        return value_set
+        return bulk_asset
 
 
 # Coefficient ValueSet form instance generator for CalibrationEvents

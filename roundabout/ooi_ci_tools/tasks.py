@@ -972,7 +972,7 @@ def parse_bulk_files(self):
                     }
                 )
     if event_created:
-        _create_action_history(bulk_event,Action.ADD,user,data=dict(csv_import=csv_file.name))
+        _create_action_history(bulk_event,Action.CALCSVIMPORT,user,data=dict(csv_import=csv_file.name))
     else:
-        _create_action_history(bulk_event,Action.UPDATE,user,data=dict(csv_import=csv_file.name))
+        _create_action_history(bulk_event,Action.CALCSVUPDATE,user,data=dict(csv_import=csv_file.name))
     cache.delete('bulk_files')

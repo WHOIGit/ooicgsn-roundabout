@@ -42,6 +42,8 @@ from roundabout.builds.models import Build
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory, Action, Deployment, InventoryDeployment
 from roundabout.inventory.utils import _create_action_history
+from roundabout.calibrations.utils import handle_reviewers, user_ccc_reviews
+from roundabout.calibrations.tasks import check_events
 from .forms import *
 from .models import *
 from .tasks import *
@@ -278,8 +280,68 @@ class BulkUploadEventUpdate(LoginRequiredMixin, AjaxFormMixin, UpdateView):
             )
         )
 
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        bulk_asset_form = EventFileFormset(
+            self.request.POST,
+            instance=self.object
+        )
+        if (form.is_valid() and bulk_asset_form.is_valid()):
+            return self.form_valid(form, bulk_asset_form)
+        return self.form_invalid(form, bulk_asset_form)
+
+    def form_valid(self, form, bulk_asset_form):
+        form.instance.approved = False
+        form.save()
+        handle_reviewers(form)
+        self.object = form.save()
+        bulk_asset_form.instance = self.object
+        bulk_asset_form.save()
+        _create_action_history(self.object, Action.UPDATE, self.request.user)
+        job = check_events.delay()
+        response = HttpResponseRedirect(self.get_success_url())
+        if self.request.is_ajax():
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+
+    def form_invalid(self, form, bulk_asset_form):
+        if self.request.is_ajax():
+            if form.errors:
+                data = form.errors
+                return JsonResponse(
+                    data,
+                    status=400,
+                    safe=False
+                )
+            if bulk_asset_form.errors:
+                data = bulk_asset_form.errors
+                return JsonResponse(
+                    data,
+                    status=400,
+                    safe=False
+                )
+            
+        else:
+            return self.render_to_response(
+                self.get_context_data(
+                    form=form,
+                    bulk_asset_form=bulk_asset_form,
+                    form_errors=form_errors
+                )
+            )
+
     def get_success_url(self):
-        return reverse_lazy('inventory:ajax_inventory_detail', args=(self.kwargs['inv_id'], ))
+        return reverse('inventory:ajax_inventory_detail', args=(self.kwargs['inv_id'], ))
 
 
 
