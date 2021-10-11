@@ -446,6 +446,8 @@ class InvBulkUploadEventDelete(LoginRequiredMixin, AjaxFormMixin, DeleteView):
     redirect_field_name = 'home'
 
     def get_object(self, queryset=None):
+        if queryset is None:
+            queryset = self.get_queryset()
         context = {
             'inv_id': self.kwargs['inv_id'],
         }
@@ -463,7 +465,7 @@ class InvBulkUploadEventDelete(LoginRequiredMixin, AjaxFormMixin, DeleteView):
 
     def get_success_url(self):
         inv_id = self.kwargs['inv_id']
-        return reverreversese_lazy('inventory:ajax_inventory_detail', args=(inv_id, ))
+        return reverse('inventory:ajax_inventory_detail', args=(inv_id, ))
 
 
 # Handles deletion of Part Bulk Upload Files

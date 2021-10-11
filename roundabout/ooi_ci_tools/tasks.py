@@ -901,13 +901,17 @@ def parse_refdes_files(self):
                 refdes_obj.save()
             if created:
                 refdes_event = ReferenceDesignatorEvent.objects.create()
-                refdes_obj.refdes_event = refdes_event
+                refdes_event.reference_designator = refdes_obj
+                refdes_event.save()
                 refdes_obj.save()
                 _create_action_history(refdes_event,Action.ADD,user,data=dict(csv_import=csv_file.name))
             else:
-                refdes_event = refdes_obj.refdes_event
-                if refdes_event:
-                    _create_action_history(refdes_event,Action.UPDATE,user,data=dict(csv_import=csv_file.name))
+                if refdes_obj.assembly_parts:
+                    for assm in refdes_obj.assembly_parts.all():
+                        for event in assm.assemblypart_referencedesignatorevents.all():
+                            event.reference_designator = refdes_obj
+                            event.save()
+                            _create_action_history(event,Action.UPDATE,user,data=dict(csv_import=csv_file.name))
     cache.delete('refdes_files')
 
 
@@ -915,7 +919,7 @@ def parse_refdes_files(self):
 
 # Parse Bulk Upload CSV file submission, 
 # Generate and associate relevant Events, containing AssetRecords and Vocab objects
-@shared_task(bind=True)
+@shared_task(bind=True, soft_time_limit = 3600)
 def parse_bulk_files(self):
     bulk_files = cache.get('bulk_files')
     user = cache.get('user')
@@ -956,7 +960,6 @@ def parse_bulk_files(self):
                 )
                 inv = Inventory.objects.filter(serial_number = asset_uid).first()
                 if inv:
-                    print('found inventory ' + inv.serial_number + ' using asset uid ' + asset_uid)
                     inv.bulk_upload_event = bulk_event
                     inv.save()
         if csv_file.name.endswith('vocab.csv'):

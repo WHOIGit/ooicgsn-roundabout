@@ -477,7 +477,14 @@ def _create_action_history(
 # Return inventory/part/assembly-part item id's where logged-in user is a CCC-reviewer
 def logged_user_review_items(logged_user, template_type):
     full_list = []
-    bulk_event = BulkUploadEvent.objects.get(pk=1)
+    try:
+        bulk_event = BulkUploadEvent.objects.get(pk=1)
+        inv_id_from_bulk_events = [inv_id["id"] for inv_id in bulk_event.inventory.values("id") ]
+        part_id_from_bulk_events = [inv_id["id"] for inv_id in bulk_event.parts.values("id") ]
+    except BulkUploadEvent.DoesNotExist:
+        bulk_event = None
+        inv_id_from_bulk_events = []
+        part_id_from_bulk_events = []
     if template_type == "inv":
         inv_id_from_cal_events = [
             inv_id["inventory_id"]
@@ -493,7 +500,6 @@ def logged_user_review_items(logged_user, template_type):
                 "inventory_id"
             )
         ]
-        inv_id_from_bulk_events = [inv_id["id"] for inv_id in bulk_event.inventory.values("id") ]
         build_id_from_dep_events = [
             build_id["build_id"]
             for build_id in logged_user.reviewer_deployments.values("build_id")
@@ -510,7 +516,7 @@ def logged_user_review_items(logged_user, template_type):
     if template_type == 'part':
         parts_from_config_name_events = [part_id['part_id'] for part_id in logged_user.reviewer_confignameevents.values('part_id')]
         parts_from_cal_name_events = [part_id['part_id'] for part_id in logged_user.reviewer_coefficientnameevents.values('part_id')]
-        full_part_list = set(parts_from_config_name_events + parts_from_cal_name_events)
+        full_part_list = set(parts_from_config_name_events + parts_from_cal_name_events + part_id_from_bulk_events)
         full_list = list(full_part_list)
 
     if template_type == 'assm':
