@@ -21,6 +21,7 @@
 
 
 from django.db import models
+from django.utils import timezone
 from mptt.models import MPTTModel, TreeForeignKey
 from roundabout.inventory.models import Action
 from roundabout.users.models import User
@@ -238,19 +239,25 @@ class BulkUploadEvent(models.Model):
         return self.user_approver.all().order_by('username')
 
 class BulkFile(models.Model):
+    class Meta:
+        ordering = ['created_at']
     def get_object_type(self):
         return 'bulk_file'
     def __str__(self):
         return self.file_name
+    created_at = models.DateTimeField(default=timezone.now)
     file_name = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
     bulk_upload_event = models.ForeignKey(BulkUploadEvent, related_name='bulk_files', on_delete=models.CASCADE, null=True)
 
 # Handles Asset Records
 class BulkAssetRecord(models.Model):
+    class Meta:
+        ordering = ['created_at']
     def __str__(self):
         return self.asset_uid
     def get_object_type(self):
         return 'asset_record'
+    created_at = models.DateTimeField(default=timezone.now)
     asset_uid = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
     legacy_asset_uid = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
     asset_type = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
@@ -273,10 +280,13 @@ class BulkAssetRecord(models.Model):
 
 # Handles Asset Records
 class BulkVocabRecord(models.Model):
+    class Meta:
+        ordering = ['created_at']
     def __str__(self):
         return self.model
     def get_object_type(self):
         return 'vocab_record'
+    created_at = models.DateTimeField(default=timezone.now)
     equip_desc = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
     manufacturer = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
     asset_model = models.CharField(max_length=255, unique=False, db_index=False, blank=True)

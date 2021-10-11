@@ -31,6 +31,9 @@ urlpatterns = [
     path('import/comments/comments/add/<int:pk>/<str:crud>/', view=views.sub_comment, name='sub_comment'),
     path('import/comments/comments/delete/<int:pk>/', view=views.CommentDelete.as_view(), name='comment_comment_delete'),
     path('configure_import/update/<int:pk>/', view=views.ImportConfigUpdate.as_view(), name='import_config_edit'),
-    path('bulkupload/update/<int:pk>/<str:file>/<int:inv_id>', view=views.BulkUploadEventUpdate.as_view(), name='bulkuploadevent_update'),
-    path('bulkupload/delete/<int:pk>/', view=views.BulkUploadEventDelete.as_view(), name='bulkuploadevent_delete'),
+    path('bulkupload/inv_update/<int:pk>/<str:file>/<int:inv_id>', view=views.InvBulkUploadEventUpdate.as_view(), name='inv_bulkuploadevent_update'),
+    path('bulkupload/part_update/<int:pk>/<str:file>/<int:part_id>', view=views.PartBulkUploadEventUpdate.as_view(), name='part_bulkuploadevent_update'),
+    path('bulkupload/inv_delete/<int:pk>/<int:inv_id>', view=views.InvBulkUploadEventDelete.as_view(), name='inv_bulkuploadevent_delete'),
+    path('bulkupload/part_delete/<int:pk>/<int:part_id>', view=views.PartBulkUploadEventDelete.as_view(), name='part_bulkuploadevent_delete'),
+
 ]

@@ -68,7 +68,7 @@
                                 <div class="ajax-detail-link float-right">
                                     <a  href="#"
                                         class="btn btn-danger btn-sm mr-2"
-                                        data-detail-url="{% url 'ooi_ci_tools:bulkuploadevent_delete' event.id %}"
+                                        data-detail-url="{% url 'ooi_ci_tools:inv_bulkuploadevent_delete' event.id inventory_item.id %}"
                                         role="button"
                                     >
                                             Delete
@@ -159,7 +159,7 @@
                                                                             <a  href="#"
                                                                                 class="btn btn-primary btn-sm mr-2"
                                                                                 role="button"
-                                                                                data-detail-url="{% url 'ooi_ci_tools:bulkuploadevent_update' event.id file.file_name inventory_item.id %}"
+                                                                                data-detail-url="{% url 'ooi_ci_tools:inv_bulkuploadevent_update' event.id file.file_name inventory_item.id %}"
                                                                                 data-node-id="{{ event.id }}"
                                                                                 data-node-type="{{ event.get_object_type }}">
                                                                                     Edit Records

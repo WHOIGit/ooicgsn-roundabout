@@ -49,45 +49,17 @@
             <h5 id = '__all__'>Bulk Upload Records ({{file_name}})</h5>
             <table class="table table-tight record_table-thead" id="calibrations-table" style = 'display:block; overflow: auto; overflow-x: auto;'>
                 <thead>
-                    <th>Asset ID</th>
-                    <th>Legacy Asset UID</th>
-                    <th>Asset Type</th>
-                    <th>Mobile</th>
-                    <th>Equip Desc</th>
-                    <th>MIO Inventory Description</th>
+                    <th>Equipment Description</th>
                     <th>Manufacturer</th>
                     <th>Asset Model</th>
-                    <th>Manufacturer Serial Number</th>
-                    <th>Firmware Version</th>
-                    <th>Acquisition Date</th>
-                    <th>Original Cost</th>
-                    <th>Comments</th>
-                    <th>Array Geometry</th>
-                    <th>Commission Date</th>
-                    <th>Decommission Date</th>
-                    <th>MIO</th>
                 </thead>
                 <tbody class = 'record_table-tbody' id = 'record_table-tbody' style = 'overflow: auto;'>
                     {{ bulk_file_form.management_form }}
                     {% for asset_row in bulk_file_form %}
                         <tr>
-                            <td {% if asset_row.errors.asset_uid %} class="alert alert-danger"{% endif %}>{% if asset_row.id  %}{{ asset_row.DELETE }}{% endif %} {{ asset_row.id }}{{ asset_row.asset_uid }} <small class = 'form-text text-muted'>{{asset_row.asset_uid.help_text}}</small></td>
-                            <td {% if asset_row.errors.legacy_asset_uid %} class="alert alert-danger"{% endif %}>{{ asset_row.legacy_asset_uid }} <small class = 'form-text text-muted'>{{asset_row.legacy_asset_uid.help_text}}</small></td>
-                            <td {% if asset_row.errors.asset_type %} class="alert alert-danger"{% endif %}>{{ asset_row.asset_type }} <small class = 'form-text text-muted'>{{asset_row.asset_type.help_text}}</small></td>
-                            <td {% if asset_row.errors.mobile %} class="alert alert-danger"{% endif %}>{{ asset_row.mobile }} <small class = 'form-text text-muted'>{{asset_row.mobile.help_text}}</small></td>
-                            <td {% if asset_row.errors.equip_desc %} class="alert alert-danger"{% endif %}>{{ asset_row.equip_desc }} <small class = 'form-text text-muted'>{{asset_row.equip_desc.help_text}}</small></td>
-                            <td {% if asset_row.errors.mio_inv_desc %} class="alert alert-danger"{% endif %}>{{ asset_row.mio_inv_desc }} <small class = 'form-text text-muted'>{{asset_row.mio_inv_desc.help_text}}</small></td>
+                            <td {% if asset_row.errors.equip_desc %} class="alert alert-danger"{% endif %}>{% if asset_row.id  %}{{ asset_row.DELETE }}{% endif %} {{ asset_row.id }}{{ asset_row.equip_desc }} <small class = 'form-text text-muted'>{{asset_row.equip_desc.help_text}}</small></td>
                             <td {% if asset_row.errors.manufacturer %} class="alert alert-danger"{% endif %}>{{ asset_row.manufacturer }} <small class = 'form-text text-muted'>{{asset_row.manufacturer.help_text}}</small></td>
                             <td {% if asset_row.errors.asset_model %} class="alert alert-danger"{% endif %}>{{ asset_row.asset_model }} <small class = 'form-text text-muted'>{{asset_row.asset_model.help_text}}</small></td>
-                            <td {% if asset_row.errors.manufacturer_serial_number %} class="alert alert-danger"{% endif %}>{{ asset_row.manufacturer_serial_number }} <small class = 'form-text text-muted'>{{asset_row.manufacturer_serial_number.help_text}}</small></td>
-                            <td {% if asset_row.errors.firmware_version %} class="alert alert-danger"{% endif %}>{{ asset_row.firmware_version }} <small class = 'form-text text-muted'>{{asset_row.firmware_version.help_text}}</small></td>
-                            <td {% if asset_row.errors.acquisition_date %} class="alert alert-danger"{% endif %}>{{ asset_row.acquisition_date }} <small class = 'form-text text-muted'>{{asset_row.acquisition_date.help_text}}</small></td>
-                            <td {% if asset_row.errors.original_cost %} class="alert alert-danger"{% endif %}>{{ asset_row.original_cost }} <small class = 'form-text text-muted'>{{asset_row.original_cost.help_text}}</small></td>
-                            <td {% if asset_row.errors.comments %} class="alert alert-danger"{% endif %}>{{ asset_row.comments }} <small class = 'form-text text-muted'>{{asset_row.comments.help_text}}</small></td>
-                            <td {% if asset_row.errors.array_geometry %} class="alert alert-danger"{% endif %}>{{ asset_row.array_geometry }} <small class = 'form-text text-muted'>{{asset_row.array_geometry.help_text}}</small></td>
-                            <td {% if asset_row.errors.commission_date %} class="alert alert-danger"{% endif %}>{{ asset_row.commission_date }} <small class = 'form-text text-muted'>{{asset_row.commission_date.help_text}}</small></td>
-                            <td {% if asset_row.errors.decommission_date %} class="alert alert-danger"{% endif %}>{{ asset_row.decommission_date }} <small class = 'form-text text-muted'>{{asset_row.decommission_date.help_text}}</small></td>
-                            <td {% if asset_row.errors.mio %} class="alert alert-danger"{% endif %}>{{ asset_row.mio }} <small class = 'form-text text-muted'>{{asset_row.mio.help_text}}</small></td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -130,8 +102,8 @@
                 <input  class="btn btn-light cancel-btn"
                         type="button"
                         value="Cancel"
-                        data-detail-url="{% url 'inventory:ajax_inventory_detail' inv_id %}"
-                        data-node-id="{{ inv_id }}"
+                        data-detail-url="{% url 'parts:ajax_parts_detail' part_id %}"
+                        data-node-id="{{ part_id }}"
                 />
             </div>
         </div>
@@ -154,8 +126,9 @@
                 addText: 'add row',
                 deleteText: 'remove',
             });
+
             $('#submit').on('click', function() {
-                location.href = '/inventory/' + '{{ inv_id }}' + '/';
+                location.href = '/parts/' + '{{ part_id }}' + '/';
             })
 
 

@@ -23,6 +23,7 @@ from django.utils import timezone
 from .models import *
 from roundabout.inventory.models import Inventory
 from roundabout.builds.models import Build
+from roundabout.ooi_ci_tools.models import BulkUploadEvent
 
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
@@ -476,6 +477,7 @@ def _create_action_history(
 # Return inventory/part/assembly-part item id's where logged-in user is a CCC-reviewer
 def logged_user_review_items(logged_user, template_type):
     full_list = []
+    bulk_event = BulkUploadEvent.objects.get(pk=1)
     if template_type == "inv":
         inv_id_from_cal_events = [
             inv_id["inventory_id"]
@@ -491,6 +493,7 @@ def logged_user_review_items(logged_user, template_type):
                 "inventory_id"
             )
         ]
+        inv_id_from_bulk_events = [inv_id["id"] for inv_id in bulk_event.inventory.values("id") ]
         build_id_from_dep_events = [
             build_id["build_id"]
             for build_id in logged_user.reviewer_deployments.values("build_id")
@@ -499,6 +502,7 @@ def logged_user_review_items(logged_user, template_type):
             inv_id_from_cal_events
             + inv_id_from_config_events
             + inv_id_from_const_def_events
+            + inv_id_from_bulk_events
             + build_id_from_dep_events
         )
         full_list = list(full_inv_list)
