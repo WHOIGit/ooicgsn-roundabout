@@ -22,8 +22,7 @@
 <div class="card-body">
     <div class="side-p">
         <h3>Are you sure you want to delete the Bulk Upload Event?</h3>
-        <p class='font-weight-light'><b>Date:</b> {{ event_template.created_at|date:"n/j/y H:i" }}</p>
-        <p class='font-weight-light'><b>User:</b> {{ event_template.user.username }}</p>
+        <p class='font-weight-light'><b>Date Created:</b> {{ event_template.created_at|date:"n/j/y H:i" }}</p>
         <form action="" method="post" class="delete-form"
               id="delete-form" data-url='{{ request.build_absolute_uri|safe }}'>
             {% csrf_token %}

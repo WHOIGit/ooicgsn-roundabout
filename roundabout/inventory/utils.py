@@ -477,14 +477,15 @@ def _create_action_history(
 # Return inventory/part/assembly-part item id's where logged-in user is a CCC-reviewer
 def logged_user_review_items(logged_user, template_type):
     full_list = []
+    inv_id_from_bulk_events = []
+    part_id_from_bulk_events = []
     try:
         bulk_event = BulkUploadEvent.objects.get(pk=1)
-        inv_id_from_bulk_events = [inv_id["id"] for inv_id in bulk_event.inventory.values("id") ]
-        part_id_from_bulk_events = [inv_id["id"] for inv_id in bulk_event.parts.values("id") ]
     except BulkUploadEvent.DoesNotExist:
         bulk_event = None
-        inv_id_from_bulk_events = []
-        part_id_from_bulk_events = []
+    if bulk_event:
+        inv_id_from_bulk_events = [inv_id["id"] for inv_id in bulk_event.inventory.values("id") ]
+        part_id_from_bulk_events = [inv_id["id"] for inv_id in bulk_event.parts.values("id") ]
     if template_type == "inv":
         inv_id_from_cal_events = [
             inv_id["inventory_id"]

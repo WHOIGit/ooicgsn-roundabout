@@ -445,12 +445,9 @@ class InvBulkUploadEventDelete(LoginRequiredMixin, AjaxFormMixin, DeleteView):
     template_name = 'ooi_ci_tools/bulkupload_delete.html'
     redirect_field_name = 'home'
 
-    def get_object(self, queryset=None):
-        if queryset is None:
-            queryset = self.get_queryset()
-        context = {
-            'inv_id': self.kwargs['inv_id'],
-        }
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['inv_id'] = self.kwargs['inv_id']
         return context
 
     def delete(self, request, *args, **kwargs):
@@ -459,7 +456,7 @@ class InvBulkUploadEventDelete(LoginRequiredMixin, AjaxFormMixin, DeleteView):
             'message': "Successfully submitted form data.",
             'object_type': 'bulk_upload_event',
         }
-        self.object[0].delete()
+        self.object.delete()
         job = check_events.delay()
         return JsonResponse(data)
 
@@ -475,10 +472,9 @@ class PartBulkUploadEventDelete(LoginRequiredMixin, AjaxFormMixin, DeleteView):
     template_name = 'ooi_ci_tools/part_bulkupload_delete.html'
     redirect_field_name = 'home'
 
-    def get_object(self, queryset=None):
-        context = {
-            'part_id': self.kwargs['part_id'],
-        }
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['part_id'] = self.kwargs['part_id']
         return context
 
     def delete(self, request, *args, **kwargs):
@@ -487,7 +483,7 @@ class PartBulkUploadEventDelete(LoginRequiredMixin, AjaxFormMixin, DeleteView):
             'message': "Successfully submitted form data.",
             'object_type': 'bulk_upload_event',
         }
-        self.object[0].delete()
+        self.object.delete()
         job = check_events.delay()
         return JsonResponse(data)
 
