@@ -147,7 +147,9 @@ class CiRefDesDeploymentCustomSerializer(serializers.Serializer):
         return int(datetime.timestamp(datetime.utcnow()))
 
     def get_eventStartTime(self, obj):
-        return int(datetime.timestamp(obj.deployment_to_field_date))
+        if obj.deployment_to_field_date:
+            return int(datetime.timestamp(obj.deployment_to_field_date))
+        return None
 
     def get_eventStopTime(self, obj):
         if obj.deployment_recovery_date:
