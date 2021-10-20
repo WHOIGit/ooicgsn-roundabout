@@ -41,7 +41,7 @@ from roundabout.cruises.models import Cruise, Vessel
 from roundabout.inventory.models import Inventory, Action, Deployment
 from roundabout.inventory.utils import _create_action_history
 from roundabout.userdefinedfields.models import Field, FieldValue
-from roundabout.ooi_ci_tools.models import Threshold, ReferenceDesignator, ReferenceDesignatorEvent
+from roundabout.ooi_ci_tools.models import Threshold, ReferenceDesignator, ReferenceDesignatorEvent, BulkUploadEvent, BulkFile, BulkAssetRecord, BulkVocabRecord
 from roundabout.assemblies.models import Assembly
 from roundabout.locations.models import Location
 
@@ -351,6 +351,7 @@ def parse_cruise_files(self):
             action_data = dict(updated_values=dict(), csv_import=csv_file.name)
             if created:
                 cruises_created.append(cruise_obj)
+                action_data["updated_values"]["CUID"] = {"from": None, "to": cuid}
                 for field,new_val in defaults.items():
                     action_data["updated_values"][field] = {"from": None, "to": str(new_val)}
                 _create_action_history(cruise_obj,Action.ADD,user,data=action_data)
@@ -442,6 +443,7 @@ def parse_vessel_files(self):
             action_data = dict(updated_values=dict(), csv_import=csv_file.name)
             if created:
                 vessels_created.append(vessel_obj)
+                action_data["updated_values"]["vessel_name"] = {"from": None, "to": vessel_name}
                 for field,new_val in defaults.items():
                     action_data["updated_values"][field] = {"from": None, "to": str(new_val)}
                 _create_action_history(vessel_obj,Action.ADD,user,data=action_data)
@@ -850,7 +852,7 @@ def parse_deployment_files(self):
     cache.delete('dep_files')
 
 
-# Parse Reference Designator vocab CSV file submission, generate and associate relevant Events 
+# Parse Reference Designator vocab CSV file submission, generate and associate relevant Events
 @shared_task(bind=True)
 def parse_refdes_files(self):
     refdes_files = cache.get('refdes_files')
@@ -899,11 +901,81 @@ def parse_refdes_files(self):
                 refdes_obj.save()
             if created:
                 refdes_event = ReferenceDesignatorEvent.objects.create()
-                refdes_obj.refdes_event = refdes_event
+                refdes_event.reference_designator = refdes_obj
+                refdes_event.save()
                 refdes_obj.save()
                 _create_action_history(refdes_event,Action.ADD,user,data=dict(csv_import=csv_file.name))
             else:
-                refdes_event = refdes_obj.refdes_event
-                if refdes_event:
-                    _create_action_history(refdes_event,Action.UPDATE,user,data=dict(csv_import=csv_file.name))
+                if refdes_obj.assembly_parts:
+                    for assm in refdes_obj.assembly_parts.all():
+                        for event in assm.assemblypart_referencedesignatorevents.all():
+                            event.reference_designator = refdes_obj
+                            event.save()
+                            _create_action_history(event,Action.UPDATE,user,data=dict(csv_import=csv_file.name))
     cache.delete('refdes_files')
+
+
+
+
+# Parse Bulk Upload CSV file submission, 
+# Generate and associate relevant Events, containing AssetRecords and Vocab objects
+@shared_task(bind=True, soft_time_limit = 3600)
+def parse_bulk_files(self):
+    bulk_files = cache.get('bulk_files')
+    user = cache.get('user')
+    bulk_event, event_created = BulkUploadEvent.objects.update_or_create(id=1)
+    for csv_file in bulk_files:
+        # Set up the Django file object for CSV DictReader
+        csv_file.seek(0)
+        reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+        # Get the column headers to save with parent TempImport object
+        headers = reader.fieldnames
+        file_name = csv_file.name
+        bulk_file, file_created = BulkFile.objects.update_or_create(file_name=file_name, bulk_upload_event=bulk_event)
+        if csv_file.name.endswith('AssetRecord.csv'):
+            for row in reader:
+                asset_uid = row['ASSET_UID']
+                assetrecord_obj, asset_created = BulkAssetRecord.objects.update_or_create(
+                    asset_uid = asset_uid,
+                    bulk_file = bulk_file,
+                    bulk_upload_event = bulk_event,
+                    defaults = {
+                        'legacy_asset_uid': row['LEGACY_ASSET_UID'],
+                        'asset_type': row['TYPE'],
+                        'mobile': row['Mobile'],
+                        'equip_desc': row['DESCRIPTION OF EQUIPMENT'],
+                        'mio_inv_desc': row['MIO_Inventory_Description'],
+                        'manufacturer': row['Manufacturer'],
+                        'asset_model': row['Model'],
+                        'manufacturer_serial_number': row["Manufacturer's Serial No./Other Identifier"],
+                        'firmware_version': row['Firmware Version'],
+                        'acquisition_date': row['ACQUISITION DATE'],
+                        'original_cost': row['ORIGINAL COST'],
+                        'comments': row['comments'],
+                        'array_geometry': row['Array_geometry'] if hasattr(row,'Array_geometry') else '',
+                        'commission_date': row['Commission_Date'] if hasattr(row,'Commission_Date') else '',
+                        'decommission_date': row['Decommission_Date'] if hasattr(row,'Decommission_Date') else '',
+                        'mio': row['MIO'] if hasattr(row,'MIO') else '',
+                    }
+                )
+                inv = Inventory.objects.filter(serial_number = asset_uid).first()
+                if inv:
+                    inv.bulk_upload_event = bulk_event
+                    inv.save()
+        if csv_file.name.endswith('vocab.csv'):
+            for row in reader:
+                equip_desc = row['DESCRIPTION OF EQUIPMENT']
+                vocabrecord_obj, vocab_created = BulkVocabRecord.objects.update_or_create(
+                    equip_desc = equip_desc,
+                    bulk_file = bulk_file,
+                    bulk_upload_event = bulk_event,
+                    defaults = {
+                        'manufacturer': row['Manufacturer'],
+                        'asset_model': row['Model'],
+                    }
+                )
+    if event_created:
+        _create_action_history(bulk_event,Action.CALCSVIMPORT,user,data=dict(csv_import=csv_file.name))
+    else:
+        _create_action_history(bulk_event,Action.CALCSVUPDATE,user,data=dict(csv_import=csv_file.name))
+    cache.delete('bulk_files')

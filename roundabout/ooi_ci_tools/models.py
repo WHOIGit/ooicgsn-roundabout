@@ -21,6 +21,7 @@
 
 
 from django.db import models
+from django.utils import timezone
 from mptt.models import MPTTModel, TreeForeignKey
 from roundabout.inventory.models import Action
 from roundabout.users.models import User
@@ -216,18 +217,6 @@ class CCCEvent(models.Model):
         return self.user_approver.all().order_by("username")
 
 
-# Handles Reference Designator-related Events
-class ReferenceDesignatorEvent(CCCEvent):
-    class Meta:
-        ordering = ["-created_at"]
-
-    def get_object_type(self):
-        return "reference_designator_event"
-
-    def get_actions(self):
-        return self.actions.filter(object_type="referencedesignatorevent")
-
-
 # Handles raw values set within the Event
 class ReferenceDesignator(models.Model):
     class Meta:
@@ -262,9 +251,206 @@ class ReferenceDesignator(models.Model):
         null=True,
         blank=True,
     )
-    refdes_event = models.ForeignKey(
-        ReferenceDesignatorEvent,
-        related_name="reference_designators",
+
+    # Handles Reference Designator-related Events
+
+
+class ReferenceDesignatorEvent(models.Model):
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.detail
+
+    def get_object_type(self):
+        return "reference_designator_event"
+
+    def get_actions(self):
+        return self.actions.filter(object_type="referencedesignatorevent")
+
+    APPROVAL_STATUS = (
+        (True, "Approved"),
+        (False, "Draft"),
+    )
+    reference_designator = models.ForeignKey(
+        ReferenceDesignator,
+        related_name="refdes_events",
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    user_draft = models.ManyToManyField(
+        User, related_name="reviewer_%(class)ss", blank=True
+    )
+    user_approver = models.ManyToManyField(User, related_name="approver_%(class)ss")
+    approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
+    detail = models.TextField(blank=True)
+    assembly_part = models.ForeignKey(
+        AssemblyPart,
+        related_name="assemblypart_%(class)ss",
+        on_delete=models.CASCADE,
+        null=True,
+    )
+
+    def get_actions(self):
+        return self.actions.filter(object_type=Action.REFDESEVENT)
+
+    def get_sorted_reviewers(self):
+        return self.user_draft.all().order_by("username")
+
+    def get_sorted_approvers(self):
+        return self.user_approver.all().order_by("username")
+
+    # Handles Reference Designator-related Events
+
+
+class BulkUploadEvent(models.Model):
+    def __str__(self):
+        return self.detail
+
+    def get_object_type(self):
+        return "bulk_upload_event"
+
+    APPROVAL_STATUS = (
+        (True, "Approved"),
+        (False, "Draft"),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    user_draft = models.ManyToManyField(
+        User, related_name="reviewer_%(class)ss", blank=True
+    )
+    user_approver = models.ManyToManyField(User, related_name="approver_%(class)ss")
+    approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
+    detail = models.TextField(blank=True)
+
+    def get_actions(self):
+        return self.actions.filter(object_type=Action.BULKUPLOAD)
+
+    def get_sorted_reviewers(self):
+        return self.user_draft.all().order_by("username")
+
+    def get_sorted_approvers(self):
+        return self.user_approver.all().order_by("username")
+
+
+class BulkFile(models.Model):
+    class Meta:
+        ordering = ["created_at"]
+
+    def get_object_type(self):
+        return "bulk_file"
+
+    def __str__(self):
+        return self.file_name
+
+    created_at = models.DateTimeField(default=timezone.now)
+    file_name = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    bulk_upload_event = models.ForeignKey(
+        BulkUploadEvent, related_name="bulk_files", on_delete=models.CASCADE, null=True
+    )
+
+
+# Handles Asset Records
+class BulkAssetRecord(models.Model):
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return self.asset_uid
+
+    def get_object_type(self):
+        return "asset_record"
+
+    created_at = models.DateTimeField(default=timezone.now)
+    asset_uid = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    legacy_asset_uid = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    asset_type = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    mobile = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
+    equip_desc = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    mio_inv_desc = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    manufacturer = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    asset_model = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    manufacturer_serial_number = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    firmware_version = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    acquisition_date = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    original_cost = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    comments = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    array_geometry = models.CharField(
+        max_length=1000, unique=False, db_index=False, blank=True
+    )
+    commission_date = models.CharField(
+        max_length=1000, unique=False, db_index=False, blank=True
+    )
+    decommission_date = models.CharField(
+        max_length=1000, unique=False, db_index=False, blank=True
+    )
+    mio = models.CharField(max_length=255, unique=False, db_index=False, blank=True)
+    bulk_file = models.ForeignKey(
+        BulkFile, related_name="asset_records", on_delete=models.CASCADE, null=True
+    )
+    bulk_upload_event = models.ForeignKey(
+        BulkUploadEvent,
+        related_name="asset_records",
+        on_delete=models.CASCADE,
+        null=True,
+    )
+
+
+# Handles Asset Records
+class BulkVocabRecord(models.Model):
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return self.model
+
+    def get_object_type(self):
+        return "vocab_record"
+
+    created_at = models.DateTimeField(default=timezone.now)
+    equip_desc = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    manufacturer = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    asset_model = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    bulk_file = models.ForeignKey(
+        BulkFile, related_name="vocab_records", on_delete=models.CASCADE, null=True
+    )
+    bulk_upload_event = models.ForeignKey(
+        BulkUploadEvent,
+        related_name="vocab_records",
         on_delete=models.CASCADE,
         null=True,
     )

@@ -22,23 +22,6 @@ var token;
     let chromeCapabilities = Capabilities.chrome();
     var firefoxOptions = new firefox.Options();
 
-    // Docker linux chrome will only run headless
-    if ((myArgs[1] == 'headless') && (myArgs.length != 0)) {
-
-        chromeCapabilities.set("goog:chromeOptions", {
-            args: [
-                "--no-sandbox",
-                "--disable-dev-shm-usage",
-                "--headless",
-                "--log-level=3",
-                "--disable-gpu",
-                "--allow-file-access-from-files"  //not working - api CORS error
-            ]
-        });
-
-        firefoxOptions.addArguments("-headless");
-    }
-
 
     try {
 
@@ -46,8 +29,6 @@ var token;
         // API TEST
         // This test performs API Get Requests on the known data created by all the other Automated Tests.
         // The data returned from the Get Request is checked against the test data that was created.
-
-        //        $.csv = require('jquery-csv');
 
         // method and body defined, but headers not defined. had to define headers here
         const fetch = require('node-fetch');
@@ -66,7 +47,7 @@ var token;
         });
 
         var $ = require('jquery')(window);
-
+        
         const url = 'http://localhost:8000/api/v1/';
 
         // Login and get Api Token
@@ -396,8 +377,8 @@ var token;
         });
         json = await rsp.json();
         if (rsp.ok) {
-            if (json.length != 4) {
-                console.log("API failed: 4 Calibrations/Coefficents not returned.");
+            if (json.length != 6) {
+                console.log("API failed: 6 Calibrations/Coefficents not returned.");
                 console.log(json);
             }
 	    else

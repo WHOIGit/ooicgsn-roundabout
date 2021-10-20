@@ -77,6 +77,7 @@ def searchbar_redirect(request):
         elif model == 'assembly':   getstr = '?f=.0.assembly_number&f=.0.name&f=.0.assembly_type__name&f=.0.description&l=.0.icontains&q=.0.{query}'
         elif model == 'action':     getstr = '?f=.0.action_type&f=.0.user&f=.0.detail&f=.0.location__name&f=.0.inventory__serial_number&f=.0.inventory__part__name&l=.0.icontains'+'&q=.0.{query}'
         elif model == 'user':       getstr = '?ccc_role=both&ccc_status=all'+'&q={query}'
+        elif model == 'change':     getstr = '?q={query}'
         getstr = getstr.format(query=query)
         resp['Location'] += getstr
     return resp

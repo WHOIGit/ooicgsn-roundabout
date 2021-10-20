@@ -23,6 +23,7 @@ from django.utils import timezone
 from .models import *
 from roundabout.inventory.models import Inventory
 from roundabout.builds.models import Build
+from roundabout.ooi_ci_tools.models import BulkUploadEvent
 
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
@@ -61,6 +62,7 @@ def _create_action_history(
         or object_type == Action.COEFFNAMEEVENT
         or object_type == Action.CONFNAMEEVENT
         or object_type == Action.REFDESEVENT
+        or object_type == Action.BULKUPLOAD
     ) and not referring_obj:
         detail = obj.detail
 
@@ -151,6 +153,10 @@ def _create_action_history(
     elif object_type == Action.REFDESEVENT:
         obj_label = "Reference Designator"
         action_record.reference_designator_event = obj
+
+    elif object_type == Action.BULKUPLOAD:
+        obj_label = "Bulk Upload"
+        action_record.bulk_upload_event = obj
 
     # Run through the discrete Actions, set up details text and extra records if needed.
     if action_type == Action.ADD:
@@ -471,6 +477,15 @@ def _create_action_history(
 # Return inventory/part/assembly-part item id's where logged-in user is a CCC-reviewer
 def logged_user_review_items(logged_user, template_type):
     full_list = []
+    inv_id_from_bulk_events = []
+    part_id_from_bulk_events = []
+    try:
+        bulk_event = BulkUploadEvent.objects.get(pk=1)
+    except BulkUploadEvent.DoesNotExist:
+        bulk_event = None
+    if bulk_event:
+        inv_id_from_bulk_events = [inv_id["id"] for inv_id in bulk_event.inventory.values("id") ]
+        part_id_from_bulk_events = [inv_id["id"] for inv_id in bulk_event.parts.values("id") ]
     if template_type == "inv":
         inv_id_from_cal_events = [
             inv_id["inventory_id"]
@@ -494,6 +509,7 @@ def logged_user_review_items(logged_user, template_type):
             inv_id_from_cal_events
             + inv_id_from_config_events
             + inv_id_from_const_def_events
+            + inv_id_from_bulk_events
             + build_id_from_dep_events
         )
         full_list = list(full_inv_list)
@@ -501,7 +517,7 @@ def logged_user_review_items(logged_user, template_type):
     if template_type == 'part':
         parts_from_config_name_events = [part_id['part_id'] for part_id in logged_user.reviewer_confignameevents.values('part_id')]
         parts_from_cal_name_events = [part_id['part_id'] for part_id in logged_user.reviewer_coefficientnameevents.values('part_id')]
-        full_part_list = set(parts_from_config_name_events + parts_from_cal_name_events)
+        full_part_list = set(parts_from_config_name_events + parts_from_cal_name_events + part_id_from_bulk_events)
         full_list = list(full_part_list)
 
     if template_type == 'assm':
