@@ -1160,13 +1160,12 @@ class BulkUploadEventForm(forms.ModelForm):
             return event
 
 
-# CoefficientValueSet form
-# Inputs: Coefficient values and notes per Part Calibration
+# Bulk Asset Record form
 class BulkAssetForm(forms.ModelForm):
     class Meta:
         model = BulkAssetRecord
         fields = '__all__'
-        exclude = ('bulk_file','id')
+        exclude = ('bulk_file','id','created_at')
         labels = {}
         widgets = {
             'bulk_file': forms.Select(
@@ -1186,11 +1185,46 @@ class BulkAssetForm(forms.ModelForm):
         return bulk_asset
 
 
-# Coefficient ValueSet form instance generator for CalibrationEvents
-EventFileFormset = inlineformset_factory(
+# Bulk Vocab Record form
+class BulkVocabForm(forms.ModelForm):
+    class Meta:
+        model = BulkVocabRecord
+        fields = '__all__'
+        exclude = ('bulk_file','id', 'created_at')
+        labels = {}
+        widgets = {
+            'bulk_file': forms.Select(
+                attrs = {
+                    'readonly': True,
+                    'style': 'cursor: not-allowed; pointer-events: none; background-color: #d5dfed;'
+                }
+            )
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(BulkVocabForm, self).__init__(*args, **kwargs)
+    def save(self, commit=True):
+        bulk_vocab = super(BulkVocabForm, self).save(commit = False)
+        if commit:
+            bulk_vocab.save()
+        return bulk_vocab
+
+
+# Asset Record form instance generator for Bulk Upload Events
+EventAssetFileFormset = inlineformset_factory(
     BulkUploadEvent,
     BulkAssetRecord,
     form=BulkAssetForm,
+    fields='__all__',
+    extra=0,
+    can_delete=True
+)
+
+# Vocab Record form instance generator for Bulk Upload Events
+EventVocabFileFormset = inlineformset_factory(
+    BulkUploadEvent,
+    BulkVocabRecord,
+    form=BulkVocabForm,
     fields='__all__',
     extra=0,
     can_delete=True

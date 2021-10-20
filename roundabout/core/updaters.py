@@ -42,6 +42,7 @@ def _create_reference_designators():
                         refdes_value, refdes_value_created = ReferenceDesignator.objects.get_or_create(refdes_name = dflt.default_value)
                         refdes_event.reference_designator = refdes_value
                         assm_part.reference_designator = refdes_value
+                        refdes_event.save()
                         assm_part.save()
 
 

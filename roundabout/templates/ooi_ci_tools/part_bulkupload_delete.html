@@ -28,7 +28,7 @@
             {% csrf_token %}
             <input class="btn btn-link cancel-btn"
                 type="button" value="Cancel"
-                data-detail-url="{% url 'inventory:ajax_inventory_detail' inv_id %}"/>
+                data-detail-url="{% url 'parts:ajax_parts_detail' part_id %}"/>
             <input id ='submit' class="btn btn-danger" type="submit" value="Confirm"/>
         </form>
     </div>
@@ -38,10 +38,10 @@
   <script>
       $(document).ready(function() {
   
-        let inv_id = '{{inv_id}}'
+        let part_id = '{{part_id}}'
 
         $('#submit').on('click', function() {
-            location.href = '/inventory/' + inv_id + '/';
+            location.href = '/parts/' + part_id + '/';
         })
         
         
