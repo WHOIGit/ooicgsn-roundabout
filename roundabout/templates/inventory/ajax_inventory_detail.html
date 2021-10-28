@@ -153,13 +153,7 @@
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
                 data-node-type="{{ node_type }}">Edit Inventory Details</a>
-{% comment %}
-            <a class="dropdown-item" href="#"
-                data-detail-url="{% url 'tags:ajax_tag_add' %}?i={{ inventory_item.id }}"
-                data-node-id="{{ inventory_item.id }}"
-                data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="{{ node_type }}">Add Inventory Tag</a>
-{% endcomment %}
+
             {% if user|has_group:"admin" or user|has_group:"technician" %}
                 {% if part_has_cals and inventory_item.part.part_type.ccc_toggle %}
                     <a  id="add_coefficient_action"
@@ -455,13 +449,12 @@
             </li>
         {% endif %}
 
-{% comment %}
-        {% if inventory_item.assembly_part.tags.exists %}
+        {% if inventory_item.bulk_upload_event %}
             <li class="nav-item">
-                <a class="nav-link" id="tags-tab" data-toggle="tab" href="#tags" role="tab" aria-controls="tags" aria-selected="false">Tags</a>
+                <a class="nav-link" id="bulkupload-template-tab" data-toggle="tab" href="#bulkupload-template" role="tab" aria-controls="bulkupload-template" aria-selected="false">Bulk Upload History</a>
             </li>
         {% endif %}
-{% endcomment %}
+
 
     </ul>
 
@@ -674,19 +667,7 @@
         {% include "configs_constants/const_default_detail.html" with inventory_item=inventory_item user=user  %}
         {% include "configs_constants/configs_detail.html" with inventory_item=inventory_item user=user  %}
         {% include "configs_constants/constants_detail.html" with inventory_item=inventory_item user=user  %}
-
-{% comment %}
-        {% if inventory_item.assembly_part.tags.exists%}
-        <div class="tab-pane fade active show" id="tags" role="tabpanel" aria-labelledby="tags-tab">
-          <p></p>
-          <ul>
-          {% for tag in inventory_item.assembly_part.tags.all %}
-            <li>{{ tag|render_tag:inventory_item.id }} - {{ tag.config_name.name }}</li>
-          {% endfor %}
-          </ul>
-        </div>
-        {% endif %}
-{% endcomment %}
+        {% include "ooi_ci_tools/bulkupload_detail.html" with inventory_item=inventory_item user=user record_type='asset' %}
 
     </div>
 

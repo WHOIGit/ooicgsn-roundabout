@@ -1,0 +1,250 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or 
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+{% load common_tags %}
+
+{% if part_template.bulk_upload_event %}
+    {% with part_template.bulk_upload_event as event %}
+        <h4>Bulk Upload Files</h4>
+        <hr>
+        <div id="bulkupload-template" aria-labelledby="bulkupload-template-tab">
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <a  class="collapsed"
+                        data-toggle="collapse"
+                        href="#bulkupload_event-{{ event.id }}"
+                        aria-expanded="false"
+                        aria-controls="bulkupload_event-{{ event.id }}"
+                    >
+                    Bulk Upload Files
+                    </a>
+                    <a  data-toggle="collapse"
+                        class="collapsed text-right"
+                        href="#bulkupload_event-{{ event.id }}"
+                        aria-controls="bulkupload_event-{{ event.id }}"
+                        aria-expanded="false"
+                        role="button"
+                        id = 'badge_tag'
+                    >
+                        <i class="fa" aria-hidden="true"></i>
+                        <span class="sr-only">Expand/Collapse Bulk Upload Files {{ event }}</span>
+                    </a>
+                    {% if user in event.user_draft.all %}
+                        <span id="review-badge" class="badge badge-pill badge-secondary">Review Requested</span>
+                    {% endif %}
+                    {% if event.approved %}
+                        <span id="approve-badge" class="badge badge-pill badge-success">Approved</span>
+                    {% else %}
+                        <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span>
+                    {% endif %}
+                    <div class="collapse mt-3" id="bulkupload_event-{{ event.id }}">
+                        <hr>
+                        {% if user in event.user_draft.all %}
+                            <button class="btn btn-success btn-sm mr-2" id='bulkupload_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
+                                Approve
+                            </button>
+                        {% elif user in event.user_approver.all %}
+                            <button class="btn btn-warning btn-sm mr-2" id='bulkupload_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
+                                Unapprove
+                            </button>
+                        {% endif %}
+                        {% if not user|has_group:"inventory only" %}
+                            <div class="ajax-detail-link float-right">
+                                <a  href="#"
+                                    class="btn btn-danger btn-sm mr-2"
+                                    data-detail-url="{% url 'ooi_ci_tools:part_bulkuploadevent_delete' event.id part_template.id %}"
+                                    role="button"
+                                >
+                                        Delete
+                                </a>
+                            </div>
+                        {% endif %}
+                        <p id = 'approvers'>Approvers:
+                            {% for user in event.get_sorted_approvers.all %}
+                                <span id='approver-{{ user.id }}'>{{ user.username }}</span>
+                            {% endfor %}
+                        </p>
+                        <p id = 'reviewers'>Reviewers:
+                            {% for user in event.get_sorted_reviewers.all %}
+                                <span id='reviewer-{{ user.id }}'>{{ user.username }}</span>
+                            {% endfor %}
+                        </p>
+    
+                        {# TABS PER EVENT #}
+                        <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+                            <li class="nav-item">
+                                <a  class="nav-link active"
+                                    id="files-{{ event.id }}-tab"
+                                    data-toggle="tab"
+                                    href="#bulkupload_records-{{ event.id }}"
+                                    role="tab"
+                                    aria-controls="bulkupload_records"
+                                    aria-selected="false">
+                                        Records
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a  class="nav-link"
+                                    id="eventhistory-{{ event.id }}-tab"
+                                    data-toggle="tab"
+                                    href="#eventhistory-{{ event.id }}"
+                                    role="tab"
+                                    aria-controls="eventhistory"
+                                    aria-selected="false">
+                                        Event History
+                                </a>
+                            </li>
+                            {% if event.hyperlinks.exists %}
+                            <li class="nav-item">
+                                <a  class="nav-link"
+                                    id="links-{{ event.id }}-tab"
+                                    data-toggle="tab"
+                                    href="#links-{{ event.id }}"
+                                    role="tab"
+                                    aria-controls="links"
+                                    aria-selected="false">
+                                        Links
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+    
+                        <div class="tab-content" id="inventory-tabs">
+                            {% if event.bulk_files.exists %}
+                                {# EVENT RECORDS TAB #}
+                                <div class="tab-pane fade show active" id="bulkupload_records-{{ event.id }}" role="tabpanel" aria-labelledby="bulkupload_records-tab">
+                                    <table class="table table-tight">
+                                        <tbody>
+                                            {% for file in event.bulk_files.all %}
+                                                {% if file.vocab_records.exists %}
+                                                    <tr>
+                                                        <td>
+                                                            <li class = 'list-group-item'>
+                                                                <a  class="collapse show" 
+                                                                    data-toggle="collapse" 
+                                                                    href="#file-{{ file.file_name }}{{ event.id }}" 
+                                                                    aria-expanded="false" 
+                                                                    aria-controls="file-{{ file.file_name }}{{ event.id }}"
+                                                                >
+                                                                    <b>{{ file.file_name }}</b>
+                                                                </a>
+                                                                <a  data-toggle="collapse" 
+                                                                    class="collapse show text-right" 
+                                                                    href="#file-{{ file.file_name }}{{ event.id }}" 
+                                                                    aria-controls="file-{{ file.file_name }}{{ event.id }}" 
+                                                                    aria-expanded="false" 
+                                                                    role="button"
+                                                                >
+                                                                    <i class="fa" aria-hidden="true"></i>
+                                                                    <span class="sr-only">Expand/Collapse Default</span>
+                                                                </a>
+                                                                {% if not user|has_group:"inventory only" %}
+                                                                    <div class = 'ajax-detail-link float-right'>
+                                                                        <a  href="#"
+                                                                            class="btn btn-primary btn-sm mr-2"
+                                                                            role="button"
+                                                                            data-detail-url="{% url 'ooi_ci_tools:part_bulkuploadevent_update' event.id file.file_name part_template.id %}"
+                                                                            data-node-id="{{ event.id }}"
+                                                                            data-node-type="{{ event.get_object_type }}">
+                                                                                Edit Records
+                                                                        </a>
+                                                                    </div>
+                                                                {% endif %}
+                                                                <div class="collapse show mt-1 border p-2 m-3" id="file-{{ file.file_name }}{{ event.id }}">
+                                                                    <table id = 'record_table' class="table table-tight record_table-thead" style = 'display:block; overflow: auto; overflow-x: auto; max-height: 200px'>
+                                                                        <thead style = 'text-align: center;'>
+                                                                            <th>Equipment Description</th>
+                                                                            <th>Manufacturer</th>
+                                                                            <th>Asset Model</th>
+                                                                        </thead>
+                                                                        <tbody class = 'record_table-tbody' id = 'record_table-tbody' style = 'overflow: auto; max-height: 200px'>
+                                                                            {% for record in file.vocab_records.all %}
+                                                                                <tr style = 'text-align: center;'>
+                                                                                    <td>{{ record.equip_desc }}</td>
+                                                                                    <td>{{ record.manufacturer }}</td>
+                                                                                    <td>{{ record.asset_model }}</td>
+                                                                                </tr>
+                                                                            {% endfor %}
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </li>
+                                                        </td>
+                                                    </tr>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% endif %}
+    
+                        {# EVENT HISTORY TAB #}
+                        <div class="tab-pane fade border m-2 p-2" id="eventhistory-{{ event.id }}" role="tabpanel" aria-labelledby="eventhistory-{{ event.id }}-tab">
+                            <table class="table table-tight table-striped action-table">
+                                <thead>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                    <th>Details</th>
+                                    <th>Person</th>
+                                </thead>
+                                <tbody style = 'overflow: auto; max-height: 200px'>
+                                    {% for action in event.get_actions.all %}
+                                        <tr>
+                                            <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
+                                            <td>{{ action.get_action_type_display }}</td>
+                                            <td>
+                                                {{ action.detail|safe }}
+                                            </td>
+                                            <td>{{ action.user.username }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+    
+                        {# LINKS TAB #}
+                        {% if event.hyperlinks.exists %}
+                        <div class="tab-pane fade m-2 p-2" id="links-{{ event.id }}" role="tabpanel" aria-labelledby="links-{{ event.id }}-tab">
+                            <ul>
+                            {% for link in event.hyperlinks.all %}
+                                <li><a target="_blank" href="{{ link.url }}">{{ link.text }} <i class="fas fa-link"></i></a></li>
+                            {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+    
+                    </div> {# end of collapsing section #}
+                </li>
+            </ul>
+        </div>
+        <hr>
+    {% endwith %}
+{% endif %}
+
+{% block javascript %}
+<script>
+    $(document).ready(function() {
+
+        handleReviewBadges('#bulkupload-template', 'button[id^=bulkupload_expander]', '{{ user.id }}', '{{ user.username }}', '{{ part_template.id }}')
+        
+    });
+</script>
+{% endblock javascript %}

@@ -1,7 +1,9 @@
-FROM ubuntu:18.04
+FROM ubuntu:latest
 
 # Required here for nodejs 15+ and npm - needs to go here
 WORKDIR /tests
+
+ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 RUN apt-get update
@@ -24,12 +26,13 @@ RUN npm install jsdom
 RUN npm install jquery
 RUN npm install jquery-csv
 RUN npm install unzipper
-RUN npm install node-fetch
+# node-fetch v3 errors with require(), needs import
+RUN npm install node-fetch@2.6.1
 
 RUN npm install selenium-webdriver
 
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && apt install -y ./google-chrome-stable_current_amd64.deb              
-RUN wget https://chromedriver.storage.googleapis.com/92.0.4515.43/chromedriver_linux64.zip && unzip -o chromedriver_linux64.zip -d/usr/local/bin
+RUN wget https://chromedriver.storage.googleapis.com/95.0.4638.17/chromedriver_linux64.zip && unzip -o chromedriver_linux64.zip -d/usr/local/bin
 
 #RUN apt install -y firefox && apt install -y firefox-geckodriver
 

@@ -20,6 +20,7 @@
 """
 from pprint import pprint
 from copy import deepcopy
+from django import forms
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
@@ -656,18 +657,6 @@ class AssemblyPartAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
 
     def form_valid(self, form):
         self.object = form.save()
-        self.object.reference_designator = None
-        reference_designator = form.cleaned_data['reference_designator']
-        updated_name = form.cleaned_data['updated_refdes_name']
-        if reference_designator:
-            reference_designator.assembly_parts.remove(self.object)
-            self.object.reference_designator = reference_designator
-            if len(updated_name) >= 1 and updated_name != reference_designator.name:
-                reference_designator.name = updated_name
-                reference_designator.save()
-        if len(updated_name) >= 1 and not reference_designator:
-            new_refdes = ReferenceDesignator.objects.create(name = updated_name)
-            self.object.reference_designator = new_refdes
 
         if self.object.part.friendly_name:
             self.object.order = self.object.part.friendly_name
@@ -730,17 +719,6 @@ class AssemblyPartAjaxUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Aj
         old_part_pk = self.object.tracker.previous('part')
 
         self.object = form.save()
-        self.object.reference_designator = None
-        reference_designator = form.cleaned_data['reference_designator']
-        updated_name = form.cleaned_data['updated_refdes_name']
-        if reference_designator:
-            self.object.reference_designator = reference_designator
-            if len(updated_name) >= 1 and updated_name != reference_designator.name:
-                reference_designator.name = updated_name
-                reference_designator.save()
-        if len(updated_name) >= 1 and not reference_designator:
-            new_refdes = ReferenceDesignator.objects.create(name = updated_name)
-            self.object.reference_designator = new_refdes
 
         print(self.object.part.id)
         print(old_part_pk)
@@ -919,9 +897,7 @@ class EventReferenceDesignatorAdd(LoginRequiredMixin, AjaxFormMixin, CreateView)
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         form.fields['user_draft'].required = True
-        event_referencedesignator_form = EventReferenceDesignatorAddFormset(
-            instance = self.object
-        )
+        event_referencedesignator_form = ReferenceDesignatorForm()
         return self.render_to_response(
             self.get_context_data(
                 form=form,
@@ -934,10 +910,7 @@ class EventReferenceDesignatorAdd(LoginRequiredMixin, AjaxFormMixin, CreateView)
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        event_referencedesignator_form = EventReferenceDesignatorAddFormset(
-            self.request.POST,
-            instance=self.object
-        )
+        event_referencedesignator_form = ReferenceDesignatorForm(self.request.POST)
         if (form.is_valid() and event_referencedesignator_form.is_valid()):
             return self.form_valid(form, event_referencedesignator_form)
         return self.form_invalid(form, event_referencedesignator_form)
@@ -947,8 +920,14 @@ class EventReferenceDesignatorAdd(LoginRequiredMixin, AjaxFormMixin, CreateView)
         form.instance.assembly_part = assm_obj
         form.instance.approved = False
         self.object = form.save()
-        event_referencedesignator_form.instance = self.object
-        event_referencedesignator_form.save()
+        selected_refdes = form.cleaned_data['reference_designator']
+        if selected_refdes is not None:
+            selected_refdes.refdes_events.add(self.object)
+            selected_refdes.save()
+        else:
+            event_referencedesignator_form.save()
+            event_referencedesignator_form.instance.refdes_events.add(self.object)
+            event_referencedesignator_form.save()
         handle_reviewers(form)
         _create_action_history(self.object, Action.ADD, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
@@ -1006,8 +985,9 @@ class EventReferenceDesignatorUpdate(LoginRequiredMixin, AjaxFormMixin, CreateVi
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         form.fields['user_draft'].required = False
-        event_referencedesignator_form = EventReferenceDesignatorFormset(
-            instance=self.object
+        form.fields['reference_designator'].widget = forms.HiddenInput()
+        event_referencedesignator_form = ReferenceDesignatorForm(
+            instance=self.object.reference_designator
         )
         return self.render_to_response(
             self.get_context_data(
@@ -1021,9 +1001,9 @@ class EventReferenceDesignatorUpdate(LoginRequiredMixin, AjaxFormMixin, CreateVi
         self.object = self.get_object()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        event_referencedesignator_form = EventReferenceDesignatorFormset(
+        event_referencedesignator_form = ReferenceDesignatorForm(
             self.request.POST,
-            instance=self.object
+            instance=self.object.reference_designator
         )
         if (form.is_valid() and event_referencedesignator_form.is_valid()):
             return self.form_valid(form, event_referencedesignator_form)
@@ -1033,9 +1013,13 @@ class EventReferenceDesignatorUpdate(LoginRequiredMixin, AjaxFormMixin, CreateVi
         form.instance.approved = False
         handle_reviewers(form)
         self.object = form.save()
-        event_referencedesignator_form.instance = self.object
-        event_referencedesignator_form.save()
+        selected_refdes = form.cleaned_data['reference_designator']
+        if selected_refdes is not None:
+            if selected_refdes == self.object.reference_designator:
+                event_referencedesignator_form.save()
         _create_action_history(self.object, Action.UPDATE, self.request.user)
+        for assm in self.object.reference_designator.assembly_parts.all():
+            _create_action_history(assm.assemblypart_referencedesignatorevents.first(), Action.UPDATE, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
             data = {

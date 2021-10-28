@@ -1,0 +1,153 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+{% load static i18n %}
+{% load mptt_tags %}
+{% load crispy_forms_tags %}
+
+<div class="card-header">
+    <h3>Update Bulk Upload Files</h3>
+</div>
+
+<div class="card-body">
+
+    {% if latest_flag.detail %}
+        <p>
+            <strong>Why Flagged:</strong> {{ latest_flag.detail }}
+        </p>
+    {% endif %}
+    <form   class="form-horizontal ajax-form"
+            method="post"
+            action="" novalidate
+            id="bulkupload-action-form"
+            enctype="multipart/form-data"
+            data-url='{{ request.build_absolute_uri|safe }}'
+    >
+        {% csrf_token %}
+        {{ form.media }}
+        {{ form|crispy }}
+
+        <div id = 'bulk-wrapper' class="col-md-12">
+            <h5 id = '__all__'>Bulk Upload Records ({{file_name}})</h5>
+            <table class="table table-tight record_table-thead" id="calibrations-table" style = 'display:block; overflow: auto; overflow-x: auto;'>
+                <thead>
+                    <th>Equipment Description</th>
+                    <th>Manufacturer</th>
+                    <th>Asset Model</th>
+                </thead>
+                <tbody class = 'record_table-tbody' id = 'record_table-tbody' style = 'overflow: auto;'>
+                    {{ bulk_file_form.management_form }}
+                    {% for asset_row in bulk_file_form %}
+                        <tr>
+                            <td {% if asset_row.errors.equip_desc %} class="alert alert-danger"{% endif %}>{% if asset_row.id  %}{{ asset_row.DELETE }}{% endif %} {{ asset_row.id }}{{ asset_row.equip_desc }} <small class = 'form-text text-muted'>{{asset_row.equip_desc.help_text}}</small></td>
+                            <td {% if asset_row.errors.manufacturer %} class="alert alert-danger"{% endif %}>{{ asset_row.manufacturer }} <small class = 'form-text text-muted'>{{asset_row.manufacturer.help_text}}</small></td>
+                            <td {% if asset_row.errors.asset_model %} class="alert alert-danger"{% endif %}>{{ asset_row.asset_model }} <small class = 'form-text text-muted'>{{asset_row.asset_model.help_text}}</small></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if link_formset %}
+        <div class="row m-1">
+          <h5>Hyperlinks</h5>
+          <table class="table table-tight rec" id="hyperlink-table">
+            <thead>
+              <th>Text</th>
+              <th>URL</th>
+            </thead>
+            <tbody>
+              {{ link_formset.management_form }}
+
+              {% for link in link_formset %}
+                <tr>
+                  <td {% if link.errors.text %} class="alert alert-danger"{% endif %}>{% if link.id  %}{{ link.DELETE }}{% endif %} {{ link.id }} {{ link.text }}</td>
+                  <td {% if link.errors.url %} class="alert alert-danger"{% endif %}>{{ link.url }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+
+        <div class="control-group">
+            <div class="controls">
+                {% if event_template.id %}
+                    {% if action_type == 'movetotrash' %}
+                        <button type="submit" class="btn btn-danger">Confirm Move to Trash</button>
+                    {% else %}
+                        <button type="submit" class="btn btn-primary">Update Records</button>
+                    {% endif %}
+                {% else %}
+                    <button type="submit" class="btn btn-primary">Add Calibration</button>
+                {% endif %}
+                <input  class="btn btn-light cancel-btn"
+                        type="button"
+                        value="Cancel"
+                        data-detail-url="{% url 'parts:ajax_parts_detail' part_id %}"
+                        data-node-id="{{ part_id }}"
+                />
+            </div>
+        </div>
+    </form>
+</div>
+
+
+{% block javascript %}
+    <script type="text/javascript">
+
+        $(document).ready(function() {
+
+            // Hide default form delete checkboxes
+            $('[id$=-DELETE]').hide();
+
+
+            // hyperlinks formset
+            $('#hyperlink-table tbody tr').formset({
+                prefix: 'hyperlinks', // <-- Needs to match the Django related_name for the models
+                addText: 'add row',
+                deleteText: 'remove',
+            });
+
+            $('#submit').on('click', function() {
+                location.href = '/parts/' + '{{ part_id }}' + '/';
+            })
+
+
+            setBulkUploadTableWidth();
+            $( window ).bind( "resize", setBulkUploadTableWidth );
+
+            // Auto-resize CoefficientValue tables for horizontal scrolling
+            function setBulkUploadTableWidth() {
+                let invTabWidth =  $('.card-body').width();
+                let tBodyWidth = invTabWidth;
+                $('.record_table-thead').each(function() {
+                    $(this).css('max-width', tBodyWidth + 'px' );
+                })
+                $('.record_table-tbody').each(function() {
+                    $(this).css('max-width', tBodyWidth + 'px' );
+                })
+            }
+
+        })
+
+    </script>
+{% endblock javascript %}

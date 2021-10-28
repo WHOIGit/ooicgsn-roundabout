@@ -115,7 +115,7 @@
                             <div class="tab-pane fade show active" id="refdes" role="tabpanel" aria-labelledby="refdes-tab">
                                 <table class="table table-tight">
                                     <tbody>
-                                        {% for des in event.reference_designators.all %}
+                                        {% with event.reference_designator as des %}
                                             <tr>
                                                 <td>
                                                     <li class = 'list-group-item'>
@@ -191,7 +191,7 @@
                                                     </li>
                                                 </td>
                                             </tr>
-                                        {% endfor %}
+                                        {% endwith %}
                                     </tbody>
                                 </table>
                             </div>

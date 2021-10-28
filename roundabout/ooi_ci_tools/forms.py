@@ -44,6 +44,7 @@ from roundabout.locations.models import Location
 from roundabout.inventory.utils import _create_action_history
 from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientNameEvent
 from roundabout.calibrations.forms import validate_coeff_vals, parse_valid_coeff_vals
+from roundabout.calibrations.utils import reviewer_users
 from roundabout.configs_constants.models import ConfigName
 from roundabout.users.models import User
 from roundabout.userdefinedfields.models import Field, FieldValue
@@ -360,7 +361,7 @@ def validate_import_config_vessels(import_config, reader, filename):
                 params={'row': idx, 'filename': filename},
             )
         if import_config.require_vessel_ICES_code:
-            if len(ices) == 0:
+            if len(ices) == 0 or ices == '':
                 raise ValidationError(
                     _('File: %(filename)s, Row %(row)s: Import Config disallows blank ICES Code'),
                     params={'row': idx, 'filename': filename}
@@ -695,6 +696,13 @@ class ImportVesselsForm(forms.Form):
                         params={'filename': filename},
                     )
                 try:
+                    assert len(ICES_code) > 0 and ICES_code != ''
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Row: %(row)s: Invalid ICES Code. Code must not be blank'),
+                        params={'filename': filename, 'row': idx},
+                    )
+                try:
                     assert len(ICES_code) == 4
                 except:
                     raise ValidationError(
@@ -1022,7 +1030,7 @@ class ImportConfigForm(forms.ModelForm):
             return import_config
 
 
-# Handles Calibration CSV file submission and field validation
+# Handles Reference Designator CSV file submission and field validation
 class ImportReferenceDesignatorForm(forms.Form):
     refdes_csv = forms.FileField(
         widget=forms.ClearableFileInput(
@@ -1043,6 +1051,30 @@ class ImportReferenceDesignatorForm(forms.Form):
         #         refdes_name = row['Reference_Designator']
                 # validate_reference_designator(refdes_name, row_idx)
         return refdes_files
+
+
+
+# Handles Bulk Upload CSV file submission and field validation
+class ImportBulkUploadForm(forms.Form):
+    bulk_csv = forms.FileField(
+        widget=forms.ClearableFileInput(
+            attrs={
+                'multiple': True
+            }
+        ),
+        required = False
+    )
+
+    def clean_bulk_csv(self):
+        bulk_files = self.files.getlist('bulk_csv')
+        # for csv_file in refdes_files:
+        #     csv_file.seek(0)
+        #     reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+        #     for idx, row in enumerate(reader):
+        #         row_idx = idx + 1
+        #         refdes_name = row['Reference_Designator']
+                # validate_reference_designator(refdes_name, row_idx)
+        return bulk_files
 
 
 # Handeles Reference Designator name validation
@@ -1092,3 +1124,108 @@ def validate_reference_designator(name, row_idx = None):
             _('Row: %(row_num)s, Reference Designator: %(name)s: Fourth section should be a 9-character string'),
             params={'name': name, 'row_num': row_idx}
         )
+
+
+
+# Event form
+# Inputs: Effective Date and Approval
+class BulkUploadEventForm(forms.ModelForm):
+    class Meta:
+        model = BulkUploadEvent
+        fields = ['user_draft']
+        labels = {
+            'user_draft': 'Reviewers'
+        }
+        widgets = {
+            'user_draft': forms.SelectMultiple()
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(BulkUploadEventForm, self).__init__(*args, **kwargs)
+        self.fields['user_draft'].queryset = reviewer_users()
+
+    def clean_user_draft(self):
+        user_draft = self.cleaned_data.get('user_draft')
+        return user_draft
+
+    def save(self, commit = True):
+        event = super(BulkUploadEventForm, self).save(commit = False)
+        if commit:
+            event.save()
+            if event.user_approver.exists():
+                for user in event.user_approver.all():
+                    event.user_draft.add(user)
+                    event.user_approver.remove(user)
+            event.save()
+            return event
+
+
+# Bulk Asset Record form
+class BulkAssetForm(forms.ModelForm):
+    class Meta:
+        model = BulkAssetRecord
+        fields = '__all__'
+        exclude = ('bulk_file','id','created_at')
+        labels = {}
+        widgets = {
+            'bulk_file': forms.Select(
+                attrs = {
+                    'readonly': True,
+                    'style': 'cursor: not-allowed; pointer-events: none; background-color: #d5dfed;'
+                }
+            )
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(BulkAssetForm, self).__init__(*args, **kwargs)
+    def save(self, commit=True):
+        bulk_asset = super(BulkAssetForm, self).save(commit = False)
+        if commit:
+            bulk_asset.save()
+        return bulk_asset
+
+
+# Bulk Vocab Record form
+class BulkVocabForm(forms.ModelForm):
+    class Meta:
+        model = BulkVocabRecord
+        fields = '__all__'
+        exclude = ('bulk_file','id', 'created_at')
+        labels = {}
+        widgets = {
+            'bulk_file': forms.Select(
+                attrs = {
+                    'readonly': True,
+                    'style': 'cursor: not-allowed; pointer-events: none; background-color: #d5dfed;'
+                }
+            )
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(BulkVocabForm, self).__init__(*args, **kwargs)
+    def save(self, commit=True):
+        bulk_vocab = super(BulkVocabForm, self).save(commit = False)
+        if commit:
+            bulk_vocab.save()
+        return bulk_vocab
+
+
+# Asset Record form instance generator for Bulk Upload Events
+EventAssetFileFormset = inlineformset_factory(
+    BulkUploadEvent,
+    BulkAssetRecord,
+    form=BulkAssetForm,
+    fields='__all__',
+    extra=0,
+    can_delete=True
+)
+
+# Vocab Record form instance generator for Bulk Upload Events
+EventVocabFileFormset = inlineformset_factory(
+    BulkUploadEvent,
+    BulkVocabRecord,
+    form=BulkVocabForm,
+    fields='__all__',
+    extra=0,
+    can_delete=True
+)

@@ -91,6 +91,11 @@
             $('#submit').on('click', function() {
                 location.href = '/assemblies/assemblypart/' + assm_id + '/';
             })
+
+            $('#id_reference_designator').change(function() {
+                let refDes = $(this).find('option:selected').text()
+                $('#id_refdes_name').val(refDes)
+            })
         })
 
     </script>

@@ -269,7 +269,7 @@ class ActionTable(SearchTable):
             cruise_url = reverse("cruises:cruises_detail",args=[parent_obj.pk])
             html_string = html_string.format(url=cruise_url, text=parent_obj)
         elif isinstance(parent_obj,ReferenceDesignatorEvent):
-            html_string = str(parent_obj.reference_designators.first())
+            html_string = str(parent_obj.reference_designator)
         else:
             html_string = ''
 

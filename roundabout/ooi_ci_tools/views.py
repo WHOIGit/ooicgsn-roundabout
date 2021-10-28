@@ -25,11 +25,11 @@ import re
 from decimal import Decimal
 
 from dateutil import parser
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.cache import cache
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.utils.timezone import make_aware
 from django.views.generic import TemplateView, FormView
 from common.util.mixins import AjaxFormMixin
@@ -42,6 +42,8 @@ from roundabout.builds.models import Build
 from roundabout.locations.models import Location
 from roundabout.inventory.models import Inventory, Action, Deployment, InventoryDeployment
 from roundabout.inventory.utils import _create_action_history
+from roundabout.calibrations.utils import handle_reviewers, user_ccc_reviews
+from roundabout.calibrations.tasks import check_events
 from .forms import *
 from .models import *
 from .tasks import *
@@ -73,10 +75,15 @@ def import_vessels(vessels_files):
     cache.set('vessels_files', vessels_files, timeout=None)
     job = parse_vessel_files.delay()
 
-# Vessel CSV Importer
+# Reference Designator CSV Importer
 def import_refdes(refdes_files):
     cache.set('refdes_files', refdes_files, timeout=None)
     job = parse_refdes_files.delay()
+
+# Bulk Upload CSV Importer
+def import_bulk(bulk_files):
+    cache.set('bulk_files', bulk_files, timeout=None)
+    job = parse_bulk_files.delay()
 
 # Calibration CSV Importer
 def import_calibrations(cal_files, user_draft):
@@ -106,11 +113,13 @@ def import_csv(request):
         cruises_form = ImportCruisesForm(request.POST, request.FILES)
         vessels_form = ImportVesselsForm(request.POST, request.FILES)
         refdes_form = ImportReferenceDesignatorForm(request.POST, request.FILES)
+        bulk_form = ImportBulkUploadForm(request.POST, request.FILES)
         cal_files = request.FILES.getlist('calibration_csv')
         dep_files = request.FILES.getlist('deployments_csv')
         cruises_file = request.FILES.getlist('cruises_csv')
         vessels_file = request.FILES.getlist('vessels_csv')
         refdes_file = request.FILES.getlist('refdes_csv')
+        bulk_file = request.FILES.getlist('bulk_csv')
         cache.set('user', request.user, timeout=None)
         if cal_form.is_valid() and len(cal_files) >= 1:
             import_calibrations(cal_files, cal_form.cleaned_data['user_draft'])
@@ -127,18 +136,23 @@ def import_csv(request):
         if refdes_form.is_valid() and len(refdes_file) >= 1:
             import_refdes(refdes_file)
             confirm = "True"
+        if bulk_form.is_valid() and len(bulk_file) >= 1:
+            import_bulk(bulk_file)
+            confirm = "True"
     else:
         cal_form = ImportCalibrationForm()
         dep_form = ImportDeploymentsForm()
         cruises_form = ImportCruisesForm()
         vessels_form = ImportVesselsForm()
         refdes_form = ImportReferenceDesignatorForm()
+        bulk_form = ImportBulkUploadForm()
     return render(request, 'ooi_ci_tools/import_tool.html', {
         "form": cal_form,
         'dep_form': dep_form,
         'cruises_form': cruises_form,
         'vessels_form': vessels_form,
         'refdes_form': refdes_form,
+        'bulk_form': bulk_form,
         'confirm': confirm
     })
 
@@ -235,3 +249,244 @@ class ImportConfigUpdate(LoginRequiredMixin, AjaxFormMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('ooi_ci_tools:import_csv')
+
+
+
+# Handles Bulk Upload file edits for Inventory items
+class InvBulkUploadEventUpdate(LoginRequiredMixin, AjaxFormMixin, UpdateView):
+    model = BulkUploadEvent
+    form_class = BulkUploadEventForm
+    context_object_name = 'event_template'
+    template_name='ooi_ci_tools/bulkupload_edit.html'
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        inv_id = self.kwargs['inv_id']
+        file_name = self.kwargs['file']
+        bulk_file = BulkFile.objects.get(file_name = file_name)
+        file_records = BulkAssetRecord.objects.filter(bulk_file = bulk_file)
+        bulk_file_form = EventAssetFileFormset(
+            instance=self.object,
+            queryset=file_records
+        )
+        return self.render_to_response(
+            self.get_context_data(
+                form=form,
+                bulk_file_form=bulk_file_form,
+                file_name=file_name,
+                inv_id=inv_id
+            )
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        bulk_file_form = EventAssetFileFormset(
+            self.request.POST,
+            instance=self.object
+        )
+        if (form.is_valid() and bulk_file_form.is_valid()):
+            return self.form_valid(form, bulk_file_form)
+        return self.form_invalid(form, bulk_file_form)
+
+    def form_valid(self, form, bulk_file_form):
+        form.instance.approved = False
+        form.save()
+        handle_reviewers(form)
+        self.object = form.save()
+        bulk_file_form.instance = self.object
+        bulk_file_form.save()
+        _create_action_history(self.object, Action.UPDATE, self.request.user)
+        job = check_events.delay()
+        response = HttpResponseRedirect(self.get_success_url())
+        if self.request.is_ajax():
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+
+    def form_invalid(self, form, bulk_file_form):
+        if self.request.is_ajax():
+            if form.errors:
+                data = form.errors
+                return JsonResponse(
+                    data,
+                    status=400,
+                    safe=False
+                )
+            if bulk_file_form.errors:
+                data = bulk_file_form.errors
+                return JsonResponse(
+                    data,
+                    status=400,
+                    safe=False
+                )
+            
+        else:
+            return self.render_to_response(
+                self.get_context_data(
+                    form=form,
+                    bulk_file_form=bulk_file_form,
+                    form_errors=form_errors
+                )
+            )
+
+    def get_success_url(self):
+        inv_id = self.kwargs['inv_id']
+        return reverse('inventory:ajax_inventory_detail', args=(inv_id, ))
+
+
+
+# Handles Bulk Upload file edits for Part items
+class PartBulkUploadEventUpdate(LoginRequiredMixin, AjaxFormMixin, UpdateView):
+    model = BulkUploadEvent
+    form_class = BulkUploadEventForm
+    context_object_name = 'event_template'
+    template_name='ooi_ci_tools/part_bulkupload_edit.html'
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        file_name = self.kwargs['file']
+        part_id = self.kwargs['part_id']
+        bulk_file = BulkFile.objects.get(file_name = file_name)
+        file_records = BulkVocabRecord.objects.filter(bulk_file = bulk_file)
+        bulk_file_form = EventVocabFileFormset(
+            instance=self.object,
+            queryset=file_records
+        )
+        return self.render_to_response(
+            self.get_context_data(
+                form=form,
+                bulk_file_form=bulk_file_form,
+                file_name=file_name,
+                part_id=part_id
+            )
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        bulk_file_form = EventVocabFileFormset(
+            self.request.POST,
+            instance=self.object
+        )
+        if (form.is_valid() and bulk_file_form.is_valid()):
+            return self.form_valid(form, bulk_file_form)
+        return self.form_invalid(form, bulk_file_form)
+
+    def form_valid(self, form, bulk_file_form):
+        form.instance.approved = False
+        form.save()
+        handle_reviewers(form)
+        self.object = form.save()
+        bulk_file_form.instance = self.object
+        bulk_file_form.save()
+        _create_action_history(self.object, Action.UPDATE, self.request.user)
+        job = check_events.delay()
+        response = HttpResponseRedirect(self.get_success_url())
+        if self.request.is_ajax():
+            data = {
+                'message': "Successfully submitted form data.",
+                'object_id': self.object.id,
+                'object_type': self.object.get_object_type(),
+                'detail_path': self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+
+    def form_invalid(self, form, bulk_file_form):
+        if self.request.is_ajax():
+            if form.errors:
+                data = form.errors
+                return JsonResponse(
+                    data,
+                    status=400,
+                    safe=False
+                )
+            if bulk_file_form.errors:
+                data = bulk_file_form.errors
+                return JsonResponse(
+                    data,
+                    status=400,
+                    safe=False
+                )
+            
+        else:
+            return self.render_to_response(
+                self.get_context_data(
+                    form=form,
+                    bulk_file_form=bulk_file_form,
+                    form_errors=form_errors
+                )
+            )
+
+    def get_success_url(self):
+        part_id = self.kwargs['part_id']
+        return reverse('parts:ajax_parts_detail', args=(part_id, ))
+
+# Handles deletion of Inventory Bulk Upload Files
+class InvBulkUploadEventDelete(LoginRequiredMixin, AjaxFormMixin, DeleteView):
+    model = BulkUploadEvent
+    context_object_name='event_template'
+    template_name = 'ooi_ci_tools/bulkupload_delete.html'
+    redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['inv_id'] = self.kwargs['inv_id']
+        return context
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        data = {
+            'message': "Successfully submitted form data.",
+            'object_type': 'bulk_upload_event',
+        }
+        self.object.delete()
+        job = check_events.delay()
+        return JsonResponse(data)
+
+    def get_success_url(self):
+        inv_id = self.kwargs['inv_id']
+        return reverse('inventory:ajax_inventory_detail', args=(inv_id, ))
+
+
+# Handles deletion of Part Bulk Upload Files
+class PartBulkUploadEventDelete(LoginRequiredMixin, AjaxFormMixin, DeleteView):
+    model = BulkUploadEvent
+    context_object_name='event_template'
+    template_name = 'ooi_ci_tools/part_bulkupload_delete.html'
+    redirect_field_name = 'home'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['part_id'] = self.kwargs['part_id']
+        return context
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        data = {
+            'message': "Successfully submitted form data.",
+            'object_type': 'bulk_upload_event',
+        }
+        self.object.delete()
+        job = check_events.delay()
+        return JsonResponse(data)
+
+    def get_success_url(self):
+        part_id = self.kwargs['part_id']
+        return reverse('parts:ajax_parts_detail', args=(part_id, ))

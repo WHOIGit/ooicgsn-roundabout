@@ -92,7 +92,7 @@
                             {% endif %}
                             <div class = 'row'>
                                 <div class = 'col-md-9'>
-                                    <a  class="collapsed" 
+                                    <a  class="collapse show" 
                                         data-toggle="collapse" 
                                         href="#comment-{{ comment.id }}" 
                                         aria-expanded="false" 
@@ -101,7 +101,7 @@
                                         {{ comment.detail|safe|truncatechars:255 }}
                                     </a>
                                     <a  data-toggle="collapse" 
-                                        class="collapsed text-right" 
+                                        class="collapse show text-right" 
                                         href="#comment-{{ comment.id }}" 
                                         aria-controls="comment-{{ comment.id }}" 
                                         aria-expanded="false" 
@@ -154,7 +154,7 @@
                                 </div>
                             </div>
                             {% if comment.children.exists %}
-                                <div class="collapse mt-3" id="comment-{{ comment.id }}">
+                                <div class="collapse show mt-3" id="comment-{{ comment.id }}">
                             {% endif %}
                             {% for level in structure.closed_levels %}
                                     </li>

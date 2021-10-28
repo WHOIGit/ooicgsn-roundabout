@@ -371,7 +371,8 @@ SUMMERNOTE_CONFIG = {
 # import-export settings
 IMPORT_EXPORT_USE_TRANSACTIONS = True
 # Allow for larger CoefficientValue formset handling
-DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
+DATA_UPLOAD_MAX_NUMBER_FIELDS = None
+DATA_UPLOAD_MAX_MEMORY_SIZE = None
 
 # Celery Settings
 if USE_TZ:
