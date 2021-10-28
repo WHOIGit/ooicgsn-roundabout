@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -21,6 +21,7 @@
 
 {% load mptt_tags %}
 {% load inventory_tags %}
+{% load tags_templatetags %}
 
 {% get_inventory_list_by_location location as inventory %}
 
@@ -73,19 +74,20 @@
                         {% endif %}
                     "
                 >
-                        {% if inv.part.friendly_name %} 
-                            {{ inv.part.friendly_name}} 
-                        {% else %} 
-                            {{ inv.part.name }} 
+                        {% if inv.part.friendly_name %}
+                            {{ inv.part.friendly_name}}
+                        {% else %}
+                            {{ inv.part.name }}
                         {% endif %}
                         - {{ inv.serial_number }}
                         {% if inv.id in reviewer_list %}
                             <span id="review-badge-{{inv.id}}" class="badge badge-pill badge-secondary">Review Requested</span>
                         {% endif %}
-                        
-                 
 
-                 </a>
+                {# Tags for unassigned inventory items #}
+                {% for tag in inv.assembly_part.tags.all %} {{ tag|render_tag:inv.id }} {% endfor %}
+
+                </a>
 
                 {% for level in structure.closed_levels %}</li></ul>{% endfor %}
 

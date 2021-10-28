@@ -1,7 +1,7 @@
 <!--
 # Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
 #
-# This file is part of the Roundabout Database project ("RDB" or 
+# This file is part of the Roundabout Database project ("RDB" or
 # "ooicgsn-roundabout").
 #
 # ooicgsn-roundabout is free software: you can redistribute it and/or modify
@@ -21,6 +21,7 @@
 
 {% load mptt_tags %}
 {% load inventory_tags %}
+{% load tags_templatetags %}
 
 {% get_inventory_assembly_part_dictionary inventory_qs as inventory %}
 
@@ -93,6 +94,10 @@
                                 {% if i.id in reviewer_list %}
                                     <span id="review-badge-{{i.id}}" class="badge badge-pill badge-secondary">Review Requested</span>
                                 {% endif %}
+
+                            {# TAGS for Inventory-assigned AssemblyParts #}
+                            {% for tag in i.assembly_part.tags.all %} {{ tag|render_tag:i.id }} {% endfor %}
+
                             </a>
                         {% endif %}
                     {% endfor %}
@@ -104,7 +109,11 @@
                        data-part-type-id="{{ assembly_part.part.part_type.id }}"
                        data-node-type="assemblyparts" class="grey">
                         {% if assembly_part.part.friendly_name %} {{ assembly_part.part.friendly_name}} {% else %} {{ assembly_part.part.name }} {% endif %} -
-                        {{ assembly_part.part.part_number }} 
+                        {{ assembly_part.part.part_number }}
+
+                    {# TAGS for AssemblyParts without inventories #}
+                    {% for tag in assembly_part.tags.all %} {{ tag|render_tag }} {% endfor %}
+
                     </a>
                 {% endif %}
 

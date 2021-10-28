@@ -1,0 +1,83 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+{% load static i18n %}
+{% load mptt_tags %}
+{% load crispy_forms_tags %}
+
+<div class="card-header">
+    {% if assembly_part.id %}
+        <h3>Add Tag to: {{ assembly_part.part.name }}</h3>
+    {% endif %}
+</div>
+
+<div class="card-body">
+    <p>Tags are additional identifiers that appear in the Nav tree next to Assembly Parts and associated Inventory Items.</p>
+    <p>The content of "Text" will appear as the Tag's text. The value associated with a Configuration Name
+      can dynamically be inserted using "<code>{}</code>" curly braces.  </p>
+    <p>Note: Values shown for Assembly Parts are derived from the associated Configuration Default Value,
+             whereas values shown for Inventory items are derived from the inventory item's Configuration Value.
+             These two values are typically, but necessarily, identical.</p>
+
+    <form class="form-horizontal ajax-form" method="post" action="" id="add_tag-form" enctype="multipart/form-data"
+          data-url='{{ request.build_absolute_uri|safe }}' novalidate>
+      {% csrf_token %}
+      {{ form|crispy }}
+      {{ form.media }}
+
+        <div class="row">
+            {% if form.errors %}
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger">
+                            <strong>{{ error|escape }}</strong>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+      <div class="control-group">
+        <div class="controls">
+
+          {# Submit Button #}
+          <button type="submit" class="btn btn-primary">
+            {% if tag.id %}Edit{% else %}Add{% endif %} Tag
+          </button>
+
+          {# Cancel button #}
+          <input class="btn btn-light cancel-btn"
+            type="button" value="Cancel"
+            data-detail-url="{% url 'assemblies:ajax_assemblyparts_detail' assembly_part.id %}"
+            data-node-id="{{ assembly_part.id }}" />
+
+        </div>
+      </div>
+    </form>
+
+
+</div>
+
