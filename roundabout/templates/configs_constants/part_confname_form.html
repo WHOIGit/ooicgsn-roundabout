@@ -56,6 +56,26 @@
         </div>
     </div>
 
+    <div class="modal fade" id="editWarnModal" tabindex="-1" role="dialog" aria-labelledby="editWarnModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editWarnModalLabel">New message</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Warning: Editing Name metadata will affect downstream Event data.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button id = 'modal_disable' type="button" class="btn btn-primary">Disable additional warnings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {% if latest_flag.detail %}
         <p>
             <strong>Why Flagged:</strong> {{ latest_flag.detail }}
@@ -192,6 +212,42 @@
         String.prototype.replaceAt = function(index, replacement) {
             return this.substr(0, index) + replacement + this.substr(index + replacement.length);
         }
+
+        // show modal if row edited
+        $('#conf_name_table').on('change', 'input[name^=config_names]', function(e) {
+            let select = $(this);
+            let row = select.parent().parent();
+            let conf_name = row.find('[name$=-name]');
+            let conf_type = row.find(':selected');
+            let last_row = $('.conf_name-form tbody tr.formset-row:last');
+            if (row.index() == last_row.index()){
+                return 
+            }
+            $('#editWarnModalLabel').text(conf_type.text() + ': ' + conf_name.val());
+            $('#editWarnModal').modal('toggle');
+        });
+
+        $('#conf_name_table').on('change', 'select[name^=config_names]', function(e) {
+            let select = $(this);
+            let row = select.parent().parent();
+            let conf_name = row.find('[name$=-name]');
+            let conf_type = row.find(':selected');
+            let last_row = $('.conf_name-form tbody tr.formset-row:last');
+            if (row.index() == last_row.index()){
+                return 
+            }
+            $('#editWarnModalLabel').text(conf_type.text() + ': ' + conf_name.val());
+            $('#editWarnModal').modal('toggle');
+        });
+
+        // Hide and mark row for deletion
+        $('#modal_disable').on('click', function() {
+            $('#editWarnModal').modal('hide');
+            setTimeout(function() {
+                $('#editWarnModal').remove()
+            }, 1000);
+            
+        });
     });
 </script>
 {% endblock javascript %}

@@ -958,8 +958,9 @@ def parse_bulk_files(self):
                         'mio': row['MIO'] if hasattr(row,'MIO') else '',
                     }
                 )
-                inv = Inventory.objects.filter(serial_number = asset_uid).first()
-                if inv:
+                inv = Inventory.objects.filter(serial_number = asset_uid)
+                if len(inv):
+                    inv = inv.first()
                     inv.bulk_upload_event = bulk_event
                     inv.save()
         if csv_file.name.endswith('vocab.csv'):
