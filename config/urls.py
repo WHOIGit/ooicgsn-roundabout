@@ -57,6 +57,7 @@ urlpatterns = [
     path('configs-constants/', include('roundabout.configs_constants.urls', namespace='configs_constants')),
     path('field-instances/', include('roundabout.field_instances.urls', namespace='field_instances')),
     path('ooi-ci-tools/', include('roundabout.ooi_ci_tools.urls', namespace='ooi_ci_tools')),
+    path('tags/', include('roundabout.tags.urls', namespace='tags')),
     # API urls
     path('api/v1/', include('roundabout.core.api.urls', namespace='api_v1')),
     #Summernote WYSIWYG

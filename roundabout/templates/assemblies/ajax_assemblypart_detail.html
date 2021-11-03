@@ -24,6 +24,7 @@
 {% load humanize %}
 {% load parts_tags %}
 {% load common_tags %}
+{% load tags_templatetags %}
 
 <div class="card-header" data-object-id="{{ assembly_part.id }}"><h3>{{ assembly_part.part.name }}</h3></div>
 
@@ -62,6 +63,11 @@
                         data-node-id="{{ assembly_part.id }}"
                         data-node-type="{{ node_type }}">Add Reference Designator</a>
                 {% endif %}
+                <a class="dropdown-item" href="#"
+                data-detail-url="{% url 'tags:ajax_tag_add' %}?a={{ assembly_part.id }}"
+                data-node-id="{{ assembly_part.id }}"
+                data-location-id="{{ inventory_item.location.id}}"
+                data-node-type="{{ node_type }}">Add {{ label_assemblies_app_singular }} Part Tag</a>
             </div>
         </div>
     </div>
@@ -105,6 +111,14 @@
             </li>
         {% endif %}
 
+        {% include "assemblies/reference_designator_detail.html" with assembly_part=assembly_part user=user nav_only='true' %}
+        {% include "configs_constants/config_default_detail.html" with assembly_part=assembly_part user=user part_has_configs=part_has_configs nav_only='true'%}
+
+        {% if assembly_part.tags.exists %}
+            <li class="nav-item">
+                <a class="nav-link" id="tags-tab" data-toggle="tab" href="#tags" role="tab" aria-controls="tags" aria-selected="false">Tags</a>
+            </li>
+        {% endif %}
 
 
     </ul>
@@ -154,9 +168,37 @@
                 </ul>
             </div>
         {% endif %}
-        {% include "assemblies/reference_designator_detail.html" with assembly_part=assembly_part user=user %}
-        {% include "configs_constants/config_default_detail.html" with assembly_part=assembly_part user=user part_has_configs=part_has_configs %}
-        
+
+        {% include "assemblies/reference_designator_detail.html" with assembly_part=assembly_part user=user body_only='true'%}
+        {% include "configs_constants/config_default_detail.html" with assembly_part=assembly_part user=user part_has_configs=part_has_configs body_only='true'%}
+
+        {% if assembly_part.tags.exists%}
+        <div class="tab-pane fade active show" id="tags" role="tabpanel" aria-labelledby="tags-tab">
+          <ul class="list-group">
+          {% for tag in assembly_part.tags.all %}
+            <li class="list-group-item">
+              {{ tag|render_tag }} - "<code>{{ tag.tooltip }}</code>"
+              <span class="float-right mr-2">
+
+                <a role="button" class="btn btn-danger btn-sm text-white" href="{% url 'tags:ajax_tag_delete' tag.id %}">
+                  <span class="fa fa-trash-alt"></span></a>
+
+              </span>
+            </li>
+          {% endfor %}
+{% comment %} for whatever reason this DOES NOT LOAD, even though it's the same as in the dropdown Add Tag button >:(
+            <li class="list-group-item">
+              <a class="btn btn-primary btn-sm text-white float-right mr-2"
+                 href="#"
+                 data-detail-url="{% url 'tags:ajax_tag_add' %}?a={{ assembly_part.id }}"
+                 data-node-id="{{ assembly_part.id }}"
+                 data-location-id="{{ assembly_part.inventory.location.id}}">
+                    Add New Tag <span class="fa fa-plus"></span></a>
+            </li>
+{% endcomment %}
+          </ul>
+        </div>
+        {% endif %}
 
     </div>
 
