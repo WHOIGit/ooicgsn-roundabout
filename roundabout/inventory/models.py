@@ -628,8 +628,8 @@ class Action(models.Model):
         (REVIEWUNAPPROVE, 'Reviewer unapproved Event'),
         (EVENTAPPROVE, "Event Approved"),
         (EVENTUNAPPROVE, 'Event Unapproved'),
-        (CALCSVIMPORT, "Calibration CSV Uploaded"),
-        (CALCSVUPDATE, "Updated by Calibration CSV"),
+        (CALCSVIMPORT, "CSV Uploaded"),
+        (CALCSVUPDATE, "Updated by CSV"),
     )
     # object_type choices
     BUILD = "build"

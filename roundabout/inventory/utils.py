@@ -484,8 +484,9 @@ def logged_user_review_items(logged_user, template_type):
     except BulkUploadEvent.DoesNotExist:
         bulk_event = None
     if bulk_event:
-        inv_id_from_bulk_events = [inv_id["id"] for inv_id in bulk_event.inventory.values("id") ]
-        part_id_from_bulk_events = [inv_id["id"] for inv_id in bulk_event.parts.values("id") ]
+        if logged_user in bulk_event.user_draft.all():
+            inv_id_from_bulk_events = [inv_id["id"] for inv_id in bulk_event.inventory.values("id") ]
+            part_id_from_bulk_events = [inv_id["id"] for inv_id in bulk_event.parts.values("id") ]
     if template_type == "inv":
         inv_id_from_cal_events = [
             inv_id["inventory_id"]
