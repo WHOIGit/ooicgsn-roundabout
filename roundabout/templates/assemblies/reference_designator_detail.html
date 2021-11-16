@@ -21,7 +21,9 @@
 {% load common_tags %}
 {% if assembly_part.assemblypart_referencedesignatorevents.exists %}
     {% if not body_only  == 'true'  %}
-    {% if not nav_only  == 'true' %}<ul class="nav nav-tabs" id="refdes-tabs-nav" role="tablist">{% endif %}
+        {% if not nav_only  == 'true' %}
+            <ul class="nav nav-tabs" id="refdes-tabs-nav" role="tablist">
+        {% endif %}
         <li class="nav-item">
             <a  class="nav-link"
                 id="reference_designator_template_tab"
@@ -33,217 +35,219 @@
                     Reference Designator
             </a>
         </li>
-    {% if not nav_only == 'true'  %}</ul>{% endif %}
+        {% if not nav_only == 'true'  %}
+            </ul>
+        {% endif %}
     {% endif %}
     {% if not nav_only == 'true'  %}
-    <div id="reference_designator-template" class="tab-pane fade" role="tabpanel" aria-labelledby="reference_designator-template">
-        <ul class="list-group">
-            {% for event in assembly_part.assemblypart_referencedesignatorevents.all %}
-                <li class="list-group-item">
-                    <a  class="collapsed"
-                        data-toggle="collapse"
-                        href="#refdes-{{ event.id }}"
-                        aria-expanded="false"
-                        aria-controls="refdes-{{ event.id }}"
-                    >
-                        Reference Designator
-                    </a>
-                    <a  data-toggle="collapse"
-                        class="collapsed text-right"
-                        href="#refdes-{{ event.id }}"
-                        aria-controls="refdes-{{ event.id }}"
-                        aria-expanded="false"
-                        role="button"
-                        id = 'badge_tag'
-                    >
-                        <i class="fa" aria-hidden="true"></i>
-                        <span class="sr-only">Expand/Collapse Reference Designator</span>
-                    </a>
-                    {% if user in event.user_draft.all %}
-                        <span id="review-badge" class="badge badge-pill badge-secondary">Review Requested</span>
-                    {% endif %}
-                    {% if event.approved %}
-                        <span id="approve-badge" class="badge badge-pill badge-success">Approved</span>
-                    {% else %}
-                        <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span>
-                    {% endif %}
-                    {% if user|has_group:"admin" or user|has_group:"technician" %}
-                        <div class = 'ajax-detail-link float-right'>
-                            <a  href="#"
-                                class="btn btn-primary btn-sm mr-2"
-                                role="button"
-                                data-detail-url="{% url 'assemblies:event_referencedesignator_update' event.id %}"
-                                data-node-id="{{ event.id }}"
-                                data-node-type="reference_designator_event">
-                                    Edit Reference Designator
-                            </a>
-                        </div>
-                    {% endif %}
-                    <div class="collapse mt-3" id="refdes-{{ event.id }}">
-                        <hr>
+        <div id="reference_designator-template" class="tab-pane fade" role="tabpanel" aria-labelledby="reference_designator-template">
+            <ul class="list-group">
+                {% for event in assembly_part.assemblypart_referencedesignatorevents.all %}
+                    <li class="list-group-item">
+                        <a  class="collapsed"
+                            data-toggle="collapse"
+                            href="#refdes-{{ event.id }}"
+                            aria-expanded="false"
+                            aria-controls="refdes-{{ event.id }}"
+                        >
+                            Reference Designator
+                        </a>
+                        <a  data-toggle="collapse"
+                            class="collapsed text-right"
+                            href="#refdes-{{ event.id }}"
+                            aria-controls="refdes-{{ event.id }}"
+                            aria-expanded="false"
+                            role="button"
+                            id = 'badge_tag'
+                        >
+                            <i class="fa" aria-hidden="true"></i>
+                            <span class="sr-only">Expand/Collapse Reference Designator</span>
+                        </a>
                         {% if user in event.user_draft.all %}
-                            <button class="btn btn-success btn-sm mr-2" id='refdes_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
-                                Approve
-                            </button>
-                        {% elif user in event.user_approver.all %}
-                            <button class="btn btn-warning btn-sm mr-2" id='refdes_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
-                                Unapprove
-                            </button>
+                            <span id="review-badge" class="badge badge-pill badge-secondary">Review Requested</span>
                         {% endif %}
-                        <div class="ajax-detail-link float-right">
-                            <a  href="#"
-                                class="btn btn-danger btn-sm mr-2"
-                                data-detail-url="{% url 'assemblies:event_referencedesignator_delete' event.id %}"
-                                data-node-id="{{assembly_part.id}}"
-                                data-node-type="assemblyparts"
-                                role="button"
-                            >
-                                    Delete
-                            </a>
-                        </div>
-                        <p id = 'approvers'>Approvers:
-                            {% for user in event.get_sorted_approvers.all %}
-                                <span id='approver-{{ user.id }}'>{{ user.username }}</span>
-                            {% endfor %}
-                        </p>
-                        <p id = 'reviewers'>Reviewers:
-                            {% for user in event.get_sorted_reviewers.all %}
-                                <span id='reviewer-{{ user.id }}'>{{ user.username }}</span>
-                            {% endfor %}
-                        </p>
-                        <div class="tab-content" id="inventory-tabs">
-                            <div class="tab-pane fade show active" id="refdes" role="tabpanel" aria-labelledby="refdes-tab">
+                        {% if event.approved %}
+                            <span id="approve-badge" class="badge badge-pill badge-success">Approved</span>
+                        {% else %}
+                            <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span>
+                        {% endif %}
+                        {% if user|has_group:"admin" or user|has_group:"technician" %}
+                            <div class = 'ajax-detail-link float-right'>
+                                <a  href="#"
+                                    class="btn btn-primary btn-sm mr-2"
+                                    role="button"
+                                    data-detail-url="{% url 'assemblies:event_referencedesignator_update' event.id %}"
+                                    data-node-id="{{ event.id }}"
+                                    data-node-type="reference_designator_event">
+                                        Edit Reference Designator
+                                </a>
+                            </div>
+                        {% endif %}
+                        <div class="collapse mt-3" id="refdes-{{ event.id }}">
+                            <hr>
+                            {% if user in event.user_draft.all %}
+                                <button class="btn btn-success btn-sm mr-2" id='refdes_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
+                                    Approve
+                                </button>
+                            {% elif user in event.user_approver.all %}
+                                <button class="btn btn-warning btn-sm mr-2" id='refdes_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
+                                    Unapprove
+                                </button>
+                            {% endif %}
+                            <div class="ajax-detail-link float-right">
+                                <a  href="#"
+                                    class="btn btn-danger btn-sm mr-2"
+                                    data-detail-url="{% url 'assemblies:event_referencedesignator_delete' event.id %}"
+                                    data-node-id="{{assembly_part.id}}"
+                                    data-node-type="assemblyparts"
+                                    role="button"
+                                >
+                                        Delete
+                                </a>
+                            </div>
+                            <p id = 'approvers'>Approvers:
+                                {% for user in event.get_sorted_approvers.all %}
+                                    <span id='approver-{{ user.id }}'>{{ user.username }}</span>
+                                {% endfor %}
+                            </p>
+                            <p id = 'reviewers'>Reviewers:
+                                {% for user in event.get_sorted_reviewers.all %}
+                                    <span id='reviewer-{{ user.id }}'>{{ user.username }}</span>
+                                {% endfor %}
+                            </p>
+                            <div class="tab-content" id="inventory-tabs">
+                                <div class="tab-pane fade show active" id="refdes" role="tabpanel" aria-labelledby="refdes-tab">
+                                    <table class="table table-tight">
+                                        <tbody>
+                                            {% with event.reference_designator as des %}
+                                                <tr>
+                                                    <td>
+                                                        <li class = 'list-group-item'>
+                                                            <a  class="collapse show"
+                                                                data-toggle="collapse"
+                                                                href="#des-{{ des.refdes_name }}{{ event.id }}"
+                                                                aria-expanded="false"
+                                                                aria-controls="des-{{ des.refdes_name }}{{ event.id }}"
+                                                            >
+                                                                <b>{{ des.refdes_name }}</b>
+                                                            </a>
+                                                            <a  data-toggle="collapse"
+                                                                class="collapse show text-right"
+                                                                href="#des-{{ des.refdes_name }}{{ event.id }}"
+                                                                aria-controls="des-{{ des.refdes_name }}{{ event.id }}"
+                                                                aria-expanded="false"
+                                                                role="button"
+                                                            >
+                                                                <i class="fa" aria-hidden="true"></i>
+                                                                <span class="sr-only">Expand/Collapse Reference Designator</span>
+                                                            </a>
+                                                            <div class="collapse show mt-1" id="des-{{ des.refdes_name }}{{ event.id }}">
+                                                                <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+                                                                    <li class="nav-item">
+                                                                        <a  class="nav-link active"
+                                                                            id="refdes_event_history-tab"
+                                                                            data-toggle="tab"
+                                                                            href="#refdes_event_history"
+                                                                            role="tab"
+                                                                            aria-controls="refdes_event_history"
+                                                                            aria-selected="false">
+                                                                                Attributes
+                                                                        </a>
+                                                                    </li>
+                                                                </ul>
+                                                                <table class="table table-tight">
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td>
+                                                                                <li class = 'list-group-item' style = 'display:block; overflow: auto; max-height: 200px'>
+                                                                                    <table class="table table-tight table-striped action-table">
+                                                                                        <thead>
+                                                                                            <th>Name</th>
+                                                                                            <th>TOC_L1</th>
+                                                                                            <th>TOC_L2</th>
+                                                                                            <th>TOC_L3</th>
+                                                                                            <th>Instrument</th>
+                                                                                            <th>Manufacturer</th>
+                                                                                            <th>Model</th>
+                                                                                            <th>Min Depth</th>
+                                                                                            <th>Max Depth</th>
+                                                                                        </thead>
+                                                                                        <tbody style = 'overflow: auto; max-height: 200px'>
+                                                                                            <tr>
+                                                                                                <td>{{ des.refdes_name }}</td>
+                                                                                                <td>{{ des.toc_l1 }}</td>
+                                                                                                <td>{{ des.toc_l2 }}</td>
+                                                                                                <td>{{ des.toc_l3 }}</td>
+                                                                                                <td>{{ des.instrument }}</td>
+                                                                                                <td>{{ des.manufacturer }}</td>
+                                                                                                <td>{{ des.model }}</td>
+                                                                                                <td>{{ des.min_depth }}</td>
+                                                                                                <td>{{ des.max_depth }}</td>
+                                                                                            </tr>
+                                                                                        </tbody>
+                                                                                    </table>
+                                                                                </li>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </li>
+                                                    </td>
+                                                </tr>
+                                            {% endwith %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+                                    <li class="nav-item">
+                                        <a  class="nav-link active"
+                                            id="refdes_event_history-tab"
+                                            data-toggle="tab"
+                                            href="#refdes_event_history"
+                                            role="tab"
+                                            aria-controls="refdes_event_history"
+                                            aria-selected="false">
+                                                Event History
+                                        </a>
+                                    </li>
+                                </ul>
                                 <table class="table table-tight">
                                     <tbody>
-                                        {% with event.reference_designator as des %}
-                                            <tr>
-                                                <td>
-                                                    <li class = 'list-group-item'>
-                                                        <a  class="collapse show"
-                                                            data-toggle="collapse"
-                                                            href="#des-{{ des.refdes_name }}{{ event.id }}"
-                                                            aria-expanded="false"
-                                                            aria-controls="des-{{ des.refdes_name }}{{ event.id }}"
-                                                        >
-                                                            <b>{{ des.refdes_name }}</b>
-                                                        </a>
-                                                        <a  data-toggle="collapse"
-                                                            class="collapse show text-right"
-                                                            href="#des-{{ des.refdes_name }}{{ event.id }}"
-                                                            aria-controls="des-{{ des.refdes_name }}{{ event.id }}"
-                                                            aria-expanded="false"
-                                                            role="button"
-                                                        >
-                                                            <i class="fa" aria-hidden="true"></i>
-                                                            <span class="sr-only">Expand/Collapse Reference Designator</span>
-                                                        </a>
-                                                        <div class="collapse show mt-1" id="des-{{ des.refdes_name }}{{ event.id }}">
-                                                            <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
-                                                                <li class="nav-item">
-                                                                    <a  class="nav-link active"
-                                                                        id="refdes_event_history-tab"
-                                                                        data-toggle="tab"
-                                                                        href="#refdes_event_history"
-                                                                        role="tab"
-                                                                        aria-controls="refdes_event_history"
-                                                                        aria-selected="false">
-                                                                            Attributes
-                                                                    </a>
-                                                                </li>
-                                                            </ul>
-                                                            <table class="table table-tight">
-                                                                <tbody>
-                                                                    <tr>
-                                                                        <td>
-                                                                            <li class = 'list-group-item' style = 'display:block; overflow: auto; max-height: 200px'>
-                                                                                <table class="table table-tight table-striped action-table">
-                                                                                    <thead>
-                                                                                        <th>Name</th>
-                                                                                        <th>TOC_L1</th>
-                                                                                        <th>TOC_L2</th>
-                                                                                        <th>TOC_L3</th>
-                                                                                        <th>Instrument</th>
-                                                                                        <th>Manufacturer</th>
-                                                                                        <th>Model</th>
-                                                                                        <th>Min Depth</th>
-                                                                                        <th>Max Depth</th>
-                                                                                    </thead>
-                                                                                    <tbody style = 'overflow: auto; max-height: 200px'>
-                                                                                        <tr>
-                                                                                            <td>{{ des.refdes_name }}</td>
-                                                                                            <td>{{ des.toc_l1 }}</td>
-                                                                                            <td>{{ des.toc_l2 }}</td>
-                                                                                            <td>{{ des.toc_l3 }}</td>
-                                                                                            <td>{{ des.instrument }}</td>
-                                                                                            <td>{{ des.manufacturer }}</td>
-                                                                                            <td>{{ des.model }}</td>
-                                                                                            <td>{{ des.min_depth }}</td>
-                                                                                            <td>{{ des.max_depth }}</td>
-                                                                                        </tr>
-                                                                                    </tbody>
-                                                                                </table>
-                                                                            </li>
-                                                                        </td>
-                                                                    </tr>
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    </li>
-                                                </td>
-                                            </tr>
-                                        {% endwith %}
+                                        <tr>
+                                            <td>
+                                                <li class = 'list-group-item' style = 'display:block; overflow: auto; max-height: 200px'>
+                                                    <table class="table table-tight table-striped action-table">
+                                                        <thead>
+                                                            <th>Date</th>
+                                                            <th>Action</th>
+                                                            <th>Details</th>
+                                                            <th>Person</th>
+                                                        </thead>
+                                                        <tbody style = 'overflow: auto; max-height: 200px'>
+                                                            {% for action in event.get_actions.all %}
+                                                                <tr>
+                                                                    <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
+                                                                    <td>{{ action.get_action_type_display }}</td>
+                                                                    <td>
+                                                                        {{ action.detail|safe }}
+                                                                    </td>
+                                                                    <td>{{ action.user.username }}</td>
+                                                                </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </li>
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
-                            <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
-                                <li class="nav-item">
-                                    <a  class="nav-link active"
-                                        id="refdes_event_history-tab"
-                                        data-toggle="tab"
-                                        href="#refdes_event_history"
-                                        role="tab"
-                                        aria-controls="refdes_event_history"
-                                        aria-selected="false">
-                                            Event History
-                                    </a>
-                                </li>
-                            </ul>
-                            <table class="table table-tight">
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <li class = 'list-group-item' style = 'display:block; overflow: auto; max-height: 200px'>
-                                                <table class="table table-tight table-striped action-table">
-                                                    <thead>
-                                                        <th>Date</th>
-                                                        <th>Action</th>
-                                                        <th>Details</th>
-                                                        <th>Person</th>
-                                                    </thead>
-                                                    <tbody style = 'overflow: auto; max-height: 200px'>
-                                                        {% for action in event.get_actions.all %}
-                                                            <tr>
-                                                                <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
-                                                                <td>{{ action.get_action_type_display }}</td>
-                                                                <td>
-                                                                    {{ action.detail|safe }}
-                                                                </td>
-                                                                <td>{{ action.user.username }}</td>
-                                                            </tr>
-                                                        {% endfor %}
-                                                    </tbody>
-                                                </table>
-                                            </li>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
                         </div>
-                    </div>
-                </li>
-            {% endfor %}
-        </ul>
-    </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
     {% endif %}
 {% endif %}
 {% block javascript %}
