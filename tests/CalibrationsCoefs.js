@@ -113,7 +113,6 @@ var password;
             console.log("Wait 2 seconds for Add Row.");
         }
 
-        // 24 | click | linkText=Add Configurations/Constants | 
         await new Promise(r => setTimeout(r, 2000));
 
         await driver.findElement(By.id("add_button")).click();
@@ -132,10 +131,17 @@ var password;
         await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1");
 
         await driver.findElement(By.id("id_user_draft")).sendKeys("admin");  //dropdown doesn't work, this gets unchecked
+        // Disable Additional Warnings: Editing Name metadata will affect downstream Event data.
+        await driver.findElement(By.id("modal_disable")).click();
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_user_draft")).sendKeys(user);  //dropdown doesn't work, this gets unchecked
         //encodedString = await driver.takeScreenshot();
         //await fs.writeFileSync('./ccscreen1.png', encodedString, 'base64');    
-        await driver.findElement(By.css(".controls > .btn-primary")).click();
+        var element = await driver.findElement(By.css(".controls > .btn-primary"));
+        await driver.executeScript("arguments[0].click()", element);  //modal control
+
+        await driver.navigate().refresh();  //refresh screen to get rid of modal control
+        await new Promise(r => setTimeout(r, 2000));
 
         while ((await driver.findElements(By.id("action"))).length == 0) {
             await new Promise(r => setTimeout(r, 2000));
@@ -307,7 +313,6 @@ var password;
         // Copy Calibrations from one Part Template to Another - Issue #146
         await driver.findElement(By.id("searchbar-query")).sendKeys("wheel");
         await driver.findElement(By.id("searchbar-modelselect")).sendKeys("Part Templates");
-        // 14 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         while ((await driver.findElements(By.partialLinkText("555"))).length == 0) {
             await new Promise(r => setTimeout(r, 2000));
@@ -357,7 +362,7 @@ var password;
         }
         // Search for Name
         await driver.findElement(By.id("field-select_c_r0")).click()
-        // 20 | select | id=field-select_c_r0 | label=Inventory: Name
+        
         {
             const dropdown = await driver.findElement(By.id("field-select_c_r0"))
             await dropdown.findElement(By.xpath("//option[. = 'Coefficient Name']")).click()
@@ -415,7 +420,6 @@ var password;
         // Navigate to Part Template and Verify the Calib Coef min and max values are within reasonable ranges
         await driver.findElement(By.id("searchbar-query")).sendKeys("pin");
         await driver.findElement(By.id("searchbar-modelselect")).sendKeys("Part Templates");
-        // 14 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         while ((await driver.findElements(By.partialLinkText("666"))).length == 0) {
             await new Promise(r => setTimeout(r, 2000));
