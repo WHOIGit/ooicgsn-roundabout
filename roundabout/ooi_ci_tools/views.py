@@ -293,13 +293,14 @@ class InvBulkUploadEventUpdate(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         return self.form_invalid(form, bulk_file_form)
 
     def form_valid(self, form, bulk_file_form):
+        file_name = self.kwargs['file']
         form.instance.approved = False
         form.save()
         handle_reviewers(form)
         self.object = form.save()
         bulk_file_form.instance = self.object
         bulk_file_form.save()
-        _create_action_history(self.object, Action.UPDATE, self.request.user)
+        _create_action_history(self.object, Action.UPDATE, self.request.user, filename = file_name)
         job = check_events.delay()
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
