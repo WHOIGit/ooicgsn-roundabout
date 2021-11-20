@@ -8,6 +8,7 @@ const chrome = require('selenium-webdriver/chrome');
 const firefox = require('selenium-webdriver/firefox');
 const assert = require('assert');
 const fs = require('fs');
+const { elementIsSelected } = require('selenium-webdriver/lib/until');
 
 var driver;
 var myArgs = process.argv.slice(2);
@@ -112,7 +113,12 @@ var password;
 
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-primary")).click();
-        await driver.findElement(By.id("id_ccc_toggle")).click();
+        await new Promise(r => setTimeout(r, 2000));
+        var isSelected = await driver.findElement(By.id("id_ccc_toggle")).isSelected();
+        // Enable Constants & Configs if disabled
+        if (!isSelected){
+            await driver.findElement(By.id("id_ccc_toggle")).click();
+        }
         await driver.findElement(By.css(".btn-primary")).click();
    	    while ((await driver.findElements(By.linkText("Add Part Type"))).length == 0) // Add Button when done
 	    {
@@ -134,29 +140,28 @@ var password;
 	       await new Promise(r => setTimeout(r, 2000));
 	       console.log("Wait 2 seconds for Create CC.");
 	    }
-            // Create Configurations / Constants | 
-            await driver.findElement(By.linkText("Create Configurations / Constants")).click();
-        //	while ((await driver.findElements(By.id("add_button"))).length == 0)  //stale element v1.7.0
+        // Create Configurations / Constants 
+        await driver.findElement(By.linkText("Create Configurations / Constants")).click();
+        await new Promise(r => setTimeout(r, 1000));   // stale element
+        while ((await driver.findElements(By.id("add_button"))).length == 0) 
 	    {
 	       await new Promise(r => setTimeout(r, 2000));
 	    }
         await driver.findElement(By.id("add_button")).click();
-        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("add_button")).click();
-        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("add_button")).click();
-        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("add_button")).click();        
-        await new Promise(r => setTimeout(r, 2000));
 
         await driver.findElement(By.id("id_config_names-0-config_type")).sendKeys("Constants"); //dropdown doesn't work here
+
         // Disable Additional Warnings: Editing Name metadata will affect downstream Event data.
+        await new Promise(r => setTimeout(r, 1000));     // this wait prevents modal backdrop disabling screen
         await driver.findElement(By.id("modal_disable")).click();
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 1000));
+
         await driver.findElement(By.id("id_config_names-1-config_type")).sendKeys("Constants");
         await driver.findElement(By.id("id_config_names-2-config_type")).sendKeys("Configuration");
-        await driver.findElement(By.id("id_config_names-3-config_type")).sendKeys("Configuration");
-       
+        await driver.findElement(By.id("id_config_names-3-config_type")).sendKeys("Configuration");      
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_config_names-0-name")).sendKeys("scnst1");
         await driver.findElement(By.id("id_config_names-1-name")).sendKeys("scnst11");
@@ -168,66 +173,37 @@ var password;
             const dropdown = await driver.findElement(By.id("id_user_draft"));
             await dropdown.findElement(By.xpath("//option[. = '" + user + "']")).click();
         }
-        await new Promise(r => setTimeout(r, 4000));
+        await new Promise(r => setTimeout(r, 2000));
 
         //let encodedString = await driver.takeScreenshot();
         //await fs.writeFileSync('/tests/cscreen.png', encodedString, 'base64');
-        var element = await driver.findElement(By.css(".controls > .btn-primary"));
-        await driver.executeScript("arguments[0].click()", element);
-
-        await driver.navigate().refresh();  //refresh screen to get rid of modal control
+        await driver.findElement(By.css(".controls > .btn-primary")).click();
 
    	    while ((await driver.findElements(By.linkText("Edit Configurations / Constants"))).length == 0)
 	    {
 	       await new Promise(r => setTimeout(r, 2000));
 	       console.log("Wait 2 seconds for Edit CC.");
               }
-        //await driver.switchTo().defaultContent();
-        //await driver.findElement(By.linkText("Edit Configurations / Constants")).click();  //broken after modal popup feature
-        var element = await driver.findElement(By.linkText("Edit Configurations / Constants"));
-        await driver.executeScript("arguments[0].click()", element);
-
-        // Causing Stale Element
-	    //while ((await driver.findElements(By.id("id_config_names-3-name"))).length == 0)
-	    //{
-	    //   await new Promise(r => setTimeout(r, 2000));
-	    //   console.log("Wait 2 seconds for Config Name.");
-	    //} 
-	    var bodyText;
-	    for (var j = 0; j < 5; j++)
+        await driver.findElement(By.linkText("Edit Configurations / Constants")).click();  
+        await new Promise(r => setTimeout(r, 2000));  // stale element
+	    while ((await driver.findElements(By.id("id_config_names-3-name"))).length == 0)
 	    {
-	       bodyText = await driver.findElement(By.tagName("Body")).getText();
-               if (bodyText.includes("Configurations/Constants"))
-	       {
-		    break;
-	       }
-	       else
-               {
-		    await new Promise(r => setTimeout(r, 2000));
-	            console.log("Wait 2 seconds for Config Name.");
-               }     
-	    }
-	
-	    await new Promise(r => setTimeout(r, 2000));   //waits inbetween these items required to set fields
+	       await new Promise(r => setTimeout(r, 2000));
+	       console.log("Wait 2 seconds for Config Name.");
+	    } 
         await driver.findElement(By.id("id_config_names-3-name")).clear();
+
+        await new Promise(r => setTimeout(r, 1000));  // this wait prevents modal backdrop disabling screen
         // Disable Additional Warnings: Editing Name metadata will affect downstream Event data.
         await driver.findElement(By.id("modal_disable")).click();
-        await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.id("id_config_names-3-name")).sendKeys("sconf12"); //stale element
-        await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.id("id_config_names-1-name")).clear();
-        await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.id("id_config_names-1-name")).sendKeys("scnst12");
+        await new Promise(r => setTimeout(r, 1000));
 
-	    await new Promise(r => setTimeout(r, 2000));  
+        await driver.findElement(By.id("id_config_names-3-name")).sendKeys("sconf12"); 
+        await driver.findElement(By.id("id_config_names-1-name")).clear();
+        await driver.findElement(By.id("id_config_names-1-name")).sendKeys("scnst12");
         //let encodedString = await driver.takeScreenshot();
         //await fs.writeFileSync('/tests/cscreen.png', encodedString, 'base64');   
-        //await driver.findElement(By.css(".controls > .btn-primary")).click();  //not attached to page
-        var element = await driver.findElement(By.css(".controls > .btn-primary"));
-        await driver.executeScript("arguments[0].click()", element);
-
-        await driver.navigate().refresh();  //refresh screen to get rid of modal control
-        await new Promise(r => setTimeout(r, 6000));
+        await driver.findElement(By.css(".controls > .btn-primary")).click(); 
 
    	    while ((await driver.findElements(By.linkText("Configurations / Constants"))).length == 0)
 	    {
@@ -243,8 +219,7 @@ var password;
         assert(bodyText.includes("Reviewers: " + user));
         assert(bodyText.includes("sconf12"));
         assert(bodyText.includes("scnst12"));
-
-       
+      
         // UPDATE CONSTANT & CONFIG DEFAULTS - ISSUE#133
         // Navigate to Assembly Item & Part in Assembly Tree
         await driver.findElement(By.id("navbarTemplates")).click()
@@ -309,7 +284,7 @@ var password;
 	    }
         // Edit Defaults Again
         await driver.findElement(By.linkText("Edit Configuration Defaults")).click()
-	await new Promise(r => setTimeout(r, 2000));
+	    await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_config_defaults-1-default_value")).sendKeys("12")
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
@@ -370,7 +345,6 @@ var password;
         
         {
             const dropdown = await driver.findElement(By.id("id_user_draft"))
-//            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click()
             await dropdown.findElement(By.xpath("//option[. = '" + user + "']")).click();
         }
         
@@ -397,9 +371,7 @@ var password;
 	       console.log("Wait 2 seconds for Edit Defaults Value.");
 	    }
         await driver.findElement(By.id("id_constant_defaults-1-default_value")).click()
-        // 43 | type | id=id_constant_defaults-1-default_value | 12
         await driver.findElement(By.id("id_constant_defaults-1-default_value")).sendKeys("983")
-        // 44 | click | css=.controls > .btn-primary 
         await driver.findElement(By.css(".controls > .btn-primary")).click()
 
    	    while ((await driver.findElements(By.linkText("Constant Defaults"))).length == 0)
@@ -437,7 +409,6 @@ var password;
         
         {
             const dropdown = await driver.findElement(By.id("id_user_draft"))
-//            await dropdown.findElement(By.xpath("//option[. = 'admin']")).click()
             await dropdown.findElement(By.xpath("//option[. = '" + user + "']")).click();
         }
 
@@ -479,8 +450,7 @@ var password;
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.partialLinkText("1232"));
 
-        // Value
-        
+        // Value       
         {
             const dropdown = await driver.findElement(By.id("field-select_c_r0"))
             await dropdown.findElement(By.xpath("//option[. = 'Value']")).click()

@@ -104,50 +104,34 @@ var password;
         }
         // Create Calibrations for Part Template
         await driver.findElement(By.linkText("Create Calibrations")).click();
-
-        // 1.6 & 1.7 Behavior of this screen is so tweeky!!! Values set are cleared before .btn-primary
-        // pushed. Doesn't happen stepping through the debugger. Fields MUST be set in this order!
-        // Wait on a link, not a field, or a Stale Element error will be thrown
+        await new Promise(r => setTimeout(r, 2000));
         while ((await driver.findElements(By.id("add_button"))).length == 0) {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Add Row.");
         }
-
-        await new Promise(r => setTimeout(r, 2000));
-
         await driver.findElement(By.id("add_button")).click();
-        await new Promise(r => setTimeout(r, 2000));
-
-        await driver.findElement(By.id("id_coefficient_names-1-value_set_type")).click();
         await driver.findElement(By.id("id_coefficient_names-1-value_set_type")).sendKeys("2-Dimensional Array");
-        await driver.findElement(By.id("id_coefficient_names-1-calibration_name")).click();
         await driver.findElement(By.id("id_coefficient_names-1-calibration_name")).sendKeys("scalib2");
-        await driver.findElement(By.id("id_coefficient_names-1-sigfig_override")).click();
         await driver.findElement(By.id("id_coefficient_names-1-sigfig_override")).clear();
         await driver.findElement(By.id("id_coefficient_names-1-sigfig_override")).sendKeys("20");
-
-        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).clear();
         await driver.findElement(By.id("id_coefficient_names-0-calibration_name")).sendKeys("scalib1");
 
-        await driver.findElement(By.id("id_user_draft")).sendKeys("admin");  //dropdown doesn't work, this gets unchecked
+        await driver.findElement(By.id("id_user_draft")).sendKeys(user); 
+
         // Disable Additional Warnings: Editing Name metadata will affect downstream Event data.
+        await new Promise(r => setTimeout(r, 1000));   // this wait prevents modal backdrop disabling screen
         await driver.findElement(By.id("modal_disable")).click();
-        await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.id("id_user_draft")).sendKeys(user);  //dropdown doesn't work, this gets unchecked
+        await new Promise(r => setTimeout(r, 1000));
+
         //encodedString = await driver.takeScreenshot();
-        //await fs.writeFileSync('./ccscreen1.png', encodedString, 'base64');    
-        var element = await driver.findElement(By.css(".controls > .btn-primary"));
-        await driver.executeScript("arguments[0].click()", element);  //modal control
-
-        await driver.navigate().refresh();  //refresh screen to get rid of modal control
-        await new Promise(r => setTimeout(r, 2000));
-
+        //await fs.writeFileSync('./ccscreen1.png', encodedString, 'base64');
+        await driver.findElement(By.css(".controls > .btn-primary")).click()
+        
         while ((await driver.findElements(By.id("action"))).length == 0) {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Action.");
         }
-
         //Edit Max Calibration Coeff decimal places for Sewing, but not Disk Drive Part Template - Issue #120
         await driver.findElement(By.id("action")).click();
         while ((await driver.findElements(By.linkText("Edit Part Template"))).length == 0) {
@@ -324,18 +308,13 @@ var password;
             console.log("Wait 2 seconds for Create Calib.");
         }
         await driver.findElement(By.linkText("Create Calibrations")).click();
-
-        await new Promise(r => setTimeout(r, 6000)); // a wait for field present on screen causes fields not set, use timeout.
-
-        // This screen is so tweeky! Works 2/3 times. Add some waits.
+        await new Promise(r => setTimeout(r, 2000));
         {
             const dropdown = await driver.findElement(By.id("id_part_select"));
             await dropdown.findElement(By.xpath("//option[. = 'Sewing Template']")).click();
         }
-        await new Promise(r => setTimeout(r, 4000));
-
         await driver.findElement(By.id("id_user_draft")).sendKeys(user);
-        await new Promise(r => setTimeout(r, 4000));
+        await new Promise(r => setTimeout(r, 2000));
 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
