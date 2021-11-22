@@ -434,14 +434,17 @@ var password;
         }
         
         // Remove sewing Inventory from Build
-        // 39 | click | id=action | 
-	while ((await driver.findElements(By.id("action"))).length == 0) //1.6
+	while ((await driver.findElements(By.id("action"))).length == 0)
 	{
 	   await new Promise(r => setTimeout(r, 2000));
 	   console.log("Wait 2 seconds for Inventory2.");
 	}
         await driver.findElement(By.id("action")).click();
-	await new Promise(r => setTimeout(r, 4000)); 
+	while ((await driver.findElements(By.linkText("Recover from Deployment"))).length == 0)
+	{
+	   await new Promise(r => setTimeout(r, 2000));
+	   console.log("Wait 2 seconds for Recover from Deployment.");
+	}
         await driver.findElement(By.linkText("Recover from Deployment")).click();
 
         // Get current date
