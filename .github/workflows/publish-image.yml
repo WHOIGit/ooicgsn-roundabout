@@ -36,6 +36,11 @@ jobs:
            name: Depcheck report
            path: ${{github.workspace}}/reports
 
+      - name: OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.6.1
+        with:
+          target: 'https://github.com/WHOIGit/ooicgsn-roundabout/pkgs/container/ooicgsn-roundabout'
+
  # RDB Automated Testing and Tagging
  setup-build-publish:
     name: Setup, Build, and Publish
