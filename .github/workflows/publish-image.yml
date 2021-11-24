@@ -10,16 +10,19 @@ env:
 
 jobs:
 
- # OWASP Dependency Check
+ # OWASP Dependency Check & ZAP Baseline Scan
  depchecktest:
     runs-on: ubuntu-latest
-    name: depcheck
+    name: OWASP
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Build project 
-        run: docker build -f compose/production/django/Dockerfile .
-      - name: Depcheck
+      - name: Build RDB project 
+        run: |
+          mv .envs.example .envs
+          docker-compose -f docker-compose-testing.yml build
+          # docker build -f compose/production/django/Dockerfile .
+      - name: OWASP Dependency Check
         uses: dependency-check/Dependency-Check_Action@main
         id: Depcheck
         with:
@@ -39,11 +42,11 @@ jobs:
       - name: OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.6.1
         with:
-          target: 'https://github.com/WHOIGit/ooicgsn-roundabout/pkgs/container/ooicgsn-roundabout'
+          target: 'https://github.com/WHOIGit/ooicgsn-roundabout'
 
  # RDB Automated Testing and Tagging
  setup-build-publish:
-    name: Setup, Build, and Publish
+    name: RDB Setup, Build, and Publish
     runs-on: ubuntu-latest
 
     steps:
@@ -58,9 +61,7 @@ jobs:
           node -v
           echo
 
-          # Build and run development version of Django
-          mv .envs.example .envs
-          docker-compose -f docker-compose-testing.yml build
+          # Build and run development version of Django          
           docker-compose -f docker-compose-testing.yml up --detach
           #sleep 60
           sh -c "until curl -Is http://localhost:8000; do echo 'waiting for http://localhost:8000'; sleep 10; done"
