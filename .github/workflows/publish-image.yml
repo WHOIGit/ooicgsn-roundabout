@@ -47,9 +47,9 @@ jobs:
         with:
           target: 'http://localhost:8000'
           allow_issue_writing: false
-        cmd_options:
-          # use the Ajax spider in addition to the traditional one
-          "-j" 
+          cmd_options:
+             # use the Ajax spider in addition to the traditional one
+             "-j" 
 
  # RDB Automated Testing and Tagging
  setup-build-publish:
