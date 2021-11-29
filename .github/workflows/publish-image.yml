@@ -55,7 +55,7 @@ jobs:
                  auth.password="admin" \
                  auth.username_field="login" \
                  auth.password_field="password" \
-                 auth.submit_field="submit" 
+                 auth.submit_field="submit" "
 
  # RDB Automated Testing and Tagging
  setup-build-publish:
