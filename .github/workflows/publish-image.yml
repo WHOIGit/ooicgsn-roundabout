@@ -22,7 +22,7 @@ jobs:
           mv .envs.example .envs
           docker-compose -f docker-compose-testing.yml build
           docker-compose -f docker-compose-testing.yml up --detach
-          sh -c "until curl -Is http://localhost:8000; do echo 'waiting for http://localhost:8000'; sleep 10; done"docker-compose -f docker-compose-testing.yml up --detach
+          sh -c "until curl -Is http://localhost:8000; do echo 'waiting for http://localhost:8000'; sleep 10; done"
       - name: OWASP Dependency Check
         uses: dependency-check/Dependency-Check_Action@main
         id: Depcheck
