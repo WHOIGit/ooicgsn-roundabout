@@ -49,7 +49,13 @@ jobs:
           allow_issue_writing: false
           cmd_options:
              # use the Ajax spider in addition to the traditional one
-             "-j" 
+             "-j"
+             -z "auth.loginurl=http://http://localhost:8000/accounts/login \
+                 auth.username="admin" \
+                 auth.password="admin" \
+                 auth.username_field="login" \
+                 auth.password_field="password" \
+                 auth.submit_field="submit" 
 
  # RDB Automated Testing and Tagging
  setup-build-publish:
