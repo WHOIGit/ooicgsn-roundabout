@@ -52,7 +52,7 @@ jobs:
               "-j \
                -z  auth.loginurl='http://localhost:8000/accounts/login' \
                    auth.username='admin' \
-                   auth.password='admin' \
+                   auth.password='bad' \
                    auth.username_field='login' \
                    auth.password_field='password' \
                    auth.submit_field='submit'"
