@@ -42,20 +42,15 @@ jobs:
 
       - name: OWASP ZAP Scan
         # Full scan runs spider and then performs attacks on target website
-        uses: zaproxy/action-full-scan@v0.3.0
-        #uses: zaproxy/action-baseline@v0.6.1
-        with:
-          target: 'http://localhost:8000'
-          allow_issue_writing: false
-          cmd_options:
-             # use the Ajax spider in addition to the traditional one
-              "-j \
-               -z  auth.loginurl='http://localhost:8000/accounts/login' \
-                   auth.username='admin' \
-                   auth.password='bad' \
-                   auth.username_field='login' \
-                   auth.password_field='password' \
-                   auth.submit_field='submit'"
+        # uses: zaproxy/action-full-scan@v0.3.0
+        run:  |
+          cp rdb.context zap:/zap/wrk/rdb.context
+          docker run -v $(pwd):/zap/wrk/:rw \
+          -t owasp/zap2docker-stable zap-full-scan.py -j  \
+          -t http://localhost:8000 \
+          -r rdb-zap-full-scan.html \
+          -n rdb.context \
+          -U RDB
 
  # RDB Automated Testing and Tagging
  setup-build-publish:
