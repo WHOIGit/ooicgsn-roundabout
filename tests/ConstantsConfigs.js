@@ -93,7 +93,7 @@ var password;
    	    while ((await driver.findElements(By.linkText("Add Part Type"))).length == 0) //1.6 Add Button is on screen
 	    {
 	       await new Promise(r => setTimeout(r, 2000));
-	       console.log("Wait 2 seconds for Edit Defaults.");
+	       console.log("Wait 2 seconds for Edit Part Type.");
 	    }
 
         // Get the index to the row Sewing Machine is displayed on screen
@@ -123,7 +123,7 @@ var password;
    	    while ((await driver.findElements(By.linkText("Add Part Type"))).length == 0) // Add Button when done
 	    {
 	       await new Promise(r => setTimeout(r, 2000));
-	       console.log("Wait 2 seconds for Edit Defaults Complete.");
+	       console.log("Wait 2 seconds for Add Part Type Complete.");
 	    }
        
         await driver.findElement(By.id("searchbar-query")).sendKeys("sewing");
@@ -277,23 +277,27 @@ var password;
         await driver.findElement(By.id("id_config_defaults-0-default_value")).sendKeys("1")
         await driver.findElement(By.css(".controls > .btn-primary")).click()
 
-	    while ((await driver.findElements(By.linkText("Edit Configuration Defaults"))).length == 0)
+	    while ((await driver.findElements(By.linkText("Configuration Defaults"))).length == 0)
 	    {
 	       await new Promise(r => setTimeout(r, 2000));
-	       console.log("Wait 2 seconds for Edit Defaults.");
+	       console.log("Wait 2 seconds for Config Defaults.");
 	    }
         // Edit Defaults Again
+        await driver.findElement(By.linkText("Configuration Defaults")).click()
+	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Edit Configuration Defaults")).click()
-	    await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_config_defaults-1-default_value")).sendKeys("12")
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
-	    while ((await driver.findElements(By.css(".collapsed > .fa"))).length == 0)
+	    while ((await driver.findElements(By.linkText("Configuration Defaults"))).length == 0)
 	    {
 	       await new Promise(r => setTimeout(r, 2000));
 	       console.log("Wait 2 seconds for Link4.");
 	    }
-        await driver.findElement(By.css(".collapsed > .fa")).click()
+        await driver.findElement(By.linkText("Configuration Defaults")).click()
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.linkText("Edit Configuration Defaults")).click()   
         // Verify values added
         await new Promise(r => setTimeout(r, 4000));
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
@@ -362,8 +366,8 @@ var password;
    	    while ((await driver.findElements(By.linkText("Edit Constant Defaults"))).length == 0)
 	    {
 	       await new Promise(r => setTimeout(r, 2000));
-	       console.log("Wait 2 seconds for Edit Defaults.");
-	    }
+	       console.log("Wait 2 seconds for Edit Constant Defaults.");
+	    }   
             await driver.findElement(By.linkText("Edit Constant Defaults")).click()
    	    while ((await driver.findElements(By.id("id_constant_defaults-1-default_value"))).length == 0)
 	    {
@@ -374,13 +378,13 @@ var password;
         await driver.findElement(By.id("id_constant_defaults-1-default_value")).sendKeys("983")
         await driver.findElement(By.css(".controls > .btn-primary")).click()
 
-   	    while ((await driver.findElements(By.linkText("Constant Defaults"))).length == 0)
+   	    while ((await driver.findElements(By.id("const_default-template-tab"))).length == 0)
 	    {
 	       await new Promise(r => setTimeout(r, 2000));
 	       console.log("Wait 2 seconds for Constant Defaults.");
 	    }
 
-        await driver.findElement(By.linkText("Constant Defaults")).click()
+        await driver.findElement(By.id("const_default-template-tab")).click()
    	    while ((await driver.findElements(By.linkText("Defaults"))).length == 0)
 	    {
 	       await new Promise(r => setTimeout(r, 2000));
@@ -414,17 +418,17 @@ var password;
 
         await driver.findElement(By.css(".controls > .btn-primary")).click()
 
-   	    while ((await driver.findElements(By.linkText("Constant History"))).length == 0)
+   	    while ((await driver.findElements(By.id("const-template-tab"))).length == 0)
 	    {
 	       await new Promise(r => setTimeout(r, 2000));
 	       console.log("Wait 2 seconds for History.");
 	    }
 
         //Verify link name on Constant History tab is not TBD anymore
-        await driver.findElement(By.linkText("Constant History")).click();
+        await driver.findElement(By.id("const-template-tab")).click();
         try {
             await driver.findElement(By.partialLinkText("TBD"));
-            console.log("Constants Error: Configuration History tab link has TBD in name.");
+            console.log("Constants Error: Constant History tab link has TBD in name.");
         }
         catch (NoSuchElementException) { }
 
