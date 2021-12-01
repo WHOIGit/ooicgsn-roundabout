@@ -45,9 +45,9 @@ jobs:
         # uses: zaproxy/action-full-scan@v0.3.0
         run:  |
           pwd
-          cd $(pwd)/.github/zap
+          cp .github/zap/rdb.context .
           ls
-          docker run -v $(pwd)/.github/zap:/zap/wrk/:rw \
+          docker run -v $(pwd):/zap/wrk/:rw \
           -t owasp/zap2docker-stable zap-full-scan.py -j  \
           -t http://localhost:8000 \
           -r rdb-zap-full-scan.html \
