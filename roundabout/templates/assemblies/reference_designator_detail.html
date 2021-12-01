@@ -19,9 +19,9 @@
 # If not, see <http://www.gnu.org/licenses/>.
 -->
 {% load common_tags %}
-{% if assembly_part.assemblypart_referencedesignatorevents.exists %}
+{% if assembly_part.assemblypart_referencedesignatorevents.exists and not js_only == 'true' %}
     {% if not body_only  == 'true'  %}
-        {% if not nav_only  == 'true' %}
+        {% if enable_navtabs %}
             <ul class="nav nav-tabs" id="refdes-tabs-nav" role="tablist">
         {% endif %}
         <li class="nav-item">
@@ -40,7 +40,7 @@
         {% endif %}
     {% endif %}
     {% if not nav_only == 'true'  %}
-        <div id="reference_designator-template" class="tab-pane fade" role="tabpanel" aria-labelledby="reference_designator-template">
+        <div id="reference_designator-template" class="tab-pane fade" role="tabpanel">
             <ul class="list-group">
                 {% for event in assembly_part.assemblypart_referencedesignatorevents.all %}
                     <li class="list-group-item">
@@ -250,7 +250,8 @@
         </div>
     {% endif %}
 {% endif %}
-{% block javascript %}
+
+{% if not nav_only == 'true' and not body_only == 'true' %}
 <script>
     $(document).ready(function() {
 
@@ -262,4 +263,4 @@
 
     });
 </script>
-{% endblock javascript %}
+{% endif %}
