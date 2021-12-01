@@ -138,17 +138,17 @@
                                                                 <li class = 'list-group-item'>
                                                                     <a  class="collapse show" 
                                                                         data-toggle="collapse" 
-                                                                        href="#file-{{ file.file_name }}{{ event.id }}" 
-                                                                        aria-expanded="false" 
-                                                                        aria-controls="file-{{ file.file_name }}{{ event.id }}"
+                                                                        href="#file-{{ file.id }}{{ event.id }}" 
+                                                                        aria-expanded="true" 
+                                                                        aria-controls="file-{{ file.id }}{{ event.id }}"
                                                                     >
                                                                         <b>{{ file.file_name }}</b>
                                                                     </a>
                                                                     <a  data-toggle="collapse" 
                                                                         class="collapse show text-right" 
-                                                                        href="#file-{{ file.file_name }}{{ event.id }}" 
-                                                                        aria-controls="file-{{ file.file_name }}{{ event.id }}" 
-                                                                        aria-expanded="false" 
+                                                                        href="#file-{{ file.id }}{{ event.id }}" 
+                                                                        aria-controls="file-{{ file.id }}{{ event.id }}" 
+                                                                        aria-expanded="true" 
                                                                         role="button"
                                                                     >
                                                                         <i class="fa" aria-hidden="true"></i>
@@ -166,7 +166,7 @@
                                                                             </a>
                                                                         </div>
                                                                     {% endif %}
-                                                                    <div class="collapse show mt-1 border p-2 m-3" id="file-{{ file.file_name }}{{ event.id }}">
+                                                                    <div class="mt-1 border p-2 m-3 collapse show" id="file-{{ file.id }}{{ event.id }}">
                                                                         <table id = 'record_table' class="table table-tight record_table-thead" style = 'display:block; overflow: auto; overflow-x: auto; max-height: 200px'>
                                                                             <thead style = 'text-align: center;'>
                                                                                 <th>Asset ID</th>

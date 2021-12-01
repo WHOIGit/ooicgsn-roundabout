@@ -44,6 +44,7 @@ def _create_action_history(
     action_date=None,
     dep_obj=None,
     data=None,
+    filename=None,
 ):
     # Set default variables
     object_type = obj._meta.model_name
@@ -164,7 +165,11 @@ def _create_action_history(
         action_record.save()
 
     elif action_type == Action.UPDATE:
-        action_record.detail = "%s details updated." % (obj_label)
+        if object_type == Action.BULKUPLOAD:
+            if filename:
+                action_record.detail = "%s details updated. (%s)" % (obj_label, filename)
+        else:
+            action_record.detail = "%s details updated." % (obj_label)
         if object_type == Action.CALEVENT:
             pass
         elif object_type == Action.CONFEVENT:
