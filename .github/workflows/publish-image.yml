@@ -44,8 +44,8 @@ jobs:
         # Full scan runs spider and then performs attacks on target website
         # uses: zaproxy/action-full-scan@v0.3.0
         run:  |
-          mkdir /zap/wrk
-          cp /.github/zap/rdb.context /zap/wrk
+          mkdir -p zap/wrk
+          cp .github/zap/rdb.context zap/wrk
           docker run -v $(pwd):/zap/wrk/:rw \
           -t owasp/zap2docker-stable zap-full-scan.py -j  \
           -t http://localhost:8000 \
