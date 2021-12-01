@@ -19,7 +19,7 @@
 # If not, see <http://www.gnu.org/licenses/>.
 -->
 {% load common_tags %}
-{% if assembly_part.assemblypart_configdefaultevents.exists %}
+{% if assembly_part.assemblypart_configdefaultevents.exists and not js_only == 'true' %}
     {% if not body_only  == 'true'  %}
         {% if not nav_only  == 'true' %}
             <ul class="nav nav-tabs" id="config-tabs-nav" role="tablist">
@@ -28,10 +28,8 @@
             <a  class="nav-link"
                 id="default_event_history-tab"
                 data-toggle="tab"
-                href="#default_event_history"
-                role="tab"
-                aria-controls="default_event_history"
-                aria-selected="false">
+                href="#config_default_event_history"
+                role="tab">
                     Configuration Defaults
             </a>
         </li>
@@ -40,7 +38,7 @@
         {% endif %}
     {% endif %}
     {% if not nav_only == 'true'  %}
-        <div id="config_default-template" class="tab-pane fade" role="tabpanel" aria-labelledby="config_default-template-tab">
+        <div id="config_default_event_history" class="tab-pane fade" role="tabpanel">
             <ul class="list-group">
                 {% for event in assembly_part.assemblypart_configdefaultevents.all %}
                     <li class="list-group-item">
@@ -215,18 +213,19 @@
         </div>
     {% endif %}
 {% endif %}
-{% block javascript %}
+
+{% if not nav_only == 'true' and not body_only == 'true' %}
 <script>
     $(document).ready(function() {
 
         // Toggle display of Constant functionality
-        let user_id = '{{ user.id }}'
+        let user_id = '{{ user.id }}';
         let ccc_toggle = '{{ assembly_part.part.part_type.ccc_toggle }}';
         let part_has_configs = '{{ part_has_configs }}';
-        let assmblypart_id = '{{assembly_part.part.id}}'
+        let assmblypart_id = '{{assembly_part.part.id}}';
 
-        handleReviewBadges('#config_default-template', 'button[id^=configdefault_expander]', '{{ user.id }}', '{{ user.username }}', assmblypart_id)
+        handleReviewBadges('#config_default_event_history', 'button[id^=configdefault_expander]', '{{ user.id }}', '{{ user.username }}', assmblypart_id);
 
     });
 </script>
-{% endblock javascript %}
+{% endif %}

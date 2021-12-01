@@ -98,7 +98,7 @@
         {% if assembly_part.children.exists %}
             <li class="nav-item">
 
-                <a class="nav-link active show" id="subassemblies-tab" data-toggle="tab" href="#subassemblies" role="tab" aria-controls="subassemblies" aria-selected="false">Sub-{{ label_assemblies_app_plural }}</a>
+                <a class="nav-link" id="subassemblies-tab" data-toggle="tab" href="#subassemblies" role="tab" aria-controls="subassemblies" aria-selected="false">Sub-{{ label_assemblies_app_plural }}</a>
 
             </li>
         {% endif %}
@@ -127,7 +127,7 @@
 
         {% if assembly_part.children.exists %}
 
-            <div class="tab-pane fade active show" id="subassemblies" role="tabpanel" aria-labelledby="subassemblies-tab">
+            <div class="tab-pane fade" id="subassemblies" role="tabpanel" aria-labelledby="subassemblies-tab">
 
                       <ul class="list-group list-group-flush">
 
@@ -173,7 +173,7 @@
         {% include "configs_constants/config_default_detail.html" with assembly_part=assembly_part user=user part_has_configs=part_has_configs body_only='true'%}
 
         {% if assembly_part.tags.exists%}
-        <div class="tab-pane fade active show" id="tags" role="tabpanel" aria-labelledby="tags-tab">
+        <div class="tab-pane fade" id="tags" role="tabpanel" aria-labelledby="tags-tab">
           <ul class="list-group">
           {% for tag in assembly_part.tags.all %}
             <li class="list-group-item">
@@ -211,9 +211,16 @@
 </div>
 
 {% block javascript %}
-<script>
-    /* Need to set a global JS variable to reference assembly_id for navtree functions */
-    var assemblyID = 'assemblies_' + {{ assembly_part.assembly_revision.assembly.id }};
-    var assemblyRevisionID = 'assemblyrevisions_' + {{ assembly_part.assembly_revision.id }};
-</script>
+  <script>
+      /* Need to set a global JS variable to reference assembly_id for navtree functions */
+      var assemblyID = 'assemblies_' + {{ assembly_part.assembly_revision.assembly.id }};
+      var assemblyRevisionID = 'assemblyrevisions_' + {{ assembly_part.assembly_revision.id }};
+
+      {# Show first tab #}
+      $(document).ready(function() {
+        $('#inventory-tabs-nav a:first').tab('show')
+      });
+  </script>
+  {% include "configs_constants/config_default_detail.html" with js_only='true' %}
+  {% include "assemblies/reference_designator_detail.html" with js_only='true' %}
 {% endblock javascript %}
