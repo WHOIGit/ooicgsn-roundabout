@@ -48,24 +48,20 @@ jobs:
           sh -c "until curl -Is http://localhost:8000; do echo 'waiting for http://localhost:8000'; sleep 10; done"
 
           # Run OWASP ZAP Full Scan
-          pwd
-          cp .github/zap/rdb.context .
-          ls
           IP=$(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1)
           echo $IP
           hostname -i
-          localhost_ip_address=`ping -c 1 localhost | head -n 1 | cut -d'(' -f2 | cut -d')' -f1`
-          echo $localhost_ip_address
           ifconfig -a
 
           docker run --network roundabout-network \
              -v $(pwd):/zap/wrk/:rw \
-             -t owasp/zap2docker-weekly zap-full-scan.py -j  \
+             -t owasp/zap2docker-stable zap-baseline.py -j  \
              -t http://$IP:8000
              -r rdb-zap-full-scan.html \
              -n rdb.context \
              -U RDB
          # -t owasp/zap2docker-stable zap-full-scan.py -j  \
+         # -t owasp/zap2docker-weekly zap-full-scan.py -j  \
          # -t http://localhost:8000 \
 
  # RDB Automated Testing and Tagging
