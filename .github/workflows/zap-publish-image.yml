@@ -52,9 +52,10 @@ jobs:
           cp .github/zap/rdb.context .
           ls
           IP=$(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1)
-          # localhost_ip_address=`ping -c 1 localhost | head -n 1 | cut -d'(' -f2 | cut -d')' -f1`
           echo $IP
           hostname -i
+          localhost_ip_address=`ping -c 1 localhost | head -n 1 | cut -d'(' -f2 | cut -d')' -f1`
+          echo $localhost_ip_address
           ifconfig -a
 
           docker run --network roundabout-network \
