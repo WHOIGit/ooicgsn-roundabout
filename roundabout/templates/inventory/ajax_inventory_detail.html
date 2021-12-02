@@ -429,9 +429,9 @@
             <li class="nav-item">
                 <a class="nav-link" id="calibration-template-tab" data-toggle="tab" href="#calibration-template" role="tab" aria-controls="calibration-template" aria-selected="false">
                     Calibration Coefficient History
-                    {% if user_rev_cal_events %}
+                    <!-- {% if user_rev_cal_events %}
                         <span id = "review-badge" class = "badge badge-pill badge-secondary">Review Requested</span>
-                    {% endif %}
+                    {% endif %} -->
                 </a>
             </li>
         {% endif %}
@@ -440,9 +440,9 @@
             <li class="nav-item">
                 <a class="nav-link" id="const_default-template-tab" data-toggle="tab" href="#const_default-template" role="tab" aria-controls="const_default-template" aria-selected="false">
                     Constant Defaults
-                    {% if user_rev_constdef_events %}
+                    <!-- {% if user_rev_constdef_events %}
                         <span id = "review-badge" class = "badge badge-pill badge-secondary">Review Requested</span>
-                    {% endif %}
+                    {% endif %} -->
                 </a>
             </li>
         {% endif %}
@@ -451,9 +451,9 @@
             <li class="nav-item">
                 <a class="nav-link" id="const-template-tab" data-toggle="tab" href="#const-template" role="tab" aria-controls="const-template" aria-selected="false">
                     Constant History
-                    {% if user_rev_const_events %}
+                    <!-- {% if user_rev_const_events %}
                         <span id = "review-badge" class = "badge badge-pill badge-secondary">Review Requested</span>
-                    {% endif %}
+                    {% endif %} -->
                 </a>
             </li>
         {% endif %}
@@ -462,9 +462,9 @@
             <li class="nav-item">
                 <a class="nav-link" id="conf-template-tab" data-toggle="tab" href="#conf-template" role="tab" aria-controls="conf-template" aria-selected="false">
                     Configuration History
-                    {% if user_rev_conf_events %}
+                    <!-- {% if user_rev_conf_events %}
                         <span id = "review-badge" class = "badge badge-pill badge-secondary">Review Requested</span>
-                    {% endif %}
+                    {% endif %} -->
                 </a>
             </li>
         {% endif %}
@@ -473,9 +473,9 @@
             <li class="nav-item">
                 <a class="nav-link" id="bulkupload-template-tab" data-toggle="tab" href="#bulkupload-template" role="tab" aria-controls="bulkupload-template" aria-selected="false">
                     Bulk Upload History
-                    {% if user_rev_bulk_events %}
+                    <!-- {% if user_rev_bulk_events %}
                         <span id = "review-badge" class = "badge badge-pill badge-secondary">Review Requested</span>
-                    {% endif %}
+                    {% endif %} -->
                 </a>
                 
             </li>
@@ -784,7 +784,6 @@
             $('#add_conf_action').hide()
         }
 
-        console.log('{{user_rev_cal_events}}')
 
     });
 </script>
