@@ -54,13 +54,13 @@ jobs:
           IP=$(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1)
           echo $IP
 
-          docker run -v $(pwd):/zap/wrk/:rw \
-          --network roundabout-network
-          -t owasp/zap2docker-weekly zap-full-scan.py -j  \
-          -t $IP:8000
-          -r rdb-zap-full-scan.html \
-          -n rdb.context \
-          -U RDB
+          docker run --network roundabout-network \
+             -v $(pwd):/zap/wrk/:rw \
+             -t owasp/zap2docker-weekly zap-full-scan.py -j  \
+             -t $IP:8000
+             -r rdb-zap-full-scan.html \
+             -n rdb.context \
+             -U RDB
          # -t owasp/zap2docker-stable zap-full-scan.py -j  \
          # -t http://localhost:8000 \
 
