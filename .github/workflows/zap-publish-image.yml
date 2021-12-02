@@ -51,13 +51,13 @@ jobs:
           pwd
           cp .github/zap/rdb.context .
           ls
-          IP = $(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1)
+          IP=$(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1)
           echo $IP
 
           docker run -v $(pwd):/zap/wrk/:rw \
           --network roundabout-network
           -t owasp/zap2docker-weekly zap-full-scan.py -j  \
-          -t $IP
+          -t $IP:8000
           -r rdb-zap-full-scan.html \
           -n rdb.context \
           -U RDB
