@@ -529,15 +529,15 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         part_has_consts = False
         inv_has_conf_events = False
         inv_has_const_events = False
-        # user_rev_cal_events = False
-        # user_rev_constdef_events = False
-        # user_rev_const_events = False
-        # user_rev_conf_events = False
-        # user_rev_bulk_events = False
-        # cnst_events = self.object.inventory_configevents.filter(config_type='cnst')
-        # conf_events = self.object.inventory_configevents.filter(config_type='conf')
-        # user_cnst_events = self.request.user.reviewer_configevents.filter(config_type='cnst')
-        # user_conf_events = self.request.user.reviewer_configevents.filter(config_type='conf')
+        user_rev_cal_events = False
+        user_rev_constdef_events = False
+        user_rev_const_events = False
+        user_rev_conf_events = False
+        user_rev_bulk_events = False
+        cnst_events = self.object.inventory_configevents.filter(config_type='cnst')
+        conf_events = self.object.inventory_configevents.filter(config_type='conf')
+        user_cnst_events = self.request.user.reviewer_configevents.filter(config_type='cnst')
+        user_conf_events = self.request.user.reviewer_configevents.filter(config_type='conf')
 
         if self.object.inventory_calibrationevents.exists():
             coeff_events = self.object.inventory_calibrationevents.prefetch_related(
@@ -574,25 +574,25 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
             if self.object.inventory_configevents.filter(config_type='cnst'):
                 inv_has_const_events = True
 
-        # if self.object.inventory_calibrationevents.exists():
-        #     if any(x in self.request.user.reviewer_calibrationevents.all() for x in self.object.inventory_calibrationevents.all()):
-        #         user_rev_cal_events = True
+        if self.object.inventory_calibrationevents.exists():
+            if any(x in self.request.user.reviewer_calibrationevents.all() for x in self.object.inventory_calibrationevents.all()):
+                user_rev_cal_events = True
 
-        # if self.object.inventory_constdefaultevents.exists():
-        #     if any(x in self.request.user.reviewer_constdefaultevents.all() for x in self.object.inventory_constdefaultevents.all()):
-        #         user_rev_constdef_events = True
+        if self.object.inventory_constdefaultevents.exists():
+            if any(x in self.request.user.reviewer_constdefaultevents.all() for x in self.object.inventory_constdefaultevents.all()):
+                user_rev_constdef_events = True
 
-        # if cnst_events:
-        #     if any(x in user_cnst_events for x in cnst_events):
-        #         user_rev_const_events = True
+        if cnst_events:
+            if any(x in user_cnst_events for x in cnst_events):
+                user_rev_const_events = True
 
-        # if conf_events:
-        #     if any(x in user_conf_events for x in conf_events):
-        #         user_rev_conf_events = True
+        if conf_events:
+            if any(x in user_conf_events for x in conf_events):
+                user_rev_conf_events = True
         
-        # if self.object.bulk_upload_event:
-        #     if self.object.bulk_upload_event in self.request.user.reviewer_bulkuploadevents.all():
-        #         user_rev_bulk_events = True
+        if self.object.bulk_upload_event:
+            if self.object.bulk_upload_event in self.request.user.reviewer_bulkuploadevents.all():
+                user_rev_bulk_events = True
 
 
         # Get Inventory items by Root Locations
@@ -622,11 +622,11 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
                 "custom_fields": custom_fields,
                 "node_type": node_type,
                 "inventory_location_data": inventory_location_data,
-                # "user_rev_cal_events": user_rev_cal_events,
-                # "user_rev_constdef_events" : user_rev_constdef_events,
-                # "user_rev_const_events" : user_rev_const_events,
-                # "user_rev_conf_events" : user_rev_conf_events,
-                # "user_rev_bulk_events" : user_rev_bulk_events,
+                "user_rev_cal_events": user_rev_cal_events,
+                "user_rev_constdef_events" : user_rev_constdef_events,
+                "user_rev_const_events" : user_rev_const_events,
+                "user_rev_conf_events" : user_rev_conf_events,
+                "user_rev_bulk_events" : user_rev_bulk_events,
             }
         )
         return context
