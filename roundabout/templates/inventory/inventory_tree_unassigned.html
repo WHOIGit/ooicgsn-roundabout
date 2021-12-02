@@ -83,6 +83,9 @@
                         {% if inv.id in reviewer_list %}
                             <span id="review-badge-{{inv.id}}" class="badge badge-pill badge-secondary">Review Requested</span>
                         {% endif %}
+                        {% if inv.id in comment_list %}
+                            <span id="comment-badge-{{inv.id}}" class="badge badge-pill badge-light">Replies</span>
+                        {% endif %}
 
                 {# Tags for unassigned inventory items #}
                 {% for tag in inv.assembly_part.tags.all %} {{ tag|render_tag:inv.id }} {% endfor %}
