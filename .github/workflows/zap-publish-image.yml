@@ -10,6 +10,60 @@ env:
 
 jobs:
 
+ # OWASP Dependency Check & ZAP Scan
+ depchecktest:
+    runs-on: ubuntu-latest
+    name: OWASP
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build RDB project 
+        run: |
+          
+      - name: OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        id: Depcheck
+        with:
+          project: 'ooicgsn-roundabout'
+          path: '.'
+          format: 'HTML'    
+          args: >
+            --failOnCVSS 7
+            --enableRetired
+            --enableExperimental
+      - name: Upload Test results
+        uses: actions/upload-artifact@master
+        with:
+           name: Depcheck report
+           path: ${{github.workspace}}/reports
+
+      - name: OWASP ZAP Scan
+        # Full scan runs spider and then performs attacks on target website
+        # uses: zaproxy/action-full-scan@v0.3.0
+        run:  |
+          # Build and Run RDB
+          mv .envs.example .envs
+          docker-compose -f docker-compose-testing.yml build
+          docker-compose -f docker-compose-testing.yml up --detach
+          sh -c "until curl -Is http://localhost:8000; do echo 'waiting for http://localhost:8000'; sleep 10; done"
+
+          # Run OWASP ZAP Full Scan
+          pwd
+          cp .github/zap/rdb.context .
+          ls
+          IP = $(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1)
+          echo $IP
+
+          docker run -v $(pwd):/zap/wrk/:rw \
+          --network roundabout-network
+          -t owasp/zap2docker-weekly zap-full-scan.py -j  \
+          -t $IP
+          -r rdb-zap-full-scan.html \
+          -n rdb.context \
+          -U RDB
+         # -t owasp/zap2docker-stable zap-full-scan.py -j  \
+         # -t http://localhost:8000 \
+
  # RDB Automated Testing and Tagging
  setup-build-publish:
     name: RDB Setup, Build, and Publish
