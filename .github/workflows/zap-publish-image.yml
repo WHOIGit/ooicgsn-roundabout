@@ -55,7 +55,7 @@ jobs:
 
           docker run --network roundabout-network \
              -v $(pwd):/zap/wrk/:rw \
-             -t owasp/zap2docker-stable zap-baseline.py -j  \
+             -t owasp/zap2docker-weekly zap-baseline.py -j  \
              -t http://$IP:8000
              -r rdb-zap-full-scan.html \
              -n rdb.context \
