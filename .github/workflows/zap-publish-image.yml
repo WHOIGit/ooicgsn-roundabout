@@ -52,6 +52,7 @@ jobs:
           echo $IP
           hostname -i
           ifconfig -a
+          chmod a+rw $(pwd)
 
           docker run --network roundabout-network \
              -v $(pwd):/zap/wrk/:rw \
