@@ -52,7 +52,7 @@ jobs:
           cp .github/zap/rdb.context .
           cp .github/zap/rdb-testing.context .
           ls
-          IP = $(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1)
+          #IP=$(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1)
           ping rdb-testing.whoi.edu
           chmod a+rw $(pwd)
 
