@@ -56,12 +56,13 @@ jobs:
           #ping rdb-testing.whoi.edu - name or service not known
           chmod a+rw $(pwd)
 
-          docker run -v $(pwd):/zap/wrk/:rw \             
+          docker run -v $(pwd):/zap/wrk/:r \
              -t owasp/zap2docker-weekly zap-baseline.py  \
              -t https://rdb-testing.whoi.edu \
              -r rdb-zap-baseline-scan.html \
              -n rdb-testing.context \
              -U jkoch
+
          # -t owasp/zap2docker-stable zap-baseline.py -j  \
          # -t owasp/zap2docker-weekly zap-full-scan.py -j  \
          # -t http://localhost:8000 \
