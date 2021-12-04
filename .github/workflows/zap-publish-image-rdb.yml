@@ -53,11 +53,10 @@ jobs:
           cp .github/zap/rdb-testing.context .
           ls
           #IP=$(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1)
-          ping rdb-testing.whoi.edu
+          #ping rdb-testing.whoi.edu - name or service not known
           chmod a+rw $(pwd)
 
-          docker run \
-             -v $(pwd):/zap/wrk/:rw \
+          docker run -v $(pwd):/zap/wrk/:rw \             
              -t owasp/zap2docker-weekly zap-baseline.py  \
              -t https://rdb-testing.whoi.edu \
              -r rdb-zap-baseline-scan.html \
