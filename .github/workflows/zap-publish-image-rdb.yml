@@ -42,28 +42,31 @@ jobs:
         # uses: zaproxy/action-full-scan@v0.3.0
         run:  |
           # Build and Run RDB
-          mv .envs.example .envs
-          docker-compose -f docker-compose-testing.yml build
-          docker-compose -f docker-compose-testing.yml up --detach
-          sh -c "until curl -Is http://localhost:8000; do echo 'waiting for http://localhost:8000'; sleep 10; done"
+          #mv .envs.example .envs
+          #docker-compose -f docker-compose-testing.yml build
+          #docker-compose -f docker-compose-testing.yml up --detach
+          #sh -c "until curl -Is http://localhost:8000; do echo 'waiting for http://localhost:8000'; sleep 10; done"
 
           # Run OWASP ZAP Full Scan
-          IP=$(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1)
-          echo $IP
-          hostname -i
-          ifconfig -a
+          pwd
+          cp .github/zap/rdb.context .
+          cp .github/zap/rdb-testing.context .
+          ls
+          IP = $(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1)
+          ping rdb-testing.whoi.edu
           chmod a+rw $(pwd)
 
-          docker run --network roundabout-network \
+          docker run \
              -v $(pwd):/zap/wrk/:rw \
-             -t owasp/zap2docker-weekly zap-baseline.py -j  \
-             -t http://$IP:8000
-             -r rdb-zap-full-scan.html \
-             -n rdb.context \
-             -U RDB
+             -t owasp/zap2docker-weekly zap-baseline.py  \
+             -t https://rdb-testing.whoi.edu \
+             -r rdb-zap-baseline-scan.html \
+             -n rdb-testing.context \
+             -U jkoch
          # -t owasp/zap2docker-stable zap-baseline.py -j  \
          # -t owasp/zap2docker-weekly zap-full-scan.py -j  \
          # -t http://localhost:8000 \
+         # --network roundabout-network \
 
  # RDB Automated Testing and Tagging
  setup-build-publish:
