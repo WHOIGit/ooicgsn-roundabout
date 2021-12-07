@@ -61,6 +61,7 @@ class TagForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         text = cleaned_data.get("text")
+        if text is None: return
         config_name = cleaned_data.get("config_name")
         if '{}' in text and not config_name:
             self.add_error('config_name', 'You must specify a Configuration if Text includes "{}" braces')
