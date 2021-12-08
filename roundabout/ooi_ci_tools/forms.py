@@ -1076,13 +1076,20 @@ class ImportBulkUploadForm(forms.Form):
 
     def clean_bulk_csv(self):
         bulk_files = self.files.getlist('bulk_csv')
-        # for csv_file in refdes_files:
-        #     csv_file.seek(0)
-        #     reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
-        #     for idx, row in enumerate(reader):
-        #         row_idx = idx + 1
-        #         refdes_name = row['Reference_Designator']
-                # validate_reference_designator(refdes_name, row_idx)
+        for csv_file in bulk_files:
+            csv_file.seek(0)
+            reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+            file_name = csv_file.name
+            if file_name.endswith('AssetRecord.csv'):
+                for row in reader:
+                    try:
+                        asset_uid = row['ASSET_UID']
+                        inv_item = Inventory.objects.get(serial_number = asset_uid)
+                    except Inventory.DoesNotExist:
+                        raise ValidationError(
+                                _('File: %(filename)s, Asset UID %(row)s: No matching Inventory serial number exists'),
+                                params={'row': asset_uid, 'filename': file_name}
+                            )
         return bulk_files
 
 

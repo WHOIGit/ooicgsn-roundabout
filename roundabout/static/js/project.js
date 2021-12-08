@@ -21,6 +21,16 @@
 
 /* Project specific Javascript goes here. */
 
+function sanitizeInputs(input) {
+  // remove all non-alphanumeric characters, plus _ - /
+  if (!input) return ""
+  const regex = /[^A-Za-z0-9_\-\/]/g;
+  const newStr = input.replace(regex, "");
+  console.log(newStr);
+  return newStr;
+}
+
+
 $(document).ready(function() {
   /* Auto focus to the Serial Number search box on page load */
   $("#search-serial-number").focus();
@@ -106,7 +116,7 @@ $(document).ready(function() {
   });
 
   $(navTree).on("click", "a", function() {
-    var nodeType = $(this).attr("data-node-type");
+    var nodeType = sanitizeInputs($(this).attr("data-node-type"));
     console.log(nodeType);
     if (!nodeType) {
       nodeType = navtreePrefix;
@@ -117,9 +127,9 @@ $(document).ready(function() {
     var nodeID = nodeType + "_" + $(this).attr("data-node-id");
     var itemID = $(this).attr("data-node-id");
     // Get the li ID for the jsTree node
-    var navTreeNodeID = $(this)
+    var navTreeNodeID = sanitizeInputs($(this)
       .parent()
-      .attr("id");
+      .attr("id"));
 
     $.ajax({
       url: url,
