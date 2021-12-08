@@ -80,6 +80,10 @@ node_type = "inventory"
 def load_inventory_navtree(request):
     node_id = request.GET.get("id")
     ccc_review_id_list = logged_user_review_items(request.user, "inv")
+    comment_list = None
+    if request.user.mptt_comments.exists():
+        comment_list = [mptt_comment.action.inventory.id for mptt_comment in request.user.mptt_comments.all() if not mptt_comment.is_leaf_node()]
+        comment_list = set(comment_list)
     # For filtering navtree by Part Type
     part_types = request.GET.getlist("part_types[]")
     if part_types:
@@ -95,6 +99,7 @@ def load_inventory_navtree(request):
                 "locations": locations,
                 "user": request.user,
                 "reviewer_list": ccc_review_id_list,
+                "comment_list": comment_list,
                 "part_types": part_types,
             },
         )
@@ -115,6 +120,7 @@ def load_inventory_navtree(request):
                 "build_pk": build_pk,
                 "user": request.user,
                 "reviewer_list": ccc_review_id_list,
+                "comment_list": comment_list,
                 "part_types": part_types,
             },
         )
