@@ -27,10 +27,14 @@ from .base import env
 # https://docs.djangoproject.com/en/dev/ref/settings/#debug
 DEBUG = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
-SECRET_KEY = env('DJANGO_SECRET_KEY', default='USEHKI7l2XRZP9HcDfRTVdQVmxPfIyDhCCwbhesoFSGwyXGGYuYnsJ8eHAEJd8A8')
+SECRET_KEY = env(
+    "DJANGO_SECRET_KEY",
+    default="USEHKI7l2XRZP9HcDfRTVdQVmxPfIyDhCCwbhesoFSGwyXGGYuYnsJ8eHAEJd8A8",
+)
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = [
     "localhost",
+    "django",
     "0.0.0.0",
     "127.0.0.1",
 ]
@@ -39,15 +43,15 @@ ALLOWED_HOSTS = [
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#caches
 CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': env('REDIS_URL'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": env("REDIS_URL"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
             # Mimicing memcache behavior.
             # http://niwinz.github.io/django-redis/latest/#_memcached_exceptions_behavior
-            'IGNORE_EXCEPTIONS': True,
-        }
+            "IGNORE_EXCEPTIONS": True,
+        },
     }
 }
 
