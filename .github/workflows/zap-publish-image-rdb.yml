@@ -62,10 +62,11 @@ jobs:
              -n rdb.context \
              -U admin
 
-          ls
-
          # -t owasp/zap2docker-stable zap-baseline.py -j  \
          # -t owasp/zap2docker-weekly zap-full-scan.py -j  \ runs for 4+ hours
+
+      - name: Stopping RDB application
+        run:  docker-compose --file docker-compose-testing.yml down
 
  # RDB Automated Testing and Tagging
  setup-build-publish:
@@ -124,6 +125,6 @@ jobs:
 
           docker push $IMAGE_ID:$VERSION
 
-      - name: Stopping Docker application
+      - name: Stopping RDB application
         run:  docker-compose --file docker-compose-testing.yml down
 
