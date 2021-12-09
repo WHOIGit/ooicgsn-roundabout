@@ -34,7 +34,7 @@ jobs:
       - name: Upload Test results
         uses: actions/upload-artifact@master
         with:
-           name: Depcheck report
+           name: Dependency Check Report
            path: ${{github.workspace}}/reports
 
       - name: OWASP ZAP Scan
@@ -56,14 +56,15 @@ jobs:
 
           docker run --network roundabout-network \
              -v "/$(pwd):/zap/wrk/:rw" \
-             -t owasp/zap2docker-stable zap-baseline.py  \
+             -t owasp/zap2docker-stable zap-full-scan.py \
              -t http://django:8000 \
              -I   \
              -r rdb-zap-baseline-scan.html \
              -n rdb.context \
              -U admin
 
-         # -t owasp/zap2docker-stable zap-baseline.py -j  \
+         # -t owasp/zap2docker-stable zap-baseline.py -j  \  no high alerts
+         # -t owasp/zap2docker-stable zap-full-scan.py \ runs 2 hrs, includes high alerts
          # -t owasp/zap2docker-weekly zap-full-scan.py -j  \ runs for 4+ hours
 
       - name: Archive production artifacts
