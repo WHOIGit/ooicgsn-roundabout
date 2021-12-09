@@ -58,12 +58,20 @@ jobs:
              -v "/$(pwd):/zap/wrk/:rw" \
              -t owasp/zap2docker-stable zap-baseline.py  \
              -t http://django:8000 \
+             -I   \
              -r rdb-zap-baseline-scan.html \
              -n rdb.context \
              -U admin
 
          # -t owasp/zap2docker-stable zap-baseline.py -j  \
          # -t owasp/zap2docker-weekly zap-full-scan.py -j  \ runs for 4+ hours
+
+     - name: Archive production artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Zap Report
+          path: |
+             ./rdb-zap-baseline-scan.html
 
       - name: Stopping RDB application
         run:  docker-compose --file docker-compose-testing.yml down
