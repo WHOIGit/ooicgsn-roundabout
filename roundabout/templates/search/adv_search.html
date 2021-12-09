@@ -30,30 +30,34 @@
 
 {% block javascript %}
   <script type="text/javascript" src="/static/js/form-search.js"></script>
+  {{ prev_cards|json_script:'prev_cards' }}
+  {{ avail_fields|json_script:'avail_fields' }}
+  {{ avail_lookups|json_script:'avail_lookups' }}
+  {{ lookup_categories|json_script:'lookup_categories' }}
   <script>
     const page_model = '{{ model }}'
 
     {% if prev_cards %}
-    const prev_cards = jQuery.parseJSON("{{ prev_cards|escapejs }}")
+    const prev_cards = JSON.parse(document.getElementById('prev_cards').textContent)
     {% else %}
     const prev_cards = null
     {% endif %}
 
     {% if avail_fields %}
-    const avail_fields = jQuery.parseJSON("{{ avail_fields|escapejs }}")
+    const avail_fields = JSON.parse(document.getElementById('avail_fields').textContent)
     {% else %}
     const avail_fields = [{value:'id',text:'Database ID',disabled:false, legal_lookup:'BOOL_LOOKUP'}]
     {% endif %}
 
     {% if avail_lookups %}
-    const avail_lookups = jQuery.parseJSON("{{ avail_lookups|escapejs }}")
+    const avail_lookups = JSON.parse(document.getElementById('avail_lookups').textContent)
     {% else %}
     const avail_lookups = [{value: "icontains", text: "Contains"},
                            {value:     "exact", text:    "Exact"}]
     {% endif %}
 
     {% if lookup_categories %}
-    const lookup_categories = jQuery.parseJSON("{{ lookup_categories|escapejs }}")
+    const lookup_categories = JSON.parse(document.getElementById('lookup_categories').textContent)
     {% else %}
     const lookup_categories = {STR_LOOKUP : ['icontains', 'exact'],
                                NUM_LOOKUP : ['exact','gte','lte'],
