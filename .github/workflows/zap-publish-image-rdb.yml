@@ -56,7 +56,7 @@ jobs:
 
           docker run --network roundabout-network \
              -v "/$(pwd):/zap/wrk/:rw" \
-             -t owasp/zap2docker-stable zap-baseline-scan.py  \
+             -t owasp/zap2docker-stable zap-baseline.py  \
              -t http://django:8000 \
              -r rdb-zap-baseline-scan.html \
              -n rdb.context \
