@@ -797,7 +797,32 @@ let handleReviewBadges = (
                         progress_badge_current.show();
                     }
                 }
-                if (data.all_reviewed) {
+                if (data.all_reviewed.found_cal_events == false) {
+                    $("#review-badge_cal-tab").hide();
+                } else {
+                    $("#review-badge_cal-tab").show();
+                }
+                if (data.all_reviewed.found_constdef_events == false) {
+                    $("#review-badge_constdef-tab").hide();
+                } else {
+                    $("#review-badge_constdef-tab").show();
+                }
+                if (data.all_reviewed.found_const_events == false) {
+                    $("#review-badge_const-tab").hide();
+                } else {
+                    $("#review-badge_const-tab").show();
+                }
+                if (data.all_reviewed.found_conf_events == false) {
+                    $("#review-badge_conf-tab").hide();
+                } else {
+                    $("#review-badge_conf-tab").show();
+                }
+                if (data.all_reviewed.found_bulk_events == false) {
+                    $("#review-badge_bulk-tab").hide();
+                } else {
+                    $("#review-badge_bulk-tab").show();
+                }
+                if (data.all_reviewed.all_reviewed) {
                     $("#review-badge-" + itemID).hide();
                 } else {
                     $("#review-badge-" + itemID).show();
