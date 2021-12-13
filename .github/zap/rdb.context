@@ -59,7 +59,7 @@
             <pollheaders/>
             <pollfreq>60</pollfreq>
             <pollunits>REQUESTS</pollunits>
-            <loggedin>"Successfully signed in as admin.\"</loggedin>
+            <loggedin>\QSuccessfully signed in as admin.\\E</loggedin>
             <form>
                 <loginurl>http://django:8000/accounts/login/</loginurl>
                 <loginbody>csrfmiddlewaretoken=fFjV3VepF9zJwkgoMEqroU26Qas2Egltt9E22QyR5y3qvuNHXNPbF2z9swwyVorX&amp;login={%username%}&amp;password={%password%}</loginbody>
