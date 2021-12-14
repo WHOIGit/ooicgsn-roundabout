@@ -28,6 +28,7 @@ from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.views.generic import View, FormView, DetailView, ListView, RedirectView, UpdateView, CreateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ValidationError
+from django.shortcuts import redirect
 
 from .models import Tag
 from .forms import TagForm
@@ -46,7 +47,11 @@ class TagAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMix
     def get(self, request, *args, **kwargs):
         self.object = None
         assemblypart_id = request.GET.get('a')
-        assembly_part = AssemblyPart.objects.get(id=assemblypart_id) if assemblypart_id else None
+        try:
+            assembly_part = AssemblyPart.objects.get(id=assemblypart_id)
+        except (ValueError,AssemblyPart.DoesNotExist):
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+
         self.initial.update(assembly_part=assembly_part, text='{}')
         form = self.get_form()
         return self.render_to_response(self.get_context_data(assembly_part=assembly_part, form=form))

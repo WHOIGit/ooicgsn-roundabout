@@ -32,6 +32,7 @@ from django.db.models import Q, Count, OuterRef, Subquery
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.html import mark_safe
+import django.core
 from django_tables2 import SingleTableView
 
 from roundabout.assemblies.models import Assembly
@@ -55,8 +56,6 @@ def rgetattr(obj, attr, *args):
 
 def searchbar_redirect(request):
     model = request.GET.get('model')
-    url = 'search:'+model
-    resp = redirect(url)
 
     query = request.GET.get('query')
     if query:
@@ -78,6 +77,10 @@ def searchbar_redirect(request):
         elif model == 'action':     getstr = '?f=.0.action_type&f=.0.user&f=.0.detail&f=.0.location__name&f=.0.inventory__serial_number&f=.0.inventory__part__name&l=.0.icontains'+'&q=.0.{query}'
         elif model == 'user':       getstr = '?ccc_role=both&ccc_status=all'+'&q={query}'
         elif model == 'change':     getstr = '?q={query}'
+        else:
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+        url = 'search:' + model
+        resp = redirect(url)
         getstr = getstr.format(query=query)
         resp['Location'] += getstr
     return resp
@@ -291,7 +294,10 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
             final_Q = None
 
         if final_Q:
-            return self.model.objects.filter(final_Q).distinct().prefetch_related(*self.query_prefetch)
+            try:
+                return self.model.objects.filter(final_Q).distinct().prefetch_related(*self.query_prefetch)
+            except django.core.exceptions.FieldError:
+                return self.model.objects.none()
         else:
             #if there are no search terms
             return self.model.objects.all().prefetch_related(*self.query_prefetch)
@@ -302,7 +308,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
 
         # Cards to initiate previous columns
         cards = self.get_search_cards()
-        context['prev_cards'] = json.dumps(cards)
+        context['prev_cards'] = cards
         context['model'] = self.model.__name__
 
         avail_lookups = [dict(value='icontains',text='Contains'),
@@ -311,7 +317,7 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
                          dict(value='gte',      text='>='),
                          dict(value='lte',      text='<='),
                          dict(value='isnull',   text='Is-Null')]
-        context['avail_lookups'] = json.dumps(avail_lookups)
+        context['avail_lookups'] = avail_lookups
 
         lcats = dict(
             STR_LOOKUP  = ['contains', 'exact', 'startswith', 'endswith', 'regex',
@@ -324,11 +330,11 @@ class GenericSearchTableView(LoginRequiredMixin,ExportStreamMixin,SingleTableVie
             EXACT_LOOKUP = ['exact'],
             BOOL_LOOKUP = ['exact','iexact'], )
         lcats = {k:v+['isnull'] for k,v in lcats.items()}
-        context['lookup_categories'] = json.dumps(lcats)
+        context['lookup_categories'] = lcats
 
         avail_fields_sans_col_args = self.get_avail_fields()
         [field.pop('col_args', None) for field in avail_fields_sans_col_args]
-        context['avail_fields'] = json.dumps(avail_fields_sans_col_args)
+        context['avail_fields'] = avail_fields_sans_col_args
 
         # Setting default shown columns based on table_class's Meta.base_shown_cols attrib,
         # and "searchcol-" extra_columns (see get_table_kwargs())
@@ -536,7 +542,7 @@ class InventoryTableView(GenericSearchTableView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         trashtog = 'checked' if 'on' in self.request.GET.getlist('trashtog') else 'unchecked'
-        context['trashtog'] = json.dumps(trashtog)
+        context['trashtog'] = trashtog
         return context
 
 
