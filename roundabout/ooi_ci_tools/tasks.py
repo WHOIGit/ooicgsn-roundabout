@@ -923,6 +923,7 @@ def parse_refdes_files(self):
 def parse_bulk_files(self):
     bulk_files = cache.get('bulk_files')
     user = cache.get('user')
+    user_draft = cache.get('user_draft')
     bulk_event, event_created = BulkUploadEvent.objects.update_or_create(id=1)
     for csv_file in bulk_files:
         # Set up the Django file object for CSV DictReader
@@ -975,8 +976,12 @@ def parse_bulk_files(self):
                         'asset_model': row['Model'],
                     }
                 )
+    if user_draft.exists():
+        for draft_user in user_draft:
+            bulk_event.user_draft.add(draft_user)
     if event_created:
         _create_action_history(bulk_event,Action.CALCSVIMPORT,user,data=dict(csv_import=csv_file.name))
     else:
         _create_action_history(bulk_event,Action.CALCSVUPDATE,user,data=dict(csv_import=csv_file.name))
     cache.delete('bulk_files')
+    cache.delete('user_draft')

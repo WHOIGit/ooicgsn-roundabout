@@ -1073,6 +1073,11 @@ class ImportBulkUploadForm(forms.Form):
         ),
         required = False
     )
+    user_draft = forms.ModelMultipleChoiceField(
+        queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username'),
+        required=False,
+        label = 'Select Reviewers'
+    )
 
     def clean_bulk_csv(self):
         bulk_files = self.files.getlist('bulk_csv')

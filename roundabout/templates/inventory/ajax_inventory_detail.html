@@ -486,7 +486,7 @@
 
     <div class="tab-content" id="inventory-tabs">
 
-        {% include "ooi_ci_tools/action_comment_detail.html" with inventory_item=inventory_item user=user  %}
+        {% include "ooi_ci_tools/action_comment_detail.html" with inventory_item=inventory_item user=user comment_list=comment_list  %}
 
         {% if inventory_item.inventory_deployments %}
         <div class="tab-pane fade" id="deployments" role="tabpanel" aria-labelledby="deployments-tab">
