@@ -22,6 +22,8 @@
 {% load static i18n %}
 
 <div class="card">
+  {{ navtree_node_id|json_script:"navtree_node_id" }}
+
   <div class="card-header">
     {% if inventory_item.id %}
     <h3>{{ inventory_item.part.name }}</h3>
@@ -111,7 +113,9 @@
   <script>
     $(document).ready(function () {
       // Get parent Inventory Item data from the navTree node data, append to the URL if parent exists
-      var currentNode = "{{ navtree_node_id }}";
+      var currentNode = JSON.parse(
+        document.getElementById("navtree_node_id").textContent
+      );
       var nodeData = $(navTree).jstree(true).get_node(currentNode);
       var nodeParent = nodeData.parent.split("_");
       if (nodeParent[0] == "inventory") {
