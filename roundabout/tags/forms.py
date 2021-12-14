@@ -56,6 +56,8 @@ class TagForm(forms.ModelForm):
             raise ValidationError(_('Formatting braces "{}" must be empty'), code='invalid')
         if len(field_names) > 2 or sum([1 for fn in field_names if fn == '']) >= 2:
             raise ValidationError(_('Only one set of "{}" braces allowed'), code='invalid')
+        if '>' in data or '<' in data:
+            raise ValidationError(_('The following characters are not allowed: <>'), code='invalid')
         return data
 
     def clean(self):
