@@ -60,7 +60,6 @@ jobs:
              -t http://django:8000 \
              -I   \
              -d \
-             -m 10 \
              -r rdb-zap-baseline-scan.html \
              -n rdb.context \
              -U admin
