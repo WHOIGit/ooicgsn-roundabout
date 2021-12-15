@@ -56,8 +56,13 @@ def rgetattr(obj, attr, *args):
 
 def searchbar_redirect(request):
     model = request.GET.get('model')
-
     query = request.GET.get('query')
+    getstr = ''
+
+    # model must be included to be valid
+    if model not in ['inventory','calibrations','configconsts','part','build','assembly','action','user','change']:
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+
     if query:
         if model=='inventory':      getstr = '?f=.0.part__name&f=.0.part__friendly_name&f=.0.serial_number&f=.0.old_serial_number&f=.0.location__name&l=.0.icontains&q=.0.{query}'
         elif model=='calibrations':
@@ -78,11 +83,13 @@ def searchbar_redirect(request):
         elif model == 'user':       getstr = '?ccc_role=both&ccc_status=all'+'&q={query}'
         elif model == 'change':     getstr = '?q={query}'
         else:
-            return redirect(request.META.get('HTTP_REFERER', '/'))
-        url = 'search:' + model
-        resp = redirect(url)
-        getstr = getstr.format(query=query)
-        resp['Location'] += getstr
+            return redirect(request.META.get('HTTP_REFERER', '/'))  # incase provided model is garbage
+
+    url = 'search:' + model
+    resp = redirect(url)
+    if getstr and query:
+        resp['Location'] += getstr.format(query=query)
+
     return resp
 
 

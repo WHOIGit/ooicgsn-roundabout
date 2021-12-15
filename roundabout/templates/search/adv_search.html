@@ -40,7 +40,7 @@
     {% if prev_cards %}
     const prev_cards = JSON.parse(document.getElementById('prev_cards').textContent)
     {% else %}
-    const prev_cards = null
+    const prev_cards = []
     {% endif %}
 
     {% if avail_fields %}

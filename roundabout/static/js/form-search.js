@@ -48,9 +48,9 @@ function create_card(card_name, model, card_data=null, fields=null){
 
     let card_header = `<div class="card-header container-fluid">
                          <div class="row">
-                           <div class="col-md-10"><h4>Search Block ${card_name}</h4></div>
-                           <div class="col-md-2 float-right">
-                             <span class="pull-right clickable close-icon" data-effect="fadeOut" onclick="remove_elem('${card_id}')"><i class="fa fa-times"></i></span>
+                           <div class="col-md-11"><h4>Search Block ${card_name}</h4></div>
+                           <div class="col-md-1 float-right">
+                             <span class="clickable close-icon" data-effect="fadeOut" onclick="remove_elem('${card_id}')"><i class="fa fa-times"></i></span>
                            </div>
                          </div>
                        </div>`
