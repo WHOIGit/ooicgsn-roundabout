@@ -134,7 +134,7 @@ $(document).ready(function() {
     $.ajax({
       url: url,
       data: {
-        navTreeNodeID: navTreeNodeID
+        navTreeNodeID: sanitizeInputs(navTreeNodeID)
       },
       success: function(data) {
         $("#detail-view").html(data);
@@ -156,7 +156,7 @@ $(document).ready(function() {
 
         var backURL = url;
         var state = {
-          navTreeNodeID: navTreeNodeID,
+          navTreeNodeID: sanitizeInputs(navTreeNodeID),
           itemID: itemID,
           nodeType: nodeType,
           backURL: backURL,
