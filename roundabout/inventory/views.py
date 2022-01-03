@@ -593,7 +593,10 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         if self.object.bulk_upload_event:
             if self.object.bulk_upload_event in self.request.user.reviewer_bulkuploadevents.all():
                 user_rev_bulk_events = True
-
+        comment_list = None
+        if self.request.user.mptt_comments.exists():
+            comment_list = [mptt_comment.action.id for mptt_comment in self.request.user.mptt_comments.all() if not mptt_comment.is_leaf_node()]
+            comment_list = set(comment_list)
 
         # Get Inventory items by Root Locations
         inventory_location_data = []
@@ -617,6 +620,7 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
                 "part_has_consts": part_has_consts,
                 'inv_has_conf_events': inv_has_conf_events,
                 'inv_has_const_events': inv_has_const_events,
+                "comment_list": comment_list,
                 "coeff_events": coeff_events,
                 "printers": printers,
                 "custom_fields": custom_fields,
