@@ -81,8 +81,9 @@ def import_refdes(refdes_files):
     job = parse_refdes_files.delay()
 
 # Bulk Upload CSV Importer
-def import_bulk(bulk_files):
+def import_bulk(bulk_files, user_draft):
     cache.set('bulk_files', bulk_files, timeout=None)
+    cache.set('user_draft', user_draft, timeout=None)
     job = parse_bulk_files.delay()
 
 # Calibration CSV Importer
@@ -137,7 +138,7 @@ def import_csv(request):
             import_refdes(refdes_file)
             confirm = "True"
         if bulk_form.is_valid() and len(bulk_file) >= 1:
-            import_bulk(bulk_file)
+            import_bulk(bulk_file, bulk_form.cleaned_data['user_draft'])
             confirm = "True"
     else:
         cal_form = ImportCalibrationForm()

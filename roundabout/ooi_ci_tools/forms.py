@@ -1073,9 +1073,15 @@ class ImportBulkUploadForm(forms.Form):
         ),
         required = False
     )
+    user_draft = forms.ModelMultipleChoiceField(
+        queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username'),
+        required=False,
+        label = 'Select Reviewers'
+    )
 
     def clean_bulk_csv(self):
         bulk_files = self.files.getlist('bulk_csv')
+        
         for csv_file in bulk_files:
             csv_file.seek(0)
             reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
@@ -1090,6 +1096,21 @@ class ImportBulkUploadForm(forms.Form):
                                 _('File: %(filename)s, Asset UID %(row)s: No matching Inventory serial number exists'),
                                 params={'row': asset_uid, 'filename': file_name}
                             )
+            if file_name.endswith('vocab.csv'):
+                for row in reader:
+                    manufacturer = row['Manufacturer']
+                    asset_model = row['Model']
+                    man_field_list = FieldValue.objects.filter(field__field_name__iexact='Manufacturer', field_value = manufacturer, part__isnull=False, is_current=True)
+                    mod_field_list = FieldValue.objects.filter(field__field_name__iexact='Model', field_value = asset_model, part__isnull=False, is_current=True)
+                    if len(man_field_list) and len(mod_field_list):
+                        man_field_obj = man_field_list.first()
+                        mod_field_obj = mod_field_list.first()
+                        if man_field_obj.part != mod_field_obj.part:
+                            raise ValidationError(
+                                _('File: %(filename)s, Manufacturer %(manufacturer)s, Model %(model)s: No matching Part exists'),
+                                params={'manufacturer': manufacturer, 'model': asset_model, 'filename': file_name}
+                            )
+
         return bulk_files
 
 
