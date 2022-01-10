@@ -461,6 +461,7 @@ def parse_vessel_files(self):
 @shared_task(bind=True)
 def parse_deployment_files(self):
     csv_files = cache.get('dep_files')
+    user_draft = cache.get('user_draft_deploy')
     # Set up the Django file object for CSV DictReader
     for csv_file in csv_files:
         print(csv_file)
@@ -591,6 +592,12 @@ def parse_deployment_files(self):
 
             print(build)
             print(deployment_obj)
+            if user_draft.exists():
+                deployment_obj.user_approver.clear()
+                deployment_obj.user_draft.clear()
+                for draft_user in user_draft:
+                    deployment_obj.user_draft.add(draft_user)
+
             # _create_action_history function won't work correctly for back-dated Build Deployments,
             # need to add history Actions manually
             build_deployment_actions = [
@@ -850,6 +857,7 @@ def parse_deployment_files(self):
                         item.location = build.location
                         item.save()
     cache.delete('dep_files')
+    cache.delete('user_draft_deploy')
 
 
 # Parse Reference Designator vocab CSV file submission, generate and associate relevant Events
@@ -857,6 +865,7 @@ def parse_deployment_files(self):
 def parse_refdes_files(self):
     refdes_files = cache.get('refdes_files')
     user = cache.get('user')
+    user_draft = cache.get('user_draft_refdes')
     for csv_file in refdes_files:
         # Set up the Django file object for CSV DictReader
         csv_file.seek(0)
@@ -902,6 +911,9 @@ def parse_refdes_files(self):
             if created:
                 refdes_event = ReferenceDesignatorEvent.objects.create()
                 refdes_event.reference_designator = refdes_obj
+                if user_draft.exists():
+                    for draft_user in user_draft:
+                        refdes_event.user_draft.add(draft_user)
                 refdes_event.save()
                 refdes_obj.save()
                 _create_action_history(refdes_event,Action.ADD,user,data=dict(csv_import=csv_file.name))
@@ -910,9 +922,16 @@ def parse_refdes_files(self):
                     for assm in refdes_obj.assembly_parts.all():
                         for event in assm.assemblypart_referencedesignatorevents.all():
                             event.reference_designator = refdes_obj
+                            if user_draft.exists():
+                                event.user_approver.clear()
+                                event.user_draft.clear()
+                                for draft_user in user_draft:
+                                    event.user_draft.add(draft_user)
                             event.save()
+
                             _create_action_history(event,Action.UPDATE,user,data=dict(csv_import=csv_file.name))
     cache.delete('refdes_files')
+    cache.delete('user_draft_refdes')
 
 
 
@@ -923,7 +942,7 @@ def parse_refdes_files(self):
 def parse_bulk_files(self):
     bulk_files = cache.get('bulk_files')
     user = cache.get('user')
-    user_draft = cache.get('user_draft')
+    user_draft = cache.get('user_draft_bulk')
     bulk_event, event_created = BulkUploadEvent.objects.update_or_create(id=1)
     for csv_file in bulk_files:
         # Set up the Django file object for CSV DictReader
@@ -989,6 +1008,8 @@ def parse_bulk_files(self):
                         field_part.save()
             
     if user_draft.exists():
+        bulk_event.user_draft.clear()
+        bulk_event.user_approver.clear()
         for draft_user in user_draft:
             bulk_event.user_draft.add(draft_user)
     if event_created:
@@ -996,4 +1017,4 @@ def parse_bulk_files(self):
     else:
         _create_action_history(bulk_event,Action.CALCSVUPDATE,user,data=dict(csv_import=csv_file.name))
     cache.delete('bulk_files')
-    cache.delete('user_draft')
+    cache.delete('user_draft_bulk')

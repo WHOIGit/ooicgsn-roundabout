@@ -60,8 +60,9 @@ def upload_status(request):
     })
 
 # Deployment CSV Importer
-def import_deployments(csv_files):
+def import_deployments(csv_files, user_draft):
     cache.set('dep_files',csv_files, timeout=None)
+    cache.set('user_draft_deploy', user_draft, timeout=None)
     job = parse_deployment_files.delay()
 
 
@@ -76,14 +77,15 @@ def import_vessels(vessels_files):
     job = parse_vessel_files.delay()
 
 # Reference Designator CSV Importer
-def import_refdes(refdes_files):
+def import_refdes(refdes_files, user_draft):
     cache.set('refdes_files', refdes_files, timeout=None)
+    cache.set('user_draft_refdes', user_draft, timeout=None)
     job = parse_refdes_files.delay()
 
 # Bulk Upload CSV Importer
 def import_bulk(bulk_files, user_draft):
     cache.set('bulk_files', bulk_files, timeout=None)
-    cache.set('user_draft', user_draft, timeout=None)
+    cache.set('user_draft_bulk', user_draft, timeout=None)
     job = parse_bulk_files.delay()
 
 # Calibration CSV Importer
@@ -126,7 +128,7 @@ def import_csv(request):
             import_calibrations(cal_files, cal_form.cleaned_data['user_draft'])
             confirm = "True"
         if dep_form.is_valid() and len(dep_files) >= 1:
-            import_deployments(dep_files)
+            import_deployments(dep_files, dep_form.cleaned_data['user_draft'])
             confirm = "True"
         if cruises_form.is_valid() and len(cruises_file) >= 1:
             import_cruises(cruises_file)
@@ -135,7 +137,7 @@ def import_csv(request):
             import_vessels(vessels_file)
             confirm = "True"
         if refdes_form.is_valid() and len(refdes_file) >= 1:
-            import_refdes(refdes_file)
+            import_refdes(refdes_file, refdes_form.cleaned_data['user_draft'])
             confirm = "True"
         if bulk_form.is_valid() and len(bulk_file) >= 1:
             import_bulk(bulk_file, bulk_form.cleaned_data['user_draft'])

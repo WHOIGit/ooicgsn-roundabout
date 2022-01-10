@@ -82,12 +82,12 @@ def user_ccc_reviews(event, user, evt_type):
     # Inventory template
     if evt_type in ['calibration_event','config_event', 'constant_default_event', 'bulk_upload_event']:
         if user.reviewer_calibrationevents.exists():
-            found_cal_events = True if event.inventory.inventory_calibrationevents.filter(user_draft__in=[user]) >= 1 else False
+            found_cal_events = True if len(event.inventory.inventory_calibrationevents.filter(user_draft__in=[user])) >= 1 else False
         if user.reviewer_configevents.exists():
-            found_conf_events = True if event.inventory.inventory_configevents.filter(user_draft__in=[user], config_type = 'conf') >= 1 else False
-            found_const_events = True if event.inventory.inventory_configevents.filter(user_draft__in=[user], config_type = 'cnst') >= 1 else False
+            found_conf_events = True if len(event.inventory.inventory_configevents.filter(user_draft__in=[user], config_type = 'conf')) >= 1 else False
+            found_const_events = True if len(event.inventory.inventory_configevents.filter(user_draft__in=[user], config_type = 'cnst')) >= 1 else False
         if user.reviewer_constdefaultevents.exists():
-            found_constdef_events = True if event.inventory.inventory_constdefaultevents.filter(user_draft__in=[user]) >= 1 else False
+            found_constdef_events = True if len(event.inventory.inventory_constdefaultevents.filter(user_draft__in=[user])) >= 1 else False
         if user.reviewer_bulkuploadevents.exists():
             found_bulk_events = True
         if not found_cal_events and not found_conf_events and not found_const_events and not found_constdef_events and not found_bulk_events:
@@ -96,24 +96,24 @@ def user_ccc_reviews(event, user, evt_type):
     # Part template
     if evt_type in ['coefficient_name_event', 'config_name_event']:
         if user.reviewer_coefficientnameevents.exists():
-            found_cal_events = True if event.part.part_coefficientnameevents.filter(user_draft__in=[user]) >= 1 else False
+            found_cal_events = True if len(event.part.part_coefficientnameevents.filter(user_draft__in=[user])) >= 1 else False
         if user.reviewer_confignameevents.exists():
-            found_conf_events = True if event.part.part_confignameevents.filter(user_draft__in=[user]) >= 1 else False
+            found_conf_events = True if len(event.part.part_confignameevents.filter(user_draft__in=[user])) >= 1 else False
         if not found_cal_events and not found_conf_events:
             all_reviewed = True
 
     # Assembly Template
     if evt_type in ['config_default_event', 'reference_designator_event']:
         if user.reviewer_configdefaultevents.exists():
-            found_conf_events = True if event.assembly_part.assemblypart_configdefaultevents.filter(user_draft__in=[user]) >= 1 else False
+            found_conf_events = True if len(event.assembly_part.assemblypart_configdefaultevents.filter(user_draft__in=[user])) >= 1 else False
         if user.reviewer_referencedesignatorevents.exists():
-            found_refdes_events = True if event.assembly_part.assemblypart_referencedesignatorevents.filter(user_draft__in=[user]) >= 1 else False
+            found_refdes_events = True if len(event.assembly_part.assemblypart_referencedesignatorevents.filter(user_draft__in=[user])) >= 1 else False
         if not found_conf_events and not found_refdes_events:
             all_reviewed = True
     # Deployment template
     if evt_type in ['deployment']:
         if user.reviewer_deployments.exists():
-            found_deploy_events = True if event.build.deployments.filter(user_draft__in=[user]) >= 1 else False
+            found_deploy_events = True if len(event.build.deployments.filter(user_draft__in=[user])) >= 1 else False
         if not found_deploy_events:
             all_reviewed = True
     review_obj = {
