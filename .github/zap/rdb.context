@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <configuration>
     <context>
-        <name>http://localhost:8000</name>
+        <name>rdb</name>
         <desc/>
         <inscope>true</inscope>
-        <incregexes>http://localhost:8000.*</incregexes>
+        <incregexes>http://django:8000.*</incregexes>
         <tech>
             <include>Db</include>
             <include>Db.CouchDB</include>
@@ -59,17 +59,17 @@
             <pollheaders/>
             <pollfreq>60</pollfreq>
             <pollunits>REQUESTS</pollunits>
-            <loggedin>\QSuccessfully signed in as admin\E</loggedin>
+            <loggedin>\QSuccessfully signed in as admin.\\E</loggedin>
             <form>
-                <loginurl>http://localhost:8000/accounts/login/</loginurl>
-                <loginbody>csrfmiddlewaretoken=FiKqMDfgfQc24JdcqQ3F2thB03OYYF46q4PzlVRNcr96OeHNKZL9i5YzILoVpWc9&amp;login={%username%}&amp;password={%password%}</loginbody>
-                <loginpageurl>http://localhost:8000/accounts/login/</loginpageurl>
+                <loginurl>http://django:8000/accounts/login/</loginurl>
+                <loginbody>csrfmiddlewaretoken=fFjV3VepF9zJwkgoMEqroU26Qas2Egltt9E22QyR5y3qvuNHXNPbF2z9swwyVorX&amp;login={%username%}&amp;password={%password%}</loginbody>
+                <loginpageurl>http://django:8000/accounts/login/</loginpageurl>
             </form>
         </authentication>
         <users>
-            <user>165;true;UkRC;2;YWRtaW4=~YWRtaW4=~</user>
+            <user>345;true;YWRtaW4=;2;YWRtaW4=~YWRtaW4=~</user>
         </users>
-        <forceduser>165</forceduser>
+        <forceduser>345</forceduser>
         <session>
             <type>0</type>
         </session>
