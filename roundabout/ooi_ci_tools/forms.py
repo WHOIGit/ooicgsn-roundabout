@@ -509,6 +509,11 @@ class ImportDeploymentsForm(forms.Form):
         ),
         required=False
     )
+    user_draft = forms.ModelMultipleChoiceField(
+        queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username'),
+        required=False,
+        label = 'Select Reviewers'
+    )
 
     def clean_deployments_csv(self):
         deployments_csv = self.files.getlist('deployments_csv')
@@ -731,6 +736,7 @@ class ImportCruisesForm(forms.Form):
         ),
         required=False
     )
+    
 
     def clean_cruises_csv(self):
         cruises_csv = self.files.getlist('cruises_csv')
@@ -1048,6 +1054,11 @@ class ImportReferenceDesignatorForm(forms.Form):
             }
         ),
         required = False
+    )
+    user_draft = forms.ModelMultipleChoiceField(
+        queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username'),
+        required=False,
+        label = 'Select Reviewers'
     )
 
     def clean_refdes_csv(self):
