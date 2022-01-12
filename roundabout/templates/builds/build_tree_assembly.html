@@ -94,7 +94,9 @@
                                 {% if i.id in reviewer_list %}
                                     <span id="review-badge-{{i.id}}" class="badge badge-pill badge-secondary">Review Requested</span>
                                 {% endif %}
-
+                                {% if i.id in comment_list %}
+                                    <span id="comment-badge-{{i.id}}" class="badge badge-pill badge-light">Replies</span>
+                                {% endif %}
                             {# TAGS for Inventory-assigned AssemblyParts #}
                             {% for tag in i.assembly_part.tags.all %} {{ tag|render_tag:i.id }} {% endfor %}
 
@@ -110,7 +112,7 @@
                        data-node-type="assemblyparts" class="grey">
                         {% if assembly_part.part.friendly_name %} {{ assembly_part.part.friendly_name}} {% else %} {{ assembly_part.part.name }} {% endif %} -
                         {{ assembly_part.part.part_number }}
-
+                    
                     {# TAGS for AssemblyParts without inventories #}
                     {% for tag in assembly_part.tags.all %} {{ tag|render_tag }} {% endfor %}
 

@@ -47,7 +47,7 @@
                                 <span class="sr-only">{{ action.detail|safe|striptags }}</span>
                             </a>
                             {% if action.id in comment_list %}
-                                <span id="comment-badge-{{inv.id}}" class="badge badge-pill badge-light">Replies</span>
+                                <span id="comment-badge-{{inventory_item.id}}" class="badge badge-pill badge-light">Replies</span>
                             {% endif %}
                             <small class = 'form-text text-muted'>
                                 <span class='font-weight-light'><b>Date:</b> {{ action.created_at|date:"n/j/y H:i" }}&nbsp;</span>
