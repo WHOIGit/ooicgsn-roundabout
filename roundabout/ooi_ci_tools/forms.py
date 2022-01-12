@@ -1063,13 +1063,13 @@ class ImportReferenceDesignatorForm(forms.Form):
 
     def clean_refdes_csv(self):
         refdes_files = self.files.getlist('refdes_csv')
-        # for csv_file in refdes_files:
-        #     csv_file.seek(0)
-        #     reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
-        #     for idx, row in enumerate(reader):
-        #         row_idx = idx + 1
-        #         refdes_name = row['Reference_Designator']
-                # validate_reference_designator(refdes_name, row_idx)
+        for csv_file in refdes_files:
+            csv_file.seek(0)
+            reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+            for idx, row in enumerate(reader):
+                row_idx = idx + 1
+                refdes_name = row['Reference_Designator']
+                validate_reference_designator(refdes_name, row_idx)
         return refdes_files
 
 
@@ -1097,7 +1097,7 @@ class ImportBulkUploadForm(forms.Form):
             csv_file.seek(0)
             reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
             file_name = csv_file.name
-            if file_name.endswith('AssetRecord.csv'):
+            if file_name.endswith('-AssetRecord.csv'):
                 for row in reader:
                     try:
                         asset_uid = row['ASSET_UID']
@@ -1107,20 +1107,35 @@ class ImportBulkUploadForm(forms.Form):
                                 _('File: %(filename)s, Asset UID %(row)s: No matching Inventory serial number exists'),
                                 params={'row': asset_uid, 'filename': file_name}
                             )
-            if file_name.endswith('vocab.csv'):
+            if file_name.endswith('_vocab.csv'):
                 for row in reader:
                     manufacturer = row['Manufacturer']
                     asset_model = row['Model']
                     man_field_list = FieldValue.objects.filter(field__field_name__iexact='Manufacturer', field_value = manufacturer, part__isnull=False, is_current=True)
                     mod_field_list = FieldValue.objects.filter(field__field_name__iexact='Model', field_value = asset_model, part__isnull=False, is_current=True)
+                    if not len(man_field_list):
+                        raise ValidationError(
+                                _('File: %(filename)s, Manufacturer %(manufacturer)s: No matching Manufacturer exists'),
+                                params={'manufacturer': manufacturer,'filename': file_name}
+                            )
+                    if not len(mod_field_list):
+                        raise ValidationError(
+                                _('File: %(filename)s, Manufacturer %(manufacturer)s, Model %(model)s: No matching Model exists'),
+                                params={'manufacturer': manufacturer, 'model': asset_model, 'filename': file_name}
+                            )
                     if len(man_field_list) and len(mod_field_list):
                         man_field_obj = man_field_list.first()
                         mod_field_obj = mod_field_list.first()
                         if man_field_obj.part != mod_field_obj.part:
                             raise ValidationError(
-                                _('File: %(filename)s, Manufacturer %(manufacturer)s, Model %(model)s: No matching Part exists'),
+                                _('File: %(filename)s, Manufacturer %(manufacturer)s, Model %(model)s: No matching Part exists for Manufacturer/Model pair'),
                                 params={'manufacturer': manufacturer, 'model': asset_model, 'filename': file_name}
                             )
+            else:
+                raise ValidationError(
+                        _('File: %(filename)s: File is invalid format. File must be of type _AssetRecord or _vocab'),
+                        params={ 'filename': file_name}
+                    )
 
         return bulk_files
 
