@@ -82,12 +82,15 @@ def user_ccc_reviews(event, user, evt_type):
     # Inventory template
     if evt_type in ['calibration_event','config_event', 'constant_default_event', 'bulk_upload_event']:
         if user.reviewer_calibrationevents.exists():
-            found_cal_events = True if len(event.inventory.inventory_calibrationevents.filter(user_draft__in=[user])) >= 1 else False
+            if hasattr(event.inventory,'inventory_calibrationevents'):
+                found_cal_events = True if len(event.inventory.inventory_calibrationevents.filter(user_draft__in=[user])) >= 1 else False
         if user.reviewer_configevents.exists():
-            found_conf_events = True if len(event.inventory.inventory_configevents.filter(user_draft__in=[user], config_type = 'conf')) >= 1 else False
-            found_const_events = True if len(event.inventory.inventory_configevents.filter(user_draft__in=[user], config_type = 'cnst')) >= 1 else False
+            if hasattr(event.inventory,'inventory_configevents'):
+                found_conf_events = True if len(event.inventory.inventory_configevents.filter(user_draft__in=[user], config_type = 'conf')) >= 1 else False
+                found_const_events = True if len(event.inventory.inventory_configevents.filter(user_draft__in=[user], config_type = 'cnst')) >= 1 else False
         if user.reviewer_constdefaultevents.exists():
-            found_constdef_events = True if len(event.inventory.inventory_constdefaultevents.filter(user_draft__in=[user])) >= 1 else False
+            if hasattr(event.inventory,'inventory_constdefaultevents'):
+                found_constdef_events = True if len(event.inventory.inventory_constdefaultevents.filter(user_draft__in=[user])) >= 1 else False
         if user.reviewer_bulkuploadevents.exists():
             found_bulk_events = True
         if not found_cal_events and not found_conf_events and not found_const_events and not found_constdef_events and not found_bulk_events:
