@@ -1063,13 +1063,13 @@ class ImportReferenceDesignatorForm(forms.Form):
 
     def clean_refdes_csv(self):
         refdes_files = self.files.getlist('refdes_csv')
-        # for csv_file in refdes_files:
-        #     csv_file.seek(0)
-        #     reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
-        #     for idx, row in enumerate(reader):
-        #         row_idx = idx + 1
-        #         refdes_name = row['Reference_Designator']
-                # validate_reference_designator(refdes_name, row_idx)
+        for csv_file in refdes_files:
+            csv_file.seek(0)
+            reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+            for idx, row in enumerate(reader):
+                row_idx = idx + 1
+                refdes_name = row['Reference_Designator']
+                validate_reference_designator(refdes_name, row_idx)
         return refdes_files
 
 
