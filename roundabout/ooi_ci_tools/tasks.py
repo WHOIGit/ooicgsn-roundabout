@@ -26,6 +26,7 @@ import io
 import re
 from decimal import Decimal
 from types import SimpleNamespace
+import itertools
 
 from celery import shared_task
 from dateutil import parser
@@ -986,8 +987,8 @@ def parse_bulk_files(self):
         if csv_file.name.endswith('vocab.csv'):
             for row in reader:
                 equip_desc = row['DESCRIPTION OF EQUIPMENT']
-                manufacturer = row['Manufacturer']
-                asset_model = row['Model']
+                manufacturer = row['Manufacturer'].strip()
+                asset_model = row['Model'].strip()
                 vocabrecord_obj, vocab_created = BulkVocabRecord.objects.update_or_create(
                     equip_desc = equip_desc,
                     bulk_file = bulk_file,
@@ -1000,12 +1001,12 @@ def parse_bulk_files(self):
                 man_field_list = FieldValue.objects.filter(field__field_name__iexact='Manufacturer', field_value = manufacturer, part__isnull=False, is_current=True)
                 mod_field_list = FieldValue.objects.filter(field__field_name__iexact='Model', field_value = asset_model, part__isnull=False, is_current=True)
                 if len(man_field_list) and len(mod_field_list):
-                    man_field_obj = man_field_list.first()
-                    mod_field_obj = mod_field_list.first()
-                    if man_field_obj.part == mod_field_obj.part:
-                        field_part = man_field_obj.part
-                        field_part.bulk_upload_event = bulk_event
-                        field_part.save()
+                    for (man_field_obj, mod_field_obj) in zip(man_field_list, mod_field_list):
+                        if man_field_obj.part == mod_field_obj.part:
+                            field_part = man_field_obj.part
+                            field_part.bulk_upload_event = bulk_event
+                            field_part.save()
+
             
     if user_draft.exists():
         bulk_event.user_draft.clear()

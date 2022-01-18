@@ -193,17 +193,17 @@
 {% block javascript %}
 <script>
     $(document).ready(function() {
-        let refdesID = '{{assembly_part.reference_designator.id}}';
-        let refdesName = '{{assembly_part.reference_designator.name}}';
-        $('select[name=reference_designator]').val(refdesID);
-        $('input[name=updated_refdes_name]').val(refdesName);
-        $('select[name=reference_designator]').on('change', function(e) {
-            e.preventDefault();
-            let selectedRef = $('select[name=reference_designator] :selected').text();
-            if (selectedRef.length >= 1) {
-                $('input[name=updated_refdes_name]').val(selectedRef)
-            }
-        });
+        // let refdesID = '{{assembly_part.reference_designator.id}}';
+        // let refdesName = '{{assembly_part.reference_designator.name}}';
+        // $('select[name=reference_designator]').val(refdesID);
+        // $('input[name=updated_refdes_name]').val(refdesName);
+        // $('select[name=reference_designator]').on('change', function(e) {
+        //     e.preventDefault();
+        //     let selectedRef = $('select[name=reference_designator] :selected').text();
+        //     if (selectedRef.length >= 1) {
+        //         $('input[name=updated_refdes_name]').val(selectedRef)
+        //     }
+        // });
     });
 </script>
 {% endblock javascript %}
