@@ -39,12 +39,16 @@ from roundabout.calibrations.forms import parse_valid_coeff_vals
 from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientNameEvent
 from roundabout.configs_constants.models import ConfigName, ConfigValue, ConfigEvent
 from roundabout.cruises.models import Cruise, Vessel
-from roundabout.inventory.models import Inventory, Action, Deployment
+from roundabout.inventory.models import Inventory, Action, Deployment, InventoryDeployment
 from roundabout.inventory.utils import _create_action_history
 from roundabout.userdefinedfields.models import Field, FieldValue
 from roundabout.ooi_ci_tools.models import Threshold, ReferenceDesignator, ReferenceDesignatorEvent, BulkUploadEvent, BulkFile, BulkAssetRecord, BulkVocabRecord
 from roundabout.assemblies.models import Assembly
 from roundabout.locations.models import Location
+from roundabout.builds.models import Build
+from roundabout.core.utils import set_app_labels
+
+labels = set_app_labels()
 
 import logging
 logger = logging.getLogger(__name__)
@@ -329,9 +333,12 @@ def parse_cruise_files(self):
 
             if vessel_name_csv:
                 # update or create Cruise object based on CUID field
-                vessel_obj, vessel_created = Vessel.objects.get_or_create(
-                    vessel_name = vessel_name_csv,
-                )
+                try:
+                    vessel_obj, vessel_created = Vessel.objects.get_or_create(
+                        vessel_name = vessel_name_csv,
+                    )
+                except Vessel.MultipleObjectsReturned:
+                    vessel_obj = Vessel.objects.filter(vessel_name=vessel_name_csv).first()
                 if vessel_created:
                     _create_action_history(vessel_obj, Action.ADD, user, data=dict(csv_import=csv_file.name))
 
@@ -463,6 +470,7 @@ def parse_vessel_files(self):
 def parse_deployment_files(self):
     csv_files = cache.get('dep_files')
     user_draft = cache.get('user_draft_deploy')
+    user = cache.get('user')
     # Set up the Django file object for CSV DictReader
     for csv_file in csv_files:
         print(csv_file)
@@ -523,8 +531,8 @@ def parse_deployment_files(self):
 
             try:
                 cruise_deployed = Cruise.objects.get(CUID=deployment_import['rows'][0]['CUID_Deploy'])
-            except Cruise.DoesNotExist:
-                raise ValueError("No Cruise matches this CUID")
+            except:
+                cruise_deployed = None
 
             try:
                 cruise_recovered = Cruise.objects.get(CUID=deployment_import['rows'][0]['CUID_Recover'])
@@ -560,7 +568,7 @@ def parse_deployment_files(self):
                     created_at = dep_start_date,
                     build = build,
                     location = deployed_location,
-                    user = self.request.user,
+                    user = user,
                     detail = f'{Action.BUILD} first added to RDB',
                 )
 
@@ -580,7 +588,7 @@ def parse_deployment_files(self):
                         'cruise_recovered': cruise_recovered,
                         'latitude': latitude,
                         'longitude': longitude,
-                        'depth': water_depth,
+                        'depth': float(water_depth),
                     },
                 )
             except Deployment.MultipleObjectsReturned:
@@ -645,7 +653,7 @@ def parse_deployment_files(self):
                         location = deployed_location,
                         deployment = deployment_obj,
                         deployment_type = Action.BUILD_DEPLOYMENT,
-                        user = self.request.user,
+                        user = user,
                         detail = detail,
                     )
 
@@ -663,36 +671,27 @@ def parse_deployment_files(self):
                     try:
                         ref_des = row['Reference Designator']
                         ref_des_obj = ReferenceDesignator.objects.get(refdes_name=ref_des)
-                        assembly_part = ref_des_obj.refdes_event.assembly_part
+                        assembly_part = ref_des_obj.assembly_parts.filter(part__isnull=False).first()
                     except Exception as e:
                         print(e)
                         continue
 
-                    # Get/Create Inventory item with matching serial_number
-                    item, item_created = Inventory.objects.get_or_create(
-                        serial_number=uid,
-                        defaults={
-                            'location': build_location,
-                            'build': build,
-                            'part': assembly_part.part,
-                            'revision': assembly_part.part.revisions.latest(),
-                            'assembly_part': assembly_part,
-                            'created_at': dep_start_date,
-                        },
-                    )
+                    # Get/Update Inventory item with matching serial_number
+
+                    try:
+                        item = Inventory.objects.get(serial_number=uid)
+                    except Inventory.DoesNotExist:
+                        continue
+                    item.location = build_location
+                    item.build = build
+                    # item.part = assembly_part.part
+                    # item.revision = assembly_part.part.revisions.latest()
+                    item.assembly_part = assembly_part
+                    item.created_at = dep_start_date
+                    item.save()
+                    
                     # Create an initial Action history if Inventory needs to be created
-                    if item_created:
-                        print(f"{item} created")
-                        action = Action.objects.create(
-                            action_type = Action.ADD,
-                            object_type = Action.INVENTORY,
-                            created_at = dep_start_date,
-                            inventory = item,
-                            build = build,
-                            location = deployed_location,
-                            user = self.request.user,
-                            detail = f'{Action.INVENTORY} first added to RDB',
-                        )
+                    
 
                     # Get/Create Deployment for this Build
                     inv_deployment_obj, inv_deployment_created = InventoryDeployment.objects.update_or_create(
@@ -721,9 +720,9 @@ def parse_deployment_files(self):
                             'config_type': 'conf',
                         },
                     )
-                    config_event.user_approver.add(self.request.user)
+                    config_event.user_approver.add(user)
 
-                    config_name = ConfigName.objects.filter(name='Nominal Depth', part=assembly_part.part).first()
+                    config_name = ConfigName.objects.filter(name='Nominal Depth', part=item.part).first()
 
                     config_value, config_value_created = ConfigValue.objects.update_or_create(
                         config_event=config_event,
@@ -733,7 +732,7 @@ def parse_deployment_files(self):
                             'created_at': dep_start_date,
                         },
                     )
-                    _create_action_history(config_event, Action.CALCSVIMPORT, self.request.user)
+                    _create_action_history(config_event, Action.CALCSVIMPORT, user)
 
                     # _create_action_history function won't work correctly fo Inventory Deployments if item is already in RDB,
                     # need to add history Actions manually
@@ -746,7 +745,7 @@ def parse_deployment_files(self):
                         build = build,
                         location = deployed_location,
                         deployment = deployment_obj,
-                        user = self.request.user,
+                        user = user,
                         detail = f'Sub-Assembly {item} added.',
                     )
 
@@ -784,7 +783,7 @@ def parse_deployment_files(self):
                                 build = build,
                                 location = deployed_location,
                                 deployment = deployment_obj,
-                                user = self.request.user,
+                                user = user,
                                 detail = f'Sub-Assembly {item} removed.',
                             )
 
@@ -797,7 +796,7 @@ def parse_deployment_files(self):
                                 build = build,
                                 location = deployed_location,
                                 deployment = deployment_obj,
-                                user = self.request.user,
+                                user = user,
                                 detail = detail,
                             )
 
@@ -840,7 +839,7 @@ def parse_deployment_files(self):
                                 deployment = deployment_obj,
                                 inventory_deployment = inv_deployment_obj,
                                 deployment_type = Action.INVENTORY_DEPLOYMENT,
-                                user = self.request.user,
+                                user = user,
                                 detail = detail,
                             )
                     #print(row['sensor.uid'])

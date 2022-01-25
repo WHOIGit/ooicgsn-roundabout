@@ -575,10 +575,13 @@ class ImportDeploymentsForm(forms.Form):
                     )
                 try:
                     cuid_deploy = row['CUID_Deploy']
-                    cruise_deployed = Cruise.objects.get(CUID=cuid_deploy)
+                    if '#' in cuid_deploy:
+                        continue
+                    else:
+                        cruise_deployed = Cruise.objects.get(CUID=cuid_deploy)
                 except Cruise.DoesNotExist:
                     raise ValidationError(
-                        _('File: %(filename)s: Unable to parse Location Code or Code not found'),
+                        _('File: %(filename)s: CUID: %(cuid)s: Unable to parse CUID or CUID not found'),
                         params={'filename': filename, 'cuid': cuid_deploy},
                     )
             validate_import_config_deployments(import_config, reader, filename)
