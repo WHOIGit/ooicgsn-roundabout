@@ -119,7 +119,8 @@ class ImportCalibrationForm(forms.Form):
             attrs={
                 'multiple': True
             }
-        )
+        ),
+        label = 'Generates Calibration data '
     )
     user_draft = forms.ModelMultipleChoiceField(
         queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username'),

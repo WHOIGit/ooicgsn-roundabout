@@ -218,7 +218,7 @@ AssemblyDocumentationFormset = inlineformset_factory(
 
 
 class AssemblyPartForm(forms.ModelForm):
-    updated_refdes_name = forms.CharField(required=False)
+    # updated_refdes_name = forms.CharField(required=False)
 
     class Meta:
         model = AssemblyPart
