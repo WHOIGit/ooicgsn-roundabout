@@ -1101,42 +1101,45 @@ class ImportBulkUploadForm(forms.Form):
             reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
             file_name = csv_file.name
             if file_name.endswith('-AssetRecord.csv'):
-                for row in reader:
-                    try:
-                        asset_uid = row['ASSET_UID']
-                        inv_item = Inventory.objects.get(serial_number = asset_uid)
-                    except Inventory.DoesNotExist:
-                        raise ValidationError(
-                                _('File: %(filename)s, Asset UID %(row)s: No matching Inventory serial number exists'),
-                                params={'row': asset_uid, 'filename': file_name}
-                            )
+                continue
+                # for row in reader:
+                #     try:
+                #         asset_uid = row['ASSET_UID']
+                #         inv_item = Inventory.objects.get(serial_number = asset_uid)
+                #     except Inventory.DoesNotExist:
+                #         raise ValidationError(
+                #                 _('File: %(filename)s, Asset UID %(row)s: No matching Inventory serial number exists'),
+                #                 params={'row': asset_uid, 'filename': file_name}
+                #             )
             if file_name.endswith('_vocab.csv'):
-                for row in reader:
-                    manufacturer = row['Manufacturer']
-                    asset_model = row['Model']
-                    man_field_list = FieldValue.objects.filter(field__field_name__iexact='Manufacturer', field_value = manufacturer, part__isnull=False, is_current=True)
-                    mod_field_list = FieldValue.objects.filter(field__field_name__iexact='Model', field_value = asset_model, part__isnull=False, is_current=True)
-                    if not len(man_field_list):
-                        raise ValidationError(
-                                _('File: %(filename)s, Manufacturer %(manufacturer)s: No matching Manufacturer exists'),
-                                params={'manufacturer': manufacturer,'filename': file_name}
-                            )
-                    if not len(mod_field_list):
-                        raise ValidationError(
-                                _('File: %(filename)s, Manufacturer %(manufacturer)s, Model %(model)s: No matching Model exists'),
-                                params={'manufacturer': manufacturer, 'model': asset_model, 'filename': file_name}
-                            )
-                    if len(man_field_list) and len(mod_field_list):
-                        man_field_obj = man_field_list.first()
-                        mod_field_obj = mod_field_list.first()
-                        if man_field_obj.part != mod_field_obj.part:
-                            raise ValidationError(
-                                _('File: %(filename)s, Manufacturer %(manufacturer)s, Model %(model)s: No matching Part exists for Manufacturer/Model pair'),
-                                params={'manufacturer': manufacturer, 'model': asset_model, 'filename': file_name}
-                            )
+                continue
+                # for row in reader:
+                #     manufacturer = row['Manufacturer']
+                #     asset_model = row['Model']
+                #     man_field_list = FieldValue.objects.filter(field__field_name__iexact='Manufacturer', field_value = manufacturer, part__isnull=False, is_current=True)
+                #     mod_field_list = FieldValue.objects.filter(field__field_name__iexact='Model', field_value = asset_model, part__isnull=False, is_current=True)
+                #     if not len(man_field_list):
+                #         raise ValidationError(
+                #                 _('File: %(filename)s, Manufacturer %(manufacturer)s: No matching Manufacturer exists'),
+                #                 params={'manufacturer': manufacturer,'filename': file_name}
+                #             )
+                #     if not len(mod_field_list):
+                #         raise ValidationError(
+                #                 _('File: %(filename)s, Manufacturer %(manufacturer)s, Model %(model)s: No matching Model exists'),
+                #                 params={'manufacturer': manufacturer, 'model': asset_model, 'filename': file_name}
+                #             )
+                #     if len(man_field_list) and len(mod_field_list):
+                #         man_field_obj = man_field_list.first()
+                #         mod_field_obj = mod_field_list.first()
+                #         if man_field_obj.part != mod_field_obj.part:
+                #             raise ValidationError(
+                #                 _('File: %(filename)s, Manufacturer %(manufacturer)s, Model %(model)s: No matching Part exists for Manufacturer/Model pair'),
+                #                 params={'manufacturer': manufacturer, 'model': asset_model, 'filename': file_name}
+                #             )
+            
             else:
                 raise ValidationError(
-                        _('File: %(filename)s: File is invalid format. File must be of type _AssetRecord or _vocab'),
+                        _('File: %(filename)s: File is invalid format. File must be of type -AssetRecord or _vocab'),
                         params={ 'filename': file_name}
                     )
 

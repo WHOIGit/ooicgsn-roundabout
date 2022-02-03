@@ -982,29 +982,26 @@ def parse_bulk_files(self):
                 if len(inv):
                     inv = inv.first()
                     inv.bulk_upload_event = bulk_event
-                    if hasattr(inv,'part'):
-                        inv_part = inv.part
-                        if hasattr(inv_part, 'fieldvalues'):
-                            field_dict = {
-                                'CI TYPE': row['TYPE'], 
-                                'CI Mobile': row['Mobile'], 
-                                'Manufacturer Serial Number': row["Manufacturer's Serial No./Other Identifier"], 
-                                'Firmware Version': row['Firmware Version'], 
-                                'Date Received': row['ACQUISITION DATE'], 
-                                'CI comments': row['comments'], 
-                                'Owner': row['MIO'] if hasattr(row,'MIO') else '', 
-                                'CI Array Geometry': row['Array_geometry'] if hasattr(row,'Array_geometry') else '', 
-                                'CI Commission Date': row['Commission_Date'] if hasattr(row,'Commission_Date') else '', 
-                                'CI Decommission Date': row['Decommission_Date'] if hasattr(row,'Decommission_Date') else ''
-                            }
-                            for key, val in field_dict.items():
-                                field_val = inv_part.fieldvalues.filter(field__field_name=key, is_current=True)
+                    if hasattr(inv, 'fieldvalues'):
+                        field_dict = {
+                            'CI TYPE': row['TYPE'], 
+                            'CI Mobile': row['Mobile'], 
+                            'Manufacturer Serial Number': row["Manufacturer's Serial No./Other Identifier"], 
+                            'Firmware Version': row['Firmware Version'], 
+                            'Date Received': row['ACQUISITION DATE'], 
+                            'CI comments': row['comments'], 
+                            'Owner': row['MIO'] if hasattr(row,'MIO') else '', 
+                            'CI Array Geometry': row['Array_geometry'] if hasattr(row,'Array_geometry') else '', 
+                            'CI Commission Date': row['Commission_Date'] if hasattr(row,'Commission_Date') else '', 
+                            'CI Decommission Date': row['Decommission_Date'] if hasattr(row,'Decommission_Date') else ''
+                        }
+                        for key, val in field_dict.items():
+                            field_val = inv.fieldvalues.filter(field__field_name=key, is_current=True)
+                            if field_val:
+                                field_val = field_val.first()
                                 if field_val:
-                                    field_val = field_val.first()
-                                    if field_val:
-                                        field_val.field_value = val
-                                        field_val.save()
-                                
+                                    field_val.field_value = val
+                                    field_val.save()       
                     inv.save()
         if csv_file.name.endswith('vocab.csv'):
             for row in reader:

@@ -36,16 +36,17 @@
     </div>
     <form class="form-horizontal" method="post" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
+        <small class = 'form-text text-muted'>Operates on Calibration Data</small>
         {{ form|crispy }}
-
+        <small class = 'form-text text-muted'>Operates on Deployment, Configuration, and Action History data</small>
         {{ dep_form|crispy }}
-
+        <small class = 'form-text text-muted'>Operates on Cruise Data</small>
         {{ cruises_form|crispy }}
-
+        <small class = 'form-text text-muted'>Operates on Vessel Data</small>
         {{ vessels_form|crispy }}
-
+        <small class = 'form-text text-muted'>Operates on AssemblyPart Reference Designator Data</small>
         {{ refdes_form|crispy }}
-
+        <small class = 'form-text text-muted'>Operates on Inventory Bulk Upload and Part Custom Field data</small>
         {{ bulk_form|crispy }}
 
         <div class="control-group">
