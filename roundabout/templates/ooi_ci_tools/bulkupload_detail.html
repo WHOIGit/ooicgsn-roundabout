@@ -70,6 +70,8 @@
                                         class="btn btn-danger btn-sm mr-2"
                                         data-detail-url="{% url 'ooi_ci_tools:inv_bulkuploadevent_delete' event.id inventory_item.id %}"
                                         role="button"
+                                        data-node-id="{{ inventory_item.id }}"
+                                        data-node-type="inventory"
                                     >
                                             Delete
                                     </a>
@@ -293,6 +295,7 @@
         }
 
         handleReviewBadges('#bulkupload-template', 'button[id^=bulkupload_expander]', '{{ user.id }}', '{{ user.username }}', inv_id)
+
 
     });
 </script>

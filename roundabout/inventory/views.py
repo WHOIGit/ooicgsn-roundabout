@@ -534,6 +534,7 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         user_rev_const_events = False
         user_rev_conf_events = False
         user_rev_bulk_events = False
+        inv_has_bulk_event = False
         cnst_events = self.object.inventory_configevents.filter(config_type='cnst')
         conf_events = self.object.inventory_configevents.filter(config_type='conf')
         user_cnst_events = self.request.user.reviewer_configevents.filter(config_type='cnst')
@@ -591,6 +592,7 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
                 user_rev_conf_events = True
         
         if self.object.bulk_upload_event:
+            inv_has_bulk_event = True
             if self.object.bulk_upload_event in self.request.user.reviewer_bulkuploadevents.all():
                 user_rev_bulk_events = True
         comment_list = None
@@ -620,6 +622,7 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
                 "part_has_consts": part_has_consts,
                 'inv_has_conf_events': inv_has_conf_events,
                 'inv_has_const_events': inv_has_const_events,
+                'inv_has_bulk_event': inv_has_bulk_event,
                 "comment_list": comment_list,
                 "coeff_events": coeff_events,
                 "printers": printers,
