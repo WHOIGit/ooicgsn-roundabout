@@ -524,67 +524,98 @@ class ImportDeploymentsForm(forms.Form):
             import_config = None
         for csv_file in deployments_csv:
             counter += 1
-            filename = csv_file.name[:-4]
+            filename = csv_file.name
             cache.set('validation_progress', {
                 'progress': counter,
                 'total': len(deployments_csv),
                 'file': filename
             })
-            try:
-                csv_file.seek(0)
-                reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
-                headers = reader.fieldnames
-            except:
-                raise ValidationError(
-                    _('File: %(filename)s: Unable to decode file headers'),
-                    params={'filename': filename},
-                )
-            
-            for idx,row in enumerate(reader):
+            if filename.endswith('_Deploy.csv'):
                 try:
-                    mooring_id = row['mooring.uid']
+                    csv_file.seek(0)
+                    reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+                    headers = reader.fieldnames
                 except:
                     raise ValidationError(
-                        _('File: %(filename)s: Unable to parse Mooring UID'),
+                        _('File: %(filename)s: Unable to decode file headers'),
                         params={'filename': filename},
                     )
-                # get Assembly number from RefDes as that seems to be most consistent across CSVs
-                try:
-                    ref_des = row['Reference Designator']
-                    ref_des_obj = ReferenceDesignator.objects.get(refdes_name=ref_des)
-                except ReferenceDesignator.DoesNotExist:
-                    raise ValidationError( 
-                        _('File: %(filename)s: Unable to parse Reference Designator or Reference Designator not found'),
-                        params={'filename': filename},
-                    )
-                try:
-                    assembly_num = ref_des.split('-')[0]
-                    assembly = Assembly.objects.get(assembly_number=assembly_num)
-                except Assembly.DoesNotExist:
-                    raise ValidationError(
-                        _('File: %(filename)s: Unable to parse Assembly from Reference Designator or Assembly not found'),
-                        params={'filename': filename},
-                    )
-                try:
-                    location_code = assembly_num[0:2]
-                    deployed_location = Location.objects.get(location_code=location_code)
-                except Location.DoesNotExist:
-                    raise ValidationError(
-                        _('File: %(filename)s: Unable to parse Location Code or Code not found'),
-                        params={'filename': filename},
-                    )
-                try:
-                    cuid_deploy = row['CUID_Deploy']
-                    if '#' in cuid_deploy:
-                        continue
-                    else:
-                        cruise_deployed = Cruise.objects.get(CUID=cuid_deploy)
-                except Cruise.DoesNotExist:
-                    raise ValidationError(
-                        _('File: %(filename)s: CUID: %(cuid)s: Unable to parse CUID or CUID not found'),
-                        params={'filename': filename, 'cuid': cuid_deploy},
-                    )
-            validate_import_config_deployments(import_config, reader, filename)
+                
+                for idx,row in enumerate(reader):
+                    try:
+                        start_date = row['startDateTime']
+                        datetime_obj = parser.parse(start_date)
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Row: %(row)s: Unable to parse Start DateTime'),
+                            params={'filename': filename, 'row': idx},
+                        )
+                    try:
+                        stop_date = row['stopDateTime']
+                        datetime_obj = parser.parse(stop_date)
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Row: %(row)s: Unable to parse Stop DateTime'),
+                            params={'filename': filename, 'row': idx},
+                        )
+                    try:
+                        water_depth = row['water_depth']
+                        float_obj = float(water_depth)
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Row: %(row)s: Unable to parse Water Depth'),
+                            params={'filename': filename, 'row': idx},
+                        )
+                    try:
+                        mooring_id = row['mooring.uid']
+                        dep_number = mooring_id.split('-')[2]
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Row: %(row)s: Unable to parse Mooring UID or Deployment Number from Mooring UID'),
+                            params={'filename': filename},
+                        )
+                    # get Assembly number from RefDes as that seems to be most consistent across CSVs
+                    try:
+                        ref_des = row['Reference Designator']
+                        ref_des_obj = ReferenceDesignator.objects.get(refdes_name=ref_des)
+                    except ReferenceDesignator.DoesNotExist:
+                        raise ValidationError( 
+                            _('File: %(filename)s: Row: %(row)s: Value: %(value)s: Unable to parse Reference Designator or Reference Designator not found'),
+                            params={'filename': filename, 'row': idx, 'value': ref_des},
+                        )
+                    try:
+                        assembly_num = ref_des.split('-')[0]
+                        assembly = Assembly.objects.get(assembly_number=assembly_num)
+                    except Assembly.DoesNotExist:
+                        raise ValidationError(
+                            _('File: %(filename)s: Row: %(row)s: Value: %(value)s: Unable to parse Assembly from Reference Designator or Assembly not found'),
+                            params={'filename': filename, 'row': idx, 'value': assembly_num},
+                        )
+                    try:
+                        location_code = assembly_num[0:2]
+                        deployed_location = Location.objects.get(location_code=location_code)
+                    except Location.DoesNotExist:
+                        raise ValidationError(
+                            _('File: %(filename)s: Row: %(row)s: Value: %(value)s: Unable to parse Location Code or Code not found'),
+                            params={'filename': filename, 'row': idx , 'value': location_code},
+                        )
+                    try:
+                        cuid_deploy = row['CUID_Deploy']
+                        if '#' in cuid_deploy:
+                            continue
+                        else:
+                            cruise_deployed = Cruise.objects.get(CUID=cuid_deploy)
+                    except Cruise.DoesNotExist:
+                        raise ValidationError(
+                            _('File: %(filename)s: Row: %(row)s: Value: %(value)s: CUID: %(cuid)s: Unable to parse CUID or CUID not found'),
+                            params={'filename': filename, 'cuid': cuid_deploy, 'row':idx , 'value': cuid_deploy},
+                        )
+                validate_import_config_deployments(import_config, reader, filename)
+            else:
+                raise ValidationError(
+                    _('File: %(filename)s: Incorrect filename format. Must be _Deploy.csv'),
+                    params={'filename': filename}
+                )
         return deployments_csv
 
 
@@ -615,116 +646,122 @@ class ImportVesselsForm(forms.Form):
                     _('File: Unable to parse CSV file'),
                 )
             counter += 1
-            filename = csv_file.name[:-4]
+            filename = csv_file.name
             cache.set('validation_progress',{
                 'progress': counter,
                 'total': len(vessels_csv),
                 'file': filename
             })
-            try:
-                csv_file.seek(0)
-                reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
-                headers = reader.fieldnames
-            except:
+            if filename.endswith('shiplist.csv'):
+                try:
+                    csv_file.seek(0)
+                    reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+                    headers = reader.fieldnames
+                except:
+                    raise ValidationError(
+                        _('File: %(filename)s: Unable to decode file headers'),
+                        params={'filename': filename},
+                    )
+                for idx,row in enumerate(reader):
+                    try:
+                        vessel_name = row['Vessel Name']
+                        vessel_obj = Vessel.objects.get(
+                            vessel_name = vessel_name,
+                        )
+                    except Vessel.DoesNotExist:
+                        vessel_obj = ''
+                    except Vessel.MultipleObjectsReturned:
+                        raise ValidationError(
+                            _('File: %(filename)s, %(v_name)s: More than one Vessel associated with CSV Vessel Name'),
+                            params={'filename': filename, 'v_name': vessel_name},
+                        )
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Unable to parse Vessel Name'),
+                            params={'filename': filename},
+                        )
+                    MMSI_number = None
+                    IMO_number = None
+                    length = None
+                    max_speed = None
+                    max_draft = None
+                    try:
+                        active = row['Active']
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Unable to parse Active'),
+                            params={'filename': filename},
+                        )
+                    try:
+                        R2R = row['R2R']
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Unable to parse R2R'),
+                            params={'filename': filename},
+                        )
+                    try:
+                        MMSI_number = row['MMSI#']
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Unable to parse MMSI'),
+                            params={'filename': filename},
+                        )
+                    try:
+                        IMO_number = row['IMO#']
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Unable to parse IMO'),
+                            params={'filename': filename},
+                        )
+                    try:
+                        length = row['Length (m)']
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Unable to parse Lenth (m)'),
+                            params={'filename': filename},
+                        )
+                    try:
+                        max_speed = row['Max Draft (m)']
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Unable to parse Max Speed (m/s)'),
+                            params={'filename': filename},
+                        )
+                    try:
+                        max_draft = row['Max Draft (m)']
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Unable to parse Max Draft (m)'),
+                            params={'filename': filename},
+                        )
+                    try:
+                        ICES_code = row['ICES Code']
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Unable to parse ICES Code'),
+                            params={'filename': filename},
+                        )
+                    try:
+                        assert len(ICES_code) > 0 and ICES_code != ''
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Row: %(row)s: Invalid ICES Code. Code must not be blank'),
+                            params={'filename': filename, 'row': idx},
+                        )
+                    try:
+                        assert len(ICES_code) == 4
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Row: %(row)s: Invalid ICES Code. Code must be 4 characters in length'),
+                            params={'filename': filename, 'row': idx},
+                        )
+                if import_config:
+                    validate_import_config_vessels(import_config, reader, filename)
+            else:
                 raise ValidationError(
-                    _('File: %(filename)s: Unable to decode file headers'),
+                    _('File: %(filename)s: Incorrect filename format. Must be shiplist.csv'),
                     params={'filename': filename},
                 )
-            for idx,row in enumerate(reader):
-                try:
-                    vessel_name = row['Vessel Name']
-                    vessel_obj = Vessel.objects.get(
-                        vessel_name = vessel_name,
-                    )
-                except Vessel.DoesNotExist:
-                    vessel_obj = ''
-                except Vessel.MultipleObjectsReturned:
-                    raise ValidationError(
-                        _('File: %(filename)s, %(v_name)s: More than one Vessel associated with CSV Vessel Name'),
-                        params={'filename': filename, 'v_name': vessel_name},
-                    )
-                except:
-                    raise ValidationError(
-                        _('File: %(filename)s: Unable to parse Vessel Name'),
-                        params={'filename': filename},
-                    )
-                MMSI_number = None
-                IMO_number = None
-                length = None
-                max_speed = None
-                max_draft = None
-                try:
-                    active = row['Active']
-                except:
-                    raise ValidationError(
-                        _('File: %(filename)s: Unable to parse Active'),
-                        params={'filename': filename},
-                    )
-                try:
-                    R2R = row['R2R']
-                except:
-                    raise ValidationError(
-                        _('File: %(filename)s: Unable to parse R2R'),
-                        params={'filename': filename},
-                    )
-                try:
-                    MMSI_number = row['MMSI#']
-                except:
-                    raise ValidationError(
-                        _('File: %(filename)s: Unable to parse MMSI'),
-                        params={'filename': filename},
-                    )
-                try:
-                    IMO_number = row['IMO#']
-                except:
-                    raise ValidationError(
-                        _('File: %(filename)s: Unable to parse IMO'),
-                        params={'filename': filename},
-                    )
-                try:
-                    length = row['Length (m)']
-                except:
-                    raise ValidationError(
-                        _('File: %(filename)s: Unable to parse Lenth (m)'),
-                        params={'filename': filename},
-                    )
-                try:
-                    max_speed = row['Max Draft (m)']
-                except:
-                    raise ValidationError(
-                        _('File: %(filename)s: Unable to parse Max Speed (m/s)'),
-                        params={'filename': filename},
-                    )
-                try:
-                    max_draft = row['Max Draft (m)']
-                except:
-                    raise ValidationError(
-                        _('File: %(filename)s: Unable to parse Max Draft (m)'),
-                        params={'filename': filename},
-                    )
-                try:
-                    ICES_code = row['ICES Code']
-                except:
-                    raise ValidationError(
-                        _('File: %(filename)s: Unable to parse ICES Code'),
-                        params={'filename': filename},
-                    )
-                try:
-                    assert len(ICES_code) > 0 and ICES_code != ''
-                except:
-                    raise ValidationError(
-                        _('File: %(filename)s: Row: %(row)s: Invalid ICES Code. Code must not be blank'),
-                        params={'filename': filename, 'row': idx},
-                    )
-                try:
-                    assert len(ICES_code) == 4
-                except:
-                    raise ValidationError(
-                        _('File: %(filename)s: Row: %(row)s: Invalid ICES Code. Code must be 4 characters in length'),
-                        params={'filename': filename, 'row': idx},
-                    )
-            if import_config:
-                validate_import_config_vessels(import_config, reader, filename)
         return vessels_csv
 
 
@@ -757,40 +794,46 @@ class ImportCruisesForm(forms.Form):
                     'total': len(cruises_csv),
                     'file': filename
                 })
-                try:
-                    csv_file.seek(0)
-                    reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
-                    headers = reader.fieldnames
-                except:
+                if filename.endswith('CruiseInformation.csv'):
+                    try:
+                        csv_file.seek(0)
+                        reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+                        headers = reader.fieldnames
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Unable to decode file headers'),
+                            params={'filename': filename},
+                        )
+                    if import_config:
+                        validate_import_config_cruises(import_config, reader, filename)
+                    for row in reader:
+                        try:
+                            cuid = row['CUID']
+                        except:
+                            raise ValidationError(
+                                _('File: %(filename)s: Unable to parse CUID'),
+                                params={'filename': filename},
+                            )
+                        try:
+                            cruise_start_date = parser.parse(row['cruiseStartDateTime']).date()
+                            cruise_stop_date = parser.parse(row['cruiseStopDateTime']).date()
+                        except:
+                            raise ValidationError(
+                                _('File: %(filename)s: Unable to parse Cruise Start/Stop Dates'),
+                                params={'filename': filename},
+                            )
+                        try:
+                            vessel_name_csv = row['ShipName'].strip()
+                        except:
+                            raise ValidationError(
+                                _('File: %(filename)s: Unable to parse Vessel Name'),
+                                params={'filename': filename},
+                            )     
+                else:
                     raise ValidationError(
-                        _('File: %(filename)s: Unable to decode file headers'),
+                        _('File: %(filename)s: Incorrect filename format. Must be cruiseinformation.csv'),
                         params={'filename': filename},
                     )
-                if import_config:
-                    validate_import_config_cruises(import_config, reader, filename)
-                for row in reader:
-                    try:
-                        cuid = row['CUID']
-                    except:
-                        raise ValidationError(
-                            _('File: %(filename)s: Unable to parse CUID'),
-                            params={'filename': filename},
-                        )
-                    try:
-                        cruise_start_date = parser.parse(row['cruiseStartDateTime']).date()
-                        cruise_stop_date = parser.parse(row['cruiseStopDateTime']).date()
-                    except:
-                        raise ValidationError(
-                            _('File: %(filename)s: Unable to parse Cruise Start/Stop Dates'),
-                            params={'filename': filename},
-                        )
-                    try:
-                        vessel_name_csv = row['ShipName'].strip()
-                    except:
-                        raise ValidationError(
-                            _('File: %(filename)s: Unable to parse Vessel Name'),
-                            params={'filename': filename},
-                        )     
         return cruises_csv
 
 
@@ -1069,10 +1112,18 @@ class ImportReferenceDesignatorForm(forms.Form):
         for csv_file in refdes_files:
             csv_file.seek(0)
             reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
-            for idx, row in enumerate(reader):
-                row_idx = idx + 1
-                refdes_name = row['Reference_Designator']
-                validate_reference_designator(refdes_name, row_idx)
+            filename = csv_file.name
+            headers = reader.fieldnames
+            if 'Reference_Designator' in headers:
+                for idx, row in enumerate(reader):
+                    row_idx = idx + 1
+                    refdes_name = row['Reference_Designator']
+                    validate_reference_designator(refdes_name, row_idx)
+            else:
+                raise ValidationError(
+                    _('File: %(filename)s:  Reference Designator CSV file is not valid. Must contain a Reference_Designator column.'),
+                        params={'filename': filename},
+                    )        
         return refdes_files
 
 
