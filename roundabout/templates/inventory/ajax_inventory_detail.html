@@ -470,7 +470,7 @@
         {% endif %}
 
         {% if inv_has_bulk_event %}
-            <li class="nav-item">
+            <li id = 'bulk_tab' class="nav-item">
                 <a class="nav-link" id="bulkupload-template-tab" data-toggle="tab" href="#bulkupload-template" role="tab" aria-controls="bulkupload-template" aria-selected="false">
                     Bulk Upload History
                     {% if user_rev_bulk_events %}
@@ -759,6 +759,11 @@
         let part_has_consts = '{{part_has_consts}}'
         let ccc_toggle = '{{inventory_item.part.part_type.ccc_toggle}}'
         let const_def_exists = '{{inventory_item.inventory_constdefaultevents.exists}}'
+        let inv_has_bulk_event = '{{inv_has_bulk_event}}'
+
+        if (inv_has_bulk_event == 'True') {
+            $('#bulk_tab').show()
+        } 
 
         if (part_has_cals == 'True' && ccc_toggle == 'True') {
             $('#add_coefficient_action').show()

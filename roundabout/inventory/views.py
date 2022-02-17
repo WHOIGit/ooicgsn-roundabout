@@ -2090,6 +2090,8 @@ class InventoryDetailView(LoginRequiredMixin, DetailView):
         part_has_consts = False
         inv_has_conf_events = False
         inv_has_const_events = False
+        inv_has_bulk_event = False
+        user_rev_bulk_events = False
 
         if self.object.inventory_calibrationevents.exists():
             coeff_events = self.object.inventory_calibrationevents.prefetch_related(
@@ -2126,6 +2128,11 @@ class InventoryDetailView(LoginRequiredMixin, DetailView):
             if self.object.inventory_configevents.filter(config_type='cnst'):
                 inv_has_const_events = True
 
+        if self.object.bulk_upload_event:
+            inv_has_bulk_event = True
+            if self.object.bulk_upload_event in self.request.user.reviewer_bulkuploadevents.all():
+                user_rev_bulk_events = True
+
         # Get Inventory items by Root Locations
         inventory_location_data = []
         root_locations = Location.objects.root_nodes().exclude(root_type="Trash")
@@ -2148,6 +2155,8 @@ class InventoryDetailView(LoginRequiredMixin, DetailView):
                 "part_has_consts": part_has_consts,
                 'inv_has_conf_events': inv_has_conf_events,
                 'inv_has_const_events': inv_has_const_events,
+                'inv_has_bulk_event': inv_has_bulk_event,
+                'user_rev_bulk_events': user_rev_bulk_events,
                 "coeff_events": coeff_events,
                 "part_types": part_types,
                 "printers": printers,
