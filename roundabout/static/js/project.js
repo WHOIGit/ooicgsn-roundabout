@@ -730,7 +730,7 @@ let handleReviewBadges = (
 ) => {
     $(templateTag).on("click", approveTag, function (e) {
         e.preventDefault();
-        let thisBtn = $(approveTag);
+        let thisBtn = $(this);
         let grandParent = thisBtn.parent().parent();
         let url = thisBtn.attr("data-reviewer-url");
         let reviewer_list = grandParent.find("#reviewers");
