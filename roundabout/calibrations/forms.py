@@ -344,8 +344,8 @@ def validate_coeff_array(coeff_1d_array, valset_inst, val_set_index = 0, filenam
         low = float(threshold.low)
         high = float(threshold.high)
     else:
-        low = float(-1000000000)
-        high = float(1000000000)
+        low = float(-10000000000000000000000000000000)
+        high = float(10000000000000000000000000000000)
     for idx, val in enumerate(coeff_1d_array):
         val = val.strip()
         error_col_index = idx + 1
