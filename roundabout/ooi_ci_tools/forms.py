@@ -787,7 +787,7 @@ class ImportCruisesForm(forms.Form):
             except ImportConfig.DoesNotExist:
                 import_config = None
             for csv_file in cruises_csv:
-                filename = csv_file.name[:-4]
+                filename = csv_file.name
                 counter += 1
                 cache.set('validation_progress',{
                     'progress': counter,
@@ -1152,7 +1152,7 @@ class ImportBulkUploadForm(forms.Form):
             reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
             file_name = csv_file.name
             if file_name.endswith('-AssetRecord.csv'):
-                continue
+                pass
                 # for row in reader:
                 #     try:
                 #         asset_uid = row['ASSET_UID']
@@ -1162,8 +1162,8 @@ class ImportBulkUploadForm(forms.Form):
                 #                 _('File: %(filename)s, Asset UID %(row)s: No matching Inventory serial number exists'),
                 #                 params={'row': asset_uid, 'filename': file_name}
                 #             )
-            if file_name.endswith('_vocab.csv'):
-                continue
+            elif file_name.endswith('_vocab.csv'):
+                pass
                 # for row in reader:
                 #     manufacturer = row['Manufacturer']
                 #     asset_model = row['Model']
