@@ -630,6 +630,11 @@ class ImportVesselsForm(forms.Form):
         ),
         required=False
     )
+    user_draft = forms.ModelMultipleChoiceField(
+        queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username'),
+        required=False,
+        label = 'Select Reviewers'
+    )
 
     def clean_vessels_csv(self):
         vessels_csv = self.files.getlist('vessels_csv')
@@ -665,20 +670,11 @@ class ImportVesselsForm(forms.Form):
                 for idx,row in enumerate(reader):
                     try:
                         vessel_name = row['Vessel Name']
-                        vessel_obj = Vessel.objects.get(
-                            vessel_name = vessel_name,
-                        )
-                    except Vessel.DoesNotExist:
-                        vessel_obj = ''
-                    except Vessel.MultipleObjectsReturned:
-                        raise ValidationError(
-                            _('File: %(filename)s, %(v_name)s: More than one Vessel associated with CSV Vessel Name'),
-                            params={'filename': filename, 'v_name': vessel_name},
-                        )
+                        assert len(vessel_name) > 0
                     except:
                         raise ValidationError(
-                            _('File: %(filename)s: Unable to parse Vessel Name'),
-                            params={'filename': filename},
+                            _('File: %(filename)s:  Unable to parse Vessel Name'),
+                            params={'filename': filename, },
                         )
                     MMSI_number = None
                     IMO_number = None
@@ -741,20 +737,20 @@ class ImportVesselsForm(forms.Form):
                             _('File: %(filename)s: Unable to parse ICES Code'),
                             params={'filename': filename},
                         )
-                    try:
-                        assert len(ICES_code) > 0 and ICES_code != ''
-                    except:
-                        raise ValidationError(
-                            _('File: %(filename)s: Row: %(row)s: Invalid ICES Code. Code must not be blank'),
-                            params={'filename': filename, 'row': idx},
-                        )
-                    try:
-                        assert len(ICES_code) == 4
-                    except:
-                        raise ValidationError(
-                            _('File: %(filename)s: Row: %(row)s: Invalid ICES Code. Code must be 4 characters in length'),
-                            params={'filename': filename, 'row': idx},
-                        )
+                    # try:
+                    #     assert len(ICES_code) > 0 and ICES_code != ''
+                    # except:
+                    #     raise ValidationError(
+                    #         _('File: %(filename)s: Row: %(row)s: Invalid ICES Code. Code must not be blank'),
+                    #         params={'filename': filename, 'row': idx},
+                    #     )
+                    # try:
+                    #     assert len(ICES_code) == 4
+                    # except:
+                    #     raise ValidationError(
+                    #         _('File: %(filename)s: Row: %(row)s: Invalid ICES Code. Code must be 4 characters in length'),
+                    #         params={'filename': filename, 'row': idx},
+                    #     )
                 if import_config:
                     validate_import_config_vessels(import_config, reader, filename)
             else:
@@ -775,6 +771,11 @@ class ImportCruisesForm(forms.Form):
             }
         ),
         required=False
+    )
+    user_draft = forms.ModelMultipleChoiceField(
+        queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username'),
+        required=False,
+        label = 'Select Reviewers'
     )
     
 

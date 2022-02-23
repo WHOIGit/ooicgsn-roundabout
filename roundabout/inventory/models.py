@@ -643,6 +643,8 @@ class Action(models.Model):
     CONFNAMEEVENT = "confignameevent"
     REFDESEVENT = "referencedesignatorevent"
     BULKUPLOAD = "bulkuploadevent"
+    CRUISEEVENT = "cruiseevent"
+    VESSELEVENT = "vesselevent"
     LOCATION = "location"
     VESSEL = "vessel"
     CRUISE = "cruise"
@@ -661,6 +663,8 @@ class Action(models.Model):
         (CRUISE, "Cruise"),
         (REFDESEVENT, "Reference Designator Event"),
         (BULKUPLOAD, "Bulk Upload Event"),
+        (CRUISEEVENT, "Cruise Event"),
+        (VESSELEVENT, "Vessel Event"),
     )
     # deployment_type choices
     BUILD_DEPLOYMENT = "build_deployment"
@@ -728,6 +732,20 @@ class Action(models.Model):
     )
     bulk_upload_event = models.ForeignKey(
         "ooi_ci_tools.BulkUploadEvent",
+        related_name="actions",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    cruise_event = models.ForeignKey(
+        "ooi_ci_tools.CruiseEvent",
+        related_name="actions",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    vessel_event = models.ForeignKey(
+        "ooi_ci_tools.VesselEvent",
         related_name="actions",
         on_delete=models.CASCADE,
         null=True,

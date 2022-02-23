@@ -42,7 +42,7 @@ from roundabout.cruises.models import Cruise, Vessel
 from roundabout.inventory.models import Inventory, Action, Deployment, InventoryDeployment
 from roundabout.inventory.utils import _create_action_history
 from roundabout.userdefinedfields.models import Field, FieldValue
-from roundabout.ooi_ci_tools.models import Threshold, ReferenceDesignator, ReferenceDesignatorEvent, BulkUploadEvent, BulkFile, BulkAssetRecord, BulkVocabRecord
+from roundabout.ooi_ci_tools.models import Threshold, ReferenceDesignator, ReferenceDesignatorEvent, BulkUploadEvent, BulkFile, BulkAssetRecord, BulkVocabRecord, CruiseEvent, VesselEvent
 from roundabout.assemblies.models import Assembly
 from roundabout.locations.models import Location
 from roundabout.builds.models import Build
@@ -310,6 +310,7 @@ def parse_cal_files(self):
 @shared_task(bind=True)
 def parse_cruise_files(self):
     cruises_files = cache.get('cruises_files')
+    user_draft = cache.get('user_draft_cruises')
     user = cache.get('user')
     for csv_file in cruises_files:
         # Set up the Django file object for CSV DictReader
@@ -320,7 +321,7 @@ def parse_cruise_files(self):
         # Set up data lists for returning results
         cruises_created = []
         cruises_updated = []
-
+        cruise_event, event_created = CruiseEvent.objects.update_or_create(id=1)
         for row in reader:
             cuid = row['CUID']
             cruise_start_date = parser.parse(row['cruiseStartDateTime'])
@@ -347,6 +348,7 @@ def parse_cruise_files(self):
                         'cruise_start_date': cruise_start_date,
                         'cruise_stop_date': cruise_stop_date,
                         'vessel': vessel_obj,
+                        'cruise_event': cruise_event,
                        }
             try:
                 cruise_obj = Cruise.objects.get(CUID=cuid)
@@ -370,6 +372,16 @@ def parse_cruise_files(self):
                     if str(orig_val).rstrip('+00:00') != str(new_val).rstrip('+00:00'):
                         action_data["updated_values"][field] = {"from": str(orig_val).rstrip('+00:00'), "to": str(new_val).rstrip('+00:00')}
                 _create_action_history(cruise_obj,Action.UPDATE,user,data=action_data)
+            if user_draft.exists():
+                cruise_event.user_draft.clear()
+                cruise_event.user_approver.clear()
+                for draft_user in user_draft:
+                    cruise_event.user_draft.add(draft_user)
+            if event_created:
+                _create_action_history(cruise_event,Action.CALCSVIMPORT,user,data=dict(csv_import=csv_file.name))
+            else:
+                _create_action_history(cruise_event,Action.CALCSVUPDATE,user,data=dict(csv_import=csv_file.name))
+    cache.delete("user_draft")
     cache.delete('cruises_files')
 
 
@@ -378,6 +390,7 @@ def parse_cruise_files(self):
 @shared_task(bind=True)
 def parse_vessel_files(self):
     vessels_files = cache.get('vessels_files')
+    user_draft = cache.get('user_draft_vessels')
     user = cache.get('user')
     for csv_file in vessels_files:
         # Set up the Django file object for CSV DictReader
@@ -388,6 +401,7 @@ def parse_vessel_files(self):
         # Set up data lists for returning results
         vessels_created = []
         vessels_updated = []
+        vessel_event, event_created = VesselEvent.objects.update_or_create(id=1)
         for row in reader:
             vessel_name = row['Vessel Name'].strip()
             MMSI_number = None
@@ -439,6 +453,7 @@ def parse_vessel_files(self):
                 'designation': row['Designation'],
                 'active': active,
                 'R2R': R2R,
+                'vessel_event': vessel_event
             }
             try:
                 vessel_obj = Vessel.objects.get(vessel_name=vessel_name)
@@ -462,6 +477,15 @@ def parse_vessel_files(self):
                     if str(orig_val).rstrip('.0') != str(new_val).rstrip('.0'):
                         action_data["updated_values"][field] = {"from": str(orig_val).rstrip('.0'), "to": str(new_val).rstrip('.0')}
                 _create_action_history(vessel_obj,Action.UPDATE,user,data=action_data)
+            if user_draft.exists():
+                vessel_event.user_draft.clear()
+                vessel_event.user_approver.clear()
+                for draft_user in user_draft:
+                    vessel_event.user_draft.add(draft_user)
+            if event_created:
+                _create_action_history(vessel_event,Action.CALCSVIMPORT,user,data=dict(csv_import=csv_file.name))
+            else:
+                _create_action_history(vessel_event,Action.CALCSVUPDATE,user,data=dict(csv_import=csv_file.name))
     cache.delete('vessels_files')
 
 

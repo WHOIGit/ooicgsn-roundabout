@@ -64,6 +64,8 @@ def _create_action_history(
         or object_type == Action.CONFNAMEEVENT
         or object_type == Action.REFDESEVENT
         or object_type == Action.BULKUPLOAD
+        or object_type == Action.CRUISEEVENT
+        or object_type == Action.VESSELEVENT
     ) and not referring_obj:
         detail = obj.detail
 
@@ -158,6 +160,14 @@ def _create_action_history(
     elif object_type == Action.BULKUPLOAD:
         obj_label = "Bulk Upload"
         action_record.bulk_upload_event = obj
+
+    elif object_type == Action.CRUISEEVENT:
+        obj_label = "Cruise Event"
+        action_record.cruise_event = obj
+
+    elif object_type == Action.VESSELEVENT:
+        obj_label = "Vessel Event"
+        action_record.vessel_event = obj
 
     # Run through the discrete Actions, set up details text and extra records if needed.
     if action_type == Action.ADD:
