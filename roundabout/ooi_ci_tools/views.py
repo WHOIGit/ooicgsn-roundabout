@@ -67,13 +67,15 @@ def import_deployments(csv_files, user_draft):
 
 
 # Cruise CSV Importer
-def import_cruises(cruises_files):
+def import_cruises(cruises_files, user_draft):
     cache.set('cruises_files', cruises_files, timeout=None)
+    cache.set('user_draft_cruises', user_draft, timeout=None)
     job = parse_cruise_files.delay()
 
 # Vessel CSV Importer
-def import_vessels(vessels_files):
+def import_vessels(vessels_files, user_draft):
     cache.set('vessels_files', vessels_files, timeout=None)
+    cache.set('user_draft_vessels', user_draft, timeout=None)
     job = parse_vessel_files.delay()
 
 # Reference Designator CSV Importer
@@ -131,10 +133,10 @@ def import_csv(request):
             import_deployments(dep_files, dep_form.cleaned_data['user_draft'])
             confirm = "True"
         if cruises_form.is_valid() and len(cruises_file) >= 1:
-            import_cruises(cruises_file)
+            import_cruises(cruises_file, cruises_form.cleaned_data['user_draft'])
             confirm = "True"
         if vessels_form.is_valid() and len(vessels_file) >= 1:
-            import_vessels(vessels_file)
+            import_vessels(vessels_file, vessels_form.cleaned_data['user_draft'])
             confirm = "True"
         if refdes_form.is_valid() and len(refdes_file) >= 1:
             import_refdes(refdes_file, refdes_form.cleaned_data['user_draft'])

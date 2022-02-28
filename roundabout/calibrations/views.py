@@ -45,7 +45,7 @@ from roundabout.configs_constants.models import ConfigEvent, ConfigNameEvent, Co
 from roundabout.inventory.models import Inventory, Action, Deployment
 from roundabout.inventory.utils import _create_action_history
 from roundabout.ooi_ci_tools.tasks import async_update_cal_thresholds
-from roundabout.ooi_ci_tools.models import ReferenceDesignatorEvent, BulkUploadEvent
+from roundabout.ooi_ci_tools.models import CruiseEvent, ReferenceDesignatorEvent, BulkUploadEvent, VesselEvent
 
 
 
@@ -676,6 +676,10 @@ def event_review_toggle(request, pk, user_pk, evt_type):
         event = ReferenceDesignatorEvent.objects.get(id=pk)
     if evt_type == 'bulk_upload_event':
         event = BulkUploadEvent.objects.get(id=pk)
+    if evt_type == 'cruise_event':
+        event = CruiseEvent.objects.get(id=pk)
+    if evt_type == 'vessel_event':
+        event = VesselEvent.objects.get(id=pk)
     user = User.objects.get(id=user_pk)
     reviewers = event.user_draft.all()
     approvers = event.user_approver.all()

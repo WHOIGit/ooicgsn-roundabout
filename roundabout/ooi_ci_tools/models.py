@@ -454,3 +454,66 @@ class BulkVocabRecord(models.Model):
         on_delete=models.CASCADE,
         null=True,
     )
+
+
+
+# Tracks Actions across Cruises
+class CruiseEvent(models.Model):
+    def __str__(self):
+        return self.detail
+
+    def get_object_type(self):
+        return "cruise_event"
+
+    APPROVAL_STATUS = (
+        (True, "Approved"),
+        (False, "Draft"),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    user_draft = models.ManyToManyField(
+        User, related_name="reviewer_%(class)ss", blank=True
+    )
+    user_approver = models.ManyToManyField(User, related_name="approver_%(class)ss")
+    approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
+    detail = models.TextField(blank=True)
+
+    def get_actions(self):
+        return self.actions.filter(object_type="cruiseevent")
+
+    def get_sorted_reviewers(self):
+        return self.user_draft.all().order_by("username")
+
+    def get_sorted_approvers(self):
+        return self.user_approver.all().order_by("username")
+
+
+# Tracks Actions across Vessels
+class VesselEvent(models.Model):
+    def __str__(self):
+        return self.detail
+
+    def get_object_type(self):
+        return "vessel_event"
+
+    APPROVAL_STATUS = (
+        (True, "Approved"),
+        (False, "Draft"),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    user_draft = models.ManyToManyField(
+        User, related_name="reviewer_%(class)ss", blank=True
+    )
+    user_approver = models.ManyToManyField(User, related_name="approver_%(class)ss")
+    approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
+    detail = models.TextField(blank=True)
+
+    def get_actions(self):
+        return self.actions.filter(object_type="vesselevent")
+
+    def get_sorted_reviewers(self):
+        return self.user_draft.all().order_by("username")
+
+    def get_sorted_approvers(self):
+        return self.user_approver.all().order_by("username")
