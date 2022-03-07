@@ -477,6 +477,13 @@ class CruiseEvent(models.Model):
     user_approver = models.ManyToManyField(User, related_name="approver_%(class)ss")
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
     detail = models.TextField(blank=True)
+    cruise = models.OneToOneField(
+        "cruises.Cruise",
+        related_name="cruise_event",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
 
     def get_actions(self):
         return self.actions.filter(object_type="cruiseevent")
@@ -508,6 +515,13 @@ class VesselEvent(models.Model):
     user_approver = models.ManyToManyField(User, related_name="approver_%(class)ss")
     approved = models.BooleanField(choices=APPROVAL_STATUS, blank=False, default=False)
     detail = models.TextField(blank=True)
+    vessel = models.OneToOneField(
+        "cruises.Vessel",
+        related_name="vessel_event",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
 
     def get_actions(self):
         return self.actions.filter(object_type="vesselevent")

@@ -321,7 +321,7 @@ def parse_cruise_files(self):
         # Set up data lists for returning results
         cruises_created = []
         cruises_updated = []
-        cruise_event, event_created = CruiseEvent.objects.update_or_create(id=1)
+        
         for row in reader:
             cuid = row['CUID']
             cruise_start_date = parser.parse(row['cruiseStartDateTime'])
@@ -348,7 +348,6 @@ def parse_cruise_files(self):
                         'cruise_start_date': cruise_start_date,
                         'cruise_stop_date': cruise_stop_date,
                         'vessel': vessel_obj,
-                        'cruise_event': cruise_event,
                        }
             try:
                 cruise_obj = Cruise.objects.get(CUID=cuid)
@@ -357,6 +356,8 @@ def parse_cruise_files(self):
             cruise_obj, created = Cruise.objects.update_or_create(
                 CUID = cuid, defaults = defaults,
             )
+
+            cruise_event, event_created = CruiseEvent.objects.update_or_create(cruise=cruise_obj)
 
             action_data = dict(updated_values=dict(), csv_import=csv_file.name)
             if created:
@@ -401,7 +402,6 @@ def parse_vessel_files(self):
         # Set up data lists for returning results
         vessels_created = []
         vessels_updated = []
-        vessel_event, event_created = VesselEvent.objects.update_or_create(id=1)
         for row in reader:
             vessel_name = row['Vessel Name'].strip()
             MMSI_number = None
@@ -453,15 +453,21 @@ def parse_vessel_files(self):
                 'designation': row['Designation'],
                 'active': active,
                 'R2R': R2R,
-                'vessel_event': vessel_event
             }
             try:
-                vessel_obj = Vessel.objects.get(vessel_name=vessel_name)
+                vessel_obj, created = Vessel.objects.update_or_create(
+                    vessel_name = vessel_name, defaults=defaults,
+                )
+            except (Vessel.MultipleObjectsReturned):
+                 vessel_obj = Vessel.objects.filter(vessel_name = vessel_name).first()
+                 created = False
+            
+            if not created:
                 orig_default = {key:str(getattr(vessel_obj,key,None)) for key in defaults}
-            except (Vessel.DoesNotExist, Vessel.MultipleObjectsReturned): orig_default = None
-            vessel_obj, created = Vessel.objects.update_or_create(
-                vessel_name = vessel_name, defaults=defaults,
-            )
+            else:
+                orig_default = None
+
+            vessel_event, event_created = VesselEvent.objects.update_or_create(vessel=vessel_obj)
 
             action_data = dict(updated_values=dict(), csv_import=csv_file.name)
             if created:
