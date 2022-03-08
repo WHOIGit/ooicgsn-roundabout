@@ -753,11 +753,7 @@ class ImportVesselsForm(forms.Form):
                     #     )
                 if import_config:
                     validate_import_config_vessels(import_config, reader, filename)
-            else:
-                raise ValidationError(
-                    _('File: %(filename)s: Incorrect filename format. Must be shiplist.csv'),
-                    params={'filename': filename},
-                )
+           
         return vessels_csv
 
 
@@ -830,11 +826,7 @@ class ImportCruisesForm(forms.Form):
                                 _('File: %(filename)s: Unable to parse Vessel Name'),
                                 params={'filename': filename},
                             )     
-                else:
-                    raise ValidationError(
-                        _('File: %(filename)s: Incorrect filename format. Must be cruiseinformation.csv'),
-                        params={'filename': filename},
-                    )
+                
         return cruises_csv
 
 
