@@ -119,6 +119,13 @@ def user_ccc_reviews(event, user, evt_type):
             found_deploy_events = True if len(event.build.deployments.filter(user_draft__in=[user])) >= 1 else False
         if not found_deploy_events:
             all_reviewed = True
+
+    # Cruise template
+    if evt_type in ['cruise_event']:
+        if user.reviewer_cruiseevents.exists():
+            found_cruise_events = True if user in event.user_draft.all() else False
+        if not found_cruise_events:
+            all_reviewed = True
     review_obj = {
         'found_cal_events': found_cal_events,
         'found_const_events': found_const_events,

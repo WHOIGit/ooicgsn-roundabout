@@ -31,7 +31,11 @@
                 <li data-jstree='{"icon":"fas fa-ship"}' id="cruises_{{ cruise.id }}">
                     <a href="#" data-detail-url="{% url 'cruises:ajax_cruises_detail' cruise.id %}"
                        data-node-id="{{ cruise.id }}"
-                       data-node-type="{{ node_type }}">{{ cruise.CUID }} {% if cruise.friendly_name  %}- {{ cruise.friendly_name }} {% endif %}</a>
+                       data-node-type="{{ node_type }}">{{ cruise.CUID }} {% if cruise.friendly_name  %}- {{ cruise.friendly_name }} {% endif %} 
+                        {% if cruise.id in reviewer_list %}
+                            <span id="review-badge-{{cruise.id}}" class="badge badge-pill badge-secondary">Review Requested</span>
+                        {% endif %}
+                    </a>
                    </li>
             {% endfor %}
         </ul>

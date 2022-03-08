@@ -22,8 +22,11 @@
 from django import forms
 from django.utils import timezone
 from bootstrap_datepicker_plus import DateTimePickerInput
+from roundabout.ooi_ci_tools.models import CruiseEvent
+from roundabout.calibrations.utils import reviewer_users
 
 from .models import *
+from roundabout.users.models import User
 
 
 class VesselForm(forms.ModelForm):
@@ -58,6 +61,11 @@ VesselHyperlinkFormset = forms.models.inlineformset_factory(Vessel, VesselHyperl
 
 
 class CruiseForm(forms.ModelForm):
+    user_draft = forms.ModelMultipleChoiceField(
+        queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username'),
+        required=False,
+        label = 'Select Reviewers'
+    )
     # Add custom date fields
     cruise_start_date = forms.DateTimeField( widget=DateTimePickerInput(
             options={
@@ -88,3 +96,39 @@ class CruiseForm(forms.ModelForm):
         fields = '__all__'
 
 CruiseHyperlinkFormset = forms.models.inlineformset_factory(Cruise, CruiseHyperlink, fields=('text', 'url'), extra=1, can_delete=True)
+
+
+
+
+
+# Event form
+# Inputs: Reviewers
+class CruiseEventForm(forms.ModelForm):
+    class Meta:
+        model = CruiseEvent
+        fields = ['user_draft']
+        labels = {
+            'user_draft': 'Reviewers'
+        }
+        widgets = {
+            'user_draft': forms.SelectMultiple()
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(CruiseEventForm, self).__init__(*args, **kwargs)
+        self.fields['user_draft'].queryset = reviewer_users()
+
+    def clean_user_draft(self):
+        user_draft = self.cleaned_data.get('user_draft')
+        return user_draft
+
+    def save(self, commit = True):
+        event = super(CruiseEventForm, self).save(commit = False)
+        if commit:
+            event.save()
+            if event.user_approver.exists():
+                for user in event.user_approver.all():
+                    event.user_draft.add(user)
+                    event.user_approver.remove(user)
+            event.save()
+            return event
