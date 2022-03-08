@@ -43,7 +43,7 @@ from roundabout.inventory.models import Inventory, Action, Deployment, Inventory
 from roundabout.inventory.utils import _create_action_history
 from roundabout.userdefinedfields.models import Field, FieldValue
 from roundabout.ooi_ci_tools.models import Threshold, ReferenceDesignator, ReferenceDesignatorEvent, BulkUploadEvent, BulkFile, BulkAssetRecord, BulkVocabRecord, CruiseEvent, VesselEvent
-from roundabout.assemblies.models import Assembly
+from roundabout.assemblies.models import Assembly, AssemblyRevision
 from roundabout.locations.models import Location
 from roundabout.builds.models import Build
 from roundabout.core.utils import set_app_labels
@@ -519,12 +519,14 @@ def parse_deployment_files(self):
                 deployment_number = f'{assembly}-{dep_number_string}'
                 print(deployment_number)
                 build_number = f'Historical {dep_number_string}'
+                assembly_template_revision = row['assembly_template_revision'] if row['assembly_template_revision'] else 'A'
                 # build data dict
                 mooring_uid_dict = {
                     'mooring.uid': row['mooring.uid'],
                     'assembly': assembly,
                     'build_number': build_number,
                     'deployment_number': deployment_number,
+                    'assembly_template_revision': assembly_template_revision,
                     'rows': [],
                 }
                 deployment_imports.append(mooring_uid_dict)
@@ -537,11 +539,15 @@ def parse_deployment_files(self):
             # get the Assembly template for this Build, needs to be only one match
             try:
                 assembly = Assembly.objects.get(assembly_number=deployment_import['assembly'])
-                assembly_revision = assembly.assembly_revisions.latest()
             except Assembly.DoesNotExist:
                 raise ValueError("no assembly found")
             except Assembly.MultipleObjectsReturned:
                 raise ValueError("too many assemblies found")
+
+            try:
+                assembly_revision = AssemblyRevision.objects.get_or_create(assembly=assembly, revision_code=deployment_import['assembly_template_revision'])
+            except AssemblyRevision.MultipleObjectsReturned:
+                assembly_revision = AssemblyRevision.objects.filter(assembly=assembly, revision_code=deployment_import['assembly_template_revision']).first()
 
             # set up common variables for Builds/Deployments
             location_code = deployment_import['assembly'][0:2]
