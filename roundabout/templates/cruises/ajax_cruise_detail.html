@@ -51,21 +51,21 @@
 {% with cruise.cruise_event as event %}
     <h4>{{cruise.CUID}}</h4>
     <hr>
-    <div id="bulkupload-template" aria-labelledby="bulkupload-template-tab">
+    <div id="cruise-template" aria-labelledby="cruise-template-tab">
         <ul class="list-group">
             <li class="list-group-item">
                 <a  class="collapse show"
                     data-toggle="collapse"
-                    href="#bulkupload_event-{{ event.id }}"
+                    href="#cruise_event-{{ event.id }}"
                     aria-expanded="true"
-                    aria-controls="bulkupload_event-{{ event.id }}"
+                    aria-controls="cruise_event-{{ event.id }}"
                 >
                 {{cruise.CUID}}
                 </a>
                 <a  data-toggle="collapse"
                     class="collapse show text-right"
-                    href="#bulkupload_event-{{ event.id }}"
-                    aria-controls="bulkupload_event-{{ event.id }}"
+                    href="#cruise_event-{{ event.id }}"
+                    aria-controls="cruise_event-{{ event.id }}"
                     aria-expanded="true"
                     role="button"
                     id = 'badge_tag'
@@ -81,14 +81,14 @@
                 {% else %}
                     <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span>
                 {% endif %}
-                <div class="collapse show mt-3" id="bulkupload_event-{{ event.id }}">
+                <div class="collapse show mt-3" id="cruise_event-{{ event.id }}">
                     <hr>
                     {% if user in event.user_draft.all %}
-                        <button class="btn btn-success btn-sm mr-2" id='bulkupload_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
+                        <button class="btn btn-success btn-sm mr-2" id='cruise_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
                             Approve
                         </button>
                     {% elif user in event.user_approver.all %}
-                        <button class="btn btn-warning btn-sm mr-2" id='bulkupload_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
+                        <button class="btn btn-warning btn-sm mr-2" id='cruise_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
                             Unapprove
                         </button>
                     {% endif %}
@@ -109,9 +109,9 @@
                             <a  class="nav-link active"
                                 id="files-{{ event.id }}-tab"
                                 data-toggle="tab"
-                                href="#bulkupload_records-{{ event.id }}"
+                                href="#cruise_records-{{ event.id }}"
                                 role="tab"
-                                aria-controls="bulkupload_records"
+                                aria-controls="cruise_records"
                                 aria-selected="false">
                                     Records
                             </a>
@@ -144,7 +144,7 @@
 
                     <div class="tab-content" id="inventory-tabs">
                         {# EVENT RECORDS TAB #}
-                        <div class="tab-pane fade show active" id="bulkupload_records-{{ event.id }}" role="tabpanel" aria-labelledby="bulkupload_records-tab">
+                        <div class="tab-pane fade show active" id="cruise_records-{{ event.id }}" role="tabpanel" aria-labelledby="cruise_records-tab">
                             <table class = 'table table-tight'>
                                 <tbody>
                                     <tr>
@@ -310,7 +310,7 @@
 <script>
     $(document).ready(function() {
 
-        handleReviewBadges('#bulkupload-template', 'button[id^=bulkupload_expander]', '{{ user.id }}', '{{ user.username }}', '{{ cruise.id }}')
+        handleReviewBadges('#cruise-template', 'button[id^=cruise_expander]', '{{ user.id }}', '{{ user.username }}', '{{ cruise.id }}')
         
     });
 </script>

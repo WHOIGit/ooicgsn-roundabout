@@ -30,6 +30,11 @@ from roundabout.users.models import User
 
 
 class VesselForm(forms.ModelForm):
+    user_draft = forms.ModelMultipleChoiceField(
+        queryset = User.objects.all().exclude(groups__name__in=['inventory only']).order_by('username'),
+        required=False,
+        label = 'Select Reviewers'
+    )
     class Meta:
         model = Vessel
         fields = '__all__'
@@ -124,6 +129,39 @@ class CruiseEventForm(forms.ModelForm):
 
     def save(self, commit = True):
         event = super(CruiseEventForm, self).save(commit = False)
+        if commit:
+            event.save()
+            if event.user_approver.exists():
+                for user in event.user_approver.all():
+                    event.user_draft.add(user)
+                    event.user_approver.remove(user)
+            event.save()
+            return event
+
+
+# Event form
+# Inputs: Reviewers
+class VesselEventForm(forms.ModelForm):
+    class Meta:
+        model = CruiseEvent
+        fields = ['user_draft']
+        labels = {
+            'user_draft': 'Reviewers'
+        }
+        widgets = {
+            'user_draft': forms.SelectMultiple()
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(VesselEventForm, self).__init__(*args, **kwargs)
+        self.fields['user_draft'].queryset = reviewer_users()
+
+    def clean_user_draft(self):
+        user_draft = self.cleaned_data.get('user_draft')
+        return user_draft
+
+    def save(self, commit = True):
+        event = super(VesselEventForm, self).save(commit = False)
         if commit:
             event.save()
             if event.user_approver.exists():

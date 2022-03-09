@@ -44,7 +44,8 @@ from .forms import (
     CruiseForm,
     VesselHyperlinkFormset,
     CruiseHyperlinkFormset,
-    CruiseEventForm
+    CruiseEventForm,
+    VesselEventForm
 )
 from roundabout.inventory.models import Action
 from roundabout.inventory.utils import _create_action_history, logged_user_review_items
@@ -474,7 +475,10 @@ class VesselUpdateView(LoginRequiredMixin, UpdateView):
                     "to": str(new_val),
                 }
         self.object = form.save(commit=True)
+        vessel_event_form = VesselEventForm(instance=self.object.vessel_event)
+        handle_reviewers(vessel_event_form.instance.user_draft, vessel_event_form.instance.user_approver, form.cleaned_data['user_draft'])
         _create_action_history(self.object, Action.UPDATE, self.request.user, data=data)
+        _create_action_history(self.object.vessel_event, Action.UPDATE, self.request.user, data=data)
 
         for link_form in link_formset:
             link = link_form.save(commit=False)
