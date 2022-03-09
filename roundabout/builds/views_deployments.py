@@ -193,7 +193,7 @@ class DeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
                 data["updated_values"][field] = { "from":str(orig_val), "to":str(new_val) }
         form.instance.approved = False
         self.object = form.save(commit=True)
-        handle_reviewers(form)
+        handle_reviewers(form.instance.user_draft, form.instance.user_approver, form.cleaned_data['user_draft'])
         #_create_action_history(self.object, Action.UPDATE, self.request.user, data=data)
 
         # Create Build Action record for deployment

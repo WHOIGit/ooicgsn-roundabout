@@ -252,7 +252,7 @@ class ConfigEventValueUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFo
     def form_valid(self, form, config_event_value_form, link_formset):
         form.instance.inventory = self.object.inventory
         form.instance.approved = False
-        handle_reviewers(form)
+        handle_reviewers(form.instance.user_draft, form.instance.user_approver, form.cleaned_data['user_draft'])
         if form.cleaned_data['deployment']:
             latest_deploy_date = form.instance.deployment.build.actions.filter(action_type=Action.DEPLOYMENTTOFIELD).first()
             if latest_deploy_date:
@@ -515,7 +515,7 @@ class EventConfigNameUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFor
         form.instance.part = self.object.part
         form.instance.approved = False
         form.save()
-        handle_reviewers(form)
+        handle_reviewers(form.instance.user_draft, form.instance.user_approver, form.cleaned_data['user_draft'])
         self.object = form.save()
         part_confname_form.instance = self.object
         part_confname_form.save()
@@ -755,7 +755,7 @@ class EventDefaultUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormMi
     def form_valid(self, form, event_default_form):
         form.instance.inventory = self.object.inventory
         form.instance.approved = False
-        handle_reviewers(form)
+        handle_reviewers(form.instance.user_draft, form.instance.user_approver, form.cleaned_data['user_draft'])
         self.object = form.save()
         event_default_form.instance = self.object
         event_default_form.save()
@@ -985,7 +985,7 @@ class EventConfigDefaultUpdate(LoginRequiredMixin, AjaxFormMixin, CreateView):
     def form_valid(self, form, event_default_form):
         form.instance.assembly_part = self.object.assembly_part
         form.instance.approved = False
-        handle_reviewers(form)
+        handle_reviewers(form.instance.user_draft, form.instance.user_approver, form.cleaned_data['user_draft'])
         self.object = form.save()
         event_default_form.instance = self.object
         event_default_form.save()

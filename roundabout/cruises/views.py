@@ -310,9 +310,7 @@ class CruiseAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
                 }
         self.object = form.save(commit=True)
         cruise_event_form = CruiseEventForm(instance=self.object.cruise_event)
-        cruise_event_form.instance.user_draft = form.instance.user_draft
-        cruise_event_form.instance.approved = False
-        handle_reviewers(cruise_event_form)
+        handle_reviewers(cruise_event_form.instance.user_draft, cruise_event_form.instance.user_approver, form.cleaned_data['user_draft'])
         _create_action_history(self.object, Action.UPDATE, self.request.user, data=data)
         _create_action_history(self.object.cruise_event, Action.UPDATE, self.request.user, data=data)
 

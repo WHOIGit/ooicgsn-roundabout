@@ -301,7 +301,7 @@ class InvBulkUploadEventUpdate(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         file_name = self.kwargs['file']
         form.instance.approved = False
         form.save()
-        handle_reviewers(form)
+        handle_reviewers(form.instance.user_draft, form.instance.user_approver, form.cleaned_data['user_draft'])
         self.object = form.save()
         bulk_file_form.instance = self.object
         bulk_file_form.save()
@@ -395,7 +395,7 @@ class PartBulkUploadEventUpdate(LoginRequiredMixin, AjaxFormMixin, UpdateView):
     def form_valid(self, form, bulk_file_form):
         form.instance.approved = False
         form.save()
-        handle_reviewers(form)
+        handle_reviewers(form.instance.user_draft, form.instance.user_approver, form.cleaned_data['user_draft'])
         self.object = form.save()
         bulk_file_form.instance = self.object
         bulk_file_form.save()

@@ -220,7 +220,7 @@ class EventValueSetUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         inv_inst = Inventory.objects.get(id=self.object.inventory.id)
         form.instance.inventory = inv_inst
         form.instance.approved = False
-        handle_reviewers(form)
+        handle_reviewers(form.instance.user_draft, form.instance.user_approver, form.cleaned_data['user_draft'])
 
         self.object = form.save()
         orig_CoefficientValueSets = self.object.coefficient_value_sets.all()
@@ -572,7 +572,7 @@ class EventCoeffNameUpdate(LoginRequiredMixin, PermissionRequiredMixin, AjaxForm
         form.instance.part = self.object.part
         form.instance.approved = False
         form.save()
-        handle_reviewers(form)
+        handle_reviewers(form.instance.user_draft, form.instance.user_approver, form.cleaned_data['user_draft'])
         self.object = form.save()
         part_calname_form.instance = self.object
         part_calname_form.save()

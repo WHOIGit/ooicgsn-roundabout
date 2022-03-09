@@ -31,40 +31,40 @@ from roundabout.ooi_ci_tools.models import Threshold
 
 
 # When an Event is updated, current Approvers reset to Reviewers
-def handle_reviewers(form):
-    if form.instance.user_approver.exists():
-        if form.cleaned_data['user_draft'].exists():
-            if form.instance.user_draft.exists():
-                model_revs = form.instance.user_draft.all()
-                form_revs = form.cleaned_data['user_draft'].all()
+def handle_reviewers(instanace_draft, instance_approvers, form_draft):
+    if instance_approvers.exists():
+        if form_draft.exists():
+            if instanace_draft.exists():
+                model_revs = instanace_draft.all()
+                form_revs = form_draft.all()
                 for user in model_revs:
                     if user not in form_revs:
-                        form.instance.user_draft.remove(user)
-            approvers = form.instance.user_approver.all()
-            reviewers = form.cleaned_data['user_draft']
+                        instanace_draft.remove(user)
+            approvers = instance_approvers.all()
+            reviewers = form_draft
             for user in approvers:
                 if user in reviewers:
-                    form.instance.user_approver.remove(user)
+                    instance_approvers.remove(user)
                 if user not in reviewers:
-                    form.instance.user_draft.add(user)
-                    form.instance.user_approver.remove(user)
+                    instanace_draft.add(user)
+                    instance_approvers.remove(user)
         else:
-            approvers = form.instance.user_approver.all()
+            approvers = instance_approvers.all()
             for user in approvers:
-                form.instance.user_draft.add(user)
-                form.instance.user_approver.remove(user)
+                instanace_draft.add(user)
+                instance_approvers.remove(user)
     else:
-        if form.cleaned_data['user_draft'].exists():
-            if form.instance.user_draft.exists():
-                model_revs = form.instance.user_draft.all()
-                form_revs = form.cleaned_data['user_draft'].all()
+        if form_draft.exists():
+            if instanace_draft.exists():
+                model_revs = instanace_draft.all()
+                form_revs = form_draft.all()
                 for user in model_revs:
                     if user not in form_revs:
-                        form.instance.user_draft.remove(user)
+                        instanace_draft.remove(user)
 
-            reviewers = form.cleaned_data['user_draft']
+            reviewers = form_draft
             for user in reviewers:
-                form.instance.user_draft.add(user)
+                instanace_draft.add(user)
 
 
 
