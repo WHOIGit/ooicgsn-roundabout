@@ -552,7 +552,8 @@ class ImportDeploymentsForm(forms.Form):
                         )
                     try:
                         stop_date = row['stopDateTime']
-                        datetime_obj = parser.parse(stop_date)
+                        if len(stop_date) > 0:
+                            datetime_obj = parser.parse(stop_date)
                     except:
                         raise ValidationError(
                             _('File: %(filename)s: Row: %(row)s: Unable to parse Stop DateTime'),
