@@ -547,9 +547,4 @@ def logged_user_review_items(logged_user, template_type):
         full_cruise_list = set(cruises_from_cruise_events)
         full_list = list(full_cruise_list)
 
-    if template_type == 'vessel':
-        vessels_from_vessel_events = [vessel_id['vessel_id'] for vessel_id in logged_user.reviewer_vesselevents.values('vessel_id')]
-        full_vessel_list = set(vessels_from_vessel_events)
-        full_list = list(full_vessel_list)
-
     return full_list

@@ -123,7 +123,7 @@ def user_ccc_reviews(event, user, evt_type):
     # Cruise template
     if evt_type in ['cruise_event']:
         if user.reviewer_cruiseevents.exists():
-            found_cruise_events = True if user in event.user_draft.all() else False
+            found_cruise_events = True if user in event.user_draft.all() or user in event.cruise.vessel.vessel_event.user_draft.all() else False
         if not found_cruise_events:
             all_reviewed = True
 
