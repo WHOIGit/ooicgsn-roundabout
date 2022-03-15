@@ -44,10 +44,13 @@ from .forms import (
     CruiseForm,
     VesselHyperlinkFormset,
     CruiseHyperlinkFormset,
+    CruiseEventForm,
+    VesselEventForm
 )
 from roundabout.inventory.models import Action
-from roundabout.inventory.utils import _create_action_history
+from roundabout.inventory.utils import _create_action_history, logged_user_review_items
 from common.util.mixins import AjaxFormMixin
+from roundabout.calibrations.utils import handle_reviewers, user_ccc_reviews
 
 # Private functions for use in other Views
 # ------------------------------------------------------------------------------
@@ -73,7 +76,8 @@ def _get_inventory_only_deployments(cruise):
 # Main Navtree function
 def load_cruises_navtree(request):
     cruises = Cruise.objects.all()
-    return render(request, "cruises/ajax_cruise_navtree.html", {"cruises": cruises})
+    reviewer_list = logged_user_review_items(request.user, "cruise")
+    return render(request, "cruises/ajax_cruise_navtree.html", {"cruises": cruises, 'reviewer_list': reviewer_list})
 
 
 # Cruise Base Views
@@ -306,7 +310,10 @@ class CruiseAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
                     "to": str(new_val),
                 }
         self.object = form.save(commit=True)
+        cruise_event_form = CruiseEventForm(instance=self.object.cruise_event)
+        handle_reviewers(cruise_event_form.instance.user_draft, cruise_event_form.instance.user_approver, form.cleaned_data['user_draft'])
         _create_action_history(self.object, Action.UPDATE, self.request.user, data=data)
+        _create_action_history(self.object.cruise_event, Action.UPDATE, self.request.user, data=data)
 
         for link_form in formset:
             link = link_form.save(commit=False)
@@ -468,7 +475,10 @@ class VesselUpdateView(LoginRequiredMixin, UpdateView):
                     "to": str(new_val),
                 }
         self.object = form.save(commit=True)
+        vessel_event_form = VesselEventForm(instance=self.object.vessel_event)
+        handle_reviewers(vessel_event_form.instance.user_draft, vessel_event_form.instance.user_approver, form.cleaned_data['user_draft'])
         _create_action_history(self.object, Action.UPDATE, self.request.user, data=data)
+        _create_action_history(self.object.vessel_event, Action.UPDATE, self.request.user, data=data)
 
         for link_form in link_formset:
             link = link_form.save(commit=False)

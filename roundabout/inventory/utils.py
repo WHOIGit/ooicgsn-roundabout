@@ -542,4 +542,9 @@ def logged_user_review_items(logged_user, template_type):
         full_assm_list = set(assmparts_from_config_def_events + assmparts_from_refdes_events)
         full_list = list(full_assm_list)
 
+    if template_type == 'cruise':
+        cruises_from_cruise_events = [cruise_id['cruise_id'] for cruise_id in logged_user.reviewer_cruiseevents.values('cruise_id')]
+        full_cruise_list = set(cruises_from_cruise_events)
+        full_list = list(full_cruise_list)
+
     return full_list

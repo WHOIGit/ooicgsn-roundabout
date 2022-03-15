@@ -928,7 +928,7 @@ class EventReferenceDesignatorAdd(LoginRequiredMixin, AjaxFormMixin, CreateView)
             event_referencedesignator_form.save()
             event_referencedesignator_form.instance.refdes_events.add(self.object)
             event_referencedesignator_form.save()
-        handle_reviewers(form)
+        handle_reviewers(form.instance.user_draft, form.instance.user_approver, form.cleaned_data['user_draft'])
         _create_action_history(self.object, Action.ADD, self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
         if self.request.is_ajax():
@@ -1011,7 +1011,7 @@ class EventReferenceDesignatorUpdate(LoginRequiredMixin, AjaxFormMixin, CreateVi
 
     def form_valid(self, form, event_referencedesignator_form):
         form.instance.approved = False
-        handle_reviewers(form)
+        handle_reviewers(form.instance.user_draft, form.instance.user_approver, form.cleaned_data['user_draft'])
         self.object = form.save()
         selected_refdes = form.cleaned_data['reference_designator']
         if selected_refdes is not None:

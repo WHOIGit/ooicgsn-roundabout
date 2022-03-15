@@ -24,73 +24,229 @@
 {% block title %}Vessels{% endblock %}
 
 {% block content %}
-<div class="container">
+    <div class="container-fluid"></div>
+        <div id="vessel-template" aria-labelledby="vessel-template-tab">
+            <ul class="list-group">
+                {% for vessel in vessels %}
+                    {% with vessel.vessel_event as event %}
+                        <li class="list-group-item">
+                            <a  class="collapsed"
+                                data-toggle="collapse"
+                                href="#vessel_event-{{ event.id }}"
+                                aria-expanded="false"
+                                aria-controls="vessel_event-{{ event.id }}"
+                                id = 'event-item-{{event.id}}'
+                            >
+                            {{vessel.vessel_name}}
+                            </a>
+                            <a  data-toggle="collapse"
+                                class="collapsed text-right"
+                                href="#vessel_event-{{ event.id }}"
+                                aria-controls="vessel_event-{{ event.id }}"
+                                aria-expanded="false"
+                                role="button"
+                                id = 'badge_tag'
+                            >
+                                <i class="fa" aria-hidden="true"></i>
+                                <span class="sr-only">Expand/Collapse Vessels {{ event }}</span>
+                            </a>
+                            {% if user in event.user_draft.all %}
+                                <span id="review-badge" class="badge badge-pill badge-secondary">Review Requested</span>
+                            {% endif %}
+                            {% if event.approved %}
+                                <span id="approve-badge" class="badge badge-pill badge-success">Approved</span>
+                            {% else %}
+                                <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span>
+                            {% endif %}
+                            <div class="collapse mt-3" id="vessel_event-{{ event.id }}">
+                                <hr>
+                                {% if user in event.user_draft.all %}
+                                    <button class="btn btn-success btn-sm mr-2" id='vessel_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
+                                        Approve
+                                    </button>
+                                {% elif user in event.user_approver.all %}
+                                    <button class="btn btn-warning btn-sm mr-2" id='vessel_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
+                                        Unapprove
+                                    </button>
+                                {% endif %}
+                                <p id = 'approvers'>Approvers:
+                                    {% for user in event.get_sorted_approvers.all %}
+                                        <span id='approver-{{ user.id }}'>{{ user.username }}</span>
+                                    {% endfor %}
+                                </p>
+                                <p id = 'reviewers'>Reviewers:
+                                    {% for user in event.get_sorted_reviewers.all %}
+                                        <span id='reviewer-{{ user.id }}'>{{ user.username }}</span>
+                                    {% endfor %}
+                                </p>
 
-  <div class="parts-add-btn">
-      <a href="{% url 'cruises:vessels_add' %}" role="button" class="btn btn-primary">Add Vessel</a>
-  </div>
-  <h2>Vessels</h2>
+                                {# TABS PER EVENT #}
+                                <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+                                    <li class="nav-item">
+                                        <a  class="nav-link active"
+                                            id="files-{{ event.id }}-tab"
+                                            data-toggle="tab"
+                                            href="#vessel_records-{{ event.id }}"
+                                            role="tab"
+                                            aria-controls="vessel_records"
+                                            aria-selected="false">
+                                                Records
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a  class="nav-link"
+                                            id="eventhistory-{{ event.id }}-tab"
+                                            data-toggle="tab"
+                                            href="#eventhistory-{{ event.id }}"
+                                            role="tab"
+                                            aria-controls="eventhistory"
+                                            aria-selected="false">
+                                                Event History
+                                        </a>
+                                    </li>
+                                    {% if event.hyperlinks.exists %}
+                                    <li class="nav-item">
+                                        <a  class="nav-link"
+                                            id="links-{{ event.id }}-tab"
+                                            data-toggle="tab"
+                                            href="#links-{{ event.id }}"
+                                            role="tab"
+                                            aria-controls="links"
+                                            aria-selected="false">
+                                                Links
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
 
+                                <div class="tab-content" id="inventory-tabs">
+                                    {# EVENT RECORDS TAB #}
+                                    <div class="tab-pane fade show active" id="vessel_records-{{ event.id }}" role="tabpanel" aria-labelledby="vessel_records-tab">
+                                        <table class = 'table table-tight'>
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                                        <li class = 'list-group-item'>
+                                                            <div class="mt-1 border p-2 m-3 collapse show" id="file-{{ vessel.id }}{{ event.id }}">
+                                                                <table class="table table-striped table-hover" id="vessel-table">
+                                                                    <thead>
+                                                                        <th>Prefix</th>
+                                                                        <th>Vessel Designation</th>
+                                                                        <th>Vessel Name</th>
+                                                                        <th>ICES Code</th>
+                                                                        <th>Operator</th>
+                                                                        <th>Call Sign</th>
+                                                                        <th>MMSI Number</th>
+                                                                        <th>IMO Number</th>
+                                                                        <th>Length</th>
+                                                                        <th>Max Speed</th>
+                                                                        <th>Max Draft</th>
+                                                                        <th>Designation</th>
+                                                                        <th>Active</th>
+                                                                        <th>R2R</th>
+                                                                        <th>Notes</th>
+                                                                        <th>Links</th>
+                                                                
+                                                                        <th>&nbsp;</th>
+                                                            
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        <tr>
+                                                            
+                                                                            <td>{{ vessel.prefix }}</td>
+                                                                            <td>{{ vessel.vessel_designation }}</td>
+                                                                            <td>{{ vessel.vessel_name }}</td>
+                                                                            <td>{{ vessel.ICES_code }}</td>
+                                                                            <td>{{ vessel.operator }}</td>
+                                                                            <td>{{ vessel.call_sign }}</td>
+                                                                            <td>{% if vessel.MMSI_number %}{{ vessel.MMSI_number }}{% endif %}</td>
+                                                                            <td>{% if vessel.IMO_number %}{{ vessel.IMO_number }}{% endif %}</td>
+                                                                            <td>{% if vessel.length %}{{ vessel.length }}{% endif %}</td>
+                                                                            <td>{% if vessel.max_speed %}{{ vessel.max_speed }}{% endif %}</td>
+                                                                            <td>{% if vessel.max_draft %}{{ vessel.max_draft }}{% endif %}</td>
+                                                                            <td>{{ vessel.designation }}</td>
+                                                                            <td>{% if vessel.get_active_display %}{{ vessel.get_active_display }}{% endif %}</td>
+                                                                            <td>{% if vessel.get_R2R_display %}{{ vessel.get_R2R_display  }}{% endif %}</td>
+                                                                            <td>{{ vessel.notes  }}</td>
+                                                            
+                                                                            <td>
+                                                                            {% if vessel.hyperlinks %}
+                                                                                {% for link in vessel.hyperlinks.all %}
+                                                                                <a target="_blank" href="{{ link.url }}">{{ link.text }} <i class="fas fa-link"></i></a><br>
+                                                                                {% endfor %}
+                                                                            {% endif %}
+                                                                            </td>
+                                                            
+                                                                            <td class="text-right action-col">
+                                                                                <a href="{% url 'cruises:vessel_actionhistory' vessel.id %}" role="button" class="btn btn-secondary btn-sm">Log</a>
+                                                                                <a href="{% url 'cruises:vessels_update' vessel.id %}" role="button" class="btn btn-primary btn-sm">Edit</a>
+                                                                                <a href="{% url 'cruises:vessels_delete' vessel.id %}" role="button" class="btn btn-danger btn-sm">Delete</a>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                            </table>
+                                                            </div>
+                                                            
+                                                        </li>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        
+                                    </div>
 
-  <table class="table table-striped table-hover" id="vessel-table">
-      <thead>
+                                    {# EVENT HISTORY TAB #}
+                                    <div class="tab-pane fade border m-2 p-2" id="eventhistory-{{ event.id }}" role="tabpanel" aria-labelledby="eventhistory-{{ event.id }}-tab">
+                                        <table class="table table-tight table-striped action-table">
+                                            <thead>
+                                                <th>Date</th>
+                                                <th>Action</th>
+                                                <th>Details</th>
+                                                <th>Person</th>
+                                            </thead>
+                                            <tbody style = 'overflow: auto; max-height: 200px'>
+                                                {% for action in event.get_actions.all %}
+                                                    <tr>
+                                                        <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
+                                                        <td>{{ action.get_action_type_display }}</td>
+                                                        <td>
+                                                            {{ action.detail|safe }}
+                                                        </td>
+                                                        <td>{{ action.user.username }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
 
-        <th>Prefix</th>
-        <th>Vessel Designation</th>
-        <th>Vessel Name</th>
-        <th>ICES Code</th>
-        <th>Operator</th>
-        <th>Call Sign</th>
-        <th>MMSI Number</th>
-        <th>IMO Number</th>
-        <th>Length</th>
-        <th>Max Speed</th>
-        <th>Max Draft</th>
-        <th>Designation</th>
-        <th>Active</th>
-        <th>R2R</th>
-        <th>Notes</th>
-        <th>Links</th>
-
-        <th>&nbsp;</th>
-
-      </thead>
-      <tbody>
-        {% for vessel in vessels %}
-          <tr>
-
-              <td>{{ vessel.prefix }}</td>
-              <td>{{ vessel.vessel_designation }}</td>
-              <td>{{ vessel.vessel_name }}</td>
-              <td>{{ vessel.ICES_code }}</td>
-              <td>{{ vessel.operator }}</td>
-              <td>{{ vessel.call_sign }}</td>
-              <td>{% if vessel.MMSI_number %}{{ vessel.MMSI_number }}{% endif %}</td>
-              <td>{% if vessel.IMO_number %}{{ vessel.IMO_number }}{% endif %}</td>
-              <td>{% if vessel.length %}{{ vessel.length }}{% endif %}</td>
-              <td>{% if vessel.max_speed %}{{ vessel.max_speed }}{% endif %}</td>
-              <td>{% if vessel.max_draft %}{{ vessel.max_draft }}{% endif %}</td>
-              <td>{{ vessel.designation }}</td>
-              <td>{% if vessel.get_active_display %}{{ vessel.get_active_display }}{% endif %}</td>
-              <td>{% if vessel.get_R2R_display %}{{ vessel.get_R2R_display  }}{% endif %}</td>
-              <td>{{ vessel.notes  }}</td>
-
-              <td>
-                {% if vessel.hyperlinks %}
-                  {% for link in vessel.hyperlinks.all %}
-                    <a target="_blank" href="{{ link.url }}">{{ link.text }} <i class="fas fa-link"></i></a><br>
-                  {% endfor %}
-                {% endif %}
-              </td>
-
-              <td class="text-right action-col">
-                  <a href="{% url 'cruises:vessel_actionhistory' vessel.id %}" role="button" class="btn btn-secondary btn-sm">Log</a>
-                  <a href="{% url 'cruises:vessels_update' vessel.id %}" role="button" class="btn btn-primary btn-sm">Edit</a>
-                  <a href="{% url 'cruises:vessels_delete' vessel.id %}" role="button" class="btn btn-danger btn-sm">Delete</a>
-              </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-</table>
-</div>
+                                    {# LINKS TAB #}
+                                    {% if event.hyperlinks.exists %}
+                                        <div class="tab-pane fade m-2 p-2" id="links-{{ event.id }}" role="tabpanel" aria-labelledby="links-{{ event.id }}-tab">
+                                            <ul>
+                                            {% for link in event.hyperlinks.all %}
+                                                <li><a target="_blank" href="{{ link.url }}">{{ link.text }} <i class="fas fa-link"></i></a></li>
+                                            {% endfor %}
+                                            </ul>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div> {# end of collapsing section #}
+                        </li>
+                        <hr>
+                    {% endwith %}
+                {% endfor %}
+            </ul>
+        </div>     
+    </div>
 {% endblock content %}
+
+{% block javascript %}
+<script>
+    $(document).ready(function() {
+
+
+        handleReviewBadges('#vessel-template', 'button[id^=vessel_expander]', '{{ user.id }}', '{{ user.username }}', '{{ vessel.id }}')
+        
+    });
+</script>
+{% endblock javascript %}
