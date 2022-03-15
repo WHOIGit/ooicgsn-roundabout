@@ -32,7 +32,7 @@ RUN npm install node-fetch@2.6.1
 RUN npm install selenium-webdriver
 
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && apt install -y ./google-chrome-stable_current_amd64.deb              
-RUN wget https://chromedriver.storage.googleapis.com/97.0.4692.71/chromedriver_linux64.zip && unzip -o chromedriver_linux64.zip -d/usr/local/bin
+RUN wget https://chromedriver.storage.googleapis.com/98.0.4758.102/chromedriver_linux64.zip && unzip -o chromedriver_linux64.zip -d/usr/local/bin
 
 #RUN apt install -y firefox && apt install -y firefox-geckodriver
 
