@@ -124,7 +124,8 @@ var password;
         await driver.findElement(By.linkText("Cruises")).click()
 	    await new Promise(r => setTimeout(r, 4000));
 
-        while ((await driver.findElements(By.xpath("//li/ul/li/a"))).length != 0) {
+         // Just delete 1 cruise - takes too long to delete all cruises        
+         //while ((await driver.findElements(By.xpath("//li/ul/li/a"))).length != 0) {
             if ((await driver.findElements(By.xpath("//li/ul/li/a"))).length != 0) {
                 await driver.findElement(By.xpath("//li/ul/li/a")).click();
 
@@ -141,7 +142,7 @@ var password;
                 await driver.findElement(By.css(".btn-danger")).click();
                 await new Promise(r => setTimeout(r, 4000));
             }
-        }
+        //}
 
 	    console.log("Cruise Deleted.");
 
