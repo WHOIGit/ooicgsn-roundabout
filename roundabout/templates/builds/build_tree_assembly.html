@@ -93,6 +93,8 @@
                                 - {{ i.serial_number }}
                                 {% if i.id in reviewer_list %}
                                     <span id="review-badge-{{i.id}}" class="badge badge-pill badge-secondary">Review Requested</span>
+                                {% else %}
+                                    <span id="review-badge-{{i.id}}" class="badge badge-pill badge-secondary" style = 'display: none;'>Review Requested</span>
                                 {% endif %}
                                 {% if i.id in comment_list %}
                                     <span id="comment-badge-{{i.id}}" class="badge badge-pill badge-light">Replies</span>

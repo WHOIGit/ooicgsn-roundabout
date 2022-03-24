@@ -59,6 +59,8 @@
                                         {% endif %}
                                         {%if build.id in reviewer_list%}
                                             <span id="review-badge-{{build.id}}" class="badge badge-pill badge-secondary">Review Requested</span>
+                                        {% else %}
+                                            <span id="review-badge-{{build.id}}" class="badge badge-pill badge-secondary" style = 'display: none;'>Review Requested</span>
                                         {%endif%}
                                         
                                   </a>

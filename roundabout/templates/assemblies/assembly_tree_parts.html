@@ -75,6 +75,8 @@
                 {% endif %}
                 {% if assembly_part.part.id in reviewer_list %}
                     <span id="review-badge-{{assembly_part.part.id}}" class="badge badge-pill badge-secondary">Review Requested</span>
+                {% else %}
+                    <span id="review-badge-{{assembly_part.part.id}}" class="badge badge-pill badge-secondary" style = 'display: none;'>Review Requested</span>
                 {% endif %}
 
                 {# TAGS for AssemblyParts #}

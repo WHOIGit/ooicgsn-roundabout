@@ -521,7 +521,7 @@ def parse_deployment_files(self):
                 deployment_number = f'{assembly}-{dep_number_string}'
                 print(deployment_number)
                 build_number = f'Historical {dep_number_string}'
-                assembly_template_revision = row['assembly_template_revision'] if row['assembly_template_revision'] else 'A'
+                assembly_template_revision = row['assembly_template_revision'] if hasattr(row, 'assembly_template_revision') else 'A'
                 # build data dict
                 mooring_uid_dict = {
                     'mooring.uid': row['mooring.uid'],
