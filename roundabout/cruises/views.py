@@ -36,6 +36,7 @@ from django.views.generic import (
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django_tables2 import SingleTableMixin, SingleTableView
 from django_tables2.export.views import ExportMixin
+from roundabout.ooi_ci_tools.models import VesselEvent
 
 from .tables import *
 from .models import *
@@ -475,6 +476,10 @@ class VesselUpdateView(LoginRequiredMixin, UpdateView):
                     "to": str(new_val),
                 }
         self.object = form.save(commit=True)
+        if not hasattr(self.object, "vessel_event"):
+            self.object.vessel_event = VesselEvent.objects.create(
+                vessel=self.object
+            )
         vessel_event_form = VesselEventForm(instance=self.object.vessel_event)
         handle_reviewers(vessel_event_form.instance.user_draft, vessel_event_form.instance.user_approver, form.cleaned_data['user_draft'])
         _create_action_history(self.object, Action.UPDATE, self.request.user, data=data)

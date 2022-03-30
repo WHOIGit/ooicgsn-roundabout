@@ -48,6 +48,8 @@
                                                 <span>{{ key.name }}</span> 
                                                 {% if part.id in reviewer_list %}
                                                     <span id="review-badge-{{part.id}}" class="badge badge-pill badge-secondary">Review Requested</span>
+                                                {% else %}
+                                                    <span id="review-badge-{{part.id}}" class="badge badge-pill badge-secondary" style = 'display: none;'>Review Requested</span>
                                                 {% endif %}
                                                 
                                             </a>
