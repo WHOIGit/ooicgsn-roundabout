@@ -536,364 +536,364 @@ def parse_deployment_files(self):
             deployment = next((deployment for deployment in deployment_imports if deployment['mooring.uid'] == row['mooring.uid']), False)
             deployment['rows'].append(row)
 
-        # loop through the Deployments
-        for deployment_import in deployment_imports:
-            # get the Assembly template for this Build, needs to be only one match
-            try:
-                assembly = Assembly.objects.get(assembly_number=deployment_import['assembly'])
-            except Assembly.DoesNotExist:
-                raise ValueError("no assembly found")
-            except Assembly.MultipleObjectsReturned:
-                raise ValueError("too many assemblies found")
+        if len(deployment_imports):
+            # loop through the Deployments
+            for deployment_import in deployment_imports:
+                # get the Assembly template for this Build, needs to be only one match
+                try:
+                    assembly = Assembly.objects.get(assembly_number=deployment_import['assembly'])
+                except Assembly.DoesNotExist:
+                    raise ValueError("no assembly found")
+                except Assembly.MultipleObjectsReturned:
+                    raise ValueError("too many assemblies found")
 
-            try:
-                assembly_revision = AssemblyRevision.objects.get_or_create(assembly=assembly, revision_code=deployment_import['assembly_template_revision'])
-            except AssemblyRevision.MultipleObjectsReturned:
-                assembly_revision = AssemblyRevision.objects.filter(assembly=assembly, revision_code=deployment_import['assembly_template_revision']).first()
+                try:
+                    assembly_revision, assembly_revision_created = AssemblyRevision.objects.get_or_create(assembly=assembly, revision_code=deployment_import['assembly_template_revision'])
+                except AssemblyRevision.MultipleObjectsReturned:
+                    assembly_revision = AssemblyRevision.objects.filter(assembly=assembly, revision_code=deployment_import['assembly_template_revision']).first()
 
-            # set up common variables for Builds/Deployments
-            location_code = deployment_import['assembly'][0:2]
-            print(location_code)
+                # set up common variables for Builds/Deployments
+                location_code = deployment_import['assembly'][0:2]
 
-            try:
-                deployed_location = Location.objects.get(location_code=location_code)
-            except Location.DoesNotExist:
-                raise ValueError("No Location Matching this Location Code")
+                try:
+                    deployed_location = Location.objects.get(location_code=location_code)
+                except Location.DoesNotExist:
+                    raise ValueError("No Location Matching this Location Code")
 
-            dep_start_date = make_aware(parser.parse(deployment_import['rows'][0]['startDateTime']))
+                dep_start_date = make_aware(parser.parse(deployment_import['rows'][0]['startDateTime']))
 
-            try:
-                dep_end_date = make_aware(parser.parse(deployment_import['rows'][0]['stopDateTime']))
-            except:
-                dep_end_date = None
+                try:
+                    dep_end_date = make_aware(parser.parse(deployment_import['rows'][0]['stopDateTime']))
+                except:
+                    dep_end_date = None
 
-            try:
-                cruise_deployed = Cruise.objects.get(CUID=deployment_import['rows'][0]['CUID_Deploy'])
-            except:
-                cruise_deployed = None
+                try:
+                    cruise_deployed = Cruise.objects.get(CUID=deployment_import['rows'][0]['CUID_Deploy'])
+                except:
+                    cruise_deployed = None
 
-            try:
-                cruise_recovered = Cruise.objects.get(CUID=deployment_import['rows'][0]['CUID_Recover'])
-            except:
-                cruise_recovered = None
+                try:
+                    cruise_recovered = Cruise.objects.get(CUID=deployment_import['rows'][0]['CUID_Recover'])
+                except:
+                    cruise_recovered = None
 
-            # Set Build location dependiing on Deployment status
-            if dep_end_date:
-                build_location = Location.objects.get(name='Retired')
-            else:
-                build_location = deployed_location
+                # Set Build location dependiing on Deployment status
+                if dep_end_date:
+                    build_location = Location.objects.get(name='Retired')
+                else:
+                    build_location = deployed_location
 
-            latitude = deployment_import['rows'][0]['lat']
-            longitude = deployment_import['rows'][0]['lon']
-            water_depth = deployment_import['rows'][0]['water_depth']
+                latitude = deployment_import['rows'][0]['lat']
+                longitude = deployment_import['rows'][0]['lon']
+                water_depth = deployment_import['rows'][0]['water_depth']
 
-            # Get/Create a Build for this Deployment
-            build, build_created = Build.objects.get_or_create(
-                build_number=deployment_import['build_number'],
-                assembly=assembly,
-                defaults={
-                    'assembly_revision': assembly_revision,
-                    'created_at': dep_start_date,
-                    'location': build_location,
-                },
-            )
-
-            # Call the function to create an initial Action history
-            if build_created:
-                action = Action.objects.create(
-                    action_type = Action.ADD,
-                    object_type = Action.BUILD,
-                    created_at = dep_start_date,
-                    build = build,
-                    location = deployed_location,
-                    user = user,
-                    detail = f'{Action.BUILD} first added to RDB',
-                )
-
-            # Update/Create Deployment for this Build
-            try:
-                deployment_obj, deployment_created = Deployment.objects.update_or_create(
-                    deployment_number=deployment_import['deployment_number'],
-                    build=build,
+                # Get/Create a Build for this Deployment
+                build, build_created = Build.objects.get_or_create(
+                    build_number=deployment_import['build_number'],
+                    assembly=assembly,
                     defaults={
-                        'deployment_start_date': dep_start_date,
-                        'deployment_burnin_date': dep_start_date,
-                        'deployment_to_field_date': dep_start_date,
-                        'deployment_recovery_date': dep_end_date,
-                        'deployment_retire_date': dep_end_date,
-                        'deployed_location': deployed_location,
-                        'cruise_deployed': cruise_deployed,
-                        'cruise_recovered': cruise_recovered,
-                        'latitude': latitude,
-                        'longitude': longitude,
-                        'depth': float(water_depth),
+                        'assembly_revision': assembly_revision,
+                        'created_at': dep_start_date,
+                        'location': build_location,
                     },
                 )
-            except Deployment.MultipleObjectsReturned:
-                print('ERROR', deployment_import['deployment_number'])
 
-            # If this an update to existing Deployment, need to delete all previous Deployment History Actions
-            if not deployment_created:
-                deployment_actions = deployment_obj.actions.all()
-                deployment_actions.delete()
-
-            print(build)
-            print(deployment_obj)
-            if user_draft.exists():
-                deployment_obj.user_approver.clear()
-                deployment_obj.user_draft.clear()
-                for draft_user in user_draft:
-                    deployment_obj.user_draft.add(draft_user)
-
-            # _create_action_history function won't work correctly for back-dated Build Deployments,
-            # need to add history Actions manually
-            build_deployment_actions = [
-                Action.STARTDEPLOYMENT,
-                Action.DEPLOYMENTBURNIN,
-                Action.DEPLOYMENTTOFIELD,
-                Action.DEPLOYMENTRECOVER,
-                Action.DEPLOYMENTRETIRE,
-            ]
-
-            for action in build_deployment_actions:
-                create_action = False
-                if action == Action.STARTDEPLOYMENT:
-                    create_action = True
-                    action_date = dep_start_date
-                    detail = '%s %s started.' % (labels['label_deployments_app_singular'], deployment_obj)
-
-                elif action == Action.DEPLOYMENTBURNIN:
-                    create_action = True
-                    action_date = dep_start_date
-                    detail = '%s %s burn in.' % (labels['label_deployments_app_singular'], deployment_obj)
-
-                elif action == Action.DEPLOYMENTTOFIELD:
-                    create_action = True
-                    action_date = dep_start_date
-                    detail = 'Deployed to field on %s. Cruise: %s' % (deployment_obj, cruise_deployed)
-
-                elif action == Action.DEPLOYMENTRECOVER and dep_end_date:
-                    create_action = True
-                    action_date = dep_end_date
-                    detail = 'Recovered from %s. Cruise: %s' % (deployment_obj, cruise_recovered)
-
-                elif action == Action.DEPLOYMENTRETIRE and dep_end_date:
-                    create_action = True
-                    action_date = dep_end_date
-                    detail = '%s %s ended for this %s.' % (labels['label_deployments_app_singular'], deployment_obj, labels['label_inventory_app_singular'])
-
-                if create_action:
+                # Call the function to create an initial Action history
+                if build_created:
                     action = Action.objects.create(
-                        action_type = action,
+                        action_type = Action.ADD,
                         object_type = Action.BUILD,
-                        created_at = action_date,
+                        created_at = dep_start_date,
                         build = build,
                         location = deployed_location,
-                        deployment = deployment_obj,
-                        deployment_type = Action.BUILD_DEPLOYMENT,
                         user = user,
-                        detail = detail,
+                        detail = f'{Action.BUILD} first added to RDB',
                     )
 
-            for row in deployment_import['rows']:
-                # create InventoryDeployments for each item
-                if row['sensor.uid'] or row['electrical.uid']:
-                    if row['sensor.uid']:
-                        uid = row['sensor.uid']
-                    elif row['electrical.uid']:
-                        uid = row['electrical.uid']
-                    else:
-                        continue
-                    # Find the AssemblyPart that matches this RefDes by searching the ConfigDefault values
-                    # If no match, throw error.
-                    try:
-                        ref_des = row['Reference Designator']
-                        ref_des_obj = ReferenceDesignator.objects.get(refdes_name=ref_des)
-                        assembly_part = ref_des_obj.assembly_parts.filter(part__isnull=False).first()
-                    except Exception as e:
-                        print(e)
-                        continue
-
-                    # Get/Update Inventory item with matching serial_number
-
-                    try:
-                        item = Inventory.objects.get(serial_number=uid)
-                    except Inventory.DoesNotExist:
-                        continue
-                    item.location = build_location
-                    item.build = build
-                    # item.part = assembly_part.part
-                    # item.revision = assembly_part.part.revisions.latest()
-                    item.assembly_part = assembly_part
-                    item.created_at = dep_start_date
-                    item.save()
-                    
-                    # Create an initial Action history if Inventory needs to be created
-                    
-
-                    # Get/Create Deployment for this Build
-                    inv_deployment_obj, inv_deployment_created = InventoryDeployment.objects.update_or_create(
-                        inventory=item,
-                        deployment=deployment_obj,
+                # Update/Create Deployment for this Build
+                try:
+                    deployment_obj, deployment_created = Deployment.objects.update_or_create(
+                        deployment_number=deployment_import['deployment_number'],
+                        build=build,
                         defaults={
-                            'assembly_part': assembly_part,
                             'deployment_start_date': dep_start_date,
                             'deployment_burnin_date': dep_start_date,
                             'deployment_to_field_date': dep_start_date,
                             'deployment_recovery_date': dep_end_date,
                             'deployment_retire_date': dep_end_date,
+                            'deployed_location': deployed_location,
                             'cruise_deployed': cruise_deployed,
                             'cruise_recovered': cruise_recovered,
+                            'latitude': latitude,
+                            'longitude': longitude,
+                            'depth': float(water_depth),
                         },
                     )
+                except Deployment.MultipleObjectsReturned:
+                    print('ERROR', deployment_import['deployment_number'])
 
-                    # Create/update Configuration values for this Deployment
-                    config_event, config_event_created = ConfigEvent.objects.update_or_create(
-                        inventory=item,
-                        deployment=deployment_obj,
-                        defaults={
-                            'created_at': dep_start_date,
-                            'configuration_date': dep_start_date,
-                            'approved': True,
-                            'config_type': 'conf',
-                        },
-                    )
-                    config_event.user_approver.add(user)
+                # If this an update to existing Deployment, need to delete all previous Deployment History Actions
+                if not deployment_created:
+                    deployment_actions = deployment_obj.actions.all()
+                    deployment_actions.delete()
 
-                    config_name = ConfigName.objects.filter(name='Nominal Depth', part=item.part).first()
+                print(build)
+                print(deployment_obj)
+                if user_draft.exists():
+                    deployment_obj.user_approver.clear()
+                    deployment_obj.user_draft.clear()
+                    for draft_user in user_draft:
+                        deployment_obj.user_draft.add(draft_user)
 
-                    config_value, config_value_created = ConfigValue.objects.update_or_create(
-                        config_event=config_event,
-                        config_name=config_name,
-                        defaults={
-                            'config_value': row['deployment_depth'],
-                            'created_at': dep_start_date,
-                        },
-                    )
-                    _create_action_history(config_event, Action.CALCSVIMPORT, user)
+                # _create_action_history function won't work correctly for back-dated Build Deployments,
+                # need to add history Actions manually
+                build_deployment_actions = [
+                    Action.STARTDEPLOYMENT,
+                    Action.DEPLOYMENTBURNIN,
+                    Action.DEPLOYMENTTOFIELD,
+                    Action.DEPLOYMENTRECOVER,
+                    Action.DEPLOYMENTRETIRE,
+                ]
 
-                    # _create_action_history function won't work correctly fo Inventory Deployments if item is already in RDB,
-                    # need to add history Actions manually
+                for action in build_deployment_actions:
+                    create_action = False
+                    if action == Action.STARTDEPLOYMENT:
+                        create_action = True
+                        action_date = dep_start_date
+                        detail = '%s %s started.' % (labels['label_deployments_app_singular'], deployment_obj)
 
-                    # create Build object action
-                    action = Action.objects.create(
-                        action_type = Action.SUBCHANGE,
-                        object_type = Action.BUILD,
-                        created_at = dep_start_date,
-                        build = build,
-                        location = deployed_location,
-                        deployment = deployment_obj,
-                        user = user,
-                        detail = f'Sub-Assembly {item} added.',
-                    )
+                    elif action == Action.DEPLOYMENTBURNIN:
+                        create_action = True
+                        action_date = dep_start_date
+                        detail = '%s %s burn in.' % (labels['label_deployments_app_singular'], deployment_obj)
 
-                    # create Inventory object actions
-                    inv_actions = [
-                        Action.ADDTOBUILD,
-                        Action.REMOVEFROMBUILD,
-                    ]
+                    elif action == Action.DEPLOYMENTTOFIELD:
+                        create_action = True
+                        action_date = dep_start_date
+                        detail = 'Deployed to field on %s. Cruise: %s' % (deployment_obj, cruise_deployed)
 
-                    inv_deployment_actions = [
-                        Action.STARTDEPLOYMENT,
-                        Action.DEPLOYMENTBURNIN,
-                        Action.DEPLOYMENTTOFIELD,
-                        Action.DEPLOYMENTRECOVER,
-                        Action.DEPLOYMENTRETIRE,
-                    ]
+                    elif action == Action.DEPLOYMENTRECOVER and dep_end_date:
+                        create_action = True
+                        action_date = dep_end_date
+                        detail = 'Recovered from %s. Cruise: %s' % (deployment_obj, cruise_recovered)
 
-                    for action in inv_actions:
-                        create_action = False
+                    elif action == Action.DEPLOYMENTRETIRE and dep_end_date:
+                        create_action = True
+                        action_date = dep_end_date
+                        detail = '%s %s ended for this %s.' % (labels['label_deployments_app_singular'], deployment_obj, labels['label_inventory_app_singular'])
 
-                        if action == Action.ADDTOBUILD:
-                            create_action = True
-                            action_date = dep_start_date
-                            detail = 'Moved to %s.' % (build)
+                    if create_action:
+                        action = Action.objects.create(
+                            action_type = action,
+                            object_type = Action.BUILD,
+                            created_at = action_date,
+                            build = build,
+                            location = deployed_location,
+                            deployment = deployment_obj,
+                            deployment_type = Action.BUILD_DEPLOYMENT,
+                            user = user,
+                            detail = detail,
+                        )
 
-                        elif action == Action.REMOVEFROMBUILD and dep_end_date:
-                            create_action = True
-                            action_date = dep_end_date
-                            detail = 'Removed from %s.' % (build)
-                            # create Build object action
-                            action = Action.objects.create(
-                                action_type = Action.SUBCHANGE,
-                                object_type = Action.BUILD,
-                                created_at = action_date,
-                                build = build,
-                                location = deployed_location,
-                                deployment = deployment_obj,
-                                user = user,
-                                detail = f'Sub-Assembly {item} removed.',
-                            )
-
-                        if create_action:
-                            action = Action.objects.create(
-                                action_type = action,
-                                object_type = Action.INVENTORY,
-                                created_at = action_date,
-                                inventory = item,
-                                build = build,
-                                location = deployed_location,
-                                deployment = deployment_obj,
-                                user = user,
-                                detail = detail,
-                            )
-
-                    for action in inv_deployment_actions:
-                        create_action = False
-
-                        if action == Action.STARTDEPLOYMENT:
-                            create_action = True
-                            action_date = dep_start_date
-                            detail = '%s %s started.' % (labels['label_deployments_app_singular'], deployment_obj)
-
-                        elif action == Action.DEPLOYMENTBURNIN:
-                            create_action = True
-                            action_date = dep_start_date
-                            detail = '%s %s burn in.' % (labels['label_deployments_app_singular'], deployment_obj)
-
-                        elif action == Action.DEPLOYMENTTOFIELD:
-                            create_action = True
-                            action_date = dep_start_date
-                            detail = 'Deployed to field on %s.' % (deployment_obj)
-
-                        elif action == Action.DEPLOYMENTRECOVER and dep_end_date:
-                            create_action = True
-                            action_date = dep_end_date
-                            detail = 'Recovered from %s.' % (deployment_obj)
-
-                        elif action == Action.DEPLOYMENTRETIRE and dep_end_date:
-                            create_action = True
-                            action_date = dep_end_date
-                            detail = '%s %s ended for this %s.' % (labels['label_deployments_app_singular'], deployment_obj, labels['label_inventory_app_singular'])
-
-                        if create_action:
-                            action = Action.objects.create(
-                                action_type = action,
-                                object_type = Action.INVENTORY,
-                                created_at = action_date,
-                                inventory = item,
-                                build = build,
-                                location = deployed_location,
-                                deployment = deployment_obj,
-                                inventory_deployment = inv_deployment_obj,
-                                deployment_type = Action.INVENTORY_DEPLOYMENT,
-                                user = user,
-                                detail = detail,
-                            )
-                    #print(row['sensor.uid'])
-                    # get the latest Action for this item, if it's NOT later than action_date,
-                    # need to update Item build/location date to match this Deployment
-                    last_action = item.actions.latest()
-                    if action_date >= last_action.created_at:
-                        # remove from Build if Deployment is retired
-                        if dep_end_date:
-                            item.build = None
-                            item.assembly_part = None
+                for row in deployment_import['rows']:
+                    # create InventoryDeployments for each item
+                    if row['sensor.uid'] or row['electrical.uid']:
+                        if row['sensor.uid']:
+                            uid = row['sensor.uid']
+                        elif row['electrical.uid']:
+                            uid = row['electrical.uid']
                         else:
-                            item.build = build
-                            item.assembly_part = assembly_part
-                        item.location = build.location
+                            continue
+                        # Find the AssemblyPart that matches this RefDes by searching the ConfigDefault values
+                        # If no match, throw error.
+                        try:
+                            ref_des = row['Reference Designator']
+                            ref_des_obj = ReferenceDesignator.objects.get(refdes_name=ref_des)
+                            assembly_part = ref_des_obj.assembly_parts.filter(part__isnull=False).first()
+                        except Exception as e:
+                            print(e)
+                            continue
+
+                        # Get/Update Inventory item with matching serial_number
+
+                        try:
+                            item = Inventory.objects.get(serial_number=uid)
+                        except Inventory.DoesNotExist:
+                            continue
+                        item.location = build_location
+                        item.build = build
+                        # item.part = assembly_part.part
+                        # item.revision = assembly_part.part.revisions.latest()
+                        item.assembly_part = assembly_part
+                        item.created_at = dep_start_date
                         item.save()
+                        
+                        # Create an initial Action history if Inventory needs to be created
+                        
+
+                        # Get/Create Deployment for this Build
+                        inv_deployment_obj, inv_deployment_created = InventoryDeployment.objects.update_or_create(
+                            inventory=item,
+                            deployment=deployment_obj,
+                            defaults={
+                                'assembly_part': assembly_part,
+                                'deployment_start_date': dep_start_date,
+                                'deployment_burnin_date': dep_start_date,
+                                'deployment_to_field_date': dep_start_date,
+                                'deployment_recovery_date': dep_end_date,
+                                'deployment_retire_date': dep_end_date,
+                                'cruise_deployed': cruise_deployed,
+                                'cruise_recovered': cruise_recovered,
+                            },
+                        )
+
+                        # Create/update Configuration values for this Deployment
+                        config_event, config_event_created = ConfigEvent.objects.update_or_create(
+                            inventory=item,
+                            deployment=deployment_obj,
+                            defaults={
+                                'created_at': dep_start_date,
+                                'configuration_date': dep_start_date,
+                                'approved': True,
+                                'config_type': 'conf',
+                            },
+                        )
+                        config_event.user_approver.add(user)
+
+                        config_name = ConfigName.objects.filter(name='Nominal Depth', part=item.part).first()
+
+                        config_value, config_value_created = ConfigValue.objects.update_or_create(
+                            config_event=config_event,
+                            config_name=config_name,
+                            defaults={
+                                'config_value': row['deployment_depth'],
+                                'created_at': dep_start_date,
+                            },
+                        )
+                        _create_action_history(config_event, Action.CALCSVIMPORT, user)
+
+                        # _create_action_history function won't work correctly fo Inventory Deployments if item is already in RDB,
+                        # need to add history Actions manually
+
+                        # create Build object action
+                        action = Action.objects.create(
+                            action_type = Action.SUBCHANGE,
+                            object_type = Action.BUILD,
+                            created_at = dep_start_date,
+                            build = build,
+                            location = deployed_location,
+                            deployment = deployment_obj,
+                            user = user,
+                            detail = f'Sub-Assembly {item} added.',
+                        )
+
+                        # create Inventory object actions
+                        inv_actions = [
+                            Action.ADDTOBUILD,
+                            Action.REMOVEFROMBUILD,
+                        ]
+
+                        inv_deployment_actions = [
+                            Action.STARTDEPLOYMENT,
+                            Action.DEPLOYMENTBURNIN,
+                            Action.DEPLOYMENTTOFIELD,
+                            Action.DEPLOYMENTRECOVER,
+                            Action.DEPLOYMENTRETIRE,
+                        ]
+
+                        for action in inv_actions:
+                            create_action = False
+
+                            if action == Action.ADDTOBUILD:
+                                create_action = True
+                                action_date = dep_start_date
+                                detail = 'Moved to %s.' % (build)
+
+                            elif action == Action.REMOVEFROMBUILD and dep_end_date:
+                                create_action = True
+                                action_date = dep_end_date
+                                detail = 'Removed from %s.' % (build)
+                                # create Build object action
+                                action = Action.objects.create(
+                                    action_type = Action.SUBCHANGE,
+                                    object_type = Action.BUILD,
+                                    created_at = action_date,
+                                    build = build,
+                                    location = deployed_location,
+                                    deployment = deployment_obj,
+                                    user = user,
+                                    detail = f'Sub-Assembly {item} removed.',
+                                )
+
+                            if create_action:
+                                action = Action.objects.create(
+                                    action_type = action,
+                                    object_type = Action.INVENTORY,
+                                    created_at = action_date,
+                                    inventory = item,
+                                    build = build,
+                                    location = deployed_location,
+                                    deployment = deployment_obj,
+                                    user = user,
+                                    detail = detail,
+                                )
+
+                        for action in inv_deployment_actions:
+                            create_action = False
+
+                            if action == Action.STARTDEPLOYMENT:
+                                create_action = True
+                                action_date = dep_start_date
+                                detail = '%s %s started.' % (labels['label_deployments_app_singular'], deployment_obj)
+
+                            elif action == Action.DEPLOYMENTBURNIN:
+                                create_action = True
+                                action_date = dep_start_date
+                                detail = '%s %s burn in.' % (labels['label_deployments_app_singular'], deployment_obj)
+
+                            elif action == Action.DEPLOYMENTTOFIELD:
+                                create_action = True
+                                action_date = dep_start_date
+                                detail = 'Deployed to field on %s.' % (deployment_obj)
+
+                            elif action == Action.DEPLOYMENTRECOVER and dep_end_date:
+                                create_action = True
+                                action_date = dep_end_date
+                                detail = 'Recovered from %s.' % (deployment_obj)
+
+                            elif action == Action.DEPLOYMENTRETIRE and dep_end_date:
+                                create_action = True
+                                action_date = dep_end_date
+                                detail = '%s %s ended for this %s.' % (labels['label_deployments_app_singular'], deployment_obj, labels['label_inventory_app_singular'])
+
+                            if create_action:
+                                action = Action.objects.create(
+                                    action_type = action,
+                                    object_type = Action.INVENTORY,
+                                    created_at = action_date,
+                                    inventory = item,
+                                    build = build,
+                                    location = deployed_location,
+                                    deployment = deployment_obj,
+                                    inventory_deployment = inv_deployment_obj,
+                                    deployment_type = Action.INVENTORY_DEPLOYMENT,
+                                    user = user,
+                                    detail = detail,
+                                )
+                        #print(row['sensor.uid'])
+                        # get the latest Action for this item, if it's NOT later than action_date,
+                        # need to update Item build/location date to match this Deployment
+                        last_action = item.actions.latest()
+                        if action_date >= last_action.created_at:
+                            # remove from Build if Deployment is retired
+                            if dep_end_date:
+                                item.build = None
+                                item.assembly_part = None
+                            else:
+                                item.build = build
+                                item.assembly_part = assembly_part
+                            item.location = build.location
+                            item.save()
     cache.delete('dep_files')
     cache.delete('user_draft_deploy')
 

@@ -28,8 +28,9 @@
 
 <div class="card-body">
 
-
-    {% if location.location_code %}<p>Location Code: {{ location.location_code }}</p>{% endif %}
+    {% if location.location_code %}
+        <p>Location Code: {{ location.location_code }}</p>
+    {% endif %}
 
     {% if deployments.exists %}
         <h5>Deployment History for this Location</h5>
@@ -38,19 +39,20 @@
 
 
         {% for build in build_list %}
-        <ul class="list-group list-group-flush">
-            <li class="list-group-item">Assembly: {{ build.grouper }}
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">Assembly: {{ build.grouper }}
 
-        <ul class="list-group list-group-flush">
-            {% for deployment in build.list %}
-                <li class="list-group-item">
+                    <ul class="list-group list-group-flush">
+                        {% for deployment in build.list %}
+                            <li class="list-group-item">
 
-                    {% include "builds/deployment_detail.html" with deployment=deployment %}
+                                {% include "builds/deployment_detail.html" with deployment=deployment %}
 
+                            </li>
+                        {% endfor %}
+                    </ul>
                 </li>
-            {% endfor %}
             </ul>
-         </li></ul>
         {% endfor %}
 
     {% endif %}
