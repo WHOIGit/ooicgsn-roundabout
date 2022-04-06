@@ -103,6 +103,11 @@ var filename, filename_ext;
             filename = process.cwd() + "\\CruiseInformation-import.csv";
         }
         await driver.findElement(By.id("id_cruises_csv")).sendKeys(filename)
+        // Set Reviewer - index 2 can change when upload github csv screen changes
+        {
+            var reviewer = await driver.findElements(By.xpath("//option[. = '" + user + "']"));
+            await reviewer[2].click();
+        }
         await driver.findElement(By.id("submit")).click()
         // Wait for upload to Complete
         var bodyText;
@@ -196,7 +201,12 @@ var filename, filename_ext;
         else {
             filename = process.cwd() + "\\shiplist-import.csv";
         }
-        await driver.findElement(By.id("id_vessels_csv")).sendKeys(filename)
+        await driver.findElement(By.id("id_vessels_csv")).sendKeys(filename);
+        // Set Reviewer - index 3 can change when upload github csv screen changes
+        {
+            var reviewer = await driver.findElements(By.xpath("//option[. = '" + user + "']"));
+            await reviewer[3].click();
+        }
         await driver.findElement(By.id("submit")).click()
         // Wait for upload to Complete
         erroridx = 0;
@@ -298,7 +308,11 @@ var filename, filename_ext;
             filename_ext = process.cwd() + "\\3604-00131-00001-20004__20160510-import__scalib2.ext";
         }
         await driver.findElement(By.id("id_calibration_csv")).sendKeys(filename_ext);
-
+        // Set Reviewer - index 0 can change when upload github csv screen changes
+        {
+            var reviewer = await driver.findElements(By.xpath("//option[. = '" + user + "']"));
+            await reviewer[0].click();
+        }
         await driver.findElement(By.id("submit")).click()
 
         // Wait for upload to Complete
