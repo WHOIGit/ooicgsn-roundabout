@@ -103,9 +103,11 @@ var filename, filename_ext;
             filename = process.cwd() + "\\CruiseInformation-import.csv";
         }
         await driver.findElement(By.id("id_cruises_csv")).sendKeys(filename)
-        // Set Reviewer - index 2 can change when upload github csv screen changes
+        // Set Reviewers - need 2 to approve - index 2 (cruises) can change when upload github csv screen changes
         {
             var reviewer = await driver.findElements(By.xpath("//option[. = '" + user + "']"));
+            await reviewer[2].click();
+            var reviewer = await driver.findElements(By.xpath("//option[. = 'tech']"));
             await reviewer[2].click();
         }
         await driver.findElement(By.id("submit")).click()
@@ -202,9 +204,11 @@ var filename, filename_ext;
             filename = process.cwd() + "\\shiplist-import.csv";
         }
         await driver.findElement(By.id("id_vessels_csv")).sendKeys(filename);
-        // Set Reviewer - index 3 can change when upload github csv screen changes
+        // Set Reviewers - need 2 to approve - index 3 (vessels) can change when upload github csv screen changes
         {
             var reviewer = await driver.findElements(By.xpath("//option[. = '" + user + "']"));
+            await reviewer[3].click();
+            var reviewer = await driver.findElements(By.xpath("//option[. = 'tech']"));
             await reviewer[3].click();
         }
         await driver.findElement(By.id("submit")).click()
@@ -236,7 +240,7 @@ var filename, filename_ext;
            // Export Vessels - CI Version
            await driver.findElement(By.id("navbarAdmintools")).click()
            await driver.findElement(By.linkText("Bulk Download Tool")).click()
-	   // CI download button associated with Vessels
+	     // CI download button associated with Vessels
            await driver.findElement(By.linkText("Export Vessels [CI]")).click()
 
            // Access Downloaded Vessel file
@@ -290,7 +294,7 @@ var filename, filename_ext;
 
 
         // Upload Calibration CSV with a single calibration and a 2D calibration
-	// Test depends on Manufacturer Serial Number previously defined in Import Export Inventory
+	    // Test depends on Manufacturer Serial Number previously defined in Import Export Inventory
         await driver.findElement(By.id("navbarAdmintools")).click()
         await driver.findElement(By.linkText("Upload GitHub CSVs")).click()
         if (myArgs[1] == 'headless') {
@@ -308,9 +312,11 @@ var filename, filename_ext;
             filename_ext = process.cwd() + "\\3604-00131-00001-20004__20160510-import__scalib2.ext";
         }
         await driver.findElement(By.id("id_calibration_csv")).sendKeys(filename_ext);
-        // Set Reviewer - index 0 can change when upload github csv screen changes
+        // Set Reviewers - need 2 to approve - index 0 (calibrations) can change when upload github csv screen changes
         {
             var reviewer = await driver.findElements(By.xpath("//option[. = '" + user + "']"));
+            await reviewer[0].click();
+            var reviewer = await driver.findElements(By.xpath("//option[. = 'tech']"));
             await reviewer[0].click();
         }
         await driver.findElement(By.id("submit")).click()
