@@ -32,7 +32,7 @@ from celery import shared_task
 from dateutil import parser
 from django.core.cache import cache
 from roundabout.ooi_ci_tools.forms import validate_reference_designator
-from roundabout.parts.models import Part
+from roundabout.parts.models import Part, PartType
 from sigfig import round
 from statistics import mean, stdev
 from django.utils.timezone import make_aware
@@ -1020,12 +1020,15 @@ def parse_bulk_files(self):
                         'mio': row['MIO'] if hasattr(row,'MIO') else '',
                     }
                 )
-                part_template = row['RDB_Part_Template'] if hasattr(row,'RDB_Part_Template') else ''
+                try:
+                    part_template = row['RDB_Part_Template']
+                except:
+                    part_template = None
                 inv = Inventory.objects.filter(serial_number = asset_uid)
-                if len(inv):
-                    inv = inv.first()
-                    inv.bulk_upload_event = bulk_event
-                    if hasattr(inv, 'fieldvalues'):
+                if inv.exists():
+                    inv_obj = inv.first()
+                    inv_obj.bulk_upload_event = bulk_event
+                    if hasattr(inv_obj, 'fieldvalues'):
                         field_dict = {
                             'CI TYPE': row['TYPE'], 
                             'CI Mobile': row['Mobile'], 
@@ -1039,68 +1042,89 @@ def parse_bulk_files(self):
                             'CI Decommission Date': row['Decommission_Date'] if hasattr(row,'Decommission_Date') else ''
                         }
                         for key, val in field_dict.items():
-                            field_val = inv.fieldvalues.filter(field__field_name=key, is_current=True)
+                            field_val = inv_obj.fieldvalues.filter(field__field_name=key, is_current=True)
                             if field_val:
                                 field_val = field_val.first()
                                 if field_val:
                                     field_val.field_value = val
                                     field_val.save()       
-                    inv.save()
-                if not len(inv) and len(part_template):
-                    print(part_template)
-                    part = Part.objects.get_or_create(name=part_template, part_type='Instrument', part_number=part_template)
-                    print(part)
+                    inv_obj.save()
+                if inv.exists() == False and part_template is not None and part_template != '':
+                    inst_obj = PartType.objects.get(name='Instrument')
+                    try:
+                        part = Part.objects.get(name=part_template, part_type=inst_obj, part_number=part_template)
+                    except Part.MultipleObjectsReturned:
+                        part = Part.objects.filter(name=part_template, part_type=inst_obj, part_number=part_template).first()
+                    except Part.DoesNotExist:
+                        part = Part.objects.create(name=part_template, part_type=inst_obj, part_number=part_template)
                     inv = Inventory.objects.create(
                         part = part,
                         serial_number = asset_uid,
                         bulk_upload_event = bulk_event,
-                        fieldvalues = [
-                            FieldValue.objects.create(
-                                field = Field.objects.get(field_name='CI TYPE'),
-                                field_value = row['TYPE'],
-                                is_current = True
-                            ),
-                            FieldValue.objects.create(
-                                field = Field.objects.get(field_name='CI Mobile'),
-                                field_value = row['Mobile'],
-                                is_current = True
-                            ),
-                            FieldValue.objects.create(
-                                field = Field.objects.get(field_name='Manufacturer Serial Number'),
-                                field_value = row["Manufacturer's Serial No./Other Identifier"],
-                                is_current = True
-                            ),
-                            FieldValue.objects.create(
-                                field = Field.objects.get(field_name='Firmware Version'),
-                                field_value = row['Firmware Version'],
-                            ),
-                            FieldValue.objects.create(
-                                field = Field.objects.get(field_name='Date Received'),
-                                field_value = row['ACQUISITION DATE'],
-                            ),
-                            FieldValue.objects.create(
-                                field = Field.objects.get(field_name='CI comments'),
-                                field_value = row['comments'],
-                            ),
-                            FieldValue.objects.create(
-                                field = Field.objects.get(field_name='Owner'),
-                                field_value = row['MIO'] if hasattr(row,'MIO') else '',
-                            ),
-                            FieldValue.objects.create(
-                                field = Field.objects.get(field_name='CI Array Geometry'),
-                                field_value = row['Array_geometry'] if hasattr(row,'Array_geometry') else '',
-                            ),
-                            FieldValue.objects.create(
-                                field = Field.objects.get(field_name='CI Commission Date'),
-                                field_value = row['Commission_Date'] if hasattr(row,'Commission_Date') else '',
-                            ),
-                            FieldValue.objects.create(
-                                field = Field.objects.get(field_name='CI Decommission Date'),
-                                field_value = row['Decommission_Date'] if hasattr(row,'Decommission_Date') else '',
-                            ),
-                        ]
+                        location = Location.objects.get(name='Retired')
                     )
                     inv.save()
+                            
+                    FieldValue.objects.get_or_create(
+                        field = Field.objects.get_or_create(field_name='CI TYPE')[0],
+                        field_value = row['TYPE'],
+                        is_current = True,
+                        inventory = inv
+                    )
+                    FieldValue.objects.get_or_create(
+                        field = Field.objects.get_or_create(field_name='CI Mobile')[0],
+                        field_value = row['Mobile'],
+                        is_current = True,
+                        inventory = inv
+                    )
+                    FieldValue.objects.get_or_create(
+                        field = Field.objects.get_or_create(field_name='Manufacturer Serial Number')[0],
+                        field_value = row["Manufacturer's Serial No./Other Identifier"],
+                        is_current = True,
+                        inventory = inv
+                    )
+                    FieldValue.objects.get_or_create(
+                        field = Field.objects.get_or_create(field_name='Firmware Version')[0],
+                        field_value = row['Firmware Version'],
+                        is_current = True,
+                        inventory = inv
+                    )
+                    FieldValue.objects.get_or_create(
+                        field = Field.objects.get_or_create(field_name='Date Received')[0],
+                        field_value = row['ACQUISITION DATE'],
+                        is_current = True,
+                        inventory = inv
+                    )
+                    FieldValue.objects.get_or_create(
+                        field = Field.objects.get_or_create(field_name='CI comments')[0],
+                        field_value = row['comments'],
+                        is_current = True,
+                        inventory = inv
+                    )
+                    FieldValue.objects.get_or_create(
+                        field = Field.objects.get_or_create(field_name='Owner')[0],
+                        field_value = row['MIO'] if hasattr(row,'MIO') else '',
+                        is_current = True,
+                        inventory = inv
+                    )
+                    FieldValue.objects.get_or_create(
+                        field = Field.objects.get_or_create(field_name='CI Array Geometry')[0],
+                        field_value = row['Array_geometry'] if hasattr(row,'Array_geometry') else '',
+                        is_current = True,
+                        inventory = inv
+                    )
+                    FieldValue.objects.get_or_create(
+                        field = Field.objects.get_or_create(field_name='CI Commission Date')[0],
+                        field_value = row['Commission_Date'] if hasattr(row,'Commission_Date') else '',
+                        is_current = True,
+                        inventory = inv
+                    )
+                    FieldValue.objects.get_or_create(
+                        field = Field.objects.get_or_create(field_name='CI Decommission Date')[0],
+                        field_value = row['Decommission_Date'] if hasattr(row,'Decommission_Date') else '',
+                        is_current = True,
+                        inventory = inv
+                    )
         if csv_file.name.endswith('vocab.csv'):
             for row in reader:
                 equip_desc = row['DESCRIPTION OF EQUIPMENT']
