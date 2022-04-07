@@ -129,6 +129,7 @@ def user_ccc_reviews(event, user, evt_type):
 
     # Vessel template
     if evt_type in ['vessel_event']:
+        found_vessel_events = False
         if user.reviewer_vesselevents.exists():
             found_vessel_events = True if user in event.user_draft.all() else False
         if not found_vessel_events:
