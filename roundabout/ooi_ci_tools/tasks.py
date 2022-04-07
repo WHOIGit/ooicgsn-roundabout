@@ -309,7 +309,7 @@ def parse_cal_files(self):
 
 
 # Parse Cruise CSV file submissions, generate and associate relevant Events
-@shared_task(bind=True)
+@shared_task(bind=True, soft_time_limit = 3600)
 def parse_cruise_files(self):
     cruises_files = cache.get('cruises_files')
     user_draft = cache.get('user_draft_cruises')
@@ -390,7 +390,7 @@ def parse_cruise_files(self):
 
 
 # Parse Vessel CSV file submissions, generate and associate relevant Events
-@shared_task(bind=True)
+@shared_task(bind=True, soft_time_limit = 3600)
 def parse_vessel_files(self):
     vessels_files = cache.get('vessels_files')
     user_draft = cache.get('user_draft_vessels')
@@ -498,7 +498,7 @@ def parse_vessel_files(self):
 
 
 # Parse Deployment CSV file submissions, generate and associate relevant Events
-@shared_task(bind=True)
+@shared_task(bind=True, soft_time_limit = 3600)
 def parse_deployment_files(self):
     csv_files = cache.get('dep_files')
     user_draft = cache.get('user_draft_deploy')
@@ -899,7 +899,7 @@ def parse_deployment_files(self):
 
 
 # Parse Reference Designator vocab CSV file submission, generate and associate relevant Events
-@shared_task(bind=True)
+@shared_task(bind=True, soft_time_limit = 3600)
 def parse_refdes_files(self):
     refdes_files = cache.get('refdes_files')
     user = cache.get('user')
@@ -1065,65 +1065,85 @@ def parse_bulk_files(self):
                     )
                     inv.save()
                             
-                    FieldValue.objects.get_or_create(
+                    FieldValue.objects.update_or_create(
                         field = Field.objects.get_or_create(field_name='CI TYPE')[0],
-                        field_value = row['TYPE'],
                         is_current = True,
-                        inventory = inv
+                        inventory = inv,
+                        defaults={
+                            'field_value': row['TYPE'],
+                        }
                     )
-                    FieldValue.objects.get_or_create(
+                    FieldValue.objects.update_or_create(
                         field = Field.objects.get_or_create(field_name='CI Mobile')[0],
-                        field_value = row['Mobile'],
                         is_current = True,
-                        inventory = inv
+                        inventory = inv,
+                        defaults = {
+                            'field_value': row['Mobile'],
+                        }
                     )
-                    FieldValue.objects.get_or_create(
+                    FieldValue.objects.update_or_create(
                         field = Field.objects.get_or_create(field_name='Manufacturer Serial Number')[0],
-                        field_value = row["Manufacturer's Serial No./Other Identifier"],
                         is_current = True,
-                        inventory = inv
+                        inventory = inv,
+                        defaults= {
+                            'field_value': row["Manufacturer's Serial No./Other Identifier"],
+                        }
                     )
-                    FieldValue.objects.get_or_create(
+                    FieldValue.objects.update_or_create(
                         field = Field.objects.get_or_create(field_name='Firmware Version')[0],
-                        field_value = row['Firmware Version'],
                         is_current = True,
-                        inventory = inv
+                        inventory = inv,
+                        defaults = {
+                            'field_value': row['Firmware Version'],
+                        }
                     )
-                    FieldValue.objects.get_or_create(
+                    FieldValue.objects.update_or_create(
                         field = Field.objects.get_or_create(field_name='Date Received')[0],
-                        field_value = row['ACQUISITION DATE'],
                         is_current = True,
-                        inventory = inv
+                        inventory = inv,
+                        defaults = {
+                            'field_value': row['ACQUISITION DATE'],
+                        }
                     )
-                    FieldValue.objects.get_or_create(
+                    FieldValue.objects.update_or_create(
                         field = Field.objects.get_or_create(field_name='CI comments')[0],
-                        field_value = row['comments'],
                         is_current = True,
-                        inventory = inv
+                        inventory = inv,
+                        defaults = {
+                            'field_value': row['comments'],
+                        }
                     )
-                    FieldValue.objects.get_or_create(
+                    FieldValue.objects.update_or_create(
                         field = Field.objects.get_or_create(field_name='Owner')[0],
-                        field_value = row['MIO'] if hasattr(row,'MIO') else '',
                         is_current = True,
-                        inventory = inv
+                        inventory = inv,
+                        defaults= {
+                            'field_value': row['MIO'] if hasattr(row,'MIO') else '',
+                        }
                     )
-                    FieldValue.objects.get_or_create(
+                    FieldValue.objects.update_or_create(
                         field = Field.objects.get_or_create(field_name='CI Array Geometry')[0],
-                        field_value = row['Array_geometry'] if hasattr(row,'Array_geometry') else '',
                         is_current = True,
-                        inventory = inv
+                        inventory = inv,
+                        defaults= {
+                            'field_value': row['Array_geometry'] if hasattr(row,'Array_geometry') else '',
+                        }
                     )
-                    FieldValue.objects.get_or_create(
+                    FieldValue.objects.update_or_create(
                         field = Field.objects.get_or_create(field_name='CI Commission Date')[0],
-                        field_value = row['Commission_Date'] if hasattr(row,'Commission_Date') else '',
                         is_current = True,
-                        inventory = inv
+                        inventory = inv,
+                        defaults= {
+                            'field_value': row['Commission_Date'] if hasattr(row,'Commission_Date') else '',
+                        }
                     )
-                    FieldValue.objects.get_or_create(
+                    FieldValue.objects.update_or_create(
                         field = Field.objects.get_or_create(field_name='CI Decommission Date')[0],
-                        field_value = row['Decommission_Date'] if hasattr(row,'Decommission_Date') else '',
                         is_current = True,
-                        inventory = inv
+                        inventory = inv,
+                        defaults= {
+                            'field_value': row['Decommission_Date'] if hasattr(row,'Decommission_Date') else '',
+                        }
                     )
         if csv_file.name.endswith('vocab.csv'):
             for row in reader:
