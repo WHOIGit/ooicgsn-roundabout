@@ -124,6 +124,7 @@ def validate_import_config_deployments(import_config,reader, filename):
                     )
             try:
                 mooring_uid = row['mooring.uid']
+                assert mooring_uid != ''
             except:
                 raise ValidationError(
                     _('File: %(filename)s, Row %(row)s: Unable to parse Mooring UID'),
@@ -570,6 +571,7 @@ class ImportDeploymentsForm(forms.Form):
                     try:
                         mooring_id = row['mooring.uid']
                         dep_number = mooring_id.split('-')[2]
+                        assert dep_number != ''
                     except:
                         raise ValidationError(
                             _('File: %(filename)s: Row: %(row)s: Unable to parse Mooring UID or Deployment Number from Mooring UID'),
