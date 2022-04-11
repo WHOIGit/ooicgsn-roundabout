@@ -46,6 +46,8 @@
                     data-detail-url="{% url 'assemblies:ajax_assemblies_copy' assembly.id %}"
                     data-node-id="{{ assembly.id }}"
                     data-node-type="{{ node_type }}">Copy {{ label_assemblies_app_singular }} Template</a>
+                <button class="dropdown-item" onclick='location.href="{% url 'exports:obs_assemblybuilds' assembly.id %}";' {% if not assembly.has_nontrashed_nonretired_builds %}disabled{% endif %}
+                  >Export {{ label_assemblies_app_singular }}-{{ label_builds_app_plural }} CSV [OBS]</button>
             </div>
 
       </div>
