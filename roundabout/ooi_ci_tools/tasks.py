@@ -546,9 +546,9 @@ def parse_deployment_files(self):
                 raise ValueError("too many assemblies found")
 
             try:
-                assembly_revision, assembly_revision_created = AssemblyRevision.objects.get_or_create(assembly=assembly, revision_code=deployment_import['assembly_template_revision'], assembly = assembly)
+                assembly_revision, assembly_revision_created = AssemblyRevision.objects.get_or_create(assembly=assembly, revision_code=deployment_import['assembly_template_revision'])
             except AssemblyRevision.MultipleObjectsReturned:
-                assembly_revision = AssemblyRevision.objects.filter(assembly=assembly, revision_code=deployment_import['assembly_template_revision'], assembly = assembly).first()
+                assembly_revision = AssemblyRevision.objects.filter(assembly=assembly, revision_code=deployment_import['assembly_template_revision']).first()
 
             # set up common variables for Builds/Deployments
             location_code = deployment_import['assembly'][0:2]
