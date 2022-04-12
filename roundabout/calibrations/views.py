@@ -702,7 +702,11 @@ def event_review_toggle(request, pk, user_pk, evt_type):
             _create_action_history(event, Action.REVIEWAPPROVE, user)
     if event.user_approver.exists():
         if len(event.user_approver.all()) >= 2:
-            event.approved = True
+            if evt_type == 'cruise_event':
+                if len(event.cruise.vessel.vessel_event.user_approver.all()) >= 2:
+                    event.approved = True
+            else:       
+                event.approved = True
             if evt_type == 'deployment':
                 _create_action_history(event.build, Action.EVENTAPPROVE, user, dep_obj=event)
             else:
