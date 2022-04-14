@@ -49,6 +49,7 @@ from roundabout.assemblies.models import Assembly, AssemblyRevision
 from roundabout.locations.models import Location
 from roundabout.builds.models import Build
 from roundabout.core.utils import set_app_labels
+from roundabout.assemblies.views import _make_revision_tree_copy
 
 labels = set_app_labels()
 
@@ -529,6 +530,7 @@ def parse_deployment_files(self):
                     'build_number': build_number,
                     'deployment_number': deployment_number,
                     'assembly_template_revision': assembly_template_revision,
+                    'reference_designator': ref_des,
                     'rows': [],
                 }
                 deployment_imports.append(mooring_uid_dict)
@@ -549,6 +551,19 @@ def parse_deployment_files(self):
                 assembly_revision, assembly_revision_created = AssemblyRevision.objects.get_or_create(assembly=assembly, revision_code=deployment_import['assembly_template_revision'])
             except AssemblyRevision.MultipleObjectsReturned:
                 assembly_revision = AssemblyRevision.objects.filter(assembly=assembly, revision_code=deployment_import['assembly_template_revision']).first()
+
+            if assembly_revision_created:
+                ref_des_obj = ReferenceDesignator.objects.get(refdes_name=deployment_import['reference_designator'])
+                for assembly_part in ref_des_obj.assembly_parts.all():
+                    if assembly_part.is_root_node():
+                        _make_revision_tree_copy(
+                            assembly_part,
+                            assembly_revision,
+                            assembly_part.parent,
+                            user,
+                            False,
+                        )
+                assembly_revision.save()
 
             # set up common variables for Builds/Deployments
             location_code = deployment_import['assembly'][0:2]
@@ -695,7 +710,7 @@ def parse_deployment_files(self):
 
             for row in deployment_import['rows']:
                 # create InventoryDeployments for each item
-                if row['sensor.uid'] or row['electrical.uid']:
+                if row['sensor.uid'] != '' or row['electrical.uid'] != '':
                     if row['sensor.uid']:
                         uid = row['sensor.uid']
                     elif row['electrical.uid']:
@@ -1050,9 +1065,9 @@ def parse_bulk_files(self):
                 if inv.exists() == False and part_template is not None and part_template != '':
                     inst_obj = PartType.objects.get(name='Instrument')
                     try:
-                        part = Part.objects.get(name=part_template, part_type=inst_obj, part_number=part_template)
+                        part = Part.objects.get(part_type=inst_obj, part_number=part_template)
                     except Part.MultipleObjectsReturned:
-                        part = Part.objects.filter(name=part_template, part_type=inst_obj, part_number=part_template).first()
+                        part = Part.objects.filter(part_type=inst_obj, part_number=part_template).first()
                     except Part.DoesNotExist:
                         part = Part.objects.create(name=part_template, part_type=inst_obj, part_number=part_template)
                     inv = Inventory.objects.create(
