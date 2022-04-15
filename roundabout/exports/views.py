@@ -27,6 +27,7 @@ import zipfile
 from os.path import splitext, join
 from sys import stdout
 from operator import attrgetter
+from unicodedata import normalize
 
 
 # Django Imports
@@ -41,6 +42,8 @@ from roundabout.configs_constants.models import ConfigEvent, ConfigValue
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.inventory.models import Inventory, Deployment, InventoryDeployment
 from roundabout.ooi_ci_tools.models import ReferenceDesignatorEvent
+from roundabout.userdefinedfields.models import FieldValue
+from roundabout.assemblies.models import Assembly
 
 
 class HomeView(TemplateView):
