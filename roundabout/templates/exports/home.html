@@ -57,13 +57,15 @@
   </div>
 
   {% if rdb_site_url == "https://obs-rdb.whoi.edu" %}
-  <br><br><a type=button class="btn btn-primary" href="{% url 'exports:obs_allbuilds' %}">Export Builds [OBS]</a>
-{% else %}
-  <br><br><a type=button class="btn btn-primary" href="{% url 'exports:CI' %}">Export All [CI]</a>
-{% endif %}
+    <div class="row">
+      <div class="col-3"><p><a type=button class="btn btn-primary" href="{% url 'exports:obs_allbuilds' %}">Export Builds [OBS]</a></p></div>
+      <div class="col-9"><p>Downloads a zip of OBS specific Build data</p></div>
+    </div>
+  {% endif %}
 
   <hr>
-
+  
+  {% if rdb_site_url != "https://obs-rdb.whoi.edu" %}
   <h2>Bulk Exports: CI spec</h2>
   <p>Exports for CI require specific schema and requirements so as to match the OOI CI Asset Management GitHub CSVs.</p>
 
@@ -102,6 +104,7 @@
       <p>CalibrationsWithConfigs_EXPORTLOG.txt is not part of the OOI Asset Management GitHub CSV schema and so, before comparison, it will have to be removed so as not to create an error.</p>
     </div>
   </div>
+  {% endif %}
 
 </div>
 
