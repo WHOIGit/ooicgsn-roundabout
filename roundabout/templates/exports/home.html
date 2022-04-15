@@ -36,8 +36,12 @@
       <br><br><a type=button class="btn btn-primary" href="{% url 'exports:calibrations' %}">Export Calibrations</a>
       <br><br><a type=button class="btn btn-primary" href="{% url 'exports:configconsts' %}">Export Configurations & Constants</a>
       <br><br><a type=button class="btn btn-primary" href="{% url 'exports:calibrations_with_configs' %}">Export Calibrations with<br>Configurations and Constants</a>
-      <br><br><a type=button class="btn btn-primary" href="{% url 'exports:CI' %}">Export All [CI]</a>
-
+      
+      {% if rdb_site_url == "https://obs-rdb.whoi.edu" %}
+        <br><br><a type=button class="btn btn-primary" href="{% url 'exports:obs_allbuilds' %}">Export Builds [OBS]</a>
+      {% else %}
+        <br><br><a type=button class="btn btn-primary" href="{% url 'exports:CI' %}">Export All [CI]</a>
+      {% endif %}
     </div>
     <div class="col-md-7">
 

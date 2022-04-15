@@ -26,11 +26,14 @@ import warnings
 import zipfile
 from os.path import splitext, join
 from sys import stdout
+from operator import attrgetter
+from unicodedata import normalize
 
+
+# Django Imports
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import F, OuterRef, Exists
 from django.http import HttpResponse
-# Django Imports
 from django.views.generic import TemplateView, DetailView, ListView
 
 # Roundabout Imports
@@ -38,6 +41,8 @@ from roundabout.calibrations.models import CalibrationEvent
 from roundabout.configs_constants.models import ConfigEvent, ConfigValue
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.inventory.models import Inventory, Deployment
+from roundabout.userdefinedfields.models import FieldValue
+from roundabout.assemblies.models import Assembly
 
 
 class HomeView(TemplateView):
@@ -109,22 +114,25 @@ class CSVExport(ListView,LoginRequiredMixin):
     model = None
     fname = '{}.csv'
     context_object_name = 'objs'
+
     def render_to_response(self, context, **response_kwargs):
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'inline; filename="{}"'.format(self.fname)
         csv_writer = CSV.writer(response)
         objs = context.get(self.context_object_name)
-        self.build_csv(csv_writer, objs)
+        CI_mode = 'ci' in self.request.GET
+        self.build_csv(csv_writer, objs, CI_mode)
         return response
 
     @classmethod
-    def build_csv(cls, csv, objs):
+    def build_csv(cls, csv, objs, CI_mode=False):
         pass
 
 class ZipExport(ListView,LoginRequiredMixin):
     model = None
     fname = '{}.zip'
     context_object_name = 'objs'
+
     def render_to_response(self, context, **response_kwargs):
         response = HttpResponse(content_type='application/zip')
         response['Content-Disposition'] = 'inline; filename="{}"'.format(self.fname)
@@ -173,6 +181,7 @@ class ExportCalibrationEvents(ZipExport):
     @classmethod
     def build_zip(cls, zf, objs, subdir=None):
         objs = objs.select_related('inventory__part__part_type').exclude(inventory__part__part_type__ccc_toggle=False)
+        objs = objs.select_related('inventory__location').exclude(inventory__location__root_type='Trash')
         objs = objs.prefetch_related('inventory', 'inventory__fieldvalues', 'inventory__fieldvalues__field')
 
         for cal in objs:
@@ -228,6 +237,7 @@ class ExportConfigEvents(ZipExport):
     @classmethod
     def build_zip(cls, zf, objs, subdir=None):
         objs = objs.select_related('inventory__part__part_type').exclude(inventory__part__part_type__ccc_toggle=False)
+        objs = objs.select_related('inventory__location').exclude(inventory__location__root_type='Trash')
         objs = objs.prefetch_related('inventory', 'inventory__fieldvalues', 'inventory__fieldvalues__field')
 
         for confconst in objs:
@@ -332,8 +342,11 @@ class ExportCalibrationEvents_withConfigs(ZipExport):
             print('Inv calibs:', calibs_qs if calibs_qs.exists() else None, file=out)
             print('Inv confconst', configs_by_deployment, file=out)
 
-            if not the_inv.assembly_part:
-                print('FAIL:',the_inv, 'does not have an associated assembly_part!', file=out)
+            if the_inv.location.root_type=='Trash':
+                print('FAIL:', the_inv, 'is in the Trash. Skip-it.', file=out)
+                continue
+            elif not the_inv.assembly_part:
+                print('FAIL:', the_inv, 'does not have an associated assembly_part!', file=out)
                 continue
             the_part = the_inv.assembly_part.part
             calibs_to_match = set(the_part.coefficient_name_events.first().coefficient_names.all()) if the_part.coefficient_name_events.first() else set()
@@ -463,24 +476,24 @@ class ExportCruises(CSVExport):
     #see https://github.com/oceanobservatories/asset-management/tree/master/cruise
 
     @classmethod
-    def build_csv(cls, csv, objs):
+    def build_csv(cls, csv, objs, CI_mode=False):
         objs = objs.prefetch_related('vessel')
-        header_att = [('CUID',                  'CUID'),
-                      ('ShipName',              'friendly_name'),
-                      ('cruiseStartDateTime',   'cruise_start_date'),
-                      ('cruiseStopDateTime',    'cruise_stop_date'),
-                      ('notes',                 'notes'),
-                      ]
-        headers, attribs = zip(*header_att)
+        if CI_mode==True:
+            headers = ['CUID','ShipName','cruiseStartDateTime','cruiseStopDateTime','notes']
+        else:
+            headers = ['CUID','ShipName','Friendly Name','Destination','cruiseStartDateTime','cruiseStopDateTime','notes']
+
         csv.writerow(headers)
         for cruise in objs:
             row = list()
+            location = cruise.location or ''
+            notes = cruise.notes or ''
             row.append(cruise.CUID)
             row.append(getattr(cruise.vessel,'vessel_name',''))
+            if CI_mode==False: row.append(cruise.friendly_name)
+            if CI_mode==False: row.append(location)
             row.append(cruise.cruise_start_date.replace(tzinfo=None).isoformat())
             row.append(cruise.cruise_stop_date.replace(tzinfo=None).isoformat())
-            #location = cruise.location or ''
-            notes = cruise.notes or ''
             row.append(notes)
             csv.writerow(row)
 
@@ -491,25 +504,28 @@ class ExportVessels(CSVExport):
     fname = 'shiplist.csv'
     ordering = ['prefix']
     # see https://github.com/oceanobservatories/asset-management/tree/master/vessel
+    header_att = [('Prefix',            'prefix'),
+                  ('Vessel Designation','vessel_designation'),
+                  ('Vessel Name',       'vessel_name'),
+                  ('ICES Code',         'ICES_code'),
+                  ('Operator',          'operator'),
+                  ('Call Sign',         'call_sign'),
+                  ('MMSI#',             'MMSI_number'),
+                  ('IMO#',              'IMO_number'),
+                  ('Length (m)',        'length'),
+                  ('Max Speed (m/s)',   'max_speed'),
+                  ('Max Draft (m)',     'max_draft'),
+                  ('Designation',       'designation'),
+                  ('Active',            'active'),
+                  ('R2R',               'R2R'),
+                  ]
 
     @classmethod
-    def build_csv(cls, csv, objs):
-        header_att = [('Prefix',                'prefix'),
-                      ('Vessel Designation',    'vessel_designation'),
-                      ('Vessel Name',           'vessel_name'),
-                      ('ICES Code',             'ICES_code'),
-                      ('Operator',              'operator'),
-                      ('Call Sign',             'call_sign'),
-                      ('MMSI#',                 'MMSI_number'),
-                      ('IMO#',                  'IMO_number'),
-                      ('Length (m)',            'length'),
-                      ('Max Speed (m/s)',       'max_speed'),
-                      ('Max Draft (m)',         'max_draft'),
-                      ('Designation',           'designation'),
-                      ('Active',                'active'),
-                      ('R2R',                   'R2R'),
-                     #('Notes',                 'notes'),
-                      ]
+    def build_csv(cls, csv, objs, CI_mode=False):
+        header_att = cls.header_att.copy()
+        if CI_mode==False:
+            header_att.append( ('Notes', 'notes') )
+
         headers,attribs = zip(*header_att)
         csv.writerow(headers)
         for vessel in objs:
@@ -529,41 +545,55 @@ class ExportVessels(CSVExport):
 class ExportDeployments(ZipExport):
     model = Deployment
     fname = 'Deployments.zip'
+    # header att are for InventoryDeployment objects
+    header_att = [('CUID_Deploy',           'cruise_deployed'),  # DeploymentBase
+                  ('deployedBy',            ''),
+                  ('CUID_Recover',          'cruise_recovered'),  # DeploymentBase
+                  ('recoveredBy',           ''),
+                  ('Reference Designator',  'assembly_part.reference_designator'),
+                  ('deploymentNumber',      'deployment.deployment_number'),
+                  ('versionNumber',         '1'), # always1
+                  ('startDateTime',         'deployment_to_field_date'), # DeploymentBase
+                  ('stopDateTime',          'deployment_recovery_date'),  # DeploymentBase
+                  ('mooring.uid',           ''),
+                  ('node.uid',              ''),
+                  ('sensor.uid',            'inventory.serial_number'),
+                  ('lat',                   'deployment.latitude'),
+                  ('lon',                   'deployment.longitude'),
+                  ('orbit',                 ''),
+                  ('deployment_depth',      'deployment.depth'),
+                  ('water_depth',           'deployment.depth'),
+                  ('notes',                 'inventory.detail'),  # alternatively, "assembly_part.note"
+                  ('electrical.uid',        ''),
+                  ('assembly_template_revision','assembly_part.assembly_revision.revision_code'), # or blank
+                  ]
 
     @classmethod
     def build_zip(cls, zf, objs, subdir=None):
-        header_att = [('CUID_Deploy',           'cruise_deployed'),
-                      ('deployedBy',            ''),
-                      ('CUID_Recover',          'cruise_recovered'),
-                      ('recoveredBy',           ''),
-                      ('Reference Designator',  ''),
-                      ('deploymentNumber',      'deployment_number'),
-                      ('versionNumber',         ''),
-                      ('startDateTime',         'deployment_to_field_date'),
-                      ('stopDateTime',          'deployment_recovery_date'),
-                      ('mooring.uid',           ''),
-                      ('node.uid',              ''),
-                      ('sensor.uid',            ''),
-                      ('lat',                   'latitude'),
-                      ('lon',                   'longitude'),
-                      ('orbit',                 ''),
-                      ('deployment_depth',      'depth'),
-                      ('water_depth',           'depth'),
-                      ('notes',                 ''), ]
-        headers, attribs = zip(*header_att)
+        headers, attribs = zip(*cls.header_att)
 
         def depl_row(depl_obj, attribs):
             row = []
             for att in attribs:
-                val = getattr(depl_obj, att, None)
-                if val is None:
-                    val = ''  # TODO check udf's
-                elif isinstance(val, dt.datetime):  # dates
+
+                if att=='1': val = 1  # versionNumber
+                else:
+                    try: val = attrgetter(att)(depl_obj)
+                    except AttributeError: val = None
+
+                if isinstance(val, dt.datetime):  # dates
                     val = val.replace(tzinfo=None)  # remove timezone awareness such that
                     val = val.isoformat(timespec='seconds')  # +00:00 doesn't appear in iso string
                 elif isinstance(val, float):  # lat,lon
                     val = '{:.5f}'.format(val)
-                row.append(str(val))
+                elif att in ['cruise_deployed','cruise_recovered'] and not val:
+                    # if CUID_deployed/recovered not recorded on InventoryDeployment, check parent deployment
+                    try: val = attrgetter('deployment.'+att)(depl_obj)
+                    except AttributeError: val = None
+
+                val = str(val) if val is not None else ''
+
+                row.append(val)
             return row
 
         objs = objs.prefetch_related('build__assembly_revision__assembly')
@@ -577,11 +607,11 @@ class ExportDeployments(ZipExport):
             csv = CSV.writer(csv_content)
             csv.writerow(headers)
             for depl in objs.filter(build__assembly_revision__assembly__name__exact=assy_name):
-                row = depl_row(depl,attribs)
-                csv.writerow(row)
-                #for inv_depl in depl.inventory_deployments.all():
-                #    row = self.depl_row(inv_depl,attribs)
-                #    csv.writerow(row)
+                #row = depl_row(depl,attribs)
+                #csv.writerow(row)
+                for inv_depl in depl.inventory_deployments.all():
+                    row = depl_row(inv_depl,attribs)
+                    csv.writerow(row)
             cls.zf_safewrite(zf, csv_fname, csv_content.getvalue())
 
 
@@ -608,7 +638,7 @@ class ExportCI(ZipExport):
         cruise_csv_fname = join('cruise',ExportCruises.fname)
         cruise_csv_content = io.StringIO()
         cruise_csv = CSV.writer(cruise_csv_content)
-        ExportCruises.build_csv(  cruise_csv, cruises)
+        ExportCruises.build_csv(cruise_csv, cruises, CI_mode=True)
         zf.writestr(cruise_csv_fname,cruise_csv_content.getvalue())
         cruise_csv_content.close()
 
@@ -617,6 +647,158 @@ class ExportCI(ZipExport):
         vessel_csv_fname = join('vessel',ExportVessels.fname)
         vessel_csv_content = io.StringIO()
         vessel_csv = CSV.writer(vessel_csv_content)
-        ExportVessels.build_csv(  vessel_csv, vessels)
+        ExportVessels.build_csv(vessel_csv, vessels, CI_mode=True)
         zf.writestr(vessel_csv_fname,vessel_csv_content.getvalue())
         vessel_csv_content.close()
+
+
+# OBS Builds
+# TODO might need to furthermore limit to builds of the same assembly THAT ARE IN THE SAME LOCATION
+class ExportOBSAssemblyBuilds(DetailView,LoginRequiredMixin):
+    model = Assembly
+    context_object_name = 'assm'
+
+    def render_to_response(self, context, **response_kwargs):
+        assm = context.get(self.context_object_name)  # getting object from context
+        fname = self.get_filename(assm)
+
+        # Reference to other bulk export class
+        rows = self.get_csvrows(assm)
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'inline; filename="{}"'.format(fname)
+        writer = CSV.writer(response)
+        writer.writerows(rows)
+        return response
+
+    @staticmethod
+    def get_filename(assm):
+        return f'{assm.name}.csv'
+
+    @staticmethod
+    def get_csvrows(assm,location=None,skip_retired=True,skip_trashed=True):
+        objs = assm.builds # fetch all builds associated with assembly
+        if location:
+            objs = objs.filter(location=location)
+        objs = objs.prefetch_related('inventory','deployments','inventory__assembly_part')
+
+        # collect data
+        data = {}
+        promoted_headers = ['System #','Notes','Location','Deployment Number','Lat','Lon']
+        def field_safeget(vals,fieldname):
+            try: return vals.get(field__field_name=fieldname).field_value
+            except FieldValue.DoesNotExist: return '-'
+        def nested_update(dic, keys, row_num, row_val):
+            # This is used to build a dict tree structure for assembly parts to maintain their tree ordering for csv export
+            # Data for an assembly-part column is saved under "rows" and any other key is a new subassemblypart dict
+            # Rows are saved with an associated row_number to account for any missing data row data in a column.
+            # nested_unpack2cols() later unfolds this data structure into flat columnar data with proper ordering
+            for key in keys+['rows']:
+                if key not in dic:
+                    dic[key] = {}
+                dic = dic[key]
+            dic.update({row_num:str(row_val)})
+        row_num = 0
+        for build in objs:
+            if not location and skip_retired and build.location.get_root().root_type == 'Retired': continue
+            if not location and skip_trashed and build.location.get_root().root_type == 'Trash': continue
+            row_num += 1
+            depl = build.deployments.latest() if build.deployments.exists() else None
+            depl = depl if depl and depl.current_status==Deployment.DEPLOYMENTTOFIELD else None
+
+            nested_update(data, ['System #'], row_num, build.build_number)
+            nested_update(data, ['Notes'],    row_num, build.build_notes)
+            nested_update(data, ['Location'], row_num, build.location)
+            nested_update(data, ['Deployment Number'], row_num, depl.deployment_number if depl else '')
+            nested_update(data, ['Lat'], row_num, depl.latitude if depl else '')
+            nested_update(data, ['Lon'], row_num, depl.longitude if depl else '')
+
+            for inv in build.inventory.all():
+                sn = inv.serial_number
+                inv_lineage = inv.assembly_part.get_ancestors(include_self=True)
+                inv_lineage_keys = [normalize('NFKD',str(asspart)) for asspart in inv_lineage]
+                part = inv_lineage_keys[-1]
+
+                nested_update(data, inv_lineage_keys, row_num, sn)
+
+                if part.startswith('PCB, Acoustic Release'):
+                    vals = inv.fieldvalues.filter(is_current=True)
+                    ar_enable = vals.get(field__field_name__icontains='Enable').field_value
+                    ar_disable = vals.get(field__field_name__icontains='Disable').field_value
+                    ar_burn1 = vals.get(field__field_name__icontains='Burn 1').field_value
+                    ar_option = vals.get(field__field_name__icontains='Option').field_value
+                    nested_update(data, inv_lineage_keys+['Enable'], row_num, ar_enable)
+                    nested_update(data, inv_lineage_keys+['Disable'], row_num, ar_disable)
+                    nested_update(data, inv_lineage_keys+['Burn1'], row_num, ar_burn1)
+                    nested_update(data, inv_lineage_keys+['Option'], row_num, ar_option)
+
+                elif part.startswith('Q330'):
+                    vals = inv.fieldvalues.filter(is_current=True)
+                    q330_idsn = field_safeget(vals,'Q330 Tag ID / SN')
+                    q330_lsn = field_safeget(vals,'Q330 Long Serial Number')
+                    q330_ip = field_safeget(vals,'Q330 IP')
+                    nested_update(data, inv_lineage_keys + ['Q330: Tag ID/SN'], row_num, q330_idsn)
+                    nested_update(data, inv_lineage_keys + ['Q330: Long S/N'], row_num, q330_lsn)
+                    nested_update(data, inv_lineage_keys + ['Q330: IP'], row_num, q330_ip)
+
+                elif part.startswith('Baler 14'):
+                    vals = inv.fieldvalues.filter(is_current=True)
+                    baller_tag = field_safeget(vals,'Baler Tag')
+                    nested_update(data, inv_lineage_keys + ['Baler 14: Tag'], row_num, baller_tag)
+
+        # format data to rows
+        def nested_unpack2cols(d):
+            # unpacks the nested_update dict to appropriately-ordered columnar data
+            for header, v in d.items():
+                # the rows for a column are extracted, filled in for missing data, and ordered
+                rows = v.pop('rows', {})
+                for i in range(1,row_num+1):
+                    if i not in rows:
+                        rows[i] = '-'
+                rows = [value for (key, value) in sorted(rows.items())]
+                # column headers and rows are then recursively yielded
+                for subheader, v2 in nested_unpack2cols(v):
+                    yield (header,) + subheader, v2
+                yield (header,), rows
+
+        cols = []
+        priority_cols = []
+        for p,v in nested_unpack2cols(data):
+            if p[-1] in promoted_headers:
+                priority_cols.append((p,v))
+            else:
+                cols.append((p,v))
+
+        cols_sorted = sorted(cols, key=lambda x: x[0])
+        cols_combo = priority_cols + cols_sorted
+        cols_final = [[p[-1]]+v for p,v in cols_combo]
+
+        rows = list(zip(*cols_final))
+
+        return rows
+
+
+
+class ExportOBSBuildsAll(ZipExport):
+    model = Assembly
+    fname = 'OBSBuilds.zip'
+
+    @classmethod
+    def build_zip(cls, zf, objs, subdir=None):
+
+        for assm in objs:
+            csv_fname = ExportOBSAssemblyBuilds.get_filename(assm)
+
+            if subdir: csv_fname = join(subdir, csv_fname)
+
+            rows = ExportOBSAssemblyBuilds.get_csvrows(assm)
+
+            # if an assembly has no builds, ignore it
+            if len(rows) < 2:
+                continue
+
+            csv_content = io.StringIO()
+            writer = CSV.writer(csv_content)
+            writer.writerows(rows)
+            cls.zf_safewrite(zf, csv_fname, csv_content.getvalue())
+

@@ -35,4 +35,6 @@ urlpatterns = [
     path('vessels/', view=views.ExportVessels.as_view(), name='vessels'),
     path('deployments/', view=views.ExportDeployments.as_view(), name='deployments'),
     path('CI/', view=views.ExportCI.as_view(), name='CI'),
+    path('obs_assemblybuilds/<int:pk>', view=views.ExportOBSAssemblyBuilds.as_view(), name='obs_assemblybuilds'),
+    path('obs_allbuilds', view=views.ExportOBSBuildsAll.as_view(), name='obs_allbuilds'),
 ]
