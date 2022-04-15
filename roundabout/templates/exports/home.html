@@ -56,6 +56,12 @@
     <div class="col-9"><p>Downloads a zip of configuration event csv files (incl. constants)</p></div>
   </div>
 
+  {% if rdb_site_url == "https://obs-rdb.whoi.edu" %}
+  <br><br><a type=button class="btn btn-primary" href="{% url 'exports:obs_allbuilds' %}">Export Builds [OBS]</a>
+{% else %}
+  <br><br><a type=button class="btn btn-primary" href="{% url 'exports:CI' %}">Export All [CI]</a>
+{% endif %}
+
   <hr>
 
   <h2>Bulk Exports: CI spec</h2>
