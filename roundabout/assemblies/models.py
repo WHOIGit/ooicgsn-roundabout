@@ -64,6 +64,11 @@ class Assembly(models.Model):
     def get_object_type(self):
         return "assemblies"
 
+    def has_nontrashed_nonretired_builds(self):
+        for build in self.builds.all():
+            if build.location.get_root().root_type == 'Retired': continue
+            if build.location.get_root().root_type == 'Trash': continue
+            return True
 
 class AssemblyRevision(models.Model):
     revision_code = models.CharField(
