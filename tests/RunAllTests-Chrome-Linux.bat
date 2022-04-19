@@ -53,6 +53,12 @@ if [[ "$val" == *"failed."* ]]; then
   exit 1
 fi
 
+val=$(node AdminUser.js chrome headless admin )
+echo $val
+if [[ "$val" == *"failed."* ]]; then
+  exit 1
+fi
+
 val=$(node ConstantsConfigs.js chrome headless admin )
 echo $val
 if [[ "$val" == *"failed."* ]]; then
@@ -66,12 +72,6 @@ if [[ "$val" == *"failed."* ]]; then
 fi
 
 val=$(node CalibrationsCoefs.js chrome headless admin )
-echo $val
-if [[ "$val" == *"failed."* ]]; then
-  exit 1
-fi
-
-val=$(node AdminUser.js chrome headless admin )
 echo $val
 if [[ "$val" == *"failed."* ]]; then
   exit 1

@@ -20,13 +20,13 @@ node ExportCruise.js chrome headless admin
 
 node AddBuilds.js chrome headless admin 
 
+node AdminUser.js chrome headless admin
+
 node ConstantsConfigs.js chrome headless admin
 
 node UploadCsv.js chrome headless admin
 
 node CalibrationsCoefs.js chrome headless admin
-
-node AdminUser.js chrome headless admin
 
 node API.js chrome headless admin
 

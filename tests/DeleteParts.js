@@ -52,13 +52,12 @@ var password;
     }
     else
     {
-//        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+        //        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
         await driver.get("https://rdb-testing.whoi.edu/");
         user = "jkoch";
         password = "Automatedtests";
     }
 
-    // 2 | setWindowSize | 1304x834 | 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
     // Set implict wait time in between steps
     await driver.manage().setTimeouts({ implicit: 4000 });
@@ -86,126 +85,127 @@ var password;
 
         // Delete Part Types, Part Templates and Inventory created running automated tests.
 
-        // 7 | click | id=navbarTemplates | 
         await driver.findElement(By.id("navbarTemplates")).click();
-        // 8 | click | linkText=Parts | 
         await driver.findElement(By.linkText("Parts")).click();
-        // 9 | click | id=searchbar-query | 
         await driver.findElement(By.id("searchbar-query")).click();
-        // 10 | type | id=searchbar-query | Sewing Template
         await driver.findElement(By.id("searchbar-query")).sendKeys("Sewing Template");
-        // 11 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
-        // 12 | click | linkText=1232 | 
 
-	await new Promise(r => setTimeout(r, 4000));
+	    await new Promise(r => setTimeout(r, 4000));
 
-	if ((await driver.findElements(By.css(".even > .searchcol-part_number > a"))).length != 0)
-	{
+	    if ((await driver.findElements(By.css(".even > .searchcol-part_number > a"))).length != 0)
+	    {
             await driver.findElement(By.css(".even > .searchcol-part_number > a")).click();
-            // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
-            // 14 | click | css=.btn-danger | 
-	    await new Promise(r => setTimeout(r, 8000));  // wait for .btn-danger caused stale element
-   	    //let encodedString = await driver.takeScreenshot();
+            await new Promise(r => setTimeout(r, 1000));  // wait for .btn-danger caused stale element
+            while ((await driver.findElements(By.css(".btn-danger"))).length == 0) {
+                await new Promise(r => setTimeout(r, 1000));
+                console.log("Wait 1 second for Delete Part 1.");
+            }
+   	        //let encodedString = await driver.takeScreenshot();
             //await fs.writeFileSync('./pscreen.png', encodedString, 'base64');
-	    //await driver.navigate().refresh();  //this did not work
+	        //await driver.navigate().refresh();  //this did not work
             await driver.findElement(By.css(".btn-danger")).click();
-	}
-	else
-	    console.log("Delete Parts failed: Sewing Template not found");
+	    }
+	    else
+	        console.log("Delete Parts failed: Sewing Template not found");
 
-	await new Promise(r => setTimeout(r, 4000)); 
+	    await new Promise(r => setTimeout(r, 4000)); 
 
-
-
-        // 7 | click | id=navbarTemplates | 
         await driver.findElement(By.id("navbarTemplates")).click();
-        // 8 | click | linkText=Parts | 
         await driver.findElement(By.linkText("Parts")).click();
-        // 9 | click | id=searchbar-query | 
         await driver.findElement(By.id("searchbar-query")).click();
-        // 10 | type | id=searchbar-query | Sewing Template
         await driver.findElement(By.id("searchbar-query")).sendKeys("Wheel Template");
-        // 11 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
-        // 12 | click | linkText=1232 | 
         await new Promise(r => setTimeout(r, 2000));
 
-	if ((await driver.findElements(By.linkText("555-456-789"))).length != 0)
-	{
+	    if ((await driver.findElements(By.linkText("555-456-789"))).length != 0)
+	    {
             await driver.findElement(By.linkText("555-456-789")).click();
-            // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
-            // 14 | click | css=.btn-danger | 
-	    await new Promise(r => setTimeout(r, 8000));  // wait for .btn-danger caused stale element
+            await new Promise(r => setTimeout(r, 1000));  // wait for .btn-danger caused stale element
+            while ((await driver.findElements(By.css(".btn-danger"))).length == 0) {
+                await new Promise(r => setTimeout(r, 1000));
+                console.log("Wait 1 second for Delete Part 2.");
+            }
             await driver.findElement(By.css(".btn-danger")).click();
-	}
-	else
-	    console.log("Delete Parts failed: Wheel Template not found");
+	    }
+	    else
+	        console.log("Delete Parts failed: Wheel Template not found");
 
-	await new Promise(r => setTimeout(r, 4000)); 
-
-        // 7 | click | id=navbarTemplates | 
+	    await new Promise(r => setTimeout(r, 4000)); 
         await driver.findElement(By.id("navbarTemplates")).click();
-        // 8 | click | linkText=Parts | 
         await driver.findElement(By.linkText("Parts")).click();
-        // 9 | click | id=searchbar-query | 
         await driver.findElement(By.id("searchbar-query")).click();
-        // 10 | type | id=searchbar-query | Sewing Template
         await driver.findElement(By.id("searchbar-query")).sendKeys("Pin Template");
-        // 11 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
-        // 12 | click | linkText=1232 | 
         await new Promise(r => setTimeout(r, 2000));
 
-	if ((await driver.findElements(By.linkText("666-456-789"))).length != 0)
-	{
+	    if ((await driver.findElements(By.linkText("666-456-789"))).length != 0)
+	    {
             await driver.findElement(By.linkText("666-456-789")).click();
-            // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
-            // 14 | click | css=.btn-danger | 
-	    await new Promise(r => setTimeout(r, 8000));  // wait for .btn-danger caused stale element
+	        await new Promise(r => setTimeout(r, 1000));  // wait for .btn-danger caused stale element
+            while ((await driver.findElements(By.css(".btn-danger"))).length == 0) {
+                await new Promise(r => setTimeout(r, 1000));
+                console.log("Wait 1 second for Delete Part 3.");
+            }
             await driver.findElement(By.css(".btn-danger")).click();
-	}
-	else
-	    console.log("Delete Parts failed: Pin Template not found");
+	    }
+	    else
+	        console.log("Delete Parts failed: Pin Template not found");
 
-        // 7 | click | id=navbarTemplates | 
-	await new Promise(r => setTimeout(r, 2000));
+    	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("navbarTemplates")).click();
-        // 8 | click | linkText=Parts | 
         await driver.findElement(By.linkText("Parts")).click();
-        // 9 | click | id=searchbar-query | 
         await driver.findElement(By.id("searchbar-query")).click();
-        // 10 | type | id=searchbar-query | Sewing Template
         await driver.findElement(By.id("searchbar-query")).sendKeys("Disk Drive");
-        // 11 | click | css=.btn-outline-primary:nth-child(1) | 
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
-        // 12 | click | linkText=1232 | 
         await new Promise(r => setTimeout(r, 2000));
 
-	if ((await driver.findElements(By.linkText("100-259-785"))).length != 0)
-	{
+	    if ((await driver.findElements(By.linkText("100-259-785"))).length != 0)
+	    {
             await driver.findElement(By.linkText("100-259-785")).click();
-            // 13 | click | linkText=Delete | 
             await driver.findElement(By.linkText("Delete")).click();
-            // 14 | click | css=.btn-danger | 
-            await new Promise(r => setTimeout(r, 8000));  // wait for .btn-danger caused stale element
+            await new Promise(r => setTimeout(r, 1000));  // wait for .btn-danger caused stale element
+            while ((await driver.findElements(By.css(".btn-danger"))).length == 0) {
+                await new Promise(r => setTimeout(r, 1000));
+                console.log("Wait 1 second for Delete Part 4.");
+            }
             await driver.findElement(By.css(".btn-danger")).click();
-	}
-	else
-	    console.log("Delete Parts failed: Disk Drive not found");
+	    }
+	    else
+            console.log("Delete Parts failed: Disk Drive not found");
 
-        // 10 | click | id=navbarTemplates |
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.id("navbarTemplates")).click();
+        await driver.findElement(By.linkText("Parts")).click();
+        await driver.findElement(By.id("searchbar-query")).click();
+        await driver.findElement(By.id("searchbar-query")).sendKeys("ADCPS-J");
+        await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
+        await new Promise(r => setTimeout(r, 2000));
+
+        if ((await driver.findElements(By.linkText("1336-00010-0000"))).length != 0) {
+            await driver.findElement(By.linkText("1336-00010-0000")).click();
+            await driver.findElement(By.linkText("Delete")).click();
+            await new Promise(r => setTimeout(r, 1000));  // wait for .btn-danger caused stale element
+            while ((await driver.findElements(By.css(".btn-danger"))).length == 0) {
+                await new Promise(r => setTimeout(r, 1000));
+                console.log("Wait 1 second for Delete Part 5.");
+            }
+            await driver.findElement(By.css(".btn-danger")).click();
+        }
+        else
+            console.log("Delete Parts failed: ADCPS-J not found");
+
+        // Delete User Define Part Types
         await driver.findElement(By.id("navbarTemplates")).click();
         await driver.findElement(By.id("navbarAdmintools")).click();
-        // 5 | click | linkText=Test |
         await driver.findElement(By.linkText("Edit Part Types")).click();
 
 
-	if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Sewing Machine']"))).length != 0)
-	{
+	    if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Sewing Machine']"))).length != 0)
+	    {
             var i = 1;
             while (true) {
                 if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Sewing Machine") {
@@ -214,11 +214,10 @@ var password;
                 i++;
             }
             await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
-            // 6 | click | css=.btn-danger | 
-	    await driver.findElement(By.css(".btn-danger")).click();
-	}
-	else
-            console.log("Delete Parts failed: Sewing Machine type not found");
+	        await driver.findElement(By.css(".btn-danger")).click();
+	    }
+	    else
+                console.log("Delete Parts failed: Sewing Machine type not found");
 
         // Delete Computerized Part Type
         if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Computerized']"))).length != 0) {
@@ -229,24 +228,19 @@ var password;
                 }
                 i++;
             }
-
-	    await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
-            // 6 | click | css=.btn-danger | 
+	        await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
             await driver.findElement(By.css(".btn-danger")).click();
         }
         else
             console.log("Delete Parts failed: Computerized type not found");
 
-	// Delete Custom Fields
-        // 10 | click | id=navbarTemplates |
+	    // Delete Custom Fields
         await driver.findElement(By.id("navbarTemplates")).click();
         await driver.findElement(By.id("navbarAdmintools")).click();
-        // 5 | click | linkText=Test |
         await driver.findElement(By.linkText("Custom Fields")).click();
 
-
-	if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Condition']"))).length != 0)
-	{
+	    if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Condition']"))).length != 0)
+	    {
             var i = 1;
             while (true) {
                 if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Condition") {
@@ -255,14 +249,13 @@ var password;
                 i++;
             }
             await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
-            // 6 | click | css=.btn-danger | 
-	    await driver.findElement(By.css(".btn-danger")).click();
-	}
-	else
+	        await driver.findElement(By.css(".btn-danger")).click();
+	    }
+	    else
             console.log("Delete Parts failed: Condition Custom Field not found");
 
-	if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Manufacturer Serial Number']"))).length != 0)
-	{
+	    if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Manufacturer Serial Number']"))).length != 0)
+	    {
             var i = 1;
             while (true) {
                 if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Manufacturer Serial Number") {
@@ -271,12 +264,38 @@ var password;
                 i++;
             }
             await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
-            // 6 | click | css=.btn-danger | 
-	    await driver.findElement(By.css(".btn-danger")).click();
-	}
-	else
+	        await driver.findElement(By.css(".btn-danger")).click();
+	    }
+	    else
             console.log("Delete Parts failed: Manufacturer Serial Number Custom Field not found");
 
+        if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Manufacturer']"))).length != 0) {
+            var i = 1;
+            while (true) {
+                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Manufacturer") {
+                    break;
+                }
+                i++;
+            }
+            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
+            await driver.findElement(By.css(".btn-danger")).click();
+        }
+        else
+            console.log("Delete Parts failed: Manufacturer Custom Field not found");
+
+        if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Model']"))).length != 0) {
+            var i = 1;
+            while (true) {
+                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Model") {
+                    break;
+                }
+                i++;
+            }
+            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
+            await driver.findElement(By.css(".btn-danger")).click();
+        }
+        else
+            console.log("Delete Parts failed: Model Custom Field not found");
 
         // Close browser window
         driver.quit();

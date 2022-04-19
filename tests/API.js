@@ -112,7 +112,7 @@ var token;
             console.log(rsp.statusText, "  ", json);
 
         // PARTS
-        // Get the Sewing, Wheel, Pin, and Disk Drive Part Templates
+        // Get the Sewing, Wheel, Pin, Disk Drive and ADCPS-J Part Templates
         // Test API filter by name
         rsp = await fetch(url + 'part-templates/parts/?fields=name', {
             method: 'GET',
@@ -120,21 +120,22 @@ var token;
         });
         json = await rsp.json();
         if (rsp.ok) {
-            if (json.length == 4) {
+            if (json.length == 5) {
                 var j = 0;
                 for (var i = 0; i < json.length; i++) {
                     if ((json[i].name.includes("Disk Drive")) || (json[i].name.includes("Pin Template")) ||
-                        (json[i].name.includes("Sewing Template")) || (json[i].name.includes("Wheel Template"))) {
+                        (json[i].name.includes("Sewing Template")) || (json[i].name.includes("Wheel Template")) ||
+                        (json[i].name.includes("ADCPS-J"))) {
                         j++;
                     }
                 }
                 if (j != json.length) {
-                    console.log("API failed: 4 Part Templates not returned.");
+                    console.log("API failed: 5 Part Templates not returned.");
                     console.log(json);
                 }
             }
             else {
-                console.log("API failed: 4 Part Templates not returned.");
+                console.log("API failed: 5 Part Templates not returned.");
                 console.log(json);
             }
         }

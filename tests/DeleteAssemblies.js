@@ -59,10 +59,9 @@ var password;
         password = "Automatedtests";
     }
 
-    // 2 | setWindowSize | 1304x834 | 
      await driver.manage().window().setRect({ width: 1304, height: 834 });
 
-    //Hide Timer Panel when connecting to circleci local rdb django app
+    //Hide Timer Panel when connecting local rdb django app
     if ((await driver.findElements(By.css("#djHideToolBarButton"))).length != 0)
     {
        await driver.findElement(By.css("#djHideToolBarButton")).click();
@@ -70,7 +69,7 @@ var password;
 
     try {
 
-	// If navbar toggler present in small screen
+	    // If navbar toggler present in small screen
         try {
             var signin = await driver.findElement(By.linkText("Sign In"));
         }
@@ -86,150 +85,161 @@ var password;
         // DELETE ASSEMBLIES TEST
 
        // Searches for and deletes the Assemblies added during the Add and Update Assemblies Test
-	while ((await driver.findElements(By.id("searchbar-query"))).length == 0) // 1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Search.");
-	}
+	    while ((await driver.findElements(By.id("searchbar-query"))).length == 0) // 1.6
+	    {
+	       await new Promise(r => setTimeout(r, 2000));
+	       console.log("Wait 2 seconds for Search.");
+	    }
         await driver.findElement(By.id("searchbar-query")).click();
         var dropdown = await driver.findElement(By.id("searchbar-modelselect"));
         await dropdown.findElement(By.xpath("//option[. = 'Assembly Templates']")).click();
-        // 16 | type | id=searchbar-query | Test Assembly 2
         await driver.findElement(By.id("searchbar-query")).sendKeys("Test Assembly");
- 	while ((await driver.findElements(By.css(".btn-outline-primary:nth-child(1)"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Link1.");
+ 	    while ((await driver.findElements(By.css(".btn-outline-primary:nth-child(1)"))).length == 0)
+	    {
+	       await new Promise(r => setTimeout(r, 2000));
+	       console.log("Wait 2 seconds for Link1.");
         }
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
-        // 18 | click | linkText=123-002 | 
 
-	if ((await driver.findElements(By.linkText("Test Assembly"))).length != 0)
-	{
-            await driver.findElement(By.linkText("Test Assembly")).click();
+	    if ((await driver.findElements(By.linkText("Test Assembly"))).length != 0)
+	    {
+                await driver.findElement(By.linkText("Test Assembly")).click();
  
- 	    while ((await driver.findElements(By.linkText("Delete"))).length == 0)
-	    {
-	       await new Promise(r => setTimeout(r, 2000));
-	     console.log("Wait 2 seconds for Delete1.");
-	    }
+ 	        while ((await driver.findElements(By.linkText("Delete"))).length == 0)
+	        {
+	           await new Promise(r => setTimeout(r, 2000));
+	           console.log("Wait 2 seconds for Delete1.");
+	        }
             await driver.findElement(By.linkText("Delete")).click();
- 	    while ((await driver.findElements(By.css(".btn-danger"))).length == 0)
-	    {
-	       await new Promise(r => setTimeout(r, 2000));
-	     console.log("Wait 2 seconds for Confirm1.");
+ 	        while ((await driver.findElements(By.css(".btn-danger"))).length == 0)
+	        {
+	           await new Promise(r => setTimeout(r, 2000));
+	           console.log("Wait 2 seconds for Confirm1.");
+	        }
+                await driver.findElement(By.css(".btn-danger")).click();
 	    }
-            await driver.findElement(By.css(".btn-danger")).click();
-	}
-	else
-	    console.log("Delete Assemblies failed: Test Assembly not found");
+	    else
+	        console.log("Delete Assemblies failed: Test Assembly not found");
 
-        // 15 | click | id=searchbar-query | 
-	await new Promise(r => setTimeout(r, 4000));  //required for firefox
+            // 15 | click | id=searchbar-query | 
+	    await new Promise(r => setTimeout(r, 4000));  //required for firefox
         await driver.wait(until.elementLocated(By.id("searchbar-query")));
         await driver.findElement(By.id("searchbar-query")).click();
-        // 16 | type | id=searchbar-query | Test Assembly 2
         await driver.findElement(By.id("searchbar-query")).sendKeys("Test Assembly 2");
- 	while ((await driver.findElements(By.css(".btn-outline-primary:nth-child(1)"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Link2.");
+ 	    while ((await driver.findElements(By.css(".btn-outline-primary:nth-child(1)"))).length == 0)
+	    {
+	       await new Promise(r => setTimeout(r, 2000));
+	       console.log("Wait 2 seconds for Link2.");
         }
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
-        // 18 | click | linkText=123-002 | 
 
-	if ((await driver.findElements(By.linkText("Test Assembly 2"))).length != 0)
-	{
+	    if ((await driver.findElements(By.linkText("Test Assembly 2"))).length != 0)
+	    {
             await driver.findElement(By.linkText("Test Assembly 2")).click();
-            // 22 | click | linkText=Delete | 
-	    while ((await driver.findElements(By.linkText("Delete"))).length == 0)
-	    {
-	       await new Promise(r => setTimeout(r, 2000));
-	     console.log("Wait 2 seconds for Delete2.");
+	        while ((await driver.findElements(By.linkText("Delete"))).length == 0)
+	        {
+	           await new Promise(r => setTimeout(r, 2000));
+	           console.log("Wait 2 seconds for Delete2.");
+	        }
+                await driver.findElement(By.linkText("Delete")).click();
+ 	        while ((await driver.findElements(By.css(".btn-danger"))).length == 0)
+	        {
+	           await new Promise(r => setTimeout(r, 2000));
+	           console.log("Wait 2 seconds for Confirm2.");
+	        }
+                await driver.findElement(By.css(".btn-danger")).click();
 	    }
-            await driver.findElement(By.linkText("Delete")).click();
- 	    while ((await driver.findElements(By.css(".btn-danger"))).length == 0)
-	    {
-	       await new Promise(r => setTimeout(r, 2000));
-	     console.log("Wait 2 seconds for Confirm2.");
-	    }
-            await driver.findElement(By.css(".btn-danger")).click();
-	}
-	else
-	    console.log("Delete Assemblies failed: Test Assembly 2 not found");
+	    else
+	        console.log("Delete Assemblies failed: Test Assembly 2 not found");
 
-        // 24 | click | id=searchbar-query | 
-	await new Promise(r => setTimeout(r, 4000));  //required for firefox
+	    await new Promise(r => setTimeout(r, 4000));  //required for firefox
         await driver.wait(until.elementLocated(By.id("searchbar-query")));
         await driver.findElement(By.id("searchbar-query")).click();
-        // 25 | type | id=searchbar-query | Test Assembly 3
         await driver.findElement(By.id("searchbar-query")).sendKeys("Test Assembly 3");
- 	while ((await driver.findElements(By.css(".btn-outline-primary:nth-child(1)"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Link3.");
+ 	    while ((await driver.findElements(By.css(".btn-outline-primary:nth-child(1)"))).length == 0)
+	    {
+	       await new Promise(r => setTimeout(r, 2000));
+	       console.log("Wait 2 seconds for Link3.");
         }
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
-        // 27 | click | linkText=123-003 | 
 
-	if ((await driver.findElements(By.linkText("Test Assembly 3"))).length != 0)
-	{
+	    if ((await driver.findElements(By.linkText("Test Assembly 3"))).length != 0)
+	    {
             await driver.findElement(By.linkText("Test Assembly 3")).click();
-            // 28 | click | linkText=Delete | 
-	    while ((await driver.findElements(By.linkText("Delete"))).length == 0)
-	    {
-	       await new Promise(r => setTimeout(r, 2000));
-	     console.log("Wait 2 seconds for Delete3.");
+	        while ((await driver.findElements(By.linkText("Delete"))).length == 0)
+	        {
+	           await new Promise(r => setTimeout(r, 2000));
+	           console.log("Wait 2 seconds for Delete3.");
+	        }
+                await driver.findElement(By.linkText("Delete")).click();
+ 	        while ((await driver.findElements(By.css(".btn-danger"))).length == 0)
+	        {
+	           await new Promise(r => setTimeout(r, 2000));
+	           console.log("Wait 2 seconds for Confirm3.");
+	        }
+               await driver.findElement(By.css(".btn-danger")).click();
 	    }
-            await driver.findElement(By.linkText("Delete")).click();
- 	    while ((await driver.findElements(By.css(".btn-danger"))).length == 0)
-	    {
-	       await new Promise(r => setTimeout(r, 2000));
-	     console.log("Wait 2 seconds for Confirm3.");
-	    }
-            await driver.findElement(By.css(".btn-danger")).click();
-	}
-	else
-	    console.log("Delete Assemblies failed: Test Assembly 3 not found");
+	    else
+	        console.log("Delete Assemblies failed: Test Assembly 3 not found");
 
-        // 30 | click | id=searchbar-query | 
-        await new Promise(r => setTimeout(r, 6000));  //required for firefox
+        await new Promise(r => setTimeout(r, 6000)); 
         await driver.findElement(By.id("searchbar-query")).click();
-        // 31 | type | id=searchbar-query | Singer
         await driver.findElement(By.id("searchbar-query")).sendKeys("Singer");
- 	while ((await driver.findElements(By.css(".btn-outline-primary:nth-child(1)"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Link4.");
+ 	    while ((await driver.findElements(By.css(".btn-outline-primary:nth-child(1)"))).length == 0)
+	    {
+	       await new Promise(r => setTimeout(r, 2000));
+	       console.log("Wait 2 seconds for Link4.");
         }
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
-        // 33 | click | linkText=000-654-987 | 
 
-	if ((await driver.findElements(By.linkText("Singer"))).length != 0)
-	{
+	    if ((await driver.findElements(By.linkText("Singer"))).length != 0)
+	    {
             await driver.findElement(By.linkText("Singer")).click();
-            // 34 | click | linkText=Delete | 
-	    while ((await driver.findElements(By.linkText("Delete"))).length == 0)
-	    {
-	       await new Promise(r => setTimeout(r, 2000));
-	     console.log("Wait 2 seconds for Delete4.");
-	    }
-            await driver.findElement(By.linkText("Delete")).click();
- 	    while ((await driver.findElements(By.css(".btn-danger"))).length == 0)
-	    {
-	       await new Promise(r => setTimeout(r, 2000));
-	     console.log("Wait 2 seconds for Confirm4.");
-	    }
+	        while ((await driver.findElements(By.linkText("Delete"))).length == 0)
+	        {
+	           await new Promise(r => setTimeout(r, 2000));
+	           console.log("Wait 2 seconds for Delete4.");
+	        }
+                await driver.findElement(By.linkText("Delete")).click();
+ 	        while ((await driver.findElements(By.css(".btn-danger"))).length == 0)
+	        {
+	           await new Promise(r => setTimeout(r, 2000));
+	           console.log("Wait 2 seconds for Confirm4.");
+	        }
             await driver.findElement(By.css(".btn-danger")).click();
-	}
-	else
-	    console.log("Delete Assemblies failed: Singer not found");
+	    }
+	    else
+            console.log("Delete Assemblies failed: Singer not found");
+
+        await new Promise(r => setTimeout(r, 6000));
+        await driver.findElement(By.id("searchbar-query")).click();
+        await driver.findElement(By.id("searchbar-query")).sendKeys("GS Surface Mooring");
+        while ((await driver.findElements(By.css(".btn-outline-primary:nth-child(1)"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Link4.");
+        }
+        await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
+
+        if ((await driver.findElements(By.linkText("GS Surface Mooring"))).length != 0) {
+            await driver.findElement(By.linkText("GS Surface Mooring")).click();
+            while ((await driver.findElements(By.linkText("Delete"))).length == 0) {
+                await new Promise(r => setTimeout(r, 2000));
+                console.log("Wait 2 seconds for Delete5.");
+            }
+            await driver.findElement(By.linkText("Delete")).click();
+            while ((await driver.findElements(By.css(".btn-danger"))).length == 0) {
+                await new Promise(r => setTimeout(r, 2000));
+                console.log("Wait 2 seconds for Confirm5.");
+            }
+            await driver.findElement(By.css(".btn-danger")).click();
+        }
+        else
+            console.log("Delete Assemblies failed: GS Surface Mooring not found");
+
 
         // Delete Assembly Type
-        // 10 | click | id=navbarTemplates |
         await driver.findElement(By.id("navbarTemplates")).click();
         await driver.findElement(By.id("navbarAdmintools")).click();
-        // 5 | click | linkText=Test |
         await driver.findElement(By.linkText("Edit Assembly Types")).click();
 
         if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Electric']"))).length != 0) {
@@ -241,7 +251,6 @@ var password;
                 i++;
             }
             await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
-            // 6 | click | css=.btn-danger | 
             await driver.findElement(By.css(".btn-danger")).click();
         }
         else
