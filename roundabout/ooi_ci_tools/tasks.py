@@ -520,7 +520,10 @@ def parse_deployment_files(self):
                 # parse together the Build/Deployment Numbers from CSV fields
                 deployment_number = f'{assembly}-{dep_number_string}'
                 build_number = f'Historical {dep_number_string}'
-                assembly_template_revision = row['assembly_template_revision'] if row['assembly_template_revision'] else 'A'
+                assembly_template_revision = 'A'
+                if hasattr(row,'assembly_template_revision'):
+                    if row['assembly_template_revision'] != '':
+                        assembly_template_revision = row['assembly_template_revision']
                 # build data dict
                 mooring_uid_dict = {
                     'mooring.uid': row['mooring.uid'],
@@ -562,7 +565,7 @@ def parse_deployment_files(self):
                             user,
                             False,
                         )
-                assembly_revision.save()
+            assembly_revision.save()
 
             # set up common variables for Builds/Deployments
             location_code = deployment_import['assembly'][0:2]
@@ -735,15 +738,19 @@ def parse_deployment_files(self):
                         continue
                     
 
-                    
-                    assembly_part, assm_created = AssemblyPart.objects.get_or_create(
-                        assembly=assembly,
-                        part = item.part,
-                        assembly_revision=assembly_revision,
-                        reference_designator=ref_des_obj,
-                        order=item.part
-                    )
-                    item.assembly_part = assembly_part
+                    if item.assembly_part == None:
+                        assembly_part, assm_created = AssemblyPart.objects.get_or_create(
+                            assembly=assembly,
+                            part = item.part,
+                            assembly_revision=assembly_revision,
+                            reference_designator=ref_des_obj,
+                            order=item.part
+                        )
+                        assembly_part.save()
+                        item.assembly_part = assembly_part
+                    refdes_event = ref_des_obj.refdes_events.first()
+                    refdes_event.assembly_part = assembly_part
+                    refdes_event.save()
                     item.location = build_location
                     item.build = build
                     item.save()
