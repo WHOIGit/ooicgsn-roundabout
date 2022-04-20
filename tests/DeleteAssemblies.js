@@ -184,7 +184,7 @@ var password;
 
         await new Promise(r => setTimeout(r, 6000)); 
         await driver.findElement(By.id("searchbar-query")).click();
-        await driver.findElement(By.id("searchbar-query")).sendKeys("Singer");
+        await driver.findElement(By.id("searchbar-query")).sendKeys("Salty Reef");
  	    while ((await driver.findElements(By.css(".btn-outline-primary:nth-child(1)"))).length == 0)
 	    {
 	       await new Promise(r => setTimeout(r, 2000));
@@ -192,9 +192,9 @@ var password;
         }
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
 
-	    if ((await driver.findElements(By.linkText("Singer"))).length != 0)
+	    if ((await driver.findElements(By.linkText("Salty Reef"))).length != 0)
 	    {
-            await driver.findElement(By.linkText("Singer")).click();
+            await driver.findElement(By.linkText("Salty Reef")).click();
 	        while ((await driver.findElements(By.linkText("Delete"))).length == 0)
 	        {
 	           await new Promise(r => setTimeout(r, 2000));
@@ -209,7 +209,7 @@ var password;
             await driver.findElement(By.css(".btn-danger")).click();
 	    }
 	    else
-            console.log("Delete Assemblies failed: Singer not found");
+            console.log("Delete Assemblies failed: Salty Reef not found");
 
         await new Promise(r => setTimeout(r, 6000));
         await driver.findElement(By.id("searchbar-query")).click();

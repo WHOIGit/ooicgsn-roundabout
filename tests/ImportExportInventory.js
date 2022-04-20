@@ -143,7 +143,7 @@ var password;
          }
 
         await driver.findElement(By.id("id_field_default_value")).sendKeys("20004");
-      	await driver.findElement(By.id("id_global_for_part_types_6")).click();  //sewing machine 
+        await driver.findElement(By.id("id_global_for_part_types_6")).click();  //Structural
         // 18 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
 
@@ -217,7 +217,7 @@ var password;
         // Search for and Export Inventory Item
         // 3 | click | id=searchbar-query | 
         await driver.findElement(By.id("searchbar-query")).click();
-        // 4 | type | id=searchbar-query | sewing
+        // 4 | type | id=searchbar-query | surface mooring
         await driver.findElement(By.id("searchbar-query")).sendKeys("456-654-321");
         // 5 | click | css=.btn:nth-child(1) | 
         await driver.findElement(By.css(".btn:nth-child(1)")).click()

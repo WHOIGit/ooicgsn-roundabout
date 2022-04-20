@@ -115,7 +115,7 @@ var filename, filename_ext;
         for (var j = 0; j < 5; j++) {
             bodyText = await driver.findElement(By.tagName("Body")).getText();
             if (bodyText.includes("Import Complete")) {
-                console.log("Cruise.csv upload successful");
+                console.log("Cruise.csv upload successful.");
                 break;
             }
             else if (bodyText.includes("File: CruiseInformation-import")) {
@@ -217,7 +217,7 @@ var filename, filename_ext;
         for (var j = 0; j < 5; j++) {
             bodyText = await driver.findElement(By.tagName("Body")).getText();
             if (bodyText.includes("Import Complete")) {
-                console.log("Vessel.csv upload successful");
+                console.log("Vessel.csv upload successful.");
                 break;
             }
             else if (bodyText.includes("File: shiplist-import")) {
@@ -327,7 +327,7 @@ var filename, filename_ext;
         for (var j = 0; j < 5; j++) {
             bodyText = await driver.findElement(By.tagName("Body")).getText();
             if (bodyText.includes("Import Complete")) {
-                console.log("Calibrations.csv upload successful");
+                console.log("Calibrations.csv upload successful.");
                 break;
             }
             else {
@@ -476,14 +476,14 @@ var filename, filename_ext;
                 await new Promise(r => setTimeout(r, 2000));
                 bodyText = await driver.findElement(By.tagName("Body")).getText();
                 if ((bodyText.includes("sensor_vocab.csv") && bodyText.includes("ADCP Velocity Profiler"))) {
-                    console.log("Sensor_vocab.csv bulk upload successful");
+                    console.log("Sensor_vocab.csv bulk upload successful.");
                 }
                 else {
-                    console.log("Sensor_vocab.csv bulk upload failed");
+                    console.log("Sensor_vocab.csv bulk upload failed.");
                 }
             }
             else {
-                console.log("Upload CSV failed: ADCPS-J not found");
+                console.log("Upload CSV failed.: ADCPS-J not found.");
             }
         }
         
@@ -572,11 +572,11 @@ var filename, filename_ext;
                 const dropdown = await driver.findElement(By.id("id_reference_designator"));
                 try {
                     await dropdown.findElement(By.xpath("//option[. = 'CE01ISSM']")).click();
-                    console.log("Vocab.csv bulk upload successful");
+                    console.log("Vocab.csv bulk upload successful.");
                 }
                 catch {
                     // Report import error if one imported reference designator is not found in dropdown list
-                    console.log("Vocab.csv bulk upload failed - reference designator not found in list");
+                    console.log("Vocab.csv bulk upload failed - reference designator not found in list.");
                 }
             }
         }
@@ -646,14 +646,14 @@ var filename, filename_ext;
                 await new Promise(r => setTimeout(r, 1000));
                 bodyText = await driver.findElement(By.tagName("Body")).getText();
                 if ((bodyText.includes("sensor_bulk_load-AssetRecord.csv") && bodyText.includes("ADCP Velocity Profiler"))) {
-                    console.log("Sensor_bulk_load-AssetRecord.csv bulk upload successful");
+                    console.log("Sensor_bulk_load-AssetRecord.csv bulk upload successful.");
                 }
                 else {
-                    console.log("Sensor_bulk_load-AssetRecord.csv bulk upload failed");
+                    console.log("Sensor_bulk_load-AssetRecord.csv bulk upload failed.");
                 }
             }
             else {
-                console.log("Upload CSV failed: CGINS-ADCPS-19061 not found");
+                console.log("Upload CSV failed: CGINS-ADCPS-19061 not found.");
             }
         }
         
@@ -723,14 +723,14 @@ var filename, filename_ext;
                 // Validate Deployment Location and Cruise
                 bodyText = await driver.findElement(By.tagName("Body")).getText();
                 if ((bodyText.includes("Coastal Pioneer") && bodyText.includes("MAUI"))) {
-                    console.log("CP04OSSM_Deploy.csv bulk upload successful");
+                    console.log("CP04OSSM_Deploy.csv bulk upload successful.");
                 }
                 else {
-                    console.log("CP04OSSM_Deploy.csv bulk upload failed");
+                    console.log("CP04OSSM_Deploy.csv bulk upload failed.");
                 }
             }
             else {
-                console.log("Upload CSV failed: CP04OSSM-Historical 00011 not found");
+                console.log("Upload CSV failed.: CP04OSSM-Historical 00011 not found.");
             }
         }
 
@@ -740,7 +740,7 @@ var filename, filename_ext;
     }
     catch (e) {
         console.log(e.message, e.stack);
-        console.log("Upload CSV (CI Version) failed.");
+        console.log("Upload CSV (CI Version) failed..");
         return 1;
     }
     console.log("Upload CSV (CI Version) completed.");

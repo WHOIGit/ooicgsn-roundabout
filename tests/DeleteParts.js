@@ -88,7 +88,7 @@ var password;
         await driver.findElement(By.id("navbarTemplates")).click();
         await driver.findElement(By.linkText("Parts")).click();
         await driver.findElement(By.id("searchbar-query")).click();
-        await driver.findElement(By.id("searchbar-query")).sendKeys("Sewing Template");
+        await driver.findElement(By.id("searchbar-query")).sendKeys("Coastal Mooring");
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
 
 	    await new Promise(r => setTimeout(r, 4000));
@@ -108,14 +108,14 @@ var password;
             await driver.findElement(By.css(".btn-danger")).click();
 	    }
 	    else
-	        console.log("Delete Parts failed: Sewing Template not found");
+	        console.log("Delete Parts failed: Coastal Mooring not found");
 
 	    await new Promise(r => setTimeout(r, 4000)); 
 
         await driver.findElement(By.id("navbarTemplates")).click();
         await driver.findElement(By.linkText("Parts")).click();
         await driver.findElement(By.id("searchbar-query")).click();
-        await driver.findElement(By.id("searchbar-query")).sendKeys("Wheel Template");
+        await driver.findElement(By.id("searchbar-query")).sendKeys("Surface Buoy");
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         await new Promise(r => setTimeout(r, 2000));
 
@@ -131,13 +131,13 @@ var password;
             await driver.findElement(By.css(".btn-danger")).click();
 	    }
 	    else
-	        console.log("Delete Parts failed: Wheel Template not found");
+	        console.log("Delete Parts failed: Surface Buoy not found");
 
 	    await new Promise(r => setTimeout(r, 4000)); 
         await driver.findElement(By.id("navbarTemplates")).click();
         await driver.findElement(By.linkText("Parts")).click();
         await driver.findElement(By.id("searchbar-query")).click();
-        await driver.findElement(By.id("searchbar-query")).sendKeys("Pin Template");
+        await driver.findElement(By.id("searchbar-query")).sendKeys("Wifi Template");
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         await new Promise(r => setTimeout(r, 2000));
 
@@ -153,7 +153,7 @@ var password;
             await driver.findElement(By.css(".btn-danger")).click();
 	    }
 	    else
-	        console.log("Delete Parts failed: Pin Template not found");
+	        console.log("Delete Parts failed: Wifi Template not found");
 
     	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("navbarTemplates")).click();
@@ -204,11 +204,11 @@ var password;
         await driver.findElement(By.linkText("Edit Part Types")).click();
 
 
-	    if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Sewing Machine']"))).length != 0)
+        if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Structural']"))).length != 0)
 	    {
             var i = 1;
             while (true) {
-                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Sewing Machine") {
+                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Structural") {
                     break;
                 } 
                 i++;
@@ -217,7 +217,7 @@ var password;
 	        await driver.findElement(By.css(".btn-danger")).click();
 	    }
 	    else
-                console.log("Delete Parts failed: Sewing Machine type not found");
+            console.log("Delete Parts failed: Structural type not found");
 
         // Delete Computerized Part Type
         if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Computerized']"))).length != 0) {

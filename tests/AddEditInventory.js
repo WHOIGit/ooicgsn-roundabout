@@ -137,12 +137,12 @@ var password;
 
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
-            await dropdown.findElement(By.xpath("//option[. = '-- Sewing Machine']")).click();
+            await dropdown.findElement(By.xpath("//option[. = '-- Structural']")).click();
         }
         {
             const dropdown = await driver.findElement(By.id("id_part"));
             await new Promise(r => setTimeout(r, 4000)); //New for 1.6 - This field blanked back out without timeout
-            await dropdown.findElement(By.xpath("//option[. = 'Sewing Template']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Coastal Mooring']")).click();
         }
         {
             const dropdown = await driver.findElement(By.id("id_location"));
@@ -177,7 +177,7 @@ var password;
         await driver.findElement(By.id("id_part")).click();
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
-            await dropdown.findElement(By.xpath("//option[. = '-- Sewing Machine']")).click();
+            await dropdown.findElement(By.xpath("//option[. = '-- Structural']")).click();
         }
         {
             const dropdown = await driver.findElement(By.id("id_location"));
@@ -187,7 +187,7 @@ var password;
         {
             const dropdown = await driver.findElement(By.id("id_part"));
             await new Promise(r => setTimeout(r, 2000)); //New for 1.6 - This field blanked back out without timeout
-            await dropdown.findElement(By.xpath("//option[. = 'Sewing Template']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Coastal Mooring']")).click();
         }
         // Add Inventory item with non unique serial number
         await driver.findElement(By.id("hint_id_serial_number")).click();
@@ -224,12 +224,12 @@ var password;
 
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
-            await dropdown.findElement(By.xpath("//option[. = '-- Sewing Machine']")).click();
+            await dropdown.findElement(By.xpath("//option[. = '-- Structural']")).click();
         }
         {
             const dropdown = await driver.findElement(By.id("id_part"));
             await new Promise(r => setTimeout(r, 6000)); //New for 1.6 - This field blanked back out without timeout
-            await dropdown.findElement(By.xpath("//option[. = 'Wheel Template']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Surface Buoy']")).click();
         }
         {
             await new Promise(r => setTimeout(r, 2000));
@@ -240,8 +240,8 @@ var password;
     	await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css(".controls > .btn")).click();
 
-        let encodedString = await driver.takeScreenshot();
-        await fs.writeFileSync('/tests/iscreen.png', encodedString, 'base64');    
+        //let encodedString = await driver.takeScreenshot();
+        //await fs.writeFileSync('/tests/iscreen.png', encodedString, 'base64');    
 
 	    while ((await driver.findElements(By.id("action"))).length == 0) // Inventory tree takes awhile to load
 	    {
@@ -257,12 +257,12 @@ var password;
 	    }
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
-            await dropdown.findElement(By.xpath("//option[. = '-- Sewing Machine']")).click();
+            await dropdown.findElement(By.xpath("//option[. = '-- Structural']")).click();
         }
         {
             const dropdown = await driver.findElement(By.id("id_part"));
             await new Promise(r => setTimeout(r, 4000)); //New for 1.6 - This field blanked back out without timeout
-            await dropdown.findElement(By.xpath("//option[. = 'Pin Template']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Wifi Template']")).click();
         }
         {
 	    await new Promise(r => setTimeout(r, 2000));
@@ -270,8 +270,8 @@ var password;
             // Space needed before Test
             await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
         }
-        encodedString = await driver.takeScreenshot();
-        await fs.writeFileSync('/tests/iscreen1.png', encodedString, 'base64');    
+        //encodedString = await driver.takeScreenshot();
+        //await fs.writeFileSync('/tests/iscreen1.png', encodedString, 'base64');    
         await driver.findElement(By.css(".controls > .btn")).click();
     	await new Promise(r => setTimeout(r, 8000));
 
@@ -345,7 +345,7 @@ var password;
         await driver.findElement(By.css("#qcard_c > .card-body")).click();
         await driver.findElement(By.id("searchform-submit-button")).click();
         await driver.findElement(By.id("searchbar-query")).click(); //search within these results
-        await driver.findElement(By.id("searchbar-query")).sendKeys("Sewing Template");
+        await driver.findElement(By.id("searchbar-query")).sendKeys("Coastal Mooring");
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
      
 	    while ((await driver.findElements(By.css(".even a"))).length == 0) // 1.6
@@ -379,7 +379,7 @@ var password;
 
         // Add another subassembly item to valid parent - no more children appear
         await driver.findElement(By.linkText("Add Sub-Assembly")).click();
-        await driver.findElement(By.id("searchbar-query")).sendKeys("singer");
+        await driver.findElement(By.id("searchbar-query")).sendKeys("Salty Reef");
 	    while ((await driver.findElements(By.xpath("//p[contains(.,'NONE')]"))).length == 0) 
 	    {
 	       await new Promise(r => setTimeout(r, 2000));
@@ -408,7 +408,7 @@ var password;
         }
 
         await driver.findElement(By.id("field-query_c_r1")).click();
-        await driver.findElement(By.id("field-query_c_r1")).sendKeys("Pin");
+        await driver.findElement(By.id("field-query_c_r1")).sendKeys("Wifi");
         await driver.findElement(By.id("searchform-submit-button")).click();
 
         //	await new Promise(r => setTimeout(r, 8000));  //1.6
@@ -481,8 +481,8 @@ var password;
         assert(await driver.findElement(By.css("#div_id_serial_number .ajax-error")).getText() == "Inventory with this Serial number already exists.");
 
 	    await new Promise(r => setTimeout(r, 2000));        
-	    // Assign Destination to Sewing Inventory - tests Issue #143
-        await driver.findElement(By.partialLinkText("sewing")).click();
+	    // Assign Destination to surface mooring Inventory - tests Issue #143
+        await driver.findElement(By.partialLinkText("surface mooring")).click();
 
 	    while ((await driver.findElements(By.id("action"))).length == 0)
 	    {
@@ -505,7 +505,7 @@ var password;
         await new Promise(r => setTimeout(r, 4000));
 
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
-        assert(bodyText.includes("Revision B - Singer"));     //Verify the Destination is assigned on the Destination tab
+        assert(bodyText.includes("Revision B - Salty Reef"));     //Verify the Destination is assigned on the Destination tab
 
         // Close browser window
         driver.quit();

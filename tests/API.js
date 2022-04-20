@@ -112,7 +112,7 @@ var token;
             console.log(rsp.statusText, "  ", json);
 
         // PARTS
-        // Get the Sewing, Wheel, Pin, Disk Drive and ADCPS-J Part Templates
+        // Get the Coastal Mooring, Surface Buoy, Wifi, Disk Drive and ADCPS-J Part Templates
         // Test API filter by name
         rsp = await fetch(url + 'part-templates/parts/?fields=name', {
             method: 'GET',
@@ -123,8 +123,8 @@ var token;
             if (json.length == 5) {
                 var j = 0;
                 for (var i = 0; i < json.length; i++) {
-                    if ((json[i].name.includes("Disk Drive")) || (json[i].name.includes("Pin Template")) ||
-                        (json[i].name.includes("Sewing Template")) || (json[i].name.includes("Wheel Template")) ||
+                    if ((json[i].name.includes("Disk Drive")) || (json[i].name.includes("Wifi Template")) ||
+                        (json[i].name.includes("Coastal Mooring")) || (json[i].name.includes("Surface Buoy")) ||
                         (json[i].name.includes("ADCPS-J"))) {
                         j++;
                     }
@@ -142,7 +142,7 @@ var token;
         else
             console.log(rsp.statusText, "  ", json);
 
-        //Get Part Types - Sewing Machine, Computerized
+        //Get Part Types - Structural, Computerized
         // Test API Omit keyword, returning just the name
         rsp = await fetch(url + 'part-templates/part-types/?omit=id,url,parent,children,parts', {
             method: 'GET',
@@ -153,7 +153,7 @@ var token;
             if (json.length > 0) {
                 var j = 0;
                 for (var i = 0; i < json.length; i++) {
-                    if ((json[i].name.includes("Sewing Machine")) || (json[i].name.includes("Computerized"))) {
+                    if ((json[i].name.includes("Structural")) || (json[i].name.includes("Computerized"))) {
                         j++;
                     }
                 }
@@ -173,9 +173,9 @@ var token;
             console.log(rsp.statusText, "  ", json);
 
         // ASSEMBLIES
-        // Get the 3 Assembly Parts under the Singer Assembly
+        // Get the 3 Assembly Parts under the Salty Reef Assembly
         // Test API Expand key word 
-        rsp = await fetch(url + 'assembly-templates/assemblies/?name=Singer&expand=assembly_revisions&fields=assembly_revisions.assembly_parts', {
+        rsp = await fetch(url + 'assembly-templates/assemblies/?name=Salty Reef&expand=assembly_revisions&fields=assembly_revisions.assembly_parts', {
             method: 'GET',
             headers: header,
         });

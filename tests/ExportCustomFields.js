@@ -21,41 +21,39 @@ var password;
     var firefoxOptions = new firefox.Options();
 
     // Docker linux chrome will only run headless
-    if ((myArgs[1] == 'headless') && (myArgs.length !=0)) {
-    
-	 chromeCapabilities.set("goog:chromeOptions", {
-      	   args: [
-      	    "--no-sandbox",
-       	    "--disable-dev-shm-usage",
-       	   "--headless",
-	    "--log-level=3",
-	    "--disable-gpu"
-     	    ]
-   	    });
+    if ((myArgs[1] == 'headless') && (myArgs.length != 0)) {
 
-	  firefoxOptions.addArguments("-headless");
-    } 
+        chromeCapabilities.set("goog:chromeOptions", {
+            args: [
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--headless",
+                "--log-level=3",
+                "--disable-gpu"
+            ]
+        });
+
+        firefoxOptions.addArguments("-headless");
+    }
 
     // First argument specifies the Browser type
-    if (myArgs[0] == 'chrome') {        
+    if (myArgs[0] == 'chrome') {
         driver = new Builder().forBrowser('chrome').withCapabilities(chromeCapabilities).build();
     }
-    else if (myArgs[0] == 'firefox') {       
+    else if (myArgs[0] == 'firefox') {
         driver = new Builder().forBrowser('firefox').setFirefoxOptions(firefoxOptions).build();
-    } 
+    }
     else {
-	console.log('Error: Missing Arguments');
+        console.log('Error: Missing Arguments');
     }
 
-   if (myArgs[2] == 'admin')
-    {
+    if (myArgs[2] == 'admin') {
         await driver.get("http://localhost:8000/");
         user = "admin";
         password = "admin";
     }
-    else
-    {
- //        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+    else {
+        //        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
         await driver.get("https://rdb-testing.whoi.edu/");
         user = "jkoch";
         password = "Automatedtests";
@@ -65,21 +63,20 @@ var password;
     await driver.manage().window().setRect({ width: 1304, height: 834 });
 
     //Hide Timer Panel when connecting to circleci local rdb django app
-    if ((await driver.findElements(By.css("#djHideToolBarButton"))).length != 0)
-    {
-       await driver.findElement(By.css("#djHideToolBarButton")).click();
-       await new Promise(r => setTimeout(r, 4000));
+    if ((await driver.findElements(By.css("#djHideToolBarButton"))).length != 0) {
+        await driver.findElement(By.css("#djHideToolBarButton")).click();
+        await new Promise(r => setTimeout(r, 4000));
     }
 
     try {
 
-	// If navbar toggler present in small screen
+        // If navbar toggler present in small screen
         try {
             var signin = await driver.findElement(By.linkText("Sign In"));
         }
         catch (NoSuchElementException) {
-                await driver.findElement(By.css(".navbar-toggler-icon")).click();
-         }
+            await driver.findElement(By.css(".navbar-toggler-icon")).click();
+        }
         // LOGIN
         await driver.findElement(By.linkText("Sign In")).click();
         await driver.findElement(By.id("id_login")).sendKeys(user);
@@ -92,14 +89,13 @@ var password;
 
         // 10 | click | id=navbarAdminTools |
         await driver.findElement(By.id("navbarAdmintools")).click();
-         // 4 | click | linkText=Custom Fields | 
+        // 4 | click | linkText=Custom Fields | 
         await driver.findElement(By.linkText("Custom Fields")).click();
 
-	while ((await driver.findElements(By.linkText("Add Custom Field"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Edit Custom Field.");
-	}
+        while ((await driver.findElements(By.linkText("Add Custom Field"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Edit Custom Field.");
+        }
 
         if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Condition']"))).length != 0) {
             var i = 1;
@@ -125,19 +121,16 @@ var password;
                     //var clicked = await driver.findElement(By.xpath("//div[" + i + "]/label/input")).isSelected();  //pre 1.6
                     var clicked = await driver.findElement(By.xpath("//div[" + i + "]/input")).isSelected();  //1.6 code change
                 }
-                if (clicked)
-                {
+                if (clicked) {
                     if (i == 1) {
                         if ((await driver.findElement(By.xpath("//div/div/label")).getText() == "Computerized") ||
-                            (await driver.findElement(By.xpath("//div/div/label")).getText() == "Sewing Machine"))
-                        {
+                            (await driver.findElement(By.xpath("//div/div/label")).getText() == "Structural")) {
                             await driver.findElement(By.xpath("//div[6]/div/div/input")).click();
                         }
                     }
                     else {
-                        if ((await driver.findElement(By.xpath("//div/div[" + i + "]/label")).getText() == "Computerized")|
-                            (await driver.findElement(By.xpath("//div/div[" + i + "]/label")).getText() == "Sewing Machine"))
-                        {
+                        if ((await driver.findElement(By.xpath("//div/div[" + i + "]/label")).getText() == "Computerized") |
+                            (await driver.findElement(By.xpath("//div/div[" + i + "]/label")).getText() == "Structural")) {
                             await driver.findElement(By.xpath("//div[" + i + "]/input")).click();
                         }
                     }
@@ -158,24 +151,24 @@ var password;
         await driver.wait(until.elementLocated(By.linkText("Parts")));
         await driver.findElement(By.linkText("Parts")).click();
         // 15 | click | linkText=Add Part Template | 
-	while ((await driver.findElements(By.linkText("Add Part Template"))).length == 0) // 1.6
-	{
-	  await new Promise(r => setTimeout(r, 2000));
-	  console.log("Wait 2 seconds for Add Part Template1.");
-	}
+        while ((await driver.findElements(By.linkText("Add Part Template"))).length == 0) // 1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Part Template1.");
+        }
         await driver.findElement(By.linkText("Add Part Template")).click();
         /*Get the text after ajax call*/
         // 16 | type | id=id_part_number |
         var part_num = "100-259-785";
-	while ((await driver.findElements(By.id("id_part_number"))).length == 0) // 1.6
-	{
-	  await new Promise(r => setTimeout(r, 2000));
-	  console.log("Wait 2 seconds for Part Number.");
-	}
+        while ((await driver.findElements(By.id("id_part_number"))).length == 0) // 1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Part Number.");
+        }
         await driver.findElement(By.id("id_part_number")).sendKeys(part_num);
         // 17 | type | id=id_name | Computerized
         await driver.findElement(By.id("id_name")).sendKeys("Disk Drive");
-        // 18 | type | id=id_friendly_name | sewing
+        // 18 | type | id=id_friendly_name | surface mooring
         await driver.findElement(By.id("id_friendly_name")).sendKeys("drive");
         // 19 | select | id=id_part_type | label=Computerized
         {
@@ -185,7 +178,7 @@ var password;
         }
         // 20 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
-	    await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 2000));
 
         var obj = await driver.findElements(By.xpath("//*[text()='Part with this Part number already exists.']"));
         if (obj.length != 0) {
@@ -194,19 +187,18 @@ var password;
 
         // Create Inventory with Part Template above
         await driver.findElement(By.linkText("Inventory")).click();
-	    while ((await driver.findElements(By.linkText("Add Inventory"))).length == 0) // 1.6
-	    {
-	       await new Promise(r => setTimeout(r, 2000));
-	       console.log("Wait 2 seconds for Add Inventory1.");
-	    }
-       
+        while ((await driver.findElements(By.linkText("Add Inventory"))).length == 0) // 1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Inventory1.");
+        }
+
         await driver.findElement(By.linkText("Add Inventory")).click();
- 	    while ((await driver.findElements(By.id("id_part_type"))).length == 0) // 1.6
-	    {
-	      await new Promise(r => setTimeout(r, 2000));
-	     console.log("Wait 2 seconds for Add Inventory2.");
-	    }
-        // 5 | select | id=id_part_type | label=-- Sewing Machine
+        while ((await driver.findElements(By.id("id_part_type"))).length == 0) // 1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Inventory2.");
+        }
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
             await dropdown.findElement(By.xpath("//option[. = '-- Computerized']")).click();
@@ -215,7 +207,7 @@ var password;
         {
             await new Promise(r => setTimeout(r, 2000));
             const dropdown = await driver.findElement(By.id("id_part"));
-	    await new Promise(r => setTimeout(r, 4000)); //New for 1.6 - This field blanked back out without timeout
+            await new Promise(r => setTimeout(r, 4000)); //New for 1.6 - This field blanked back out without timeout
             await dropdown.findElement(By.xpath("//option[. = 'Disk Drive']")).click();
         }
         // 7 | select | id=id_location | label=Test
@@ -226,18 +218,18 @@ var password;
         }
         // 8 | storeValue | id=id_serial_number | Serial_Number
         // Stores the value of the Serial Number assigned
-	await new Promise(r => setTimeout(r, 6000));  //wait here for revision & serial number to automatically fill in
+        await new Promise(r => setTimeout(r, 6000));  //wait here for revision & serial number to automatically fill in
         var Serial_Number = await driver.findElement(By.id("id_serial_number")).getAttribute("value");
         await driver.findElement(By.css(".controls > .btn")).click();
 
-	    while ((await driver.findElements(By.partialLinkText("drive"))).length == 0) // 1.6
-	    {
-	       await new Promise(r => setTimeout(r, 2000));
-	       console.log("Wait 2 seconds for Add Inventory3.");
-	       //let encodedString = await driver.takeScreenshot();
-	       //await fs.writeFileSync('/tests/escreen.png', encodedString, 'base64');      
-	    }
-       
+        while ((await driver.findElements(By.partialLinkText("drive"))).length == 0) // 1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Inventory3.");
+            //let encodedString = await driver.takeScreenshot();
+            //await fs.writeFileSync('/tests/escreen.png', encodedString, 'base64');      
+        }
+
         // Now, check all Global Types for the Custom Field
 
         // 10 | click | id=navbarAdminTools |
@@ -245,11 +237,10 @@ var password;
         // 4 | click | linkText=Custom Fields | 
         await driver.findElement(By.linkText("Custom Fields")).click();
 
-	    while ((await driver.findElements(By.linkText("Add Custom Field"))).length == 0)
-	    {
-	       await new Promise(r => setTimeout(r, 2000));
-	       console.log("Wait 2 seconds for Edit Custom Field.");
-	    }
+        while ((await driver.findElements(By.linkText("Add Custom Field"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Edit Custom Field.");
+        }
 
         if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Condition']"))).length != 0) {
             var i = 1;
@@ -268,27 +259,24 @@ var password;
         var i = 1;
         while (true) {
             try {
-                if (i == 1)
-                {
+                if (i == 1) {
                     var clicked = await driver.findElement(By.xpath("//div[6]/div/div/input")).isSelected();
                 }
-                else
-                {
+                else {
                     //var clicked = await driver.findElement(By.xpath("//div[" + i + "]/label/input")).isSelected();  //pre 1.6
                     var clicked = await driver.findElement(By.xpath("//div[" + i + "]/input")).isSelected();
                 }
 
-                if (!clicked)
-                {
+                if (!clicked) {
                     if (i == 1) {
                         if ((await driver.findElement(By.xpath("//div/div/label")).getText() == "Computerized") ||
-                            (await driver.findElement(By.xpath("//div/div/label")).getText() == "Sewing Machine")) {
+                            (await driver.findElement(By.xpath("//div/div/label")).getText() == "Structural")) {
                             await driver.findElement(By.xpath("//div[6]/div/div/input")).click();
                         }
                     }
                     else {
                         if ((await driver.findElement(By.xpath("//div/div[" + i + "]/label")).getText() == "Computerized") |
-                            (await driver.findElement(By.xpath("//div/div[" + i + "]/label")).getText() == "Sewing Machine")) {
+                            (await driver.findElement(By.xpath("//div/div[" + i + "]/label")).getText() == "Structural")) {
                             await driver.findElement(By.xpath("//div[" + i + "]/input")).click();
                         }
                     }
@@ -301,12 +289,11 @@ var password;
         }
         // 18 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
-//	await new Promise(r => setTimeout(r, 4000));   //takes a while when db is fully populated
-	    while ((await driver.findElements(By.linkText("Add Custom Field"))).length == 0) 
-	    {
-	       await new Promise(r => setTimeout(r, 2000));
-	      console.log("Wait 2 seconds for Edit Custom Field.");
-	    }
+        //	await new Promise(r => setTimeout(r, 4000));   //takes a while when db is fully populated
+        while ((await driver.findElements(By.linkText("Add Custom Field"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Edit Custom Field.");
+        }
 
         // Search for and Export Part Items and verify "Condition" Custom Field is exported
         // 3 | click | id=searchbar-query | 
@@ -333,18 +320,16 @@ var password;
         $.csv = require('jquery-csv');
         var data;
 
-	    if (myArgs[1] == 'headless')
-	    {
-	    	var rdb_inv = process.cwd()+"/RDB_Part.csv";
-	    }
-	    else
-	    {
-           const execSync = require('child_process').execSync;
+        if (myArgs[1] == 'headless') {
+            var rdb_inv = process.cwd() + "/RDB_Part.csv";
+        }
+        else {
+            const execSync = require('child_process').execSync;
             var username = execSync('echo %username%', { encoding: 'utf-8' });
             username = username.replace(/[\n\r]+/g, '');
             var rdb_inv = "C:\\Users\\" + username + "\\Downloads\\RDB_Part.csv";
-        } 
-     	
+        }
+
         // Read in the exported Part Template csv data  
         while (!fs.existsSync(rdb_inv)) // wait for file download
         {
@@ -355,23 +340,20 @@ var password;
         var csv = fs.readFileSync(rdb_inv, 'utf8');
         var exported_data = $.csv.toArrays(csv);
         for (var i = 0, len = exported_data[0].length; i < len; i++) {
-            if (exported_data[0][i] == "Part Number")
-            {
+            if (exported_data[0][i] == "Part Number") {
                 var epart_num_index = i;
             }
-            if (exported_data[0][i] == "Condition (Default)")
-            {
+            if (exported_data[0][i] == "Condition (Default)") {
                 var econdition_index = i;
             }
-        } 
+        }
 
         var condition = "Good";
         var part_num_found = false;
         // Check if Part Num and Custom Field in exported data matches created Part Template.
         //Find the created part number and verify condition matches
         for (var j = 1, elen = exported_data.length; j < elen; j++) {
-            if (part_num == exported_data[j][epart_num_index])
-            {
+            if (part_num == exported_data[j][epart_num_index]) {
                 if (condition == exported_data[j][econdition_index]) {
                     console.log("Condition Custom Field matches for Part Template: ", part_num, ".");
                 }
@@ -381,9 +363,8 @@ var password;
                 part_num_found = true;
             }
         }
-        if (!part_num_found)
-        {
-            throw new Error(part_num+" not found.");
+        if (!part_num_found) {
+            throw new Error(part_num + " not found.");
         }
 
         // // Search for Disk Drive 
@@ -394,15 +375,14 @@ var password;
             const dropdown = await driver.findElement(By.id("searchbar-modelselect"))
             await dropdown.findElement(By.xpath("//option[. = 'Inventory']")).click()
         }
-        
+
         // 5 | click | css=.btn:nth-child(1) | 
         await driver.findElement(By.css(".btn:nth-child(1)")).click()
 
-	while ((await driver.findElements(By.id("search--download-csv-button"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Search2.");
-	}
+        while ((await driver.findElements(By.id("search--download-csv-button"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Search2.");
+        }
 
         // Downloads to Downloads Folder
         // 10 | click | id=search--download-csv-button |
@@ -432,15 +412,14 @@ var password;
             if (exported_data[0][i] == "Condition") {
                 var econdition_index = i;
             }
-        } 
+        }
 
         // Check if Serial Number and Custom Field in exported data matches created Assembly.
         //Find the created serial number and verify condition matches
         var serial_num_found = false;
         for (var j = 1, elen = exported_data.length; j < elen; j++) {
             if (Serial_Number == exported_data[j][eserial_num_index]) {
-                if (condition == exported_data[j][econdition_index])
-                {
+                if (condition == exported_data[j][econdition_index]) {
                     console.log("Condition Custom Field matches for Inventory:", Serial_Number, ".");
                 }
                 else {
@@ -452,7 +431,7 @@ var password;
         if (!serial_num_found) {
             throw new Error(Serial_Number + " not found.");
         }
-	    
+
         // Close browser window
         driver.quit();
 
@@ -460,8 +439,8 @@ var password;
     catch (e) {
         console.log(e.message, e.stack);
         console.log("Export Custom Fields failed.");
-	return 1;
-    } 
+        return 1;
+    }
 
     console.log("Export Custom Fields completed.")
     return 0;

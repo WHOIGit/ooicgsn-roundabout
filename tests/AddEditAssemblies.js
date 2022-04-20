@@ -343,7 +343,7 @@ var password;
         }
         await driver.findElement(By.linkText("Create New Assembly")).click();
         await driver.wait(until.elementLocated(By.id("id_name")));
-        await driver.findElement(By.id("id_name")).sendKeys("Singer");
+        await driver.findElement(By.id("id_name")).sendKeys("Salty Reef");
         
         {
             const dropdown = await driver.findElement(By.id("id_assembly_type"));
@@ -386,7 +386,7 @@ var password;
 
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
-            await dropdown.findElement(By.xpath("//option[. = '-- Sewing Machine']")).click();
+            await dropdown.findElement(By.xpath("//option[. = '-- Structural']")).click();
         }
 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
@@ -399,7 +399,7 @@ var password;
         // Now specify non null part type
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await dropdown.findElement(By.xpath("//option[. = 'Sewing Template']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Coastal Mooring']")).click();
         }
 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
@@ -426,7 +426,7 @@ var password;
         await driver.findElement(By.id("id_part_type")).click();
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
-            await dropdown.findElement(By.xpath("//option[. = '-- Sewing Machine']")).click();
+            await dropdown.findElement(By.xpath("//option[. = '-- Structural']")).click();
         }
 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
@@ -441,18 +441,18 @@ var password;
         await driver.findElement(By.id("id_part")).click();
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await dropdown.findElement(By.xpath("//option[. = 'Wheel Template']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Surface Buoy']")).click();
         }
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-        while ((await driver.findElements(By.linkText("Sewing Template"))).length == 0) // displayed after above command completes
+        while ((await driver.findElements(By.linkText("Coastal Mooring"))).length == 0) // displayed after above command completes
         {
             await new Promise(r => setTimeout(r, 2000));
-            console.log("Wait 2 seconds for Add Wheel Subassembly.");
+            console.log("Wait 2 seconds for Add Subassembly1.");
         }
 
         if ((await driver.findElements(By.xpath("//div/div/ul/li[*]/a[text()='Electric']"))).length != 0) {
-            // Expand Revision B and Sewing Template
+            // Expand Revision B and Coastal Mooring
             var j = 1;
             while (true) {
                 if ((await driver.findElement(By.xpath("//div/div/ul/li[" + j + "]/a")).getText()) == "Electric") {
@@ -466,16 +466,16 @@ var password;
 
         await new Promise(r => setTimeout(r, 8000));
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/ul/li/i")).click();
-        while ((await driver.findElements(By.linkText("sewing"))).length == 0) 
+        while ((await driver.findElements(By.linkText("surface mooring"))).length == 0) 
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Expand Navtree.");
         }
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/ul/li/ul/li/i")).click();
 
-        // Add Pin sub assembly part
+        // Add wifi sub assembly part
         await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.linkText("wheel"));
+        await driver.findElement(By.linkText("buoy"));
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("action")).click();
         // 28 | click | linkText=Add New Sub-Assembly | 
@@ -496,28 +496,28 @@ var password;
         
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
-            await dropdown.findElement(By.xpath("//option[. = '-- Sewing Machine']")).click();
+            await dropdown.findElement(By.xpath("//option[. = '-- Structural']")).click();
         }
         await driver.findElement(By.id("id_part")).click();
         
         {
             const dropdown = await driver.findElement(By.id("id_part"));
             await new Promise(r => setTimeout(r, 4000));  //1.6 stale element, element not set
-            await dropdown.findElement(By.xpath("//option[. = 'Pin Template']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Wifi Template']")).click();
         }
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
         // Verify Top Level Part and Sub Assembly created in tree
-        while ((await driver.findElements(By.linkText("pin"))).length == 0) {
+        while ((await driver.findElements(By.linkText("wifi"))).length == 0) {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Add SubAssembly4.");
         }
-        await driver.findElement(By.linkText("sewing"));
-        await driver.findElement(By.linkText("wheel"));
-        await driver.findElement(By.linkText("pin"));
+        await driver.findElement(By.linkText("surface mooring"));
+        await driver.findElement(By.linkText("buoy"));
+        await driver.findElement(By.linkText("wifi"));
 
-        // Add Reference Designator to Sewing Template Assembly
-        await driver.findElement(By.linkText("sewing")).click();
+        // Add Reference Designator to Coastal Mooring Assembly
+        await driver.findElement(By.linkText("surface mooring")).click();
         while ((await driver.findElements(By.linkText("1232"))).length == 0) {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Page Load.");

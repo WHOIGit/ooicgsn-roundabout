@@ -150,7 +150,7 @@ var password;
         // Add a Part Type with a name
 	    await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Add Part Type")).click();
-        await driver.findElement(By.id("id_name")).sendKeys("Sewing Machine");
+        await driver.findElement(By.id("id_name")).sendKeys("Structural");
         await driver.findElement(By.css(".btn-primary")).click();
 
         // Add Part Type with null name
@@ -174,11 +174,11 @@ var password;
         await driver.findElement(By.linkText("Add Part Template")).click();
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_part_number")).sendKeys("123-456-789");
-        await driver.findElement(By.id("id_name")).sendKeys("Sewing Template");
-        await driver.findElement(By.id("id_friendly_name")).sendKeys("sewing");
+        await driver.findElement(By.id("id_name")).sendKeys("Coastal Mooring");
+        await driver.findElement(By.id("id_friendly_name")).sendKeys("surface mooring");
         {
             dropdown = await driver.findElement(By.id("id_part_type"));
-            await dropdown.findElement(By.xpath("//option[. = ' Sewing Machine']")).click();
+            await dropdown.findElement(By.xpath("//option[. = ' Structural']")).click();
  
         }
         await driver.findElement(By.css(".controls > .btn")).click();
@@ -187,7 +187,7 @@ var password;
         var obj = await driver.findElements(By.xpath("//*[text()='Part with this Part number already exists.']"));	
 	    if (obj.length != 0)
 	    {
-	       throw new Error("Please run the Delete Parts Test. Sewing Template already created");
+	       throw new Error("Please run the Delete Parts Test. Coastal Mooring already created");
 	    }
 
         await driver.findElement(By.id("navbarTemplates")).click();
@@ -201,11 +201,11 @@ var password;
         await driver.findElement(By.linkText("Add Part Template")).click();
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_part_number")).sendKeys("555-456-789");
-        await driver.findElement(By.id("id_name")).sendKeys("Wheel Template");
-        await driver.findElement(By.id("id_friendly_name")).sendKeys("wheel");
+        await driver.findElement(By.id("id_name")).sendKeys("Surface Buoy");
+        await driver.findElement(By.id("id_friendly_name")).sendKeys("buoy");
         {
             dropdown = await driver.findElement(By.id("id_part_type"));
-            await dropdown.findElement(By.xpath("//option[. = ' Sewing Machine']")).click();
+            await dropdown.findElement(By.xpath("//option[. = ' Structural']")).click();
 
         }
         await driver.findElement(By.css(".controls > .btn")).click();
@@ -214,7 +214,7 @@ var password;
         var obj = await driver.findElements(By.xpath("//*[text()='Part with this Part number already exists.']"));	
 	    if (obj.length != 0)
 	    {
-	       throw new Error("Please run the Delete Parts Test. Wheel Template already created");
+	       throw new Error("Please run the Delete Parts Test. Surface Buoy already created");
 	    }
 
         await driver.findElement(By.id("navbarTemplates")).click();
@@ -229,11 +229,11 @@ var password;
         await driver.findElement(By.linkText("Add Part Template")).click();
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_part_number")).sendKeys("666-456-789");
-        await driver.findElement(By.id("id_name")).sendKeys("Pin Template");
-        await driver.findElement(By.id("id_friendly_name")).sendKeys("pin");
+        await driver.findElement(By.id("id_name")).sendKeys("Wifi Template");
+        await driver.findElement(By.id("id_friendly_name")).sendKeys("wifi");
         {
             dropdown = await driver.findElement(By.id("id_part_type"));
-            await dropdown.findElement(By.xpath("//option[. = ' Sewing Machine']")).click();
+            await dropdown.findElement(By.xpath("//option[. = ' Structural']")).click();
 
         }
         await driver.findElement(By.css(".controls > .btn")).click();
@@ -242,7 +242,7 @@ var password;
         var obj = await driver.findElements(By.xpath("//*[text()='Part with this Part number already exists.']"));	
 	    if (obj.length != 0)
 	    {
-	       throw new Error("Please run the Delete Parts Test. Pin Template already created");
+	       throw new Error("Please run the Delete Parts Test. Wifi Template already created");
 	    }
 
         // Create new Template Revision with cost or refurbishment cost with greater than 2 decimal places.
@@ -314,11 +314,11 @@ var password;
         await driver.findElement(By.id("id_part_number")).sendKeys("123-456-789");
         await driver.wait(until.elementLocated(By.id("id_name")));
         await driver.findElement(By.id("id_name")).clear();
-        await driver.findElement(By.id("id_name")).sendKeys("Sewing Template");
+        await driver.findElement(By.id("id_name")).sendKeys("Coastal Mooring");
         await driver.findElement(By.id("id_friendly_name")).clear();
-        await driver.findElement(By.id("id_friendly_name")).sendKeys("sewing");
+        await driver.findElement(By.id("id_friendly_name")).sendKeys("surface mooring");
         dropdown = await driver.findElement(By.id("id_part_type"));
-        await dropdown.findElement(By.xpath("//option[. = ' Sewing Machine']")).click();
+        await dropdown.findElement(By.xpath("//option[. = ' Structural']")).click();
 	    await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css(".controls > .btn")).click();
 	    await new Promise(r => setTimeout(r, 2000));
@@ -401,44 +401,44 @@ var password;
 	    // Change part type
         await driver.findElement(By.id("navbarAdmintools")).click();
         await driver.findElement(By.linkText("Edit Part Types")).click();
-        // Get the index to the row Sewing Machine is displayed on screen
+        // Get the index to the row Structural is displayed on screen
         await new Promise(r => setTimeout(r, 2000)); 
 
-	    if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Sewing Machine']"))).length != 0)
+	    if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Structural']"))).length != 0)
 	    {
                 var i = 1;
                 while (true) {
-                  if ((await driver.findElement(By.xpath("//tr["+i+"]/td")).getText()) == "Sewing Machine") { 
+                  if ((await driver.findElement(By.xpath("//tr["+i+"]/td")).getText()) == "Structural") { 
                       break;
                   }
                   i++;
 	        }
             }
 	    else
-	        console.log("Edit Parts failed: Sewing Machine type not found");
+	        console.log("Edit Parts failed: Structural type not found");
         
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css("tr:nth-child("+i+") .btn-primary")).click();
 
         await driver.findElement(By.id("id_name")).clear();
-        await driver.findElement(By.id("id_name")).sendKeys("Sewing Machine - Updated");
+        await driver.findElement(By.id("id_name")).sendKeys("Structural - Updated");
         await driver.findElement(By.css(".btn-primary")).click();
 
         // Change part type name to null
         await new Promise(r => setTimeout(r, 2000));
 
-	    if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Sewing Machine - Updated']"))).length != 0)
+	    if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Structural - Updated']"))).length != 0)
 	    {
                 var i = 1;
                 while (true) {
-                    if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Sewing Machine - Updated") {
+                    if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Structural - Updated") {
                         break;
                     }
                     i++;
 	        }
             }
 	    else
-	        console.log("Edit Parts failed: Sewing Machine - Updated type not found");
+	        console.log("Edit Parts failed: Structural - Updated type not found");
 
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css("tr:nth-child("+i+") .btn-primary")).click();
@@ -450,7 +450,7 @@ var password;
     	// Change part type parent
         await driver.wait(until.elementLocated(By.id("id_name")));
         await driver.findElement(By.id("id_name")).clear();
-        await driver.findElement(By.id("id_name")).sendKeys("Sewing Machine");
+        await driver.findElement(By.id("id_name")).sendKeys("Structural");
         await driver.findElement(By.css(".parts")).click();
         dropdown = await driver.findElement(By.id("id_parent"));
         await dropdown.findElement(By.xpath("//option[. = ' Computerized']")).click();
@@ -458,16 +458,16 @@ var password;
 
         {
             await new Promise(r => setTimeout(r, 2000));
-            const elements = await driver.findElements(By.xpath("//td[contains(.,\'Sewing Machine\')]"));
+            const elements = await driver.findElements(By.xpath("//td[contains(.,\'Structural\')]"));
             assert(elements.length);
         }
 
         // Change part type parent back to null
-        // Get the index to the row Sewing Machine is displayed on screen
+        // Get the index to the row Structural is displayed on screen
         await new Promise(r => setTimeout(r, 2000));  //until element located not working here
         var i = 1;
         while (true) {
-            if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Sewing Machine") {
+            if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Structural") {
                 break;
             }
             i++;
@@ -479,7 +479,7 @@ var password;
         await driver.findElement(By.css(".btn-primary")).click();
 
         // Search for Part Templates and change Part Number
-        await driver.findElement(By.id("searchbar-query")).sendKeys("Sewing Template");
+        await driver.findElement(By.id("searchbar-query")).sendKeys("Coastal Mooring");
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();        // 22 | click | linkText=123-456-789 | 
         await driver.findElement(By.linkText("123-456-789")).click();
 
@@ -560,9 +560,9 @@ var password;
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_part_number")).clear();
         await driver.findElement(By.id("id_part_number")).sendKeys("1232");
-        await driver.findElement(By.id("id_name")).sendKeys("Sewing Template");
+        await driver.findElement(By.id("id_name")).sendKeys("Coastal Mooring");
         dropdown = await driver.findElement(By.id("id_part_type"));
-        await dropdown.findElement(By.xpath("//option[. = ' Sewing Machine']")).click();
+        await dropdown.findElement(By.xpath("//option[. = ' Structural']")).click();
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css(".controls > .btn")).click();
         await new Promise(r => setTimeout(r, 6000));
@@ -570,7 +570,7 @@ var password;
         var obj = await driver.findElements(By.xpath("//*[text()='Part with this Part number already exists.']"));	
 	    if (obj.length != 0)
 	    {
-	       throw new Error("Please run the Delete Parts Test. Sewing Template already created");
+	       throw new Error("Please run the Delete Parts Test. Coastal Mooring already created");
 	    }
 
         // Edit revision with null code and invalid date
