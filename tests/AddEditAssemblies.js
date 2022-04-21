@@ -60,6 +60,8 @@ var password;
     }
 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
+    // Set implict wait time in between steps
+    await driver.manage().setTimeouts({ implicit: 2000 });
 
     //Hide Timer Panel 
     if ((await driver.findElements(By.css("#djHideToolBarButton"))).length != 0) {

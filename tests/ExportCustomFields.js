@@ -61,6 +61,8 @@ var password;
 
     // 2 | setWindowSize | 1304x834 | 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
+    // Set implict wait time in between steps
+    await driver.manage().setTimeouts({ implicit: 2000 });
 
     //Hide Timer Panel when connecting to circleci local rdb django app
     if ((await driver.findElements(By.css("#djHideToolBarButton"))).length != 0) {
