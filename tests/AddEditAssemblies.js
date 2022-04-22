@@ -59,10 +59,11 @@ var password;
         password = "Automatedtests";
     }
 
-    // 2 | setWindowSize | 1304x834 | 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
+    // Set implict wait time in between steps
+    await driver.manage().setTimeouts({ implicit: 2000 });
 
-    //Hide Timer Panel when connecting to circleci local rdb django app
+    //Hide Timer Panel 
     if ((await driver.findElements(By.css("#djHideToolBarButton"))).length != 0) {
         await driver.findElement(By.css("#djHideToolBarButton")).click();
     }
@@ -95,13 +96,69 @@ var password;
         await new Promise(r => setTimeout(r, 6000));
         await driver.findElement(By.id("navbarTemplates")).click();
 
-        // Add template with non null name and type  
+        // Add GS Surface Mooring Assembly 
         await driver.findElement(By.linkText("Assemblies")).click();
-        while ((await driver.findElements(By.linkText("Create New Assembly"))).length == 0) 
-        {
+        while ((await driver.findElements(By.linkText("Create New Assembly"))).length == 0) {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for New Assembly1.");
         }
+        await driver.wait(until.elementLocated(By.linkText("Create New Assembly")));
+        await driver.findElement(By.linkText("Create New Assembly")).click();
+        await driver.wait(until.elementLocated(By.id("id_name")));
+        await driver.findElement(By.id("id_name")).sendKeys("GS Surface Mooring");
+        {
+            const dropdown = await driver.findElement(By.id("id_assembly_type"));
+            await dropdown.findElement(By.xpath("//option[. = 'Mooring']")).click();
+        }
+        await driver.findElement(By.id("id_assembly_number")).sendKeys("CP04OSSM");
+        await driver.findElement(By.css(".controls > .btn")).click();
+
+        while ((await driver.findElements(By.linkText("GS Surface Mooring"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for New Assembly2.");
+        }
+
+        // Create a Revision of Assembly Template
+        while ((await driver.findElements(By.id("action"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Create Revision Mooring.");
+        }
+        await driver.findElement(By.id("action")).click();
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.linkText("Create New Revision")).click();
+        while ((await driver.findElements(By.id("id_revision_code"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Revision.");
+        }
+
+        await driver.findElement(By.id("id_revision_code")).sendKeys("B");
+        await driver.findElement(By.css(".controls > .btn")).click();
+
+        // Add top level part with non null part type and part template
+        while ((await driver.findElements(By.id("action"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Top Level Part.");
+        }
+        await driver.findElement(By.id("action")).click();
+        await driver.findElement(By.linkText("Add Top Level Part")).click();
+        while ((await driver.findElements(By.css(".controls > .btn-primary"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Create Revision4.");
+        }
+        
+        {
+            const dropdown = await driver.findElement(By.id("id_part_type"));
+            await dropdown.findElement(By.xpath("//option[. = '-- Instrument']")).click();
+        }
+        await new Promise(r => setTimeout(r, 1000));
+        {
+            const dropdown = await driver.findElement(By.id("id_part"));
+            await dropdown.findElement(By.xpath("//option[. = 'ADCPS-J']")).click();
+        }
+
+        await driver.findElement(By.css(".controls > .btn-primary")).click();
+        await new Promise(r => setTimeout(r, 4000));
+
         await driver.wait(until.elementLocated(By.linkText("Create New Assembly")));
         await driver.findElement(By.linkText("Create New Assembly")).click();
         await driver.wait(until.elementLocated(By.id("id_name")));
@@ -125,17 +182,15 @@ var password;
         while ((await driver.findElements(By.linkText("Test Assembly"))).length == 0) 
         {
             await new Promise(r => setTimeout(r, 2000));
-            console.log("Wait 2 seconds for New Assembly2.");
+            console.log("Wait 2 seconds for Test Assembly1.");
         }
  
-        await driver.findElement(By.linkText("Test Assembly"));
-
         //  Add template with null type
         await driver.findElement(By.linkText("Create New Assembly")).click();
         while ((await driver.findElements(By.id("id_name"))).length == 0) 
         {
             await new Promise(r => setTimeout(r, 2000));
-            console.log("Wait 2 seconds for New Assembly2.");
+            console.log("Wait 2 seconds for Test Assembly2.");
         }
         await driver.findElement(By.id("id_name")).sendKeys("Test Assembly 2");
         await driver.findElement(By.css(".controls > .btn")).click();
@@ -152,9 +207,7 @@ var password;
             const dropdown = await driver.findElement(By.id("id_assembly_type"));
             await dropdown.findElement(By.xpath("//option[. = 'Electric']")).click();
         }
-        // 26 | type | id=id_assembly_number | 123-002
         await driver.findElement(By.id("id_assembly_number")).sendKeys("123-002");
-        // 27 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
         while ((await driver.findElements(By.linkText("Test Assembly 2"))).length == 0) 
         {
@@ -181,7 +234,6 @@ var password;
         await driver.findElement(By.css(".controls > .btn")).click();
         await new Promise(r => setTimeout(r, 2000));
 
-        // 32 | verifyText | css=#div_id_name .ajax-error | This field is required.
         // Checks null name not added - Add Assembly button present
         await new Promise(r => setTimeout(r, 2000));
         assert(await driver.findElement(By.css("#div_id_name .ajax-error")).getText() == "This field is required.");
@@ -245,7 +297,6 @@ var password;
         await driver.findElement(By.css(".controls > .btn")).click();
         await new Promise(r => setTimeout(r, 2000));
 
-        // 52 | verifyText | css=#div_id_assembly_type .ajax-error | This field is required.
         await new Promise(r => setTimeout(r, 2000));
         assert(await driver.findElement(By.css("#div_id_assembly_type .ajax-error")).getText() == "This field is required.");
 
@@ -294,7 +345,7 @@ var password;
         }
         await driver.findElement(By.linkText("Create New Assembly")).click();
         await driver.wait(until.elementLocated(By.id("id_name")));
-        await driver.findElement(By.id("id_name")).sendKeys("Singer");
+        await driver.findElement(By.id("id_name")).sendKeys("Salty Reef");
         
         {
             const dropdown = await driver.findElement(By.id("id_assembly_type"));
@@ -337,7 +388,7 @@ var password;
 
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
-            await dropdown.findElement(By.xpath("//option[. = '-- Sewing Machine']")).click();
+            await dropdown.findElement(By.xpath("//option[. = '-- Structural']")).click();
         }
 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
@@ -350,7 +401,7 @@ var password;
         // Now specify non null part type
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await dropdown.findElement(By.xpath("//option[. = 'Sewing Template']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Coastal Mooring']")).click();
         }
 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
@@ -377,7 +428,7 @@ var password;
         await driver.findElement(By.id("id_part_type")).click();
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
-            await dropdown.findElement(By.xpath("//option[. = '-- Sewing Machine']")).click();
+            await dropdown.findElement(By.xpath("//option[. = '-- Structural']")).click();
         }
 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
@@ -390,21 +441,20 @@ var password;
 
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_part")).click();
-        // 35 | select | id=id_part | label=Wheel Template
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await dropdown.findElement(By.xpath("//option[. = 'Wheel Template']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Surface Buoy']")).click();
         }
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css(".controls > .btn-primary")).click();
-        while ((await driver.findElements(By.linkText("Sewing Template"))).length == 0) // displayed after above command completes
+        while ((await driver.findElements(By.linkText("Coastal Mooring"))).length == 0) // displayed after above command completes
         {
             await new Promise(r => setTimeout(r, 2000));
-            console.log("Wait 2 seconds for Add Wheel Subassembly.");
+            console.log("Wait 2 seconds for Add Subassembly1.");
         }
 
         if ((await driver.findElements(By.xpath("//div/div/ul/li[*]/a[text()='Electric']"))).length != 0) {
-            // Expand Revision B and Sewing Template
+            // Expand Revision B and Coastal Mooring
             var j = 1;
             while (true) {
                 if ((await driver.findElement(By.xpath("//div/div/ul/li[" + j + "]/a")).getText()) == "Electric") {
@@ -418,16 +468,16 @@ var password;
 
         await new Promise(r => setTimeout(r, 8000));
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/ul/li/i")).click();
-        while ((await driver.findElements(By.linkText("sewing"))).length == 0) 
+        while ((await driver.findElements(By.linkText("surface mooring"))).length == 0) 
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Expand Navtree.");
         }
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/ul/li/ul/li/i")).click();
 
-        // Add Pin sub assembly part
+        // Add wifi sub assembly part
         await new Promise(r => setTimeout(r, 2000));
-        await driver.findElement(By.linkText("wheel"));
+        await driver.findElement(By.linkText("buoy"));
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("action")).click();
         // 28 | click | linkText=Add New Sub-Assembly | 
@@ -448,28 +498,28 @@ var password;
         
         {
             const dropdown = await driver.findElement(By.id("id_part_type"));
-            await dropdown.findElement(By.xpath("//option[. = '-- Sewing Machine']")).click();
+            await dropdown.findElement(By.xpath("//option[. = '-- Structural']")).click();
         }
         await driver.findElement(By.id("id_part")).click();
         
         {
             const dropdown = await driver.findElement(By.id("id_part"));
             await new Promise(r => setTimeout(r, 4000));  //1.6 stale element, element not set
-            await dropdown.findElement(By.xpath("//option[. = 'Pin Template']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Wifi Template']")).click();
         }
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
         // Verify Top Level Part and Sub Assembly created in tree
-        while ((await driver.findElements(By.linkText("pin"))).length == 0) {
+        while ((await driver.findElements(By.linkText("wifi"))).length == 0) {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Add SubAssembly4.");
         }
-        await driver.findElement(By.linkText("sewing"));
-        await driver.findElement(By.linkText("wheel"));
-        await driver.findElement(By.linkText("pin"));
+        await driver.findElement(By.linkText("surface mooring"));
+        await driver.findElement(By.linkText("buoy"));
+        await driver.findElement(By.linkText("wifi"));
 
-        // Add Reference Designator to Sewing Template Assembly
-        await driver.findElement(By.linkText("sewing")).click();
+        // Add Reference Designator to Coastal Mooring Assembly
+        await driver.findElement(By.linkText("surface mooring")).click();
         while ((await driver.findElements(By.linkText("1232"))).length == 0) {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Page Load.");

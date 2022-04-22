@@ -21,60 +21,58 @@ var password;
     var firefoxOptions = new firefox.Options();
 
     // Docker linux chrome will only run headless
-    if ((myArgs[1] == 'headless') && (myArgs.length !=0)) {
-    
-	 chromeCapabilities.set("goog:chromeOptions", {
-      	   args: [
-      	    "--no-sandbox",
-       	    "--disable-dev-shm-usage",
-       	    "--headless",
-            "--enable-logging",
-            "--v=1",
-	    "--disable-gpu"
-     	    ]
-   	    });
+    if ((myArgs[1] == 'headless') && (myArgs.length != 0)) {
 
-	  firefoxOptions.addArguments("-headless");
+        chromeCapabilities.set("goog:chromeOptions", {
+            args: [
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--headless",
+                "--log-level=3",
+                "--disable-gpu"
+            ]
+        });
+
+        firefoxOptions.addArguments("-headless");
     }
 
     // First argument specifies the Browser type
-    if (myArgs[0] == 'chrome') {        
+    if (myArgs[0] == 'chrome') {
         driver = new Builder().forBrowser('chrome').withCapabilities(chromeCapabilities).build();
     }
-    else if (myArgs[0] == 'firefox') {  
+    else if (myArgs[0] == 'firefox') {
         driver = new Builder().forBrowser('firefox').setFirefoxOptions(firefoxOptions).build();
-    } 
+    }
     else {
         console.log('Error: Missing Arguments');
     }
 
-   try {
-      if (myArgs[2] == 'admin')
-       {
-        await driver.get("http://localhost:8000/");
-        user = "admin";
-        password = "admin";
-       }
-       else
-       {
-        //await driver.get("https://ooi-cgrdb-staging.whoi.net/");
-        await driver.get("https://rdb-testing.whoi.edu/");
-        user = "jkoch";
-        password = "Automatedtests";
-       }
+    try {
+        if (myArgs[2] == 'admin') {
+            await driver.get("http://localhost:8000/");
+            user = "admin";
+            password = "admin";
+        }
+        else {
+            //await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+            await driver.get("https://rdb-testing.whoi.edu/");
+            user = "jkoch";
+            password = "Automatedtests";
+        }
     }
     catch (e) {
         console.log(e.message, e.stack);
         console.log("Add Edit Locations failed.");
-	return 1; }
+        return 1;
+    }
 
-    // 2 | setWindowSize | 1304x834 | 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
+    // Set implict wait time in between steps
+    await driver.manage().setTimeouts({ implicit: 2000 });
 
-    //Hide Timer Panel when connecting to circleci local rdb django app
-    if ((await driver.findElements(By.css("#djHideToolBarButton"))).length != 0)
-    {
-       await driver.findElement(By.css("#djHideToolBarButton")).click();
+    //Hide Timer Panel
+    if ((await driver.findElements(By.css("#djHideToolBarButton"))).length != 0) {
+        await driver.findElement(By.css("#djHideToolBarButton")).click();
     }
 
     try {
@@ -84,10 +82,10 @@ var password;
             var signin = await driver.findElement(By.linkText("Sign In"));
         }
         catch (NoSuchElementException) {
-                await driver.findElement(By.css(".navbar-toggler-icon")).click();
-         }
+            await driver.findElement(By.css(".navbar-toggler-icon")).click();
+        }
         // LOGIN
-	await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Sign In")).click();
         await driver.findElement(By.id("id_login")).sendKeys(user);
         await driver.findElement(By.id("id_password")).sendKeys(password);
@@ -95,152 +93,142 @@ var password;
 
         // ADD LOCATIONS TEST
 
-        // Add location with unique name
-        // 10 | click | id=navbarTemplates |
+        // Add Location Sea->Coastal Pioneer
         await driver.findElement(By.id("navbarTemplates")).click();
-        // 11 | click | linkText=Locations | 
         await driver.findElement(By.linkText("Locations")).click();
-        // 12 | click | linkText=Add Location | 
-	while ((await driver.findElements(By.linkText("Add Location"))).length == 0) // 1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Location1.");
-	}
+        while ((await driver.findElements(By.linkText("Add Location"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Location Coastal Pioneer.");
+        }
         await driver.findElement(By.linkText("Add Location")).click();
-	while ((await driver.findElements(By.id("id_name"))).length == 0) // 1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Location1.");
-	}
-        // 14 | type | id=id_name | Test
+        while ((await driver.findElements(By.id("id_name"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Location5.");
+        }
+        await driver.wait(until.elementLocated(By.id("id_name")));
+        await driver.findElement(By.id("id_name")).sendKeys("Coastal Pioneer");
+        dropdown = await driver.findElement(By.id("id_parent"));
+        await dropdown.findElement(By.xpath("//option[. = ' Sea']")).click(); //need space before Sea
+        await driver.findElement(By.id("id_location_code")).sendKeys("CP");  // needed for depoyment bulk upload
+        await driver.findElement(By.css(".controls > .btn")).click();
+
+        // Add location with unique name
+        while ((await driver.findElements(By.linkText("Edit Location"))).length == 0) //Edit button appears after element created
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Location1.");
+        }
+        await driver.findElement(By.linkText("Add Location")).click();
+        while ((await driver.findElements(By.id("id_name"))).length == 0) // 1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Location1.");
+        }
         await driver.findElement(By.id("id_name")).sendKeys("Test");
-        // 15 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
         // Add location with non-unique name
-        // 16 | click | linkText=Add Location |
-	while ((await driver.findElements(By.linkText("Edit Location"))).length == 0) //Edit button appears after element created
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Location2.");
-	}
+        while ((await driver.findElements(By.linkText("Edit Location"))).length == 0) //Edit button appears after element created
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Location2.");
+        }
         await driver.findElement(By.linkText("Add Location")).click();
         // 17 | type | id=id_name | Test
-	while ((await driver.findElements(By.id("id_name"))).length == 0) // 1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Location2.");
-	}
-	//let encodedString = await driver.takeScreenshot();
-	//await fs.writeFileSync('/tests/screen.png', encodedString, 'base64');      
+        while ((await driver.findElements(By.id("id_name"))).length == 0) // 1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Location2.");
+        }
+        //let encodedString = await driver.takeScreenshot();
+        //await fs.writeFileSync('/tests/screen.png', encodedString, 'base64');      
         await driver.findElement(By.id("id_name")).sendKeys("Test");
-        // 18 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
         // Rename Test to unique name for test automation
-	while ((await driver.findElements(By.linkText("Edit Location"))).length == 0) 
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Edit Location1.");
-	}
+        while ((await driver.findElements(By.linkText("Edit Location"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Edit Location1.");
+        }
         await driver.findElement(By.linkText("Edit Location")).click();
         await new Promise(r => setTimeout(r, 2000));
-        // 12 | type | id=id_name | Test
         await driver.findElement(By.id("id_name")).clear();
         await driver.findElement(By.id("id_name")).sendKeys("Test1");
-        // 14 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
         // Add child location with unique name
-        // 19 | click | linkText=Add Location |
-	while ((await driver.findElements(By.linkText("Edit Location"))).length == 0) //Edit button appears after element created
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Location3.");
-	}
+        while ((await driver.findElements(By.linkText("Edit Location"))).length == 0) //Edit button appears after element created
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Location3.");
+        }
         await driver.findElement(By.linkText("Add Location")).click();
         await new Promise(r => setTimeout(r, 6000));
         await driver.findElement(By.id("id_name")).sendKeys("Test Child");
-        // 21 | select | id=id_parent | label=Test from dropdown
         dropdown = await driver.findElement(By.id("id_parent"));
         await dropdown.findElement(By.xpath("//option[. = ' Test']")).click(); //need space before Test
-        // 24 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
         // Add child location with name in parent group
-        // 26 | click | linkText=Add Location |
-	while ((await driver.findElements(By.linkText("Edit Location"))).length == 0) //Edit button appears after element created
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Location4.");
-	}
+        while ((await driver.findElements(By.linkText("Edit Location"))).length == 0) //Edit button appears after element created
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Location4.");
+        }
         await driver.findElement(By.linkText("Add Location")).click();
-        // 27 | type | id=id_name | Test Child
-   	while ((await driver.findElements(By.id("id_name"))).length == 0) // 1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Location4.");
-	}
+        while ((await driver.findElements(By.id("id_name"))).length == 0) // 1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Location4.");
+        }
         await driver.wait(until.elementLocated(By.id("id_name")));
         await driver.findElement(By.id("id_name")).sendKeys("Test Child");
-        // 21 | select | id=id_parent | label=Test from dropdown
         dropdown = await driver.findElement(By.id("id_parent"));
         await dropdown.findElement(By.xpath("//option[. = ' Test']")).click(); //need space before Test
-        // 24 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
+
+
 
         // EDIT LOCATIONS TEST
 
         // Test Child location renamed with name unique to parent group	
-	while ((await driver.findElements(By.linkText("Edit Location"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Edit Location.");
-	}
+        while ((await driver.findElements(By.linkText("Edit Location"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Edit Location.");
+        }
 
-        // 17 | click | linkText=Edit Location | 
         await driver.findElement(By.linkText("Edit Location")).click();  //stale element
-        // 18 | click | id=id_name | 
-	while ((await driver.findElements(By.id("id_name"))).length == 0) // 1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Edit Location2.");
-	}
-        // 19 | type | id=id_name | Test Child1
+        while ((await driver.findElements(By.id("id_name"))).length == 0) // 1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Edit Location2.");
+        }
         await driver.findElement(By.id("id_name")).clear();
         await driver.findElement(By.id("id_name")).sendKeys("Test Child1");
-        // 20 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
-
-        //Child location parent changed to itself
-        // 25 | click | linkText=Edit Location |
-	while ((await driver.findElements(By.linkText("Test Child1"))).length == 0) 
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Edit Location3.");
-	}
+        //Child location parent changed to itself        // 25 | click | linkText=Edit Location |
+        while ((await driver.findElements(By.linkText("Test Child1"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Edit Location3.");
+        }
         await driver.findElement(By.linkText("Test Child")).click();
-        await new Promise(r => setTimeout(r, 4000));  
-	while ((await driver.findElements(By.linkText("Edit Location"))).length == 0) 
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Edit Location4.");
-	}
+        await new Promise(r => setTimeout(r, 4000));
+        while ((await driver.findElements(By.linkText("Edit Location"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Edit Location4.");
+        }
 
         await driver.findElement(By.linkText("Edit Location")).click();
-        // 26 | click | id=id_parent | 
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("id_parent")).click();
-        // 27 | select | id=id_parent | label=--- Test Child
         {
             dropdown = await driver.findElement(By.id("id_parent"));
-	    await new Promise(r => setTimeout(r, 2000));
+            await new Promise(r => setTimeout(r, 2000));
             await dropdown.findElement(By.xpath("//option[. = '--- Test Child']")).click();
         }
-        // 29 | click | css=.controls > .btn | 
-	//let encodedString = await driver.takeScreenshot();
-	//await fs.writeFileSync('/tests/screen.png', encodedString, 'base64');     
+        //let encodedString = await driver.takeScreenshot();
+        //await fs.writeFileSync('/tests/screen.png', encodedString, 'base64');     
         await driver.findElement(By.css(".controls > .btn")).click();
 
         await new Promise(r => setTimeout(r, 6000));
@@ -254,16 +242,16 @@ var password;
         }
 
         // Close browser window
-           driver.quit();
+        driver.quit();
     }
     catch (e) {
         console.log(e.message, e.stack);
         console.log("Add Edit Locations failed.");
-	return 1;
-    }  
+        return 1;
+    }
 
     console.log("Add Edit Locations completed.");
     return 0;
-    
+
 
 })();

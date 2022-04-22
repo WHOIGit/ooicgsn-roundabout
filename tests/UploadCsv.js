@@ -58,7 +58,6 @@ var filename, filename_ext;
         password = "Automatedtests";
     }
 
-    // 2 | setWindowSize | 1304x834 | 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
     // Set implict wait time in between steps
     await driver.manage().setTimeouts({ implicit: 2000 });
@@ -103,9 +102,11 @@ var filename, filename_ext;
             filename = process.cwd() + "\\CruiseInformation-import.csv";
         }
         await driver.findElement(By.id("id_cruises_csv")).sendKeys(filename)
-        // Set Reviewer - index 2 can change when upload github csv screen changes
+        // Set Reviewers - need 2 to approve - index 2 (cruises) can change when upload github csv screen changes
         {
             var reviewer = await driver.findElements(By.xpath("//option[. = '" + user + "']"));
+            await reviewer[2].click();
+            var reviewer = await driver.findElements(By.xpath("//option[. = 'tech']"));
             await reviewer[2].click();
         }
         await driver.findElement(By.id("submit")).click()
@@ -114,6 +115,7 @@ var filename, filename_ext;
         for (var j = 0; j < 5; j++) {
             bodyText = await driver.findElement(By.tagName("Body")).getText();
             if (bodyText.includes("Import Complete")) {
+                console.log("Cruise.csv upload successful.");
                 break;
             }
             else if (bodyText.includes("File: CruiseInformation-import")) {
@@ -202,9 +204,11 @@ var filename, filename_ext;
             filename = process.cwd() + "\\shiplist-import.csv";
         }
         await driver.findElement(By.id("id_vessels_csv")).sendKeys(filename);
-        // Set Reviewer - index 3 can change when upload github csv screen changes
+        // Set Reviewers - need 2 to approve - index 3 (vessels) can change when upload github csv screen changes
         {
             var reviewer = await driver.findElements(By.xpath("//option[. = '" + user + "']"));
+            await reviewer[3].click();
+            var reviewer = await driver.findElements(By.xpath("//option[. = 'tech']"));
             await reviewer[3].click();
         }
         await driver.findElement(By.id("submit")).click()
@@ -213,6 +217,7 @@ var filename, filename_ext;
         for (var j = 0; j < 5; j++) {
             bodyText = await driver.findElement(By.tagName("Body")).getText();
             if (bodyText.includes("Import Complete")) {
+                console.log("Vessel.csv upload successful.");
                 break;
             }
             else if (bodyText.includes("File: shiplist-import")) {
@@ -224,7 +229,7 @@ var filename, filename_ext;
             }
             else {
                 await new Promise(r => setTimeout(r, 2000));
-                console.log("Wait 2 seconds for Import Cruises.");
+                console.log("Wait 2 seconds for Import Vessels.");
             }
         }
 
@@ -236,7 +241,7 @@ var filename, filename_ext;
            // Export Vessels - CI Version
            await driver.findElement(By.id("navbarAdmintools")).click()
            await driver.findElement(By.linkText("Bulk Download Tool")).click()
-	   // CI download button associated with Vessels
+	     // CI download button associated with Vessels
            await driver.findElement(By.linkText("Export Vessels [CI]")).click()
 
            // Access Downloaded Vessel file
@@ -290,7 +295,7 @@ var filename, filename_ext;
 
 
         // Upload Calibration CSV with a single calibration and a 2D calibration
-	// Test depends on Manufacturer Serial Number previously defined in Import Export Inventory
+	    // Test depends on Manufacturer Serial Number previously defined in Import Export Inventory
         await driver.findElement(By.id("navbarAdmintools")).click()
         await driver.findElement(By.linkText("Upload GitHub CSVs")).click()
         if (myArgs[1] == 'headless') {
@@ -308,9 +313,11 @@ var filename, filename_ext;
             filename_ext = process.cwd() + "\\3604-00131-00001-20004__20160510-import__scalib2.ext";
         }
         await driver.findElement(By.id("id_calibration_csv")).sendKeys(filename_ext);
-        // Set Reviewer - index 0 can change when upload github csv screen changes
+        // Set Reviewers - need 2 to approve - index 0 (calibrations) can change when upload github csv screen changes
         {
             var reviewer = await driver.findElements(By.xpath("//option[. = '" + user + "']"));
+            await reviewer[0].click();
+            var reviewer = await driver.findElements(By.xpath("//option[. = 'tech']"));
             await reviewer[0].click();
         }
         await driver.findElement(By.id("submit")).click()
@@ -320,6 +327,7 @@ var filename, filename_ext;
         for (var j = 0; j < 5; j++) {
             bodyText = await driver.findElement(By.tagName("Body")).getText();
             if (bodyText.includes("Import Complete")) {
+                console.log("Calibrations.csv upload successful.");
                 break;
             }
             else {
@@ -332,11 +340,11 @@ var filename, filename_ext;
 
         // Bulk Download Calibrations
         await driver.findElement(By.id("navbarAdmintools")).click()
-	await new Promise(r => setTimeout(r, 2000));
+	    await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Bulk Download Tool")).click()
-	await new Promise(r => setTimeout(r, 2000));
+	    await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Export Calibrations")).click()
-	await new Promise(r => setTimeout(r, 2000));
+	    await new Promise(r => setTimeout(r, 2000));
 
         // Access Downloaded Calibrations file
         if (myArgs[1] == 'headless') {
@@ -408,9 +416,323 @@ var filename, filename_ext;
             console.log("Calibration Export Missing: 2 Dimensional Array Values");
 
 
-        // Upload Deployment CSV
+
+        // Upload Sensor_vocab.csv - will create a bulk upload file for the associated Part.
+        // Depends upon Part Manufacturer and Model matching csv file
+        await driver.findElement(By.id("navbarAdmintools")).click();
+        await driver.findElement(By.linkText("Upload GitHub CSVs")).click();
+        if (myArgs[1] == 'headless') {
+            filename = process.cwd() + "//sensor_vocab.csv";
+        }
+        else {
+            filename = process.cwd() + "\\sensor_vocab.csv";
+        }
+        await driver.findElement(By.id("id_bulk_csv")).sendKeys(filename);  // bulk upload
+        // Set Reviewers - need 2 to approve - index 5 (bulk) can change when upload github csv screen changes
+        {
+            var reviewer = await driver.findElements(By.xpath("//option[. = '" + user + "']"));
+            await reviewer[5].click();
+            var reviewer = await driver.findElements(By.xpath("//option[. = 'tech']"));
+            await reviewer[5].click();
+        }
+        await driver.findElement(By.id("submit")).click();
+        // Wait for upload to Complete
+        erroridx = 0;
+        for (var j = 0; j < 5; j++) {
+            bodyText = await driver.findElement(By.tagName("Body")).getText();
+            if (bodyText.includes("Import Complete")) {
+                break;
+            }
+            else if (bodyText.includes("File: sensor_vocab.csv")) {
+                // Import error occurred
+                erroridx = bodyText.indexOf("File: sensor_vocab");
+                var error = bodyText.substring(erroridx, erroridx + 70);
+                console.log("Import Error Occurred: " + error);
+                break;
+            }
+            else {
+                await new Promise(r => setTimeout(r, 2000));
+                console.log("Wait 2 seconds for Bulk Import.");
+            }
+        }
+
+        // If no import error
+        if (erroridx == 0) {
+            // Don't trust Import Complete has actually completed
+            await new Promise(r => setTimeout(r, 9000));
+
+            // Verify bulk upload file created for the Part
+            await driver.findElement(By.id("navbarTemplates")).click();
+            await driver.findElement(By.linkText("Parts")).click();
+            await driver.findElement(By.id("searchbar-query")).click();
+            await driver.findElement(By.id("searchbar-query")).sendKeys("ADCPS-J");
+            await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
+            await new Promise(r => setTimeout(r, 2000));
+
+            if ((await driver.findElements(By.linkText("1336-00010-0000"))).length != 0) {
+                await driver.findElement(By.linkText("1336-00010-0000")).click();
+                await new Promise(r => setTimeout(r, 2000));
+                await driver.findElement(By.linkText("Bulk Upload Files")).click();
+                await new Promise(r => setTimeout(r, 2000));
+                bodyText = await driver.findElement(By.tagName("Body")).getText();
+                if ((bodyText.includes("sensor_vocab.csv") && bodyText.includes("ADCP Velocity Profiler"))) {
+                    console.log("Sensor_vocab.csv bulk upload successful.");
+                }
+                else {
+                    console.log("Sensor_vocab.csv bulk upload failed.");
+                }
+            }
+            else {
+                console.log("Upload CSV failed.: ADCPS-J not found.");
+            }
+        }
         
+        // Upload Vocab.csv - updates the list of reference designators for Assemblies
+        // Works if no parts or assemblies are defined
+
+        await driver.findElement(By.id("navbarAdmintools")).click();
+        await driver.findElement(By.linkText("Upload GitHub CSVs")).click();
+        if (myArgs[1] == 'headless') {
+            filename = process.cwd() + "//vocab.csv";
+        }
+        else {
+            filename = process.cwd() + "\\vocab.csv";
+        }
+        await driver.findElement(By.id("id_refdes_csv")).sendKeys(filename);  // RefDes upload
+        // Set Reviewers - need 2 to approve - index 4 (refdes) can change when upload github csv screen changes
+        {
+            var reviewer = await driver.findElements(By.xpath("//option[. = '" + user + "']"));
+            await reviewer[4].click();
+            var reviewer = await driver.findElements(By.xpath("//option[. = 'tech']"));
+            await reviewer[4].click();
+        }
+        await driver.findElement(By.id("submit")).click();
+        // Wait for upload to Complete
+        erroridx = 0;
+        for (var j = 0; j < 5; j++) {
+            bodyText = await driver.findElement(By.tagName("Body")).getText();
+            if (bodyText.includes("Import Complete")) {
+                break;
+            }
+            else if (bodyText.includes("File: vocab.csv")) {
+                // Import error occurred
+                erroridx = bodyText.indexOf("File: vocab");
+                var error = bodyText.substring(erroridx, erroridx + 70);
+                console.log("Import Error Occurred: " + error);
+                break;
+            }
+            else {
+                await new Promise(r => setTimeout(r, 2000));
+                console.log("Wait 2 seconds for Bulk Import.");
+            }
+        }
+
+        // If no import error
+        if (erroridx == 0) {
+            // Don't trust Import Complete has actually completed
+            await new Promise(r => setTimeout(r, 9000));
+
+            // Verify Reference Designator list created on an Assembly
+            await driver.findElement(By.id("navbarTemplates")).click();
+            await driver.findElement(By.linkText("Assemblies")).click();
+
+            await new Promise(r => setTimeout(r, 2000));
+            // Expand Assembly Tree and Navigate to GS Surface Mooring Inventory
+            var j = 1;
+            while (true) {
+                if (await driver.findElement(By.xpath("//div/div/ul/li[" + j + "]")).getText() == "Mooring") {
+                    await driver.findElement(By.xpath("//li[" + j + "]/i")).click();
+                    break;
+                }
+                j++;
+            }
+            await new Promise(r => setTimeout(r, 2000));
+            await driver.findElement(By.xpath("//li[" + j + "]/ul/li/i")).click();  // Gs surface mooring is only mooring
+            await new Promise(r => setTimeout(r, 2000));
+            //Expand Rev B
+            var j = 1;
+            while (true) {
+                if (await driver.findElement(By.xpath("//li/ul/li/ul/li[" + j + "]/a")).getText() == "Revision B") {
+                    await driver.findElement(By.xpath("//li/ul/li/ul/li[" + j + "]/i")).click();
+                    break;
+                }
+                j++;
+            } 
+            await new Promise(r => setTimeout(r, 1000));
+            await driver.findElement(By.linkText("ADCPS-J")).click();
+            await new Promise(r => setTimeout(r, 1000));
+            while ((await driver.findElements(By.id("action"))).length == 0) {
+                await new Promise(r => setTimeout(r, 2000));
+                console.log("Wait 2 seconds for Action.");
+            }
+            await driver.findElement(By.id("action")).click();
+            await new Promise(r => setTimeout(r, 1000));
+            await driver.findElement(By.linkText("Add Reference Designator")).click();
+            {
+                const dropdown = await driver.findElement(By.id("id_reference_designator"));
+                try {
+                    await dropdown.findElement(By.xpath("//option[. = 'CE01ISSM']")).click();
+                    console.log("Vocab.csv bulk upload successful.");
+                }
+                catch {
+                    // Report import error if one imported reference designator is not found in dropdown list
+                    console.log("Vocab.csv bulk upload failed - reference designator not found in list.");
+                }
+            }
+        }
+
+
+        // Upload Sensor_bulk_load_asset_record.csv - will create a bulk upload file for the associated Inventory. 
+        // Depends upon Inventory Serial Number = Asset UID field
+        // If Inventory with Serial Number does not exist & part number supplied in csv, an Inventory is created.
+        // Custom fields will be created from column headers in csv file
+
+        await driver.findElement(By.id("navbarAdmintools")).click();
+        await driver.findElement(By.linkText("Upload GitHub CSVs")).click();
+        if (myArgs[1] == 'headless') {
+            filename = process.cwd() + "//sensor_bulk_load-AssetRecord.csv";
+        }
+        else {
+            filename = process.cwd() + "\\sensor_bulk_load-AssetRecord.csv";
+        }
+        await driver.findElement(By.id("id_bulk_csv")).sendKeys(filename);  // bulk upload
+        // Set Reviewers - need 2 to approve - index 5 (bulk) can change when upload github csv screen changes
+        {
+            var reviewer = await driver.findElements(By.xpath("//option[. = '" + user + "']"));
+            await reviewer[5].click();
+            var reviewer = await driver.findElements(By.xpath("//option[. = 'tech']"));
+            await reviewer[5].click();
+        }
+        await driver.findElement(By.id("submit")).click();
+        // Wait for upload to Complete
+        erroridx = 0;
+        for (var j = 0; j < 5; j++) {
+            bodyText = await driver.findElement(By.tagName("Body")).getText();
+            if (bodyText.includes("Import Complete")) {
+                break;
+            }
+            else if (bodyText.includes("File: sensor_bulk_load-AssetRecord.csv")) {
+                // Import error occurred
+                erroridx = bodyText.indexOf("File: sensor_bulk_load-AssetRecord");
+                var error = bodyText.substring(erroridx, erroridx + 70);
+                console.log("Import Error Occurred: " + error);
+                break;
+            }
+            else {
+                await new Promise(r => setTimeout(r, 2000));
+                console.log("Wait 2 seconds for Bulk Import.");
+            }
+        }
+
+        // If no import error
+        if (erroridx == 0) {
+            // Don't trust Import Complete has actually completed
+            await new Promise(r => setTimeout(r, 9000));
+
+            // Verify bulk upload file created for the Part
+            await driver.findElement(By.id("navbarTemplates")).click();
+            await driver.findElement(By.linkText("Inventory")).click();
+            await driver.findElement(By.id("searchbar-query")).click();
+            await driver.findElement(By.id("searchbar-query")).sendKeys("ADCPS-J");
+            await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
+            await new Promise(r => setTimeout(r, 2000));
+
+            if ((await driver.findElements(By.linkText("CGINS-ADCPSJ-19061"))).length != 0) {
+                await driver.findElement(By.linkText("CGINS-ADCPSJ-19061")).click();
+                await new Promise(r => setTimeout(r, 1000));
+                await driver.findElement(By.id("bulkupload-template-tab")).click();
+                await new Promise(r => setTimeout(r, 1000));
+                await driver.findElement(By.linkText("Bulk Upload Files")).click();
+                await new Promise(r => setTimeout(r, 1000));
+                bodyText = await driver.findElement(By.tagName("Body")).getText();
+                if ((bodyText.includes("sensor_bulk_load-AssetRecord.csv") && bodyText.includes("ADCP Velocity Profiler"))) {
+                    console.log("Sensor_bulk_load-AssetRecord.csv bulk upload successful.");
+                }
+                else {
+                    console.log("Sensor_bulk_load-AssetRecord.csv bulk upload failed.");
+                }
+            }
+            else {
+                console.log("Upload CSV failed: CGINS-ADCPS-19061 not found.");
+            }
+        }
+        
+
+        // Upload CP04OSSM_Deploy.csv - will create a Build.
+        // Depends upon Reference Designator defined in the database, Location code set for a location,
+        // Cruise defined with Cruise ID.
+        // If Inventory with Serial Number does not exist, Inventory will be created from sensor.uid or electrical.uid
+
+        await driver.findElement(By.id("navbarAdmintools")).click();
+        await driver.findElement(By.linkText("Upload GitHub CSVs")).click();
+        if (myArgs[1] == 'headless') {
+            filename = process.cwd() + "//CP04OSSM_Deploy.csv";
+        }
+        else {
+            filename = process.cwd() + "\\CP04OSSM_Deploy.csv";
+        }
+        await driver.findElement(By.id("id_deployments_csv")).sendKeys(filename);  // bulk upload
+        // Set Reviewers - need 2 to approve - index 1 (deployment) can change when upload github csv screen changes
+        {
+            var reviewer = await driver.findElements(By.xpath("//option[. = '" + user + "']"));
+            await reviewer[1].click();
+            var reviewer = await driver.findElements(By.xpath("//option[. = 'tech']"));
+            await reviewer[1].click();
+        }
+        await driver.findElement(By.id("submit")).click();
+        // Wait for upload to Complete
+        erroridx = 0;
+        for (var j = 0; j < 5; j++) {
+            bodyText = await driver.findElement(By.tagName("Body")).getText();
+            if (bodyText.includes("Import Complete")) {
+                break;
+            }
+            else if (bodyText.includes("File: CP04OSSM_Deploy.csv")) {
+                // Import error occurred
+                erroridx = bodyText.indexOf("File: CP04OSSM_Deploy");
+                var error = bodyText.substring(erroridx, erroridx + 70);
+                console.log("Import Error Occurred: " + error);
+                break;
+            }
+            else {
+                await new Promise(r => setTimeout(r, 2000));
+                console.log("Wait 2 seconds for Bulk Import.");
+            }
+        }
+
+        // If no import error
+        if (erroridx == 0) {
+            // Don't trust Import Complete has actually completed
+            await new Promise(r => setTimeout(r, 9000));
+
+            // Verify bulk upload file created for the Part
+            await driver.findElement(By.id("navbarTemplates")).click();
+            await driver.findElement(By.linkText("Builds")).click();
+            await driver.findElement(By.id("searchbar-query")).click();
+            await driver.findElement(By.id("searchbar-query")).sendKeys("Historical 00011");
+            await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
+            await new Promise(r => setTimeout(r, 2000));
             
+            if ((await driver.findElements(By.linkText("CP04OSSM-Historical 00011"))).length != 0) {
+                await driver.findElement(By.linkText("CP04OSSM-Historical 00011")).click();
+                await new Promise(r => setTimeout(r, 1000));
+                await driver.findElement(By.id("deployments-tab")).click();
+                await new Promise(r => setTimeout(r, 1000));
+                await driver.findElement(By.partialLinkText("Deployment: CP04OSSM")).click();
+                await new Promise(r => setTimeout(r, 1000));
+                // Validate Deployment Location and Cruise
+                bodyText = await driver.findElement(By.tagName("Body")).getText();
+                if ((bodyText.includes("Coastal Pioneer") && bodyText.includes("MAUI"))) {
+                    console.log("CP04OSSM_Deploy.csv bulk upload successful.");
+                }
+                else {
+                    console.log("CP04OSSM_Deploy.csv bulk upload failed.");
+                }
+            }
+            else {
+                console.log("Upload CSV failed.: CP04OSSM-Historical 00011 not found.");
+            }
+        }
 
         // Close browser window
         driver.quit();
@@ -418,7 +740,7 @@ var filename, filename_ext;
     }
     catch (e) {
         console.log(e.message, e.stack);
-        console.log("Upload CSV (CI Version) failed.");
+        console.log("Upload CSV (CI Version) failed..");
         return 1;
     }
     console.log("Upload CSV (CI Version) completed.");
