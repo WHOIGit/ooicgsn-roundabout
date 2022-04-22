@@ -20,66 +20,63 @@ var password;
     var firefoxOptions = new firefox.Options();
 
     // Docker linux chrome will only run headless
-    if ((myArgs[1] == 'headless') && (myArgs.length !=0)) {
-    
-	 chromeCapabilities.set("goog:chromeOptions", {
-      	   args: [
-             "--no-sandbox",
-       	    "--disable-dev-shm-usage",
-       	   "--headless",
-	    "--log-level=3",
-	    "--disable-gpu"
-     	    ]
-   	    });
+    if ((myArgs[1] == 'headless') && (myArgs.length != 0)) {
 
-	  firefoxOptions.addArguments("-headless");
-    } 
+        chromeCapabilities.set("goog:chromeOptions", {
+            args: [
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--headless",
+                "--log-level=3",
+                "--disable-gpu"
+            ]
+        });
+
+        firefoxOptions.addArguments("-headless");
+    }
 
     // First argument specifies the Browser type
-    if (myArgs[0] == 'chrome') {        
+    if (myArgs[0] == 'chrome') {
         driver = new Builder().forBrowser('chrome').withCapabilities(chromeCapabilities).build();
     }
-    else if (myArgs[0] == 'firefox') {       
+    else if (myArgs[0] == 'firefox') {
         driver = new Builder().forBrowser('firefox').setFirefoxOptions(firefoxOptions).build();
-    } 
+    }
     else {
-	console.log('Error: Missing Arguments');
+        console.log('Error: Missing Arguments');
     }
 
-   if (myArgs[2] == 'admin')
-    {
+    if (myArgs[2] == 'admin') {
         await driver.get("http://localhost:8000/");
         user = "admin";
         password = "admin";
     }
-    else
-    {
-  //        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+    else {
+        //        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
         await driver.get("https://rdb-testing.whoi.edu/");
         user = "jkoch";
         password = "Automatedtests";
     }
 
     // 2 | setWindowSize | 1304x834 | 
-     await driver.manage().window().setRect({ width: 1304, height: 834 });
+    await driver.manage().window().setRect({ width: 1304, height: 834 });
     // Set implict wait time in between steps
     await driver.manage().setTimeouts({ implicit: 2000 });
 
     //Hide Timer Panel when connecting to circleci local rdb django app
-    if ((await driver.findElements(By.css("#djHideToolBarButton"))).length != 0)
-    {
-       await driver.findElement(By.css("#djHideToolBarButton")).click();
+    if ((await driver.findElements(By.css("#djHideToolBarButton"))).length != 0) {
+        await driver.findElement(By.css("#djHideToolBarButton")).click();
     }
 
     try {
-	
+
         // If navbar toggler present in small screen
         try {
             var signin = await driver.findElement(By.linkText("Sign In"));
         }
         catch (NoSuchElementException) {
-                await driver.findElement(By.css(".navbar-toggler-icon")).click();
-         }
+            await driver.findElement(By.css(".navbar-toggler-icon")).click();
+        }
         // LOGIN
         await driver.findElement(By.linkText("Sign In")).click();
         await driver.findElement(By.id("id_login")).sendKeys(user);
@@ -90,22 +87,22 @@ var password;
 
         // Add build with non null assembly template, build number, and location
         await driver.findElement(By.linkText("Builds")).click();
-	while ((await driver.findElements(By.linkText("Create New Build"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for New Build.");
-	}
-   
+        while ((await driver.findElements(By.linkText("Create New Build"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for New Build.");
+        }
+
         await driver.findElement(By.linkText("Create New Build")).click();
         await new Promise(r => setTimeout(r, 6000));  //needed for build number to populate - 1.6
         // 5 | select | id=id_assembly | label=Test Glider 1
         {
             const dropdown = await driver.findElement(By.id("id_assembly"));
-            await dropdown.findElement(By.xpath("//option[. = 'Singer']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Salty Reef']")).click();
         }
-   
+
         await new Promise(r => setTimeout(r, 6000));  //needed for build number to populate
-      
+
         // 6 | select | id=id_location | label=--- Test
         {
             const dropdown = await driver.findElement(By.id("id_location"));
@@ -116,11 +113,11 @@ var password;
         // 8 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
-	while ((await driver.findElements(By.partialLinkText("Singer"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for New Build1.");
-	}
+        while ((await driver.findElements(By.partialLinkText("Salty Reef"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for New Build1.");
+        }
 
         // Verify Build is created in Test Location
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click(); // search button
@@ -147,28 +144,28 @@ var password;
 
         // Add build with null assembly template, assembly revision, build number or location
         await driver.findElement(By.linkText("Builds")).click();
-	while ((await driver.findElements(By.linkText("Create New Build"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for New Build2.");
-	}
+        while ((await driver.findElements(By.linkText("Create New Build"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for New Build2.");
+        }
         await driver.findElement(By.linkText("Create New Build")).click();
-	while ((await driver.findElements(By.id("id_assembly"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for New Build2.");
-	}
+        while ((await driver.findElements(By.id("id_assembly"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for New Build2.");
+        }
         {
             const dropdown = await driver.findElement(By.id("id_assembly"));
-            await dropdown.findElement(By.xpath("//option[. = 'Singer']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Salty Reef']")).click();
         }
         // 11 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click()
-	while ((await driver.findElements(By.css("#div_id_location .ajax-error"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for New Build Ajax Error.");
-	}
+        while ((await driver.findElements(By.css("#div_id_location .ajax-error"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for New Build Ajax Error.");
+        }
         // 12 | verifyText | css=.ajax-error | This field is required.
         assert(await driver.findElement(By.css("#div_id_location .ajax-error")).getText() == "This field is required.");
         // 13 | select | id=id_location | label=Test
@@ -178,54 +175,52 @@ var password;
             await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
         }
         // 14 | select | id=id_assembly | label=---------
-	    await new Promise(r => setTimeout(r, 6000)); //linux firefox
+        await new Promise(r => setTimeout(r, 6000)); //linux firefox
         {
             const dropdown = await driver.findElement(By.id("id_assembly"))
             await dropdown.findElement(By.xpath("//option[. = '---------']")).click();
         }
         // 15 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
-	while ((await driver.findElements(By.css("#div_id_assembly .ajax-error"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for New Build Assembly Ajax Error.");
-	}
+        while ((await driver.findElements(By.css("#div_id_assembly .ajax-error"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for New Build Assembly Ajax Error.");
+        }
 
         // 16 | verifyText | css=.ajax-error | This field is required.
         assert(await driver.findElement(By.css("#div_id_assembly .ajax-error")).getText() == "This field is required.");
         {
             const dropdown = await driver.findElement(By.id("id_assembly"));
-            await dropdown.findElement(By.xpath("//option[. = 'Singer']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Salty Reef']")).click();
         }
-	await new Promise(r => setTimeout(r, 6000));  //needed for build number to populate
+        await new Promise(r => setTimeout(r, 6000));  //needed for build number to populate
         // 18 | type | id=id_build_number |  
         await driver.findElement(By.id("hint_id_build_number")).click();
         await driver.findElement(By.id("id_build_number")).clear();
         // 19 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
         // 20 | verifyText | css=.ajax-error | This field is required.
-	while ((await driver.findElements(By.css("#div_id_build_number .ajax-error"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for New Build Ajax Error2.");
-	}
+        while ((await driver.findElements(By.css("#div_id_build_number .ajax-error"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for New Build Ajax Error2.");
+        }
         assert(await driver.findElement(By.css("#div_id_build_number .ajax-error")).getText() == "This field is required.");
 
         // Add Inventory Items to the Build
         await driver.findElement(By.linkText("Inventory")).click();
 
-	while ((await driver.findElements(By.linkText("Test"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Inv Navtree.");
-	}
+        while ((await driver.findElements(By.linkText("Test"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Inv Navtree.");
+        }
 
-        // Expand Inventory Tree and Navigate to Build->Sewing Inventory
+        // Expand Inventory Tree and Navigate to Build->surface mooring Inventory
         // Expand "Test" tree nodes   
         var j = 1;
         while (true) {
-            if (await driver.findElement(By.xpath("//div[2]/ul/li["+j+"]/a")).getText() == "Test")
-            { 
+            if (await driver.findElement(By.xpath("//div[2]/ul/li[" + j + "]/a")).getText() == "Test") {
                 await driver.findElement(By.xpath("//div/ul/li[" + j + "]/i")).click();
                 break;
             }
@@ -234,18 +229,18 @@ var password;
 
         // Expand Build tree node
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/i")).click();
-	while ((await driver.findElements(By.linkText("sewing - 1232"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for sewing.");
-	}
-        await driver.findElement(By.linkText("sewing - 1232")).click(); 
+        while ((await driver.findElements(By.linkText("surface mooring - 1232"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for surface mooring.");
+        }
+        await driver.findElement(By.linkText("surface mooring - 1232")).click();
 
-	while ((await driver.findElements(By.linkText("Add"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Inventory.");
-	}
+        while ((await driver.findElements(By.linkText("Add"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Inventory.");
+        }
         await driver.findElement(By.linkText("Add")).click();
         await new Promise(r => setTimeout(r, 6000));  //wait for navtree to refresh
 
@@ -253,68 +248,68 @@ var password;
 
         // Start Deployment->Initiate Burnin->Deploy Build
         // 10 | click | linkText=Start Deployment | 
-   	while ((await driver.findElements(By.partialLinkText("Singer"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Deploy1.");
-	}
-        await driver.findElement(By.partialLinkText("Singer")).click(); 
-	// Left hand doesn't know what right hand is doing..... this takes along time to load
-   	while ((await driver.findElements(By.linkText("Retire Build"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Deploy2.");
-	}
-        await driver.findElement(By.id("action")).click(); 
+        while ((await driver.findElements(By.partialLinkText("Salty Reef"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Deploy1.");
+        }
+        await driver.findElement(By.partialLinkText("Salty Reef")).click();
+        // Left hand doesn't know what right hand is doing..... this takes along time to load
+        while ((await driver.findElements(By.linkText("Retire Build"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Deploy2.");
+        }
+        await driver.findElement(By.id("action")).click();
         await driver.findElement(By.linkText("Start Deployment")).click();
         // 12 | type | id=id_deployment_number | 7
-	while ((await driver.findElements(By.id("id_deployment_number"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Deployment Number.");
-	}
+        while ((await driver.findElements(By.id("id_deployment_number"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Deployment Number.");
+        }
         await driver.findElement(By.id("id_deployment_number")).sendKeys("7");
         // 14 | select | id=id_deployed_location | label=Test
         {
             const dropdown = await driver.findElement(By.id("id_deployed_location"));
             await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
-        } 
- 
-        await driver.findElement(By.css(".controls > .btn")).click();
-	await new Promise(r => setTimeout(r, 2000));  // wait for refresh to start
+        }
 
-	while ((await driver.findElements(By.linkText("Retire Build"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Deploy3.");
-	}
+        await driver.findElement(By.css(".controls > .btn")).click();
+        await new Promise(r => setTimeout(r, 2000));  // wait for refresh to start
+
+        while ((await driver.findElements(By.linkText("Retire Build"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Deploy3.");
+        }
         // 18 | click | id=action | 
         await driver.findElement(By.id("action")).click();
-	await new Promise(r => setTimeout(r, 2000)); 
+        await new Promise(r => setTimeout(r, 2000));
 
         await driver.findElement(By.linkText("Initiate Burn In")).click();
         // 20 | click | css=.controls > .btn-primary | 
-   	while ((await driver.findElements(By.css(".controls > .btn-primary"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Burnin2.");
-	}
+        while ((await driver.findElements(By.css(".controls > .btn-primary"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Burnin2.");
+        }
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
-	await new Promise(r => setTimeout(r, 2000));  //wait for refresh to start
+        await new Promise(r => setTimeout(r, 2000));  //wait for refresh to start
         // 25 | click | id=action | 
-	while ((await driver.findElements(By.linkText("Retire Build"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Deploy4.");
-	}
+        while ((await driver.findElements(By.linkText("Retire Build"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Deploy4.");
+        }
         await driver.findElement(By.id("action")).click();
         await driver.findElement(By.linkText("Deploy to Field")).click();
-	while ((await driver.findElements(By.id("id_location"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Deploy to Field3.");
-	}
+        while ((await driver.findElements(By.id("id_location"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Deploy to Field3.");
+        }
         // Read current date and set to 2 days prior
         // 27 | click | id=id_date | 
         var ele = await driver.findElement(By.xpath("//input[@id='id_date']"));
@@ -323,74 +318,73 @@ var password;
         // Get new date 2 days prior to current date
         var d = new Date(dateString);
         d.setDate(d.getDate() - 2);
-	var month = d.getMonth() + 1;
-        var newDate = month.toString().trim() + "/" + d.getDate().toString().trim() + "/" + d.getFullYear() + " " + ('0'+d.getHours()).slice(-2) + ":" + ('0'+d.getMinutes()).slice(-2);
-  
-        await driver.findElement(By.xpath("//input[@id='id_date']")).clear();
-        await driver.executeScript("arguments[0].value = arguments[1]", ele, newDate); 
-       // await driver.findElement(By.xpath("//input[@id='id_date']")).sendKeys(newDate);  //this appends new date to old date
+        var month = d.getMonth() + 1;
+        var newDate = month.toString().trim() + "/" + d.getDate().toString().trim() + "/" + d.getFullYear() + " " + ('0' + d.getHours()).slice(-2) + ":" + ('0' + d.getMinutes()).slice(-2);
 
-	// Set Location - to avoid spinning wheel bug - #186
+        await driver.findElement(By.xpath("//input[@id='id_date']")).clear();
+        await driver.executeScript("arguments[0].value = arguments[1]", ele, newDate);
+        // await driver.findElement(By.xpath("//input[@id='id_date']")).sendKeys(newDate);  //this appends new date to old date
+
+        // Set Location - to avoid bug - #186
         const dropdown = await driver.findElement(By.id("id_location"));
-        await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();       
+        await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
         // 29 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
- 
+
         // Verify Total Time in Field and Current Deployment Time in Field: 2 days 0 hours
-	while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //wait for screen to populate
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Deploy to Field4.");
-	}
+        while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //wait for screen to populate
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Deploy to Field4.");
+        }
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
         // UNCOMMENT FOR DOCKER - history shows 27 days due to staging testing
-	// Total Time in Field and Current Deployment Time in Field
+        // Total Time in Field and Current Deployment Time in Field
         assert(bodyText.includes("2 days 0 hours"));
 
         // Click Deployments Tab and verify Deployment To Field Date: is 2 days prior 
-	while ((await driver.findElements(By.id("deployments-tab"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Deployments-tab.");
-	}
+        while ((await driver.findElements(By.id("deployments-tab"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Deployments-tab.");
+        }
         //await driver.findElement(By.id("deployments-tab")).click();
         await new Promise(r => setTimeout(r, 4000));
-        await driver.findElement(By.partialLinkText("Singer")).click();
+        await driver.findElement(By.partialLinkText("Salty Reef")).click();
         await new Promise(r => setTimeout(r, 2000));
         // Verify Deployment Times in the Deployments Tab
         bodyText = await driver.findElement(By.tagName("Body")).getText();
-	// Deployment Time in Field
+        // Deployment Time in Field
         assert(bodyText.includes("2 days 0 hours"));
-        
-	try {
-	   assert(bodyText.includes(newDate));
-	}
-	catch (AssertionError) {
-           console.log("Possible Error: Expecting Build Deployment To Field Date:  "+ newDate);
+
+        try {
+            assert(bodyText.includes(newDate));
+        }
+        catch (AssertionError) {
+            console.log("Possible Error: Expecting Build Deployment To Field Date:  " + newDate);
         }
 
-	// Verify Assembly Template link on build page points to the correct Assembly Template
-        await driver.findElement(By.linkText("Singer | Revision: B")).click();
-	bodyText = await driver.findElement(By.tagName("Body")).getText();
-	// Singer - Revision B
-        assert(bodyText.includes("Singer - Revision B"));
+        // Verify Assembly Template link on build page points to the correct Assembly Template
+        await driver.findElement(By.linkText("Salty Reef | Revision: B")).click();
+        bodyText = await driver.findElement(By.tagName("Body")).getText();
+        // Salty Reef - Revision B
+        assert(bodyText.includes("Salty Reef - Revision B"));
 
 
         // Go to Inventory Item
-	await driver.findElement(By.linkText("Inventory")).click();
+        await driver.findElement(By.linkText("Inventory")).click();
 
-	while ((await driver.findElements(By.linkText("Test"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Inv Navtree.");
-	}
+        while ((await driver.findElements(By.linkText("Test"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Inv Navtree.");
+        }
 
-        // Expand Inventory Tree and Navigate to Build->Sewing Inventory
+        // Expand Inventory Tree and Navigate to Build->surface mooring Inventory
         // Expand "Test" tree nodes   
         var j = 1;
         while (true) {
-            if (await driver.findElement(By.xpath("//div[2]/ul/li["+j+"]/a")).getText() == "Test")
-            { 
+            if (await driver.findElement(By.xpath("//div[2]/ul/li[" + j + "]/a")).getText() == "Test") {
                 await driver.findElement(By.xpath("//div/ul/li[" + j + "]/i")).click();
                 break;
             }
@@ -399,159 +393,157 @@ var password;
 
         // Expand tree node
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/i")).click();
-	while ((await driver.findElements(By.partialLinkText("sewing - 1232"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for sewing.");
-	}
+        while ((await driver.findElements(By.partialLinkText("surface mooring - 1232"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for surface mooring.");
+        }
 
         // Select Inventory and verify Deployment times
-        await driver.findElement(By.partialLinkText("sewing - 1232")).click();
+        await driver.findElement(By.partialLinkText("surface mooring - 1232")).click();
         // 34 | click | id=deployments-tab | 
-	while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Inventory Deployments.");
-	}
+        while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Inventory Deployments.");
+        }
         await driver.findElement(By.linkText("Deployments")).click();
-	while ((await driver.findElements(By.css(".list-group-item > .collapsed > .fa"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Inv List Item."); 
-	}
+        while ((await driver.findElements(By.css(".list-group-item > .collapsed > .fa"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Inv List Item.");
+        }
         // 35 | click | css=.list-group-item > .collapsed > .fa | 
-        await driver.findElement(By.css(".list-group-item > .collapsed > .fa")).click(); 
+        await driver.findElement(By.css(".list-group-item > .collapsed > .fa")).click();
         await new Promise(r => setTimeout(r, 2000));
         bodyText = await driver.findElement(By.tagName("Body")).getText();
-	// Inventory Time in Field
+        // Inventory Time in Field
         assert(bodyText.includes("2 days 0 hours"));
-    
-	try {
-           assert(bodyText.includes(newDate));
+
+        try {
+            assert(bodyText.includes(newDate));
         }
-	catch (AssertionError) {
-           console.log("Possible Error: Expecting Inventory Deployment (2 Days Prior) To Field Date:  "+ newDate);
+        catch (AssertionError) {
+            console.log("Possible Error: Expecting Inventory Deployment (2 Days Prior) To Field Date:  " + newDate);
         }
-        
-        // Remove sewing Inventory from Build
-	while ((await driver.findElements(By.id("action"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Inventory2.");
-	}
+
+        // Remove surface mooring Inventory from Build
+        while ((await driver.findElements(By.id("action"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Inventory2.");
+        }
         await driver.findElement(By.id("action")).click();
-	while ((await driver.findElements(By.linkText("Recover from Deployment"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Recover from Deployment.");
-	}
+        while ((await driver.findElements(By.linkText("Recover from Deployment"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Recover from Deployment.");
+        }
         await driver.findElement(By.linkText("Recover from Deployment")).click();
 
         // Get current date
         await new Promise(r => setTimeout(r, 2000));
         var ele = await driver.findElement(By.xpath("//input[@id='id_date']"));
-        var dateString = await ele.getAttribute("value"); 
+        var dateString = await ele.getAttribute("value");
 
         // Get new date 1 day prior to current date
         var d = new Date(dateString);
         d.setDate(d.getDate() - 1);
         var day = parseInt(d.getDate(), 10);
-	var month = d.getMonth() + 1;
-        var newDate = month.toString().trim() + "/" + day.toString().trim() + "/" + d.getFullYear() + " " + ('0'+d.getHours()).slice(-2) + ":" + ('0'+d.getMinutes()).slice(-2);
+        var month = d.getMonth() + 1;
+        var newDate = month.toString().trim() + "/" + day.toString().trim() + "/" + d.getFullYear() + " " + ('0' + d.getHours()).slice(-2) + ":" + ('0' + d.getMinutes()).slice(-2);
         await driver.findElement(By.xpath("//input[@id='id_date']")).clear();
-        await driver.executeScript("arguments[0].value = arguments[1]", ele, newDate); 
+        await driver.executeScript("arguments[0].value = arguments[1]", ele, newDate);
         // 43 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
         // Verify date is 1 day prior on Deployments tab
         // 45 | click | id=deployments-tab | 
-	while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Deployments.");
-	}
+        while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Deployments.");
+        }
         await driver.findElement(By.linkText("Deployments")).click();
-	while ((await driver.findElements(By.css(".list-group-item > .collapsed > .fa"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Build List Item."); 
-	}
+        while ((await driver.findElements(By.css(".list-group-item > .collapsed > .fa"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Build List Item.");
+        }
         // 46 | click | css=.list-group-item > .collapsed > .fa | 
         await driver.findElement(By.css(".list-group-item > .collapsed > .fa")).click();
         await new Promise(r => setTimeout(r, 2000));
         bodyText = await driver.findElement(By.tagName("Body")).getText();
-	// Inventory Time in Field
+        // Inventory Time in Field
         assert(bodyText.includes("1 days 0 hours"));
 
-	try {
-           assert(bodyText.includes(newDate));
-	}
-	catch (AssertionError) {
-           console.log("Possibe Error: Expecting Inventory Deployment Recovery Date:  "+ newDate);
-        } 
+        try {
+            assert(bodyText.includes(newDate));
+        }
+        catch (AssertionError) {
+            console.log("Possibe Error: Expecting Inventory Deployment Recovery Date:  " + newDate);
+        }
 
-        // Re-add sewing Inventory to Build at the current date
+        // Re-add surface mooring Inventory to Build at the current date
         // 47 | click | id=action | 
-	while ((await driver.findElements(By.partialLinkText("sewing - 1232"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Re-add.");
-	}
-        await driver.findElement(By.partialLinkText("sewing - 1232")).click();
+        while ((await driver.findElements(By.partialLinkText("surface mooring - 1232"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Re-add.");
+        }
+        await driver.findElement(By.partialLinkText("surface mooring - 1232")).click();
         await new Promise(r => setTimeout(r, 2000));
-	while ((await driver.findElements(By.linkText("Add"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add1.");
-	}
+        while ((await driver.findElements(By.linkText("Add"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add1.");
+        }
         await driver.findElement(By.linkText("Add")).click();
-	while ((await driver.findElements(By.xpath("//input[@id='id_date']"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Id_date.");
-	}
+        while ((await driver.findElements(By.xpath("//input[@id='id_date']"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Id_date.");
+        }
 
         var ele = await driver.findElement(By.xpath("//input[@id='id_date']"));
         var dateString = await ele.getAttribute("value");
-	// Recovery screen date format is 01/05/2021 03:06, trim leading zeroes and time
-	dateString = dateString.replace(/\b0/g, '');
-	dateString = dateString.split(" ")[0];
+        // Recovery screen date format is 01/05/2021 03:06, trim leading zeroes and time
+        dateString = dateString.replace(/\b0/g, '');
+        dateString = dateString.split(" ")[0];
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
         // Verify Total Time in Field and Current Deployment Time in Field: 0 days 0 hours
-	while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //wait for screen to populate
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Deploy to Re-add2.");
-	}
-	//let encodedString = await driver.takeScreenshot();
-	//await fs.writeFileSync('/tests/bscreen.png', encodedString, 'base64');      
+        while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //wait for screen to populate
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Deploy to Re-add2.");
+        }
+        //let encodedString = await driver.takeScreenshot();
+        //await fs.writeFileSync('/tests/bscreen.png', encodedString, 'base64');      
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
         // UNCOMMENT FOR DOCKER - Inventory history shows 27 days due to staging testing
-	// Total Time in Field
+        // Total Time in Field
         assert(bodyText.includes("1 days 0 hours"));
-	// Current Deployment Time in Field
-       assert(bodyText.includes("0 days 0 hours"));
+        // Current Deployment Time in Field
+        assert(bodyText.includes("0 days 0 hours"));
 
         // 53 | click | id=deployments-tab | 
-	while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Deployments.");
-	}
+        while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Deployments.");
+        }
         await driver.findElement(By.linkText("Deployments")).click();
         // 54 | click | css=.list-group-item:nth-child(1) > .collapsed > .fa | 
         //await driver.findElement(By.css(".list-group-item > .collapsed > .fa")).click();
-	// Sometimes the Retired Deployment is the first one on the list for Inventory, so expand both
+        // Sometimes the Retired Deployment is the first one on the list for Inventory, so expand both
         await driver.findElement(By.css(".list-group-item:nth-child(2) > .collapsed:nth-child(1)")).click();
         await driver.findElement(By.css(".list-group-item:nth-child(1) > .collapsed:nth-child(1)")).click();
 
         await new Promise(r => setTimeout(r, 2000));
         bodyText = await driver.findElement(By.tagName("Body")).getText();
-	// Inventory Time in Field
+        // Inventory Time in Field
         assert(bodyText.includes("0 days 0 hours"));
 
-	// Deployment to Field Date
+        // Deployment to Field Date
         try {
             assert(bodyText.includes(dateString));
         }
@@ -566,7 +558,7 @@ var password;
     catch (e) {
         console.log(e.message, e.stack);
         console.log("Add/Deploy Builds failed.");
-	return 1;
+        return 1;
     }
     console.log("Add/Deploy Builds completed.");
     return 0;

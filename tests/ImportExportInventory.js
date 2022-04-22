@@ -20,41 +20,39 @@ var password;
     var firefoxOptions = new firefox.Options();
 
     // Docker linux chrome will only run headless
-    if ((myArgs[1] == 'headless') && (myArgs.length !=0)) {
-    
-	 chromeCapabilities.set("goog:chromeOptions", {
-      	   args: [
-      	    "--no-sandbox",
-       	    "--disable-dev-shm-usage",
-       	   "--headless",
-	    "--log-level=3",
-	    "--disable-gpu"
-     	    ]
-   	    });
+    if ((myArgs[1] == 'headless') && (myArgs.length != 0)) {
 
-	  firefoxOptions.addArguments("-headless");
-    } 
+        chromeCapabilities.set("goog:chromeOptions", {
+            args: [
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--headless",
+                "--log-level=3",
+                "--disable-gpu"
+            ]
+        });
+
+        firefoxOptions.addArguments("-headless");
+    }
 
     // First argument specifies the Browser type
-    if (myArgs[0] == 'chrome') {        
+    if (myArgs[0] == 'chrome') {
         driver = new Builder().forBrowser('chrome').withCapabilities(chromeCapabilities).build();
     }
-    else if (myArgs[0] == 'firefox') {       
+    else if (myArgs[0] == 'firefox') {
         driver = new Builder().forBrowser('firefox').setFirefoxOptions(firefoxOptions).build();
-    } 
+    }
     else {
-	console.log('Error: Missing Arguments');
+        console.log('Error: Missing Arguments');
     }
 
-   if (myArgs[2] == 'admin')
-    {
+    if (myArgs[2] == 'admin') {
         await driver.get("http://localhost:8000/");
         user = "admin";
         password = "admin";
     }
-    else
-    {
-//        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
+    else {
+        //        await driver.get("https://ooi-cgrdb-staging.whoi.net/");
         await driver.get("https://rdb-testing.whoi.edu/");
         user = "jkoch";
         password = "Automatedtests";
@@ -62,23 +60,24 @@ var password;
 
     // 2 | setWindowSize | 1304x834 | 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
+    // Set implict wait time in between steps
+    await driver.manage().setTimeouts({ implicit: 2000 });
 
     //Hide Timer Panel when connecting to circleci local rdb django app
-    if ((await driver.findElements(By.css("#djHideToolBarButton"))).length != 0)
-    {
-       await driver.findElement(By.css("#djHideToolBarButton")).click();
-       await new Promise(r => setTimeout(r, 4000));
+    if ((await driver.findElements(By.css("#djHideToolBarButton"))).length != 0) {
+        await driver.findElement(By.css("#djHideToolBarButton")).click();
+        await new Promise(r => setTimeout(r, 4000));
     }
 
     try {
 
-	// If navbar toggler present in small screen
+        // If navbar toggler present in small screen
         try {
             var signin = await driver.findElement(By.linkText("Sign In"));
         }
         catch (NoSuchElementException) {
-                await driver.findElement(By.css(".navbar-toggler-icon")).click();
-         }
+            await driver.findElement(By.css(".navbar-toggler-icon")).click();
+        }
         // LOGIN
         await driver.findElement(By.linkText("Sign In")).click();
         await driver.findElement(By.id("id_login")).sendKeys(user);
@@ -90,117 +89,112 @@ var password;
         // Create a Custom Field "Condition", used for Bulk Upload Inventory
         // 10 | click | id=navbarAdminTools |
         await driver.findElement(By.id("navbarAdmintools")).click();
-         // 4 | click | linkText=Custom Fields | 
+        // 4 | click | linkText=Custom Fields | 
         await driver.findElement(By.linkText("Custom Fields")).click();
-	while ((await driver.findElements(By.linkText("Add Custom Field"))).length == 0) // 1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Custom Field.");
-	}
+        while ((await driver.findElements(By.linkText("Add Custom Field"))).length == 0) // 1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Custom Field.");
+        }
         await driver.findElement(By.linkText("Add Custom Field")).click();
-	while ((await driver.findElements(By.id("id_field_name"))).length == 0) // 1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Custom Field1.");
-	}
+        while ((await driver.findElements(By.id("id_field_name"))).length == 0) // 1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Custom Field1.");
+        }
         await driver.findElement(By.id("id_field_name")).click();
         await driver.findElement(By.id("id_field_name")).sendKeys("Condition");
         await driver.findElement(By.id("id_field_description")).click();
         await driver.findElement(By.id("id_field_description")).sendKeys("Inventory Condition");
         await driver.findElement(By.id("id_field_type")).click();
         // 11 | select | id=id_field_type | label=Dropdown Field
-         {
+        {
             const dropdown = await driver.findElement(By.id("id_field_type"));
             await dropdown.findElement(By.xpath("//option[. = 'Dropdown Field']")).click();
-         }
+        }
         await driver.findElement(By.id("id_choice_field_options")).click();
         // 14 | type | id=id_choice_field_options | New|New\nGood|Good\nFair|Fair\nJunk|Junk
         await driver.findElement(By.id("id_choice_field_options")).sendKeys("New|New\nGood|Good\nFair|Fair\nJunk|Junk");
-       // 15 | click | id=id_field_default_value | 
+        // 15 | click | id=id_field_default_value | 
         await driver.findElement(By.id("id_field_default_value")).click();
         // 16 | type | id=id_field_default_value | Good
         await driver.findElement(By.id("id_field_default_value")).sendKeys("Good");
         // 17 | click | id=id_global_for_part_types_6 | 
-//      await driver.findElement(By.id("id_global_for_part_types_6")).click();
+        //      await driver.findElement(By.id("id_global_for_part_types_6")).click();
         // 18 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
 
         // Create a Custom Field "Manufacturer Serial Number", required for Upload Github Calibration Csv 
         await driver.findElement(By.linkText("Add Custom Field")).click();
-	while ((await driver.findElements(By.id("id_field_name"))).length == 0)
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Add Custom Field1.");
-	}
+        while ((await driver.findElements(By.id("id_field_name"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Custom Field1.");
+        }
         await driver.findElement(By.id("id_field_name")).click();
         await driver.findElement(By.id("id_field_name")).sendKeys("Manufacturer Serial Number");
         await driver.findElement(By.id("id_field_description")).click();
         await driver.findElement(By.id("id_field_description")).sendKeys("Required for Github Csv");
         await driver.findElement(By.id("id_field_type")).click();
-         {
+        {
             const dropdown = await driver.findElement(By.id("id_field_type"));
             await dropdown.findElement(By.xpath("//option[. = 'Text Field']")).click();
-         }
+        }
 
         await driver.findElement(By.id("id_field_default_value")).sendKeys("20004");
-      	await driver.findElement(By.id("id_global_for_part_types_6")).click();  //sewing machine 
+        await driver.findElement(By.id("id_global_for_part_types_6")).click();  //Structural
         // 18 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
 
         // Import Valid Inventory Item
-	await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("navbarAdmintools")).click();
         // 4 | click | linkText=Bulk Upload Tool | 
         await driver.findElement(By.linkText("Bulk Upload Tool")).click();
 
-	if (myArgs[1] == 'headless')
-	{
-		var filename = process.cwd()+"//inventory-import-successful.csv";
-	}
-	else
-	{
-	        var filename = process.cwd()+"\\inventory-import-successful.csv";
-	}
+        if (myArgs[1] == 'headless') {
+            var filename = process.cwd() + "//inventory-import-successful.csv";
+        }
+        else {
+            var filename = process.cwd() + "\\inventory-import-successful.csv";
+        }
 
-	while ((await driver.findElements(By.id("id_document"))).length == 0) // 1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Bulk Upload.");
-	}
+        while ((await driver.findElements(By.id("id_document"))).length == 0) // 1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Bulk Upload.");
+        }
 
         // 6 | type | id=id_document | C:\fakepath\inventory-import-successful.csv
         await driver.findElement(By.id("id_document")).sendKeys(filename);
         // 7 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
         // 8 | click | linkText=Import Valid! Click here to complete | 
-	while ((await driver.findElements(By.partialLinkText("Click here"))).length == 0) // 1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Preview Import.");
-	}
+        while ((await driver.findElements(By.partialLinkText("Click here"))).length == 0) // 1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Preview Import.");
+        }
         await driver.findElement(By.linkText("Import Valid! Click here to complete")).click();
         // 9 | click | id=navbarAdmintools | 
 
         // Import Invalid Inventory Item
-	await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("navbarAdmintools")).click();
         // 10 | click | linkText=Bulk Upload Tool | 
         await driver.findElement(By.linkText("Bulk Upload Tool")).click();
 
-	if (myArgs[1] == 'headless')
-	{
-		filename = process.cwd()+"//inventory-import-unsuccessful.csv";
-	}
-	else
-	{
-	        filename = process.cwd()+"\\inventory-import-unsuccessful.csv";
-	}
+        if (myArgs[1] == 'headless') {
+            filename = process.cwd() + "//inventory-import-unsuccessful.csv";
+        }
+        else {
+            filename = process.cwd() + "\\inventory-import-unsuccessful.csv";
+        }
 
-	while ((await driver.findElements(By.id("id_document"))).length == 0) // 1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Bulk Upload1.");
-	}
+        while ((await driver.findElements(By.id("id_document"))).length == 0) // 1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Bulk Upload1.");
+        }
 
         // 12 | type | id=id_document | C:\fakepath\inventory-import-unsuccessful.csv
         await driver.findElement(By.id("id_document")).sendKeys(filename);
@@ -210,24 +204,24 @@ var password;
         assert(await driver.findElement(By.css("td:nth-child(1) > .alert")).getText() == "ERROR. Serial Number already exists.");
         assert(await driver.findElement(By.css("td:nth-child(2) > .alert")).getText() == "ERROR. No matching Part Number. Check if Part Template exists.");
         assert(await driver.findElement(By.css("td:nth-child(3) > .alert")).getText() == "ERROR. No matching Location. Check if Location exists.");
-        assert(await driver.findElement(By.css("td:nth-child(5) > .alert")).getText() == "ERROR. No matching Custom Field. Check if Field exists.");                
+        assert(await driver.findElement(By.css("td:nth-child(5) > .alert")).getText() == "ERROR. No matching Custom Field. Check if Field exists.");
 
         // EXPORT INVENTORY TEST
 
         // Search for and Export Inventory Item
         // 3 | click | id=searchbar-query | 
         await driver.findElement(By.id("searchbar-query")).click();
-        // 4 | type | id=searchbar-query | sewing
+        // 4 | type | id=searchbar-query | surface mooring
         await driver.findElement(By.id("searchbar-query")).sendKeys("456-654-321");
         // 5 | click | css=.btn:nth-child(1) | 
         await driver.findElement(By.css(".btn:nth-child(1)")).click()
 
         // Downloads to Downloads Folder
-	while ((await driver.findElements(By.id("search--download-csv-button"))).length == 0) // 1.6
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for Search Download CSV.");
-	}
+        while ((await driver.findElements(By.id("search--download-csv-button"))).length == 0) // 1.6
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Search Download CSV.");
+        }
         // 10 | click | id=search--download-csv-button |
         await driver.findElement(By.id("search--download-csv-button")).click();
         // 11 | click | linkText=All (Include Hidden Columns) | 
@@ -242,108 +236,89 @@ var password;
         $.csv = require('jquery-csv');
         var data;
 
-	if (myArgs[1] == 'headless')
-	{
-		// Docker/Circleci puts file in the current dir
-		var rdb_inv = process.cwd()+"//RDB_Inventory.csv";
-	}
-	else
-	{
-		// Windows command line puts file in the User's default Downloads dir
- 		const execSync = require('child_process').execSync;
-        	var username = execSync('echo %username%', { encoding: 'utf-8' });
-        	username = username.replace(/[\n\r]+/g, '');
-        	var rdb_inv = "C:\\Users\\" + username + "\\Downloads\\RDB_Inventory.csv";
-	}
+        if (myArgs[1] == 'headless') {
+            // Docker/Circleci puts file in the current dir
+            var rdb_inv = process.cwd() + "//RDB_Inventory.csv";
+        }
+        else {
+            // Windows command line puts file in the User's default Downloads dir
+            const execSync = require('child_process').execSync;
+            var username = execSync('echo %username%', { encoding: 'utf-8' });
+            username = username.replace(/[\n\r]+/g, '');
+            var rdb_inv = "C:\\Users\\" + username + "\\Downloads\\RDB_Inventory.csv";
+        }
 
-	while (!fs.existsSync(rdb_inv)) // wait for file download
-	{
-	   await new Promise(r => setTimeout(r, 2000));
-	   console.log("Wait 2 seconds for File Download.");
-	}    	
+        while (!fs.existsSync(rdb_inv)) // wait for file download
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for File Download.");
+        }
 
-        var csv = fs.readFileSync(rdb_inv,'utf8');
+        var csv = fs.readFileSync(rdb_inv, 'utf8');
         var data = $.csv.toArrays(csv);
         for (var i = 0, len = data[0].length; i < len; i++) {
-            if (data[0][i] == "Serial Number")
-            {
+            if (data[0][i] == "Serial Number") {
                 var serial_number = data[1][i];
             }
-            if (data[0][i] == "Part Number")
-            {
+            if (data[0][i] == "Part Number") {
                 var part_number = data[1][i];
             }
-            if (data[0][i] == "Location")
-            {
+            if (data[0][i] == "Location") {
                 var location = data[1][i];
             }
-            if (data[0][i] == "Latest Action: Notes")
-            {
+            if (data[0][i] == "Latest Action: Notes") {
                 var notes = data[1][i];
             }
-            if (data[0][i] == "Condition")
-            {
+            if (data[0][i] == "Condition") {
                 var condition = data[1][i];
             }
-        } 
+        }
 
         // Verify exported Inventory fields match those in import csv file
-	if (myArgs[1] == 'headless')
-	{
-		var import_inv = process.cwd()+"//inventory-import-successful.csv";
-	}
-	else
-	{
-	        var import_inv = process.cwd()+"\\inventory-import-successful.csv";
-	}
-        
-        data = fs.readFileSync(import_inv, 'utf8');
-        if (data.includes(serial_number))
-	{
-            console.log("Import/Export Serial Number matches.");
+        if (myArgs[1] == 'headless') {
+            var import_inv = process.cwd() + "//inventory-import-successful.csv";
         }
-	else
-        {
-	    throw new error("Import/Export Serial Number does not match.");
+        else {
+            var import_inv = process.cwd() + "\\inventory-import-successful.csv";
         }
 
-        if (data.includes(part_number)) 
-	{
+        data = fs.readFileSync(import_inv, 'utf8');
+        if (data.includes(serial_number)) {
+            console.log("Import/Export Serial Number matches.");
+        }
+        else {
+            throw new error("Import/Export Serial Number does not match.");
+        }
+
+        if (data.includes(part_number)) {
             console.log("Import/Export Part Number matches.");
         }
-	else
-	{
+        else {
             throw new error("Import/Export Part Number does not match.");
         }
 
-        if (data.includes(location)) 
-	{
+        if (data.includes(location)) {
             console.log("Import/Export Location matches.");
         }
-	else
-	{
+        else {
             throw new error("Import/Export Location does not match.");
         }
 
-        if (data.includes(notes))
-	{
+        if (data.includes(notes)) {
             console.log("Import/Export Notes matches.");
         }
-	else
-	{
-            throw new error("Import/Export Notes does not match."); 
+        else {
+            throw new error("Import/Export Notes does not match.");
         }
 
-        if (data.includes(condition)) 
-	{
+        if (data.includes(condition)) {
             console.log("Import/Export Condition matches.");
         }
-	else
-	{
+        else {
             throw new error("Import/Export Condition does not match");
         }
 
-	    
+
         // Close browser window
         driver.quit();
 
@@ -351,8 +326,8 @@ var password;
     catch (e) {
         console.log(e.message, e.stack);
         console.log("Import/Export Inventory failed.");
-	return 1;
-    } 
+        return 1;
+    }
 
     console.log("Import/Export Inventory completed.")
     return 0;

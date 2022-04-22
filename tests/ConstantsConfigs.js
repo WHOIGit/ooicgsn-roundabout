@@ -96,20 +96,20 @@ var password;
 	       console.log("Wait 2 seconds for Edit Part Type.");
 	    }
 
-        // Get the index to the row Sewing Machine is displayed on screen
+        // Get the index to the row Structural is displayed on screen
         await new Promise(r => setTimeout(r, 2000));
 
-        if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Sewing Machine']"))).length != 0) {
+        if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Structural']"))).length != 0) {
             var i = 1;
             while (true) {
-                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Sewing Machine") {
+                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Structural") {
                     break;
                 }
                 i++;
             }
         }
         else
-            console.log("Edit Parts failed: Sewing Machine type not found");
+            console.log("Edit Parts failed: Structural type not found");
 
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-primary")).click();
@@ -126,7 +126,7 @@ var password;
 	       console.log("Wait 2 seconds for Add Part Type Complete.");
 	    }
        
-        await driver.findElement(By.id("searchbar-query")).sendKeys("sewing");
+        await driver.findElement(By.id("searchbar-query")).sendKeys("surface mooring");
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
    	    while ((await driver.findElements(By.linkText("1232"))).length == 0) 
 	    {
@@ -231,7 +231,7 @@ var password;
 	       console.log("Wait 2 seconds for Electric.");
 	    }
         if ((await driver.findElements(By.xpath("//div/div/ul/li[*]/a[text()='Electric']"))).length != 0) {
-            // Expand Revision B and Sewing Template
+            // Expand Revision B and Coastal Mooring
             var j = 1;
             while (true) {
                 if ((await driver.findElement(By.xpath("//div/div/ul/li[" + j + "]/a")).getText()) == "Electric") {
@@ -249,12 +249,12 @@ var password;
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/i")).click();
         await new Promise(r => setTimeout(r, 6000));
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/ul/li/i")).click(); 
-   	    while ((await driver.findElements(By.partialLinkText("sewing"))).length == 0)
+   	    while ((await driver.findElements(By.partialLinkText("surface mooring"))).length == 0)
 	    {
 	       await new Promise(r => setTimeout(r, 2000));
 	       console.log("Wait 2 seconds for Search.");
 	    }
-            await driver.findElement(By.partialLinkText("sewing")).click();
+            await driver.findElement(By.partialLinkText("surface mooring")).click();
    	    while ((await driver.findElements(By.id("action"))).length == 0)
 	    {
 	       await new Promise(r => setTimeout(r, 2000));
@@ -313,7 +313,7 @@ var password;
 	       console.log("Wait 2 seconds for Inventory.");
 	    }
         if ((await driver.findElements(By.xpath("//div[2]/ul/li[*]/a[text()='Test']"))).length != 0) {
-            // Expand Revision B and Sewing Template
+            // Expand Revision B and Coastal Mooring
             var j = 1;
             while (true) {
                 if ((await driver.findElement(By.xpath("//div[2]/ul/li[" + j + "]/a")).getText()) == "Test") {
@@ -329,12 +329,12 @@ var password;
         await driver.findElement(By.xpath("//li[" + j + "]/i")).click();
         await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.xpath("//li[" + j + "]/ul/li/i")).click();
-	    while ((await driver.findElements(By.partialLinkText("sewing - 1232"))).length == 0)
+	    while ((await driver.findElements(By.partialLinkText("surface mooring - 1232"))).length == 0)
 	    {
 	       await new Promise(r => setTimeout(r, 2000));
 	       console.log("Wait 2 seconds for Navtree.");
 	    }
-            await driver.findElement(By.partialLinkText("sewing - 1232")).click();
+            await driver.findElement(By.partialLinkText("surface mooring - 1232")).click();
 	    while ((await driver.findElements(By.id("action"))).length == 0)
 	    {
 	       await new Promise(r => setTimeout(r, 2000));

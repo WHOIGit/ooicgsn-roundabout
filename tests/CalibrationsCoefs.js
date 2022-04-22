@@ -88,7 +88,7 @@ var password;
 
         // Create Calibrations for Part Template - Tests Issue #147
         // Search for Part Template
-        await driver.findElement(By.id("searchbar-query")).sendKeys("sewing");
+        await driver.findElement(By.id("searchbar-query")).sendKeys("surface mooring");
         await driver.findElement(By.id("searchbar-modelselect")).sendKeys("Part Templates");
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         while ((await driver.findElements(By.linkText("1232"))).length == 0) // 1.6
@@ -132,7 +132,7 @@ var password;
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Action.");
         }
-        //Edit Max Calibration Coeff decimal places for Sewing, but not Disk Drive Part Template - Issue #120
+        //Edit Max Calibration Coeff decimal places for surface mooring, but not Disk Drive Part Template - Issue #120
         await driver.findElement(By.id("action")).click();
         while ((await driver.findElements(By.linkText("Edit Part Template"))).length == 0) {
             await new Promise(r => setTimeout(r, 2000));
@@ -183,7 +183,7 @@ var password;
             console.log("Wait 2 seconds for Navtree.");
         }
         if ((await driver.findElements(By.xpath("//div[2]/ul/li[*]/a[text()='Test']"))).length != 0) {
-            // Expand Revision B and Sewing Template
+            // Expand Revision B and Coastal Mooring
             var j = 1;
             while (true) {
                 if ((await driver.findElement(By.xpath("//div[2]/ul/li[" + j + "]/a")).getText()) == "Test") {
@@ -295,7 +295,7 @@ var password;
         }
 
         // Copy Calibrations from one Part Template to Another - Issue #146
-        await driver.findElement(By.id("searchbar-query")).sendKeys("wheel");
+        await driver.findElement(By.id("searchbar-query")).sendKeys("buoy");
         await driver.findElement(By.id("searchbar-modelselect")).sendKeys("Part Templates");
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         while ((await driver.findElements(By.partialLinkText("555"))).length == 0) {
@@ -311,7 +311,7 @@ var password;
         await new Promise(r => setTimeout(r, 2000));
         {
             const dropdown = await driver.findElement(By.id("id_part_select"));
-            await dropdown.findElement(By.xpath("//option[. = 'Sewing Template']")).click();
+            await dropdown.findElement(By.xpath("//option[. = 'Coastal Mooring']")).click();
         }
         await driver.findElement(By.id("id_user_draft")).sendKeys(user);
         await new Promise(r => setTimeout(r, 2000));
@@ -375,8 +375,8 @@ var password;
 
         // Test Calibration Coefficient Threshold Min and Max Values on a Part Template
         // Create a second Calibration Coefficient event for the Single value coef to generate a min and max value
-        // Navigate to the Pin Inventory - the initial single and 2D values are imported in UploadCsv.js
-        await driver.findElement(By.id("searchbar-query")).sendKeys("pin");
+        // Navigate to the wifi Inventory - the initial single and 2D values are imported in UploadCsv.js
+        await driver.findElement(By.id("searchbar-query")).sendKeys("wifi");
         await driver.findElement(By.id("searchbar-modelselect")).sendKeys("Inventory");
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         while ((await driver.findElements(By.partialLinkText("3604"))).length == 0) {
@@ -397,7 +397,7 @@ var password;
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
         // Navigate to Part Template and Verify the Calib Coef min and max values are within reasonable ranges
-        await driver.findElement(By.id("searchbar-query")).sendKeys("pin");
+        await driver.findElement(By.id("searchbar-query")).sendKeys("wifi");
         await driver.findElement(By.id("searchbar-modelselect")).sendKeys("Part Templates");
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
         while ((await driver.findElements(By.partialLinkText("666"))).length == 0) {

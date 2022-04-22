@@ -1,0 +1,2 @@
+ASSET_UID,LEGACY_ASSET_UID,TYPE,Mobile,DESCRIPTION OF EQUIPMENT,MIO_Inventory_Description,Manufacturer,Model,Manufacturer's Serial No./Other Identifier,Firmware Version,ACQUISITION DATE,ORIGINAL COST,comments,MIO,RDB_Part_Template
+CGINS-ADCPSJ-19061,A00222,Sensor,0,ADCP Velocity Profiler (long range): ADCPS Series J,ADCP SERIES J (WHLS75-1500),Teledyne RDI,WHLS75-1500,19061,xyz,20130122,51941.25,comments,, 1336-00010-00000
