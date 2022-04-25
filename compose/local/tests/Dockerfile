@@ -20,8 +20,12 @@ COPY ./tests/*.js /tests/
 COPY ./tests/*.csv /tests/
 COPY ./tests/*.ext /tests/
 
-RUN curl -sL https://deb.nodesource.com/setup_16.x | bash -
-RUN apt-get install -y nodejs
+#RUN curl -sL https://deb.nodesource.com/setup_16.x | bash -
+#RUN apt-get install -y nodejs
+#nodesource not yet supported for ubuntu jammy rls 22.04 - 4/25/2022, issue #1379
+RUN curl -LO https://nodejs.org/dist/v18.0.0/node-v18.0.0-linux-x64.tar.xz
+RUN tar -xvf node-v18.0.0-linux-x64.tar.xz
+
 RUN npm install jsdom
 RUN npm install jquery
 RUN npm install jquery-csv
