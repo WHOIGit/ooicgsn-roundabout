@@ -705,6 +705,8 @@ def event_review_toggle(request, pk, user_pk, evt_type):
             if evt_type == 'cruise_event':
                 if len(event.cruise.vessel.vessel_event.user_approver.all()) >= 2:
                     event.approved = True
+                else:
+                    event.approved = False
             else:       
                 event.approved = True
             if evt_type == 'deployment':
