@@ -32,7 +32,7 @@ from celery import shared_task
 from dateutil import parser
 from django.core.cache import cache
 from roundabout.ooi_ci_tools.forms import validate_reference_designator
-from roundabout.parts.models import Part, PartType
+from roundabout.parts.models import Part, PartType, Revision
 from sigfig import round
 from statistics import mean, stdev
 from django.utils.timezone import make_aware
@@ -45,10 +45,11 @@ from roundabout.inventory.models import Inventory, Action, Deployment, Inventory
 from roundabout.inventory.utils import _create_action_history
 from roundabout.userdefinedfields.models import Field, FieldValue
 from roundabout.ooi_ci_tools.models import Threshold, ReferenceDesignator, ReferenceDesignatorEvent, BulkUploadEvent, BulkFile, BulkAssetRecord, BulkVocabRecord, CruiseEvent, VesselEvent
-from roundabout.assemblies.models import Assembly, AssemblyRevision
+from roundabout.assemblies.models import Assembly, AssemblyPart, AssemblyRevision
 from roundabout.locations.models import Location
 from roundabout.builds.models import Build
 from roundabout.core.utils import set_app_labels
+from roundabout.assemblies.views import _make_revision_tree_copy
 
 labels = set_app_labels()
 
@@ -505,7 +506,6 @@ def parse_deployment_files(self):
     user = cache.get('user')
     # Set up the Django file object for CSV DictReader
     for csv_file in csv_files:
-        print(csv_file)
         csv_file.seek(0)
         reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
         headers = reader.fieldnames
@@ -519,9 +519,11 @@ def parse_deployment_files(self):
                 dep_number_string = row['mooring.uid'].split('-')[2]
                 # parse together the Build/Deployment Numbers from CSV fields
                 deployment_number = f'{assembly}-{dep_number_string}'
-                print(deployment_number)
                 build_number = f'Historical {dep_number_string}'
-                assembly_template_revision = row['assembly_template_revision'] if row['assembly_template_revision'] else 'A'
+                assembly_template_revision = 'A'
+                if hasattr(row,'assembly_template_revision'):
+                    if row['assembly_template_revision'] != '':
+                        assembly_template_revision = row['assembly_template_revision']
                 # build data dict
                 mooring_uid_dict = {
                     'mooring.uid': row['mooring.uid'],
@@ -545,10 +547,25 @@ def parse_deployment_files(self):
             except Assembly.MultipleObjectsReturned:
                 raise ValueError("too many assemblies found")
 
+            deployment_import_revision = deployment_import['assembly_template_revision'] 
             try:
-                assembly_revision, assembly_revision_created = AssemblyRevision.objects.get_or_create(assembly=assembly, revision_code=deployment_import['assembly_template_revision'])
+                assembly_revision, assembly_revision_created = AssemblyRevision.objects.get_or_create(assembly=assembly, revision_code=deployment_import_revision)
             except AssemblyRevision.MultipleObjectsReturned:
-                assembly_revision = AssemblyRevision.objects.filter(assembly=assembly, revision_code=deployment_import['assembly_template_revision']).first()
+                assembly_revision = AssemblyRevision.objects.filter(assembly=assembly, revision_code=deployment_import_revision).latest()
+
+            if assembly_revision_created:
+                latest_revision = assembly.assembly_revisions.exclude(revision_code=deployment_import_revision).latest()
+                for assembly_part in latest_revision.assembly_parts.all():
+                    
+                    if assembly_part.is_root_node():
+                        _make_revision_tree_copy(
+                            assembly_part,
+                            assembly_revision,
+                            assembly_part.parent,
+                            user,
+                            False,
+                        )
+            assembly_revision.save()
 
             # set up common variables for Builds/Deployments
             location_code = deployment_import['assembly'][0:2]
@@ -577,7 +594,11 @@ def parse_deployment_files(self):
 
             # Set Build location dependiing on Deployment status
             if dep_end_date:
-                build_location = Location.objects.get(name='Retired')
+                build_location, created = Location.objects.get_or_create(name='Retired')
+                if created:
+                    build_location.root_type = 'Retired'
+                    build_location.weight = 500
+                    build_location.save()
             else:
                 build_location = deployed_location
 
@@ -634,9 +655,6 @@ def parse_deployment_files(self):
             if not deployment_created:
                 deployment_actions = deployment_obj.actions.all()
                 deployment_actions.delete()
-
-            print(build)
-            print(deployment_obj)
             if user_draft.exists():
                 deployment_obj.user_approver.clear()
                 deployment_obj.user_draft.clear()
@@ -695,7 +713,7 @@ def parse_deployment_files(self):
 
             for row in deployment_import['rows']:
                 # create InventoryDeployments for each item
-                if row['sensor.uid'] or row['electrical.uid']:
+                if row['sensor.uid'] != '' or row['electrical.uid'] != '':
                     if row['sensor.uid']:
                         uid = row['sensor.uid']
                     elif row['electrical.uid']:
@@ -718,16 +736,24 @@ def parse_deployment_files(self):
                         item = Inventory.objects.get(serial_number=uid)
                     except Inventory.DoesNotExist:
                         continue
+                    
+
+                    if item.assembly_part == None:
+                        assembly_part, assm_created = AssemblyPart.objects.get_or_create(
+                            assembly=assembly,
+                            part = item.part,
+                            assembly_revision=assembly_revision,
+                            reference_designator=ref_des_obj,
+                            order=item.part
+                        )
+                        assembly_part.save()
+                        item.assembly_part = assembly_part
+                    refdes_event = ref_des_obj.refdes_events.first()
+                    refdes_event.assembly_part = assembly_part
+                    refdes_event.save()
                     item.location = build_location
                     item.build = build
-                    # item.part = assembly_part.part
-                    # item.revision = assembly_part.part.revisions.latest()
-                    item.assembly_part = assembly_part
-                    item.created_at = dep_start_date
                     item.save()
-                    
-                    # Create an initial Action history if Inventory needs to be created
-                    
 
                     # Get/Create Deployment for this Build
                     inv_deployment_obj, inv_deployment_created = InventoryDeployment.objects.update_or_create(
@@ -1050,11 +1076,12 @@ def parse_bulk_files(self):
                 if inv.exists() == False and part_template is not None and part_template != '':
                     inst_obj = PartType.objects.get(name='Instrument')
                     try:
-                        part = Part.objects.get(name=part_template, part_type=inst_obj, part_number=part_template)
+                        part = Part.objects.get(part_type=inst_obj, part_number=part_template)
                     except Part.MultipleObjectsReturned:
-                        part = Part.objects.filter(name=part_template, part_type=inst_obj, part_number=part_template).first()
+                        part = Part.objects.filter(part_type=inst_obj, part_number=part_template).first()
                     except Part.DoesNotExist:
                         part = Part.objects.create(name=part_template, part_type=inst_obj, part_number=part_template)
+                        rev_a = Revision.objects.create(part=part)
                     inv = Inventory.objects.create(
                         part = part,
                         serial_number = asset_uid,
