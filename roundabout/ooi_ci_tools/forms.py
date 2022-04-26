@@ -575,7 +575,7 @@ class ImportDeploymentsForm(forms.Form):
                     except:
                         raise ValidationError(
                             _('File: %(filename)s: Row: %(row)s: Unable to parse Mooring UID or Deployment Number from Mooring UID'),
-                            params={'filename': filename},
+                            params={'filename': filename,  'row': idx},
                         )
                     # get Assembly number from RefDes as that seems to be most consistent across CSVs
                     try:
