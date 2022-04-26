@@ -727,24 +727,24 @@ class ExportOBSAssemblyBuilds(DetailView,LoginRequiredMixin):
                     ar_disable = vals.get(field__field_name__icontains='Disable').field_value
                     ar_burn1 = vals.get(field__field_name__icontains='Burn 1').field_value
                     ar_option = vals.get(field__field_name__icontains='Option').field_value
-                    nested_update(data, inv_lineage_keys+['Enable'], row_num, ar_enable)
-                    nested_update(data, inv_lineage_keys+['Disable'], row_num, ar_disable)
-                    nested_update(data, inv_lineage_keys+['Burn1'], row_num, ar_burn1)
-                    nested_update(data, inv_lineage_keys+['Option'], row_num, ar_option)
+                    nested_update(data, inv_lineage_keys+[' Enable'], row_num, ar_enable)
+                    nested_update(data, inv_lineage_keys+[' Disable'], row_num, ar_disable)
+                    nested_update(data, inv_lineage_keys+[' Burn1'], row_num, ar_burn1)
+                    nested_update(data, inv_lineage_keys+[' Option'], row_num, ar_option)
 
                 elif part.startswith('Q330'):
                     vals = inv.fieldvalues.filter(is_current=True)
                     q330_idsn = field_safeget(vals,'Q330 Tag ID / SN')
                     q330_lsn = field_safeget(vals,'Q330 Long Serial Number')
                     q330_ip = field_safeget(vals,'Q330 IP')
-                    nested_update(data, inv_lineage_keys + ['Q330: Tag ID/SN'], row_num, q330_idsn)
-                    nested_update(data, inv_lineage_keys + ['Q330: Long S/N'], row_num, q330_lsn)
-                    nested_update(data, inv_lineage_keys + ['Q330: IP'], row_num, q330_ip)
+                    nested_update(data, inv_lineage_keys + [' Q330: Tag ID/SN'], row_num, q330_idsn)
+                    nested_update(data, inv_lineage_keys + [' Q330: Long S/N'], row_num, q330_lsn)
+                    nested_update(data, inv_lineage_keys + [' Q330: IP'], row_num, q330_ip)
 
                 elif part.startswith('Baler 14'):
                     vals = inv.fieldvalues.filter(is_current=True)
                     baller_tag = field_safeget(vals,'Baler Tag')
-                    nested_update(data, inv_lineage_keys + ['Baler 14: Tag'], row_num, baller_tag)
+                    nested_update(data, inv_lineage_keys + [' Baler 14: Tag'], row_num, baller_tag)
 
         # format data to rows
         def nested_unpack2cols(d):
