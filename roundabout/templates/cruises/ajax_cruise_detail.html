@@ -47,264 +47,265 @@
 
 {% load common_tags %}
 
-
-{% with cruise.cruise_event as event %}
-    <h4>{{cruise.CUID}}</h4>
-    <hr>
-    <div id="cruise-template" aria-labelledby="cruise-template-tab">
-        <ul class="list-group">
-            <li class="list-group-item">
-                <a  class="collapse show"
-                    data-toggle="collapse"
-                    href="#cruise_event-{{ event.id }}"
-                    aria-expanded="true"
-                    aria-controls="cruise_event-{{ event.id }}"
-                >
-                {{cruise.CUID}}
-                </a>
-                <a  data-toggle="collapse"
-                    class="collapse show text-right"
-                    href="#cruise_event-{{ event.id }}"
-                    aria-controls="cruise_event-{{ event.id }}"
-                    aria-expanded="true"
-                    role="button"
-                    id = 'badge_tag'
-                >
-                    <i class="fa" aria-hidden="true"></i>
-                    <span class="sr-only">Expand/Collapse Bulk Upload Files {{ event }}</span>
-                </a>
-                {% if user in event.user_draft.all %}
-                    <span id="review-badge" class="badge badge-pill badge-secondary">Review Requested</span>
-                {% endif %}
-                {% if event.approved %}
-                    <span id="approve-badge" class="badge badge-pill badge-success">Approved</span>
-                {% else %}
-                    <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span>
-                {% endif %}
-                <div class="collapse show mt-3" id="cruise_event-{{ event.id }}">
-                    <hr>
+{% block content %}
+    {% with cruise.cruise_event as event %}
+        <h4>{{cruise.CUID}}</h4>
+        <hr>
+        <div id="cruise-template" aria-labelledby="cruise-template-tab">
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <a  class="collapse show"
+                        data-toggle="collapse"
+                        href="#cruise_event-{{ event.id }}"
+                        aria-expanded="true"
+                        aria-controls="cruise_event-{{ event.id }}"
+                    >
+                    {{cruise.CUID}}
+                    </a>
+                    <a  data-toggle="collapse"
+                        class="collapse show text-right"
+                        href="#cruise_event-{{ event.id }}"
+                        aria-controls="cruise_event-{{ event.id }}"
+                        aria-expanded="true"
+                        role="button"
+                        id = 'badge_tag'
+                    >
+                        <i class="fa" aria-hidden="true"></i>
+                        <span class="sr-only">Expand/Collapse Bulk Upload Files {{ event }}</span>
+                    </a>
                     {% if user in event.user_draft.all %}
-                        <button class="btn btn-success btn-sm mr-2" id='cruise_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
-                            Approve
-                        </button>
-                    {% elif user in event.user_approver.all %}
-                        <button class="btn btn-warning btn-sm mr-2" id='cruise_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
-                            Unapprove
-                        </button>
+                        <span id="review-badge" class="badge badge-pill badge-secondary">Review Requested</span>
                     {% endif %}
-                    <p id = 'approvers'>Approvers:
-                        {% for user in event.get_sorted_approvers.all %}
-                            <span id='approver-{{ user.id }}'>{{ user.username }}</span>
-                        {% endfor %}
-                    </p>
-                    <p id = 'reviewers'>Reviewers:
-                        {% for user in event.get_sorted_reviewers.all %}
-                            <span id='reviewer-{{ user.id }}'>{{ user.username }}</span>
-                        {% endfor %}
-                    </p>
-
-                    {# TABS PER EVENT #}
-                    <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
-                        <li class="nav-item">
-                            <a  class="nav-link active"
-                                id="files-{{ event.id }}-tab"
-                                data-toggle="tab"
-                                href="#cruise_records-{{ event.id }}"
-                                role="tab"
-                                aria-controls="cruise_records"
-                                aria-selected="false">
-                                    Records
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a  class="nav-link"
-                                id="eventhistory-{{ event.id }}-tab"
-                                data-toggle="tab"
-                                href="#eventhistory-{{ event.id }}"
-                                role="tab"
-                                aria-controls="eventhistory"
-                                aria-selected="false">
-                                    Event History
-                            </a>
-                        </li>
-                        {% if event.hyperlinks.exists %}
-                        <li class="nav-item">
-                            <a  class="nav-link"
-                                id="links-{{ event.id }}-tab"
-                                data-toggle="tab"
-                                href="#links-{{ event.id }}"
-                                role="tab"
-                                aria-controls="links"
-                                aria-selected="false">
-                                    Links
-                            </a>
-                        </li>
+                    {% if event.approved %}
+                        <span id="approve-badge" class="badge badge-pill badge-success">Approved</span>
+                    {% else %}
+                        <span id="progress-badge" class="badge badge-pill badge-info">In Progress</span>
+                    {% endif %}
+                    <div class="collapse show mt-3" id="cruise_event-{{ event.id }}">
+                        <hr>
+                        {% if user in event.user_draft.all %}
+                            <button class="btn btn-success btn-sm mr-2" id='cruise_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
+                                Approve
+                            </button>
+                        {% elif user in event.user_approver.all %}
+                            <button class="btn btn-warning btn-sm mr-2" id='cruise_expander-date-{{event.id}}' data-reviewer-url="{% url 'calibrations:event_review_toggle' event.id user.id event.get_object_type %}">
+                                Unapprove
+                            </button>
                         {% endif %}
-                    </ul>
+                        <p id = 'approvers'>Approvers:
+                            {% for user in event.get_sorted_approvers.all %}
+                                <span id='approver-{{ user.id }}'>{{ user.username }}</span>
+                            {% endfor %}
+                        </p>
+                        <p id = 'reviewers'>Reviewers:
+                            {% for user in event.get_sorted_reviewers.all %}
+                                <span id='reviewer-{{ user.id }}'>{{ user.username }}</span>
+                            {% endfor %}
+                        </p>
 
-                    <div class="tab-content" id="inventory-tabs">
-                        {# EVENT RECORDS TAB #}
-                        <div class="tab-pane fade show active" id="cruise_records-{{ event.id }}" role="tabpanel" aria-labelledby="cruise_records-tab">
-                            <table class = 'table table-tight'>
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <li class = 'list-group-item'>
-                                                <div class="mt-1 border p-2 m-3 collapse show" id="file-{{ cruise.id }}{{ event.id }}">
-                                                    <div class="card-header" data-object-id="{{ cruise.id }}">
-                                                        <h3>Cruise ID: {{ cruise.CUID }}</h3>
-                                                        <h5>{{ cruise.friendly_name }} </h5>
-                                                    
-                                                    </div>
-                                                    
-                                                    <div class="card-body">
-                                                    
-                                                        <p>Destination: {{ cruise.location }} </p>
-                                                        <p>Cruise Start Date: {{ cruise.cruise_start_date }}</p>
-                                                        <p>Cruise Stop Date: {{ cruise.cruise_stop_date }}</p>
-                                                        <p>Vessel: <a href="{% url 'cruises:vessels_home' %}">{{ cruise.vessel }}</a></p>
-                                                        <p>Notes: {{ cruise.notes }}</p>
-                                                        {% if cruise.hyperlinks.exists %}
-                                                        <p>Links:</p>
-                                                            <ul>
-                                                            {% for link in cruise.hyperlinks.all %}
-                                                            <li><a target="_blank" href="{{ link.url }}">{{ link.text }}</a></li>
-                                                            {% endfor %}
-                                                            </ul>
-                                                        {% endif %}
-                                                    
-                                                        <h5>Deployment History for this Cruise</h5>
-                                                        <hr>
-                                                    
-                                                        {% if cruise.deployments.exists %}
-                                                            <h6>{{ label_builds_app_plural }} Deployed</h6>
-                                                            <ul class="list-group list-group-flush">
-                                                                {% for deployment in cruise.deployments.all %}
-                                                                    <li class="list-group-item">
-                                                    
-                                                                        {% include "builds/deployment_detail.html" with deployment=deployment deployment_type="deployed" %}
-                                                    
-                                                                    </li>
-                                                                {% endfor %}
-                                                            </ul>
-                                                        {% endif %}
-                                                    
-                                                        {% if cruise.recovered_deployments.exists %}
-                                                            <h6 class="mt-3">{{ label_builds_app_plural }} Recovered</h6>
-                                                            <ul class="list-group list-group-flush">
-                                                                {% for deployment in cruise.recovered_deployments.all %}
-                                                                    <li class="list-group-item">
-                                                    
-                                                                        {% include "builds/deployment_detail.html" with deployment=deployment deployment_type="recovered" %}
-                                                    
-                                                                    </li>
-                                                                {% endfor %}
-                                                            </ul>
-                                                        {% endif %}
-                                                    
-                                                        {% if inventory_deployed %}
-                                                            <h6 class="mt-3">Individual {{ label_inventory_app_plural }} Deployed</h6>
-                                                            <ul class="list-group list-group-flush">
-                                                                {% for inv in inventory_deployed %}
-                                                                    <li class="list-group-item">
-                                                                        <a href="{% url 'inventory:inventory_detail' inv.id %}">{% if inv.part.friendly_name %} {{ inv.part.friendly_name}} {% else %} {{ inv.part.name }} {% endif %}
-                                                                            - {{ inv.serial_number }}</a>
-                                                                    </li>
-                                                                {% endfor %}
-                                                            </ul>
-                                                        {% endif %}
-                                                    
-                                                        {% if inventory_recovered %}
-                                                            <h6 class="mt-3">Individual {{ label_inventory_app_plural }} Recovered</h6>
-                                                            <ul class="list-group list-group-flush">
-                                                                {% for inv in inventory_recovered %}
-                                                                    <li class="list-group-item">
-                                                                        <a href="{% url 'inventory:inventory_detail' inv.id %}">{% if inv.part.friendly_name %} {{ inv.part.friendly_name}} {% else %} {{ inv.part.name }} {% endif %}
-                                                                            - {{ inv.serial_number }}</a>
-                                                                    </li>
-                                                                {% endfor %}
-                                                            </ul>
-                                                        {% endif %}
-                                                    
-                                                        <ul class="nav nav-tabs" id="cruise-tabs-nav" role="tablist">
-                                                    
-                                                            {% if cruise.get_actions.exists %}
-                                                                <li class="nav-item">
-                                                                    <a class="nav-link active" id="history-tab" data-toggle="tab" href="#history" role="tab" aria-controls="history" aria-selected="true">History</a>
-                                                                </li>
-                                                            {% endif %}
-                                                    
-                                                        </ul>
-                                                    
-                                                        <div class="tab-content" id="inventory-tabs">
-                                                    
-                                                            {% if cruise.get_actions.exists %}
-                                                                <div class="tab-pane fade show active p-2" id="history" role="tabpanel" aria-labelledby="history-tab">
-                                                                {% if history_table %}
-                                                                {% render_table history_table %}
-                                                                <a class="btn btn-primary btn-sm m-1 float-right" href="{% export_url "csv" %}">Download</a>
-                                                                {% endif %}
-                                                                </div>
-                                                            {% endif %}
-                                                        </div>
-                                                    
-                                                        <div class="mt-3 ajax-btn">
-                                                            <a href="#" data-update-url="{% url 'cruises:ajax_cruises_update' cruise.id %}" role="button" class="btn btn-primary">Edit Cruise</a>
-                                                            <a href="#" data-update-url="{% url 'cruises:ajax_cruises_delete' cruise.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
-                                                        </div>
-                                                    
-                                                    </div>
-                                                </div>
-                                                
-                                            </li>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            
-                        </div>
+                        {# TABS PER EVENT #}
+                        <ul class="nav nav-tabs" id="inventory-tabs-nav" role="tablist">
+                            <li class="nav-item">
+                                <a  class="nav-link active"
+                                    id="files-{{ event.id }}-tab"
+                                    data-toggle="tab"
+                                    href="#cruise_records-{{ event.id }}"
+                                    role="tab"
+                                    aria-controls="cruise_records"
+                                    aria-selected="false">
+                                        Records
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a  class="nav-link"
+                                    id="eventhistory-{{ event.id }}-tab"
+                                    data-toggle="tab"
+                                    href="#eventhistory-{{ event.id }}"
+                                    role="tab"
+                                    aria-controls="eventhistory"
+                                    aria-selected="false">
+                                        Event History
+                                </a>
+                            </li>
+                            {% if event.hyperlinks.exists %}
+                            <li class="nav-item">
+                                <a  class="nav-link"
+                                    id="links-{{ event.id }}-tab"
+                                    data-toggle="tab"
+                                    href="#links-{{ event.id }}"
+                                    role="tab"
+                                    aria-controls="links"
+                                    aria-selected="false">
+                                        Links
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
 
-                        {# EVENT HISTORY TAB #}
-                        <div class="tab-pane fade border m-2 p-2" id="eventhistory-{{ event.id }}" role="tabpanel" aria-labelledby="eventhistory-{{ event.id }}-tab">
-                            <table class="table table-tight table-striped action-table">
-                                <thead>
-                                    <th>Date</th>
-                                    <th>Action</th>
-                                    <th>Details</th>
-                                    <th>Person</th>
-                                </thead>
-                                <tbody style = 'overflow: auto; max-height: 200px'>
-                                    {% for action in event.get_actions.all %}
+                        <div class="tab-content" id="inventory-tabs">
+                            {# EVENT RECORDS TAB #}
+                            <div class="tab-pane fade show active" id="cruise_records-{{ event.id }}" role="tabpanel" aria-labelledby="cruise_records-tab">
+                                <table class = 'table table-tight'>
+                                    <tbody>
                                         <tr>
-                                            <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
-                                            <td>{{ action.get_action_type_display }}</td>
                                             <td>
-                                                {{ action.detail|safe }}
+                                                <li class = 'list-group-item'>
+                                                    <div class="mt-1 border p-2 m-3 collapse show" id="file-{{ cruise.id }}{{ event.id }}">
+                                                        <div class="card-header" data-object-id="{{ cruise.id }}">
+                                                            <h3>Cruise ID: {{ cruise.CUID }}</h3>
+                                                            <h5>{{ cruise.friendly_name }} </h5>
+                                                        
+                                                        </div>
+                                                        
+                                                        <div class="card-body">
+                                                        
+                                                            <p>Destination: {{ cruise.location }} </p>
+                                                            <p>Cruise Start Date: {{ cruise.cruise_start_date }}</p>
+                                                            <p>Cruise Stop Date: {{ cruise.cruise_stop_date }}</p>
+                                                            <p>Vessel: <a href="{% url 'cruises:vessels_home' %}">{{ cruise.vessel }}</a></p>
+                                                            <p>Notes: {{ cruise.notes }}</p>
+                                                            {% if cruise.hyperlinks.exists %}
+                                                            <p>Links:</p>
+                                                                <ul>
+                                                                {% for link in cruise.hyperlinks.all %}
+                                                                <li><a target="_blank" href="{{ link.url }}">{{ link.text }}</a></li>
+                                                                {% endfor %}
+                                                                </ul>
+                                                            {% endif %}
+                                                        
+                                                            <h5>Deployment History for this Cruise</h5>
+                                                            <hr>
+                                                        
+                                                            {% if cruise.deployments.exists %}
+                                                                <h6>{{ label_builds_app_plural }} Deployed</h6>
+                                                                <ul class="list-group list-group-flush">
+                                                                    {% for deployment in cruise.deployments.all %}
+                                                                        <li class="list-group-item">
+                                                        
+                                                                            {% include "builds/deployment_detail.html" with deployment=deployment deployment_type="deployed" %}
+                                                        
+                                                                        </li>
+                                                                    {% endfor %}
+                                                                </ul>
+                                                            {% endif %}
+                                                        
+                                                            {% if cruise.recovered_deployments.exists %}
+                                                                <h6 class="mt-3">{{ label_builds_app_plural }} Recovered</h6>
+                                                                <ul class="list-group list-group-flush">
+                                                                    {% for deployment in cruise.recovered_deployments.all %}
+                                                                        <li class="list-group-item">
+                                                        
+                                                                            {% include "builds/deployment_detail.html" with deployment=deployment deployment_type="recovered" %}
+                                                        
+                                                                        </li>
+                                                                    {% endfor %}
+                                                                </ul>
+                                                            {% endif %}
+                                                        
+                                                            {% if inventory_deployed %}
+                                                                <h6 class="mt-3">Individual {{ label_inventory_app_plural }} Deployed</h6>
+                                                                <ul class="list-group list-group-flush">
+                                                                    {% for inv in inventory_deployed %}
+                                                                        <li class="list-group-item">
+                                                                            <a href="{% url 'inventory:inventory_detail' inv.id %}">{% if inv.part.friendly_name %} {{ inv.part.friendly_name}} {% else %} {{ inv.part.name }} {% endif %}
+                                                                                - {{ inv.serial_number }}</a>
+                                                                        </li>
+                                                                    {% endfor %}
+                                                                </ul>
+                                                            {% endif %}
+                                                        
+                                                            {% if inventory_recovered %}
+                                                                <h6 class="mt-3">Individual {{ label_inventory_app_plural }} Recovered</h6>
+                                                                <ul class="list-group list-group-flush">
+                                                                    {% for inv in inventory_recovered %}
+                                                                        <li class="list-group-item">
+                                                                            <a href="{% url 'inventory:inventory_detail' inv.id %}">{% if inv.part.friendly_name %} {{ inv.part.friendly_name}} {% else %} {{ inv.part.name }} {% endif %}
+                                                                                - {{ inv.serial_number }}</a>
+                                                                        </li>
+                                                                    {% endfor %}
+                                                                </ul>
+                                                            {% endif %}
+                                                        
+                                                            <ul class="nav nav-tabs" id="cruise-tabs-nav" role="tablist">
+                                                        
+                                                                {% if cruise.get_actions.exists %}
+                                                                    <li class="nav-item">
+                                                                        <a class="nav-link active" id="history-tab" data-toggle="tab" href="#history" role="tab" aria-controls="history" aria-selected="true">History</a>
+                                                                    </li>
+                                                                {% endif %}
+                                                        
+                                                            </ul>
+                                                        
+                                                            <div class="tab-content" id="inventory-tabs">
+                                                        
+                                                                {% if cruise.get_actions.exists %}
+                                                                    <div class="tab-pane fade show active p-2" id="history" role="tabpanel" aria-labelledby="history-tab">
+                                                                    {% if history_table %}
+                                                                    {% render_table history_table %}
+                                                                    <a class="btn btn-primary btn-sm m-1 float-right" href="{% export_url "csv" %}">Download</a>
+                                                                    {% endif %}
+                                                                    </div>
+                                                                {% endif %}
+                                                            </div>
+                                                        
+                                                            <div class="mt-3 ajax-btn">
+                                                                <a href="#" data-update-url="{% url 'cruises:ajax_cruises_update' cruise.id %}" role="button" class="btn btn-primary">Edit Cruise</a>
+                                                                <a href="#" data-update-url="{% url 'cruises:ajax_cruises_delete' cruise.id %}" role="button" class="btn btn-danger parts-delete">Delete</a>
+                                                            </div>
+                                                        
+                                                        </div>
+                                                    </div>
+                                                    
+                                                </li>
                                             </td>
-                                            <td>{{ action.user.username }}</td>
                                         </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {# LINKS TAB #}
-                        {% if event.hyperlinks.exists %}
-                            <div class="tab-pane fade m-2 p-2" id="links-{{ event.id }}" role="tabpanel" aria-labelledby="links-{{ event.id }}-tab">
-                                <ul>
-                                {% for link in event.hyperlinks.all %}
-                                    <li><a target="_blank" href="{{ link.url }}">{{ link.text }} <i class="fas fa-link"></i></a></li>
-                                {% endfor %}
-                                </ul>
+                                    </tbody>
+                                </table>
+                                
                             </div>
-                        {% endif %}
-                    </div>
-                </div> {# end of collapsing section #}
-            </li>
-        </ul>
-    </div>
-    <hr>
-{% endwith %}
+
+                            {# EVENT HISTORY TAB #}
+                            <div class="tab-pane fade border m-2 p-2" id="eventhistory-{{ event.id }}" role="tabpanel" aria-labelledby="eventhistory-{{ event.id }}-tab">
+                                <table class="table table-tight table-striped action-table">
+                                    <thead>
+                                        <th>Date</th>
+                                        <th>Action</th>
+                                        <th>Details</th>
+                                        <th>Person</th>
+                                    </thead>
+                                    <tbody style = 'overflow: auto; max-height: 200px'>
+                                        {% for action in event.get_actions.all %}
+                                            <tr>
+                                                <td>{{ action.created_at|date:"n/j/y H:i" }}</td>
+                                                <td>{{ action.get_action_type_display }}</td>
+                                                <td>
+                                                    {{ action.detail|safe }}
+                                                </td>
+                                                <td>{{ action.user.username }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {# LINKS TAB #}
+                            {% if event.hyperlinks.exists %}
+                                <div class="tab-pane fade m-2 p-2" id="links-{{ event.id }}" role="tabpanel" aria-labelledby="links-{{ event.id }}-tab">
+                                    <ul>
+                                    {% for link in event.hyperlinks.all %}
+                                        <li><a target="_blank" href="{{ link.url }}">{{ link.text }} <i class="fas fa-link"></i></a></li>
+                                    {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div> {# end of collapsing section #}
+                </li>
+            </ul>
+        </div>
+        <hr>
+    {% endwith %}
+{% endblock content %}
 
 {% block javascript %}
 <script>
