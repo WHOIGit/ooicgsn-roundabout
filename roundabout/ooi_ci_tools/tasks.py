@@ -1025,7 +1025,10 @@ def parse_bulk_files(self):
         bulk_file, file_created = BulkFile.objects.update_or_create(file_name=file_name, bulk_upload_event=bulk_event)
         if csv_file.name.endswith('AssetRecord.csv'):
             for row in reader:
-                asset_uid = row['ASSET_UID']
+                try:
+                    asset_uid = row['ASSET_UID']
+                except:
+                    continue
                 assetrecord_obj, asset_created = BulkAssetRecord.objects.update_or_create(
                     asset_uid = asset_uid,
                     bulk_file = bulk_file,
