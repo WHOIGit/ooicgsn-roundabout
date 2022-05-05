@@ -744,7 +744,7 @@ def parse_deployment_files(self):
                             part = item.part,
                             assembly_revision=assembly_revision,
                             reference_designator=ref_des_obj,
-                            order=item.part
+                            order=item.part.part_number
                         )
                         assembly_part.save()
                         item.assembly_part = assembly_part
