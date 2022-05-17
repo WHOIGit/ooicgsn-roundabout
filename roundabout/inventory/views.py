@@ -1302,7 +1302,7 @@ class InventoryAjaxAddToBuildListView(LoginRequiredMixin, TemplateView):
         )
         inventory_item = Inventory.objects.get(id=self.kwargs["pk"])
         builds = Build.objects.all().order_by("location__name")
-
+        x = False
         if inventory_item.assembly_part:
             for build in builds:
                 for assembly_part in build.assembly_revision.assembly_parts.all():
