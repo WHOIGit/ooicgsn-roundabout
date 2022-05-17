@@ -230,6 +230,13 @@ class BuildAjaxDetailView(LoginRequiredMixin, DetailView):
         bar_class = None
         bar_width = None
 
+        user_rev_deployment_events = False
+
+        latest_deployment = self.object.get_latest_deployment()
+        if self.request.user.reviewer_deployments.exists():
+            if latest_deployment in self.request.user.reviewer_deployments.all():
+                user_rev_deployment_events = True
+
         # Get Lat/Long, Depth if Deployed
         if self.object.is_deployed:
             current_deployment = self.object.current_deployment()
@@ -241,6 +248,7 @@ class BuildAjaxDetailView(LoginRequiredMixin, DetailView):
             'current_deployment': self.object.current_deployment(),
             'percent_complete': percent_complete,
             'action_record': action_record,
+            'user_rev_deployment_events': user_rev_deployment_events
         })
         return context
 
