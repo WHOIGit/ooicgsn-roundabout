@@ -293,7 +293,7 @@
                 <th>Part Number</th>
                 <td>
                     <a href="{% url 'parts:parts_detail' inventory_item.part.id  %}">
-                      {{ inventory_item.part.part_number }} | Revision: {{ inventory_item.revision.revision_code }}
+                      {{ inventory_item.part.part_number }} | Revision: {{ inventory_item.part.revision.revision_code }}
                     </a>
                     <a class="btn btn-sm btn-link" href="{% url 'parts:parts_detail' inventory_item.part.id  %}">
                         <i class="fas fa-link"></i>
@@ -399,7 +399,12 @@
 
         {% if inventory_item.inventory_deployments.exists %}
             <li class="nav-item">
-              <a class="nav-link" id="deployments-tab" data-toggle="tab" href="#deployments" role="tab" aria-controls="deployments" aria-selected="false">Deployments</a>
+                <a class="nav-link" id="deployments-tab" data-toggle="tab" href="#deployments" role="tab" aria-controls="deployments" aria-selected="false">
+                    Deployments
+                    {% if user_rev_deployment_events %}
+                        <span id = "review-badge_dep-tab" class = "badge badge-pill badge-secondary">Review Requested</span>
+                    {% endif %}
+                </a>
             </li>
         {% endif %}
 
@@ -495,7 +500,7 @@
                 {% for inventory_deployment in inventory_item.inventory_deployments.all %}
                     <li class="list-group-item">
 
-                        {% include "inventory/inventory_deployment_detail.html" with inventory_deployment=inventory_deployment %}
+                        {% include "inventory/inventory_deployment_detail.html" with inventory_deployment=inventory_deployment user=user %}
 
                     </li>
                 {% endfor %}

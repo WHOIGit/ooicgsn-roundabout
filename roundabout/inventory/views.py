@@ -539,6 +539,7 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         conf_events = self.object.inventory_configevents.filter(config_type='conf')
         user_cnst_events = self.request.user.reviewer_configevents.filter(config_type='cnst')
         user_conf_events = self.request.user.reviewer_configevents.filter(config_type='conf')
+        user_rev_deployment_events = False
 
         if self.object.inventory_calibrationevents.exists():
             coeff_events = self.object.inventory_calibrationevents.prefetch_related(
@@ -600,6 +601,10 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
             comment_list = [mptt_comment.action.id for mptt_comment in self.request.user.mptt_comments.all() if not mptt_comment.is_leaf_node()]
             comment_list = set(comment_list)
 
+        if self.object.inventory_deployments.exists():
+            if any(x in self.request.user.reviewer_deployments.all() for x in self.object.inventory_deployments.all()):
+                user_rev_deployment_events = True
+
         # Get Inventory items by Root Locations
         inventory_location_data = []
         root_locations = Location.objects.root_nodes().exclude(root_type="Trash")
@@ -634,6 +639,7 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
                 "user_rev_const_events" : user_rev_const_events,
                 "user_rev_conf_events" : user_rev_conf_events,
                 "user_rev_bulk_events" : user_rev_bulk_events,
+                "user_rev_deployment_events" : user_rev_deployment_events
             }
         )
         return context
@@ -1302,7 +1308,7 @@ class InventoryAjaxAddToBuildListView(LoginRequiredMixin, TemplateView):
         )
         inventory_item = Inventory.objects.get(id=self.kwargs["pk"])
         builds = Build.objects.all().order_by("location__name")
-
+        x = False
         if inventory_item.assembly_part:
             for build in builds:
                 for assembly_part in build.assembly_revision.assembly_parts.all():

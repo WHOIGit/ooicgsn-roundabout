@@ -110,6 +110,7 @@ def import_calibrations(cal_files, user_draft):
 # Activates parsing tasks based on selected files
 def import_csv(request):
     confirm = ""
+    extra_message = ''
     if not ImportConfig.objects.exists():
         ImportConfig.objects.create()
     if request.method == "POST":
@@ -144,6 +145,7 @@ def import_csv(request):
         if bulk_form.is_valid() and len(bulk_file) >= 1:
             import_bulk(bulk_file, bulk_form.cleaned_data['user_draft'])
             confirm = "True"
+            extra_message = "Note: Bulk Vocab Files are displayed for Parts with matching Manufacturer/Model Field Values"
     else:
         cal_form = ImportCalibrationForm()
         dep_form = ImportDeploymentsForm()
@@ -158,7 +160,8 @@ def import_csv(request):
         'vessels_form': vessels_form,
         'refdes_form': refdes_form,
         'bulk_form': bulk_form,
-        'confirm': confirm
+        'confirm': confirm,
+        'extra_message': extra_message
     })
 
 
