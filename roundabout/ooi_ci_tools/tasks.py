@@ -938,6 +938,11 @@ def parse_refdes_files(self):
         for row in reader:
             refdes_name = row['Reference_Designator']
             try:
+                assertion_sets = refdes_name.split('-')
+                assert len(assertion_sets) == 4
+            except:
+                continue
+            try:
                 refdes_valid = validate_reference_designator(refdes_name)
             except:
                 continue
@@ -1080,7 +1085,7 @@ def parse_bulk_files(self):
                     except Part.MultipleObjectsReturned:
                         part = Part.objects.filter(part_type=inst_obj, part_number=part_template).first()
                     except Part.DoesNotExist:
-                        part = Part.objects.create(name=part_template, part_type=inst_obj, part_number=part_template)
+                        part = Part.objects.create(name=part_template, part_type=inst_obj, part_number=part_template, bulk_upload_event=bulk_event)
                         rev_a = Revision.objects.create(part=part)
                     inv = Inventory.objects.create(
                         part = part,

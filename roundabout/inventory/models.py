@@ -187,9 +187,12 @@ class Inventory(MPTTModel):
 
     def location_changed(self):
         current_location = self.location
-        last_location = self.actions.latest().location
-        if current_location != last_location:
-            return True
+        if self.actions.exists():
+            latest_action = self.actions.latest()
+            if latest_action.location.exists():
+                last_location = latest_action.location
+                if current_location != last_location:
+                    return True
         return False
 
     # Return True if item removed from Parent

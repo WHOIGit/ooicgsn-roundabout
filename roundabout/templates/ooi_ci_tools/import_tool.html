@@ -70,10 +70,11 @@
 
 
         let confirm = '{{ confirm }}';
+        let extra_message = '{{ extra_message }}';
 
-        check_confirm(confirm)
+        check_confirm(confirm, extra_message)
 
-        function check_confirm(confirm) {
+        function check_confirm(confirm, extra_message) {
             if (confirm == 'True') {
                 $('.progress').show();
                 $('.progress-bar')
@@ -81,7 +82,7 @@
                     .css('width', 100 + '%')
                     .removeClass('bg-info')
                     .addClass('bg-success')
-                    .text('Import Complete')
+                    .text('Import Complete. ' + extra_message)
             } else {
                 $('.progress-bar')
                     .removeClass('bg-success')
@@ -95,7 +96,7 @@
                 if (r.progress != null) {
                     $('.progress').show();
                     confirm = 'False'
-                    check_confirm(confirm)
+                    check_confirm(confirm, '')
                     let current = r.progress.progress;
                     let total = r.progress.total;
                     let filename = r.progress.file;

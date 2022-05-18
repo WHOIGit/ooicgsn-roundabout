@@ -23,6 +23,9 @@
 
 <a class="collapsed" data-toggle="collapse" href="#deployment-{{ inventory_deployment.id }}" aria-expanded="false" aria-controls="deployment-{{ inventory_deployment.id }}">
     {{ inventory_deployment.deployment.build }} - {{ label_deployments_app_singular }}: {{ inventory_deployment.deployment }}
+    {% if inventory_deployment in user.reviewer_deployments.all %}
+        <span id = "review-badge_dep-tab" class = "badge badge-pill badge-secondary">Review Requested</span>
+    {% endif %}
 </a>
 
 <a data-toggle="collapse" class="collapsed text-right" href="#deployment-{{ inventory_deployment.id }}" aria-controls="deployment-{{ inventory_deployment.id }}" aria-expanded="false" role="button">
