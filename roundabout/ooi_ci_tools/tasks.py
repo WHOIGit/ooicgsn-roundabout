@@ -1078,6 +1078,7 @@ def parse_bulk_files(self):
                                     field_val.field_value = val
                                     field_val.save()       
                     inv_obj.save()
+                    _create_action_history(inv_obj,Action.CALCSVUPDATE,user,data=dict(csv_import=csv_file.name))
                 if inv.exists() == False and part_template is not None and part_template != '':
                     inst_obj = PartType.objects.get(name='Instrument')
                     try:
@@ -1094,6 +1095,7 @@ def parse_bulk_files(self):
                         location = Location.objects.get(name='Retired')
                     )
                     inv.save()
+                    _create_action_history(inv,Action.CALCSVIMPORT,user,data=dict(csv_import=csv_file.name))
                             
                     FieldValue.objects.update_or_create(
                         field = Field.objects.get_or_create(field_name='CI TYPE')[0],

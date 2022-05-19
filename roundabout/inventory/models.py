@@ -189,7 +189,7 @@ class Inventory(MPTTModel):
         current_location = self.location
         if self.actions.exists():
             latest_action = self.actions.latest()
-            if latest_action.location.exists():
+            if hasattr(latest_action,'location'):
                 last_location = latest_action.location
                 if current_location != last_location:
                     return True
