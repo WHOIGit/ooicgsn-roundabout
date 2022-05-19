@@ -1150,7 +1150,7 @@ class ImportBulkUploadForm(forms.Form):
             if file_name.endswith('-AssetRecord.csv'):
                 
                 for row in reader:
-                    pass
+                    continue
                     try:
                         asset_uid = row['ASSET_UID']
                         inv_item = Inventory.objects.get(serial_number = asset_uid)
@@ -1162,7 +1162,6 @@ class ImportBulkUploadForm(forms.Form):
             elif file_name.endswith('_vocab.csv'):
                 
                 for row in reader:
-                    pass
                     manufacturer = row['Manufacturer']
                     asset_model = row['Model']
                     man_field_list = FieldValue.objects.filter(field__field_name__iexact='Manufacturer', field_value = manufacturer, part__isnull=False, is_current=True)

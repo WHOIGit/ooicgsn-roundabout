@@ -713,13 +713,14 @@ def parse_deployment_files(self):
 
             for row in deployment_import['rows']:
                 # create InventoryDeployments for each item
-                if row['sensor.uid'] != '' or row['electrical.uid'] != '':
-                    if row['sensor.uid']:
+                if row['sensor.uid'] == '' and row['electrical.uid'] == '':
+                    continue
+                else:
+                    if row['sensor.uid'] != '':
                         uid = row['sensor.uid']
-                    elif row['electrical.uid']:
+                    elif row['electrical.uid'] != :
                         uid = row['electrical.uid']
-                    else:
-                        continue
+                    
                     # Find the AssemblyPart that matches this RefDes by searching the ConfigDefault values
                     # If no match, throw error.
                     try:
