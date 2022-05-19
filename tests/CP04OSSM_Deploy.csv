@@ -1,2 +1,2 @@
 CUID_Deploy,deployedBy,CUID_Recover,recoveredBy,Reference Designator,deploymentNumber,versionNumber,startDateTime,stopDateTime,mooring.uid,node.uid,sensor.uid,lat,lon,orbit,deployment_depth,water_depth,notes,electrical.uid,assembly_template_revision
-MAUI,, ,,CP04OSSM-MFD35-01-ADCPSJ000, ,,2021-12-12T21:47:00,,CGMCP-04OSSM-00011, , ,39.93617,-70.8803,, ,25, ,,B
+MAUI,, ,,CP04OSSM-MFD35-01-ADCPSJ000, ,,2021-12-12T21:47:00,,CGMCP-04OSSM-00011, ,CGINS-ADCPSJ-19061,39.93617,-70.8803,, ,25, ,,B

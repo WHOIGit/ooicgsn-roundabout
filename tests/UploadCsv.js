@@ -571,7 +571,7 @@ var filename, filename_ext;
             {
                 const dropdown = await driver.findElement(By.id("id_reference_designator"));
                 try {
-                    await dropdown.findElement(By.xpath("//option[. = 'CE01ISSM']")).click();
+                    await dropdown.findElement(By.xpath("//option[. = 'CE01ISSM-MFC31-00-CPMENG000']")).click();
                     console.log("Vocab.csv bulk upload successful.");
                 }
                 catch {
