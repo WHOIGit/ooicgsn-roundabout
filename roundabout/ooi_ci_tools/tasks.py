@@ -616,8 +616,6 @@ def parse_deployment_files(self):
                     'location': build_location,
                 },
             )
-            print(assembly_revision)
-            print(build.assembly_revision)
 
             # Call the function to create an initial Action history
             if build_created:
