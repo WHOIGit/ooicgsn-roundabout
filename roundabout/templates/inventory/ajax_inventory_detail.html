@@ -293,7 +293,7 @@
                 <th>Part Number</th>
                 <td>
                     <a href="{% url 'parts:parts_detail' inventory_item.part.id  %}">
-                      {{ inventory_item.part.part_number }} | Revision: {{ inventory_item.part.revision.revision_code }}
+                      {{ inventory_item.part.part_number }} | Revision: {{ inventory_item.part.revisions.latest.revision_code }}
                     </a>
                     <a class="btn btn-sm btn-link" href="{% url 'parts:parts_detail' inventory_item.part.id  %}">
                         <i class="fas fa-link"></i>
