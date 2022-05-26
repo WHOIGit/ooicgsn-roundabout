@@ -89,11 +89,6 @@ jobs:
 
       - name: Running Automated tests
         run:  |
-          google-chrome --version
-          chromedriver --version
-          echo node.exe version
-          node -v
-          echo
 
           # Build and run development version of Django
           mv .envs.example .envs
