@@ -512,31 +512,32 @@ def parse_deployment_files(self):
         # Restructure CSV data to group rows by Deployment
         deployment_imports = []
         for row in reader:
-            if not any(dict['mooring.uid'] == row['mooring.uid'] for dict in deployment_imports):
-                # get Assembly number from RefDes as that seems to be most consistent across CSVs
-                ref_des = row['Reference Designator']
-                assembly = ref_des.split('-')[0]
-                dep_number_string = row['mooring.uid'].split('-')[2]
-                # parse together the Build/Deployment Numbers from CSV fields
-                deployment_number = f'{assembly}-{dep_number_string}'
-                build_number = f'Historical {dep_number_string}'
-                assembly_template_revision = 'A'
-                if 'assembly_template_revision' in row.keys():
-                    if row['assembly_template_revision'] != '':
-                        assembly_template_revision = row['assembly_template_revision']
-                # build data dict
-                mooring_uid_dict = {
-                    'mooring.uid': row['mooring.uid'],
-                    'assembly': assembly,
-                    'build_number': build_number,
-                    'deployment_number': deployment_number,
-                    'assembly_template_revision': assembly_template_revision,
-                    'rows': [],
-                }
-                deployment_imports.append(mooring_uid_dict)
+            if '#' not in row:
+                if not any(dict['mooring.uid'] == row['mooring.uid'] for dict in deployment_imports):
+                    # get Assembly number from RefDes as that seems to be most consistent across CSVs
+                    ref_des = row['Reference Designator']
+                    assembly = ref_des.split('-')[0]
+                    dep_number_string = row['mooring.uid'].split('-')[2]
+                    # parse together the Build/Deployment Numbers from CSV fields
+                    deployment_number = f'{assembly}-{dep_number_string}'
+                    build_number = f'Historical {dep_number_string}'
+                    assembly_template_revision = 'A'
+                    if 'assembly_template_revision' in row.keys():
+                        if row['assembly_template_revision'] != '':
+                            assembly_template_revision = row['assembly_template_revision']
+                    # build data dict
+                    mooring_uid_dict = {
+                        'mooring.uid': row['mooring.uid'],
+                        'assembly': assembly,
+                        'build_number': build_number,
+                        'deployment_number': deployment_number,
+                        'assembly_template_revision': assembly_template_revision,
+                        'rows': [],
+                    }
+                    deployment_imports.append(mooring_uid_dict)
 
-            deployment = next((deployment for deployment in deployment_imports if deployment['mooring.uid'] == row['mooring.uid']), False)
-            deployment['rows'].append(row)
+                deployment = next((deployment for deployment in deployment_imports if deployment['mooring.uid'] == row['mooring.uid']), False)
+                deployment['rows'].append(row)
         # loop through the Deployments
         for deployment_import in deployment_imports:
             # get the Assembly template for this Build, needs to be only one match
@@ -554,17 +555,19 @@ def parse_deployment_files(self):
                 assembly_revision = AssemblyRevision.objects.filter(assembly=assembly, revision_code=deployment_import_revision).latest()
 
             if assembly_revision_created:
-                latest_revision = assembly.assembly_revisions.exclude(revision_code=deployment_import_revision).latest()
-                for assembly_part in latest_revision.assembly_parts.all():
-                    
-                    if assembly_part.is_root_node():
-                        _make_revision_tree_copy(
-                            assembly_part,
-                            assembly_revision,
-                            assembly_part.parent,
-                            user,
-                            False,
-                        )
+                assm_revs = assembly.assembly_revisions.exclude(revision_code=deployment_import_revision)
+                if len(assm_revs):
+                    latest_revision = assm_revs.latest()
+                    for assembly_part in latest_revision.assembly_parts.all():
+                        
+                        if assembly_part.is_root_node():
+                            _make_revision_tree_copy(
+                                assembly_part,
+                                assembly_revision,
+                                assembly_part.parent,
+                                user,
+                                False,
+                            )
             assembly_revision.save()
 
             # set up common variables for Builds/Deployments
