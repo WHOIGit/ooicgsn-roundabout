@@ -86,8 +86,6 @@ var password;
 
         // DELETE CRUISE/VESSEL TEST
 
-        // Delete a Vessel
-        // TO DO: When Ethan fixes warning there are active cruises, put that in
         await driver.findElement(By.linkText("Cruises")).click()
         while ((await driver.findElements(By.id("action"))).length == 0)
         {
@@ -103,7 +101,9 @@ var password;
         await new Promise(r => setTimeout(r, 2000));
 
         // Delete all Vessels
-        while ((await driver.findElements(By.css(".list-group-item:nth-child(" + 1 + ") .fa"))).length != 0) {
+        //while ((await driver.findElements(By.css(".list-group-item:nth-child(" + 1 + ") .fa"))).length != 0) {
+         // Just delete 1 vessel - takes too long to delete all vessel        
+         if ((await driver.findElements(By.css(".list-group-item:nth-child(" + 1 + ") .fa"))).length != 0) {
             await driver.findElement(By.css(".list-group-item:nth-child(" + 1 + ") .fa")).click();
             await driver.findElement(By.linkText("Delete")).click();
             while ((await driver.findElements(By.css(".btn-danger"))).length == 0) {
@@ -112,9 +112,9 @@ var password;
             }
             await driver.findElement(By.css(".btn-danger")).click();  // confirm
             await new Promise(r => setTimeout(r, 2000));
-        }
+         }
  
-	    console.log("All Vessels Deleted.");
+	    console.log("Vessel Deleted.");
 
         // Delete All Cruises
         while ((await driver.findElements(By.linkText("Cruises"))).length == 0) {

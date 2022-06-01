@@ -433,6 +433,7 @@ var password;
             console.log("Wait 2 seconds for Inventory2.");
         }
         await driver.findElement(By.id("action")).click();
+        await new Promise(r => setTimeout(r, 2000));
         while ((await driver.findElements(By.linkText("Recover from Deployment"))).length == 0) {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Recover from Deployment.");

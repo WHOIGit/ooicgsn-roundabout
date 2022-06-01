@@ -84,6 +84,34 @@ var password;
         await driver.findElement(By.id("id_password")).sendKeys(password);
         await driver.findElement(By.css(".primaryAction")).click();
 
+        await driver.findElement(By.linkText("Cruises")).click()
+        while ((await driver.findElements(By.id("action"))).length == 0)
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Action.");
+        }
+        await driver.findElement(By.id("action")).click()
+        while ((await driver.findElements(By.linkText("Edit Vessel List"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Edit Vessel.");
+        }
+        await driver.findElement(By.linkText("Edit Vessel List")).click()
+        await new Promise(r => setTimeout(r, 2000));
+
+        // Delete all Vessels
+        while ((await driver.findElements(By.css(".list-group-item:nth-child(" + 1 + ") .fa"))).length != 0) {
+            await driver.findElement(By.css(".list-group-item:nth-child(" + 1 + ") .fa")).click();
+            await driver.findElement(By.linkText("Delete")).click();
+            while ((await driver.findElements(By.css(".btn-danger"))).length == 0) {
+                await new Promise(r => setTimeout(r, 2000));
+                console.log("Wait 2 seconds for Confirm.");
+            }
+            await driver.findElement(By.css(".btn-danger")).click();  // confirm
+            await new Promise(r => setTimeout(r, 2000));
+         }
+ 
+	    console.log("All Vessels Deleted.");
+
         // Delete All Cruises
         while ((await driver.findElements(By.linkText("Cruises"))).length == 0) {
             await new Promise(r => setTimeout(r, 4000));
@@ -92,7 +120,6 @@ var password;
         await driver.findElement(By.linkText("Cruises")).click()
 	await new Promise(r => setTimeout(r, 4000));
 
-	// Circleci times out deleting all cruises, just delete one cruise
         while ((await driver.findElements(By.xpath("//li/ul/li/a"))).length != 0) 
 	{
             await driver.findElement(By.xpath("//li/ul/li/a")).click();
