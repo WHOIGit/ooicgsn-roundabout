@@ -1,6 +1,6 @@
 FROM ubuntu:latest
 
-# Required here for nodejs 15+ and npm - needs to go here
+# Required for nodejs 15+ and npm - needs to go here
 WORKDIR /tests
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -14,17 +14,17 @@ RUN apt-get install iputils-ping -y && apt-get install net-tools -y
 
 RUN apt-get install -y wget && apt install -y unzip
 
-# At Circleci root dir
+# At root dir
 COPY ./tests/*.bat /tests/
 COPY ./tests/*.js /tests/
 COPY ./tests/*.csv /tests/
 COPY ./tests/*.ext /tests/
 
-#RUN curl -sL https://deb.nodesource.com/setup_16.x | bash -
-#RUN apt-get install -y nodejs
-#nodesource not yet supported for ubuntu jammy rls 22.04 - 4/25/2022, issue #1379
-RUN curl -LO https://nodejs.org/dist/v18.0.0/node-v18.0.0-linux-x64.tar.xz
-RUN tar -xvf node-v18.0.0-linux-x64.tar.xz
+#RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -  #don't need
+# The default Ubuntu 22.04 repository contains an old version of Node.js. Currently, the repositories contain the Node 12.22.9 version.
+# To install Node.js from default repositories, run:
+RUN apt-get install -y nodejs
+
 RUN npm install jsdom
 RUN npm install jquery
 RUN npm install jquery-csv
