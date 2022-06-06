@@ -512,7 +512,7 @@ def parse_deployment_files(self):
         # Restructure CSV data to group rows by Deployment
         deployment_imports = []
         for row in reader:
-            if '#' not in row:
+            if '#' not in row['CUID_Deploy']:
                 if not any(dict['mooring.uid'] == row['mooring.uid'] for dict in deployment_imports):
                     # get Assembly number from RefDes as that seems to be most consistent across CSVs
                     ref_des = row['Reference Designator']
@@ -743,12 +743,15 @@ def parse_deployment_files(self):
                     
 
                     if item.assembly_part == None:
+                        order = item.part.name
+                        if item.part.friendly_name:
+                            order = item.part.friendly_name
                         assembly_part, assm_created = AssemblyPart.objects.get_or_create(
                             assembly=assembly,
                             part = item.part,
                             assembly_revision=assembly_revision,
                             reference_designator=ref_des_obj,
-                            order=item.part.part_number
+                            order=order
                         )
                         assembly_part.save()
                         item.assembly_part = assembly_part

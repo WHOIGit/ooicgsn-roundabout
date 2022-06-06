@@ -57,7 +57,7 @@ from django.forms.models import inlineformset_factory
 def validate_import_config_deployments(import_config,reader, filename):
     if import_config:
         for idx,row in enumerate(reader):
-            if '#' not in row:
+            if '#' not in row['CUID_Deploy']:
                 try:
                     sensor_uid = row['sensor.uid']
                 except:
@@ -544,7 +544,7 @@ class ImportDeploymentsForm(forms.Form):
                     )
                 
                 for idx,row in enumerate(reader):
-                    if '#' not in row:
+                    if '#' not in row['CUID_Deploy']:
                         try:
                             start_date = row['startDateTime']
                             datetime_obj = parser.parse(start_date)
