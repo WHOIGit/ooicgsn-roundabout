@@ -295,7 +295,9 @@ class CalibrationTable(SearchTable):
     user_draft__all__name = ManyToManyColumn(verbose_name='Reviewers', accessor='user_draft', transform=lambda x: x.name or x.username, default='')
 
     coefficient_value_set__names = ManyToManyColumn(verbose_name='Coefficient Names',
-            accessor='coefficient_value_sets', transform=lambda x: x.coefficient_name)
+            accessor='coefficient_value_sets', transform=lambda x: x.coefficient_name, separator='; ')
+    coefficient_value_set__values = ManyToManyColumn(verbose_name='Coefficient Values',
+            accessor = 'coefficient_value_sets', transform = lambda x: trunc_render(37)(x.value_set), separator='; ')
     coefficient_value_set__notes = ManyToManyColumn(verbose_name='Coefficient Notes',
             accessor='coefficient_value_sets', transform=lambda x: format_html('<b>{}:</b> [{}]<br>'.format(x.coefficient_name,trunc_render()(x.notes))) if x.notes else '', separator='\n')
 
@@ -304,6 +306,16 @@ class CalibrationTable(SearchTable):
 
     refdes = Column(verbose_name='Reference Designator', accessor='inventory__assembly_part__reference_designator__refdes_name')
 
+    def value_coefficient_value_set__values(self,value):
+        return '; '.join([str(val) for val in value.all()])
+
+    def value_coefficient_value_set__notes(self,value):
+        notes = []
+        for val in value.all():
+            if val.notes:
+                note = '{}: [{}]'.format(val.coefficient_name,val.notes)
+                notes.append(note)
+        return '\n'.join(notes)
 
 class ConfigConstTable(SearchTable):
     class Meta(SearchTable.Meta):
@@ -323,7 +335,9 @@ class ConfigConstTable(SearchTable):
     user_draft__all__name = ManyToManyColumn(verbose_name='Reviewers', accessor='user_draft', transform=lambda x: x.name or x.username, default='')
 
     config_values__names = ManyToManyColumn(verbose_name='Config/Constant Names',
-            accessor='config_values', transform=lambda x: x.config_name)
+            accessor='config_values', transform=lambda x: x.config_name, separator='; ')
+    config_values__values = ManyToManyColumn(verbose_name='Config/Constant Values',
+            accessor = 'config_values', transform = lambda x: x.config_value, separator='; ')
     config_values__notes = ManyToManyColumn(verbose_name='Config/Constant Notes',
             accessor='config_values', transform=lambda x: format_html('<b>{}:</b> [{}]<br>'.format(x.config_name,trunc_render()(x.notes))) if x.notes else '', separator='\n')
 
@@ -332,3 +346,10 @@ class ConfigConstTable(SearchTable):
 
     refdes = Column(verbose_name='Reference Designator', accessor='inventory__assembly_part__reference_designator__refdes_name')
 
+    def value_coefficient_value_set__notes(self,value):
+        notes = []
+        for val in value.all():
+            if val.notes:
+                note = '{}: [{}]'.format(val.config_name,val.notes)
+                notes.append(note)
+        return '\n'.join(notes)
