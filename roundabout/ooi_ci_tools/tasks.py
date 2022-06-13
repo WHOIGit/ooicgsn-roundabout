@@ -750,9 +750,9 @@ def parse_deployment_files(self):
                             assembly=assembly,
                             part = item.part,
                             assembly_revision=assembly_revision,
-                            reference_designator=ref_des_obj,
                             order=order
                         )
+                        assembly_part.reference_designator = ref_des_obj
                         assembly_part.save()
                         item.assembly_part = assembly_part
                     refdes_event = ref_des_obj.refdes_events.first()

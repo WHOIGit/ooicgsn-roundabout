@@ -260,245 +260,247 @@ def validate_import_config_deployments(import_config,reader, filename):
 def validate_import_config_cruises(import_config, reader, filename):
     for idx, row in enumerate(reader):
         idx = idx + 2
-        try:
-            ship_name = row['ShipName']
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, Row %(row)s: Unable to parse Ship Name'),
-                params={'row': idx, 'filename': filename},
-            )
-        if import_config.require_cruise_ship_name:
-            if len(ship_name) == 0:
+        if '#' not in row['CUID']:
+            try:
+                ship_name = row['ShipName']
+            except:
                 raise ValidationError(
-                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank Ship Name'),
-                    params={'row': idx, 'filename': filename}
+                    _('File: %(filename)s, Row %(row)s: Unable to parse Ship Name'),
+                    params={'row': idx, 'filename': filename},
                 )
-        try:
-            start_date = row['cruiseStartDateTime']
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, Row %(row)s: Unable to parse Start Date'),
-                params={'row': idx, 'filename': filename},
-            )
-        if import_config.require_cruise_cruise_start_date:
-            if len(start_date) == 0:
+            if import_config.require_cruise_ship_name:
+                if len(ship_name) == 0:
+                    raise ValidationError(
+                        _('File: %(filename)s, Row %(row)s: Import Config disallows blank Ship Name'),
+                        params={'row': idx, 'filename': filename}
+                    )
+            try:
+                start_date = row['cruiseStartDateTime']
+            except:
                 raise ValidationError(
-                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank Start Date'),
-                    params={'row': idx, 'filename': filename}
+                    _('File: %(filename)s, Row %(row)s: Unable to parse Start Date'),
+                    params={'row': idx, 'filename': filename},
                 )
-        try:
-            stop_date = row['cruiseStopDateTime']
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, Row %(row)s: Unable to parse Stop Date'),
-                params={'row': idx, 'filename': filename},
-            )
-        if import_config.require_cruise_cruise_end_date:
-            if len(stop_date) == 0:
+            if import_config.require_cruise_cruise_start_date:
+                if len(start_date) == 0:
+                    raise ValidationError(
+                        _('File: %(filename)s, Row %(row)s: Import Config disallows blank Start Date'),
+                        params={'row': idx, 'filename': filename}
+                    )
+            try:
+                stop_date = row['cruiseStopDateTime']
+            except:
                 raise ValidationError(
-                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank Stop Date'),
-                    params={'row': idx, 'filename': filename}
+                    _('File: %(filename)s, Row %(row)s: Unable to parse Stop Date'),
+                    params={'row': idx, 'filename': filename},
                 )
-        try:
-            notes = row['notes']
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, Row %(row)s: Unable to parse Notes'),
-                params={'row': idx, 'filename': filename},
-            )
-        if import_config.require_cruise_notes:
-            if len(notes) == 0:
+            if import_config.require_cruise_cruise_end_date:
+                if len(stop_date) == 0:
+                    raise ValidationError(
+                        _('File: %(filename)s, Row %(row)s: Import Config disallows blank Stop Date'),
+                        params={'row': idx, 'filename': filename}
+                    )
+            try:
+                notes = row['notes']
+            except:
                 raise ValidationError(
-                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank Notes'),
-                    params={'row': idx, 'filename': filename}
+                    _('File: %(filename)s, Row %(row)s: Unable to parse Notes'),
+                    params={'row': idx, 'filename': filename},
                 )
+            if import_config.require_cruise_notes:
+                if len(notes) == 0:
+                    raise ValidationError(
+                        _('File: %(filename)s, Row %(row)s: Import Config disallows blank Notes'),
+                        params={'row': idx, 'filename': filename}
+                    )
     return True
 
 # Vessel CSV import config validator
 def validate_import_config_vessels(import_config, reader, filename):
     for idx, row in enumerate(reader):
-        try:
-            prefix = row['Prefix']
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, Row %(row)s: Unable to parse Prefix'),
-                params={'row': idx, 'filename': filename},
-            )
-        if import_config.require_vessel_vesseldesignation:
-            if len(prefix) == 0:
+        if '#' not in row['Prefix']:
+            try:
+                prefix = row['Prefix']
+            except:
                 raise ValidationError(
-                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank Prefix'),
-                    params={'row': idx, 'filename': filename}
+                    _('File: %(filename)s, Row %(row)s: Unable to parse Prefix'),
+                    params={'row': idx, 'filename': filename},
                 )
-        try:
-            v_des = row['Vessel Designation']
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, Row %(row)s: Unable to parse Vessel Designation'),
-                params={'row': idx, 'filename': filename},
-            )
-        if import_config.require_vessel_vesseldesignation:
-            if len(v_des) == 0:
+            if import_config.require_vessel_vesseldesignation:
+                if len(prefix) == 0:
+                    raise ValidationError(
+                        _('File: %(filename)s, Row %(row)s: Import Config disallows blank Prefix'),
+                        params={'row': idx, 'filename': filename}
+                    )
+            try:
+                v_des = row['Vessel Designation']
+            except:
                 raise ValidationError(
-                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank Vessel Designation'),
-                    params={'row': idx, 'filename': filename}
+                    _('File: %(filename)s, Row %(row)s: Unable to parse Vessel Designation'),
+                    params={'row': idx, 'filename': filename},
                 )
-        try:
-            v_name = row['Vessel Name']
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, Row %(row)s: Unable to parse Vessel Name'),
-                params={'row': idx, 'filename': filename},
-            )
-        if import_config.require_vessel_vessel_name:
-            if len(v_name) == 0:
+            if import_config.require_vessel_vesseldesignation:
+                if len(v_des) == 0:
+                    raise ValidationError(
+                        _('File: %(filename)s, Row %(row)s: Import Config disallows blank Vessel Designation'),
+                        params={'row': idx, 'filename': filename}
+                    )
+            try:
+                v_name = row['Vessel Name']
+            except:
                 raise ValidationError(
-                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank Vessel Name'),
-                    params={'row': idx, 'filename': filename}
+                    _('File: %(filename)s, Row %(row)s: Unable to parse Vessel Name'),
+                    params={'row': idx, 'filename': filename},
                 )
-        try:
-            ices = row['ICES Code']
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, Row %(row)s: Unable to parse ICES Code'),
-                params={'row': idx, 'filename': filename},
-            )
-        if import_config.require_vessel_ICES_code:
-            if len(ices) == 0 or ices == '':
+            if import_config.require_vessel_vessel_name:
+                if len(v_name) == 0:
+                    raise ValidationError(
+                        _('File: %(filename)s, Row %(row)s: Import Config disallows blank Vessel Name'),
+                        params={'row': idx, 'filename': filename}
+                    )
+            try:
+                ices = row['ICES Code']
+            except:
                 raise ValidationError(
-                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank ICES Code'),
-                    params={'row': idx, 'filename': filename}
+                    _('File: %(filename)s, Row %(row)s: Unable to parse ICES Code'),
+                    params={'row': idx, 'filename': filename},
                 )
-        try:
-            operator = row['Operator']
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, Row %(row)s: Unable to parse Operator'),
-                params={'row': idx, 'filename': filename},
-            )
-        if import_config.require_vessel_operator:
-            if len(operator) == 0:
+            if import_config.require_vessel_ICES_code:
+                if len(ices) == 0 or ices == '':
+                    raise ValidationError(
+                        _('File: %(filename)s, Row %(row)s: Import Config disallows blank ICES Code'),
+                        params={'row': idx, 'filename': filename}
+                    )
+            try:
+                operator = row['Operator']
+            except:
                 raise ValidationError(
-                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank Operator'),
-                    params={'row': idx, 'filename': filename}
+                    _('File: %(filename)s, Row %(row)s: Unable to parse Operator'),
+                    params={'row': idx, 'filename': filename},
                 )
-        try:
-            call_sign = row['Call Sign']
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, Row %(row)s: Unable to parse Call Sign'),
-                params={'row': idx, 'filename': filename},
-            )
-        if import_config.require_vessel_call_sign:
-            if len(call_sign) == 0:
+            if import_config.require_vessel_operator:
+                if len(operator) == 0:
+                    raise ValidationError(
+                        _('File: %(filename)s, Row %(row)s: Import Config disallows blank Operator'),
+                        params={'row': idx, 'filename': filename}
+                    )
+            try:
+                call_sign = row['Call Sign']
+            except:
                 raise ValidationError(
-                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank Call Sign'),
-                    params={'row': idx, 'filename': filename}
+                    _('File: %(filename)s, Row %(row)s: Unable to parse Call Sign'),
+                    params={'row': idx, 'filename': filename},
                 )
-        try:
-            mmsi = row['MMSI#']
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, Row %(row)s: Unable to parse MMSI Number'),
-                params={'row': idx, 'filename': filename},
-            )
-        if import_config.require_vessel_MMSI_number:
-            if len(mmsi) == 0:
+            if import_config.require_vessel_call_sign:
+                if len(call_sign) == 0:
+                    raise ValidationError(
+                        _('File: %(filename)s, Row %(row)s: Import Config disallows blank Call Sign'),
+                        params={'row': idx, 'filename': filename}
+                    )
+            try:
+                mmsi = row['MMSI#']
+            except:
                 raise ValidationError(
-                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank MMSI Number'),
-                    params={'row': idx, 'filename': filename}
+                    _('File: %(filename)s, Row %(row)s: Unable to parse MMSI Number'),
+                    params={'row': idx, 'filename': filename},
                 )
-        try:
-            imo = row['IMO#']
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, Row %(row)s: Unable to parse IMO Number'),
-                params={'row': idx, 'filename': filename},
-            )
-        if import_config.require_vessel_IMO_number:
-            if len(imo) == 0:
+            if import_config.require_vessel_MMSI_number:
+                if len(mmsi) == 0:
+                    raise ValidationError(
+                        _('File: %(filename)s, Row %(row)s: Import Config disallows blank MMSI Number'),
+                        params={'row': idx, 'filename': filename}
+                    )
+            try:
+                imo = row['IMO#']
+            except:
                 raise ValidationError(
-                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank IMO Number'),
-                    params={'row': idx, 'filename': filename}
+                    _('File: %(filename)s, Row %(row)s: Unable to parse IMO Number'),
+                    params={'row': idx, 'filename': filename},
                 )
-        try:
-            length_m = row['Length (m)']
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, Row %(row)s: Unable to parse Length (m)'),
-                params={'row': idx, 'filename': filename},
-            )
-        if import_config.require_vessel_length:
-            if len(length_m) == 0:
+            if import_config.require_vessel_IMO_number:
+                if len(imo) == 0:
+                    raise ValidationError(
+                        _('File: %(filename)s, Row %(row)s: Import Config disallows blank IMO Number'),
+                        params={'row': idx, 'filename': filename}
+                    )
+            try:
+                length_m = row['Length (m)']
+            except:
                 raise ValidationError(
-                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank Length (m)'),
-                    params={'row': idx, 'filename': filename}
+                    _('File: %(filename)s, Row %(row)s: Unable to parse Length (m)'),
+                    params={'row': idx, 'filename': filename},
                 )
-        try:
-            max_speed = row['Max Speed (m/s)']
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, Row %(row)s: Unable to parse Max Speed (m/s)'),
-                params={'row': idx, 'filename': filename},
-            )
-        if import_config.require_vessel_max_speed:
-            if len(max_speed) == 0:
+            if import_config.require_vessel_length:
+                if len(length_m) == 0:
+                    raise ValidationError(
+                        _('File: %(filename)s, Row %(row)s: Import Config disallows blank Length (m)'),
+                        params={'row': idx, 'filename': filename}
+                    )
+            try:
+                max_speed = row['Max Speed (m/s)']
+            except:
                 raise ValidationError(
-                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank Max Speed (m/s)'),
-                    params={'row': idx, 'filename': filename}
+                    _('File: %(filename)s, Row %(row)s: Unable to parse Max Speed (m/s)'),
+                    params={'row': idx, 'filename': filename},
                 )
-        try:
-            max_draft = row['Max Draft (m)']
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, Row %(row)s: Unable to parse Max Draft (m)'),
-                params={'row': idx, 'filename': filename},
-            )
-        if import_config.require_vessel_max_draft:
-            if len(max_draft) == 0:
+            if import_config.require_vessel_max_speed:
+                if len(max_speed) == 0:
+                    raise ValidationError(
+                        _('File: %(filename)s, Row %(row)s: Import Config disallows blank Max Speed (m/s)'),
+                        params={'row': idx, 'filename': filename}
+                    )
+            try:
+                max_draft = row['Max Draft (m)']
+            except:
                 raise ValidationError(
-                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank Max Draft (m)'),
-                    params={'row': idx, 'filename': filename}
+                    _('File: %(filename)s, Row %(row)s: Unable to parse Max Draft (m)'),
+                    params={'row': idx, 'filename': filename},
                 )
-        try:
-            des = row['Designation']
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, Row %(row)s: Unable to parse Designation'),
-                params={'row': idx, 'filename': filename},
-            )
-        if import_config.require_vessel_designation:
-            if len(des) == 0:
+            if import_config.require_vessel_max_draft:
+                if len(max_draft) == 0:
+                    raise ValidationError(
+                        _('File: %(filename)s, Row %(row)s: Import Config disallows blank Max Draft (m)'),
+                        params={'row': idx, 'filename': filename}
+                    )
+            try:
+                des = row['Designation']
+            except:
                 raise ValidationError(
-                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank Designation'),
-                    params={'row': idx, 'filename': filename}
+                    _('File: %(filename)s, Row %(row)s: Unable to parse Designation'),
+                    params={'row': idx, 'filename': filename},
                 )
-        try:
-            active = row['Active']
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, Row %(row)s: Unable to parse Active'),
-                params={'row': idx, 'filename': filename},
-            )
-        if import_config.require_vessel_active:
-            if len(active) == 0:
+            if import_config.require_vessel_designation:
+                if len(des) == 0:
+                    raise ValidationError(
+                        _('File: %(filename)s, Row %(row)s: Import Config disallows blank Designation'),
+                        params={'row': idx, 'filename': filename}
+                    )
+            try:
+                active = row['Active']
+            except:
                 raise ValidationError(
-                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank Active'),
-                    params={'row': idx, 'filename': filename}
+                    _('File: %(filename)s, Row %(row)s: Unable to parse Active'),
+                    params={'row': idx, 'filename': filename},
                 )
-        try:
-            r2r = row['R2R']
-        except:
-            raise ValidationError(
-                _('File: %(filename)s, Row %(row)s: Unable to parse R2R'),
-                params={'row': idx, 'filename': filename},
-            )
-        if import_config.require_vessel_R2R:
-            if len(r2r) == 0:
+            if import_config.require_vessel_active:
+                if len(active) == 0:
+                    raise ValidationError(
+                        _('File: %(filename)s, Row %(row)s: Import Config disallows blank Active'),
+                        params={'row': idx, 'filename': filename}
+                    )
+            try:
+                r2r = row['R2R']
+            except:
                 raise ValidationError(
-                    _('File: %(filename)s, Row %(row)s: Import Config disallows blank R2R'),
-                    params={'row': idx, 'filename': filename}
+                    _('File: %(filename)s, Row %(row)s: Unable to parse R2R'),
+                    params={'row': idx, 'filename': filename},
                 )
+            if import_config.require_vessel_R2R:
+                if len(r2r) == 0:
+                    raise ValidationError(
+                        _('File: %(filename)s, Row %(row)s: Import Config disallows blank R2R'),
+                        params={'row': idx, 'filename': filename}
+                    )
     return True
 
 # Handles Deployment CSV file submission and field validation
