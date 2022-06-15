@@ -744,7 +744,7 @@ def parse_deployment_files(self):
 
                     if item.assembly_part == None:
                         order = item.part.name
-                        if item.part.friendly_name:
+                        if item.part.friendly_name != '':
                             order = item.part.friendly_name
                         assembly_part, assm_created = AssemblyPart.objects.get_or_create(
                             assembly=assembly,
