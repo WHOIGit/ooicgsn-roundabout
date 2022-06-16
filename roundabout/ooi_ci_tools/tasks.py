@@ -747,12 +747,12 @@ def parse_deployment_files(self):
                         if item.part.friendly_name != '':
                             order = item.part.friendly_name
                         assembly_part, assm_created = AssemblyPart.objects.get_or_create(
-                            assembly=assembly,
                             part = item.part,
                             assembly_revision=assembly_revision,
                             order=order
                         )
                         assembly_part.reference_designator = ref_des_obj
+                        assembly_part.assembly = assembly
                         assembly_part.save()
                         item.assembly_part = assembly_part
                     refdes_event = ref_des_obj.refdes_events.first()
