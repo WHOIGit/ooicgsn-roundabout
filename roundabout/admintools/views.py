@@ -162,6 +162,7 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
 
     def form_valid(self, form):
         csv_file = self.request.FILES['document']
+        update_existing_inventory = form.cleaned_data.get('update_existing_inventory')
         # Set up the Django file object for CSV DictReader
         csv_file.seek(0)
         reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
@@ -170,6 +171,8 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
 
         # Create or get parent TempImport object
         tempimport_obj, created = TempImport.objects.get_or_create(name=csv_file.name, column_headers=headers)
+        if update_existing_inventory:
+            tempimport_obj.update_existing_inventory = True
         # If already exists, reset all the related items
         if not created:
             tempimport_obj.tempimportitems.all().delete()
@@ -187,11 +190,18 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                     except Inventory.DoesNotExist:
                         item = None
 
-                    if not item:
-                        data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
+                    if update_existing_inventory:
+                        if item:
+                            data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
+                        else:
+                            error_msg = "Matching Serial Number not found"
+                            data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
                     else:
-                        data.append({'field_name': key, 'field_value': value.strip(),
-                                    'error': True, 'error_msg': error_msg})
+                        if not item:
+                            data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
+                        else:
+                            data.append({'field_name': key, 'field_value': value.strip(),
+                                        'error': True, 'error_msg': error_msg})
 
                 elif key == 'Part Number':
                     # Check if Part template exists

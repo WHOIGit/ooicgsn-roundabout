@@ -50,6 +50,7 @@ class TempImport(models.Model):
     name = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
     column_headers = models.JSONField()
+    update_existing_inventory = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

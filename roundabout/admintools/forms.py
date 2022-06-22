@@ -110,6 +110,11 @@ def validate_cal_file(self,cal_csv,ext_files):
                     )
 
 class ImportInventoryForm(forms.Form):
+    update_existing_inventory = forms.BooleanField(
+        label="Update Existing Inventory items",
+        required=False,
+        help_text="Update existing Inventory items with matching Serial Numbers",
+    )
     document = forms.FileField()
 
 
