@@ -351,69 +351,121 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
             tempimport_obj = None
 
         if tempimport_obj:
-            # get all the Inventory items to upload from the Temp tables2
-            for item_obj in tempimport_obj.tempimportitems.all():
-                inventory_obj = Inventory()
+            if tempimport_obj.update_existing_inventory:
+                for item_obj in tempimport_obj.tempimportitems.all():
+                    inv_serial = None
+                    inv_obj = None
+                    location = None
+                    notes = None
+                    for col in item_obj.data:
+                        if col['field_name'] == 'Serial Number':
+                            inv_serial = col['field_value']  
+                        elif col['field_name'] == 'Location':
+                            location = Location.objects.get(name=col['field_value'])
+                        elif col['field_name'] == 'Notes':
+                            notes = col['field_value']
+                    try:
+                        inv_obj = Inventory.objects.get(serial_number=inv_serial)
+                    except Inventory.DoesNotExist:
+                        continue
+                    except: Inventory.MultipleObjectsReturned:
+                        inv_obj = inv_obj.first()
+                    inv_obj.location = location
+                    inv_obj.notes = notes
+                    inv_obj.save()
+                    action_record = Action.objects.create(action_type='invupdate',
+                                                        detail='Inventory updated by Bulk Import',
+                                                        location=location,
+                                                        user=self.request.user,
+                                                        inventory=inv_obj)
+                    for col in item_obj.data:
+                        if not col['field_name'] == 'Serial Number' and not col['field_name'] == 'Part Number' and not col['field_name'] == 'Location' and not col['field_name'] == 'Notes':
+                            # Get the field
+                            try:
+                                custom_field = Field.objects.get(field_name=col['field_name'])
+                            except Field.DoesNotExist:
+                                custom_field = None
 
-                for col in item_obj.data:
-                    if col['field_name'] == 'Serial Number':
-                        inventory_obj.serial_number = col['field_value']
-                    elif col['field_name'] == 'Part Number':
-                        part = Part.objects.get(part_number=col['field_value'])
-                        revision = part.revisions.last()
-                        inventory_obj.part = part
-                        inventory_obj.revision = revision
-                    elif col['field_name'] == 'Location':
-                        location = Location.objects.get(name=col['field_value'])
-                        inventory_obj.location = location
-                    elif col['field_name'] == 'Notes':
-                        note_detail = col['field_value']
+                            # Create new value object
+                            if col['field_value']:
+                                if custom_field:
+                                    fieldvalue = FieldValue.objects.create(field=custom_field,
+                                                                        field_value=col['field_value'],
+                                                                        inventory=inv_obj,
+                                                                        is_current=True,
+                                                                        user=self.request.user)
+                                else:
+                                    # Drop any fields that don't match a custom field into a History Note
+                                    note_detail = col['field_name'] + ': ' + col['field_value']
+                                    note_record = Action.objects.create(action_type='note',
+                                                                        detail=note_detail,
+                                                                        location=location,
+                                                                        user=self.request.user,
+                                                                        inventory=inv_obj)
+            else:
+                # get all the Inventory items to upload from the Temp tables2
+                for item_obj in tempimport_obj.tempimportitems.all():
+                    inventory_obj = Inventory()
 
-                inventory_obj.save()
-                # Create initial history record for item
-                action_record = Action.objects.create(action_type='invadd',
-                                                      detail='Item first added to Inventory by Bulk Import',
-                                                      location=location,
-                                                      user=self.request.user,
-                                                      inventory=inventory_obj)
+                    for col in item_obj.data:
+                        if col['field_name'] == 'Serial Number':
+                            inventory_obj.serial_number = col['field_value']
+                        elif col['field_name'] == 'Part Number':
+                            part = Part.objects.get(part_number=col['field_value'])
+                            revision = part.revisions.last()
+                            inventory_obj.part = part
+                            inventory_obj.revision = revision
+                        elif col['field_name'] == 'Location':
+                            location = Location.objects.get(name=col['field_value'])
+                            inventory_obj.location = location
+                        elif col['field_name'] == 'Notes':
+                            note_detail = col['field_value']
 
-                # Create notes history record for item
-                if note_detail:
-                    # Split the field on "|" delimiter to add multiple Notes
-                    note_list = note_detail.split('|')
-                    for note in note_list:
-                        if note:
-                            note_record = Action.objects.create(action_type='note',
-                                                                detail=note,
-                                                                location=location,
-                                                                user=self.request.user,
-                                                                inventory=inventory_obj)
+                    inventory_obj.save()
+                    # Create initial history record for item
+                    action_record = Action.objects.create(action_type='invadd',
+                                                        detail='Item first added to Inventory by Bulk Import',
+                                                        location=location,
+                                                        user=self.request.user,
+                                                        inventory=inventory_obj)
 
-                # Add the Custom Fields
-                for col in item_obj.data:
-                    if not col['field_name'] == 'Serial Number' and not col['field_name'] == 'Part Number' and not col['field_name'] == 'Location' and not col['field_name'] == 'Notes':
-                        # Get the field
-                        try:
-                            custom_field = Field.objects.get(field_name=col['field_name'])
-                        except Field.DoesNotExist:
-                            custom_field = None
-
-                        # Create new value object
-                        if col['field_value']:
-                            if custom_field:
-                                fieldvalue = FieldValue.objects.create(field=custom_field,
-                                                                       field_value=col['field_value'],
-                                                                       inventory=inventory_obj,
-                                                                       is_current=True,
-                                                                       user=self.request.user)
-                            else:
-                                # Drop any fields that don't match a custom field into a History Note
-                                note_detail = col['field_name'] + ': ' + col['field_value']
+                    # Create notes history record for item
+                    if note_detail:
+                        # Split the field on "|" delimiter to add multiple Notes
+                        note_list = note_detail.split('|')
+                        for note in note_list:
+                            if note:
                                 note_record = Action.objects.create(action_type='note',
-                                                                    detail=note_detail,
+                                                                    detail=note,
                                                                     location=location,
                                                                     user=self.request.user,
                                                                     inventory=inventory_obj)
+
+                    # Add the Custom Fields
+                    for col in item_obj.data:
+                        if not col['field_name'] == 'Serial Number' and not col['field_name'] == 'Part Number' and not col['field_name'] == 'Location' and not col['field_name'] == 'Notes':
+                            # Get the field
+                            try:
+                                custom_field = Field.objects.get(field_name=col['field_name'])
+                            except Field.DoesNotExist:
+                                custom_field = None
+
+                            # Create new value object
+                            if col['field_value']:
+                                if custom_field:
+                                    fieldvalue = FieldValue.objects.create(field=custom_field,
+                                                                        field_value=col['field_value'],
+                                                                        inventory=inventory_obj,
+                                                                        is_current=True,
+                                                                        user=self.request.user)
+                                else:
+                                    # Drop any fields that don't match a custom field into a History Note
+                                    note_detail = col['field_name'] + ': ' + col['field_value']
+                                    note_record = Action.objects.create(action_type='note',
+                                                                        detail=note_detail,
+                                                                        location=location,
+                                                                        user=self.request.user,
+                                                                        inventory=inventory_obj)
 
         return reverse('admintools:import_inventory_upload_success', )
 
