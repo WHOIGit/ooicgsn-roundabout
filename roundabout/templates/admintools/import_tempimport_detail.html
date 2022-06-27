@@ -39,7 +39,7 @@
         <span class="badge badge-danger ml-3">Import Invalid. Fix the errors listed below.</span><br>
         {% endif %}
     </h4>
-    {% if tempimport.update_existing_inventory %}
+    <!-- {% if tempimport.update_existing_inventory %}
         <h4>
             <div class="dropdown float-right">
                 <button id="action" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
@@ -56,7 +56,7 @@
                 </div>
             </div>
         </h4>
-    {% endif %}
+    {% endif %} -->
     {% if not valid_upload %}
     <p><a href="{% url 'admintools:import_inventory_upload'  %}">Click here to try again</a></p>
     {% endif %}
