@@ -369,20 +369,27 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                     elif col['field_name'] == 'Notes':
                         note_detail = col['field_value']
 
-                if tempimport_obj.update_existing_inventory:
-                    inv_existing = Inventory.objects.update(
-                        serial_number=inventory_obj.serial_number, 
-                        part=inventory_obj.part
-                        defaults = {
-                            'location': inventory_obj.location,
+                inv_existing, inv_created = Inventory.objects.update_or_create(
+                    serial_number=inventory_obj.serial_number, 
+                    part=inventory_obj.part,
+                    defaults = {
+                        'location': inventory_obj.location,
 
-                        }
-                    )
-                    inventory_obj = inv_existing
-
-                inventory_obj.save()
+                    }
+                )
+                inventory_obj = inv_existing
+                if inv_created:
+                    inventory_obj.save()
                 # Create initial history record for item
-                action_record = Action.objects.create(action_type='invadd',
+
+                if tempimport_obj.update_existing_inventory:
+                    action_record = Action.objects.create(action_type='invchange',
+                                                    detail='Inventory item updated by Bulk Import',
+                                                    location=location,
+                                                    user=self.request.user,
+                                                    inventory=inventory_obj)
+                else:
+                    action_record = Action.objects.create(action_type='invadd',
                                                     detail='Item first added to Inventory by Bulk Import',
                                                     location=location,
                                                     user=self.request.user,
