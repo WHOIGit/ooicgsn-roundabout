@@ -26,49 +26,68 @@
 {% block content %}
 <div class="container">
 
-  <h2>Preview Import</h2>
+    <h2>Preview Import</h2>
 
-  <hr>
+    <hr>
 
-  <h4>
-      Import from {{ tempimport.name }}
-      {% if valid_upload %}
-          <a href="{% url 'admintools:import_inventory_upload_add_action' tempimport.id %}" role="button" class="btn btn-success ml-3">Import Valid! Click here to complete</a>
-      {% else %}
-          <span class="badge badge-danger ml-3">Import Invalid. Fix the errors listed below.</span><br>
-      {% endif %}
-  </h4>
-      {% if not valid_upload %}
-          <p><a href="{% url 'admintools:import_inventory_upload'  %}">Click here to try again</a></p>
-      {% endif %}
+    <h4>
+        Import from {{ tempimport.name }}
+        {% if valid_upload %}
+        <a href="{% url 'admintools:import_inventory_upload_add_action' tempimport.id %}" role="button"
+            class="btn btn-success ml-3">Import Valid! Click here to complete</a>
+        {% else %}
+        <span class="badge badge-danger ml-3">Import Invalid. Fix the errors listed below.</span><br>
+        {% endif %}
+    </h4>
+    <!-- {% if tempimport.update_existing_inventory %}
+        <h4>
+            <div class="dropdown float-right">
+                <button id="action" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                    class="btn btn-primary">
+                    Choose Action
+                </button>
+                <div class="dropdown-menu dropdown-menu-right ajax-detail-link" aria-labelledby="action">
+                    <a class="dropdown-item" href="#"
+                        data-detail-url=""
+                        data-node-id="" data-location-id=""
+                        data-node-type="">Inventory Action</a>
 
-  <table class="table table-striped table-hover preview-import-table">
-      <thead>
-          {% for col in tempimport.column_headers %}
-              <th>{{ col }}</th>
-          {% endfor %}
-      </thead>
-      <tbody>
-        {% for import in tempimport.tempimportitems.all %}
+
+                </div>
+            </div>
+        </h4>
+    {% endif %} -->
+    {% if not valid_upload %}
+    <p><a href="{% url 'admintools:import_inventory_upload'  %}">Click here to try again</a></p>
+    {% endif %}
+
+    <table class="table table-striped table-hover preview-import-table">
+        <thead>
+            {% for col in tempimport.column_headers %}
+            <th>{{ col }}</th>
+            {% endfor %}
+        </thead>
+        <tbody>
+            {% for import in tempimport.tempimportitems.all %}
             <tr>
                 {% for col in import.data %}
-                          <td>
-                               {% if col.field_value %}
-                                  {{ col.field_value }}
-                               {% else %}
-                                   &nbsp;
-                               {% endif %}
+                <td>
+                    {% if col.field_value %}
+                    {{ col.field_value }}
+                    {% else %}
+                    &nbsp;
+                    {% endif %}
 
-                               {% if col.error %}
-                                  <div class="alert alert-danger" role="alert">ERROR. {{ col.error_msg }}</div>
-                               {% endif %}
-                          </td>
+                    {% if col.error %}
+                    <div class="alert alert-danger" role="alert">ERROR. {{ col.error_msg }}</div>
+                    {% endif %}
+                </td>
 
                 {% endfor %}
 
             </tr>
-        {% endfor %}
-      </tbody>
-</table>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock content %}

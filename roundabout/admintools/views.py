@@ -162,6 +162,7 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
 
     def form_valid(self, form):
         csv_file = self.request.FILES['document']
+        update_existing_inventory = form.cleaned_data.get('update_existing_inventory')
         # Set up the Django file object for CSV DictReader
         csv_file.seek(0)
         reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
@@ -170,6 +171,8 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
 
         # Create or get parent TempImport object
         tempimport_obj, created = TempImport.objects.get_or_create(name=csv_file.name, column_headers=headers)
+        if update_existing_inventory:
+            tempimport_obj.update_existing_inventory = True
         # If already exists, reset all the related items
         if not created:
             tempimport_obj.tempimportitems.all().delete()
@@ -187,11 +190,18 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                     except Inventory.DoesNotExist:
                         item = None
 
-                    if not item:
-                        data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
+                    if update_existing_inventory:
+                        if item:
+                            data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
+                        else:
+                            error_msg = "Matching Serial Number not found"
+                            data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'error_msg': error_msg})
                     else:
-                        data.append({'field_name': key, 'field_value': value.strip(),
-                                    'error': True, 'error_msg': error_msg})
+                        if not item:
+                            data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
+                        else:
+                            data.append({'field_name': key, 'field_value': value.strip(),
+                                        'error': True, 'error_msg': error_msg})
 
                 elif key == 'Part Number':
                     # Check if Part template exists
@@ -359,13 +369,31 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                     elif col['field_name'] == 'Notes':
                         note_detail = col['field_value']
 
-                inventory_obj.save()
+                inv_existing, inv_created = Inventory.objects.update_or_create(
+                    serial_number=inventory_obj.serial_number, 
+                    part=inventory_obj.part,
+                    defaults = {
+                        'location': inventory_obj.location,
+
+                    }
+                )
+                inventory_obj = inv_existing
+                if inv_created:
+                    inventory_obj.save()
                 # Create initial history record for item
-                action_record = Action.objects.create(action_type='invadd',
-                                                      detail='Item first added to Inventory by Bulk Import',
-                                                      location=location,
-                                                      user=self.request.user,
-                                                      inventory=inventory_obj)
+
+                if tempimport_obj.update_existing_inventory:
+                    action_record = Action.objects.create(action_type='invchange',
+                                                    detail='Inventory item updated by Bulk Import',
+                                                    location=location,
+                                                    user=self.request.user,
+                                                    inventory=inventory_obj)
+                else:
+                    action_record = Action.objects.create(action_type='invadd',
+                                                    detail='Item first added to Inventory by Bulk Import',
+                                                    location=location,
+                                                    user=self.request.user,
+                                                    inventory=inventory_obj)
 
                 # Create notes history record for item
                 if note_detail:
@@ -392,10 +420,10 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                         if col['field_value']:
                             if custom_field:
                                 fieldvalue = FieldValue.objects.create(field=custom_field,
-                                                                       field_value=col['field_value'],
-                                                                       inventory=inventory_obj,
-                                                                       is_current=True,
-                                                                       user=self.request.user)
+                                                                    field_value=col['field_value'],
+                                                                    inventory=inventory_obj,
+                                                                    is_current=True,
+                                                                    user=self.request.user)
                             else:
                                 # Drop any fields that don't match a custom field into a History Note
                                 note_detail = col['field_name'] + ': ' + col['field_value']
