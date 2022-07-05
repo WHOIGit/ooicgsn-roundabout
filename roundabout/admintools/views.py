@@ -369,17 +369,26 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                     elif col['field_name'] == 'Notes':
                         note_detail = col['field_value']
 
-                inv_existing, inv_created = Inventory.objects.update_or_create(
+                inv_existing, inv_created = Inventory.objects.get_or_create(
                     serial_number=inventory_obj.serial_number, 
-                    part=inventory_obj.part,
-                    defaults = {
-                        'location': inventory_obj.location,
-
-                    }
+                    part=inventory_obj.part
                 )
-                inventory_obj = inv_existing
+                
                 if inv_created:
-                    inventory_obj.save()
+                    inv_existing.location = inventory_obj.location
+                    inv_existing.save()
+                else:
+                    #   If build, Remove from build
+					#   If deployed, end deployment
+				    #   Change location
+
+                    if inv_existing.location != inventory_obj.location:
+                        if hasattr(inv_existing, 'build'):
+                            if inv_existing.build.current_deployment() is not None:
+                                current_dep = inv_existing.build.current_deployment()
+                                # inv_existing.build =  None
+
+                inventory_obj = inv_existing
                 # Create initial history record for item
 
                 if tempimport_obj.update_existing_inventory:
