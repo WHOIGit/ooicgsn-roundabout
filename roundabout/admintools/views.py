@@ -422,10 +422,12 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                                     build_retire.save()
                                     inv_existing.build = None
                                     inv_existing.location = inventory_obj.location
+                                    _create_action_history(inv_existing, 'locationchange', self.request.user, None, "", datetime.datetime.now())
                                     inv_existing.save()
                                 else:
                                     inv_existing.build = None
                                     inv_existing.location = inventory_obj.location
+                                    _create_action_history(inv_existing, 'locationchange', self.request.user, None, "", datetime.datetime.now())
                                     inv_existing.save()
 
                 inventory_obj = inv_existing
