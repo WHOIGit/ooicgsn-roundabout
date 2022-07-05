@@ -231,11 +231,19 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                         # get Location object out of queryset
                         location = locations.first()
 
-                    if location:
-                        data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
+                    if update_existing_inventory:
+                        if location:
+                            if item.location == location:
+                                data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
+                            else:
+                                error_msg = "WARNING: This Instrument is part of a Deployed Build. Changing Locations will retire the associated Deployment/Build."
+                                data.append({'field_name': key, 'field_value': value.strip(), 'error': False, 'warning': True, 'warning_msg': error_msg})
                     else:
-                        data.append({'field_name': key, 'field_value': value.strip(),
-                                    'error': True, 'error_msg': error_msg})
+                        if location:
+                            data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
+                        else:
+                            data.append({'field_name': key, 'field_value': value.strip(),
+                                        'error': True, 'error_msg': error_msg})
 
                 elif key == 'Notes':
                     data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
@@ -306,6 +314,7 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
             tempitem_obj = TempImportItem(data=data, tempimport=tempimport_obj)
             tempitem_obj.save()
             self.tempimport_obj = tempimport_obj
+            tempimport_obj.save()
 
         return super(ImportInventoryUploadView, self).form_valid(form)
 
@@ -381,12 +390,43 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                     #   If build, Remove from build
 					#   If deployed, end deployment
 				    #   Change location
-
-                    if inv_existing.location != inventory_obj.location:
-                        if hasattr(inv_existing, 'build'):
-                            if inv_existing.build.current_deployment() is not None:
-                                current_dep = inv_existing.build.current_deployment()
-                                # inv_existing.build =  None
+                    if tempimport_obj.update_existing_inventory:
+                        if inv_existing.location != inventory_obj.location:
+                            if hasattr(inv_existing, 'build'):
+                                if inv_existing.build.current_deployment() is not None:
+                                    current_dep = inv_existing.build.current_deployment()
+                                    current_dep.deployment_recovery_date = datetime.datetime.now()
+                                    current_dep.deployment_retire_date = datetime.datetime.now()
+                                    recover_record = Action.objects.create(
+                                        action_type='deploymentrecover',
+                                        detail = "%s Recovered to: %s. " % (current_dep.deployment_number, current_dep.location),
+                                        deployment_recovery_date=datetime.datetime.now(),
+                                    )
+                                    retire_record = Action.objects.create(
+                                        action_type='deploymentretire',
+                                        detail = "%s Ended." % (current_dep.deployment_number),
+                                        deployment_retire_date=datetime.datetime.now(),
+                                    )
+                                    build = inv_existing.build
+                                    build.detail = "%s Recovered to: %s. " % (current_dep.deployment_number, current_dep.location)
+                                    build.save()
+                                    build_recover = _create_action_history(build, 'deploymentrecover', self.request.user, None, "", datetime.datetime.now())
+                                    build.detail = "%s Ended." % (current_dep.deployment_number)
+                                    build.location = current_dep.location
+                                    build.is_deployed = False
+                                    build.save()
+                                    build_retire = _create_action_history(build, 'deploymentretire', self.request.user, None, "", datetime.datetime.now())
+                                    build_recover.cruise = current_dep.cruise_recovered or cruise.cruise_deployed
+                                    build_retire.cruise = current_dep.cruise_recovered or cruise.cruise_deployed
+                                    build_recover.save()
+                                    build_retire.save()
+                                    inv_existing.build = None
+                                    inv_existing.location = inventory_obj.location
+                                    inv_existing.save()
+                                else:
+                                    inv_existing.build = None
+                                    inv_existing.location = inventory_obj.location
+                                    inv_existing.save()
 
                 inventory_obj = inv_existing
                 # Create initial history record for item
