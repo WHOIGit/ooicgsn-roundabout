@@ -236,7 +236,7 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                             if item.location == location:
                                 data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
                             else:
-                                error_msg = "WARNING: This Instrument is part of a Deployed Build. Changing Locations will retire the associated Deployment/Build."
+                                error_msg = "WARNING: Changing Inventory Locations will retire the associated Build's Deployment."
                                 data.append({'field_name': key, 'field_value': value.strip(), 'error': False, 'warning': True, 'warning_msg': error_msg})
                     else:
                         if location:
@@ -391,9 +391,13 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
 					#   If deployed, end deployment
 				    #   Change location
                     if tempimport_obj.update_existing_inventory:
+                        print('Update Existing Inventory')
                         if inv_existing.location != inventory_obj.location:
+                            print('Change Location')
                             if hasattr(inv_existing, 'build'):
+                                print('existing build')
                                 if inv_existing.build.current_deployment() is not None:
+                                    print('build is deployed')
                                     current_dep = inv_existing.build.current_deployment()
                                     current_dep.deployment_recovery_date = datetime.datetime.now()
                                     current_dep.deployment_retire_date = datetime.datetime.now()
@@ -424,11 +428,14 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                                     inv_existing.location = inventory_obj.location
                                     _create_action_history(inv_existing, 'locationchange', self.request.user, None, "", datetime.datetime.now())
                                     inv_existing.save()
+                                    print('inventory location changed')
                                 else:
+                                    print('build is not deployed')
                                     inv_existing.build = None
                                     inv_existing.location = inventory_obj.location
                                     _create_action_history(inv_existing, 'locationchange', self.request.user, None, "", datetime.datetime.now())
                                     inv_existing.save()
+                                    print('inventory location changed')
 
                 inventory_obj = inv_existing
                 # Create initial history record for item
