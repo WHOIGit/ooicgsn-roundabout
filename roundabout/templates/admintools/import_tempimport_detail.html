@@ -79,7 +79,10 @@
                     {% endif %}
 
                     {% if col.error %}
-                    <div class="alert alert-danger" role="alert">ERROR. {{ col.error_msg }}</div>
+                        <div class="alert alert-danger" role="alert">ERROR. {{ col.error_msg }}</div>
+                    {% endif %}
+                    {% if col.warning %}
+                        <div class="alert alert-warning" role="alert">{{ col.warning_msg }}</div>
                     {% endif %}
                 </td>
 
