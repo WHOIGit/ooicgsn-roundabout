@@ -396,41 +396,40 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                             print('Change Location')
                             if hasattr(inv_existing, 'build'):
                                 print('existing build')
-                                if inv_existing.build.current_deployment() is not None:
-                                    print('build is deployed')
-                                    current_dep = inv_existing.build.current_deployment()
-                                    current_dep.deployment_recovery_date = datetime.datetime.now()
-                                    current_dep.deployment_retire_date = datetime.datetime.now()
-                                    recover_record = Action.objects.create(
-                                        action_type='deploymentrecover',
-                                        detail = "%s Recovered to: %s. " % (current_dep.deployment_number, current_dep.location),
-                                        deployment_recovery_date=datetime.datetime.now(),
-                                    )
-                                    retire_record = Action.objects.create(
-                                        action_type='deploymentretire',
-                                        detail = "%s Ended." % (current_dep.deployment_number),
-                                        deployment_retire_date=datetime.datetime.now(),
-                                    )
-                                    build = inv_existing.build
-                                    build.detail = "%s Recovered to: %s. " % (current_dep.deployment_number, current_dep.location)
-                                    build.save()
-                                    build_recover = _create_action_history(build, 'deploymentrecover', self.request.user, None, "", datetime.datetime.now())
-                                    build.detail = "%s Ended." % (current_dep.deployment_number)
-                                    build.location = current_dep.location
-                                    build.is_deployed = False
-                                    build.save()
-                                    build_retire = _create_action_history(build, 'deploymentretire', self.request.user, None, "", datetime.datetime.now())
-                                    build_recover.cruise = current_dep.cruise_recovered or cruise.cruise_deployed
-                                    build_retire.cruise = current_dep.cruise_recovered or cruise.cruise_deployed
-                                    build_recover.save()
-                                    build_retire.save()
-                                    inv_existing.build = None
-                                    inv_existing.location = inventory_obj.location
-                                    _create_action_history(inv_existing, 'locationchange', self.request.user, None, "", datetime.datetime.now())
-                                    inv_existing.save()
-                                    print('inventory location changed')
+                                if inv_existing.build is not None:
+                                    if inv_existing.build.current_deployment() is not None:
+                                        print('build is deployed')
+                                        current_dep = inv_existing.build.current_deployment()
+                                        current_dep.deployment_recovery_date = datetime.datetime.now()
+                                        current_dep.deployment_retire_date = datetime.datetime.now()
+                                        recover_record = Action.objects.create(
+                                            action_type='deploymentrecover',
+                                            detail = "%s Recovered to: %s. " % (current_dep.deployment_number, current_dep.location),
+                                        )
+                                        retire_record = Action.objects.create(
+                                            action_type='deploymentretire',
+                                            detail = "%s Ended." % (current_dep.deployment_number),
+                                        )
+                                        build = inv_existing.build
+                                        build.detail = "%s Recovered to: %s. " % (current_dep.deployment_number, current_dep.location)
+                                        build.save()
+                                        build_recover = _create_action_history(build, 'deploymentrecover', self.request.user, None, "", datetime.datetime.now())
+                                        build.detail = "%s Ended." % (current_dep.deployment_number)
+                                        build.location = current_dep.location
+                                        build.is_deployed = False
+                                        build.save()
+                                        build_retire = _create_action_history(build, 'deploymentretire', self.request.user, None, "", datetime.datetime.now())
+                                        build_recover.cruise = current_dep.cruise_recovered or cruise.cruise_deployed
+                                        build_retire.cruise = current_dep.cruise_recovered or cruise.cruise_deployed
+                                        build_recover.save()
+                                        build_retire.save()
+                                        inv_existing.build = None
+                                        inv_existing.location = inventory_obj.location
+                                        _create_action_history(inv_existing, 'locationchange', self.request.user, None, "", datetime.datetime.now())
+                                        inv_existing.save()
+                                        print('inventory location changed')
                                 else:
-                                    print('build is not deployed')
+                                    print('build is not deployed or no current deployed build')
                                     inv_existing.build = None
                                     inv_existing.location = inventory_obj.location
                                     _create_action_history(inv_existing, 'locationchange', self.request.user, None, "", datetime.datetime.now())
