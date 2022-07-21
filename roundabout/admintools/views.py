@@ -419,8 +419,8 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                                         build.is_deployed = False
                                         build.save()
                                         build_retire = _create_action_history(build, 'deploymentretire', self.request.user, None, "", datetime.datetime.now())
-                                        build_recover.cruise = current_dep.cruise_recovered or cruise.cruise_deployed
-                                        build_retire.cruise = current_dep.cruise_recovered or cruise.cruise_deployed
+                                        build_recover.cruise = current_dep.cruise_recovered or None
+                                        build_retire.cruise = current_dep.cruise_recovered or None
                                         build_recover.save()
                                         build_retire.save()
                                         inv_existing.build = None
