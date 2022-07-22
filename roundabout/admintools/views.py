@@ -397,9 +397,10 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                             if hasattr(inv_existing, 'build'):
                                 print('existing build')
                                 if inv_existing.build is not None:
-                                    if inv_existing.build.current_deployment() is not None:
+                                    print('get current deployment')
+                                    current_dep = inv_existing.build.current_deployment()
+                                    if current_dep:
                                         print('build is deployed')
-                                        current_dep = inv_existing.build.current_deployment()
                                         current_dep.deployment_recovery_date = datetime.datetime.now()
                                         current_dep.deployment_retire_date = datetime.datetime.now()
                                         recover_record = Action.objects.create(
@@ -423,6 +424,13 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                                         build_retire.cruise = current_dep.cruise_recovered or None
                                         build_recover.save()
                                         build_retire.save()
+                                        inv_existing.build = None
+                                        inv_existing.location = inventory_obj.location
+                                        inv_existing.save()
+                                        _create_action_history(inv_existing, 'locationchange', self.request.user, None, "", datetime.datetime.now())
+                                        print('inventory location changed')
+                                    else:
+                                        print('build is not deployed or no current deployed build')
                                         inv_existing.build = None
                                         inv_existing.location = inventory_obj.location
                                         _create_action_history(inv_existing, 'locationchange', self.request.user, None, "", datetime.datetime.now())
