@@ -233,11 +233,12 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
 
                     if update_existing_inventory:
                         if location:
-                            if item.location == location:
-                                data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
-                            else:
-                                error_msg = "WARNING: Changing Inventory Locations will retire the associated Build's Deployment."
-                                data.append({'field_name': key, 'field_value': value.strip(), 'error': False, 'warning': True, 'warning_msg': error_msg})
+                            if item:
+                                if item.location == location:
+                                    data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
+                                else:
+                                    error_msg = "WARNING: Changing Inventory Locations will retire the associated Build's Deployment."
+                                    data.append({'field_name': key, 'field_value': value.strip(), 'error': False, 'warning': True, 'warning_msg': error_msg})
                     else:
                         if location:
                             data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
