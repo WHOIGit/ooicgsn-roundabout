@@ -1061,7 +1061,7 @@ def parse_bulk_files(self):
                 except:
                     part_template = None
                 inv = Inventory.objects.filter(serial_number = asset_uid)
-                if inv.exists():
+                if inv:
                     inv = inv.first()
                     inv.bulk_upload_event = bulk_event
                     FieldValue.objects.update_or_create(
@@ -1146,7 +1146,7 @@ def parse_bulk_files(self):
                     )   
                     inv.save()
                     _create_action_history(inv,Action.CALCSVUPDATE,user,data=dict(csv_import=csv_file.name))
-                if inv.exists() == False and part_template is not None and part_template != '':
+                if not inv and part_template is not None and part_template != '':
                     inst_obj = PartType.objects.get(name='Instrument')
                     try:
                         part = Part.objects.get(part_type=inst_obj, part_number=part_template)
