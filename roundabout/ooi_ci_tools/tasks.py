@@ -1148,10 +1148,11 @@ def parse_bulk_files(self):
                     _create_action_history(inv,Action.CALCSVUPDATE,user,data=dict(csv_import=csv_file.name))
                 if not inv and part_template is not None and part_template != '':
                     inst_obj = PartType.objects.get(name='Instrument')
+                    all_part_search = Part.objects.all()
                     try:
-                        part = Part.objects.get(part_type=inst_obj, part_number=part_template)
+                        part = Part.objects.get(part_type__in=all_part_search, part_number=part_template)
                     except Part.MultipleObjectsReturned:
-                        part = Part.objects.filter(part_type=inst_obj, part_number=part_template).first()
+                        part = Part.objects.filter(part_type__in=all_part_search, part_number=part_template).first()
                     except Part.DoesNotExist:
                         part = Part.objects.create(name=part_template, part_type=inst_obj, part_number=part_template, bulk_upload_event=bulk_event)
                         rev_a = Revision.objects.create(part=part)
