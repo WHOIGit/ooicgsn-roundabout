@@ -247,7 +247,10 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                                         'error': True, 'error_msg': error_msg})
 
                 elif key == 'Notes':
-                    data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
+                    if value is not None:
+                        data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
+                    else:
+                        data.append({'field_name': key, 'field_value': '', 'error': False})
 
                 # Now run through all the Custom Fields, validate type, add to JSON
                 else:
@@ -397,6 +400,14 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                             print('Change Location')
                             if hasattr(inv_existing, 'build'):
                                 print('existing build')
+                                # if hasattr(inv_existing, 'assembly_part'):
+                                #     inv_subassemblies = inv_existing.get_descendants()
+                                #     for inv_subassembly in inv_subassemblies:
+                                #         inv_subassembly.assembly_part = None
+                                #         inv_subassembly.build = None
+                                #         inv_subassembly.location = inventory_obj.location
+                                #         inv_subassembly.save()
+                                #         _create_action_history(inv_subassembly, 'locationchange', self.request.user, None, "", datetime.datetime.now())
                                 if inv_existing.build is not None:
                                     print('get current deployment')
                                     current_dep = inv_existing.build.current_deployment()
