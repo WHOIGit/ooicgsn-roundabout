@@ -729,10 +729,15 @@ def parse_deployment_files(self):
                     try:
                         ref_des = row['Reference Designator']
                         ref_des_obj = ReferenceDesignator.objects.get(refdes_name=ref_des)
-                        assembly_part = ref_des_obj.assembly_parts.filter(part__isnull=False).first()
+                    except ReferenceDesignator.MultipleObjectsReturned:
+                        ref_des_obj = ReferenceDesignator.objects.filter(refdes_name=ref_des).first()
+                    except ReferenceDesignator.DoesNotExist:
+                        continue
                     except Exception as e:
                         print(e)
                         continue
+
+                    assembly_part = ref_des_obj.assembly_parts.filter(part__isnull=False).first()
 
                     # Get/Update Inventory item with matching serial_number
 
