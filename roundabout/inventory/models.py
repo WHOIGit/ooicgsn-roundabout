@@ -33,6 +33,7 @@ from django.utils import timezone
 from mptt.models import MPTTModel, TreeForeignKey
 
 from roundabout.assemblies.models import Assembly, AssemblyPart
+
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
 from roundabout.cruises.models import Cruise, Vessel
@@ -189,7 +190,7 @@ class Inventory(MPTTModel):
         current_location = self.location
         if self.actions.exists():
             latest_action = self.actions.latest()
-            if hasattr(latest_action,'location'):
+            if hasattr(latest_action, "location"):
                 last_location = latest_action.location
                 if current_location != last_location:
                     return True
@@ -616,7 +617,10 @@ class Action(models.Model):
         (DEPLOYMENTUPDATE, "%s Update" % (labels["label_deployments_app_singular"])),
         (DEPLOYMENTRECOVER, "%s Recovery" % (labels["label_deployments_app_singular"])),
         (DEPLOYMENTRETIRE, "%s Retired" % (labels["label_deployments_app_singular"])),
-        (DEPLOYMENTDETAILS,"%s Details Updated" % (labels["label_deployments_app_singular"])),
+        (
+            DEPLOYMENTDETAILS,
+            "%s Details Updated" % (labels["label_deployments_app_singular"]),
+        ),
         (ASSIGNDEST, "Assign Destination"),
         (REMOVEDEST, "Remove Destination"),
         (TEST, "Test"),
@@ -628,9 +632,9 @@ class Action(models.Model):
         (MOVETOTRASH, "Move to Trash"),
         (RETIREBUILD, "Retire Build"),
         (REVIEWAPPROVE, "Reviewer approved Event"),
-        (REVIEWUNAPPROVE, 'Reviewer unapproved Event'),
+        (REVIEWUNAPPROVE, "Reviewer unapproved Event"),
         (EVENTAPPROVE, "Event Approved"),
-        (EVENTUNAPPROVE, 'Event Unapproved'),
+        (EVENTUNAPPROVE, "Event Unapproved"),
         (CALCSVIMPORT, "CSV Uploaded"),
         (CALCSVUPDATE, "Updated by CSV"),
     )
@@ -990,3 +994,38 @@ class DeploymentAction(models.Model):
 
     def __str__(self):
         return self.get_action_type_display()
+
+
+class InventoryTest(models.Model):
+    name = models.CharField(max_length=200)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class InventoryTestResult(models.Model):
+    PASS = "pass"
+    FAIL = "fail"
+    PENDING = "pending"
+    RESULT_TYPES = (
+        (PASS, "Pass"),
+        (FAIL, "Fail"),
+        (PENDING, "Pending"),
+    )
+    result = models.CharField(max_length=20, choices=RESULT_TYPES)
+    created_at = models.DateTimeField(default=timezone.now)
+    inventory = models.ForeignKey(
+        Inventory, related_name="test_results", on_delete=models.CASCADE
+    )
+    inventory_test = models.ForeignKey(
+        InventoryTest, related_name="test_results", on_delete=models.CASCADE
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.inventory.serial_number} - {self.inventory_test.name} - {self.result}"

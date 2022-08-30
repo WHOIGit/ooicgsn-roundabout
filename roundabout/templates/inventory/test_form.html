@@ -1,0 +1,50 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or 
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Test Types - {{ test.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>{% if test.name %}Edit {{ test.name }}{% else %}Add Test{% endif %}</h1>
+  <form class="form-horizontal" method="post" action="" id="part-type-form" novalidate>
+    {% csrf_token %}
+    {{ form|crispy }}
+
+
+
+    <div class="control-group">
+      <div class="controls">
+        {% if test %}
+            <button type="submit" class="btn btn-primary">Update Test</button>
+        {% else %}
+            <button type="submit" class="btn btn-primary">Add Test</button>
+        {% endif %}
+
+        <a class="btn btn-light btn-cancel" href="{% url 'inventory:test_home' %}">Cancel</a>
+
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -9,9 +9,8 @@ server {
 
 server {
     server_name EXAMPLE.com;
-    listen 443;  # <-
+    listen 443 ssl;  # <-
 
-    ssl on;  # <-
     ssl_certificate /etc/ssl/certs/certificate.cer;  # <-
     ssl_certificate_key /etc/ssl/certs/private.key;  # <-
 
@@ -27,51 +26,10 @@ server {
         proxy_set_header X-Forwarded-Proto https;
         proxy_set_header Host $http_host;
         proxy_redirect off;
-        proxy_read_timeout 300;
-        proxy_send_timeout 90;
-        proxy_connect_timeout 90;
 
         if (!-f $request_filename) {
             proxy_pass http://django:8000; # <- Use container name from DOCKER COMPOSE file
             break;
         }
     }
-
-    # Alfresco Community Edition location blocks
-    location /alfresco/ {
-        proxy_pass http://alfresco:8080; # <- Use container name from DOCKER COMPOSE file
-        proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
-        proxy_redirect off;
-        proxy_buffering off;
-        proxy_set_header Host            $host;
-        proxy_set_header X-Real-IP       $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_pass_header Set-Cookie;
-    }
-
-    # Alfresco Share Web App
-    location /share/ {
-        proxy_pass http://alfresco-share:8080; # <- Use container name from DOCKER COMPOSE file
-        proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
-        proxy_redirect off;
-        proxy_buffering off;
-        proxy_set_header Host            $host;
-        proxy_set_header X-Real-IP       $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_pass_header Set-Cookie;
-    }
-
-
-    # SOLR Web Console
-    location /solr/ {
-        proxy_pass http://alfresco-solr6:8983; # <- Use container name from DOCKER COMPOSE file
-        proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
-        proxy_redirect off;
-        proxy_buffering off;
-        proxy_set_header Host            $host;
-        proxy_set_header X-Real-IP       $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_pass_header Set-Cookie;
-    }
-
 }
