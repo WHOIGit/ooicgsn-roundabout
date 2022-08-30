@@ -729,10 +729,15 @@ def parse_deployment_files(self):
                     try:
                         ref_des = row['Reference Designator']
                         ref_des_obj = ReferenceDesignator.objects.get(refdes_name=ref_des)
-                        assembly_part = ref_des_obj.assembly_parts.filter(part__isnull=False).first()
+                    except ReferenceDesignator.MultipleObjectsReturned:
+                        ref_des_obj = ReferenceDesignator.objects.filter(refdes_name=ref_des).first()
+                    except ReferenceDesignator.DoesNotExist:
+                        continue
                     except Exception as e:
                         print(e)
                         continue
+
+                    assembly_part = ref_des_obj.assembly_parts.filter(part__isnull=False).first()
 
                     # Get/Update Inventory item with matching serial_number
 
@@ -1148,10 +1153,19 @@ def parse_bulk_files(self):
                     _create_action_history(inv,Action.CALCSVUPDATE,user,data=dict(csv_import=csv_file.name))
                 if not inv and part_template is not None and part_template != '':
                     inst_obj = PartType.objects.get(name='Instrument')
+
+                    #  Search Parts by Part Number across all Part Types
+                    all_type_search = PartType.objects.all()
                     try:
-                        part = Part.objects.get(part_type=inst_obj, part_number=part_template)
+                        part = Part.objects.get(
+                            part_type__in=all_type_search, 
+                            part_number=part_template
+                        )
                     except Part.MultipleObjectsReturned:
-                        part = Part.objects.filter(part_type=inst_obj, part_number=part_template).first()
+                        part = Part.objects.filter(
+                            part_type__in=all_type_search, 
+                            part_number=part_template
+                        ).first()
                     except Part.DoesNotExist:
                         part = Part.objects.create(name=part_template, part_type=inst_obj, part_number=part_template, bulk_upload_event=bulk_event)
                         rev_a = Revision.objects.create(part=part)
@@ -1258,8 +1272,8 @@ def parse_bulk_files(self):
                         'asset_model': asset_model,
                     }
                 )
-                man_field_list = FieldValue.objects.filter(field__field_name__iexact='Manufacturer', field_value = manufacturer, part__isnull=False, is_current=True)
-                mod_field_list = FieldValue.objects.filter(field__field_name__iexact='Model', field_value = asset_model, part__isnull=False, is_current=True)
+                man_field_list = FieldValue.objects.filter(field__field_name__iexact='Manufacturer', field_value__icontains = manufacturer, part__isnull=False, is_current=True)
+                mod_field_list = FieldValue.objects.filter(field__field_name__iexact='Model', field_value__icontains = asset_model, part__isnull=False, is_current=True)
                 if len(man_field_list) and len(mod_field_list):
                     for (man_field_obj, mod_field_obj) in zip(man_field_list, mod_field_list):
                         if man_field_obj.part == mod_field_obj.part:
