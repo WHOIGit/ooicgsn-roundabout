@@ -524,6 +524,9 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         else:
             custom_fields = None
 
+        # Get only current Test Results for display
+        test_results = self.object.test_results.filter(is_current=True)
+
         part_has_cals = False
         part_has_configs = False
         part_has_consts = False
@@ -639,7 +642,8 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
                 "user_rev_const_events" : user_rev_const_events,
                 "user_rev_conf_events" : user_rev_conf_events,
                 "user_rev_bulk_events" : user_rev_bulk_events,
-                "user_rev_deployment_events" : user_rev_deployment_events
+                "user_rev_deployment_events" : user_rev_deployment_events,
+                "test_results": test_results
             }
         )
         return context

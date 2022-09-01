@@ -262,4 +262,14 @@ urlpatterns = [
         view=views_tests.InventoryTestDeleteView.as_view(),
         name="test_delete",
     ),
+    path(
+        "ajax/test-result/<int:inventory_pk>/",
+        views_tests.InventoryTestResultAjaxCreateView.as_view(),
+        name="ajax_test_result",
+    ),
+    path(
+        "ajax/test-result/<int:inventory_pk>/<int:test_pk>/",
+        views_tests.InventoryTestResultAjaxCreateView.as_view(),
+        name="ajax_test_result",
+    ),
 ]

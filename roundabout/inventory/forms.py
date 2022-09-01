@@ -38,6 +38,7 @@ from .models import (
     InventoryDeployment,
     Action,
     DeploymentSnapshot,
+    InventoryTestResult,
     PhotoNote,
     InventoryHyperlink,
     InventoryTest,
@@ -683,3 +684,14 @@ class InventoryTestForm(forms.ModelForm):
     class Meta:
         model = InventoryTest
         fields = ["name"]
+
+
+class InventoryTestResultForm(forms.ModelForm):
+    class Meta:
+        model = InventoryTestResult
+        fields = ["inventory_test", "result", "inventory"]
+
+        widgets = {
+            "inventory": forms.HiddenInput(),
+        }
+

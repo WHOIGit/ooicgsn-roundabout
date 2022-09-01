@@ -19,8 +19,8 @@ from .models import (
     InventoryTestResult,
     Action,
 )
-from .forms import InventoryTestForm
-
+from .forms import InventoryTestForm, InventoryTestResultForm
+from common.util.mixins import AjaxFormMixin
 
 # Test Template Views
 
@@ -92,3 +92,69 @@ class InventoryTestAjaxDetailView(LoginRequiredMixin, DetailView):
     context_object_name = "test"
     template_name = "inventory/ajax_test_detail.html"
     redirect_field_name = "home"
+
+
+class InventoryTestResultAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
+    model = InventoryTestResult
+    form_class = InventoryTestResultForm
+    context_object_name = "test_result"
+    template_name = "inventory/ajax_test_result_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(InventoryTestResultAjaxCreateView, self).get_context_data(
+            **kwargs
+        )
+        inventory_item = Inventory.objects.get(id=self.kwargs["inventory_pk"])
+        test_pk = self.kwargs.get("test_pk", None)
+
+        if test_pk:
+            test_result = InventoryTestResult.objects.get(id=test_pk)
+        else:
+            test_result = None
+
+        context.update({"inventory_item": inventory_item, "test_result": test_result})
+        return context
+
+    def get_initial(self):
+        inventory_item = Inventory.objects.get(id=self.kwargs["inventory_pk"])
+        test_pk = self.kwargs.get("test_pk", None)
+        if test_pk:
+            test_result = InventoryTestResult.objects.get(id=test_pk)
+            inventory_test_id = test_result.inventory_test.id
+        else:
+            inventory_test_id = None
+        return {"inventory": inventory_item.id, "inventory_test": inventory_test_id}
+
+    def form_valid(self, form):
+        inventory_item = Inventory.objects.get(id=self.kwargs["inventory_pk"])
+
+        # reset is_current status for older Test Results for this Test type
+        old_results = inventory_item.test_results.filter(
+            is_current=True, inventory_test=form.cleaned_data["inventory_test"]
+        )
+        for result in old_results:
+            result.is_current = False
+            result.save()
+
+        self.object = form.save()
+        self.object.is_current = True
+        self.object.save()
+
+        response = HttpResponseRedirect(self.get_success_url())
+
+        if self.request.is_ajax():
+            print(form.cleaned_data)
+            data = {
+                "message": "Successfully submitted form data.",
+                "object_id": self.object.inventory_id,
+                "object_type": self.object.inventory.get_object_type(),
+                "detail_path": self.get_success_url(),
+            }
+            return JsonResponse(data)
+        else:
+            return response
+
+    def get_success_url(self):
+        return reverse(
+            "inventory:ajax_inventory_detail", args=(self.object.inventory_id,)
+        )

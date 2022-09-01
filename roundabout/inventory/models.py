@@ -1023,6 +1023,7 @@ class InventoryTestResult(models.Model):
     inventory_test = models.ForeignKey(
         InventoryTest, related_name="test_results", on_delete=models.CASCADE
     )
+    is_current = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["-created_at"]
