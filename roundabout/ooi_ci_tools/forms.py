@@ -585,13 +585,14 @@ class ImportDeploymentsForm(forms.Form):
                         try:
                             ref_des = row['Reference Designator']
                             ref_des_obj = ReferenceDesignator.objects.get(refdes_name=ref_des)
+                        except ReferenceDesignator.MultipleObjectsReturned:
+                            ref_des_obj = ReferenceDesignator.objects.filter(refdes_name=ref_des).first()
                         except ReferenceDesignator.DoesNotExist:
                             raise ValidationError( 
                                 _('File: %(filename)s: Row: %(row)s: Value: %(value)s: Unable to parse Reference Designator or Reference Designator not found'),
                                 params={'filename': filename, 'row': idx, 'value': ref_des},
                             )
-                        except ReferenceDesignator.MultipleObjectsReturned:
-                            ref_des_obj = ReferenceDesignator.objects.filter(refdes_name=ref_des).first()
+                        
                         try:
                             assembly_num = ref_des.split('-')[0]
                             assembly = Assembly.objects.get(assembly_number=assembly_num)
