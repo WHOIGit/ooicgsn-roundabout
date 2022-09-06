@@ -1165,13 +1165,13 @@ class ImportBulkUploadForm(forms.Form):
                                 _('File: %(filename)s, Asset UID %(row)s: No matching Inventory serial number exists'),
                                 params={'row': asset_uid, 'filename': file_name}
                             )
-            elif file_name.endswith('_vocab.csv'):
+            elif file_name.endswith('vocab.csv'):
                 
                 for row in reader:
                     manufacturer = row['Manufacturer']
                     asset_model = row['Model']
-                    man_field_list = FieldValue.objects.filter(field__field_name__iexact='Manufacturer', field_value = manufacturer, part__isnull=False, is_current=True)
-                    mod_field_list = FieldValue.objects.filter(field__field_name__iexact='Model', field_value = asset_model, part__isnull=False, is_current=True)
+                    man_field_list = FieldValue.objects.filter(field__field_name__icontains='Manufacturer', field_value = manufacturer, part__isnull=False, is_current=True)
+                    mod_field_list = FieldValue.objects.filter(field__field_name__icontains='Model', field_value = asset_model, part__isnull=False, is_current=True)
                     if not len(man_field_list):
                         raise ValidationError(
                                 _('File: %(filename)s, Manufacturer %(manufacturer)s: No matching Manufacturer exists'),
