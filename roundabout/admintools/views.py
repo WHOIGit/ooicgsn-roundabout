@@ -456,7 +456,7 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                 if tempimport_obj.update_existing_inventory:
                     action_record = Action.objects.create(action_type='invchange',
                                                     detail='Inventory item updated by Bulk Import',
-                                                    location=location,
+                                                    location=inventory_obj.location,
                                                     user=self.request.user,
                                                     inventory=inventory_obj)
                 else:
