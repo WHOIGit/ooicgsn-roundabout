@@ -1154,7 +1154,7 @@ class ImportBulkUploadForm(forms.Form):
             csv_file.seek(0)
             reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
             file_name = csv_file.name
-            if file_name.endswith('-AssetRecord.csv'):
+            if file_name.endswith('AssetRecord.csv'):
                 
                 for row in reader:
                     continue
@@ -1166,9 +1166,11 @@ class ImportBulkUploadForm(forms.Form):
                                 _('File: %(filename)s, Asset UID %(row)s: No matching Inventory serial number exists'),
                                 params={'row': asset_uid, 'filename': file_name}
                             )
-            elif file_name.endswith('vocab.csv'):
+            elif file_name.endswith('_vocab.csv'):
                 
                 for row in reader:
+                    manufacturer = None
+                    asset_model = None
                     if hasattr(row, 'manufacturer'):
                         manufacturer = row['manufacturer'].strip()
                     if hasattr(row, 'Manufacturer'):
