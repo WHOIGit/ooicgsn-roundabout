@@ -233,8 +233,8 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
 
                     if update_existing_inventory:
                         if location:
+                            data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
                             if item:
-                                data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
                                 if item.location != location and hasattr(item,'build'):
                                     if item.build:
                                         if item.build.current_deployment():
