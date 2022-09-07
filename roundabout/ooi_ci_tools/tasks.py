@@ -760,7 +760,7 @@ def parse_deployment_files(self):
                         except AssemblyPart.MultipleObjectsReturned:
                             assembly_part = AssemblyPart.objects.filter(part = item.part,assembly_revision=assembly_revision,order=order).first()
                         except AssemblyPart.DoesNotExist:
-                            assembly_part, assm_created = AssemblyPart.objects.create(
+                            assembly_part = AssemblyPart.objects.create(
                                 part = item.part,
                                 assembly_revision=assembly_revision,
                                 order=order
