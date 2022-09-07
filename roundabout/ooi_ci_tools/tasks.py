@@ -1261,8 +1261,14 @@ def parse_bulk_files(self):
         if csv_file.name.endswith('vocab.csv'):
             for row in reader:
                 equip_desc = row['DESCRIPTION OF EQUIPMENT']
-                manufacturer = row['Manufacturer'].strip()
-                asset_model = row['Model'].strip()
+                if hasattr(row, 'manufacturer'):
+                    manufacturer = row['manufacturer'].strip()
+                if hasattr(row, 'Manufacturer'):
+                    manufacturer = row['Manufacturer'].strip()
+                if hasattr(row, 'model'):
+                    asset_model = row['model'].strip()
+                if hasattr(row, 'Model'):
+                    asset_model = row['Model'].strip()
                 vocabrecord_obj, vocab_created = BulkVocabRecord.objects.update_or_create(
                     equip_desc = equip_desc,
                     bulk_file = bulk_file,

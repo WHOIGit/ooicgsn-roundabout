@@ -1169,8 +1169,14 @@ class ImportBulkUploadForm(forms.Form):
             elif file_name.endswith('vocab.csv'):
                 
                 for row in reader:
-                    manufacturer = row['Manufacturer']
-                    asset_model = row['Model']
+                    if hasattr(row, 'manufacturer'):
+                        manufacturer = row['manufacturer'].strip()
+                    if hasattr(row, 'Manufacturer'):
+                        manufacturer = row['Manufacturer'].strip()
+                    if hasattr(row, 'model'):
+                        asset_model = row['model'].strip()
+                    if hasattr(row, 'Model'):
+                        asset_model = row['Model'].strip()
                     man_field_list = FieldValue.objects.filter(field__field_name__icontains='Manufacturer', field_value = manufacturer, part__isnull=False, is_current=True)
                     mod_field_list = FieldValue.objects.filter(field__field_name__icontains='Model', field_value = asset_model, part__isnull=False, is_current=True)
                     if not len(man_field_list):
