@@ -1154,7 +1154,7 @@ class ImportBulkUploadForm(forms.Form):
             csv_file.seek(0)
             reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
             file_name = csv_file.name
-            if file_name.endswith('-AssetRecord.csv'):
+            if file_name.endswith('AssetRecord.csv'):
                 
                 for row in reader:
                     continue
