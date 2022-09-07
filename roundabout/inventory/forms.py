@@ -689,9 +689,8 @@ class InventoryTestForm(forms.ModelForm):
 class InventoryTestResultForm(forms.ModelForm):
     class Meta:
         model = InventoryTestResult
-        fields = ["inventory_test", "result", "inventory"]
+        fields = ["inventory_test", "result", "inventory", "notes"]
 
         widgets = {
             "inventory": forms.HiddenInput(),
         }
-

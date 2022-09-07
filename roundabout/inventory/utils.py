@@ -141,11 +141,11 @@ def _create_action_history(
         action_record.location_parent = obj.parent
 
     elif object_type == Action.CRUISE:
-        obj_label = 'Cruise'
+        obj_label = "Cruise"
         action_record.cruise = obj
 
     elif object_type == Action.VESSEL:
-        obj_label = 'Vessel'
+        obj_label = "Vessel"
         action_record.vessel = obj
 
     elif object_type == Action.DEPLOYMENT:
@@ -177,7 +177,10 @@ def _create_action_history(
     elif action_type == Action.UPDATE:
         if object_type == Action.BULKUPLOAD:
             if filename:
-                action_record.detail = "%s details updated. (%s)" % (obj_label, filename)
+                action_record.detail = "%s details updated. (%s)" % (
+                    obj_label,
+                    filename,
+                )
         else:
             action_record.detail = "%s details updated." % (obj_label)
         if object_type == Action.CALEVENT:
@@ -249,7 +252,9 @@ def _create_action_history(
         if not referring_obj:
             if obj.parent:
                 _create_action_history(obj, Action.SUBCHANGE, user, "", "", action_date)
-                _create_action_history(obj.parent, Action.SUBCHANGE, user, obj, "", action_date)
+                _create_action_history(
+                    obj.parent, Action.SUBCHANGE, user, obj, "", action_date
+                )
 
         # If Build is deployed, need to add extra Action record to add to Deployment
         if obj.build.is_deployed:
@@ -313,10 +318,12 @@ def _create_action_history(
         action_record.save()
 
     elif action_type == Action.TEST:
-        action_record.detail = "%s: %s. %s" % (
-            obj.get_test_type_display(),
-            obj.get_test_result_display(),
-            detail,
+        test_result = obj.test_results.latest()
+
+        action_record.detail = "Test Result - %s: %s. %s" % (
+            test_result.inventory_test.name,
+            test_result.get_result_display(),
+            test_result.notes,
         )
         action_record.save()
 
@@ -500,8 +507,12 @@ def logged_user_review_items(logged_user, template_type):
         bulk_event = None
     if bulk_event:
         if logged_user in bulk_event.user_draft.all():
-            inv_id_from_bulk_events = [inv_id["id"] for inv_id in bulk_event.inventory.values("id") ]
-            part_id_from_bulk_events = [inv_id["id"] for inv_id in bulk_event.parts.values("id") ]
+            inv_id_from_bulk_events = [
+                inv_id["id"] for inv_id in bulk_event.inventory.values("id")
+            ]
+            part_id_from_bulk_events = [
+                inv_id["id"] for inv_id in bulk_event.parts.values("id")
+            ]
     if template_type == "inv":
         inv_id_from_cal_events = [
             inv_id["inventory_id"]
@@ -513,9 +524,7 @@ def logged_user_review_items(logged_user, template_type):
         ]
         inv_id_from_const_def_events = [
             inv_id["inventory_id"]
-            for inv_id in logged_user.reviewer_constdefaultevents.values(
-                "inventory_id"
-            )
+            for inv_id in logged_user.reviewer_constdefaultevents.values("inventory_id")
         ]
         build_id_from_dep_events = [
             build_id["build_id"]
@@ -530,20 +539,45 @@ def logged_user_review_items(logged_user, template_type):
         )
         full_list = list(full_inv_list)
 
-    if template_type == 'part':
-        parts_from_config_name_events = [part_id['part_id'] for part_id in logged_user.reviewer_confignameevents.values('part_id')]
-        parts_from_cal_name_events = [part_id['part_id'] for part_id in logged_user.reviewer_coefficientnameevents.values('part_id')]
-        full_part_list = set(parts_from_config_name_events + parts_from_cal_name_events + part_id_from_bulk_events)
+    if template_type == "part":
+        parts_from_config_name_events = [
+            part_id["part_id"]
+            for part_id in logged_user.reviewer_confignameevents.values("part_id")
+        ]
+        parts_from_cal_name_events = [
+            part_id["part_id"]
+            for part_id in logged_user.reviewer_coefficientnameevents.values("part_id")
+        ]
+        full_part_list = set(
+            parts_from_config_name_events
+            + parts_from_cal_name_events
+            + part_id_from_bulk_events
+        )
         full_list = list(full_part_list)
 
-    if template_type == 'assm':
-        assmparts_from_config_def_events = [part_id['assembly_part__part_id'] for part_id in logged_user.reviewer_configdefaultevents.values('assembly_part__part_id')]
-        assmparts_from_refdes_events = [part_id['assembly_part__part_id'] for part_id in logged_user.reviewer_referencedesignatorevents.values('assembly_part__part_id')]
-        full_assm_list = set(assmparts_from_config_def_events + assmparts_from_refdes_events)
+    if template_type == "assm":
+        assmparts_from_config_def_events = [
+            part_id["assembly_part__part_id"]
+            for part_id in logged_user.reviewer_configdefaultevents.values(
+                "assembly_part__part_id"
+            )
+        ]
+        assmparts_from_refdes_events = [
+            part_id["assembly_part__part_id"]
+            for part_id in logged_user.reviewer_referencedesignatorevents.values(
+                "assembly_part__part_id"
+            )
+        ]
+        full_assm_list = set(
+            assmparts_from_config_def_events + assmparts_from_refdes_events
+        )
         full_list = list(full_assm_list)
 
-    if template_type == 'cruise':
-        cruises_from_cruise_events = [cruise_id['cruise_id'] for cruise_id in logged_user.reviewer_cruiseevents.values('cruise_id')]
+    if template_type == "cruise":
+        cruises_from_cruise_events = [
+            cruise_id["cruise_id"]
+            for cruise_id in logged_user.reviewer_cruiseevents.values("cruise_id")
+        ]
         full_cruise_list = set(cruises_from_cruise_events)
         full_list = list(full_cruise_list)
 

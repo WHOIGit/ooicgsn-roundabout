@@ -82,7 +82,11 @@ def load_inventory_navtree(request):
     ccc_review_id_list = logged_user_review_items(request.user, "inv")
     comment_list = None
     if request.user.mptt_comments.exists():
-        comment_list = [mptt_comment.action.inventory.id for mptt_comment in request.user.mptt_comments.all() if not mptt_comment.is_leaf_node()]
+        comment_list = [
+            mptt_comment.action.inventory.id
+            for mptt_comment in request.user.mptt_comments.all()
+            if not mptt_comment.is_leaf_node()
+        ]
         comment_list = set(comment_list)
     # For filtering navtree by Part Type
     part_types = request.GET.getlist("part_types[]")
@@ -525,7 +529,9 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
             custom_fields = None
 
         # Get only current Test Results for display
-        test_results = self.object.test_results.filter(is_current=True)
+        test_results = self.object.test_results.filter(is_current=True).exclude(
+            result=InventoryTestResult.UNKNOWN
+        )
 
         part_has_cals = False
         part_has_configs = False
@@ -538,10 +544,14 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         user_rev_conf_events = False
         user_rev_bulk_events = False
         inv_has_bulk_event = False
-        cnst_events = self.object.inventory_configevents.filter(config_type='cnst')
-        conf_events = self.object.inventory_configevents.filter(config_type='conf')
-        user_cnst_events = self.request.user.reviewer_configevents.filter(config_type='cnst')
-        user_conf_events = self.request.user.reviewer_configevents.filter(config_type='conf')
+        cnst_events = self.object.inventory_configevents.filter(config_type="cnst")
+        conf_events = self.object.inventory_configevents.filter(config_type="conf")
+        user_cnst_events = self.request.user.reviewer_configevents.filter(
+            config_type="cnst"
+        )
+        user_conf_events = self.request.user.reviewer_configevents.filter(
+            config_type="conf"
+        )
         user_rev_deployment_events = False
 
         if self.object.inventory_calibrationevents.exists():
@@ -574,17 +584,23 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
                 part_has_consts = True
 
         if self.object.inventory_configevents.exists():
-            if self.object.inventory_configevents.filter(config_type='conf'):
+            if self.object.inventory_configevents.filter(config_type="conf"):
                 inv_has_conf_events = True
-            if self.object.inventory_configevents.filter(config_type='cnst'):
+            if self.object.inventory_configevents.filter(config_type="cnst"):
                 inv_has_const_events = True
 
         if self.object.inventory_calibrationevents.exists():
-            if any(x in self.request.user.reviewer_calibrationevents.all() for x in self.object.inventory_calibrationevents.all()):
+            if any(
+                x in self.request.user.reviewer_calibrationevents.all()
+                for x in self.object.inventory_calibrationevents.all()
+            ):
                 user_rev_cal_events = True
 
         if self.object.inventory_constdefaultevents.exists():
-            if any(x in self.request.user.reviewer_constdefaultevents.all() for x in self.object.inventory_constdefaultevents.all()):
+            if any(
+                x in self.request.user.reviewer_constdefaultevents.all()
+                for x in self.object.inventory_constdefaultevents.all()
+            ):
                 user_rev_constdef_events = True
 
         if cnst_events:
@@ -594,18 +610,28 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
         if conf_events:
             if any(x in user_conf_events for x in conf_events):
                 user_rev_conf_events = True
-        
+
         if self.object.bulk_upload_event:
             inv_has_bulk_event = True
-            if self.object.bulk_upload_event in self.request.user.reviewer_bulkuploadevents.all():
+            if (
+                self.object.bulk_upload_event
+                in self.request.user.reviewer_bulkuploadevents.all()
+            ):
                 user_rev_bulk_events = True
         comment_list = None
         if self.request.user.mptt_comments.exists():
-            comment_list = [mptt_comment.action.id for mptt_comment in self.request.user.mptt_comments.all() if not mptt_comment.is_leaf_node()]
+            comment_list = [
+                mptt_comment.action.id
+                for mptt_comment in self.request.user.mptt_comments.all()
+                if not mptt_comment.is_leaf_node()
+            ]
             comment_list = set(comment_list)
 
         if self.object.inventory_deployments.exists():
-            if any(x in self.request.user.reviewer_deployments.all() for x in self.object.inventory_deployments.all()):
+            if any(
+                x in self.request.user.reviewer_deployments.all()
+                for x in self.object.inventory_deployments.all()
+            ):
                 user_rev_deployment_events = True
 
         # Get Inventory items by Root Locations
@@ -628,9 +654,9 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
                 "part_has_cals": part_has_cals,
                 "part_has_configs": part_has_configs,
                 "part_has_consts": part_has_consts,
-                'inv_has_conf_events': inv_has_conf_events,
-                'inv_has_const_events': inv_has_const_events,
-                'inv_has_bulk_event': inv_has_bulk_event,
+                "inv_has_conf_events": inv_has_conf_events,
+                "inv_has_const_events": inv_has_const_events,
+                "inv_has_bulk_event": inv_has_bulk_event,
                 "comment_list": comment_list,
                 "coeff_events": coeff_events,
                 "printers": printers,
@@ -638,12 +664,12 @@ class InventoryAjaxDetailView(LoginRequiredMixin, DetailView):
                 "node_type": node_type,
                 "inventory_location_data": inventory_location_data,
                 "user_rev_cal_events": user_rev_cal_events,
-                "user_rev_constdef_events" : user_rev_constdef_events,
-                "user_rev_const_events" : user_rev_const_events,
-                "user_rev_conf_events" : user_rev_conf_events,
-                "user_rev_bulk_events" : user_rev_bulk_events,
-                "user_rev_deployment_events" : user_rev_deployment_events,
-                "test_results": test_results
+                "user_rev_constdef_events": user_rev_constdef_events,
+                "user_rev_const_events": user_rev_const_events,
+                "user_rev_conf_events": user_rev_conf_events,
+                "user_rev_bulk_events": user_rev_bulk_events,
+                "user_rev_deployment_events": user_rev_deployment_events,
+                "test_results": test_results,
             }
         )
         return context
@@ -2067,147 +2093,9 @@ class InventoryAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, Delet
 # Base Views
 
 # View to get direct link to an Inventory item
-class InventoryDetailView(LoginRequiredMixin, DetailView):
-    model = Inventory
+class InventoryDetailView(InventoryAjaxDetailView):
+
     template_name = "inventory/inventory_detail.html"
-    context_object_name = "inventory_item"
-    queryset = (
-        Inventory.objects.prefetch_related("actions__user")
-        .prefetch_related("actions__location")
-        .prefetch_related("actions__photos")
-        .prefetch_related("photos")
-        .prefetch_related("inventory_deployments")
-        .select_related(
-            "location", "parent", "revision__part", "build", "part", "assembly_part"
-        )
-    )
-
-    def get_context_data(self, **kwargs):
-        context = super(InventoryDetailView, self).get_context_data(**kwargs)
-        # Add Parts list to context to build navtree filter
-        part_types = PartType.objects.all()
-        # Get Printers to display in print dropdown
-        printers = Printer.objects.all()
-
-        # Get this item's custom fields with most recent Values
-        if self.object.fieldvalues.exists():
-            custom_fields = self.object.fieldvalues.filter(is_current=True)
-        else:
-            custom_fields = None
-
-        part_has_cals = False
-        part_has_configs = False
-        part_has_consts = False
-        inv_has_conf_events = False
-        inv_has_const_events = False
-        user_rev_cal_events = False
-        user_rev_constdef_events = False
-        user_rev_const_events = False
-        user_rev_conf_events = False
-        user_rev_bulk_events = False
-        inv_has_bulk_event = False
-        cnst_events = self.object.inventory_configevents.filter(config_type='cnst')
-        conf_events = self.object.inventory_configevents.filter(config_type='conf')
-        user_cnst_events = self.request.user.reviewer_configevents.filter(config_type='cnst')
-        user_conf_events = self.request.user.reviewer_configevents.filter(config_type='conf')
-
-        if self.object.inventory_calibrationevents.exists():
-            coeff_events = self.object.inventory_calibrationevents.prefetch_related(
-                "coefficient_value_sets__coefficient_values"
-            )
-        else:
-            coeff_events = None
-
-        if self.object.part.part_coefficientnameevents.exists():
-            if (
-                self.object.part.part_coefficientnameevents.first()
-                .coefficient_names.filter(deprecated=False)
-                .exists()
-            ):
-                part_has_cals = True
-
-        if self.object.part.part_confignameevents.exists():
-            if (
-                self.object.part.part_confignameevents.first()
-                .config_names.filter(config_type="conf", deprecated=False)
-                .exists()
-            ):
-                part_has_configs = True
-            if (
-                self.object.part.part_confignameevents.first()
-                .config_names.filter(config_type="cnst", deprecated=False)
-                .exists()
-            ):
-                part_has_consts = True
-
-        if self.object.inventory_configevents.exists():
-            if self.object.inventory_configevents.filter(config_type='conf'):
-                inv_has_conf_events = True
-            if self.object.inventory_configevents.filter(config_type='cnst'):
-                inv_has_const_events = True
-
-        if self.object.inventory_calibrationevents.exists():
-            if any(x in self.request.user.reviewer_calibrationevents.all() for x in self.object.inventory_calibrationevents.all()):
-                user_rev_cal_events = True
-
-        if self.object.inventory_constdefaultevents.exists():
-            if any(x in self.request.user.reviewer_constdefaultevents.all() for x in self.object.inventory_constdefaultevents.all()):
-                user_rev_constdef_events = True
-
-        if cnst_events:
-            if any(x in user_cnst_events for x in cnst_events):
-                user_rev_const_events = True
-
-        if conf_events:
-            if any(x in user_conf_events for x in conf_events):
-                user_rev_conf_events = True
-        
-        if self.object.bulk_upload_event:
-            inv_has_bulk_event = True
-            if self.object.bulk_upload_event in self.request.user.reviewer_bulkuploadevents.all():
-                user_rev_bulk_events = True
-        comment_list = None
-        if self.request.user.mptt_comments.exists():
-            comment_list = [mptt_comment.action.id for mptt_comment in self.request.user.mptt_comments.all() if not mptt_comment.is_leaf_node()]
-            comment_list = set(comment_list)
-
-        # Get Inventory items by Root Locations
-        inventory_location_data = []
-        root_locations = Location.objects.root_nodes().exclude(root_type="Trash")
-        for root in root_locations:
-            locations_list = root.get_descendants(include_self=True).values_list(
-                "id", flat=True
-            )
-            items = self.object.part.inventory.filter(location__in=locations_list)
-            if items:
-                data = {
-                    "location_root": root,
-                    "inventory_items": items,
-                }
-                inventory_location_data.append(data)
-
-        context.update(
-            {
-                "part_has_cals": part_has_cals,
-                "part_has_configs": part_has_configs,
-                "part_has_consts": part_has_consts,
-                'inv_has_conf_events': inv_has_conf_events,
-                'inv_has_const_events': inv_has_const_events,
-                'inv_has_bulk_event': inv_has_bulk_event,
-                "comment_list": comment_list,
-                "coeff_events": coeff_events,
-                "printers": printers,
-                "custom_fields": custom_fields,
-                "node_type": node_type,
-                "inventory_location_data": inventory_location_data,
-                "user_rev_cal_events": user_rev_cal_events,
-                "user_rev_constdef_events" : user_rev_constdef_events,
-                "user_rev_const_events" : user_rev_const_events,
-                "user_rev_conf_events" : user_rev_conf_events,
-                "user_rev_bulk_events" : user_rev_bulk_events,
-            }
-        )
-        return context
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()

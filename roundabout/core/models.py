@@ -21,4 +21,20 @@
 
 from django.db import models
 
-# Create your models here.
+
+class CoreConfig(models.Model):
+    """
+    Model to hold general global settings, allows user to manage settings through web app
+    """
+
+    RESET_TESTS_ON_DEPLOYMENT_END = "reset_tests_on_deployment_end"
+    CONFIG_TYPES = ((RESET_TESTS_ON_DEPLOYMENT_END, "Reset Tests on Deployment End"),)
+
+    name = models.CharField(max_length=200, choices=CONFIG_TYPES)
+    is_active = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name

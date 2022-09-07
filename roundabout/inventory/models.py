@@ -1010,10 +1010,12 @@ class InventoryTestResult(models.Model):
     PASS = "pass"
     FAIL = "fail"
     PENDING = "pending"
+    UNKNOWN = "unknown"
     RESULT_TYPES = (
         (PASS, "Pass"),
         (FAIL, "Fail"),
         (PENDING, "Pending"),
+        (UNKNOWN, "Unknown"),
     )
     result = models.CharField(max_length=20, choices=RESULT_TYPES)
     created_at = models.DateTimeField(default=timezone.now)
@@ -1024,9 +1026,18 @@ class InventoryTestResult(models.Model):
         InventoryTest, related_name="test_results", on_delete=models.CASCADE
     )
     is_current = models.BooleanField(default=False)
+    notes = models.TextField(blank=True)
+    user = models.ForeignKey(
+        User,
+        related_name="test_results",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False,
+    )
 
     class Meta:
         ordering = ["-created_at"]
+        get_latest_by = "created_at"
 
     def __str__(self):
         return f"{self.inventory.serial_number} - {self.inventory_test.name} - {self.result}"

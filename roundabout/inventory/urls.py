@@ -272,4 +272,9 @@ urlpatterns = [
         views_tests.InventoryTestResultAjaxCreateView.as_view(),
         name="ajax_test_result",
     ),
+    path(
+        "test/reset-all-tests/<int:inventory_pk>/",
+        view=views_tests.InventoryTestResetAllActionView.as_view(),
+        name="ajax_test_reset_all_tests",
+    ),
 ]
