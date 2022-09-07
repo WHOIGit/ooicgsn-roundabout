@@ -1269,6 +1269,8 @@ def parse_bulk_files(self):
                     )
         if csv_file.name.endswith('vocab.csv'):
             for row in reader:
+                manufacturer = None
+                asset_model = None
                 equip_desc = row['DESCRIPTION OF EQUIPMENT']
                 if hasattr(row, 'manufacturer'):
                     manufacturer = row['manufacturer'].strip()

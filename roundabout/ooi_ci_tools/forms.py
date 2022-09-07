@@ -1166,9 +1166,11 @@ class ImportBulkUploadForm(forms.Form):
                                 _('File: %(filename)s, Asset UID %(row)s: No matching Inventory serial number exists'),
                                 params={'row': asset_uid, 'filename': file_name}
                             )
-            elif file_name.endswith('vocab.csv'):
+            elif file_name.endswith('_vocab.csv'):
                 
                 for row in reader:
+                    manufacturer = None
+                    asset_model = None
                     if hasattr(row, 'manufacturer'):
                         manufacturer = row['manufacturer'].strip()
                     if hasattr(row, 'Manufacturer'):
