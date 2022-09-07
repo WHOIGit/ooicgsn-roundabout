@@ -1272,8 +1272,8 @@ def parse_bulk_files(self):
                         'asset_model': asset_model,
                     }
                 )
-                man_field_list = FieldValue.objects.filter(field__field_name__iexact='Manufacturer', field_value__icontains = manufacturer, part__isnull=False, is_current=True)
-                mod_field_list = FieldValue.objects.filter(field__field_name__iexact='Model', field_value__icontains = asset_model, part__isnull=False, is_current=True)
+                man_field_list = FieldValue.objects.filter(field__field_name__icontains='Manufacturer', field_value__icontains = manufacturer, part__isnull=False, is_current=True)
+                mod_field_list = FieldValue.objects.filter(field__field_name__icontains='Model', field_value__icontains = asset_model, part__isnull=False, is_current=True)
                 if len(man_field_list) and len(mod_field_list):
                     for (man_field_obj, mod_field_obj) in zip(man_field_list, mod_field_list):
                         if man_field_obj.part == mod_field_obj.part:
