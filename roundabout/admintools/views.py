@@ -236,11 +236,14 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                             if item:
                                 if item.location == location:
                                     data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
+                                if item.location != location:
+                                    data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
                                 if item.location != location and hasattr(item,'build'):
                                     if item.build:
                                         if item.build.current_deployment():
                                             error_msg = "ERROR: Bulk Import cannot change Locations of Deployed Inventory."
                                             data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'warning': False, 'error_msg': error_msg})
+                                        
                     else:
                         if location:
                             data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
@@ -462,7 +465,7 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                 else:
                     action_record = Action.objects.create(action_type='invadd',
                                                     detail='Item first added to Inventory by Bulk Import',
-                                                    location=location,
+                                                    location=inventory_obj.location,
                                                     user=self.request.user,
                                                     inventory=inventory_obj)
 
