@@ -20,6 +20,7 @@
 -->
 
 {% load crispy_forms_tags %}
+{% load tz %}
 
 <div class="card-header">
     <h3>{{ inventory_item.part.name }}</h3>
@@ -31,10 +32,22 @@
 
     {% if test_result %}
         <div>
-            Test Result here
+            <h5>Current Test Status</h5>
+            <span class="text-uppercase badge {% if test_result.result == 'pass' %}btn-success{% elif test_result.result == 'fail' %}badge-danger{% else %}badge-warning{% endif %}"
+                href="#" role="button"
+                data-toggle="tooltip" data-placement="right" title="Click to update"
+                data-detail-url="{% url 'inventory:ajax_test_result' inventory_item.id test_result.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-node-type="{{ node_type }}">
+                {{test_result.inventory_test.name}} - {{test_result.get_result_display}}
+        </span>
+        <p>
+            Test Date: {{ test_result.created_at|date:"Y-m-d H:i:s" }}<br />
+            User: {{ test_result.user }}
+        </p>
         </div>
     {% endif %}
-
+    <h5>Update Test Status</h5>
     <form class="form-horizontal ajax-form" method="post" action="" id="snapshot-form"
             data-url='{{ request.build_absolute_uri|safe }}' novalidate>
         {% csrf_token %}

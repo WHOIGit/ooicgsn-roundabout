@@ -145,9 +145,15 @@ class InventoryTestResultAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, Creat
         if test_pk:
             test_result = InventoryTestResult.objects.get(id=test_pk)
             inventory_test_id = test_result.inventory_test.id
+            result = test_result.result
         else:
             inventory_test_id = None
-        return {"inventory": inventory_item.id, "inventory_test": inventory_test_id}
+            result = None
+        return {
+            "inventory": inventory_item.id,
+            "inventory_test": inventory_test_id,
+            "result": result,
+        }
 
     def form_valid(self, form):
         inventory_item = Inventory.objects.get(id=self.kwargs["inventory_pk"])
@@ -162,7 +168,7 @@ class InventoryTestResultAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, Creat
 
         self.object = form.save()
         self.object.is_current = True
-        self.user = self.request.user
+        self.object.user = self.request.user
         self.object.save()
 
         # Call the function to create an Action history chain this event
