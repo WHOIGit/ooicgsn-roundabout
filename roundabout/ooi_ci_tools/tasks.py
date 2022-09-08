@@ -1273,13 +1273,13 @@ def parse_bulk_files(self):
                 manufacturer = None
                 asset_model = None
                 equip_desc = row['DESCRIPTION OF EQUIPMENT']
-                if hasattr(row, 'manufacturer'):
+                if 'manufacturer' in row:
                     manufacturer = row['manufacturer'].strip()
-                if hasattr(row, 'Manufacturer'):
+                if 'Manufacturer' in row:
                     manufacturer = row['Manufacturer'].strip()
-                if hasattr(row, 'model'):
+                if 'model' in row:
                     asset_model = row['model'].strip()
-                if hasattr(row, 'Model'):
+                if 'Model' in row:
                     asset_model = row['Model'].strip()
                 vocabrecord_obj, vocab_created = BulkVocabRecord.objects.update_or_create(
                     equip_desc = equip_desc,
