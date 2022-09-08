@@ -370,6 +370,8 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
             for item_obj in tempimport_obj.tempimportitems.all():
                 inventory_obj = Inventory()
 
+                note_detail = None
+
                 for col in item_obj.data:
                     if col['field_name'] == 'Serial Number':
                         inventory_obj.serial_number = col['field_value']
