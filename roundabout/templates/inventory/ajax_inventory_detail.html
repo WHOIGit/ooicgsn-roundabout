@@ -374,6 +374,12 @@
                     Current Test Status
                 </th>
                 <td>
+                    <div class="float-right ajax-detail-link">
+                        <a href="#" data-detail-url="{% url 'inventory:ajax_test_reset_all_tests' inventory_item.id %}" role="button" class="btn btn-danger btn-sm">
+                        Reset all Tests
+                        </a>
+                    </div>
+
                     <ul class="no-style-list ajax-detail-link">
                         {% for test_result in test_results.all %}
                             <li class="pb-2">
