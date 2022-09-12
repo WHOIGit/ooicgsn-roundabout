@@ -204,6 +204,8 @@ class InventoryTestResetAllActionView(RedirectView):
             _reset_all_tests(inventory_item, self.request.user)
         except Inventory.DoesNotExist:
             pass
+
+        print(self.kwargs["inventory_pk"])
         return reverse(
             "inventory:ajax_inventory_detail", args=(self.kwargs["inventory_pk"],)
         )
