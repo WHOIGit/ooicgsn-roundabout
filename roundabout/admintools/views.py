@@ -492,11 +492,15 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                         # Create new value object
                         if col['field_value']:
                             if custom_field:
-                                fieldvalue = FieldValue.objects.create(field=custom_field,
-                                                                    field_value=col['field_value'],
-                                                                    inventory=inventory_obj,
-                                                                    is_current=True,
-                                                                    user=self.request.user)
+                                fieldvalue = FieldValue.objects.update_or_create(
+                                    field=custom_field,
+                                    inventory=inventory_obj,
+                                    is_current=True,
+                                    defaults = {
+                                        'field_value': col['field_value'],
+                                        'user': self.request.user,
+                                    }
+                                )
                             else:
                                 # Drop any fields that don't match a custom field into a History Note
                                 note_detail = col['field_name'] + ': ' + col['field_value']
