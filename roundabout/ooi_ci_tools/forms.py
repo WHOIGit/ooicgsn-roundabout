@@ -1179,8 +1179,8 @@ class ImportBulkUploadForm(forms.Form):
                         asset_model = row['model'].strip()
                     if 'Model' in row:
                         asset_model = row['Model'].strip()
-                    man_field_list = FieldValue.objects.filter(field__field_name__icontains='Manufacturer', field_value = manufacturer, part__isnull=False, is_current=True)
-                    mod_field_list = FieldValue.objects.filter(field__field_name__icontains='Model', field_value = asset_model, part__isnull=False, is_current=True)
+                    man_field_list = FieldValue.objects.filter(field__field_name__icontains='Manufacturer', field_value__icontains = manufacturer, part__isnull=False, is_current=True)
+                    mod_field_list = FieldValue.objects.filter(field__field_name__icontains='Model', field_value__icontains = asset_model, part__isnull=False, is_current=True)
                     if not len(man_field_list):
                         raise ValidationError(
                                 _('File: %(filename)s, Manufacturer %(manufacturer)s: No matching Manufacturer exists'),
