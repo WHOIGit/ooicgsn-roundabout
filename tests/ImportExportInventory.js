@@ -301,6 +301,7 @@ var password;
 
         // Check the Update Existing Inventory Items Checkbox
         await driver.findElement(By.name("update_existing_inventory")).click();
+        await new Promise(r => setTimeout(r, 2000));
 
         if (myArgs[1] == 'headless') {
             var filename = process.cwd() + "//upload-and-move-inventory-success.csv";
@@ -322,14 +323,19 @@ var password;
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Preview Import.");
         }
+
+//DEBUG
+        bodyText = await driver.findElement(By.tagName("Body")).getText();
+        console.log(bodyText);
+
         await driver.findElement(By.linkText("Import Valid! Click here to complete")).click();
         await new Promise(r => setTimeout(r, 2000));
         bodyText = await driver.findElement(By.tagName("Body")).getText();
         if (bodyText.includes("Import successful")) {
-            console.log("Import Inventory 456-654-321 Successful.");
+            console.log("Import and Move Inventory 456-654-321 Successful.");
         }
         else {
-            console.log("Import Inventory 456-654-321 NOT Successful.");
+            console.log("Import and Move Inventory 456-654-321 NOT Successful.");
         }
 
         // Verify Inventory Moved to new Location
