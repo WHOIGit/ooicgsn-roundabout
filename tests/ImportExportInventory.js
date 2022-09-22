@@ -111,6 +111,7 @@ var password;
         await driver.findElement(By.id("id_choice_field_options")).click();
         await driver.findElement(By.id("id_choice_field_options")).sendKeys("New|New\nGood|Good\nFair|Fair\nJunk|Junk");
         await driver.findElement(By.id("id_field_default_value")).click();
+        await driver.findElement(By.id("id_field_default_value")).sendKeys("Good");
         await driver.findElement(By.css(".btn-primary")).click();
 
         // Create a Custom Field "Manufacturer Serial Number", required for Upload Github Calibration Csv 
@@ -375,8 +376,6 @@ var password;
             console.log("Wait 2 seconds for Preview Import.");
         }
         bodyText = await driver.findElement(By.tagName("Body")).getText();
-let encodedString = await driver.takeScreenshot();
-        await fs.writeFileSync('/tests/depscreen.png', encodedString, 'base64');     
         if (bodyText.includes("Bulk Import cannot change Locations of Deployed Inventory")) {
             console.log("Import and Try to Move Deployed Inventory Successful: Error Flagged. ");
         }
