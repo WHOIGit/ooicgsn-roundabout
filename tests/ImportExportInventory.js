@@ -58,7 +58,6 @@ var password;
         password = "Automatedtests";
     }
 
-    // 2 | setWindowSize | 1304x834 | 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
     // Set implict wait time in between steps
     await driver.manage().setTimeouts({ implicit: 2000 });
@@ -87,17 +86,15 @@ var password;
         // IMPORT INVENTORY TEST
 
         // Create a Custom Field "Condition", used for Bulk Upload Inventory
-        // 10 | click | id=navbarAdminTools |
         await driver.findElement(By.id("navbarAdmintools")).click();
-        // 4 | click | linkText=Custom Fields | 
         await driver.findElement(By.linkText("Custom Fields")).click();
-        while ((await driver.findElements(By.linkText("Add Custom Field"))).length == 0) // 1.6
+        while ((await driver.findElements(By.linkText("Add Custom Field"))).length == 0)
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Add Custom Field.");
         }
         await driver.findElement(By.linkText("Add Custom Field")).click();
-        while ((await driver.findElements(By.id("id_field_name"))).length == 0) // 1.6
+        while ((await driver.findElements(By.id("id_field_name"))).length == 0)
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Add Custom Field1.");
@@ -107,21 +104,13 @@ var password;
         await driver.findElement(By.id("id_field_description")).click();
         await driver.findElement(By.id("id_field_description")).sendKeys("Inventory Condition");
         await driver.findElement(By.id("id_field_type")).click();
-        // 11 | select | id=id_field_type | label=Dropdown Field
         {
             const dropdown = await driver.findElement(By.id("id_field_type"));
             await dropdown.findElement(By.xpath("//option[. = 'Dropdown Field']")).click();
         }
         await driver.findElement(By.id("id_choice_field_options")).click();
-        // 14 | type | id=id_choice_field_options | New|New\nGood|Good\nFair|Fair\nJunk|Junk
         await driver.findElement(By.id("id_choice_field_options")).sendKeys("New|New\nGood|Good\nFair|Fair\nJunk|Junk");
-        // 15 | click | id=id_field_default_value | 
         await driver.findElement(By.id("id_field_default_value")).click();
-        // 16 | type | id=id_field_default_value | Good
-        await driver.findElement(By.id("id_field_default_value")).sendKeys("Good");
-        // 17 | click | id=id_global_for_part_types_6 | 
-        //      await driver.findElement(By.id("id_global_for_part_types_6")).click();
-        // 18 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
 
         // Create a Custom Field "Manufacturer Serial Number", required for Upload Github Calibration Csv 
@@ -142,13 +131,11 @@ var password;
 
         await driver.findElement(By.id("id_field_default_value")).sendKeys("20004");
         await driver.findElement(By.id("id_global_for_part_types_6")).click();  //Structural
-        // 18 | click | css=.btn-primary | 
         await driver.findElement(By.css(".btn-primary")).click();
 
-        // Import Valid Inventory Item
+        // Import and create new Inventory Item - non CI
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("navbarAdmintools")).click();
-        // 4 | click | linkText=Bulk Upload Tool | 
         await driver.findElement(By.linkText("Bulk Upload Tool")).click();
 
         if (myArgs[1] == 'headless') {
@@ -158,29 +145,24 @@ var password;
             var filename = process.cwd() + "\\inventory-import-successful.csv";
         }
 
-        while ((await driver.findElements(By.id("id_document"))).length == 0) // 1.6
+        while ((await driver.findElements(By.id("id_document"))).length == 0)
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Bulk Upload.");
         }
 
-        // 6 | type | id=id_document | C:\fakepath\inventory-import-successful.csv
         await driver.findElement(By.id("id_document")).sendKeys(filename);
-        // 7 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
-        // 8 | click | linkText=Import Valid! Click here to complete | 
-        while ((await driver.findElements(By.partialLinkText("Click here"))).length == 0) // 1.6
+        while ((await driver.findElements(By.partialLinkText("Click here"))).length == 0)
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Preview Import.");
         }
         await driver.findElement(By.linkText("Import Valid! Click here to complete")).click();
-        // 9 | click | id=navbarAdmintools | 
 
         // Import Invalid Inventory Item
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.id("navbarAdmintools")).click();
-        // 10 | click | linkText=Bulk Upload Tool | 
         await driver.findElement(By.linkText("Bulk Upload Tool")).click();
 
         if (myArgs[1] == 'headless') {
@@ -190,15 +172,13 @@ var password;
             filename = process.cwd() + "\\inventory-import-unsuccessful.csv";
         }
 
-        while ((await driver.findElements(By.id("id_document"))).length == 0) // 1.6
+        while ((await driver.findElements(By.id("id_document"))).length == 0)
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Bulk Upload1.");
         }
 
-        // 12 | type | id=id_document | C:\fakepath\inventory-import-unsuccessful.csv
         await driver.findElement(By.id("id_document")).sendKeys(filename);
-        // 13 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
         assert(await driver.findElement(By.css("td:nth-child(1) > .alert")).getText() == "ERROR. Serial Number already exists.");
@@ -209,22 +189,17 @@ var password;
         // EXPORT INVENTORY TEST
 
         // Search for and Export Inventory Item
-        // 3 | click | id=searchbar-query | 
         await driver.findElement(By.id("searchbar-query")).click();
-        // 4 | type | id=searchbar-query | surface mooring
         await driver.findElement(By.id("searchbar-query")).sendKeys("456-654-321");
-        // 5 | click | css=.btn:nth-child(1) | 
         await driver.findElement(By.css(".btn:nth-child(1)")).click()
 
         // Downloads to Downloads Folder
-        while ((await driver.findElements(By.id("search--download-csv-button"))).length == 0) // 1.6
+        while ((await driver.findElements(By.id("search--download-csv-button"))).length == 0)
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Search Download CSV.");
         }
-        // 10 | click | id=search--download-csv-button |
         await driver.findElement(By.id("search--download-csv-button")).click();
-        // 11 | click | linkText=All (Include Hidden Columns) | 
         await driver.findElement(By.linkText("All (Include Hidden Columns)")).click();
 
         // Read RDB_Inventory.csv and verify Serial Number, Part Number, Location, Notes, and Condition Custom Field
@@ -318,6 +293,96 @@ var password;
             throw new error("Import/Export Condition does not match");
         }
 
+        // Import and Update Existing Inventory Item - moving its Location to a new Location
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.id("navbarAdmintools")).click();
+        await driver.findElement(By.linkText("Bulk Upload Tool")).click();
+
+        // Check the Update Existing Inventory Items Checkbox
+        await driver.findElement(By.name("update_existing_inventory")).click();
+
+        if (myArgs[1] == 'headless') {
+            var filename = process.cwd() + "//upload-and-move-inventory-success.csv";
+        }
+        else {
+            var filename = process.cwd() + "\\upload-and-move-inventory-success.csv";
+        }
+
+        while ((await driver.findElements(By.id("id_document"))).length == 0)
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Bulk Upload.");
+        }
+
+        await driver.findElement(By.id("id_document")).sendKeys(filename);
+        await driver.findElement(By.css(".controls > .btn")).click();
+        while ((await driver.findElements(By.partialLinkText("Click here"))).length == 0)
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Preview Import.");
+        }
+        await driver.findElement(By.linkText("Import Valid! Click here to complete")).click();
+        await new Promise(r => setTimeout(r, 2000));
+        bodyText = await driver.findElement(By.tagName("Body")).getText();
+        if (bodyText.includes("Import successful")) {
+            console.log("Import Inventory 456-654-321 Successful.");
+        }
+        else {
+            console.log("Import Inventory 456-654-321 NOT Successful.");
+        }
+
+        // Verify Inventory Moved to new Location
+
+        // Search for Inventory
+        await driver.findElement(By.id("searchbar-query")).click();
+        await driver.findElement(By.id("searchbar-query")).sendKeys("456-654-321");
+        await driver.findElement(By.css(".btn:nth-child(1)")).click()
+        await new Promise(r => setTimeout(r, 2000));
+        // Verify Inventory moved to Test1 location
+        var bodyText = await driver.findElement(By.tagName("Body")).getText();
+        if (bodyText.includes("Test1")) {
+            console.log("Upload and Move Inventory 456-654-321 Successful.");
+        }
+        else {
+            console.log("Upload and Move Inventory 456-654-321 FAILED.");
+        }
+
+        // Import and Update Deployed Inventory Item - try to move its Location to a new Location
+        // An error should be flagged
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.id("navbarAdmintools")).click();
+        await driver.findElement(By.linkText("Bulk Upload Tool")).click();
+
+        // Check the Update Existing Inventory Items Checkbox
+        await driver.findElement(By.name("update_existing_inventory")).click();
+
+        if (myArgs[1] == 'headless') {
+            var filename = process.cwd() + "//upload-and-move-inventory-fail.csv";
+        }
+        else {
+            var filename = process.cwd() + "\\upload-and-move-inventory-fail.csv";
+        }
+
+        while ((await driver.findElements(By.id("id_document"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Bulk Upload.");
+        }
+
+        await driver.findElement(By.id("id_document")).sendKeys(filename);
+        await driver.findElement(By.css(".controls > .btn")).click();
+        while ((await driver.findElements(By.partialLinkText("Click here"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Preview Import.");
+        }
+        bodyText = await driver.findElement(By.tagName("Body")).getText();
+let encodedString = await driver.takeScreenshot();
+        await fs.writeFileSync('/tests/depscreen.png', encodedString, 'base64');     
+        if (bodyText.includes("Bulk Import cannot change Locations of Deployed Inventory")) {
+            console.log("Import and Try to Move Deployed Inventory Successful: Error Flagged. ");
+        }
+        else {
+            console.log("Import and Try to Move Deployed Inventory NOT Successful: Error NOT Flagged.");
+        }
 
         // Close browser window
         driver.quit();

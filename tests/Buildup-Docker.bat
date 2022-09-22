@@ -15,13 +15,17 @@ node AddEditAssemblies.js chrome headless admin
 
 node AddEditInventory.js chrome headless admin
 
-node ImportExportInventory.js chrome headless admin
+#node ImportExportInventory.js chrome headless admin
 
-node ExportCustomFields.js chrome headless admin
+#node ExportCustomFields.js chrome headless admin
 
 node ExportCruise.js chrome headless admin
 
 node AddBuilds.js chrome headless admin 
+
+node ImportExportInventory.js chrome headless admin
+
+node ExportCustomFields.js chrome headless admin
 
 node AdminUser.js chrome headless admin
 
