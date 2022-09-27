@@ -327,10 +327,10 @@ var password;
         await new Promise(r => setTimeout(r, 2000));
         bodyText = await driver.findElement(By.tagName("Body")).getText();
         if (bodyText.includes("Import successful")) {
-            console.log("Import and Move Inventory 456-654-321 Successful.");
+            console.log("Import Inventory 456-654-321 Successful.");
         }
         else {
-            console.log("Import and Move Inventory 456-654-321 NOT Successful.");
+            console.log("Import Inventory 456-654-321 NOT Successful.");
         }
 
         // Verify Inventory Moved to new Location
@@ -343,10 +343,10 @@ var password;
         // Verify Inventory moved to Test1 location
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
         if (bodyText.includes("Test1")) {
-            console.log("Upload and Move Inventory 456-654-321 Successful.");
+            console.log("Move Inventory 456-654-321 Successful.");
         }
         else {
-            console.log("Upload and Move Inventory 456-654-321 FAILED.");
+            console.log("Move Inventory 456-654-321 FAILED.");
         }
 
         // Import and Update Deployed Inventory Item - try to move its Location to a new Location

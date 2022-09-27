@@ -231,61 +231,16 @@ var password;
         await driver.findElement(By.id("navbarAdmintools")).click();
         await driver.findElement(By.linkText("Custom Fields")).click();
 
-        if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Condition']"))).length != 0) {
-            var i = 1;
-            while (true) {
-                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Condition") {
-                    break;
-                }
-                i++;
+        var i = 1;
+        while (true){
+            if ((await driver.findElements(By.css("tr:nth-child(" + i + ") .btn-danger"))).length != 0) {
+                await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
+                await driver.findElement(By.css(".btn-danger")).click();
             }
-            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
-            await driver.findElement(By.css(".btn-danger")).click();
-        }
-        else
-            console.log("Delete Parts failed: Condition Custom Field not found");
-
-        if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Manufacturer Serial Number']"))).length != 0) {
-            var i = 1;
-            while (true) {
-                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Manufacturer Serial Number") {
-                    break;
-                }
-                i++;
+            else {
+                break;
             }
-            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
-            await driver.findElement(By.css(".btn-danger")).click();
         }
-        else
-            console.log("Delete Parts failed: Manufacturer Serial Number Custom Field not found");
-
-        if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Manufacturer']"))).length != 0) {
-            var i = 1;
-            while (true) {
-                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Manufacturer") {
-                    break;
-                }
-                i++;
-            }
-            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
-            await driver.findElement(By.css(".btn-danger")).click();
-        }
-        else
-            console.log("Delete Parts failed: Manufacturer Custom Field not found");
-
-        if ((await driver.findElements(By.xpath("//tr[*]/td[text()='Model']"))).length != 0) {
-            var i = 1;
-            while (true) {
-                if ((await driver.findElement(By.xpath("//tr[" + i + "]/td")).getText()) == "Model") {
-                    break;
-                }
-                i++;
-            }
-            await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
-            await driver.findElement(By.css(".btn-danger")).click();
-        }
-        else
-            console.log("Delete Parts failed: Model Custom Field not found");
 
         // Close browser window
         driver.quit();
