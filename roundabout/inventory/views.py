@@ -44,6 +44,8 @@ from django.views.generic import (
 )
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
+from roundabout.inventory.views_tests import _reset_all_tests
+
 from .models import (
     Inventory,
     Deployment,
@@ -1096,6 +1098,12 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
             inventory_deployment.deployment_recovery_date = action_date
             inventory_deployment.save()
 
+            # Auto reset all inventory tests here on Deployment Recovery
+            _reset_all_tests(
+                self.object,
+                self.request.user,
+            )
+
             # Find Build it was removed from
             old_build = self.object.get_latest_build()
             if old_build:
@@ -1122,6 +1130,11 @@ class InventoryAjaxActionView(InventoryAjaxUpdateView):
                 inventory_deployment.cruise_recovered = cruise
                 inventory_deployment.deployment_recovery_date = action_date
                 inventory_deployment.save()
+                # Auto reset all inventory tests here on Deployment Recovery
+                _reset_all_tests(
+                    item,
+                    self.request.user,
+                )
                 # Call the function to create an Action history chain for all child items
                 _create_action_history(
                     item, action_type, self.request.user, self.object, "", action_date

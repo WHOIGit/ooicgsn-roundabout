@@ -27,20 +27,22 @@ from common.util.mixins import AjaxFormMixin
 def _reset_all_tests(inventory_item, user):
     # reset is_current status for older Test Results for this item
     results = inventory_item.test_results.filter(is_current=True)
-    for result in results:
-        result.is_current = False
-        result.save()
-        # create new Test Result to set Test to Unknown
-        new_result = InventoryTestResult.objects.create(
-            result=InventoryTestResult.UNKNOWN,
-            inventory=inventory_item,
-            inventory_test=result.inventory_test,
-            is_current=True,
-            user=user,
-            notes="Test reset to Unknown status",
-        )
-        # Call the function to create an Action history chain for this event
-        _create_action_history(inventory_item, Action.TEST, user)
+
+    if results.exists():
+        for result in results:
+            result.is_current = False
+            result.save()
+            # create new Test Result to set Test to Unknown
+            new_result = InventoryTestResult.objects.create(
+                result=InventoryTestResult.UNKNOWN,
+                inventory=inventory_item,
+                inventory_test=result.inventory_test,
+                is_current=True,
+                user=user,
+                notes="Test reset to Unknown status",
+            )
+            # Call the function to create an Action history chain for this event
+            _create_action_history(inventory_item, Action.TEST, user)
     return True
 
 
