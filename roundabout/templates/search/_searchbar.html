@@ -32,12 +32,13 @@
           {# 0 #} <option value="inventory" selected>{{ label_inventory_app_plural }}</option>
           {# 1 #} <option value="calibrations"> -- Calibrations</option>
           {# 2 #} <option value="configconsts"> -- Configs/Constants</option>
-          {# 3 #} <option value="build">{{ label_builds_app_plural }}</option>
-          {# 4 #} <option value="part">Part Templates</option>
-          {# 5 #} <option value="assembly">{{ label_assemblies_app_singular }} Templates</option>
-          {# 6 #} <option value="action">Actions</option>
-          {# 7 #} <option value="user">User</option>
-          {# 8 #} <option value="change">Change</option>
+          {# 3 #} <option value="tests"> -- Tests</option>
+          {# 4 #} <option value="build">{{ label_builds_app_plural }}</option>
+          {# 5 #} <option value="part">Part Templates</option>
+          {# 6 #} <option value="assembly">{{ label_assemblies_app_singular }} Templates</option>
+          {# 7 #} <option value="action">Actions</option>
+          {# 8 #} <option value="user">User</option>
+          {# 9 #} <option value="change">Change</option>
                 </select>
               </div>
 
@@ -55,12 +56,14 @@
   // no case for calibration searchbar search
   if      (domain.includes('calib'))   { select_idx = 1 }
   else if (domain.startsWith('config')){ select_idx = 2 }
-  else if (domain.startsWith('build')) { select_idx = 3 }
-  else if (domain.startsWith('part'))  { select_idx = 4 }
-  else if (domain.startsWith('assem')) { select_idx = 5 }
-  else if (domain.startsWith('action')){ select_idx = 6 }
-  else if (domain.startsWith('user'))  { select_idx = 7 }
-  else if (domain.startsWith('change')){ select_idx = 8 }
+  else if (domain.startsWith('tests')) { select_idx = 3 }
+  else if (domain.startsWith('build')) { select_idx = 4 }
+  else if (domain.startsWith('part'))  { select_idx = 5 }
+  else if (domain.startsWith('assem')) { select_idx = 6 }
+  else if (domain.startsWith('action')){ select_idx = 7 }
+  else if (domain.startsWith('user'))  { select_idx = 8 }
+  else if (domain.startsWith('change')){ select_idx = 9 }
+  
   else { select_idx = 0 } // inventory, the default
 
   document.getElementById("searchbar-modelselect").selectedIndex = select_idx

@@ -89,6 +89,7 @@ def searchbar_redirect(request):
         "action",
         "user",
         "change",
+        "tests",
     ]:
         return redirect(request.META.get("HTTP_REFERER", "/"))
 
@@ -124,6 +125,8 @@ def searchbar_redirect(request):
             getstr = "?ccc_role=both&ccc_status=all" + "&q={query}"
         elif model == "change":
             getstr = "?q={query}"
+        elif model == "tests":
+            getstr = "?f=.0.inventory_test__name&l=.0.icontains&q=.0.{query}"
         else:
             return redirect(
                 request.META.get("HTTP_REFERER", "/")
