@@ -236,10 +236,9 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                             data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
                             if item:
                                 if item.location != location and hasattr(item,'build'):
-                                    if item.build:
-                                        if item.build.current_deployment():
-                                            error_msg = "ERROR: Bulk Import cannot change Locations of Deployed Inventory."
-                                            data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'warning': False, 'error_msg': error_msg})
+                                    if item.build != None:
+                                        error_msg = "Bulk Import cannot change Locations of Deployed Inventory."
+                                        data.append({'field_name': key, 'field_value': value.strip(), 'error': True, 'warning': False, 'error_msg': error_msg})
                                         
                     else:
                         if location:
