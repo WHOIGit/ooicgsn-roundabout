@@ -9,8 +9,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 RUN apt-get update
 
 RUN apt-get install curl -y && apt-get install npm -y
-# Tools for Circleci debugging
-RUN apt-get install iputils-ping -y && apt-get install net-tools -y
 
 RUN apt-get install -y wget && apt install -y unzip
 
@@ -35,6 +33,9 @@ RUN npm install node-fetch@2.6.1
 
 RUN npm install selenium-webdriver
 
+# Prevents unable to fetch archive.ubuntu.com google chrome error below
+RUN apt-get update
+
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && apt install -y ./google-chrome-stable_current_amd64.deb      
 
 # Determine and Get Chromedriver Version based upon the Google Chrome Version
@@ -43,8 +44,6 @@ RUN CHROME_VERSION=$(google-chrome --version | sed 's/Google Chrome \([0-9]*\).*
   && wget https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip \
   && unzip -o chromedriver_linux64.zip -d/usr/local/bin
         
-#RUN apt install -y firefox && apt install -y firefox-geckodriver
-
 RUN chmod +x /tests/RunAllTests-Chrome-Linux.bat
 RUN sed -i 's/\r//' /tests/RunAllTests-Chrome-Linux.bat
 
