@@ -1472,6 +1472,11 @@ class InventoryTestResultTableView(GenericSearchTableView):
                     value="value",
                 ),
             ),
+            dict(
+                value="is_current",
+                text="Is Current",
+                legal_lookup="BOOL_LOOKUP",
+            ),
         ]
         return avail_fields
 

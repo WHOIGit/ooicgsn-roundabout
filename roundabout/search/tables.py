@@ -598,6 +598,7 @@ class InventoryTestResultTable(SearchTable):
             "created_at",
             "user",
             "notes",
+            "is_current",
         ]
         base_shown_cols = [
             "inventory_test__name",
@@ -606,6 +607,7 @@ class InventoryTestResultTable(SearchTable):
             "created_at",
             "user",
             "notes",
+            "is_current",
         ]
 
     inventory__serial_number = Column(
