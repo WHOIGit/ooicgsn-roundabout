@@ -117,6 +117,36 @@ class ImportInventoryForm(forms.Form):
     )
     document = forms.FileField()
 
+    def clean_document(self):
+        document = self.files.getlist('document')
+        if document:
+            document = document[0]
+            document.seek(0)
+            reader = csv.DictReader(io.StringIO(document.read().decode('utf-8')))
+            headers = reader.fieldnames
+            required_fields = ['Serial Number', 'Part Number','Location']
+            for field in required_fields:
+                if not field in headers:
+                    raise ValidationError(
+                        _('File: %(filename)s, Required fields (Serial Number, Part Number, Location) are not found.'),
+                        params={'filename': document.name},
+                    )
+            for idx, row in enumerate(reader):
+                row_data = row.items()
+                for key, val in row_data:
+                    if key in required_fields:
+                        if val == None or val == '':
+                            raise ValidationError(
+                                _('File: %(filename)s, Row %(row)s: A required field is blank'),
+                                params={ 'row': idx, 'filename': document.name},
+                            )
+            
+        else:
+            raise ValidationError(
+                _('No file specified'),
+            )
+        return document
+
 
 class ImportCalibrationForm(forms.Form):
     cal_csv = forms.FileField(
