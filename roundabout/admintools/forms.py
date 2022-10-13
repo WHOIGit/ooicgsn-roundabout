@@ -135,11 +135,17 @@ class ImportInventoryForm(forms.Form):
                 row_data = row.items()
                 for key, val in row_data:
                     if key in required_fields:
-                        if val == None or val == '':
+                        if not val:
                             raise ValidationError(
                                 _('File: %(filename)s, Row %(row)s: A required field is blank'),
                                 params={ 'row': idx, 'filename': document.name},
                             )
+                        else:
+                            if val.strip() == '':
+                                raise ValidationError(
+                                    _('File: %(filename)s, Row %(row)s: A required field is blank'),
+                                    params={ 'row': idx, 'filename': document.name},
+                                )
             
         else:
             raise ValidationError(
