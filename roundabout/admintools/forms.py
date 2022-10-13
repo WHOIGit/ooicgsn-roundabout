@@ -140,6 +140,12 @@ class ImportInventoryForm(forms.Form):
                                 _('File: %(filename)s, Row %(row)s: A required field is blank'),
                                 params={ 'row': idx, 'filename': document.name},
                             )
+                        else:
+                            if val.strip() == '':
+                                raise ValidationError(
+                                    _('File: %(filename)s, Row %(row)s: A required field is blank'),
+                                    params={ 'row': idx, 'filename': document.name},
+                                )
             
         else:
             raise ValidationError(
