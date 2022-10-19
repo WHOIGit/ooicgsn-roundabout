@@ -1239,8 +1239,6 @@ def validate_reference_designator(name, row_idx = None):
         try:
             third_section = assertion_sets[2]
             assert len(third_section) == 2
-            intable_2 = int(third_section)
-            assert type(intable_2) is int
         except:
             raise ValidationError(
                 _('Row: %(row_num)s, Reference Designator: %(name)s: Third section should be a 2-digit integer'),
