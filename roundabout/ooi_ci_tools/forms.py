@@ -546,80 +546,79 @@ class ImportDeploymentsForm(forms.Form):
                     )
                 
                 for idx,row in enumerate(reader):
-                    if '#' not in row['CUID_Deploy']:
-                        try:
-                            start_date = row['startDateTime']
-                            datetime_obj = parser.parse(start_date)
-                        except:
-                            raise ValidationError(
-                                _('File: %(filename)s: Row: %(row)s: Unable to parse Start DateTime'),
-                                params={'filename': filename, 'row': idx},
-                            )
-                        try:
-                            stop_date = row['stopDateTime']
-                            if len(stop_date) > 0:
-                                datetime_obj = parser.parse(stop_date)
-                        except:
-                            raise ValidationError(
-                                _('File: %(filename)s: Row: %(row)s: Unable to parse Stop DateTime'),
-                                params={'filename': filename, 'row': idx},
-                            )
-                        try:
-                            water_depth = row['water_depth']
-                            float_obj = float(water_depth)
-                        except:
-                            raise ValidationError(
-                                _('File: %(filename)s: Row: %(row)s: Unable to parse Water Depth'),
-                                params={'filename': filename, 'row': idx},
-                            )
-                        try:
-                            mooring_id = row['mooring.uid']
-                            dep_number = mooring_id.split('-')[2]
-                            assert dep_number != ''
-                        except:
-                            raise ValidationError(
-                                _('File: %(filename)s: Row: %(row)s: Unable to parse Mooring UID or Deployment Number from Mooring UID'),
-                                params={'filename': filename,  'row': idx},
-                            )
-                        # get Assembly number from RefDes as that seems to be most consistent across CSVs
-                        try:
-                            ref_des = row['Reference Designator']
-                            ref_des_obj = ReferenceDesignator.objects.get(refdes_name=ref_des)
-                        except ReferenceDesignator.MultipleObjectsReturned:
-                            ref_des_obj = ReferenceDesignator.objects.filter(refdes_name=ref_des).first()
-                        except ReferenceDesignator.DoesNotExist:
-                            raise ValidationError( 
-                                _('File: %(filename)s: Row: %(row)s: Value: %(value)s: Unable to parse Reference Designator or Reference Designator not found'),
-                                params={'filename': filename, 'row': idx, 'value': ref_des},
-                            )
+                    try:
+                        cuid_deploy = row['CUID_Deploy']
+                        if '#' in cuid_deploy or cuid_deploy == '':
+                            continue
+                        cruise_deployed = Cruise.objects.get(CUID=cuid_deploy)
+                    except Cruise.DoesNotExist:
+                        raise ValidationError(
+                            _('File: %(filename)s: Row: %(row)s: Value: %(value)s: CUID: %(cuid)s: Unable to parse CUID or CUID not found'),
+                            params={'filename': filename, 'cuid': cuid_deploy, 'row':idx , 'value': cuid_deploy},
+                        )
+                    try:
+                        start_date = row['startDateTime']
+                        datetime_obj = parser.parse(start_date)
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Row: %(row)s: Unable to parse Start DateTime'),
+                            params={'filename': filename, 'row': idx},
+                        )
+                    try:
+                        stop_date = row['stopDateTime']
+                        if len(stop_date) > 0:
+                            datetime_obj = parser.parse(stop_date)
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Row: %(row)s: Unable to parse Stop DateTime'),
+                            params={'filename': filename, 'row': idx},
+                        )
+                    try:
+                        water_depth = row['water_depth']
+                        float_obj = float(water_depth)
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Row: %(row)s: Unable to parse Water Depth'),
+                            params={'filename': filename, 'row': idx},
+                        )
+                    try:
+                        mooring_id = row['mooring.uid']
+                        dep_number = mooring_id.split('-')[2]
+                        assert dep_number != ''
+                    except:
+                        raise ValidationError(
+                            _('File: %(filename)s: Row: %(row)s: Unable to parse Mooring UID or Deployment Number from Mooring UID'),
+                            params={'filename': filename,  'row': idx},
+                        )
+                    # get Assembly number from RefDes as that seems to be most consistent across CSVs
+                    try:
+                        ref_des = row['Reference Designator']
+                        ref_des_obj = ReferenceDesignator.objects.get(refdes_name=ref_des)
+                    except ReferenceDesignator.MultipleObjectsReturned:
+                        ref_des_obj = ReferenceDesignator.objects.filter(refdes_name=ref_des).first()
+                    except ReferenceDesignator.DoesNotExist:
+                        raise ValidationError( 
+                            _('File: %(filename)s: Row: %(row)s: Value: %(value)s: Unable to parse Reference Designator or Reference Designator not found'),
+                            params={'filename': filename, 'row': idx, 'value': ref_des},
+                        )
+                    
+                    try:
+                        assembly_num = ref_des.split('-')[0]
+                        assembly = Assembly.objects.get(assembly_number=assembly_num)
+                    except Assembly.DoesNotExist:
+                        raise ValidationError(
+                            _('File: %(filename)s: Row: %(row)s: Value: %(value)s: Unable to parse Assembly from Reference Designator or Assembly not found'),
+                            params={'filename': filename, 'row': idx, 'value': assembly_num},
+                        )
+                    try:
+                        location_code = assembly_num[0:2]
+                        deployed_location = Location.objects.get(location_code=location_code)
+                    except Location.DoesNotExist:
+                        raise ValidationError(
+                            _('File: %(filename)s: Row: %(row)s: Value: %(value)s: Unable to parse Location Code or Code not found'),
+                            params={'filename': filename, 'row': idx , 'value': location_code},
+                        )
                         
-                        try:
-                            assembly_num = ref_des.split('-')[0]
-                            assembly = Assembly.objects.get(assembly_number=assembly_num)
-                        except Assembly.DoesNotExist:
-                            raise ValidationError(
-                                _('File: %(filename)s: Row: %(row)s: Value: %(value)s: Unable to parse Assembly from Reference Designator or Assembly not found'),
-                                params={'filename': filename, 'row': idx, 'value': assembly_num},
-                            )
-                        try:
-                            location_code = assembly_num[0:2]
-                            deployed_location = Location.objects.get(location_code=location_code)
-                        except Location.DoesNotExist:
-                            raise ValidationError(
-                                _('File: %(filename)s: Row: %(row)s: Value: %(value)s: Unable to parse Location Code or Code not found'),
-                                params={'filename': filename, 'row': idx , 'value': location_code},
-                            )
-                        try:
-                            cuid_deploy = row['CUID_Deploy']
-                            if '#' in cuid_deploy:
-                                continue
-                            else:
-                                cruise_deployed = Cruise.objects.get(CUID=cuid_deploy)
-                        except Cruise.DoesNotExist:
-                            raise ValidationError(
-                                _('File: %(filename)s: Row: %(row)s: Value: %(value)s: CUID: %(cuid)s: Unable to parse CUID or CUID not found'),
-                                params={'filename': filename, 'cuid': cuid_deploy, 'row':idx , 'value': cuid_deploy},
-                            )
                 validate_import_config_deployments(import_config, reader, filename)
             else:
                 raise ValidationError(
@@ -1157,6 +1156,12 @@ class ImportBulkUploadForm(forms.Form):
             if file_name.endswith('AssetRecord.csv'):
                 
                 for row in reader:
+                    try:
+                        asset_uid = row['ASSET_UID']
+                        part_template = row['RDB_Part_Template']
+                    except:
+                        part_template = None
+                    print(asset_uid,part_template)
                     continue
                     try:
                         asset_uid = row['ASSET_UID']
@@ -1234,8 +1239,6 @@ def validate_reference_designator(name, row_idx = None):
         try:
             third_section = assertion_sets[2]
             assert len(third_section) == 2
-            intable_2 = int(third_section)
-            assert type(intable_2) is int
         except:
             raise ValidationError(
                 _('Row: %(row_num)s, Reference Designator: %(name)s: Third section should be a 2-digit integer'),
