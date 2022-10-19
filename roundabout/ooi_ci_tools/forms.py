@@ -550,6 +550,7 @@ class ImportDeploymentsForm(forms.Form):
                         cuid_deploy = row['CUID_Deploy']
                         if '#' in cuid_deploy or cuid_deploy == '':
                             continue
+                        cruise_deployed = Cruise.objects.get(CUID=cuid_deploy)
                     except Cruise.DoesNotExist:
                         raise ValidationError(
                             _('File: %(filename)s: Row: %(row)s: Value: %(value)s: CUID: %(cuid)s: Unable to parse CUID or CUID not found'),
