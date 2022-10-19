@@ -1,0 +1,27 @@
+<!-- Modal -->
+<div class="modal fade" id="modal-confirm-tests-reset" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modal-confirm-tests-reset-label">Confirm Tests Reset</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to reset all Tests for this Inventory Item?
+        </div>
+        <div class="modal-footer ajax-detail-link">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <a href="#" data-detail-url="{% url 'inventory:ajax_test_reset_all_tests' inventory_item.id %}" 
+            data-node-id="{{ inventory_item.id }}"
+            data-node-type="{{ inventory_item.get_object_type }}"
+            role="button" 
+            class="btn btn-danger"
+            data-dismiss="modal">
+            Confirm Reset all Tests
+            </a>
+        </div>
+      </div>
+    </div>
+  </div>

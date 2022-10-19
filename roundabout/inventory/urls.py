@@ -21,7 +21,7 @@
 
 from django.urls import path
 
-from . import views
+from . import views, views_tests
 
 app_name = "inventory"
 urlpatterns = [
@@ -241,5 +241,40 @@ urlpatterns = [
         "ajax/print-code/<int:pk>/<code_format>/",
         views.print_code_zebraprinter,
         name="ajax_print_code",
+    ),
+    # Test paths
+    path(
+        "test/<int:pk>/",
+        view=views_tests.InventoryTestDetailView.as_view(),
+        name="test_detail",
+    ),
+    path("test/", view=views_tests.InventoryTestListView.as_view(), name="test_home"),
+    path(
+        "test/add/", view=views_tests.InventoryTestCreateView.as_view(), name="test_add"
+    ),
+    path(
+        "test/edit/<int:pk>/",
+        view=views_tests.InventoryTestUpdateView.as_view(),
+        name="test_update",
+    ),
+    path(
+        "test/delete/<int:pk>/",
+        view=views_tests.InventoryTestDeleteView.as_view(),
+        name="test_delete",
+    ),
+    path(
+        "ajax/test-result/<int:inventory_pk>/",
+        views_tests.InventoryTestResultAjaxCreateView.as_view(),
+        name="ajax_test_result",
+    ),
+    path(
+        "ajax/test-result/<int:inventory_pk>/<int:test_pk>/",
+        views_tests.InventoryTestResultAjaxCreateView.as_view(),
+        name="ajax_test_result",
+    ),
+    path(
+        "test/reset-all-tests/<int:inventory_pk>/",
+        view=views_tests.InventoryTestResetAllActionView.as_view(),
+        name="ajax_test_reset_all_tests",
     ),
 ]
