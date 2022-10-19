@@ -31,12 +31,14 @@
     {% elif model == 'Action' %} Actions
     {% elif model == 'User' %} User
     {% elif model == 'change' %} Change
+    {% elif model == 'InventoryTestResult' %} Tests
     {% endif %}
   </button>
   <div class="dropdown-menu" aria-labelledby="search-model-dropdown">
     <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:inventory' %}>{{ label_inventory_app_plural }}</a>
     <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:calibrations' %}> -- Calibrations</a>
     <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:configconsts' %}> -- Config/Constants</a>
+    <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:tests' %}> -- Tests</a>
     <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:build' %}>{{ label_builds_app_plural }}</a>
     <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:part' %}>Part Templates</a>
     <a class="dropdown-item" onclick="buttonload_spinner('on','#search-model-dropdown')" href={% url 'search:assembly' %}>{{ label_assemblies_app_singular }} Templates</a>

@@ -1,0 +1,92 @@
+<!--
+# Copyright (C) 2019-2020 Woods Hole Oceanographic Institution
+#
+# This file is part of the Roundabout Database project ("RDB" or 
+# "ooicgsn-roundabout").
+#
+# ooicgsn-roundabout is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# ooicgsn-roundabout is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ooicgsn-roundabout in the COPYING.md file at the project root.
+# If not, see <http://www.gnu.org/licenses/>.
+-->
+
+{% load crispy_forms_tags %}
+{% load tz %}
+
+<div class="card-header">
+    <h3>{{ inventory_item.part.name }}</h3>
+
+    <p>{{ inventory_item.serial_number }}</p>
+</div>
+
+<div class="card-body">
+
+    {% if test_result %}
+        <div>
+            <h5>Current Test Status</h5>
+            <span class="text-uppercase badge {% if test_result.result == 'pass' %}btn-success{% elif test_result.result == 'fail' %}badge-danger{% else %}badge-warning{% endif %}"
+                href="#" role="button"
+                data-toggle="tooltip" data-placement="right" title="Click to update"
+                data-detail-url="{% url 'inventory:ajax_test_result' inventory_item.id test_result.id %}"
+                data-node-id="{{ inventory_item.id }}"
+                data-node-type="{{ node_type }}">
+                {{test_result.inventory_test.name}} - {{test_result.get_result_display}}
+        </span>
+        <p>
+            Test Date: {{ test_result.created_at|date:"Y-m-d H:i:s" }}<br />
+            User: {{ test_result.user }}
+        </p>
+        <h5>Update Test Status</h5>
+        </div>
+    {% endif %}
+   
+    <form class="form-horizontal ajax-form" method="post" action="" id="snapshot-form"
+            data-url='{{ request.build_absolute_uri|safe }}' novalidate>
+        {% csrf_token %}
+        {{ form|crispy }}
+
+        <div class="row">
+            {% if form.errors %}
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger">
+                            <strong>{{ error|escape }}</strong>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="control-group">
+            <div class="controls">
+                  <button type="submit" class="btn btn-primary">Save Test Result</button>
+    
+                 {% if inventory_item.id %}
+                  <input class="btn btn-light cancel-btn"
+                         type="button" value="Cancel"
+                         data-detail-url="{% url 'inventory:ajax_inventory_detail' inventory_item.id %}"
+                         data-node-id="{{ inventory_item.id }}" />
+                 {% endif %}
+            </div>
+          </div>
+    </form>
+
+</div>
+
+{% block javascript %}
+
+{% endblock javascript %}

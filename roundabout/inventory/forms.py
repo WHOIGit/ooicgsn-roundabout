@@ -38,8 +38,10 @@ from .models import (
     InventoryDeployment,
     Action,
     DeploymentSnapshot,
+    InventoryTestResult,
     PhotoNote,
     InventoryHyperlink,
+    InventoryTest,
 )
 from .validators import validate_udffield_decimal
 from roundabout.locations.models import Location
@@ -676,3 +678,19 @@ class DeploymentSnapshotForm(forms.ModelForm):
         self.pk = kwargs.pop("pk")
         super(DeploymentSnapshotForm, self).__init__(*args, **kwargs)
         # self.fields['location'].queryset = Location.objects.exclude(id=self.pk)
+
+
+class InventoryTestForm(forms.ModelForm):
+    class Meta:
+        model = InventoryTest
+        fields = ["name"]
+
+
+class InventoryTestResultForm(forms.ModelForm):
+    class Meta:
+        model = InventoryTestResult
+        fields = ["inventory_test", "result", "inventory", "notes"]
+
+        widgets = {
+            "inventory": forms.HiddenInput(),
+        }

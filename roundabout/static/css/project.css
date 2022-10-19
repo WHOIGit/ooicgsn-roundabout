@@ -39,6 +39,14 @@
     font-size: .9rem;
 }
 
+ul.no-style-list {
+    padding: 0;
+}
+ul.no-style-list li {
+    list-style: none;
+}
+
+
 /* vertical progress bar */
 
 .progress-bar-vertical {
@@ -273,6 +281,10 @@ a.wh {
     width: 28%;
     color: #666;
 }
+
+.borderless tr, .borderless td, .borderless th {
+    border: none !important;
+   }
 
 /* Template Mode styling for apps that are considered Templates */
 .template #detail-view {

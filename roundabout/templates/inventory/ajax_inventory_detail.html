@@ -39,13 +39,7 @@
         Choose Action
       </button>
       <div class="dropdown-menu dropdown-menu-right ajax-detail-link" aria-labelledby="action">
-          <!---
-            <a class="dropdown-item" href="#"
-                data-detail-url="{% url 'inventory:ajax_inventory_action' 'invchange' inventory_item.id %}"
-                data-node-id="{{ inventory_item.id }}"
-                data-location-id="{{ inventory_item.location.id}}"
-                data-node-type="{{ node_type }}">Inventory Change</a>
-            --->
+         
         {% if not inventory_item.build and not inventory_item.parent %}
             <a class="dropdown-item" href="#"
                 data-detail-url="{% url 'inventory:ajax_inventory_action' 'locationchange' inventory_item.id %}"
@@ -119,7 +113,7 @@
         {% endif %}
 
             <a class="dropdown-item" href="#"
-                data-detail-url="{% url 'inventory:ajax_inventory_action' 'test' inventory_item.id %}"
+                data-detail-url="{% url 'inventory:ajax_test_result' inventory_item.id %}"
                 data-node-id="{{ inventory_item.id }}"
                 data-location-id="{{ inventory_item.location.id}}"
                 data-node-type="{{ node_type }}">Test</a>
@@ -364,13 +358,45 @@
                 </td>
             </tr>
             {% endif %}
-            {% if inventory_item.hyperlinks.all %}
+            {% if inventory_item.hyperlinks.exists %}
             <tr>
                 <th>Links</th>
                 <td>
                   <ul>{% for link in inventory_item.hyperlinks.all %}
                       <li><a target="_blank" href="{{ link.url }}">{{ link.text }} <i class="fas fa-link"></i></a></li>
                   {% endfor %}</ul>
+                </td>
+            </tr>
+            {% endif %}
+            {% if test_results.exists %}
+            <tr>
+                <th>
+                    Current Test Status
+                </th>
+                <td>
+                    <div class="float-right">
+                        <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#modal-confirm-tests-reset">
+                            Reset All Tests
+                        </button>
+
+                        {% include "inventory/modal_confirm_tests_reset.html" with item=inventory_item  %}      
+                    </div>
+
+                    <ul class="no-style-list ajax-detail-link">
+                        {% for test_result in test_results.all %}
+                            <li class="pb-2">
+                                <a class="text-uppercase btn btn-sm {% if test_result.result == 'pass' %}btn-success{% elif test_result.result == 'fail' %}btn-danger{% else %}btn-warning{% endif %}"
+                                    href="#" role="button"
+                                    data-toggle="tooltip" data-placement="right" title="Click to update"
+                                    data-detail-url="{% url 'inventory:ajax_test_result' inventory_item.id test_result.id %}"
+                                    data-node-id="{{ inventory_item.id }}"
+                                    data-node-type="{{ node_type }}">
+                                    {{test_result.inventory_test.name}} - {{test_result.get_result_display}}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    
                 </td>
             </tr>
             {% endif %}
@@ -721,6 +747,13 @@
 
 {% block javascript %}
 <script>
+    // Tooltip functions for Test buttons
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-toggle="tooltip"]').click(function() {
+            $(this).tooltip('hide');
+        })
+    })
 
     /* Need to set a global JS variable is this item is on a Build to reference build_id for navtree functions */
     {% if inventory_item.build %}
