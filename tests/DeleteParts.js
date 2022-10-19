@@ -242,6 +242,21 @@ var password;
             }
         }
 
+        // Delete Inventory Tests
+        await driver.findElement(By.id("navbarAdmintools")).click();
+        await driver.findElement(By.linkText("Inventory Tests")).click();
+
+        var i = 1;
+        while (true) {
+            if ((await driver.findElements(By.css("tr:nth-child(" + i + ") .btn-danger"))).length != 0) {
+                await driver.findElement(By.css("tr:nth-child(" + i + ") .btn-danger")).click();
+                await driver.findElement(By.css(".btn-danger")).click();
+            }
+            else {
+                break;
+            }
+        }
+
         // Close browser window
         driver.quit();
 
