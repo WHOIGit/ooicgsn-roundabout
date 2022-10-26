@@ -775,7 +775,7 @@ def parse_deployment_files(self):
                     except Exception as e:
                         refdes_event = ReferenceDesignatorEvent.objects.create(
                             reference_designator = ref_des_obj,
-                            assembly_part = assembly_part
+                            assembly_part = item.assembly_part
                         )
                     refdes_event.assembly_part = item.assembly_part
                     refdes_event.save()
