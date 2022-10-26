@@ -104,7 +104,7 @@ var password;
         }
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await new Promise(r => setTimeout(r, 4000)); //New for 1.6 - This field blanked back out without timeout
+            await new Promise(r => setTimeout(r, 4000)); 
             await dropdown.findElement(By.xpath("//option[. = 'ADCPS-J']")).click();
         }
         {
@@ -140,7 +140,7 @@ var password;
         }
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await new Promise(r => setTimeout(r, 4000)); //New for 1.6 - This field blanked back out without timeout
+            await new Promise(r => setTimeout(r, 4000)); 
             await dropdown.findElement(By.xpath("//option[. = 'Coastal Mooring']")).click();
         }
         {
@@ -166,7 +166,7 @@ var password;
         await new Promise(r => setTimeout(r, 6000));
         await driver.findElement(By.id("id_part_type")).click();
         await driver.findElement(By.css(".controls > .btn")).click();
-        await new Promise(r => setTimeout(r, 4000)); //1.6
+        await new Promise(r => setTimeout(r, 4000));
         // Wait for bug fix for blank part type error
         assert(await driver.findElement(By.css("#div_id_part .ajax-error")).getText() == "This field is required.");
         assert(await driver.findElement(By.css("#div_id_revision .ajax-error")).getText() == "This field is required.");
@@ -185,7 +185,7 @@ var password;
         }
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await new Promise(r => setTimeout(r, 2000)); //New for 1.6 - This field blanked back out without timeout
+            await new Promise(r => setTimeout(r, 2000)); 
             await dropdown.findElement(By.xpath("//option[. = 'Coastal Mooring']")).click();
         }
         // Add Inventory item with non unique serial number
@@ -224,7 +224,7 @@ var password;
         }
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await new Promise(r => setTimeout(r, 6000)); //New for 1.6 - This field blanked back out without timeout
+            await new Promise(r => setTimeout(r, 6000));
             await dropdown.findElement(By.xpath("//option[. = 'Surface Buoy']")).click();
         }
         {
@@ -257,7 +257,7 @@ var password;
         }
         {
             const dropdown = await driver.findElement(By.id("id_part"));
-            await new Promise(r => setTimeout(r, 4000)); //New for 1.6 - This field blanked back out without timeout
+            await new Promise(r => setTimeout(r, 4000)); 
             await dropdown.findElement(By.xpath("//option[. = 'Wifi Template']")).click();
         }
         {
@@ -285,7 +285,7 @@ var password;
         await driver.findElement(By.id("field-query_c_r0")).sendKeys("Test");
         await driver.findElement(By.id("searchform-submit-button")).click();
 
-        while ((await driver.findElements(By.css(".even a"))).length == 0) // 1.6
+        while ((await driver.findElements(By.css(".even a"))).length == 0)
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Search1.");
@@ -342,7 +342,7 @@ var password;
         await driver.findElement(By.id("searchbar-query")).sendKeys("Coastal Mooring");
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
 
-        while ((await driver.findElements(By.css(".even a"))).length == 0) // 1.6
+        while ((await driver.findElements(By.css(".even a"))).length == 0)
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Search3.");
@@ -356,7 +356,7 @@ var password;
         }
         await driver.findElement(By.id("action")).click();
         await driver.findElement(By.linkText("Add Sub-Assembly")).click();
-        while ((await driver.findElements(By.linkText("Add"))).length == 0) //1.6
+        while ((await driver.findElements(By.linkText("Add"))).length == 0)
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Add SubAssembly.");
@@ -402,8 +402,8 @@ var password;
         await driver.findElement(By.id("field-query_c_r1")).sendKeys("Wifi");
         await driver.findElement(By.id("searchform-submit-button")).click();
 
-        //	await new Promise(r => setTimeout(r, 8000));  //1.6
-        while ((await driver.findElements(By.css(".even a"))).length == 0) // 1.6
+        //	await new Promise(r => setTimeout(r, 8000));  
+        while ((await driver.findElements(By.css(".even a"))).length == 0)
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Search5.");
@@ -416,7 +416,7 @@ var password;
         }
         await driver.findElement(By.id("action")).click();
         await driver.findElement(By.linkText("Add to Parent Assembly")).click();
-        while ((await driver.findElements(By.linkText("Add"))).length == 0) //1.6
+        while ((await driver.findElements(By.linkText("Add"))).length == 0)
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Add SubAssembly.");
@@ -448,7 +448,7 @@ var password;
 
         await driver.findElement(By.linkText("Edit Inventory Details")).click();
         {
-            await new Promise(r => setTimeout(r, 6000)); //circleci - stale element
+            await new Promise(r => setTimeout(r, 6000));
             const dropdown = await driver.findElement(By.id("id_revision"));
             await new Promise(r => setTimeout(r, 2000));
             await dropdown.findElement(By.xpath("//option[. = '---------']")).click();
@@ -492,6 +492,104 @@ var password;
 
         var bodyText = await driver.findElement(By.tagName("Body")).getText();
         assert(bodyText.includes("Revision B - Salty Reef"));     //Verify the Destination is assigned on the Destination tab
+
+        // Add Three New Inventory Test Types - OBS Enhancement
+        await driver.findElement(By.id("navbarAdmintools")).click();
+        await driver.findElement(By.linkText("Inventory Tests")).click();
+
+        while ((await driver.findElements(By.linkText("Add Test"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Test.");
+        }
+
+        await driver.findElement(By.linkText("Add Test")).click();
+        await driver.findElement(By.name("name")).sendKeys("Submersible Test");
+        await driver.findElement(By.css(".btn-primary")).click();
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.linkText("Add Test")).click();
+        await driver.findElement(By.name("name")).sendKeys("Dive Test");
+        await driver.findElement(By.css(".btn-primary")).click();
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.linkText("Add Test")).click();
+        await driver.findElement(By.name("name")).sendKeys("Float Test");
+        await driver.findElement(By.css(".btn-primary")).click();
+        await new Promise(r => setTimeout(r, 2000));
+
+        // Add the New Inventory Tests to ADCPS-J Inventory and Assign a Result Status
+        await driver.findElement(By.id("searchbar-query")).sendKeys("ADCPS-J");  // search for inventory
+        await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click();
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.linkText("CGINS-ADCPSJ-19061")).click();
+        while ((await driver.findElements(By.id("action"))).length == 0) 
+        {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Search8.");
+        }
+        // Add Submersible Test
+        await driver.findElement(By.id("action")).click();
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.xpath("(//a[contains(text(),'Test')])[4]")).click();
+        while ((await driver.findElements(By.id("id_inventory_test"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Inventory Test1.");
+        }
+        {
+            const dropdown = await driver.findElement(By.id("id_inventory_test"));
+            await dropdown.findElement(By.xpath("//option[. = 'Submersible Test']")).click();
+        }
+        {
+            const dropdown = await driver.findElement(By.id("id_result"));
+            await dropdown.findElement(By.xpath("//option[. = 'Pass']")).click();
+        }
+        await driver.findElement(By.css(".controls > .btn-primary")).click();  // save test result
+        await new Promise(r => setTimeout(r, 2000));
+
+        // Add Dive Test
+        await driver.findElement(By.id("action")).click();
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.xpath("(//a[contains(text(),'Test')])[4]")).click();
+        while ((await driver.findElements(By.id("id_inventory_test"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Inventory Test2.");
+        }
+        {
+            const dropdown = await driver.findElement(By.id("id_inventory_test"));
+            await dropdown.findElement(By.xpath("//option[. = 'Dive Test']")).click();
+        }
+        {
+            const dropdown = await driver.findElement(By.id("id_result"));
+            await dropdown.findElement(By.xpath("//option[. = 'Fail']")).click();
+        }
+        await driver.findElement(By.css(".controls > .btn-primary")).click();  // save test result
+        await new Promise(r => setTimeout(r, 2000));
+
+        // Add Float Test
+        await driver.findElement(By.id("action")).click();
+        await new Promise(r => setTimeout(r, 2000));
+        await driver.findElement(By.xpath("(//a[contains(text(),'Test')])[4]")).click();
+        while ((await driver.findElements(By.id("id_inventory_test"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Add Inventory Test3.");
+        }
+        {
+            const dropdown = await driver.findElement(By.id("id_inventory_test"));
+            await dropdown.findElement(By.xpath("//option[. = 'Float Test']")).click();
+        }
+        {
+            const dropdown = await driver.findElement(By.id("id_result"));
+            await dropdown.findElement(By.xpath("//option[. = 'Pending']")).click();
+        }
+        await driver.findElement(By.css(".controls > .btn-primary")).click();  // save test result
+        await new Promise(r => setTimeout(r, 4000));
+
+        // Verify New Test Results are added to Inventory Detail screen
+        var bodyText = await driver.findElement(By.tagName("Body")).getText();
+        if (bodyText.includes("SUBMERSIBLE TEST - PASS") && bodyText.includes("DIVE TEST - FAIL") && bodyText.includes("FLOAT TEST - PENDING")) {
+            console.log("Inventory Tests Added Successfully.");
+        }
+        else {
+            console.log("Inventory Tests NOT Added Successfully.");
+        }
 
         // Close browser window
         driver.quit();
