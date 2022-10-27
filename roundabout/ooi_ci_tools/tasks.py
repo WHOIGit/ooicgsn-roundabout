@@ -769,8 +769,15 @@ def parse_deployment_files(self):
                         assembly_part.assembly = assembly
                         assembly_part.save()
                         item.assembly_part = assembly_part
-                    refdes_event = ref_des_obj.refdes_events.first()
-                    refdes_event.assembly_part = assembly_part
+                        item.save()
+                    try:
+                        refdes_event = ref_des_obj.assembly_part.assemblypart_referencedesignatorevents.first()
+                    except Exception as e:
+                        refdes_event = ReferenceDesignatorEvent.objects.create(
+                            reference_designator = ref_des_obj,
+                            assembly_part = item.assembly_part
+                        )
+                    refdes_event.assembly_part = item.assembly_part
                     refdes_event.save()
                     item.location = build_location
                     item.build = build
