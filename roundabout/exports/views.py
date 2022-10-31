@@ -990,6 +990,8 @@ class ExportOBSAssemblyBuilds(DetailView, LoginRequiredMixin):
             nested_update(data, ["Lat"], row_num, depl.latitude if depl else "")
             nested_update(data, ["Lon"], row_num, depl.longitude if depl else "")
 
+            inv_lineage_keylist = []
+
             for inv in build.inventory.all():
                 sn = inv.serial_number
                 inv_lineage = inv.assembly_part.get_ancestors(include_self=True)
@@ -997,6 +999,11 @@ class ExportOBSAssemblyBuilds(DetailView, LoginRequiredMixin):
                     normalize("NFKD", str(asspart)) for asspart in inv_lineage
                 ]
                 part = inv_lineage_keys[-1]
+
+                duplicate_count = inv_lineage_keylist.count(inv_lineage_keys)
+                uniquifier_postfix = ' '*duplicate_count
+                inv_lineage_keylist.append(inv_lineage_keys.copy())
+                inv_lineage_keys[-1] += uniquifier_postfix
 
                 nested_update(data, inv_lineage_keys, row_num, sn)
 
