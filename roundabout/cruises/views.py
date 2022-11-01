@@ -36,7 +36,7 @@ from django.views.generic import (
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django_tables2 import SingleTableMixin, SingleTableView
 from django_tables2.export.views import ExportMixin
-from roundabout.ooi_ci_tools.models import VesselEvent
+from roundabout.ooi_ci_tools.models import VesselEvent, CruiseEvent
 
 from .tables import *
 from .models import *
@@ -228,12 +228,16 @@ class CruiseAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
     def form_valid(self, form, formset):
         self.object = form.save()
 
+        cruise_event = CruiseEvent.objects.create(cruise=self.object)
+        cruise_event.save()
+
         data = dict(updated_values=dict())
         for field in form.fields:
             val = getattr(self.object, field, None)
             if val:
                 data["updated_values"][field] = {"from": None, "to": str(val)}
         _create_action_history(self.object, Action.ADD, self.request.user, data=data)
+        _create_action_history(cruise_event, Action.ADD, self.request.user, data=data)
 
         for link_form in formset:
             link = link_form.save(commit=False)
@@ -412,12 +416,16 @@ class VesselCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form, formset):
         self.object = form.save()
 
+        vessel_event = VesselEvent.objects.create(vessel=self.object)
+        vessel_event.save()
+
         data = dict(updated_values=dict())
         for field in form.fields:
             val = getattr(self.object, field, None)
             if val:
                 data["updated_values"][field] = {"from": None, "to": str(val)}
         _create_action_history(self.object, Action.ADD, self.request.user, data=data)
+        _create_action_history(vessel_event, Action.ADD, self.request.user, data=data)
 
         for link_form in formset:
             link = link_form.save(commit=False)
