@@ -144,9 +144,9 @@
 
                         <div class="tab-content" id="inventory-tabs">
                             {# EVENT RECORDS TAB #}
-                            <div class="tab-pane fade show active" id="cruise_records-{{ event.id }}" role="tabpanel" aria-labelledby="cruise_records-tab">
-                                <table class = 'table table-tight'>
-                                    <tbody>
+                            <div class="tab-pane fade show active border m-2 p-2" id="cruise_records-{{ event.id }}" role="tabpanel" aria-labelledby="cruise_records-tab">
+                                <table class = 'table table-tight' style = 'display:block; overflow: auto; overflow-x: auto;'>
+                                    <tbody style = 'overflow: auto;'>
                                         <tr>
                                             <td>
                                                 <li class = 'list-group-item'>
