@@ -38,7 +38,7 @@ from django.views.generic import TemplateView, DetailView, ListView
 
 # Roundabout Imports
 from roundabout.calibrations.models import CalibrationEvent
-from roundabout.configs_constants.models import ConfigEvent, ConfigValue
+from roundabout.configs_constants.models import ConfigEvent, ConfigValue, ConfigName
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.inventory.models import Inventory, Deployment, InventoryDeployment
 from roundabout.ooi_ci_tools.models import ReferenceDesignatorEvent
@@ -787,7 +787,7 @@ class ExportDeployments(ZipExport):
         ("lat", "deployment.latitude"),
         ("lon", "deployment.longitude"),
         ("orbit", ""),
-        ("deployment_depth", "deployment.depth"),
+        ("deployment_depth", "deployment.config_event('Nominal_Depth').config_value"),
         ("water_depth", "deployment.depth"),
         ("notes", "inventory.detail"),  # alternatively, "assembly_part.note"
         ("electrical.uid", ""),
@@ -807,6 +807,12 @@ class ExportDeployments(ZipExport):
 
                 if att == "1":
                     val = 1  # versionNumber
+                elif att == "deployment.config_event('Nominal_Depth').config_value":
+                    config_name = ConfigName.objects.filter(name='Nominal Depth', part=depl_obj.inventory.part, config_type='conf').first()
+                    config_event = ConfigEvent.objects.filter(inventory=depl_obj.inventory, deployment=depl_obj.deployment).first()
+                    config_val = ConfigValue.objects.filter(config_event=config_event, config_name=config_name).first()
+                    val = config_val.config_value
+
                 else:
                     try:
                         val = attrgetter(att)(depl_obj)

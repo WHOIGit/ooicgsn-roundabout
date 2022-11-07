@@ -33,7 +33,7 @@ from roundabout.ooi_ci_tools.models import (
     ReferenceDesignator,
     Comment,
     MPTTComment,
-    CruiseEvent
+    CruiseEvent,
 )
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.parts.models import Part
@@ -44,9 +44,13 @@ from roundabout.inventory.utils import _create_action_history
 # Generate Cruise Events for legacy Cruises created prior to Event system
 def _update_cruise_events():
     for cruise in Cruise.objects.all():
-        if not cruise.cruise_event.exists():
+        if not hasattr(cruise, "cruise_event"):
+            print("adding cruise event")
             new_cruise_event = CruiseEvent.objects.create(cruise=cruise)
             new_cruise_event.save()
+        else:
+            print("Cruise event already exists")
+
 
 # Generate Reference Designator Event and Reference Designator Values from Assemblyparts containing Configuration Defaults with populated Reference Designator Config Names
 def _create_reference_designators():
