@@ -346,6 +346,13 @@ def parse_cruise_files(self):
                 if vessel_created:
                     _create_action_history(vessel_obj, Action.ADD, user, data=dict(csv_import=csv_file.name))
 
+                vessel_event, event_created = VesselEvent.objects.update_or_create(vessel=vessel_obj)
+
+                if event_created:
+                    _create_action_history(vessel_event,Action.CALCSVIMPORT,user,data=dict(csv_import=csv_file.name))
+                else:
+                    _create_action_history(vessel_event,Action.CALCSVUPDATE,user,data=dict(csv_import=csv_file.name))
+
             # update or create Cruise object based on CUID field
             defaults = {'notes': row['notes'],
                         'cruise_start_date': cruise_start_date,
