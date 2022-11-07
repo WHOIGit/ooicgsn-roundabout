@@ -31,8 +31,8 @@
         </div>
         <div id="vessel-template" aria-labelledby="vessel-template-tab">
             <ul class="list-group">
-                {% for vessel in vessels %}
-                    {% with vessel.vessel_event as event %}
+                {% for event in vessel_events %}
+                    {% with event.vessel as vessel %}
                         <li class="list-group-item">
                             <a  class="collapsed"
                                 data-toggle="collapse"
