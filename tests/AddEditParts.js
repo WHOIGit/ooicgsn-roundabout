@@ -61,7 +61,7 @@ var password;
 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
     // Set implict wait time in between steps
-    //await driver.manage().setTimeouts({ implicit: 2000 }); AddEditPart fails with implicit wait
+    // await driver.manage().setTimeouts({ implicit: 2000 }); //AddEditPart fails with implicit wait
 
     //Hide Timer Panel
     if ((await driver.findElements(By.css("#djHideToolBarButton"))).length != 0) {
@@ -483,9 +483,9 @@ var password;
 
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.linkText("Edit Part Template")).click();
-        while ((await driver.findElements(By.id("id_part_number"))).length == 0) // 1.6
+        while ((await driver.findElements(By.id("id_part_number"))).length == 0)
         {
-            await new Promise(r => setTimeout(r, 2000));
+            await new Promise(r => setTimeout(r, 1000));    // stale element, was 2 seconds
             console.log("Wait 2 seconds for Edit Part Template3.");
         }
         await driver.findElement(By.id("id_part_number")).clear();
