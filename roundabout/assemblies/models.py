@@ -174,6 +174,33 @@ class AssemblyPart(MPTTModel):
     )
     note = models.TextField(blank=True)
     order = models.CharField(max_length=255, null=False, blank=True, db_index=True)
+    ci_deployedBy = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    ci_recoveredBy = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    ci_versionNumber = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    ci_orbit = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    ci_deployment_depth = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    ci_notes = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    ci_electrical_uid = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    ci_mooring_uid = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
+    ci_node_uid = models.CharField(
+        max_length=255, unique=False, db_index=False, blank=True
+    )
 
     tracker = FieldTracker(
         fields=[

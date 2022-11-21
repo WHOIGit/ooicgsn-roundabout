@@ -759,19 +759,25 @@ def parse_deployment_files(self):
                         if item.part.friendly_name != '':
                             order = item.part.friendly_name
                         try:
-                            assembly_part = AssemblyPart.objects.get(
+                            assembly_part = AssemblyPart.objects.update_or_create(
                                 part = item.part,
                                 assembly_revision=assembly_revision,
-                                order=order
+                                order=order,
+                                defaults={
+                                    'ci_deployedBy': row['deployedBy'],
+                                    'ci_recoveredBy': row['recoveredBy'],
+                                    'ci_versionNumber': row['versionNumber'],
+                                    'ci_orbit': row['orbit'],
+                                    'ci_deployment_depth': row['deployment_depth'],
+                                    'ci_notes': row['notes'],
+                                    'ci_electrical_uid': row['electrical.uid'],
+                                    'ci_mooring_uid': row['mooring.uid'],
+                                    'ci_node_uid': row['node.uid'],
+
+                                }
                             )
                         except AssemblyPart.MultipleObjectsReturned:
                             assembly_part = AssemblyPart.objects.filter(part = item.part,assembly_revision=assembly_revision,order=order).first()
-                        except AssemblyPart.DoesNotExist:
-                            assembly_part = AssemblyPart.objects.create(
-                                part = item.part,
-                                assembly_revision=assembly_revision,
-                                order=order
-                            )
                         assembly_part.reference_designator = ref_des_obj
                         assembly_part.assembly = assembly
                         assembly_part.save()
