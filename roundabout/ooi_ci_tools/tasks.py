@@ -346,6 +346,13 @@ def parse_cruise_files(self):
                 if vessel_created:
                     _create_action_history(vessel_obj, Action.ADD, user, data=dict(csv_import=csv_file.name))
 
+                vessel_event, event_created = VesselEvent.objects.update_or_create(vessel=vessel_obj)
+
+                if event_created:
+                    _create_action_history(vessel_event,Action.CALCSVIMPORT,user,data=dict(csv_import=csv_file.name))
+                else:
+                    _create_action_history(vessel_event,Action.CALCSVUPDATE,user,data=dict(csv_import=csv_file.name))
+
             # update or create Cruise object based on CUID field
             defaults = {'notes': row['notes'],
                         'cruise_start_date': cruise_start_date,
@@ -752,19 +759,25 @@ def parse_deployment_files(self):
                         if item.part.friendly_name != '':
                             order = item.part.friendly_name
                         try:
-                            assembly_part = AssemblyPart.objects.get(
+                            assembly_part = AssemblyPart.objects.update_or_create(
                                 part = item.part,
                                 assembly_revision=assembly_revision,
-                                order=order
+                                order=order,
+                                defaults={
+                                    'ci_deployedBy': row['deployedBy'],
+                                    'ci_recoveredBy': row['recoveredBy'],
+                                    'ci_versionNumber': row['versionNumber'],
+                                    'ci_orbit': row['orbit'],
+                                    'ci_deployment_depth': row['deployment_depth'],
+                                    'ci_notes': row['notes'],
+                                    'ci_electrical_uid': row['electrical.uid'],
+                                    'ci_mooring_uid': row['mooring.uid'],
+                                    'ci_node_uid': row['node.uid'],
+
+                                }
                             )
                         except AssemblyPart.MultipleObjectsReturned:
                             assembly_part = AssemblyPart.objects.filter(part = item.part,assembly_revision=assembly_revision,order=order).first()
-                        except AssemblyPart.DoesNotExist:
-                            assembly_part = AssemblyPart.objects.create(
-                                part = item.part,
-                                assembly_revision=assembly_revision,
-                                order=order
-                            )
                         assembly_part.reference_designator = ref_des_obj
                         assembly_part.assembly = assembly
                         assembly_part.save()

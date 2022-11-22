@@ -383,9 +383,9 @@ class CruiseAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteVi
 
 
 class VesselListView(LoginRequiredMixin, ListView):
-    model = Vessel
+    model = VesselEvent
     template_name = "cruises/vessel_list.html"
-    context_object_name = "vessels"
+    context_object_name = "vessel_events"
 
 
 class VesselCreateView(LoginRequiredMixin, CreateView):
