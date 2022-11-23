@@ -485,18 +485,19 @@ var password;
         await driver.findElement(By.linkText("Edit Part Template")).click();
         while ((await driver.findElements(By.id("id_part_number"))).length == 0)
         {
-            await new Promise(r => setTimeout(r, 1000));    // stale element, was 2 seconds
+            await new Promise(r => setTimeout(r, 1000));    
             console.log("Wait 2 seconds for Edit Part Template3.");
         }
-        await driver.findElement(By.id("id_part_number")).clear();
+        await driver.findElement(By.id("id_part_number")).click();  //stale element   
+        await driver.findElement(By.id("id_part_number")).clear();    
         await driver.findElement(By.id("id_part_number")).sendKeys("789-456-123");
         dropdown = await driver.findElement(By.id("id_part_type"));
         await dropdown.findElement(By.xpath("//option[. = ' Computerized']")).click();
         await new Promise(r => setTimeout(r, 4000));
         await driver.findElement(By.css(".controls > .btn")).click();
 
-        //        await new Promise(r => setTimeout(r, 20000));   //1.6 - update screen hasn't gone away after 14 seconds, try 20 sec!
-        while ((await driver.findElements(By.id("action"))).length == 0) // 1.6
+        //        await new Promise(r => setTimeout(r, 20000));   
+        while ((await driver.findElements(By.id("action"))).length == 0) 
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Edit Part Template4.");
@@ -505,7 +506,7 @@ var password;
         // Add revision
         await driver.findElement(By.id("action")).click();
         //	await new Promise(r => setTimeout(r, 4000));
-        while ((await driver.findElements(By.linkText("Create New Revision"))).length == 0) // 1.6
+        while ((await driver.findElements(By.linkText("Create New Revision"))).length == 0) 
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Create New Revision2.");
@@ -517,7 +518,7 @@ var password;
         await driver.findElement(By.css(".controls > .btn")).click();
 
         //	await new Promise(r => setTimeout(r, 8000)); 
-        while ((await driver.findElements(By.id("action"))).length == 0) // 1.6
+        while ((await driver.findElements(By.id("action"))).length == 0) 
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for New Revision2.");
@@ -527,7 +528,7 @@ var password;
         await driver.findElement(By.id("action")).click();
         await driver.findElement(By.linkText("Edit Part Template")).click();
         //        await new Promise(r => setTimeout(r, 6000)); 
-        while ((await driver.findElements(By.id("id_part_number"))).length == 0) // 1.6
+        while ((await driver.findElements(By.id("id_part_number"))).length == 0) 
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Edit Part Template5.");
@@ -563,13 +564,13 @@ var password;
 
         // Edit revision with null code and invalid date
         await driver.findElement(By.linkText("Revision: B")).click();
-        while ((await driver.findElements(By.linkText("Edit Revision"))).length == 0) // 1.6
+        while ((await driver.findElements(By.linkText("Edit Revision"))).length == 0)
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Edit Revision3.");
         }
         await driver.findElement(By.linkText("Edit Revision")).click();
-        while ((await driver.findElements(By.id("id_revision_code"))).length == 0) // 1.6
+        while ((await driver.findElements(By.id("id_revision_code"))).length == 0)
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Edit Revision4.");
