@@ -494,7 +494,7 @@ var password;
            try {
                await driver.findElement(By.id("id_part_number")).clear();   
                break;
-           } catch(StaleElementException e) {}
+           } catch(StaleElementException) {}
            attempts++;
         }
         await driver.findElement(By.id("id_part_number")).sendKeys("789-456-123");
