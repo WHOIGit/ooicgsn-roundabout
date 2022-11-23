@@ -488,8 +488,15 @@ var password;
             await new Promise(r => setTimeout(r, 1000));    
             console.log("Wait 2 seconds for Edit Part Template3.");
         }
-        await driver.findElement(By.id("id_part_number")).click();  //stale element   
-        await driver.findElement(By.id("id_part_number")).clear();    
+        // Github Actions stale element
+        int attempts = 0;
+        while(attempts < 2) {
+           try {
+               await driver.findElement(By.id("id_part_number")).clear();   
+               break;
+           } catch(StaleElementException e) {}
+           attempts++;
+        }
         await driver.findElement(By.id("id_part_number")).sendKeys("789-456-123");
         dropdown = await driver.findElement(By.id("id_part_type"));
         await dropdown.findElement(By.xpath("//option[. = ' Computerized']")).click();
