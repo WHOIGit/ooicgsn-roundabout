@@ -489,7 +489,7 @@ var password;
             console.log("Wait 2 seconds for Edit Part Template3.");
         }
         // Github Actions stale element
-        int attempts = 0;
+        var attempts = 0;
         while(attempts < 2) {
            try {
                await driver.findElement(By.id("id_part_number")).clear();   
