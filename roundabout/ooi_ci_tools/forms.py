@@ -618,6 +618,11 @@ class ImportDeploymentsForm(forms.Form):
                             _('File: %(filename)s: Row: %(row)s: Value: %(value)s: Unable to parse Location Code or Code not found'),
                             params={'filename': filename, 'row': idx , 'value': location_code},
                         )
+                    except Location.MultipleObjectsReturned:
+                        raise ValidationError(
+                            _('File: %(filename)s: Row: %(row)s: Value: %(value)s: More than one Location found for Location Code'),
+                            params={'filename': filename, 'row': idx , 'value': location_code},
+                        )
                         
                 validate_import_config_deployments(import_config, reader, filename)
             else:
