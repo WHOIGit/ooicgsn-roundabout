@@ -282,7 +282,14 @@ def _create_action_history(
                 obj, Action.LOCATIONCHANGE, user, "", "", action_date
             )
 
-        action_record.build = obj.get_latest_build()
+        if not obj.get_latest_build():
+            print(
+                f"ERROR REMOVING {obj} FROM BUILD. NO BUILD IN ACTION HISTORY, POSSIBLE BROKEN TREE"
+            )
+            print("REFRESH INVENTORY MPTT TREE...")
+            Inventory.objects.rebuild()
+            print("REBUILD COMPLETE")
+
         action_record.detail = "Removed from %s. %s" % (obj.get_latest_build(), detail)
         action_record.location = obj.get_latest_build().location
         action_record.save()
