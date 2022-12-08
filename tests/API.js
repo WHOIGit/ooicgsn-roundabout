@@ -293,7 +293,7 @@ var token;
             console.log(rsp.statusText, "  ", json);
 
         // CRUISES
-        // There are 10 pages of cruises, get the header link field and verify 9 pages returned
+        // There are 11 pages of cruises, get the header link field and verify 10 pages returned
         var link = ' ';
         rsp = await fetch(url + 'cruises', {
             method: 'GET',
@@ -307,16 +307,16 @@ var token;
                 }
             }        
 
-            if (link.includes("page=10")) {
+            if (link.includes("page=11")) {
                 // Get the last Cruise Page
-                rsp = await fetch(url + 'cruises/?page=9', {
+                rsp = await fetch(url + 'cruises/?page=10', {
                     method: 'GET',
                     headers: header,
                 });
                 json = await rsp.json();
                 if (rsp.ok) {
                     if (json.length == 0) {
-                        console.log("API failed: Cruise Page 10 data not returned.");
+                        console.log("API failed: Cruise Page 11 data not returned.");
                         console.log(json);
                     }
 		    else
@@ -327,7 +327,7 @@ var token;
                 }
             }
             else {
-                console.log("API failed: 10 Cruise Pages not returned.");
+                console.log("API failed: 11 Cruise Pages not returned.");
                 console.log(json);
             }
         }

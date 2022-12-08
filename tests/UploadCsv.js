@@ -165,13 +165,12 @@ var filename, filename_ext;
 
            // Compare Uploaded & Exported Cruise files
            // read a line from upload file and find it in exported buffer to verify Cruise was created properly
-           // my local file has been modified to remove extra spaces and an extra dash in a time field and to fix R/V naming
            var upload = fs.readFileSync(filename, 'utf8');
            var exported = fs.readFileSync(rdb_cruise, 'utf8');
 
            var uploaded_data = $.csv.toArrays(upload);
 
-           // Skip  line
+           // Skip line
            for (var i = 2, len = uploaded_data.length; i < len; i++) {
                var cruise_str = uploaded_data[i];
       	       // Strip off any trailing blanks in cruise name imported data
@@ -179,6 +178,15 @@ var filename, filename_ext;
 	       // Remove extra dash in Timestamp
 	       cruise_str[2] = cruise_str[2].toString().replace('-T', 'T');
 	       cruise_str[3] = cruise_str[3].toString().replace('-T', 'T');
+               // Imported EK20220415 is missing :00 in Timestamp
+               if (cruise_str[2].split(":").length == 2)
+               {
+                  cruise_str[2] = cruise_str[2] + ":00";
+               }
+               if (cruise_str[3].split(":").length == 2)
+               {
+                  cruise_str[3] = cruise_str[3] + ":00";
+               }
                // This is the only way to compare the double quotes in the notes field
                if (cruise_str[4].includes(",")) {
                     if (!(exported.includes(cruise_str[0]) && exported.includes(cruise_str[1])
@@ -281,6 +289,11 @@ var filename, filename_ext;
                var vessel_str = uploaded_data[i];
 	       // Strip off any trailing blanks in vessel name imported data
    	       vessel_str[2] = vessel_str[2].toString().trim();
+               // Strip off invalid character in MMSI number for Maria S. Merian
+               if (!(/^[0-9.,]+$/.test(vessel_str[6])))
+               {
+                  vessel_str[6] = vessel_str[6].slice(1);
+               }
 
                for (var j = 0, lth = vessel_str.length; j < lth; j++)
                {
