@@ -1064,30 +1064,27 @@ def parse_bulk_files(self):
         for draft_user in user_draft:
             bulk_event.user_draft.add(draft_user)
     if event_created:
-        _create_action_history(bulk_event,Action.CALCSVIMPORT,user,data=dict(csv_import=csv_file.name))
+        _create_action_history(bulk_event,Action.CALCSVIMPORT,user)
     else:
-        _create_action_history(bulk_event,Action.CALCSVUPDATE,user,data=dict(csv_import=csv_file.name))
+        _create_action_history(bulk_event,Action.CALCSVUPDATE,user)
 
     counter = 0
     for csv_file in bulk_files:
         str_counter = str(counter)
-        cache.set('bulk_counter', str_counter, timeout=None)
         cache.set('csv_file_'+str_counter, csv_file, timeout=None)
-        cache.set()
-        parse_bulk_file.delay()
+        parse_bulk_file.delay(str_counter)
         counter += 1
-    cache.delete('bulk_counter')
+    # cache.delete('bulk_counter')
     cache.delete('bulk_files')
     cache.delete('user_draft_bulk')
+    cache.delete('bulk_event')
 
 @shared_task(bind=True, soft_time_limit = 3600)
-def parse_bulk_file(self):
-    counter = cache.get('bulk_counter')
+def parse_bulk_file(self, counter):
     str_counter = str(counter)
     csv_file = cache.get('csv_file_'+str_counter)
     bulk_event = cache.get('bulk_event')
     user = cache.get('user')
-    
     # Set up the Django file object for CSV DictReader
     csv_file.seek(0)
     reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
