@@ -1166,7 +1166,6 @@ class ImportBulkUploadForm(forms.Form):
                         part_template = row['RDB_Part_Template']
                     except:
                         part_template = None
-                    print(asset_uid,part_template)
                     continue
                     try:
                         asset_uid = row['ASSET_UID']

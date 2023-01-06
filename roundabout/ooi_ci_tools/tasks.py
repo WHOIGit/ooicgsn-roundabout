@@ -1048,7 +1048,7 @@ def parse_refdes_files(self):
 
 
 
-# Parse Bulk Upload CSV file submission, 
+# Parse Bulk Upload CSV file submissions 
 # Generate and associate relevant Events, containing AssetRecords and Vocab objects
 @shared_task(bind=True, soft_time_limit = 3600)
 def parse_bulk_files(self):
@@ -1077,8 +1077,9 @@ def parse_bulk_files(self):
     # cache.delete('bulk_counter')
     cache.delete('bulk_files')
     cache.delete('user_draft_bulk')
-    cache.delete('bulk_event')
+    # cache.delete('bulk_event')
 
+# Parse Bulk Upload CSV file submission as a separate task
 @shared_task(bind=True, soft_time_limit = 3600)
 def parse_bulk_file(self, counter):
     str_counter = str(counter)
