@@ -386,8 +386,11 @@ def parse_cruise_files(self):
             if user_draft.exists():
                 cruise_event.user_draft.clear()
                 cruise_event.user_approver.clear()
+                vessel_event.user_draft.clear()
+                vessel_event.user_approver.clear()
                 for draft_user in user_draft:
                     cruise_event.user_draft.add(draft_user)
+                    vessel_event.user_draft.add(draft_user)
             if event_created:
                 _create_action_history(cruise_event,Action.CALCSVIMPORT,user,data=dict(csv_import=csv_file.name))
             else:
