@@ -122,200 +122,190 @@ def parse_cal_files(self):
     csv_files = cache.get('csv_files')
     counter = 0
     for cal_csv in csv_files:
-        str_counter = str(counter)
-        cache.set('cal_csv_' + str_counter, cal_csv, timeout=None)
-        parse_cal_file.delay(str_counter)
         counter += 1
+        self.update_state(state='PROGRESS', meta = {'progress': counter, 'total': len(csv_files)})
+        cal_csv_filename = cal_csv.name[:-4]
+        cal_csv.seek(0)
+        reader = csv.DictReader(io.StringIO(cal_csv.read().decode('utf-8')))
+        headers = reader.fieldnames
+        coeff_val_sets = []
+        config_val_sets = []
+        const_val_sets = []
+        inv_serial = cal_csv.name.split('__')[0]
+        cal_date_string = cal_csv.name.split('__')[1][:8]
+        inventory_item = Inventory.objects.get(serial_number=inv_serial)
+        cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
+        custom_field = Field.objects.get(field_name='Manufacturer Serial Number')
+        try:
+            inv_manufacturer_serial = FieldValue.objects.get(inventory=inventory_item,field=custom_field,is_current=True)
+        except FieldValue.DoesNotExist:
+            inv_manufacturer_serial = FieldValue.objects.create(inventory=inventory_item,field=custom_field,is_current=True)
+        try:
+            deployment = Deployment.objects.get(
+                deployment_to_field_date__year=cal_date_date.year,
+                deployment_to_field_date__month=cal_date_date.month,
+                deployment_to_field_date__day=cal_date_date.day,
+            )
+        except Deployment.DoesNotExist:
+            deployment = None
+        conf_event, conf_created = ConfigEvent.objects.get_or_create(
+            configuration_date = cal_date_date,
+            inventory = inventory_item,
+            config_type = 'conf',
+            deployment = deployment
+        )
+        cnst_event, cnst_created = ConfigEvent.objects.get_or_create(
+            configuration_date = cal_date_date,
+            inventory = inventory_item,
+            config_type = 'cnst',
+            deployment = deployment
+        )
+        csv_event, cal_created = CalibrationEvent.objects.get_or_create(
+            calibration_date = cal_date_date,
+            inventory = inventory_item
+        )
+        for idx, row in enumerate(reader):
+            row_data = row.items()
+            for key, value in row_data:
+                if key == 'serial':
+                    csv_manufacturer_serial = value.strip()
+                    if len(inv_manufacturer_serial.field_value) == 0 and len(csv_manufacturer_serial) > 0:
+                        inv_manufacturer_serial.field_value = csv_manufacturer_serial
+                        inv_manufacturer_serial.save()
+                if key == 'name':
+                    calibration_name = value.strip()
+                    try:
+                        cal_name_item = CoefficientName.objects.get(
+                            calibration_name = calibration_name,
+                            coeff_name_event = inventory_item.part.part_coefficientnameevents.first()
+                        )
+                    except CoefficientName.DoesNotExist:
+                        cal_name_item = None
+                    try:
+                        config_name_item = ConfigName.objects.get(
+                            name = calibration_name,
+                            config_name_event = inventory_item.part.part_confignameevents.first()
+                        )
+                    except ConfigName.DoesNotExist:
+                        config_name_item = None
+                elif key == 'value':
+                    valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
+                    mock_valset_instance = SimpleNamespace(**valset_keys)
+                    raw_valset = str(value)
+                    value_set_type = 'sl'
+                    if '[' in raw_valset:
+                        raw_valset = raw_valset[1:-1]
+                        value_set_type = '1d'
+                    if 'SheetRef' in raw_valset:
+                        ext_finder_filename = "__".join((cal_csv_filename,calibration_name))
+                        ref_file = [file for file in ext_files if ext_finder_filename in file.name][0]
+                        ref_file.seek(0)
+                        reader = io.StringIO(ref_file.read().decode('utf-8'))
+                        contents = reader.getvalue()
+                        raw_valset = contents
+                        value_set_type = '2d'
+                elif key == 'notes':
+                    notes = value.strip()
+                    if cal_name_item:
+                        coeff_val_set = {
+                            'coefficient_name': cal_name_item,
+                            'value_set': raw_valset,
+                            'notes': notes
+                        }
+                        coeff_val_sets.append(coeff_val_set)
+                    if config_name_item:
+                        if config_name_item.config_type == 'conf':
+                            config_val_set = {
+                                'config_name': config_name_item,
+                                'config_value': raw_valset,
+                                'notes': notes,
+                                'config_event': conf_event
+                            }
+                            config_val_sets.append(config_val_set)
+                        if config_name_item.config_type == 'cnst':
+                            const_val_set = {
+                                'config_name': config_name_item,
+                                'config_value': raw_valset,
+                                'notes': notes,
+                                'config_event': cnst_event
+                            }
+                            const_val_sets.append(const_val_set)
+                    if not cal_name_item and not config_name_item:
+                        if not inventory_item.part.part_coefficientnameevents.exists():
+                            coeff_name_event = CoefficientNameEvent.objects.create(part = inventory_item.part)
+                            _create_action_history(coeff_name_event, Action.CALCSVIMPORT, user, data=dict(csv_import=cal_csv.name))
+                        else:
+                            coeff_name_event = inventory_item.part.part_coefficientnameevents.first()
+                        cal_name_item = CoefficientName.objects.create(
+                            calibration_name = calibration_name,
+                            coeff_name_event = coeff_name_event,
+                            value_set_type = value_set_type
+                        )
+                        coeff_val_set = {
+                            'coefficient_name': cal_name_item,
+                            'value_set': raw_valset,
+                            'notes': notes
+                        }
+                        coeff_val_sets.append(coeff_val_set)
+        if user_draft.exists():
+            for draft_user in user_draft:
+                csv_event.user_draft.add(draft_user)
+        if len(coeff_val_sets) >= 1:
+            for valset in coeff_val_sets:
+                valset['calibration_event'] = csv_event
+                coeff_val_set, created = CoefficientValueSet.objects.update_or_create(
+                    coefficient_name = valset['coefficient_name'],
+                    calibration_event = valset['calibration_event'],
+                    defaults = {
+                        'value_set': valset['value_set'],
+                        'notes': valset['notes'],
+                    }
+                )
+                parse_valid_coeff_vals(coeff_val_set)
+            if cal_created:
+                _create_action_history(csv_event, Action.CALCSVIMPORT, user, data=dict(csv_import=cal_csv.name))
+            else:
+                _create_action_history(csv_event, Action.CALCSVUPDATE, user, data=dict(csv_import=cal_csv.name))
+        else:
+            csv_event.delete()
+        if len(config_val_sets) >= 1:
+            for valset in config_val_sets:
+                valset['config_event'] = conf_event
+                coeff_val_set, created = ConfigValue.objects.update_or_create(
+                    config_name = valset['config_name'],
+                    config_event = valset['config_event'],
+                    defaults = {
+                        'config_value': valset['config_value'],
+                        'notes': valset['notes'],
+                    }
+                )
+            if conf_created:
+                _create_action_history(conf_event, Action.CALCSVIMPORT, user, data=dict(csv_import=cal_csv.name))
+            else:
+                _create_action_history(conf_event, Action.CALCSVUPDATE, user, data=dict(csv_import=cal_csv.name))
+        else:
+            conf_event.delete()
+        if len(const_val_sets) >= 1:
+            for valset in const_val_sets:
+                valset['config_event'] = cnst_event
+                const_val_set, created = ConfigValue.objects.update_or_create(
+                    config_name = valset['config_name'],
+                    config_event = valset['config_event'],
+                    defaults = {
+                        'config_value': valset['config_value'],
+                        'notes': valset['notes'],
+                    }
+                )
+            if cnst_created:
+                _create_action_history(cnst_event, Action.CALCSVIMPORT, user, data=dict(csv_import=cal_csv.name))
+            else:
+                _create_action_history(cnst_event, Action.CALCSVUPDATE, user, data=dict(csv_import=cal_csv.name))
+        else:
+            cnst_event.delete()
     async_update_cal_thresholds.delay()
     cache.delete('user_draft')
-    # cache.delete('ext_files')
+    cache.delete('ext_files')
     cache.delete('csv_files')
-
-@shared_task(bind = True, soft_time_limit = 3600)
-def parse_cal_file(self, counter):
-    user = cache.get('user')
-    user_draft = cache.get('user_draft')
-    ext_files = cache.get('ext_files')
-    cal_csv = cache.get('cal_csv_' + counter)
-    cal_csv_filename = cal_csv.name[:-4]
-    cal_csv.seek(0)
-    reader = csv.DictReader(io.StringIO(cal_csv.read().decode('utf-8')))
-    headers = reader.fieldnames
-    coeff_val_sets = []
-    config_val_sets = []
-    const_val_sets = []
-    inv_serial = cal_csv.name.split('__')[0]
-    cal_date_string = cal_csv.name.split('__')[1][:8]
-    inventory_item = Inventory.objects.get(serial_number=inv_serial)
-    cal_date_date = datetime.datetime.strptime(cal_date_string, "%Y%m%d").date()
-    custom_field = Field.objects.get(field_name='Manufacturer Serial Number')
-    try:
-        inv_manufacturer_serial = FieldValue.objects.get(inventory=inventory_item,field=custom_field,is_current=True)
-    except FieldValue.DoesNotExist:
-        inv_manufacturer_serial = FieldValue.objects.create(inventory=inventory_item,field=custom_field,is_current=True)
-    try:
-        deployment = Deployment.objects.get(
-            deployment_to_field_date__year=cal_date_date.year,
-            deployment_to_field_date__month=cal_date_date.month,
-            deployment_to_field_date__day=cal_date_date.day,
-        )
-    except Deployment.DoesNotExist:
-        deployment = None
-    conf_event, conf_created = ConfigEvent.objects.get_or_create(
-        configuration_date = cal_date_date,
-        inventory = inventory_item,
-        config_type = 'conf',
-        deployment = deployment
-    )
-    cnst_event, cnst_created = ConfigEvent.objects.get_or_create(
-        configuration_date = cal_date_date,
-        inventory = inventory_item,
-        config_type = 'cnst',
-        deployment = deployment
-    )
-    csv_event, cal_created = CalibrationEvent.objects.get_or_create(
-        calibration_date = cal_date_date,
-        inventory = inventory_item
-    )
-    for idx, row in enumerate(reader):
-        row_data = row.items()
-        for key, value in row_data:
-            if key == 'serial':
-                csv_manufacturer_serial = value.strip()
-                if len(inv_manufacturer_serial.field_value) == 0 and len(csv_manufacturer_serial) > 0:
-                    inv_manufacturer_serial.field_value = csv_manufacturer_serial
-                    inv_manufacturer_serial.save()
-            if key == 'name':
-                calibration_name = value.strip()
-                try:
-                    cal_name_item = CoefficientName.objects.get(
-                        calibration_name = calibration_name,
-                        coeff_name_event = inventory_item.part.part_coefficientnameevents.first()
-                    )
-                except CoefficientName.DoesNotExist:
-                    cal_name_item = None
-                try:
-                    config_name_item = ConfigName.objects.get(
-                        name = calibration_name,
-                        config_name_event = inventory_item.part.part_confignameevents.first()
-                    )
-                except ConfigName.DoesNotExist:
-                    config_name_item = None
-            elif key == 'value':
-                valset_keys = {'cal_dec_places': inventory_item.part.cal_dec_places}
-                mock_valset_instance = SimpleNamespace(**valset_keys)
-                raw_valset = str(value)
-                value_set_type = 'sl'
-                if '[' in raw_valset:
-                    raw_valset = raw_valset[1:-1]
-                    value_set_type = '1d'
-                if 'SheetRef' in raw_valset:
-                    ext_finder_filename = "__".join((cal_csv_filename,calibration_name))
-                    ref_file = [file for file in ext_files if ext_finder_filename in file.name][0]
-                    ref_file.seek(0)
-                    reader = io.StringIO(ref_file.read().decode('utf-8'))
-                    contents = reader.getvalue()
-                    raw_valset = contents
-                    value_set_type = '2d'
-            elif key == 'notes':
-                notes = value.strip()
-                if cal_name_item:
-                    coeff_val_set = {
-                        'coefficient_name': cal_name_item,
-                        'value_set': raw_valset,
-                        'notes': notes
-                    }
-                    coeff_val_sets.append(coeff_val_set)
-                if config_name_item:
-                    if config_name_item.config_type == 'conf':
-                        config_val_set = {
-                            'config_name': config_name_item,
-                            'config_value': raw_valset,
-                            'notes': notes,
-                            'config_event': conf_event
-                        }
-                        config_val_sets.append(config_val_set)
-                    if config_name_item.config_type == 'cnst':
-                        const_val_set = {
-                            'config_name': config_name_item,
-                            'config_value': raw_valset,
-                            'notes': notes,
-                            'config_event': cnst_event
-                        }
-                        const_val_sets.append(const_val_set)
-                if not cal_name_item and not config_name_item:
-                    if not inventory_item.part.part_coefficientnameevents.exists():
-                        coeff_name_event = CoefficientNameEvent.objects.create(part = inventory_item.part)
-                        _create_action_history(coeff_name_event, Action.CALCSVIMPORT, user, data=dict(csv_import=cal_csv.name))
-                    else:
-                        coeff_name_event = inventory_item.part.part_coefficientnameevents.first()
-                    cal_name_item = CoefficientName.objects.create(
-                        calibration_name = calibration_name,
-                        coeff_name_event = coeff_name_event,
-                        value_set_type = value_set_type
-                    )
-                    coeff_val_set = {
-                        'coefficient_name': cal_name_item,
-                        'value_set': raw_valset,
-                        'notes': notes
-                    }
-                    coeff_val_sets.append(coeff_val_set)
-    if user_draft.exists():
-        for draft_user in user_draft:
-            csv_event.user_draft.add(draft_user)
-    if len(coeff_val_sets) >= 1:
-        for valset in coeff_val_sets:
-            valset['calibration_event'] = csv_event
-            coeff_val_set, created = CoefficientValueSet.objects.update_or_create(
-                coefficient_name = valset['coefficient_name'],
-                calibration_event = valset['calibration_event'],
-                defaults = {
-                    'value_set': valset['value_set'],
-                    'notes': valset['notes'],
-                }
-            )
-            parse_valid_coeff_vals(coeff_val_set)
-        if cal_created:
-            _create_action_history(csv_event, Action.CALCSVIMPORT, user, data=dict(csv_import=cal_csv.name))
-        else:
-            _create_action_history(csv_event, Action.CALCSVUPDATE, user, data=dict(csv_import=cal_csv.name))
-    else:
-        csv_event.delete()
-    if len(config_val_sets) >= 1:
-        for valset in config_val_sets:
-            valset['config_event'] = conf_event
-            coeff_val_set, created = ConfigValue.objects.update_or_create(
-                config_name = valset['config_name'],
-                config_event = valset['config_event'],
-                defaults = {
-                    'config_value': valset['config_value'],
-                    'notes': valset['notes'],
-                }
-            )
-        if conf_created:
-            _create_action_history(conf_event, Action.CALCSVIMPORT, user, data=dict(csv_import=cal_csv.name))
-        else:
-            _create_action_history(conf_event, Action.CALCSVUPDATE, user, data=dict(csv_import=cal_csv.name))
-    else:
-        conf_event.delete()
-    if len(const_val_sets) >= 1:
-        for valset in const_val_sets:
-            valset['config_event'] = cnst_event
-            const_val_set, created = ConfigValue.objects.update_or_create(
-                config_name = valset['config_name'],
-                config_event = valset['config_event'],
-                defaults = {
-                    'config_value': valset['config_value'],
-                    'notes': valset['notes'],
-                }
-            )
-        if cnst_created:
-            _create_action_history(cnst_event, Action.CALCSVIMPORT, user, data=dict(csv_import=cal_csv.name))
-        else:
-            _create_action_history(cnst_event, Action.CALCSVUPDATE, user, data=dict(csv_import=cal_csv.name))
-    else:
-        cnst_event.delete()
-    cache.delete('cal_csv_' + counter)
 
 
 
