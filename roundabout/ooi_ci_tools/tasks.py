@@ -37,8 +37,8 @@ from sigfig import round
 from statistics import mean, stdev
 from django.utils.timezone import make_aware
 
-from roundabout.calibrations.forms import parse_valid_coeff_vals
-from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientNameEvent
+from roundabout.calibrations.forms import parse_coeff_1d_array
+from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientNameEvent, CoefficientValue
 from roundabout.configs_constants.models import ConfigName, ConfigValue, ConfigEvent
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.inventory.models import Inventory, Action, Deployment, InventoryDeployment
@@ -261,7 +261,7 @@ def parse_cal_files(self):
                         'notes': valset['notes'],
                     }
                 )
-                parse_valid_coeff_vals(coeff_val_set)
+                parse_coeff_vals(coeff_val_set)
             if cal_created:
                 _create_action_history(csv_event, Action.CALCSVIMPORT, user, data=dict(csv_import=cal_csv.name))
             else:
@@ -306,6 +306,40 @@ def parse_cal_files(self):
     cache.delete('user_draft')
     cache.delete('ext_files')
     cache.delete('csv_files')
+
+# Creates Coefficient value model instances for a valid CoefficientValueSet
+def parse_coeff_vals(value_set_instance):
+    set_type = value_set_instance.coefficient_name.value_set_type
+    coeff_vals = CoefficientValue.objects.filter(coeff_value_set = value_set_instance)
+    coeff_batch = []
+    mega_batch = []
+    if coeff_vals:
+        coeff_vals.delete()
+    if set_type  == 'sl' or set_type  == '1d':
+        coeff_1d_array = value_set_instance.value_set.split(',')
+        coeff_batch = parse_coeff_1d_array(coeff_1d_array, value_set_instance)
+        mega_batch.extend(coeff_batch)
+        # CoefficientValue.objects.bulk_create(coeff_batch)
+    elif set_type == '2d':
+        val_array = []
+        coeff_2d_array = value_set_instance.value_set.splitlines()
+        for val_set_index, val_set in enumerate(coeff_2d_array):
+            coeff_1d_array = val_set.split(',')
+            parsed_batch = parse_coeff_1d_array(coeff_1d_array, value_set_instance, val_set_index)
+            val_array.extend(parsed_batch)
+        mega_batch.extend(val_array)
+        # CoefficientValue.objects.bulk_create(val_array)
+    str_valset_id = str(value_set_instance.id)
+    cache.set('coeff_vals_'+str_valset_id, mega_batch, timeout=None)
+    bulk_upload_vals.delay(str_valset_id)
+    return value_set_instance
+
+@shared_task(bind=True, soft_time_limit = 3600)
+def bulk_upload_vals(self, value_set_id):
+    str_id = str(value_set_id)
+    coeff_vals = cache.get('coeff_vals_'+str_id)
+    CoefficientValue.objects.bulk_create(coeff_vals)
+    cache.delete('coeff_vals_'+str_id)
 
 
 
