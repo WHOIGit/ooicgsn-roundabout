@@ -38,7 +38,7 @@ from statistics import mean, stdev
 from django.utils.timezone import make_aware
 
 from roundabout.calibrations.forms import parse_valid_coeff_vals
-from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientNameEvent
+from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent, CoefficientNameEvent, CoefficientValue
 from roundabout.configs_constants.models import ConfigName, ConfigValue, ConfigEvent
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.inventory.models import Inventory, Action, Deployment, InventoryDeployment
@@ -261,7 +261,9 @@ def parse_cal_files(self):
                         'notes': valset['notes'],
                     }
                 )
-                parse_valid_coeff_vals(coeff_val_set)
+                cache.set('valueset_inst_' + str(coeff_val_set.id), coeff_val_set, timeout=None)
+                parse_coeff_vals.delay(coeff_val_set.id)
+                # parse_valid_coeff_vals(coeff_val_set)
             if cal_created:
                 _create_action_history(csv_event, Action.CALCSVIMPORT, user, data=dict(csv_import=cal_csv.name))
             else:
@@ -306,6 +308,63 @@ def parse_cal_files(self):
     cache.delete('user_draft')
     cache.delete('ext_files')
     cache.delete('csv_files')
+
+@shared_task(bind=True, soft_time_limit = 3600)
+def parse_coeff_vals(self, counter):
+    value_set_instance = cache.get('valueset_inst_' + str(counter))
+    set_type = value_set_instance.coefficient_name.value_set_type
+    coeff_vals = CoefficientValue.objects.filter(coeff_value_set = value_set_instance)
+    coeff_batch = []
+    if coeff_vals:
+        coeff_vals.delete()
+    if set_type  == 'sl' or set_type  == '1d':
+        coeff_1d_array = value_set_instance.value_set.split(',')
+        coeff_batch = parse_coeff_1d_array(coeff_1d_array, value_set_instance)
+        CoefficientValue.objects.bulk_create(coeff_batch)
+    elif set_type == '2d':
+        val_array = []
+        coeff_2d_array = value_set_instance.value_set.splitlines()
+        for val_set_index, val_set in enumerate(coeff_2d_array):
+            coeff_1d_array = val_set.split(',')
+            parsed_batch = parse_coeff_1d_array(coeff_1d_array, value_set_instance, val_set_index)
+            val_array.extend(parsed_batch)
+        CoefficientValue.objects.bulk_create(val_array)
+    cache.delete('valueset_inst_' + str(counter))
+    return value_set_instance
+
+def parse_coeff_1d_array(coeff_1d_array, value_set_instance, row_index = 0):
+    coeff_batch = []
+    for idx, val in enumerate(coeff_1d_array):
+        val = val.strip()
+        notation = find_notation(val)
+        sigfig = find_sigfigs(val)
+        coeff_val_obj = CoefficientValue(
+            coeff_value_set = value_set_instance,
+            value = val,
+            original_value = val,
+            notation_format = notation,
+            sigfig = sigfig,
+            row = row_index
+        )
+        coeff_batch.append(coeff_val_obj)
+
+    return coeff_batch
+
+# Parses Coefficient Value notation
+def find_notation(val):
+    notation = 'std'
+    val = val.lower()
+    if ( 'e' in val ):
+        notation = 'sci'
+    return notation
+
+
+# Parses Coefficient Value significant digits
+def find_sigfigs(val):
+    stripped_val = val.lower().replace('.','').replace('-','').strip('0')
+    val_e_split = stripped_val.split('e')[0]
+    sig_count = len(val_e_split)
+    return sig_count
 
 
 
