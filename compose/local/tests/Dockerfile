@@ -8,7 +8,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 RUN apt-get update
 
-RUN apt-get install curl -y && apt-get install npm -g -y
+RUN apt-get install curl -y && apt-get install npm -y
+RUN install -g npm@latest
 
 RUN apt-get install -y wget && apt install -y unzip
 
