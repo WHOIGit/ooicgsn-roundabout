@@ -9,8 +9,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 RUN apt-get update
 
 RUN apt-get install curl -y && apt-get install npm -y
-# Fix can't find module: node:events
-RUN npm update -g
 
 RUN apt-get install -y wget && apt install -y unzip
 
@@ -24,6 +22,8 @@ COPY ./tests/*.ext /tests/
 # The default Ubuntu 22.04 repository contains an old version of Node.js. Currently, the repositories contain the Node 12.22.9 version.
 # To install Node.js from default repositories, run:
 RUN apt-get install -y nodejs
+# Fix can't find module: node:events
+RUN npm update -g
 
 # npm WARN EBADENGINE package: 'jsdom@20.0.0' with Node 12.x
 RUN npm install jsdom@19.0.0
