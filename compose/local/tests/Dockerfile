@@ -10,7 +10,8 @@ RUN apt-get update
 
 RUN apt-get install curl -y && apt-get install npm -y
 # Fix can't find module: node:events
-RUN install -g npm@latest .
+RUN npm cache clean
+RUN npm update -g
 
 RUN apt-get install -y wget && apt install -y unzip
 
