@@ -31,6 +31,7 @@ import itertools
 from celery import shared_task
 from dateutil import parser
 from django.core.cache import cache
+from django.db import transaction
 from roundabout.ooi_ci_tools.forms import validate_reference_designator
 from roundabout.parts.models import Part, PartType, Revision
 from sigfig import round
@@ -364,6 +365,7 @@ def parse_cruise_files(self):
             cruise_start_date = parser.parse(row['cruiseStartDateTime'])
             cruise_stop_date = parser.parse(row['cruiseStopDateTime'])
             vessel_obj = None
+            vessel_event = None
             # parse out the vessel name to match its formatting from Vessel CSV
             vessel_name_csv = row['ShipName'].strip()
             if vessel_name_csv == 'N/A':
@@ -1120,6 +1122,7 @@ def parse_bulk_files(self):
 
 # Parse Bulk Upload CSV file submission as a separate task
 @shared_task(bind=True, soft_time_limit = 3600)
+@transaction.atomic
 def parse_bulk_file(self, counter):
     str_counter = str(counter)
     csv_file = cache.get('csv_file_'+str_counter)
