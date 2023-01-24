@@ -23,6 +23,7 @@ COPY ./tests/*.ext /tests/
 # RUN apt-get install -y nodejs
 # But, Selenium Webdriver version 4.8.0 requires node 14 or higher
 RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - 
+RUN apt-get install -y nodejs
 
 # npm WARN EBADENGINE package: 'jsdom@20.0.0' with Node 12.x
 RUN npm install jsdom@19.0.0
