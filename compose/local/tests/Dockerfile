@@ -18,9 +18,13 @@ COPY ./tests/*.js /tests/
 COPY ./tests/*.csv /tests/
 COPY ./tests/*.ext /tests/
 
-#RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -  #don't need
-# The default Ubuntu 22.04 repository contains an old version of Node.js. Currently, the repositories contain the Node 12.22.9 version.
-# To install Node.js from default repositories, run:
+# The default Ubuntu 22.04 repository contains an old version 12.22.9 of Node.js
+# Need to remove it
+RUN apt remove -y nodejs
+RUN apt remove -y nodejs-doc
+RUN apt-get -y autoremove
+# Selenium Webdriver version 4.8.0 requires node 14 or higher
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - 
 RUN apt-get install -y nodejs
 
 # npm WARN EBADENGINE package: 'jsdom@20.0.0' with Node 12.x
