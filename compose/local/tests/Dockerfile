@@ -23,7 +23,7 @@ COPY ./tests/*.ext /tests/
 # To install Node.js from default repositories, run:
 RUN apt-get install -y nodejs
 # Fix can't find module: node:events
-RUN npm update -g
+RUN npm install events
 
 # npm WARN EBADENGINE package: 'jsdom@20.0.0' with Node 12.x
 RUN npm install jsdom@19.0.0
