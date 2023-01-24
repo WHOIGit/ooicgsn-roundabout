@@ -22,8 +22,8 @@ COPY ./tests/*.ext /tests/
 # To install Node.js from default repositories, run:
 # RUN apt-get install -y nodejs
 # But, Selenium Webdriver version 4.8.0 requires node 14 or higher
-RUN apt remove -y nodejs
-RUN apt remove -y nodejs-doc
+#RUN apt remove -y nodejs
+#RUN apt remove -y nodejs-doc
 RUN apt-get -y autoremove
 RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - 
 RUN apt-get install -y nodejs
