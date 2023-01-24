@@ -18,12 +18,11 @@ COPY ./tests/*.js /tests/
 COPY ./tests/*.csv /tests/
 COPY ./tests/*.ext /tests/
 
-#RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -  #don't need
-# The default Ubuntu 22.04 repository contains an old version of Node.js. Currently, the repositories contain the Node 12.22.9 version.
+# The default Ubuntu 22.04 repository contains an old version 12.22.9 of Node.js
 # To install Node.js from default repositories, run:
-RUN apt-get install -y nodejs
-# Fix can't find module: node:events
-RUN npm install events
+# RUN apt-get install -y nodejs
+# But, Selenium Webdriver version 4.8.0 requires node 14 or higher
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - 
 
 # npm WARN EBADENGINE package: 'jsdom@20.0.0' with Node 12.x
 RUN npm install jsdom@19.0.0
