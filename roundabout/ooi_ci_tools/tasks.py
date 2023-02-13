@@ -1122,7 +1122,6 @@ def parse_bulk_files(self):
 
 # Parse Bulk Upload CSV file submission as a separate task
 @shared_task(bind=True, soft_time_limit = 3600)
-@transaction.atomic
 def parse_bulk_file(self, counter):
     str_counter = str(counter)
     csv_file = cache.get('csv_file_'+str_counter)
