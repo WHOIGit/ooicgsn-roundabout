@@ -1270,14 +1270,15 @@ def parse_bulk_file(self, counter):
                 except Part.DoesNotExist:
                     part = Part.objects.create(name=part_template, part_type=inst_obj, part_number=part_template, bulk_upload_event=bulk_event)
                     rev_a = Revision.objects.create(part=part)
-                inv = Inventory.objects.create(
+                inv, inv_created = Inventory.objects.get_or_create(
                     part = part,
                     serial_number = asset_uid,
                     bulk_upload_event = bulk_event,
                     location = Location.objects.get(name='Retired')
                 )
                 inv.save()
-                _create_action_history(inv,Action.CALCSVIMPORT,user,data=dict(csv_import=csv_file.name))
+                if inv_created:
+                    _create_action_history(inv,Action.CALCSVIMPORT,user,data=dict(csv_import=csv_file.name))
                         
                 FieldValue.objects.update_or_create(
                     field = Field.objects.get_or_create(field_name='CI TYPE')[0],
