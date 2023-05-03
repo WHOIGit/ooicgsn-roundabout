@@ -808,9 +808,17 @@ class ExportDeployments(ZipExport):
                 if att == "1":
                     val = 1  # versionNumber
                 elif att == "deployment.config_event('Nominal_Depth').config_value":
-                    config_name = ConfigName.objects.filter(name='Nominal Depth', part=depl_obj.inventory.part, config_type='conf').first()
-                    config_event = ConfigEvent.objects.filter(inventory=depl_obj.inventory, deployment=depl_obj.deployment).first()
-                    config_val = ConfigValue.objects.filter(config_event=config_event, config_name=config_name).first()
+                    config_name = ConfigName.objects.filter(
+                        name="Nominal Depth",
+                        part=depl_obj.inventory.part,
+                        config_type="conf",
+                    ).first()
+                    config_event = ConfigEvent.objects.filter(
+                        inventory=depl_obj.inventory, deployment=depl_obj.deployment
+                    ).first()
+                    config_val = ConfigValue.objects.filter(
+                        config_event=config_event, config_name=config_name
+                    ).first()
                     val = config_val.config_value
 
                 else:
@@ -1000,14 +1008,18 @@ class ExportOBSAssemblyBuilds(DetailView, LoginRequiredMixin):
 
             for inv in build.inventory.all():
                 sn = inv.serial_number
-                inv_lineage = inv.assembly_part.get_ancestors(include_self=True)
+                try:
+                    inv_lineage = inv.assembly_part.get_ancestors(include_self=True)
+                except:
+                    continue
+
                 inv_lineage_keys = [
                     normalize("NFKD", str(asspart)) for asspart in inv_lineage
                 ]
                 part = inv_lineage_keys[-1]
 
                 duplicate_count = inv_lineage_keylist.count(inv_lineage_keys)
-                uniquifier_postfix = ' '*duplicate_count
+                uniquifier_postfix = " " * duplicate_count
                 inv_lineage_keylist.append(inv_lineage_keys.copy())
                 inv_lineage_keys[-1] += uniquifier_postfix
 
