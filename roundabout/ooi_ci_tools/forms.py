@@ -604,6 +604,9 @@ class ImportDeploymentsForm(forms.Form):
                     
                     try:
                         assembly_num = ref_des.split('-')[0]
+                        if 'MOAS' in ref_des:
+                            extended_num = ref_des.split('-')[1]
+                            assembly_num = assembly_num + '-' + extended_num
                         assembly = Assembly.objects.get(assembly_number=assembly_num)
                     except Assembly.DoesNotExist:
                         raise ValidationError(
