@@ -75,6 +75,48 @@
 
         <p>Part Number: <a href="{% url 'parts:parts_detail' assembly_part.part.id %}">{{ assembly_part.part.part_number }}</a> </p>
         <p>Part Type: {{ assembly_part.part.part_type }}</p>
+
+        {% if assembly_part.inventory.exists %}
+        <div class="alert alert-warning" role="alert">
+            <p><b>NOTICE:</b>  This {{ label_assemblies_app_singular }} Part has existing {{ label_inventory_app_plural }} assigned to it.
+            If you delete this {{ label_assemblies_app_singular }} Part, the {{ label_inventory_app_singular }} will be removed from its 
+            assigned Build and marked as available in its current location. If you move this {{ label_assemblies_app_singular }} Part, the
+            {{ label_inventory_app_singular }} will be moved along with any subassemblies. 
+            If you want to create a new version of this {{ label_assemblies_app_singular }},
+            but keep existing {{ label_builds_app_plural }} unchanged, please create a
+            <span class="ajax-detail-link">
+                <a href="#"
+                data-detail-url="{% url 'assemblies:ajax_assemblies_create_revision' assembly_part.assembly_revision.assembly.id %}"
+                data-node-id="{{ assembly_part.id }}"
+                data-node-type="{{ assembly_part.get_object_type }}"><b>NEW REVISION</b></a>
+            </span> of this {{ label_assemblies_app_singular }}  instead.</p>
+            <h5>Current {{ label_inventory_app_plural }} for this {{ label_assemblies_app_singular }} Part</h5>
+
+            <ul class="list-group list-group-flush">
+    
+                {% for item in assembly_part.inventory.all %}
+    
+                    <li class="list-group-item">
+                        {{ label_inventory_app_singular }}: {{ item }}<br>
+                        Current Location: {{ item.location }}
+                        <a href="{% url 'inventory:inventory_detail' item.id %}" data-detail-url="{% url 'inventory:ajax_inventory_detail' item.id %}"
+                           data-node-id="{{ item.id }}"
+                           data-location-id="{{ item.location.id }}"
+                           data-node-type="{{ item.get_object_type }}"
+                           class="btn btn-primary btn-sm float-right"
+                           target="_blank"
+                           role="button">View</a>
+                    </li>
+    
+                {% endfor %}
+    
+            </ul>
+        </div>
+
+       
+
+    {% endif %}
+
         <p>Current Inventory: {{ assembly_part.part.get_part_inventory_count }}</p>
         {% if assembly_part.assemblypart_referencedesignatorevents.exists %}
             <p>Reference Designator: {{ assembly_part.reference_designator }} -- {{assembly_part.part.name}} -- {{assembly_part.assembly_revision}} -- {{assembly_part.inventory.build}} -- {{assembly_part.inventory.build.current_deployment}}</p>
