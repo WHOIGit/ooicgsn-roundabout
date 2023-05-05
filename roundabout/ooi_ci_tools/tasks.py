@@ -565,6 +565,10 @@ def parse_deployment_files(self):
                     # get Assembly number from RefDes as that seems to be most consistent across CSVs
                     ref_des = row['Reference Designator']
                     assembly = ref_des.split('-')[0]
+                    if 'MOAS' in ref_des:
+                        extended_ref_des = ref_des.split('-')[1]
+                        assembly = f'{assembly}-{extended_ref_des}'
+                    
                     dep_number_string = row['mooring.uid'].split('-')[2]
                     # parse together the Build/Deployment Numbers from CSV fields
                     deployment_number = f'{assembly}-{dep_number_string}'
