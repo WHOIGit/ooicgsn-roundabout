@@ -75,7 +75,8 @@ def _create_reference_designators():
                             _create_action_history(refdes_event, Action.ADD, user=None)
                         try:
                             (
-                                refdes_value
+                                refdes_value,
+                                refdes_value_created
                             ) = ReferenceDesignator.objects.get_or_create(
                                 refdes_name=dflt.default_value
                             )
@@ -83,6 +84,7 @@ def _create_reference_designators():
                             refdes_value = ReferenceDesignator.objects.filter(
                                 refdes_name=dflt.default_value
                             ).first()
+                            refdes_value_created = False
 
                         refdes_event.reference_designator = refdes_value
                         assm_part.reference_designator = refdes_value
