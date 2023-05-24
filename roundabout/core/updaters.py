@@ -56,27 +56,34 @@ def _update_cruise_events():
 def _create_reference_designators():
     for assm_part in AssemblyPart.objects.all():
         if assm_part.assemblypart_configdefaultevents.exists():
-            for (
-                dflt
-            ) in (
-                assm_part.assemblypart_configdefaultevents.first().config_defaults.all()
-            ):
+            for (dflt) in (assm_part.assemblypart_configdefaultevents.first().config_defaults.all()):
                 if dflt.config_name.name == "Reference Designator":
                     if len(dflt.default_value) >= 1:
-                        (
-                            refdes_event,
-                            refdes_event_created,
-                        ) = ReferenceDesignatorEvent.objects.get_or_create(
-                            assembly_part=assm_part
-                        )
+                        try:
+                            (
+                                refdes_event,
+                                refdes_event_created,
+                            ) = ReferenceDesignatorEvent.objects.get_or_create(
+                                assembly_part=assm_part
+                            )
+                        except ReferenceDesignatorEvent.MultipleObjectsReturned:
+                            refdes_event = ReferenceDesignatorEvent.objects.filter(
+                                assembly_part=assm_part
+                            ).first()
+                            refdes_event_created = False
                         if refdes_event_created:
                             _create_action_history(refdes_event, Action.ADD, user=None)
-                        (
-                            refdes_value,
-                            refdes_value_created,
-                        ) = ReferenceDesignator.objects.get_or_create(
-                            refdes_name=dflt.default_value
-                        )
+                        try:
+                            (
+                                refdes_value
+                            ) = ReferenceDesignator.objects.get_or_create(
+                                refdes_name=dflt.default_value
+                            )
+                        except ReferenceDesignator.MultipleObjectsReturned:
+                            refdes_value = ReferenceDesignator.objects.filter(
+                                refdes_name=dflt.default_value
+                            ).first()
+
                         refdes_event.reference_designator = refdes_value
                         assm_part.reference_designator = refdes_value
                         refdes_event.save()
