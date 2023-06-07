@@ -804,7 +804,7 @@ def parse_deployment_files(self):
                         if item.part.friendly_name != '':
                             order = item.part.friendly_name
                         try:
-                            assembly_part = AssemblyPart.objects.update_or_create(
+                            assembly_part, assm_created = AssemblyPart.objects.update_or_create(
                                 part = item.part,
                                 assembly_revision=assembly_revision,
                                 order=order,
@@ -823,9 +823,10 @@ def parse_deployment_files(self):
                             )
                         except AssemblyPart.MultipleObjectsReturned:
                             assembly_part = AssemblyPart.objects.filter(part = item.part,assembly_revision=assembly_revision,order=order).first()
-                        assembly_part.reference_designator = ref_des_obj
-                        assembly_part.assembly = assembly
-                        assembly_part.save()
+                        if assembly_part:
+                            assembly_part.reference_designator = ref_des_obj
+                            assembly_part.assembly = assembly
+                            assembly_part.save()
                         item.assembly_part = assembly_part
                         item.save()
                     try:
