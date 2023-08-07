@@ -545,3 +545,11 @@ def _create_inv_deployments():
                 current_status=build.current_deployment().current_status,
             )
             print(inventory_deployment, inventory_deployment.current_status)
+
+# If Vessels are found without VesselEvents, generate and associate VesselEvents with each
+def _update_vessel_events():
+    for vessel in Vessel.objects.all():
+        if not hasattr(vessel, "vessel_event"):
+            print("adding vessel event")
+            new_vessel_event = VesselEvent.objects.create(vessel=vessel)
+            new_vessel_event.save()
