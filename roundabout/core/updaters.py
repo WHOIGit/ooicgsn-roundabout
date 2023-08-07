@@ -34,6 +34,7 @@ from roundabout.ooi_ci_tools.models import (
     Comment,
     MPTTComment,
     CruiseEvent,
+    VesselEvent
 )
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.parts.models import Part
