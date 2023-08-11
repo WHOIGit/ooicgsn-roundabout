@@ -38,6 +38,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from common.util.mixins import AjaxFormMixin
 from .models import Build, BuildAction
 from .forms import *
+from .views import _make_tree_copy
 from roundabout.locations.models import Location
 from roundabout.inventory.models import (
     Inventory,
@@ -413,38 +414,31 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         )
         build_record.save()
 
-        """
-        # Create automatic Snapshot when Deployed to Sea or Recovered
-        if action_type == 'deploy' or action_type == 'recover':
-            # Create a Snapshot when Deployment is Deployed
-            deployment = self.object
-            base_location = Location.objects.get(root_type='Snapshots')
-            inventory_items = deployment.inventory.all()
-
-            snapshot = DeploymentSnapshot.objects.create(deployment=deployment,
-                                                         location=base_location,
-                                                         snapshot_location=deployment.location,
-                                                         notes=self.object.detail,
-                                                         created_at=action_date, )
-
-            # Now create Inventory Item Snapshots with make_tree_copy function for Deployment Snapshot
-            for item in inventory_items:
-                if item.is_root_node():
-                    make_tree_copy(item, base_location, snapshot, item.parent)
-
-        detail = build_record.get_action_type_display()
-        cruise = None
-        deployment_type = 'build_deployment'
-
-        if action_type ==  Action.DEPLOYMENTTOFIELD:
-            cruise = self.object.cruise_deployed
-        elif action_type ==  Action.DEPLOYMENTRECOVER:
-            cruise = self.object.cruise_recovered
-        """
-
         # Get all Inventory items on Build, match location and add Actions
         inventory_items = build.inventory.all()
 
+        # Create automatic Snapshot when Deployed to Sea or Recovered
+        if (
+            action_type == Action.DEPLOYMENTTOFIELD
+            or action_type == Action.DEPLOYMENTRECOVER
+        ):
+            build_snapshot = BuildSnapshot()
+
+            build_snapshot.build = build
+            build_snapshot.deployment = build.current_deployment()
+            if build.current_deployment():
+                build_snapshot.deployment_status = (
+                    build.current_deployment().current_status
+                )
+            build_snapshot.location = build.location
+            build_snapshot.time_at_sea = build.time_at_sea
+            build_snapshot.save()
+
+            for item in inventory_items:
+                if item.is_root_node():
+                    _make_tree_copy(item, build.location, build_snapshot, item.parent)
+
+        # Match Inventory location and add Actions
         for item in inventory_items:
             item.location = build.location
             item.save()
