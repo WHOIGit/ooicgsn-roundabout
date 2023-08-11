@@ -38,6 +38,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from common.util.mixins import AjaxFormMixin
 from .models import Build, BuildAction
 from .forms import *
+from .views import _make_tree_copy
 from roundabout.locations.models import Location
 from roundabout.inventory.models import (
     Inventory,
