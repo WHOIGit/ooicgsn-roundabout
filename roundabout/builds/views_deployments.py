@@ -366,6 +366,12 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             action_type == Action.DEPLOYMENTTOFIELD
             or action_type == Action.DEPLOYMENTRECOVER
         ):
+            for action in Action.ACTION_TYPES:
+                if action[0] == action_type:
+                    notes = action[1]
+                elif action[0] == action_type:
+                    notes = action[1]
+
             build_snapshot = BuildSnapshot()
 
             build_snapshot.build = build
@@ -376,6 +382,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
                 )
             build_snapshot.location = build.location
             build_snapshot.time_at_sea = build.time_at_sea
+            build_snapshot.notes = notes
             build_snapshot.save()
 
             for item in inventory_items:
