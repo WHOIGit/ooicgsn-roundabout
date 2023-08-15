@@ -43,10 +43,9 @@ RUN apt-get update
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && apt install -y ./google-chrome-stable_current_amd64.deb      
 
 # Determine and Get Chromedriver Version based upon the Google Chrome Version
-RUN CHROME_VERSION=$(google-chrome --version | sed 's/Google Chrome \([0-9]*\).*/\1/g') \
-  && CHROME_DRIVER_VERSION=$(wget -qO- https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION) \
-  && wget https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip \
-  && unzip -o chromedriver_linux64.zip -d/usr/local/bin
+RUN CHROME_VERSION=$(google-chrome --version | sed -n 's/Google Chrome \([0-9.]*\).*/\1/p; s/[^0-9.]//g') \
+  && wget https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROME_VERSION/linux64/chromedriver-linux64.zip \
+  && unzip -o chromedriver-linux64.zip -d/usr/local/bin
         
 RUN chmod +x /tests/RunAllTests-Chrome-Linux.bat
 RUN sed -i 's/\r//' /tests/RunAllTests-Chrome-Linux.bat
@@ -56,9 +55,6 @@ RUN sed -i 's/\r//' /tests/Cleanup-Docker.bat
 
 RUN chmod +x /tests/Buildup-Docker.bat
 RUN sed -i 's/\r//' /tests/Buildup-Docker.bat
-
-#RUN chmod +x /tests/RunAllTests-Firefox-Linux.bat
-#RUN sed -i 's/\r//' /tests/RunAllTests-Firefox-Linux.bat
 
 
 
