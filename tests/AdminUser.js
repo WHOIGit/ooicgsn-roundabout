@@ -161,7 +161,7 @@ var password;
         await driver.findElement(By.id("id_password")).sendKeys("tech")
         await driver.findElement(By.css(".primaryAction")).click()
 	    // Verify "Account Inactive"
-        var bodyText = await driver.findElement(By.tagName("Body")).getText();
+        var bodyText = await driver.findElement(By.css('body')).getText();
         assert(bodyText.includes("Account Inactive"));
 
         await driver.findElement(By.id("log-in-link")).click()
@@ -169,7 +169,7 @@ var password;
         await driver.findElement(By.id("id_password")).sendKeys("inv")
         await driver.findElement(By.css(".primaryAction")).click()
 	    // Verify "Account Inactive"
-        bodyText = await driver.findElement(By.tagName("Body")).getText();
+        bodyText = await driver.findElement(By.css('body')).getText();
         assert(bodyText.includes("Account Inactive"));
 
         await driver.findElement(By.id("log-in-link")).click()
@@ -209,7 +209,7 @@ var password;
         await driver.findElement(By.id("id_name")).sendKeys("best technician")
         await driver.findElement(By.css(".btn-primary")).click() 
 	    // Verify my info changed
-        bodyText = await driver.findElement(By.tagName("Body")).getText();
+        bodyText = await driver.findElement(By.css('body')).getText();
         assert(bodyText.includes("best technician"));
 
 	    // Modify Email
@@ -217,7 +217,7 @@ var password;
         await driver.findElement(By.id("id_email")).sendKeys("tech@example.com")
         await driver.findElement(By.name("action_add")).click()
 	    // Verify screen text contains tech@example.com
-        bodyText = await driver.findElement(By.tagName("Body")).getText();
+        bodyText = await driver.findElement(By.css('body')).getText();
         assert(bodyText.includes("tech@example.com"));
 
 	    // Modify Password

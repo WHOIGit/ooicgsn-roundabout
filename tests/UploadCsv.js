@@ -113,7 +113,7 @@ var filename, filename_ext;
         // Wait for upload to Complete
         var bodyText;
         for (var j = 0; j < 5; j++) {
-            bodyText = await driver.findElement(By.tagName("Body")).getText();
+            bodyText = await driver.findElement(By.css('body')).getText();
             if (bodyText.includes("Import Complete")) {
                 console.log("Cruise.csv upload successful.");
                 break;
@@ -223,7 +223,7 @@ var filename, filename_ext;
         // Wait for upload to Complete
         erroridx = 0;
         for (var j = 0; j < 5; j++) {
-            bodyText = await driver.findElement(By.tagName("Body")).getText();
+            bodyText = await driver.findElement(By.css('body')).getText();
             if (bodyText.includes("Import Complete")) {
                 console.log("Vessel.csv upload successful.");
                 break;
@@ -338,7 +338,7 @@ var filename, filename_ext;
         // Wait for upload to Complete
         var bodyText;
         for (var j = 0; j < 5; j++) {
-            bodyText = await driver.findElement(By.tagName("Body")).getText();
+            bodyText = await driver.findElement(By.css('body')).getText();
             if (bodyText.includes("Import Complete")) {
                 console.log("Calibrations.csv upload successful.");
                 break;
@@ -452,7 +452,7 @@ var filename, filename_ext;
         // Wait for upload to Complete
         erroridx = 0;
         for (var j = 0; j < 5; j++) {
-            bodyText = await driver.findElement(By.tagName("Body")).getText();
+            bodyText = await driver.findElement(By.css('body')).getText();
             if (bodyText.includes("Import Complete")) {
                 break;
             }
@@ -487,7 +487,7 @@ var filename, filename_ext;
                 await new Promise(r => setTimeout(r, 2000));
                 await driver.findElement(By.linkText("Bulk Upload Files")).click();
                 await new Promise(r => setTimeout(r, 2000));
-                bodyText = await driver.findElement(By.tagName("Body")).getText();
+                bodyText = await driver.findElement(By.css('body')).getText();
                 if ((bodyText.includes("sensor_vocab.csv") && bodyText.includes("ADCP Velocity Profiler"))) {
                     console.log("Sensor_vocab.csv bulk upload successful.");
                 }
@@ -523,7 +523,7 @@ var filename, filename_ext;
         // Wait for upload to Complete
         erroridx = 0;
         for (var j = 0; j < 5; j++) {
-            bodyText = await driver.findElement(By.tagName("Body")).getText();
+            bodyText = await driver.findElement(By.css('body')).getText();
             if (bodyText.includes("Import Complete")) {
                 break;
             }
@@ -620,7 +620,7 @@ var filename, filename_ext;
         // Wait for upload to Complete
         erroridx = 0;
         for (var j = 0; j < 5; j++) {
-            bodyText = await driver.findElement(By.tagName("Body")).getText();
+            bodyText = await driver.findElement(By.css('body')).getText();
             if (bodyText.includes("Import Complete")) {
                 break;
             }
@@ -657,7 +657,7 @@ var filename, filename_ext;
                 await new Promise(r => setTimeout(r, 1000));
                 await driver.findElement(By.linkText("Bulk Upload Files")).click();
                 await new Promise(r => setTimeout(r, 1000));
-                bodyText = await driver.findElement(By.tagName("Body")).getText();
+                bodyText = await driver.findElement(By.css('body')).getText();
                 if ((bodyText.includes("sensor_bulk_load-AssetRecord.csv") && bodyText.includes("ADCP Velocity Profiler"))) {
                     console.log("Sensor_bulk_load-AssetRecord.csv bulk upload successful.");
                 }
@@ -696,7 +696,7 @@ var filename, filename_ext;
         // Wait for upload to Complete
         erroridx = 0;
         for (var j = 0; j < 5; j++) {
-            bodyText = await driver.findElement(By.tagName("Body")).getText();
+            bodyText = await driver.findElement(By.css('body')).getText();
             if (bodyText.includes("Import Complete")) {
                 break;
             }
@@ -734,7 +734,7 @@ var filename, filename_ext;
                 await driver.findElement(By.partialLinkText("Deployment: CP04OSSM")).click();
                 await new Promise(r => setTimeout(r, 1000));
                 // Validate Deployment Location and Cruise
-                bodyText = await driver.findElement(By.tagName("Body")).getText();
+                bodyText = await driver.findElement(By.css('body')).getText();
                 if ((bodyText.includes("Coastal Pioneer") && bodyText.includes("MAUI"))) {
                     console.log("CP04OSSM_Deploy.csv bulk upload successful.");
                 }
