@@ -214,7 +214,7 @@ var password;
 
         // Verify Approvers; blank, Reviewers: admin
         await new Promise(r => setTimeout(r, 4000));
-        var bodyText = await driver.findElement(By.tagName("Body")).getText();
+        var bodyText = await driver.findElement(By.css('body')).getText();
         assert(bodyText.includes("Approvers:"));        
         assert(bodyText.includes("Reviewers: " + user));
         assert(bodyText.includes("sconf12"));
@@ -300,7 +300,7 @@ var password;
         await driver.findElement(By.linkText("Edit Configuration Defaults")).click()   
         // Verify values added
         await new Promise(r => setTimeout(r, 4000));
-        var bodyText = await driver.findElement(By.tagName("Body")).getText();
+        var bodyText = await driver.findElement(By.css('body')).getText();
         assert(bodyText.includes("1"));
         assert(bodyText.includes("12"));
  
@@ -393,7 +393,7 @@ var password;
         await driver.findElement(By.linkText("Defaults")).click();
         // Verify values added
         await new Promise(r => setTimeout(r, 4000));
-        var bodyText = await driver.findElement(By.tagName("Body")).getText();
+        var bodyText = await driver.findElement(By.css('body')).getText();
         assert(bodyText.includes("657"));
         assert(bodyText.includes("983"));
 

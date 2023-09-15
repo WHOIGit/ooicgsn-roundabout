@@ -2,8 +2,8 @@
 
 set -e
 
-google-chrome --version
-chromedriver --version
+chrome --version
+chromedriver -v
 
 # Runs all Roundabout Selenium Webdriver automated tests in linux Docker container to build up the test database.
 

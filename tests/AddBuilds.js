@@ -58,7 +58,6 @@ var password;
         password = "Automatedtests";
     }
 
-    // 2 | setWindowSize | 1304x834 | 
     await driver.manage().window().setRect({ width: 1304, height: 834 });
     // Set implict wait time in between steps
     await driver.manage().setTimeouts({ implicit: 2000 });
@@ -95,7 +94,6 @@ var password;
 
         await driver.findElement(By.linkText("Create New Build")).click();
         await new Promise(r => setTimeout(r, 6000));  //needed for build number to populate - 1.6
-        // 5 | select | id=id_assembly | label=Test Glider 1
         {
             const dropdown = await driver.findElement(By.id("id_assembly"));
             await dropdown.findElement(By.xpath("//option[. = 'Salty Reef']")).click();
@@ -103,14 +101,12 @@ var password;
 
         await new Promise(r => setTimeout(r, 6000));  //needed for build number to populate
 
-        // 6 | select | id=id_location | label=--- Test
         {
             const dropdown = await driver.findElement(By.id("id_location"));
             await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
         }
-        // 7 | type | id=id_build_notes | This is an automated test build.
+ 
         await driver.findElement(By.id("id_build_notes")).sendKeys("This is an automated test build.");
-        // 8 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
 
         while ((await driver.findElements(By.partialLinkText("Salty Reef"))).length == 0) //1.6
@@ -121,24 +117,19 @@ var password;
 
         // Verify Build is created in Test Location
         await driver.findElement(By.css(".btn-outline-primary:nth-child(1)")).click(); // search button
-        // 20 | click | id=field-select_c_r0 | 
         await driver.wait(until.elementLocated(By.id("field-select_c_r0")));
         await driver.findElement(By.id("field-select_c_r0")).click();
-        // 21 | select | id=field-select_c_r0 | label=Location
         {
             const dropdown = await driver.findElement(By.id("field-select_c_r0"));
             await dropdown.findElement(By.xpath("//option[. = 'Location']")).click();
         }
-        // 22 | select | id=qfield-lookup_c_r0 | label=Exact
+
         {
             const dropdown = await driver.findElement(By.id("qfield-lookup_c_r0"));
             await dropdown.findElement(By.xpath("//option[. = 'Exact']")).click();
         }
-        // 23 | type | id=field-query_c_r0 | Lost
         await driver.findElement(By.id("field-query_c_r0")).sendKeys("Test");
-        // 24 | click | id=searchform-submit-button | 
         await driver.findElement(By.id("searchform-submit-button")).click();
-        // 25 | click | css=.even a | 
         await new Promise(r => setTimeout(r, 2000));
         await driver.findElement(By.xpath("//p[contains(.,'1 items match your search!')]"));
 
@@ -159,47 +150,40 @@ var password;
             const dropdown = await driver.findElement(By.id("id_assembly"));
             await dropdown.findElement(By.xpath("//option[. = 'Salty Reef']")).click();
         }
-        // 11 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click()
         while ((await driver.findElements(By.css("#div_id_location .ajax-error"))).length == 0) //1.6
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for New Build Ajax Error.");
         }
-        // 12 | verifyText | css=.ajax-error | This field is required.
+
         assert(await driver.findElement(By.css("#div_id_location .ajax-error")).getText() == "This field is required.");
-        // 13 | select | id=id_location | label=Test
         {
             const dropdown = await driver.findElement(By.id("id_location"));
             // Space required before Test
             await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
         }
-        // 14 | select | id=id_assembly | label=---------
-        await new Promise(r => setTimeout(r, 6000)); //linux firefox
+        await new Promise(r => setTimeout(r, 6000));
         {
             const dropdown = await driver.findElement(By.id("id_assembly"))
             await dropdown.findElement(By.xpath("//option[. = '---------']")).click();
         }
-        // 15 | click | css=.controls > .btn | 
+
         await driver.findElement(By.css(".controls > .btn")).click();
         while ((await driver.findElements(By.css("#div_id_assembly .ajax-error"))).length == 0) {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for New Build Assembly Ajax Error.");
         }
 
-        // 16 | verifyText | css=.ajax-error | This field is required.
         assert(await driver.findElement(By.css("#div_id_assembly .ajax-error")).getText() == "This field is required.");
         {
             const dropdown = await driver.findElement(By.id("id_assembly"));
             await dropdown.findElement(By.xpath("//option[. = 'Salty Reef']")).click();
         }
         await new Promise(r => setTimeout(r, 6000));  //needed for build number to populate
-        // 18 | type | id=id_build_number |  
         await driver.findElement(By.id("hint_id_build_number")).click();
         await driver.findElement(By.id("id_build_number")).clear();
-        // 19 | click | css=.controls > .btn | 
         await driver.findElement(By.css(".controls > .btn")).click();
-        // 20 | verifyText | css=.ajax-error | This field is required.
         while ((await driver.findElements(By.css("#div_id_build_number .ajax-error"))).length == 0) //1.6
         {
             await new Promise(r => setTimeout(r, 2000));
@@ -236,7 +220,7 @@ var password;
         }
         await driver.findElement(By.linkText("surface mooring - 1232")).click();
 
-        while ((await driver.findElements(By.linkText("Add"))).length == 0) //1.6
+        while ((await driver.findElements(By.linkText("Add Inventory"))).length == 0) 
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Add Inventory.");
@@ -247,7 +231,6 @@ var password;
         // DEPLOY BUILD - Tests Issue #137
 
         // Start Deployment->Initiate Burnin->Deploy Build
-        // 10 | click | linkText=Start Deployment | 
         while ((await driver.findElements(By.partialLinkText("Salty Reef"))).length == 0) //1.6
         {
             await new Promise(r => setTimeout(r, 2000));
@@ -262,14 +245,12 @@ var password;
         }
         await driver.findElement(By.id("action")).click();
         await driver.findElement(By.linkText("Start Deployment")).click();
-        // 12 | type | id=id_deployment_number | 7
         while ((await driver.findElements(By.id("id_deployment_number"))).length == 0) //1.6
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Deployment Number.");
         }
         await driver.findElement(By.id("id_deployment_number")).sendKeys("7");
-        // 14 | select | id=id_deployed_location | label=Test
         {
             const dropdown = await driver.findElement(By.id("id_deployed_location"));
             await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
@@ -283,12 +264,10 @@ var password;
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Deploy3.");
         }
-        // 18 | click | id=action | 
         await driver.findElement(By.id("action")).click();
         await new Promise(r => setTimeout(r, 2000));
 
         await driver.findElement(By.linkText("Initiate Burn In")).click();
-        // 20 | click | css=.controls > .btn-primary | 
         while ((await driver.findElements(By.css(".controls > .btn-primary"))).length == 0) //1.6
         {
             await new Promise(r => setTimeout(r, 2000));
@@ -297,7 +276,6 @@ var password;
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
         await new Promise(r => setTimeout(r, 2000));  //wait for refresh to start
-        // 25 | click | id=action | 
         while ((await driver.findElements(By.linkText("Retire Build"))).length == 0) //1.6
         {
             await new Promise(r => setTimeout(r, 2000));
@@ -311,7 +289,6 @@ var password;
             console.log("Wait 2 seconds for Deploy to Field3.");
         }
         // Read current date and set to 2 days prior
-        // 27 | click | id=id_date | 
         var ele = await driver.findElement(By.xpath("//input[@id='id_date']"));
         var dateString = await ele.getAttribute("value");  //getText did not work
 
@@ -323,12 +300,10 @@ var password;
 
         await driver.findElement(By.xpath("//input[@id='id_date']")).clear();
         await driver.executeScript("arguments[0].value = arguments[1]", ele, newDate);
-        // await driver.findElement(By.xpath("//input[@id='id_date']")).sendKeys(newDate);  //this appends new date to old date
 
-        // Set Location - to avoid bug - #186
+
         const dropdown = await driver.findElement(By.id("id_location"));
         await dropdown.findElement(By.xpath("//option[. = ' Test']")).click();
-        // 29 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
         // Verify Total Time in Field and Current Deployment Time in Field: 2 days 0 hours
@@ -337,7 +312,7 @@ var password;
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Deploy to Field4.");
         }
-        var bodyText = await driver.findElement(By.tagName("Body")).getText();
+        var bodyText = await driver.findElement(By.css('body')).getText();
         // UNCOMMENT FOR DOCKER - history shows 27 days due to staging testing
         // Total Time in Field and Current Deployment Time in Field
         assert(bodyText.includes("2 days 0 hours"));
@@ -353,7 +328,7 @@ var password;
         await driver.findElement(By.partialLinkText("Salty Reef")).click();
         await new Promise(r => setTimeout(r, 2000));
         // Verify Deployment Times in the Deployments Tab
-        bodyText = await driver.findElement(By.tagName("Body")).getText();
+        bodyText = await driver.findElement(By.css('body')).getText();
         // Deployment Time in Field
         assert(bodyText.includes("2 days 0 hours"));
 
@@ -364,9 +339,24 @@ var password;
             console.log("Possible Error: Expecting Build Deployment To Field Date:  " + newDate);
         }
 
+        // Click Snapshots Tab and verify Snapshot 'Test' created
+        await driver.findElement(By.linkText("Snapshots")).click();
+        await new Promise(r => setTimeout(r, 2000));
+        // Click Snapshot link
+        await driver.findElement(By.partialLinkText("Snapshot: Test")).click();
+        await new Promise(r => setTimeout(r, 2000));
+        bodyText = await driver.findElement(By.css('body')).getText();
+
+        try {
+            assert(bodyText.includes("Snapshot Deployment: 7 - Test"));
+        }
+        catch (AssertionError) {
+            console.log("Error: Build Snapshot does not include 'Snapshot Deployment: 7 - Test' ");
+        }
+
         // Verify Assembly Template link on build page points to the correct Assembly Template
         await driver.findElement(By.linkText("Salty Reef | Revision: B")).click();
-        bodyText = await driver.findElement(By.tagName("Body")).getText();
+        bodyText = await driver.findElement(By.css('body')).getText();
         // Salty Reef - Revision B
         assert(bodyText.includes("Salty Reef - Revision B"));
 
@@ -413,10 +403,10 @@ var password;
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Inv List Item.");
         }
-        // 35 | click | css=.list-group-item > .collapsed > .fa | 
+
         await driver.findElement(By.css(".list-group-item > .collapsed > .fa")).click();
         await new Promise(r => setTimeout(r, 2000));
-        bodyText = await driver.findElement(By.tagName("Body")).getText();
+        bodyText = await driver.findElement(By.css('body')).getText();
         // Inventory Time in Field
         assert(bodyText.includes("2 days 0 hours"));
 
@@ -453,11 +443,9 @@ var password;
         var newDate = month.toString().trim() + "/" + day.toString().trim() + "/" + d.getFullYear() + " " + ('0' + d.getHours()).slice(-2) + ":" + ('0' + d.getMinutes()).slice(-2);
         await driver.findElement(By.xpath("//input[@id='id_date']")).clear();
         await driver.executeScript("arguments[0].value = arguments[1]", ele, newDate);
-        // 43 | click | css=.controls > .btn-primary | 
         await driver.findElement(By.css(".controls > .btn-primary")).click();
 
         // Verify date is 1 day prior on Deployments tab
-        // 45 | click | id=deployments-tab | 
         while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //1.6
         {
             await new Promise(r => setTimeout(r, 2000));
@@ -469,10 +457,9 @@ var password;
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Build List Item.");
         }
-        // 46 | click | css=.list-group-item > .collapsed > .fa | 
         await driver.findElement(By.css(".list-group-item > .collapsed > .fa")).click();
         await new Promise(r => setTimeout(r, 2000));
-        bodyText = await driver.findElement(By.tagName("Body")).getText();
+        bodyText = await driver.findElement(By.css('body')).getText();
         // Inventory Time in Field
         assert(bodyText.includes("1 days 0 hours"));
 
@@ -484,7 +471,6 @@ var password;
         }
 
         // Re-add surface mooring Inventory to Build at the current date
-        // 47 | click | id=action | 
         while ((await driver.findElements(By.partialLinkText("surface mooring - 1232"))).length == 0) //1.6
         {
             await new Promise(r => setTimeout(r, 2000));
@@ -519,28 +505,25 @@ var password;
         }
         //let encodedString = await driver.takeScreenshot();
         //await fs.writeFileSync('/tests/bscreen.png', encodedString, 'base64');      
-        var bodyText = await driver.findElement(By.tagName("Body")).getText();
+        var bodyText = await driver.findElement(By.css('body')).getText();
         // UNCOMMENT FOR DOCKER - Inventory history shows 27 days due to staging testing
         // Total Time in Field
         assert(bodyText.includes("1 days 0 hours"));
         // Current Deployment Time in Field
         assert(bodyText.includes("0 days 0 hours"));
 
-        // 53 | click | id=deployments-tab | 
         while ((await driver.findElements(By.linkText("Deployments"))).length == 0) //1.6
         {
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Deployments.");
         }
         await driver.findElement(By.linkText("Deployments")).click();
-        // 54 | click | css=.list-group-item:nth-child(1) > .collapsed > .fa | 
-        //await driver.findElement(By.css(".list-group-item > .collapsed > .fa")).click();
         // Sometimes the Retired Deployment is the first one on the list for Inventory, so expand both
         await driver.findElement(By.css(".list-group-item:nth-child(2) > .collapsed:nth-child(1)")).click();
         await driver.findElement(By.css(".list-group-item:nth-child(1) > .collapsed:nth-child(1)")).click();
 
         await new Promise(r => setTimeout(r, 2000));
-        bodyText = await driver.findElement(By.tagName("Body")).getText();
+        bodyText = await driver.findElement(By.css('body')).getText();
         // Inventory Time in Field
         assert(bodyText.includes("0 days 0 hours"));
 

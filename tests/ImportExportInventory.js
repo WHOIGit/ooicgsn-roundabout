@@ -325,7 +325,7 @@ var password;
 
         await driver.findElement(By.linkText("Import Valid! Click here to complete")).click();
         await new Promise(r => setTimeout(r, 2000));
-        bodyText = await driver.findElement(By.tagName("Body")).getText();
+        bodyText = await driver.findElement(By.css('body')).getText();
         if (bodyText.includes("Import successful")) {
             console.log("Import Inventory 456-654-321 Successful.");
         }
@@ -341,7 +341,7 @@ var password;
         await driver.findElement(By.css(".btn:nth-child(1)")).click()
         await new Promise(r => setTimeout(r, 2000));
         // Verify Inventory moved to Test1 location
-        var bodyText = await driver.findElement(By.tagName("Body")).getText();
+        var bodyText = await driver.findElement(By.css('body')).getText();
         if (bodyText.includes("Test1")) {
             console.log("Move Inventory 456-654-321 Successful.");
         }
@@ -376,7 +376,7 @@ var password;
             await new Promise(r => setTimeout(r, 2000));
             console.log("Wait 2 seconds for Preview Import.");
         }
-        bodyText = await driver.findElement(By.tagName("Body")).getText();
+        bodyText = await driver.findElement(By.css('body')).getText();
         if (bodyText.includes("Bulk Import cannot change Locations of Deployed Inventory")) {
             console.log("Import and Try to Move Deployed Inventory Successful: Error Flagged. ");
         }

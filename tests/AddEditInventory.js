@@ -490,7 +490,7 @@ var password;
         await driver.findElement(By.id("destination-tab")).click();
         await new Promise(r => setTimeout(r, 4000));
 
-        var bodyText = await driver.findElement(By.tagName("Body")).getText();
+        var bodyText = await driver.findElement(By.css('body')).getText();
         assert(bodyText.includes("Revision B - Salty Reef"));     //Verify the Destination is assigned on the Destination tab
 
         // Add Three New Inventory Test Types - OBS Enhancement
@@ -542,7 +542,10 @@ var password;
             await dropdown.findElement(By.xpath("//option[. = 'Pass']")).click();
         }
         await driver.findElement(By.css(".controls > .btn-primary")).click();  // save test result
-        await new Promise(r => setTimeout(r, 2000));
+        while ((await driver.findElements(By.id("action"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Search9.");
+        }
 
         // Add Dive Test
         await driver.findElement(By.id("action")).click();
@@ -561,7 +564,10 @@ var password;
             await dropdown.findElement(By.xpath("//option[. = 'Fail']")).click();
         }
         await driver.findElement(By.css(".controls > .btn-primary")).click();  // save test result
-        await new Promise(r => setTimeout(r, 2000));
+        while ((await driver.findElements(By.id("action"))).length == 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("Wait 2 seconds for Search10.");
+        }
 
         // Add Float Test
         await driver.findElement(By.id("action")).click();
@@ -583,7 +589,7 @@ var password;
         await new Promise(r => setTimeout(r, 4000));
 
         // Verify New Test Results are added to Inventory Detail screen
-        var bodyText = await driver.findElement(By.tagName("Body")).getText();
+        var bodyText = await driver.findElement(By.css('body')).getText();
         if (bodyText.includes("SUBMERSIBLE TEST - PASS") && bodyText.includes("DIVE TEST - FAIL") && bodyText.includes("FLOAT TEST - PENDING")) {
             console.log("Inventory Tests Added Successfully.");
         }
