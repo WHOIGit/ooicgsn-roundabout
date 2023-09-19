@@ -459,6 +459,27 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
                     item,
                     self.request.user,
                 )
+            # generate inventory configevent with default values on deyployed to field
+            if not item.inventory_configevents.exists():
+                config_event, event_added = ConfigEvent.objects.get_or_create(
+                    inventory=item,
+                    config_type="conf"
+                )
+                if item.assembly_part is not None:
+                    if item.assembly_part.assemblypart_configdefaultevents.exists():
+                        conf_def_event = item.assembly_part.assemblypart_configdefaultevents.first()
+                        names = ConfigName.objects.filter(config_name_event = item.part.part_confignameevents.first(), config_type ='conf')
+                        for name in names:
+                            try:
+                                default_value = ConfigDefault.objects.get(conf_def_event = conf_def_event, config_name = name).default_value
+                            except ConfigDefault.DoesNotExist:
+                                default_value = None
+                            ConfigEventValue.objects.create(
+                                config_event = config_event,
+                                config_name = name,
+                                config_value = default_value,
+                            )
+
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
