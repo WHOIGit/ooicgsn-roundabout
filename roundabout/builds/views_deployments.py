@@ -463,7 +463,8 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             if not item.inventory_configevents.exists():
                 config_event, event_added = ConfigEvent.objects.get_or_create(
                     inventory=item,
-                    config_type="conf"
+                    config_type="conf",
+                    configuration_date = action_date
                 )
                 if item.assembly_part is not None:
                     if item.assembly_part.assemblypart_configdefaultevents.exists():
