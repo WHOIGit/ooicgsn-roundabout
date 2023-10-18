@@ -50,6 +50,7 @@ from roundabout.inventory.models import (
 from roundabout.inventory.utils import _create_action_history
 from roundabout.inventory.views_tests import _reset_all_tests
 from roundabout.calibrations.utils import handle_reviewers
+from roundabout.configs_constants.models import ConfigEvent, ConfigName, ConfigDefault, ConfigValue
 
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
@@ -459,6 +460,32 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
                     item,
                     self.request.user,
                 )
+            # generate inventory configevent with default values on deyployed to field
+            if not item.inventory_configevents.exists():
+                config_event, event_added = ConfigEvent.objects.get_or_create(
+                    inventory=item,
+                    config_type="conf",
+                    configuration_date = action_date,
+                    deployment = self.object
+                )
+                _create_action_history(config_event, Action.ADD, self.request.user, data={})
+                if item.assembly_part is not None:
+                    if item.assembly_part.assemblypart_configdefaultevents.exists():
+                        conf_def_event = item.assembly_part.assemblypart_configdefaultevents.first()
+                        names = ConfigName.objects.filter(config_name_event = item.part.part_confignameevents.first(), config_type ='conf')
+                        for name in names:
+                            try:
+                                default_value = ConfigDefault.objects.get(conf_def_event = conf_def_event, config_name = name).default_value
+                            except ConfigDefault.DoesNotExist:
+                                default_value = None
+                            ConfigValue.objects.create(
+                                config_event = config_event,
+                                config_name = name,
+                                config_value = default_value,
+                            )
+
+                    
+
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.is_ajax():
