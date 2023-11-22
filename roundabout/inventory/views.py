@@ -257,6 +257,7 @@ def print_code_zebraprinter(request, **kwargs):
 # AJAX Functions for Forms
 # ------------------------------------------------------------------------------
 
+
 # Function to load available Parent Inventory items based on Part Template
 def load_parents(request):
     part_id = request.GET.get("part")
@@ -427,17 +428,21 @@ def load_new_serialnumber(request):
 # Function to search subassembly options by serial number, load object
 def load_subassemblies_by_serialnumber(request):
     serial_number = request.GET.get("serial_number").strip()
-    parent_id = request.GET.get("parent_id")
+    item_id = request.GET.get("item_id")
+    action = request.GET.get("action")
+    print("Action", action)
 
-    parent = Inventory.objects.get(id=parent_id)
+    try:
+        item = Inventory.objects.get(id=item_id)
+    except Exception as e:
+        print(e)
+        item = None
+
     inventory_items = Inventory.objects.filter(serial_number__icontains=serial_number)
     return render(
         request,
         "inventory/available_subassemblies.html",
-        {
-            "inventory_items": inventory_items,
-            "parent": parent,
-        },
+        {"inventory_items": inventory_items, "item": item, "action": action},
     )
 
 
@@ -2105,9 +2110,9 @@ class InventoryAjaxDeleteView(LoginRequiredMixin, PermissionRequiredMixin, Delet
 
 # Base Views
 
+
 # View to get direct link to an Inventory item
 class InventoryDetailView(InventoryAjaxDetailView):
-
     template_name = "inventory/inventory_detail.html"
 
     def post(self, request, *args, **kwargs):

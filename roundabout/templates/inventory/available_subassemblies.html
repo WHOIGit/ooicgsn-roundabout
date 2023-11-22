@@ -25,22 +25,29 @@
 
       {% for inventory in inventory_items %}
 
-                  <li class="list-group-item">
-                      <div class="ajax-add-subassembly-link">
-                        {% if inventory.part.friendly_name %} {{ inventory.part.friendly_name}} {% else %} {{ inventory.part.name }} {% endif %}
-                        - {{ inventory.serial_number }} <br>Current Location: {{ inventory.location.name }}
+        <li class="list-group-item">
+            <div class="ajax-add-subassembly-link">
+            {% if inventory.part.friendly_name %} {{ inventory.part.friendly_name}} {% else %} {{ inventory.part.name }} {% endif %}
+            - {{ inventory.serial_number }} <br>Current Location: {{ inventory.location.name }}
+        
+        {% if action == "add_subassembly"%}
+            {% if inventory.parent %}
+                <p class="alert-danger">ERROR. Inventory Item is attached to another Parent Assembly.</p>
+            {% else %}
+                <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_add_subassembly_action' inventory.id item.id %}"
+                    data-item-id="{{ item.id }}"
+                    class="btn btn-primary btn-sm float-right"
+                    role="button">Add</a>
+            {% endif %}
+        {% else %}  
+            <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_add_to_parent_action' item.id inventory.id %}"
+            data-item-id="{{ item.id }}"
+            class="btn btn-primary btn-sm float-right"
+            role="button">Add</a>
+        {% endif %}
 
-                    {% if inventory.parent %}
-                        <p class="alert-danger">ERROR. Inventory Item is attached to another Parent Assembly.</p>
-                    {% else %}
-                      <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_add_subassembly_action' inventory.id parent.id %}"
-                          data-parent-id="{{ parent.id }}"
-                          class="btn btn-primary btn-sm float-right"
-                          role="button">Add</a>
-                    {% endif %}
-
-                      </div>
-                  </li>
+            </div>
+        </li>
 
       {% endfor %}
 {% else %}

@@ -43,7 +43,8 @@
     <div id="subassembly-filter">
         <form method="post" action="" id="subassembly-filter-form-serial-number"
               data-url="{% url 'inventory:ajax_load_subassemblies_by_serialnumber' %}"
-              data-parent-id="{{ parent.id }}"
+              data-item-id="{{ parent.id }}"
+              data-action="add_subassembly"
               novalidate>
               {% csrf_token %}
             <div class="form-row">
@@ -112,13 +113,15 @@ $(document).ready(function() {
     // AJAX functions to search subassemblies by serial number
     $("#subassembly-filter-form-serial-number").on("submit", function(){
       var url = $(this).attr("data-url");
-      var parentID = $(this).attr("data-parent-id");
+      var itemID = $(this).attr("data-item-id");
+      var action = $(this).attr("data-action");
       var serialNumber = $("#serial_number_search").val();
       $.ajax({
           url: url,
           data: {
             "serial_number": serialNumber,
-            "parent_id": parentID
+            "item_id": itemID,
+            "action": action
           },
           success: function (data) {
             $("#available-subassemblies").html(data);

@@ -26,16 +26,13 @@
 <div class="card">
     <div class="card-header">
         {% if inventory_item.id %}
-            <h3>{{ inventory_item.part.name }}</h3>
+            <h3>Add to a Parent Inventory Item</h3>
         {% else %}
             <h3>Add Inventory</h3>
         {% endif %}
 
-        <p>{{ inventory_item.serial_number }}</p>
+        <p>{{ inventory_item.part.name }} - {{ inventory_item.serial_number }}</p>
 
-        {% if parent.id %}
-            <h3>Add to Parent Inventory Item</h3>
-        {% endif %}
     </div>
 
     <div class="card-body">
@@ -45,7 +42,8 @@
         <div id="subassembly-filter">
             <form method="post" action="" id="subassembly-filter-form-serial-number"
                   data-url="{% url 'inventory:ajax_load_subassemblies_by_serialnumber' %}"
-                  data-parent-id="{{ parent.id }}"
+                  data-item-id="{{ inventory_item.id }}"
+                  data-action="add_to_parent"
                   novalidate>
                   {% csrf_token %}
                 <div class="form-row">
@@ -82,6 +80,7 @@
                                    - {{ parent.serial_number }}
                                    {% if parent.assigned_destination_root %}<span class="badge badge-pill badge-primary">DEST - {{ parent.assigned_destination_root.assembly_part.assembly }}</span>{% endif %}
                                    <br>Current Location: {{ parent.location.name }}
+                                   {% if parent.build %}<br>Current Build: {{ parent.build.build_number }} {% endif %}
 
                                   <a href="#" data-detail-url="{% url 'inventory:ajax_inventory_add_to_parent_action' inventory_item.id parent.id %}"
                                       data-node-id="{{ inventory_item.id }}"
@@ -116,13 +115,15 @@ $(document).ready(function() {
     // AJAX functions to search subassemblies by serial number
     $("#subassembly-filter-form-serial-number").on("submit", function(){
       var url = $(this).attr("data-url");
-      var parentID = $(this).attr("data-parent-id");
+      var itemID = $(this).attr("data-item-id");
+      var action = $(this).attr("data-action");
       var serialNumber = $("#serial_number_search").val();
       $.ajax({
           url: url,
           data: {
             "serial_number": serialNumber,
-            "parent_id": parentID
+            "item_id": itemID,
+            "action": action
           },
           success: function (data) {
             $("#available-subassemblies").html(data);
