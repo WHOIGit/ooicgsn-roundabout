@@ -599,6 +599,8 @@ def parse_deployment_files(self):
                 raise ValueError("no assembly found")
             except Assembly.MultipleObjectsReturned:
                 raise ValueError("too many assemblies found")
+            
+            assembly_revision_created = False
 
             deployment_import_revision = deployment_import['assembly_template_revision'] 
             try:
