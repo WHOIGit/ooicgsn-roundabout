@@ -826,7 +826,35 @@
         } else {
             $('#add_conf_action').hide()
         }
+        
+        $('#navtree').on('search.jstree', function(e, data) {
+            // Delay execution to ensure the search results have been processed and highlights applied
+            setTimeout(function() {
 
+                // select a tag by nodeID
+                var nodeID = '{{ nodeID }}';
+                var node = $('#navtree').jstree(true).get_node(nodeID);
+                $('#navtree').jstree(true).deselect_all();
+                $('#navtree').jstree(true).select_node(node);
+
+
+                var highlightedItem = $('#navtree .jstree-clicked'); // Assuming '.jstree-search' is the highlight class
+                console.log(highlightedItem)
+                if(highlightedItem.length) {
+                    var container = $('#navtree'); // Assuming the navtree itself is the scrollable container
+                    var itemTop = highlightedItem.first().offset().top;
+                    var containerTop = container.offset().top;
+                    var scrollTo = itemTop - containerTop + container.scrollTop() - 20; // Adjust by container's top and an extra margin
+
+                    // Only scroll if the item is not fully visible
+                    if(scrollTo > container.height() || scrollTo < 0) {
+                        container.animate({
+                            scrollTop: scrollTo
+                        }, 300); // Adjust scrolling with animation for a smoother effect
+                    }
+                }
+            }, 250); // Adjust timeout as needed based on your application's responsiveness
+        });
 
     });
 </script>
