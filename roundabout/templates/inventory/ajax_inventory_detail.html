@@ -827,6 +827,30 @@
             $('#add_conf_action').hide()
         }
 
+        $('#jstree-navtree').on('loaded.jstree', function() {
+            // Open the tree to the selected item
+            
+            setTimeout(function() { // Adding a slight delay to ensure the node is open and rendered
+                var selectedItem = $('#jstree-navtree').find('.jstree-clicked')
+                console.log(selectedItem)
+                if (selectedItem.length) {
+                    var container = $('#jstree-navtree').parent();
+                    var selectedItemOffsetFromTop = selectedItem.offset().top;
+                    var containerScrollTop = container.scrollTop();
+                    var containerHeight = container.height();
+                    var selectedItemHeight = selectedItem.outerHeight(true); // Include margin
+
+                    // Calculate the top scroll position to center the item
+                    var scrollTopToCenterItem = containerScrollTop + selectedItemOffsetFromTop - container.offset().top - (containerHeight / 2) + (selectedItemHeight / 2);
+                    
+                    container.animate({
+                        scrollTop: scrollTopToCenterItem
+                    }, 'slow');
+                }
+            }, 300); // Adjust delay as necessary
+        });
+            
+        
 
     });
 </script>
