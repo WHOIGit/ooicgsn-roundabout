@@ -92,7 +92,7 @@ class InventoryTable(SearchTable):
     class Meta(SearchTable.Meta):
         model = Inventory
         udf_accessors = ['fieldvalues__field__field_name','fieldvalues__field_value']
-        base_shown_cols = ['serial_number', 'part__name', 'location__name']
+        base_shown_cols = ['serial_number', 'part__name', 'location__name', 'flag','detail']
 
     def set_column_default_show(self,table_data):
         search_cols = [col for col in self.sequence if col.startswith('searchcol-')]

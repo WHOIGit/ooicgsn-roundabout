@@ -414,6 +414,8 @@ class InventoryTableView(GenericSearchTableView):
                                            linkify=dict(viewname="inventory:inventory_detail", args=[tables.A('pk')]))),
                         dict(value="old_serial_number", text="Old Serial Number", legal_lookup='STR_LOOKUP'),
                         dict(value="location__name",             text="Location", legal_lookup='STR_LOOKUP'),
+                        dict(value="flag",             text="Flag", legal_lookup='STR_LOOKUP'),
+                        dict(value="detail",             text="Notes", legal_lookup='STR_LOOKUP'),
                         dict(value="build__assembly__name",         text="Build", legal_lookup='STR_LOOKUP'),
                         dict(value="created_at",             text="Date Created", legal_lookup='DATE_LOOKUP'),
                         dict(value="updated_at",            text="Date Modified", legal_lookup='DATE_LOOKUP'),
