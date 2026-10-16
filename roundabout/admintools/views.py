@@ -140,7 +140,9 @@ class ImportInventoryCreateTemplateView(LoginRequiredMixin, View):
         response['Content-Disposition'] = 'attachment; filename="roundabout-inventory-import-template.csv"'
 
         # Create default list of required fields
-        headers = ['Serial Number', 'Part Number', 'Location', 'Notes']
+        # 'Revision' is optional - if left blank on a row, the item gets the
+        # Part's current (newest) Revision on import.
+        headers = ['Serial Number', 'Part Number', 'Revision', 'Location', 'Notes']
 
         # Get all UDF fields for column names
         custom_fields = Field.objects.all()
@@ -252,6 +254,30 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                         data.append({'field_name': key, 'field_value': value.strip(), 'error': False})
                     else:
                         data.append({'field_name': key, 'field_value': '', 'error': False})
+
+                elif key == 'Revision':
+                    # Optional column. A blank value is valid (item will get the
+                    # Part's current Revision on import). A non-blank value must
+                    # match one of the Revision Codes on the row's Part.
+                    revision_code = value.strip() if value else ''
+                    if not revision_code:
+                        data.append({'field_name': key, 'field_value': '', 'error': False})
+                    else:
+                        part_number = (row.get('Part Number') or '').strip()
+                        try:
+                            row_part = Part.objects.get(part_number=part_number)
+                        except Part.DoesNotExist:
+                            row_part = None
+
+                        if row_part is None:
+                            # Bad Part Number is already flagged on its own column
+                            data.append({'field_name': key, 'field_value': revision_code, 'error': False})
+                        elif row_part.revisions.filter(revision_code=revision_code).exists():
+                            data.append({'field_name': key, 'field_value': revision_code, 'error': False})
+                        else:
+                            error_msg = "No matching Revision Code for this Part. Check the Part's Revisions."
+                            data.append({'field_name': key, 'field_value': revision_code,
+                                        'error': True, 'error_msg': error_msg})
 
                 # Now run through all the Custom Fields, validate type, add to JSON
                 else:
@@ -370,28 +396,49 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                 inventory_obj = Inventory()
 
                 note_detail = None
+                revision_code = ''
+                revision_in_csv = False
 
                 for col in item_obj.data:
                     if col['field_name'] == 'Serial Number':
                         inventory_obj.serial_number = col['field_value']
                     elif col['field_name'] == 'Part Number':
                         part = Part.objects.get(part_number=col['field_value'])
-                        revision = part.revisions.last()
                         inventory_obj.part = part
-                        inventory_obj.revision = revision
+                    elif col['field_name'] == 'Revision':
+                        revision_in_csv = True
+                        revision_code = (col['field_value'] or '')
+                        if isinstance(revision_code, str):
+                            revision_code = revision_code.strip()
                     elif col['field_name'] == 'Location':
                         location = Location.objects.get(name=col['field_value'])
                         inventory_obj.location = location
                     elif col['field_name'] == 'Notes':
                         note_detail = col['field_value']
 
+                # Resolve the Revision for this item. Use the Revision Code from
+                # the CSV when one was supplied, otherwise fall back to the Part's
+                # current (newest) Revision - matching the manual "Add to
+                # Inventory" default. Revision.Meta.ordering puts newest first,
+                # so .first() is the current Revision.
+                revision = None
+                if inventory_obj.part_id:
+                    if revision_code:
+                        revision = inventory_obj.part.revisions.filter(
+                            revision_code=revision_code
+                        ).first()
+                    if revision is None:
+                        revision = inventory_obj.part.revisions.first()
+                inventory_obj.revision = revision
+
                 inv_existing, inv_created = Inventory.objects.get_or_create(
-                    serial_number=inventory_obj.serial_number, 
+                    serial_number=inventory_obj.serial_number,
                     part=inventory_obj.part
                 )
-                
+
                 if inv_created:
                     inv_existing.location = inventory_obj.location
+                    inv_existing.revision = inventory_obj.revision
                     inv_existing.save()
                 else:
                     #   If build, Remove from build
@@ -452,6 +499,15 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                                     print('inventory location changed')
 
                 inventory_obj = inv_existing
+
+                # For existing items, only move the Revision when the CSV
+                # explicitly supplied a Revision Code that resolved to one of the
+                # Part's Revisions. A blank Revision column leaves it untouched.
+                if not inv_created and revision_in_csv and revision_code and revision is not None:
+                    if inv_existing.revision_id != revision.id:
+                        inv_existing.revision = revision
+                        inv_existing.save()
+
                 # Create initial history record for item
 
                 if tempimport_obj.update_existing_inventory:
@@ -481,7 +537,7 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
 
                 # Add the Custom Fields
                 for col in item_obj.data:
-                    if not col['field_name'] == 'Serial Number' and not col['field_name'] == 'Part Number' and not col['field_name'] == 'Location' and not col['field_name'] == 'Notes':
+                    if not col['field_name'] == 'Serial Number' and not col['field_name'] == 'Part Number' and not col['field_name'] == 'Revision' and not col['field_name'] == 'Location' and not col['field_name'] == 'Notes':
                         # Get the field
                         try:
                             custom_field = Field.objects.get(field_name=col['field_name'])

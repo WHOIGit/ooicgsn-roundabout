@@ -30,7 +30,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.core.exceptions import ValidationError
 from django.template.defaultfilters import slugify
 
-from .models import Part, PartType, Revision, Documentation
+from .models import Part, PartType, Revision, RevisionEvent, Documentation
 from .forms import PartForm, PartTypeForm, RevisionForm, DocumentationFormset, RevisionFormset, PartUdfAddFieldForm, PartUdfFieldSetValueForm, PartTypeDeleteForm
 from roundabout.calibrations.forms import PartCalNameFormset
 from roundabout.locations.models import Location
@@ -252,6 +252,10 @@ class PartsAjaxCreateView(LoginRequiredMixin, PermissionRequiredMixin, AjaxFormM
         for instance in revision_instances:
             revision = instance
 
+        # Record the creation of the initial Revision in its history
+        if revision_instances:
+            revision.log_event(RevisionEvent.CREATED, user=self.request.user)
+
         # Save the Documentation inline model form
         documentation_form.instance = revision
         documentation_instances = documentation_form.save(commit=False)
@@ -429,6 +433,7 @@ class PartsAjaxCreateRevisionView(LoginRequiredMixin, PermissionRequiredMixin, A
         self.object = form.save()
         documentation_form.instance = self.object
         documentation_form.save()
+        self.object.log_event(RevisionEvent.CREATED, user=self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
@@ -487,6 +492,7 @@ class PartsAjaxUpdateRevisionView(LoginRequiredMixin, PermissionRequiredMixin, A
         self.object = part_form
         documentation_form.instance = self.object
         documentation_form.save()
+        self.object.log_event(RevisionEvent.UPDATED, user=self.request.user)
         response = HttpResponseRedirect(self.get_success_url())
 
         if self.request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':

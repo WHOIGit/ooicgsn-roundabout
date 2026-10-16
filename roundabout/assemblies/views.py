@@ -30,7 +30,7 @@ from django.db import transaction
 
 from .models import Assembly, AssemblyPart, AssemblyType, AssemblyDocument, AssemblyRevision
 from .forms import AssemblyForm, AssemblyPartForm, AssemblyTypeForm, AssemblyRevisionForm, AssemblyRevisionFormset, AssemblyDocumentationFormset, AssemblyTypeDeleteForm, ReferenceDesignatorEventForm, ReferenceDesignatorForm, EventReferenceDesignatorFormset, EventReferenceDesignatorAddFormset
-from roundabout.parts.models import PartType, Part
+from roundabout.parts.models import PartType, Part, Revision
 from roundabout.inventory.models import Action
 from roundabout.inventory.utils import _create_action_history, logged_user_review_items
 from roundabout.configs_constants.models import ConfigDefaultEvent, ConfigDefault
@@ -45,7 +45,7 @@ from common.util.mixins import AjaxFormMixin
 
 # Makes a copy of the tree starting at "root_part", move to new Assembly, reparenting it to "parent"
 def _make_tree_copy(root_part, new_assembly, parent=None):
-    new_ap = AssemblyPart.objects.create(assembly=new_assembly, part=root_part.part, parent=parent, order=root_part.order)
+    new_ap = AssemblyPart.objects.create(assembly=new_assembly, part=root_part.part, revision=root_part.revision, parent=parent, order=root_part.order)
 
     for child in root_part.get_children():
         _make_tree_copy(child, new_assembly, new_ap)
@@ -57,6 +57,7 @@ def _make_revision_tree_copy(root_part, new_revision, parent=None, user=None, co
     new_ap = AssemblyPart.objects.create(
         assembly_revision=new_revision,
         part=root_part.part,
+        revision=root_part.revision,
         parent=parent,
         order=root_part.order
     )
@@ -111,6 +112,19 @@ def load_part_templates(request):
     else:
         part_list = Part.objects.filter(part_type=part_type)
     return render(request, 'inventory/part_templates_dropdown_list_options.html', {'parts': part_list})
+
+
+# Function to load the Revisions available for a given Part (Assembly BOM slot)
+def load_part_revisions(request):
+    part_id = request.GET.get('part_id')
+    revisions = Revision.objects.none()
+    if part_id:
+        revisions = Revision.objects.filter(part_id=part_id)
+    return render(
+        request,
+        'assemblies/part_revisions_dropdown_list_options.html',
+        {'revisions': revisions},
+    )
 
 
 # Function to load available Assembly Parts based on Assembly

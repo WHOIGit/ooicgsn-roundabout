@@ -610,6 +610,7 @@ class InventoryTableView(GenericSearchTableView):
         "fieldvalues",
         "fieldvalues__field",
         "part",
+        "revision",
         "actions",
         "actions__user",
         "actions__location",
@@ -704,7 +705,7 @@ class InventoryTableView(GenericSearchTableView):
                 legal_lookup="STR_LOOKUP",
             ),
             dict(
-                value="part__revision", text="Part Revision", legal_lookup="STR_LOOKUP"
+                value="revision__revision_code", text="Part Revision", legal_lookup="STR_LOOKUP"
             ),
             dict(value="part__unit_cost", text="Unit Cost", legal_lookup="NUM_LOOKUP"),
             dict(

@@ -464,6 +464,7 @@ def load_build_subassemblies_by_serialnumber(request):
         .filter(part=assembly_part.part)
         .filter(build__isnull=True)
         .filter(parent__isnull=True)
+        .filter(assembly_part.inventory_revision_filter())
     )
     return render(
         request,
@@ -1370,7 +1371,11 @@ class InventoryAjaxAddToBuildListView(LoginRequiredMixin, TemplateView):
         else:
             for build in builds:
                 for assembly_part in build.assembly_revision.assembly_parts.all():
-                    if assembly_part.part != inventory_item.part:
+                    # Item 6: a slot only matches if the Part matches AND (the
+                    # slot has no pinned Revision OR it matches the item's).
+                    if assembly_part.part != inventory_item.part or not assembly_part.accepts_inventory_revision(
+                        inventory_item
+                    ):
                         x = False
                     else:
                         x = True
@@ -1388,6 +1393,11 @@ class InventoryAjaxAddToBuildListView(LoginRequiredMixin, TemplateView):
             assembly_parts = (
                 AssemblyPart.objects.filter(part=inventory_item.part)
                 .filter(assembly_revision__builds__in=builds)
+                # Same rule as AssemblyPart.accepts_inventory_revision: unpinned
+                # slots accept any Revision, pinned slots need an exact match
+                .filter(
+                    Q(revision__isnull=True) | Q(revision=inventory_item.revision_id)
+                )
                 .distinct()
             )
 
@@ -1406,6 +1416,13 @@ class InventoryAjaxAddToBuildActionView(RedirectView):
         assembly_part = AssemblyPart.objects.get(id=self.kwargs["assembly_part_pk"])
         inventory_item = Inventory.objects.get(id=self.kwargs["pk"])
         build = Build.objects.get(id=self.kwargs["build_pk"])
+
+        # Item 6: refuse to place an item into a slot that pins a different
+        # Part Revision.
+        if not assembly_part.accepts_inventory_revision(inventory_item):
+            return reverse(
+                "inventory:ajax_inventory_detail", args=(self.kwargs["pk"],)
+            )
 
         if assembly_part.parent:
             try:
@@ -1510,6 +1527,11 @@ class InventoryAjaxByAssemblyPartListView(LoginRequiredMixin, TemplateView):
         inventory_items = inventory_items.filter(
             Q(assembly_part=assembly_part) | Q(assembly_part__isnull=True)
         )
+        # Item 6: if this BOM slot pins a Part Revision, only matching-revision
+        # items are eligible. Legacy slots (no pinned Revision) hide nothing.
+        inventory_items = inventory_items.filter(
+            assembly_part.inventory_revision_filter()
+        )
 
         context.update({"inventory_items": inventory_items})
         context.update({"assembly_part": assembly_part})
@@ -1530,6 +1552,13 @@ class InventoryAjaxByAssemblyPartActionView(LoginRequiredMixin, RedirectView):
         assembly_part = AssemblyPart.objects.get(id=self.kwargs["assembly_part_pk"])
         build = Build.objects.get(id=self.kwargs["build_pk"])
         location = build.location
+
+        # Item 6: refuse to place an item into a slot that pins a different
+        # Part Revision.
+        if not assembly_part.accepts_inventory_revision(subassembly):
+            return reverse(
+                "inventory:ajax_inventory_detail", args=(self.kwargs["pk"],)
+            )
         if "parent_pk" in self.kwargs:
             parent = Inventory.objects.get(id=self.kwargs["parent_pk"])
         else:

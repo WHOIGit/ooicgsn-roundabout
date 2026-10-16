@@ -19,7 +19,7 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 
-version: '3.7'
+version: "3.7"
 
 volumes:
   production_postgres_data: {}
@@ -30,14 +30,14 @@ volumes:
 
 services:
   django: &django
-    image: ghcr.io/whoigit/ooicgsn-roundabout:stable
+    image: ghcr.io/whoigit/obs-roundabout:1.7.0
     #container_name: django
     depends_on:
       - postgres
       - redis
     volumes:
-      - static_volume:/app/staticfiles  # <-- bind the static files
-      - media_volume:/app/media  # <-- bind the media files
+      - static_volume:/app/staticfiles # <-- bind the static files
+      - media_volume:/app/media # <-- bind the media files
     env_file:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres

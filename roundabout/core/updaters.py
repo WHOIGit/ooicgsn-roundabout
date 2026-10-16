@@ -19,6 +19,8 @@
 # If not, see <http://www.gnu.org/licenses/>.
 """
 
+from datetime import datetime
+
 from roundabout.inventory.models import (
     Inventory,
     Action,
@@ -34,12 +36,13 @@ from roundabout.ooi_ci_tools.models import (
     Comment,
     MPTTComment,
     CruiseEvent,
-    VesselEvent
+    VesselEvent,
 )
 from roundabout.cruises.models import Cruise, Vessel
 from roundabout.parts.models import Part
 from roundabout.exports.views import ExportDeployments
 from roundabout.inventory.utils import _create_action_history
+from roundabout.users.models import User
 
 
 # Generate Cruise Events for legacy Cruises created prior to Event system
@@ -57,7 +60,11 @@ def _update_cruise_events():
 def _create_reference_designators():
     for assm_part in AssemblyPart.objects.all():
         if assm_part.assemblypart_configdefaultevents.exists():
-            for (dflt) in (assm_part.assemblypart_configdefaultevents.first().config_defaults.all()):
+            for (
+                dflt
+            ) in (
+                assm_part.assemblypart_configdefaultevents.first().config_defaults.all()
+            ):
                 if dflt.config_name.name == "Reference Designator":
                     if len(dflt.default_value) >= 1:
                         try:
@@ -75,11 +82,10 @@ def _create_reference_designators():
                         if refdes_event_created:
                             _create_action_history(refdes_event, Action.ADD, user=None)
                         try:
-                            (
-                                refdes_value,
-                                refdes_value_created
-                            ) = ReferenceDesignator.objects.get_or_create(
-                                refdes_name=dflt.default_value
+                            (refdes_value, refdes_value_created) = (
+                                ReferenceDesignator.objects.get_or_create(
+                                    refdes_name=dflt.default_value
+                                )
                             )
                         except ReferenceDesignator.MultipleObjectsReturned:
                             refdes_value = ReferenceDesignator.objects.filter(
@@ -547,6 +553,7 @@ def _create_inv_deployments():
             )
             print(inventory_deployment, inventory_deployment.current_status)
 
+
 # If Vessels are found without VesselEvents, generate and associate VesselEvents with each
 def _update_vessel_events():
     for vessel in Vessel.objects.all():
@@ -554,3 +561,72 @@ def _update_vessel_events():
             print("adding vessel event")
             new_vessel_event = VesselEvent.objects.create(vessel=vessel)
             new_vessel_event.save()
+
+
+def _fix_broken_inv_dep():
+    inv_broken_list = [
+        "120035-010A-20009",
+        "021031-010A-20012",
+        "310006-010A-20012",
+        "230007-010A-20017",
+        "120041-010A-20006",
+        "120037-010A-20009",
+        "021045-010A-20010",
+        "021044-010A-20010",
+        "210009-010A-20010",
+        "300018-010A-20013",
+        "300017-010A-20026",
+        "300017-010A-20014",
+        "013063-010A-20013",
+        "150026-010A-20012",
+        "120035-010A-20015",
+        "021031-010A-20014",
+        "310006-010A-20014",
+        "230007-010A-20016",
+        "120041-010A-20017",
+        "120037-010A-20026",
+        "021045-010A-20009",
+        "021044-010A-20009",
+        "210009-010A-20001",
+        "300018-010A-20015",
+        "300017-010A-20027",
+        "300017-010A-20013",
+        "013063-010A-20015",
+        "150026-010A-20014",
+        "150026-010A-20012",
+        "220002-010A-20016",
+        "220002-010A-20058",
+        "210006-010A-20004",
+    ]
+    filtered_inv = Inventory.objects.filter(serial_number__in=inv_broken_list)
+    for inv in filtered_inv:
+        active_inv_dep = inv.inventory_deployments.get_active_deployment()
+        if active_inv_dep:
+            active_inv_dep.delete()
+    for inv in filtered_inv:
+        active_inv_dep = inv.inventory_deployments.get_active_deployment()
+        if active_inv_dep:
+            active_inv_dep.delete()
+
+
+def _fix_missing_inv_dep():
+    user = User.objects.get(username="hbrewer")
+    # get all the Builds that are deployed, exclude Lost at Sea
+    builds = Build.objects.filter(is_deployed=True).exclude(location_id=35)
+    for build in builds:
+        print(build)
+        print(build.current_deployment())
+        action_date = build.current_deployment().deployment_start_date
+        # get all the Inventory items
+        inv = build.inventory.all()
+        for i in inv:
+            print(i)
+            # start new Inventory Deployment for all Inventory
+            rec = _create_action_history(
+                i,
+                Action.DEPLOYMENTTOFIELD,
+                user,
+                referring_obj=build,
+                action_date=action_date,
+            )
+            print(rec)

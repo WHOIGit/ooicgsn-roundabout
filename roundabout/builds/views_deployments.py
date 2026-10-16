@@ -50,7 +50,12 @@ from roundabout.inventory.models import (
 from roundabout.inventory.utils import _create_action_history
 from roundabout.inventory.views_tests import _reset_all_tests
 from roundabout.calibrations.utils import handle_reviewers
-from roundabout.configs_constants.models import ConfigEvent, ConfigName, ConfigDefault, ConfigValue
+from roundabout.configs_constants.models import (
+    ConfigEvent,
+    ConfigName,
+    ConfigDefault,
+    ConfigValue,
+)
 
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
@@ -58,6 +63,7 @@ from roundabout.core.utils import set_app_labels
 labels = set_app_labels()
 
 ## CBV views for Deployments as part of Builds app ##
+
 
 # Create Deployment for Build
 class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
@@ -87,10 +93,11 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
         return reverse("builds:ajax_builds_detail", args=(self.object.build.id,))
 
     def form_valid(self, form):
-        action_type = Action.STARTDEPLOYMENT
-        action_date = form.cleaned_data["date"]
+        action_type = Action.DEPLOYMENTTOFIELD
+        action_date = form.cleaned_data["deployment_to_field_date"]
         self.object = form.save()
         self.object.deployment_start_date = action_date
+        self.object.deployed_location = self.object.location
         self.object.save()
 
         # Create Deployment Action record
@@ -116,6 +123,61 @@ class DeploymentAjaxCreateView(LoginRequiredMixin, AjaxFormMixin, CreateView):
             item.save()
             # Call the function to create an Action history chain for this event
             _create_action_history(item, action_type, self.request.user, build)
+
+            if not item.inventory_configevents.exists():
+                config_event, event_added = ConfigEvent.objects.get_or_create(
+                    inventory=item,
+                    config_type="conf",
+                    configuration_date=action_date,
+                    deployment=self.object,
+                )
+                _create_action_history(
+                    config_event, Action.ADD, self.request.user, data={}
+                )
+                # auto create default configs if available
+                if item.assembly_part is not None:
+                    if item.assembly_part.assemblypart_configdefaultevents.exists():
+                        conf_def_event = (
+                            item.assembly_part.assemblypart_configdefaultevents.first()
+                        )
+                        names = ConfigName.objects.filter(
+                            config_name_event=item.part.part_confignameevents.first(),
+                            config_type="conf",
+                        )
+                        for name in names:
+                            try:
+                                default_value = ConfigDefault.objects.get(
+                                    conf_def_event=conf_def_event, config_name=name
+                                ).default_value
+                            except ConfigDefault.DoesNotExist:
+                                default_value = None
+                            ConfigValue.objects.create(
+                                config_event=config_event,
+                                config_name=name,
+                                config_value=default_value,
+                            )
+        # Create automatic Snapshot when Deployed to Sea or Recoveredf
+
+        for action in Action.ACTION_TYPES:
+            if action[0] == action_type:
+                notes = action[1]
+            elif action[0] == action_type:
+                notes = action[1]
+
+        build_snapshot = BuildSnapshot()
+
+        build_snapshot.build = build
+        build_snapshot.deployment = build.current_deployment()
+        if build.current_deployment():
+            build_snapshot.deployment_status = build.current_deployment().current_status
+        build_snapshot.location = build.location
+        build_snapshot.time_at_sea = build.time_at_sea
+        build_snapshot.notes = notes
+        build_snapshot.save()
+
+        for item in inventory_items:
+            if item.is_root_node():
+                _make_tree_copy(item, build.location, build_snapshot, item.parent)
 
         response = HttpResponseRedirect(self.get_success_url())
 
@@ -202,7 +264,6 @@ class DeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         return actions
 
     def form_valid(self, form):
-
         # Update Deployment Action Record
         previous_deployment = Deployment.objects.get(id=self.object.pk)
         new_deployment = form.save(commit=False)
@@ -215,13 +276,9 @@ class DeploymentAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
                     "from": str(orig_val),
                     "to": str(new_val),
                 }
-        form.instance.approved = False
+
         self.object = form.save(commit=True)
-        handle_reviewers(
-            form.instance.user_draft,
-            form.instance.user_approver,
-            form.cleaned_data["user_draft"],
-        )
+
         # _create_action_history(self.object, Action.UPDATE, self.request.user, data=data)
 
         # Create Build Action record for deployment
@@ -350,7 +407,6 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         return form_class_name
 
     def form_valid(self, form):
-
         # Update Deployment Action Record
         previous_deployment = Deployment.objects.get(id=self.object.pk)
         new_deployment = form.save(commit=False)
@@ -367,7 +423,7 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         # _create_action_history(self.object, Action.UPDATE, self.request.user, data=data)
 
         action_type = self.kwargs["action_type"]
-        action_date = form.cleaned_data["date"]
+        action_date = form.cleaned_data["deployment_recovery_date"]
         # Set Detail and action_type variables
         if action_type == Action.DEPLOYMENTBURNIN:
             self.object.detail = "%s Burn In initiated at %s. " % (
@@ -383,11 +439,13 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
             self.object.deployment_to_field_date = action_date
             self.object.deployed_location = self.object.location
         if action_type == Action.DEPLOYMENTRECOVER:
+            # also retire it
+            self.object.deployment_retire_date = action_date
             self.object.detail = "%s Recovered to: %s. " % (
                 self.object.deployment_number,
                 self.object.location,
             )
-            self.object.deployment_recovery_date = action_date
+
         if action_type == Action.DEPLOYMENTRETIRE:
             self.object.detail = "%s Ended." % (self.object.deployment_number)
             self.object.deployment_retire_date = action_date
@@ -396,15 +454,9 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
         # Update Build location, create Action Record
         build = self.object.build
         build.detail = self.object.detail
-
-        # If action_type is not "retire", update Build location
-        if action_type != "deploymentretire":
-            build.location = self.object.location
-
-        # If action_type is "retire", update Build deployment status
-        if action_type == "deploymentretire":
+        build.location = self.object.location
+        if action_type == Action.DEPLOYMENTRECOVER:
             build.is_deployed = False
-
         build.save()
         # Create Build Action record for deployment
         build_record = _create_action_history(
@@ -466,26 +518,33 @@ class DeploymentAjaxActionView(DeploymentAjaxUpdateView):
                     config_event, event_added = ConfigEvent.objects.get_or_create(
                         inventory=item,
                         config_type="conf",
-                        configuration_date = action_date,
-                        deployment = self.object
+                        configuration_date=action_date,
+                        deployment=self.object,
                     )
-                    _create_action_history(config_event, Action.ADD, self.request.user, data={})
+                    _create_action_history(
+                        config_event, Action.ADD, self.request.user, data={}
+                    )
                     if item.assembly_part is not None:
                         if item.assembly_part.assemblypart_configdefaultevents.exists():
-                            conf_def_event = item.assembly_part.assemblypart_configdefaultevents.first()
-                            names = ConfigName.objects.filter(config_name_event = item.part.part_confignameevents.first(), config_type ='conf')
+                            conf_def_event = (
+                                item.assembly_part.assemblypart_configdefaultevents.first()
+                            )
+                            names = ConfigName.objects.filter(
+                                config_name_event=item.part.part_confignameevents.first(),
+                                config_type="conf",
+                            )
                             for name in names:
                                 try:
-                                    default_value = ConfigDefault.objects.get(conf_def_event = conf_def_event, config_name = name).default_value
+                                    default_value = ConfigDefault.objects.get(
+                                        conf_def_event=conf_def_event, config_name=name
+                                    ).default_value
                                 except ConfigDefault.DoesNotExist:
                                     default_value = None
                                 ConfigValue.objects.create(
-                                    config_event = config_event,
-                                    config_name = name,
-                                    config_value = default_value,
+                                    config_event=config_event,
+                                    config_name=name,
+                                    config_value=default_value,
                                 )
-
-                    
 
         response = HttpResponseRedirect(self.get_success_url())
 

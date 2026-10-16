@@ -348,7 +348,7 @@ class DeploymentBase(models.Model):
             deployment_progress_bar = {
                 "bar_class": "bg-info",
                 "bar_width": 100,
-                "status_label": "Deployment Retired",
+                "status_label": "Deployment Recovered",
             }
         return deployment_progress_bar
 
@@ -394,6 +394,7 @@ class Deployment(DeploymentBase):
         null=True,
         blank=True,
         validators=[MaxValueValidator(90), MinValueValidator(-90)],
+        verbose_name="Drop Latitude",
     )
     longitude = models.DecimalField(
         max_digits=10,
@@ -401,8 +402,26 @@ class Deployment(DeploymentBase):
         null=True,
         blank=True,
         validators=[MaxValueValidator(180), MinValueValidator(-180)],
+        verbose_name="Drop Longitude",
     )
-    depth = models.PositiveIntegerField(null=True, blank=True)
+    depth = models.PositiveIntegerField(
+        null=True, blank=True, verbose_name="Drop Depth"
+    )
+    surveyed_latitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+        validators=[MaxValueValidator(90), MinValueValidator(-90)],
+    )
+    surveyed_longitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+        validators=[MaxValueValidator(180), MinValueValidator(-180)],
+    )
+    surveyed_depth = models.PositiveIntegerField(null=True, blank=True)
     user_draft = models.ManyToManyField(
         User, related_name="reviewer_deployments", blank=True
     )

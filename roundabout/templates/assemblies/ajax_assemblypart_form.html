@@ -132,7 +132,8 @@
 
   <form class="form-horizontal ajax-form" method="post" action="" id="assembly-part-form"
       data-url='{{ request.build_absolute_uri|safe }}'
-      data-assembly-parts-url="{% url 'assemblies:ajax_load_assembly_parts' %}" novalidate>
+      data-assembly-parts-url="{% url 'assemblies:ajax_load_assembly_parts' %}"
+      data-part-revisions-url="{% url 'assemblies:ajax_load_part_revisions' %}" novalidate>
     {% csrf_token %}
     {{ form.media }}
     {{ form|crispy }}

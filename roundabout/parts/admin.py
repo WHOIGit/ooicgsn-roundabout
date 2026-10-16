@@ -21,7 +21,7 @@
 
 from django.contrib import admin
 from mptt.admin import MPTTModelAdmin
-from .models import Part, PartType, Documentation
+from .models import Part, PartType, Documentation, Revision, RevisionEvent
 from roundabout.locations.models import Location
 
 # Register your models here
@@ -30,3 +30,12 @@ admin.site.register(Documentation)
 admin.site.register(PartType, MPTTModelAdmin)
 
 admin.site.register(Part)
+
+admin.site.register(Revision)
+
+
+@admin.register(RevisionEvent)
+class RevisionEventAdmin(admin.ModelAdmin):
+    list_display = ("revision", "event_type", "user", "created_at")
+    list_filter = ("event_type",)
+    readonly_fields = ("created_at",)

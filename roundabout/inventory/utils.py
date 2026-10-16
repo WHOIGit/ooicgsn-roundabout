@@ -18,6 +18,7 @@
 # along with ooicgsn-roundabout in the COPYING.md file at the project root.
 # If not, see <http://www.gnu.org/licenses/>.
 """
+
 from django.utils import timezone
 
 from .models import *
@@ -32,6 +33,7 @@ labels = set_app_labels()
 
 # Utility functions for use with Inventory models
 # ------------------------------------------------------------------------------
+
 
 # Function to handle creating new Action records with meta data for different Action.OBJECT_TYPES
 # Current objects available = Inventory, Build
@@ -403,15 +405,16 @@ def _create_action_history(
 
         # Update InventoryDeployment record
         if isinstance(obj, Inventory):
-            inventory_deployment = obj.inventory_deployments.get_active_deployment()
-            # Only update date/cruise on full Build deployment, not individual item
-            if deployment_type == Action.BUILD_DEPLOYMENT:
-                inventory_deployment.deployment_to_field_date = action_date
-                inventory_deployment.cruise_deployed = deployment.cruise_deployed
-            else:
-                inventory_deployment.deployment_start_date = action_date
+            # Create InventoryDeployment record
+            inventory_deployment = InventoryDeployment.objects.create(
+                deployment=deployment,
+                inventory=obj,
+                assembly_part=obj.assembly_part,
+                deployment_start_date=action_date,
+                deployment_to_field_date=action_date,
+                cruise_deployed=deployment.cruise_deployed,
+            )
 
-            inventory_deployment.save()
             action_record.inventory_deployment = inventory_deployment
             action_record.created_at = action_date
             action_record.cruise = inventory_deployment.cruise_deployed
@@ -442,21 +445,25 @@ def _create_action_history(
         # Update InventoryDeployment record
         if isinstance(obj, Inventory):
             inventory_deployment = obj.inventory_deployments.get_active_deployment()
-            # Only update date/cruise on full Build deployment, not individual item
-            if deployment_type == Action.BUILD_DEPLOYMENT:
-                inventory_deployment.deployment_recovery_date = action_date
-                if deployment:
-                    inventory_deployment.cruise_recovered = deployment.cruise_recovered
-            inventory_deployment.save()
-            action_record.inventory_deployment = inventory_deployment
+            if inventory_deployment:
+                # Only update date/cruise on full Build deployment, not individual item
+                if deployment_type == Action.BUILD_DEPLOYMENT:
+                    inventory_deployment.deployment_recovery_date = action_date
+                    if deployment:
+                        inventory_deployment.cruise_recovered = (
+                            deployment.cruise_recovered
+                        )
+                inventory_deployment.deployment_retire_date = action_date
+                inventory_deployment.save()
+                action_record.inventory_deployment = inventory_deployment
+                action_record.cruise = inventory_deployment.cruise_recovered
+                action_record.detail = "%s Cruise: %s" % (
+                    action_record.detail,
+                    inventory_deployment.cruise_recovered,
+                )
             action_record.build = obj.get_latest_build()
             action_record.detail = "Recovered from %s. %s" % (deployment, detail)
             action_record.created_at = action_date
-            action_record.cruise = inventory_deployment.cruise_recovered
-            action_record.detail = "%s Cruise: %s" % (
-                action_record.detail,
-                inventory_deployment.cruise_recovered,
-            )
 
         action_record.save()
         # Run secondary Action records after completion
@@ -589,3 +596,22 @@ def logged_user_review_items(logged_user, template_type):
         full_list = list(full_cruise_list)
 
     return full_list
+
+
+def create_inventory_deployments(deployment):
+    print(deployment)
+    # get all the inventory items on the Deployment Build
+    inv = deployment.build.inventory.all()
+    for i in inv:
+        # create a new Inventory Deployment to match the Build Deployment
+        print("create Inventory Dep.")
+        inv_dep = InventoryDeployment.objects.create(
+            deployment_start_date=deployment.deployment_start_date,
+            deployment_burnin_date=deployment.deployment_burnin_date,
+            deployment_to_field_date=deployment.deployment_to_field_date,
+            deployment_recovery_date=deployment.deployment_recovery_date,
+            deployment_retire_date=deployment.deployment_retire_date,
+            deployment=deployment,
+            inventory=i,
+            assembly_part=i.assembly_part,
+        )
