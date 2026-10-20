@@ -49,7 +49,7 @@ def _row(serial, part_number, revision="", location="", notes=""):
     return [
         {"field_name": "Serial Number", "field_value": serial, "error": False},
         {"field_name": "Part Number", "field_value": part_number, "error": False},
-        {"field_name": "Revision", "field_value": revision, "error": False},
+        {"field_name": "Revision Code", "field_value": revision, "error": False},
         {"field_name": "Location", "field_value": location, "error": False},
         {"field_name": "Notes", "field_value": notes, "error": False},
     ]
@@ -94,7 +94,7 @@ def test_template_includes_revision_column(user):
     request.user = user
     response = view.get(request)
     header_line = response.content.decode("utf-8").splitlines()[0]
-    assert "Revision" in header_line.split(",")
+    assert "Revision Code" in header_line.split(",")
 
 
 def test_blank_revision_falls_back_to_current_revision(
@@ -160,7 +160,7 @@ def test_upload_validation_flags_unknown_revision_code(
     client.force_login(user)
 
     csv_body = (
-        "Serial Number,Part Number,Revision,Location,Notes\r\n"
+        "Serial Number,Part Number,Revision Code,Location,Notes\r\n"
         "SN-BAD,{pn},ZZ,{loc},\r\n".format(pn=part.part_number, loc=lab_location.name)
     )
     upload = SimpleUploadedFile(
@@ -177,6 +177,6 @@ def test_upload_validation_flags_unknown_revision_code(
         col
         for item in tempimport.tempimportitems.all()
         for col in item.data
-        if col["field_name"] == "Revision"
+        if col["field_name"] == "Revision Code"
     ]
     assert revision_cells and revision_cells[0]["error"] is True

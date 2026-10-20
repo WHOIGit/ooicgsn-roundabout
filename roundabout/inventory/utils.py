@@ -510,6 +510,19 @@ def _create_action_history(
     return action_record
 
 
+# Record a change of an Inventory item's Revision in its History (Action) chain.
+# Does nothing when the Revision did not actually change.
+def _create_revision_change_history(inventory, old_revision, new_revision, user):
+    if old_revision == new_revision:
+        return None
+    inventory.detail = "Revision changed from %s to %s" % (
+        old_revision.revision_code if old_revision else "(none)",
+        new_revision.revision_code if new_revision else "(none)",
+    )
+    inventory.save()
+    return _create_action_history(inventory, Action.REVISIONCHANGE, user)
+
+
 # Return inventory/part/assembly-part item id's where logged-in user is a CCC-reviewer
 def logged_user_review_items(logged_user, template_type):
     full_list = []

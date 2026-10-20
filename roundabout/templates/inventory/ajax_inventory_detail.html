@@ -643,6 +643,13 @@
 
             <ul class="list-group list-group-flush">
                 <li class="list-group-item">Part Type: {{ inventory_item.revision.part.part_type }}</li>
+                <li class="list-group-item">
+                    Revision: {{ inventory_item.revision.revision_code }}
+                    <button type="button" class="btn btn-sm btn-link float-right" data-toggle="modal" data-target="#modal-inventory-revision-history">
+                      View Field History
+                    </button>
+                    {% include "inventory/modal_inventory_revision_history.html" with item=inventory_item %}
+                </li>
                 <li class="list-group-item">Unit Cost: ${{ inventory_item.revision.unit_cost|intcomma }}</li>
                 <li class="list-group-item">Refurbishment Cost: ${{ inventory_item.revision.refurbishment_cost|intcomma }}</li>
                 {% if inventory_item.part.note %}
