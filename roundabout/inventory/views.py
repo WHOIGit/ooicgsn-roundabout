@@ -56,7 +56,11 @@ from .models import (
     DeploymentSnapshot,
 )
 from .forms import *
-from .utils import _create_action_history, logged_user_review_items
+from .utils import (
+    _create_action_history,
+    _create_revision_change_history,
+    logged_user_review_items,
+)
 from roundabout.locations.models import Location
 from roundabout.parts.models import Part, PartType, Revision
 from roundabout.admintools.models import Printer
@@ -873,7 +877,20 @@ class InventoryAjaxUpdateView(LoginRequiredMixin, AjaxFormMixin, UpdateView):
         return self.form_invalid(form, link_formset)
 
     def form_valid(self, form, formset):
+        # form.is_valid() has already written the new Revision onto the instance,
+        # so read the previous one from the form's initial data
+        old_revision_id = form.initial.get("revision")
         self.object = form.save()
+
+        if "revision" in form.changed_data:
+            old_revision = (
+                Revision.objects.filter(pk=old_revision_id).first()
+                if old_revision_id
+                else None
+            )
+            _create_revision_change_history(
+                self.object, old_revision, self.object.revision, self.request.user
+            )
 
         for link_form in formset:
             link = link_form.save(commit=False)
