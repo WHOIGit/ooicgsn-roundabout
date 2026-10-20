@@ -21,6 +21,22 @@
 
 $(document).ready(function() {
 
+    // Repopulate the Part Revision dropdown for the currently selected Part
+    function loadPartRevisions() {
+        var url = $("#assembly-part-form").attr("data-part-revisions-url");
+        if (!url) { return; }
+        var partID = $("#id_part").val();
+        $.ajax({
+            url: url,
+            data: {
+              'part_id': partID
+            },
+            success: function (data) {
+              $("#id_revision").html(data);
+            }
+        });
+    }
+
     // AJAX functions for form
     $("#inventory-filter-form-part-number").on("submit", function(){
       var url = $(this).attr("data-url");
@@ -32,6 +48,7 @@ $(document).ready(function() {
           },
           success: function (data) {
             $("#id_part").html(data);
+            loadPartRevisions();
           }
       });
       return false;
@@ -47,10 +64,14 @@ $(document).ready(function() {
             },
             success: function (data) {
               $("#id_part").html(data);
+              loadPartRevisions();
             }
         });
 
     });
+
+    // When the Part choice changes, refresh the available Revisions
+    $(document).on("change", "#id_part", loadPartRevisions);
 
     $("#id_assembly").change(function () {
         var url_assembly_parts = $("#assembly-part-form").attr("data-assembly-parts-url");

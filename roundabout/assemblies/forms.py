@@ -40,6 +40,7 @@ from .models import (
     AssemblyRevision,
     AssemblyDocument,
 )
+from roundabout.parts.models import Revision
 
 # Get the app label names from the core utility functions
 from roundabout.core.utils import set_app_labels
@@ -222,11 +223,15 @@ class AssemblyPartForm(forms.ModelForm):
 
     class Meta:
         model = AssemblyPart
-        fields = ["assembly_revision", "part", "parent", "note"]
+        fields = ["assembly_revision", "part", "revision", "parent", "note"]
         labels = {
             "part": "Select Part Template",
+            "revision": "Select Part Revision",
             "parent": "Parent %s Part" % (labels["label_assemblies_app_singular"]),
             "note": "Design Notes",
+        }
+        help_texts = {
+            "revision": "Leave blank to accept any Revision of the selected Part.",
         }
 
         widgets = {"assembly_revision": forms.HiddenInput()}
@@ -257,6 +262,24 @@ class AssemblyPartForm(forms.ModelForm):
             self.fields["parent"].queryset = AssemblyPart.objects.filter(
                 assembly_revision=self.instance.assembly_revision
             )
+
+        # The Part Revision dropdown is populated by AJAX (load_part_revisions)
+        # as the Part choice changes. Constrain the valid choices to the Part
+        # currently in play so a bound (POST) form validates, and keep it
+        # optional - a blank Revision means "any Revision of this Part".
+        self.fields["revision"].required = False
+        self.fields["revision"].empty_label = "Any Revision"
+        selected_part = (
+            self.data.get("part")
+            or self.initial.get("part")
+            or getattr(self.instance, "part_id", None)
+        )
+        if selected_part:
+            self.fields["revision"].queryset = Revision.objects.filter(
+                part=selected_part
+            )
+        else:
+            self.fields["revision"].queryset = Revision.objects.none()
 
 
 class AssemblyTypeForm(forms.ModelForm):

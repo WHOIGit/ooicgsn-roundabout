@@ -9,8 +9,8 @@ python-dateutil==2.9.0.post0  # https://github.com/dateutil/dateutil
 # ------------------------------------------------------------------------------
 mypy==1.0.0  # https://github.com/python/mypy
 django-stubs==5.0.2  # https://github.com/typeddjango/django-stubs
-pytest==6.1.1  # https://github.com/pytest-dev/pytest
-pytest-sugar==0.9.4  # https://github.com/Frozenball/pytest-sugar
+pytest==6.2.5  # https://github.com/pytest-dev/pytest  (6.1.1 crashes on Python 3.10: ast.alias lineno)
+pytest-sugar==0.9.6  # https://github.com/Frozenball/pytest-sugar  (0.9.4 incompatible with pytest 6.2)
 
 # Documentation
 # ------------------------------------------------------------------------------
@@ -34,4 +34,4 @@ factory-boy==3.0.1  # https://github.com/FactoryBoy/factory_boy
 django-debug-toolbar==3.1.1  # https://github.com/jazzband/django-debug-toolbar
 django-extensions==3.2.1  # https://github.com/django-extensions/django-extensions
 django-coverage-plugin==1.8.0  # https://github.com/nedbat/django_coverage_plugin
-pytest-django==3.10.0  # https://github.com/pytest-dev/pytest-django
+pytest-django==4.5.2  # https://github.com/pytest-dev/pytest-django  (3.10.0 also breaks on Python 3.10)

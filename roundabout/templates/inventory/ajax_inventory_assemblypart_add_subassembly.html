@@ -68,7 +68,13 @@
         </form>
     </div>
 
-    <p>The following Inventory Items are available for this Part. </p>
+    {% if assembly_part.revision %}
+        <p>The following Inventory Items are available for this Part at
+        <strong>Revision {{ assembly_part.revision.revision_code }}</strong>
+        (this {{ label_assemblies_app_singular }} slot is pinned to that Revision).</p>
+    {% else %}
+        <p>The following Inventory Items are available for this Part. </p>
+    {% endif %}
     <div id="available-subassemblies">
         <ul class="list-group list-group-flush">
 
