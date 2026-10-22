@@ -172,7 +172,14 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
         update_existing_inventory = form.cleaned_data.get('update_existing_inventory')
         # Set up the Django file object for CSV DictReader
         csv_file.seek(0)
-        reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+        reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8-sig')))
+        # Spreadsheets from the old template have two 'Revision' columns (the
+        # built-in one first, then the Custom Field). DictReader would keep only
+        # the last, so rename the first to 'Revision Code' before reading rows.
+        fieldnames = [(name or '').strip() for name in (reader.fieldnames or [])]
+        if fieldnames.count('Revision') > 1:
+            fieldnames[fieldnames.index('Revision')] = 'Revision Code'
+        reader.fieldnames = fieldnames
         # Get the column headers to save with parent TempImport object
         headers = reader.fieldnames
         # A Custom Field named 'Revision' owns a plain 'Revision' header

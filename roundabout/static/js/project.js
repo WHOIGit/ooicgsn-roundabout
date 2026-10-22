@@ -259,7 +259,10 @@ $(document).ready(function() {
           bookmarkURL: bookmarkURL
         };
 
-        history.pushState(state, "", bookmarkURL);
+        // Links without a data-node-id have no bookmarkable URL
+        if (itemID) {
+          history.pushState(state, "", bookmarkURL);
+        }
         console.log(history.state);
       }
     });

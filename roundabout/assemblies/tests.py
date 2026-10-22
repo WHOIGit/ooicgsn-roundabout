@@ -159,3 +159,25 @@ def test_subassembly_cost_prefers_pinned_revision(bom_setup):
         order="Widget",
     )
     assert ap.get_subassembly_total_cost() == 10
+
+
+def test_delete_part_and_revision_with_pinned_part_revision(bom_setup):
+    # Deleting used to hit a RecursionError: the collector loads related
+    # AssemblyParts with deferred fields, and tracking the "revision" FK on
+    # FieldTracker re-fired post_init on every deferred load.
+    assembly_revision = bom_setup["assembly_revision"]
+    parent = AssemblyPart.objects.create(
+        assembly_revision=assembly_revision,
+        part=bom_setup["part"],
+        revision=bom_setup["rev_a"],
+    )
+    child = AssemblyPart.objects.create(
+        assembly_revision=assembly_revision,
+        part=bom_setup["other_part"],
+        parent=parent,
+    )
+    child.delete()
+    assert AssemblyPart.objects.filter(pk=parent.pk).exists()
+
+    assembly_revision.delete()
+    assert not AssemblyPart.objects.filter(pk=parent.pk).exists()

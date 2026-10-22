@@ -180,3 +180,33 @@ def test_upload_validation_flags_unknown_revision_code(
         if col["field_name"] == "Revision Code"
     ]
     assert revision_cells and revision_cells[0]["error"] is True
+
+
+def test_upload_old_template_with_revision_custom_field(
+    client, user, part_with_revisions, lab_location
+):
+    # Old template: built-in Revision column followed by a Custom Field that is
+    # also named "Revision". The built-in column must still be honoured.
+    from roundabout.userdefinedfields.models import Field
+
+    Field.objects.create(field_name="Revision", field_type="CharField")
+    part, rev_a, rev_b = part_with_revisions
+    client.force_login(user)
+
+    csv_body = (
+        "Serial Number,Part Number,Revision,Location,Notes,Revision\r\n"
+        "SN-OLD,{pn},A,{loc},,\r\n".format(pn=part.part_number, loc=lab_location.name)
+    )
+    upload = SimpleUploadedFile(
+        "old_template.csv", csv_body.encode("utf-8"), content_type="text/csv"
+    )
+
+    client.post(reverse("admintools:import_inventory_upload"), {"document": upload})
+
+    tempimport = TempImport.objects.get(name="old_template.csv")
+    cells = {
+        col["field_name"]: col["field_value"]
+        for item in tempimport.tempimportitems.all()
+        for col in item.data
+    }
+    assert cells["Revision Code"] == "A"
