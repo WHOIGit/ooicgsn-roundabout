@@ -23,6 +23,7 @@ import datetime
 
 import pytest
 from django.test import RequestFactory
+from django.urls import resolve, reverse
 from django.utils import timezone
 
 from roundabout.assemblies.forms import AssemblyPartForm
@@ -121,7 +122,10 @@ def test_form_rejects_revision_from_a_different_part(bom_setup):
 
 
 def test_load_part_revisions_view(bom_setup):
-    request = RequestFactory().get("/", {"part_id": bom_setup["part"].id})
+    url = reverse("assemblies:ajax_load_part_revisions")
+    request = RequestFactory().get(url, {"part_id": bom_setup["part"].id})
+    # the template context processors read request.resolver_match
+    request.resolver_match = resolve(url)
     response = load_part_revisions(request)
     body = response.content.decode("utf-8")
     assert "Any Revision" in body
