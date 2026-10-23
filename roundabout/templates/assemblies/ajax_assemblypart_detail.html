@@ -248,7 +248,7 @@
 
     <div class="ajax-detail-link">
         <hr>
-        <a href="#" data-detail-url="{% url 'assemblies:ajax_assemblyparts_delete' assembly_part.id %}" role="button" class="btn btn-danger parts-delete">Remove from Template</a>
+        <a href="#" data-detail-url="{% url 'assemblies:ajax_assemblyparts_delete' assembly_part.id %}" data-node-id="{{ assembly_part.id }}" data-node-type="{{ assembly_part.get_object_type }}" role="button" class="btn btn-danger parts-delete">Remove from Template</a>
     </div>
 
 </div>

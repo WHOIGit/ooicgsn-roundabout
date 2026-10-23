@@ -215,7 +215,6 @@ class AssemblyPart(MPTTModel):
     tracker = FieldTracker(
         fields=[
             "part",
-            "revision",
         ]
     )
 

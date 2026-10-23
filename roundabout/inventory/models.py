@@ -613,6 +613,7 @@ class Action(models.Model):
     HISTORYNOTE = "historynote"
     TICKET = "ticket"
     FIELDCHANGE = "fieldchange"
+    REVISIONCHANGE = "revisionchange"
     FLAG = "flag"
     MOVETOTRASH = "movetotrash"
     RETIREBUILD = "retirebuild"
@@ -647,6 +648,7 @@ class Action(models.Model):
         (HISTORYNOTE, "Historical Note"),
         (TICKET, "Work Ticket"),
         (FIELDCHANGE, "Field Change"),
+        (REVISIONCHANGE, "Revision Change"),
         (FLAG, "Flag"),
         (MOVETOTRASH, "Move to Trash"),
         (RETIREBUILD, "Retire Build"),

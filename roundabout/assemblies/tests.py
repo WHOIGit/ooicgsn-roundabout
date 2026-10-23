@@ -23,6 +23,7 @@ import datetime
 
 import pytest
 from django.test import RequestFactory
+from django.urls import resolve, reverse
 from django.utils import timezone
 
 from roundabout.assemblies.forms import AssemblyPartForm
@@ -121,7 +122,10 @@ def test_form_rejects_revision_from_a_different_part(bom_setup):
 
 
 def test_load_part_revisions_view(bom_setup):
-    request = RequestFactory().get("/", {"part_id": bom_setup["part"].id})
+    url = reverse("assemblies:ajax_load_part_revisions")
+    request = RequestFactory().get(url, {"part_id": bom_setup["part"].id})
+    # the template context processors read request.resolver_match
+    request.resolver_match = resolve(url)
     response = load_part_revisions(request)
     body = response.content.decode("utf-8")
     assert "Any Revision" in body
@@ -159,3 +163,25 @@ def test_subassembly_cost_prefers_pinned_revision(bom_setup):
         order="Widget",
     )
     assert ap.get_subassembly_total_cost() == 10
+
+
+def test_delete_part_and_revision_with_pinned_part_revision(bom_setup):
+    # Deleting used to hit a RecursionError: the collector loads related
+    # AssemblyParts with deferred fields, and tracking the "revision" FK on
+    # FieldTracker re-fired post_init on every deferred load.
+    assembly_revision = bom_setup["assembly_revision"]
+    parent = AssemblyPart.objects.create(
+        assembly_revision=assembly_revision,
+        part=bom_setup["part"],
+        revision=bom_setup["rev_a"],
+    )
+    child = AssemblyPart.objects.create(
+        assembly_revision=assembly_revision,
+        part=bom_setup["other_part"],
+        parent=parent,
+    )
+    child.delete()
+    assert AssemblyPart.objects.filter(pk=parent.pk).exists()
+
+    assembly_revision.delete()
+    assert not AssemblyPart.objects.filter(pk=parent.pk).exists()

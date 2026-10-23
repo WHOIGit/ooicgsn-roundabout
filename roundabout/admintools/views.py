@@ -36,7 +36,10 @@ from roundabout.assemblies.models import Assembly, AssemblyPart, AssemblyRevisio
 from roundabout.calibrations.forms import parse_valid_coeff_vals
 from roundabout.calibrations.models import CoefficientName, CoefficientValueSet, CalibrationEvent
 from roundabout.inventory.models import Inventory, Action
-from roundabout.inventory.utils import _create_action_history
+from roundabout.inventory.utils import (
+    _create_action_history,
+    _create_revision_change_history,
+)
 from roundabout.locations.models import Location
 from roundabout.parts.models import Revision, Documentation, PartType
 from roundabout.userdefinedfields.models import FieldValue, Field
@@ -140,9 +143,11 @@ class ImportInventoryCreateTemplateView(LoginRequiredMixin, View):
         response['Content-Disposition'] = 'attachment; filename="roundabout-inventory-import-template.csv"'
 
         # Create default list of required fields
-        # 'Revision' is optional - if left blank on a row, the item gets the
+        # 'Revision Code' is optional (named so it can't collide with a Custom
+        # Field called 'Revision', which csv.DictReader would silently merge
+        # with it) - if left blank on a row, the item gets the
         # Part's current (newest) Revision on import.
-        headers = ['Serial Number', 'Part Number', 'Revision', 'Location', 'Notes']
+        headers = ['Serial Number', 'Part Number', 'Revision Code', 'Location', 'Notes']
 
         # Get all UDF fields for column names
         custom_fields = Field.objects.all()
@@ -167,9 +172,18 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
         update_existing_inventory = form.cleaned_data.get('update_existing_inventory')
         # Set up the Django file object for CSV DictReader
         csv_file.seek(0)
-        reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8')))
+        reader = csv.DictReader(io.StringIO(csv_file.read().decode('utf-8-sig')))
+        # Spreadsheets from the old template have two 'Revision' columns (the
+        # built-in one first, then the Custom Field). DictReader would keep only
+        # the last, so rename the first to 'Revision Code' before reading rows.
+        fieldnames = [(name or '').strip() for name in (reader.fieldnames or [])]
+        if fieldnames.count('Revision') > 1:
+            fieldnames[fieldnames.index('Revision')] = 'Revision Code'
+        reader.fieldnames = fieldnames
         # Get the column headers to save with parent TempImport object
         headers = reader.fieldnames
+        # A Custom Field named 'Revision' owns a plain 'Revision' header
+        has_revision_custom_field = Field.objects.filter(field_name='Revision').exists()
 
         # Create or get parent TempImport object
         tempimport_obj, created = TempImport.objects.get_or_create(name=csv_file.name, column_headers=headers)
@@ -255,13 +269,13 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
                     else:
                         data.append({'field_name': key, 'field_value': '', 'error': False})
 
-                elif key == 'Revision':
+                elif key == 'Revision Code' or (key == 'Revision' and not has_revision_custom_field):
                     # Optional column. A blank value is valid (item will get the
                     # Part's current Revision on import). A non-blank value must
                     # match one of the Revision Codes on the row's Part.
                     revision_code = value.strip() if value else ''
                     if not revision_code:
-                        data.append({'field_name': key, 'field_value': '', 'error': False})
+                        data.append({'field_name': 'Revision Code', 'field_value': '', 'error': False})
                     else:
                         part_number = (row.get('Part Number') or '').strip()
                         try:
@@ -271,12 +285,12 @@ class ImportInventoryUploadView(LoginRequiredMixin, FormView):
 
                         if row_part is None:
                             # Bad Part Number is already flagged on its own column
-                            data.append({'field_name': key, 'field_value': revision_code, 'error': False})
+                            data.append({'field_name': 'Revision Code', 'field_value': revision_code, 'error': False})
                         elif row_part.revisions.filter(revision_code=revision_code).exists():
-                            data.append({'field_name': key, 'field_value': revision_code, 'error': False})
+                            data.append({'field_name': 'Revision Code', 'field_value': revision_code, 'error': False})
                         else:
                             error_msg = "No matching Revision Code for this Part. Check the Part's Revisions."
-                            data.append({'field_name': key, 'field_value': revision_code,
+                            data.append({'field_name': 'Revision Code', 'field_value': revision_code,
                                         'error': True, 'error_msg': error_msg})
 
                 # Now run through all the Custom Fields, validate type, add to JSON
@@ -405,7 +419,7 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                     elif col['field_name'] == 'Part Number':
                         part = Part.objects.get(part_number=col['field_value'])
                         inventory_obj.part = part
-                    elif col['field_name'] == 'Revision':
+                    elif col['field_name'] == 'Revision Code':
                         revision_in_csv = True
                         revision_code = (col['field_value'] or '')
                         if isinstance(revision_code, str):
@@ -505,8 +519,12 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
                 # Part's Revisions. A blank Revision column leaves it untouched.
                 if not inv_created and revision_in_csv and revision_code and revision is not None:
                     if inv_existing.revision_id != revision.id:
+                        old_revision = inv_existing.revision
                         inv_existing.revision = revision
                         inv_existing.save()
+                        _create_revision_change_history(
+                            inv_existing, old_revision, revision, self.request.user
+                        )
 
                 # Create initial history record for item
 
@@ -537,7 +555,7 @@ class ImportInventoryUploadAddActionView(LoginRequiredMixin, RedirectView):
 
                 # Add the Custom Fields
                 for col in item_obj.data:
-                    if not col['field_name'] == 'Serial Number' and not col['field_name'] == 'Part Number' and not col['field_name'] == 'Revision' and not col['field_name'] == 'Location' and not col['field_name'] == 'Notes':
+                    if not col['field_name'] == 'Serial Number' and not col['field_name'] == 'Part Number' and not col['field_name'] == 'Revision Code' and not col['field_name'] == 'Location' and not col['field_name'] == 'Notes':
                         # Get the field
                         try:
                             custom_field = Field.objects.get(field_name=col['field_name'])

@@ -31,6 +31,15 @@ from roundabout.users.models import User
 register = template.Library()
 
 # Get the historical list of custom field values, return as queryset
+# Get the Revision change history for an Inventory item, newest first.
+# Each entry is a REVISIONCHANGE Action ("Revision changed from A to B").
+@register.simple_tag
+def get_inventory_revision_history(item):
+    return item.actions.filter(action_type=Action.REVISIONCHANGE).order_by(
+        "-created_at"
+    )
+
+
 @register.simple_tag
 def get_udf_field_value_history(field, item):
     fieldvalues = FieldValue.objects.filter(field=field).filter(inventory=item).order_by('-created_at')
