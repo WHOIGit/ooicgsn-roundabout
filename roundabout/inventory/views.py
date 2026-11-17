@@ -1413,7 +1413,7 @@ class InventoryAjaxAddToBuildListView(LoginRequiredMixin, TemplateView):
                 # Same rule as AssemblyPart.accepts_inventory_revision: unpinned
                 # slots accept any Revision, pinned slots need an exact match
                 .filter(
-                    Q(revision__isnull=True) | Q(revision=inventory_item.revision_id)
+                    Q(revisions__isnull=True) | Q(revisions=inventory_item.revision_id)
                 )
                 .distinct()
             )

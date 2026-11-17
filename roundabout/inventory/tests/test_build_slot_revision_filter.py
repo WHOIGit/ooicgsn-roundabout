@@ -92,9 +92,9 @@ def test_pinned_slot_shows_only_matching_revision(slot_setup):
     assembly_part = AssemblyPart.objects.create(
         assembly_revision=slot_setup["assembly_revision"],
         part=slot_setup["part"],
-        revision=slot_setup["rev_a"],
         order="w",
     )
+    assembly_part.revisions.add(slot_setup["rev_a"])
     assert _available_items(assembly_part, slot_setup) == {"ITEM-A"}
 
 
@@ -102,7 +102,6 @@ def test_unpinned_slot_hides_nothing(slot_setup):
     assembly_part = AssemblyPart.objects.create(
         assembly_revision=slot_setup["assembly_revision"],
         part=slot_setup["part"],
-        revision=None,
         order="w",
     )
     assert _available_items(assembly_part, slot_setup) == {
@@ -116,16 +115,33 @@ def test_accepts_inventory_revision_helper(slot_setup):
     pinned = AssemblyPart.objects.create(
         assembly_revision=slot_setup["assembly_revision"],
         part=slot_setup["part"],
-        revision=slot_setup["rev_a"],
         order="w",
     )
+    pinned.revisions.add(slot_setup["rev_a"])
     legacy = AssemblyPart.objects.create(
         assembly_revision=slot_setup["assembly_revision"],
         part=slot_setup["part"],
-        revision=None,
         order="w2",
     )
     assert pinned.accepts_inventory_revision(slot_setup["item_a"]) is True
     assert pinned.accepts_inventory_revision(slot_setup["item_b"]) is False
     assert pinned.accepts_inventory_revision(slot_setup["item_none"]) is False
     assert legacy.accepts_inventory_revision(slot_setup["item_b"]) is True
+
+
+def test_multi_revision_slot_and_build_flag(slot_setup):
+    ap = AssemblyPart.objects.create(
+        assembly_revision=slot_setup["assembly_revision"],
+        part=slot_setup["part"],
+        order="multi",
+    )
+    ap.revisions.set([slot_setup["rev_a"], slot_setup["rev_b"]])
+    assert _available_items(ap, slot_setup) == {"ITEM-A", "ITEM-B"}
+
+    item_b = slot_setup["item_b"]
+    item_b.assembly_part = ap
+    item_b.build = slot_setup["build"]
+    assert item_b.has_revision_mismatch() is False
+    # Removing B from the slot flags the already-built unit; it stays attached.
+    ap.revisions.remove(slot_setup["rev_b"])
+    assert item_b.has_revision_mismatch() is True

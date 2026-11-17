@@ -32,7 +32,7 @@ $(document).ready(function() {
               'part_id': partID
             },
             success: function (data) {
-              $("#id_revision").html(data);
+              $("#id_revisions").html(data);
             }
         });
     }

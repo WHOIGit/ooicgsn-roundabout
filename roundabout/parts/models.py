@@ -194,7 +194,7 @@ class Revision(models.Model):
         from roundabout.assemblies.models import AssemblyRevision
 
         return (
-            AssemblyRevision.objects.filter(assembly_parts__revision=self)
+            AssemblyRevision.objects.filter(assembly_parts__revisions=self)
             .select_related("assembly")
             .distinct()
         )
