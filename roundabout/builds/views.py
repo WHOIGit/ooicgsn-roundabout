@@ -54,7 +54,11 @@ def load_builds_navtree(request):
     if node_id == '#' or not node_id:
         locations = Location.objects.prefetch_related('builds__assembly__assembly_parts__part__part_type') \
                     .prefetch_related('builds__inventory__part__part_type').prefetch_related('builds__deployments')
-        return render(request, 'builds/ajax_build_navtree.html', {'locations': locations, 'reviewer_list': reviewer_list})
+        return render(request, 'builds/ajax_build_navtree.html', {
+            'locations': locations,
+            'reviewer_list': reviewer_list,
+            'revision_mismatch_build_ids': Build.ids_with_revision_mismatch(),
+        })
     else:
         build_pk = node_id.split('_')[1]
         build = Build.objects.prefetch_related('assembly_revision__assembly_parts').prefetch_related('inventory').get(id=build_pk)
@@ -197,6 +201,7 @@ class BuildDetailView(LoginRequiredMixin, DetailView):
             'node_type': node_type,
             'current_deployment': self.object.current_deployment(),
             'percent_complete': percent_complete,
+            'revision_mismatch_items': self.object.get_revision_mismatch_items(),
             'action_record': action_record,
         })
         return context

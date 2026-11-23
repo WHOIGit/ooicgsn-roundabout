@@ -57,6 +57,9 @@
                                         {% if build.current_deployment.current_status == 'startdeployment' %}
                                             <span class="badge badge-pill badge-success">Initial Deployment - {{ build.current_deployment.deployment_number }} </span>
                                         {% endif %}
+                                        {% if build.id in revision_mismatch_build_ids %}
+                                            <span class="badge badge-pill badge-warning" title="One or more items have a Revision not allowed for their slot.">Revision mismatch</span>
+                                        {% endif %}
                                         {%if build.id in reviewer_list%}
                                             <span id="review-badge-{{build.id}}" class="badge badge-pill badge-secondary">Review Requested</span>
                                         {% else %}

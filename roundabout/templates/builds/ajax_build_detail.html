@@ -217,6 +217,22 @@
         </tbody>
     </table>
 
+    {% if revision_mismatch_items %}
+        <div class="alert alert-warning" role="alert">
+            <strong>Revision not allowed for this build</strong>
+            <p class="mb-1">These items are attached, but their Revision is not among the Revisions currently allowed for their slot:</p>
+            <ul class="mb-0">
+                {% for item in revision_mismatch_items %}
+                <li>
+                    <a href="{% url 'inventory:inventory_detail' item.id %}">{{ item.part.name }} - {{ item.serial_number }}</a>
+                    (Revision: {% if item.revision %}{{ item.revision.revision_code }}{% else %}none{% endif %};
+                    allowed: {% for r in item.assembly_part.revisions.all %}{{ r.revision_code }}{% if not forloop.last %}, {% endif %}{% endfor %})
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
     {% if percent_complete %}
         <h6>Percent Built</h6>
 
