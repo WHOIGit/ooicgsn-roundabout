@@ -45,7 +45,8 @@ from common.util.mixins import AjaxFormMixin
 
 # Makes a copy of the tree starting at "root_part", move to new Assembly, reparenting it to "parent"
 def _make_tree_copy(root_part, new_assembly, parent=None):
-    new_ap = AssemblyPart.objects.create(assembly=new_assembly, part=root_part.part, revision=root_part.revision, parent=parent, order=root_part.order)
+    new_ap = AssemblyPart.objects.create(assembly=new_assembly, part=root_part.part, parent=parent, order=root_part.order)
+    new_ap.revisions.set(root_part.revisions.all())
 
     for child in root_part.get_children():
         _make_tree_copy(child, new_assembly, new_ap)
@@ -57,10 +58,10 @@ def _make_revision_tree_copy(root_part, new_revision, parent=None, user=None, co
     new_ap = AssemblyPart.objects.create(
         assembly_revision=new_revision,
         part=root_part.part,
-        revision=root_part.revision,
         parent=parent,
         order=root_part.order
     )
+    new_ap.revisions.set(root_part.revisions.all())
     # Copy ConfigDefaults for this Assembly Part
     if copy_default_configs and root_part.assemblypart_configdefaultevents.exists():
         for event in root_part.assemblypart_configdefaultevents.all():

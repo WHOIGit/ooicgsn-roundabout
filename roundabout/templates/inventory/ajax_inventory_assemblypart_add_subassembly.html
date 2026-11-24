@@ -68,10 +68,10 @@
         </form>
     </div>
 
-    {% if assembly_part.revision %}
+    {% if assembly_part.revisions.exists %}
         <p>The following Inventory Items are available for this Part at
-        <strong>Revision {{ assembly_part.revision.revision_code }}</strong>
-        (this {{ label_assemblies_app_singular }} slot is pinned to that Revision).</p>
+        <strong>Revision {% for r in assembly_part.revisions.all %}{{ r.revision_code }}{% if not forloop.last %}, {% endif %}{% endfor %}</strong>
+        (this {{ label_assemblies_app_singular }} slot is limited to those Revisions).</p>
     {% else %}
         <p>The following Inventory Items are available for this Part. </p>
     {% endif %}

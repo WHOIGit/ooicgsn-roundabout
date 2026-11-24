@@ -72,21 +72,21 @@ def test_form_revision_field_is_optional_and_scoped_to_part(bom_setup):
         data={
             "assembly_revision": bom_setup["assembly_revision"].id,
             "part": bom_setup["part"].id,
-            "revision": bom_setup["rev_a"].id,
+            "revisions": [bom_setup["rev_a"].id],
             "note": "",
         },
         assembly_revision_pk=bom_setup["assembly_revision"].id,
     )
-    assert "revision" in form.fields
-    assert form.fields["revision"].required is False
+    assert "revisions" in form.fields
+    assert form.fields["revisions"].required is False
     # queryset is scoped to the submitted Part's revisions only
-    qs_ids = set(form.fields["revision"].queryset.values_list("id", flat=True))
+    qs_ids = set(form.fields["revisions"].queryset.values_list("id", flat=True))
     assert qs_ids == {bom_setup["rev_a"].id, bom_setup["rev_b"].id}
     assert form.is_valid(), form.errors
 
     assembly_part = form.save()
     assembly_part.refresh_from_db()
-    assert assembly_part.revision == bom_setup["rev_a"]
+    assert list(assembly_part.revisions.all()) == [bom_setup["rev_a"]]
 
 
 def test_form_accepts_blank_revision(bom_setup):
@@ -94,14 +94,14 @@ def test_form_accepts_blank_revision(bom_setup):
         data={
             "assembly_revision": bom_setup["assembly_revision"].id,
             "part": bom_setup["part"].id,
-            "revision": "",
+            "revisions": [],
             "note": "",
         },
         assembly_revision_pk=bom_setup["assembly_revision"].id,
     )
     assert form.is_valid(), form.errors
     assembly_part = form.save()
-    assert assembly_part.revision is None
+    assert not assembly_part.revisions.exists()
 
 
 def test_form_rejects_revision_from_a_different_part(bom_setup):
@@ -112,13 +112,13 @@ def test_form_rejects_revision_from_a_different_part(bom_setup):
         data={
             "assembly_revision": bom_setup["assembly_revision"].id,
             "part": bom_setup["part"].id,
-            "revision": wrong_revision.id,
+            "revisions": [wrong_revision.id],
             "note": "",
         },
         assembly_revision_pk=bom_setup["assembly_revision"].id,
     )
     assert not form.is_valid()
-    assert "revision" in form.errors
+    assert "revisions" in form.errors
 
 
 def test_load_part_revisions_view(bom_setup):
@@ -128,7 +128,6 @@ def test_load_part_revisions_view(bom_setup):
     request.resolver_match = resolve(url)
     response = load_part_revisions(request)
     body = response.content.decode("utf-8")
-    assert "Any Revision" in body
     assert ">A<" in body and ">B<" in body
 
 
@@ -137,9 +136,9 @@ def test_revision_tree_copy_carries_pinned_revision(bom_setup):
     source = AssemblyPart.objects.create(
         assembly_revision=ar,
         part=bom_setup["part"],
-        revision=bom_setup["rev_b"],
         order="Widget",
     )
+    source.revisions.set([bom_setup["rev_a"], bom_setup["rev_b"]])
     new_ar = AssemblyRevision.objects.create(
         assembly=bom_setup["assembly"], revision_code="B"
     )
@@ -147,7 +146,7 @@ def test_revision_tree_copy_carries_pinned_revision(bom_setup):
     _make_revision_tree_copy(source, new_ar)
 
     copied = AssemblyPart.objects.get(assembly_revision=new_ar, part=bom_setup["part"])
-    assert copied.revision == bom_setup["rev_b"]
+    assert set(copied.revisions.all()) == {bom_setup["rev_a"], bom_setup["rev_b"]}
 
 
 def test_subassembly_cost_prefers_pinned_revision(bom_setup):
@@ -159,9 +158,9 @@ def test_subassembly_cost_prefers_pinned_revision(bom_setup):
     ap = AssemblyPart.objects.create(
         assembly_revision=bom_setup["assembly_revision"],
         part=bom_setup["part"],
-        revision=bom_setup["rev_a"],
         order="Widget",
     )
+    ap.revisions.add(bom_setup["rev_a"])
     assert ap.get_subassembly_total_cost() == 10
 
 
@@ -173,8 +172,8 @@ def test_delete_part_and_revision_with_pinned_part_revision(bom_setup):
     parent = AssemblyPart.objects.create(
         assembly_revision=assembly_revision,
         part=bom_setup["part"],
-        revision=bom_setup["rev_a"],
     )
+    parent.revisions.add(bom_setup["rev_a"])
     child = AssemblyPart.objects.create(
         assembly_revision=assembly_revision,
         part=bom_setup["other_part"],

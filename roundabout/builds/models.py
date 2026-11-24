@@ -86,6 +86,34 @@ class Build(models.Model):
     def get_object_type(self):
         return 'builds'
 
+    # Inventory items attached to this Build whose Revision is not allowed by the
+    # slot (AssemblyPart.revisions) they occupy. Computed, never stored: it
+    # follows slot edits, and matches Inventory.has_revision_mismatch.
+    def get_revision_mismatch_items(self):
+        items = self.inventory.filter(assembly_part__isnull=False).select_related(
+            "assembly_part", "part", "revision"
+        ).prefetch_related("assembly_part__revisions")
+        return [item for item in items if item.has_revision_mismatch()]
+
+    # IDs of every Build holding at least one item whose Revision is not
+    # allowed by its slot. One query for all Builds (used by the nav tree);
+    # same rule as Inventory.has_revision_mismatch.
+    @staticmethod
+    def ids_with_revision_mismatch():
+        from django.db.models import Exists, OuterRef
+        from roundabout.assemblies.models import AssemblyPart
+        from roundabout.inventory.models import Inventory
+
+        slot_revisions = AssemblyPart.revisions.through.objects
+        restricted = slot_revisions.filter(assemblypart_id=OuterRef("assembly_part_id"))
+        accepted = restricted.filter(revision_id=OuterRef("revision_id"))
+        return set(
+            Inventory.objects.filter(build__isnull=False, assembly_part__isnull=False)
+            .filter(Exists(restricted))
+            .exclude(Exists(accepted))
+            .values_list("build_id", flat=True)
+        )
+
     def get_actions(self):
         return self.actions.filter(object_type=Action.BUILD)
 

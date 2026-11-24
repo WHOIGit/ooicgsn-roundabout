@@ -75,7 +75,7 @@
 
         <p>Part Number: <a href="{% url 'parts:parts_detail' assembly_part.part.id %}">{{ assembly_part.part.part_number }}</a> </p>
         <p>Part Type: {{ assembly_part.part.part_type }}</p>
-        <p>Part Revision: {% if assembly_part.revision %}{{ assembly_part.revision.revision_code }}{% else %}Any Revision{% endif %}</p>
+        <p>Part Revision: {% for r in assembly_part.revisions.all %}{{ r.revision_code }}{% if not forloop.last %}, {% endif %}{% empty %}Any Revision{% endfor %}</p>
 
         {% if assembly_part.inventory.exists %}
         <div class="alert alert-warning" role="alert">

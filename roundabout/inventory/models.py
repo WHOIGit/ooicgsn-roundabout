@@ -172,6 +172,14 @@ class Inventory(MPTTModel):
         tree = self.get_descendants(include_self=True)
         return tree
 
+    # Build flag: True when this item sits in a BOM slot whose allowed
+    # Revisions no longer include the item's Revision (e.g. a Revision was
+    # removed from the slot after the unit was built). The item stays attached.
+    def has_revision_mismatch(self):
+        if not self.assembly_part_id or not self.build_id:
+            return False
+        return not self.assembly_part.accepts_inventory_revision(self)
+
     def get_latest_build(self):
         try:
             action = self.actions.filter(build__isnull=False).latest()

@@ -103,7 +103,7 @@ class AssemblyRevision(models.Model):
         for item in tree:
             # Use the Revision pinned on the BOM slot when set, else the Part's
             # current Revision.
-            revision = item.revision or item.part.revisions.first()
+            revision = item.get_costing_revision()
             cost = revision.unit_cost if revision else 0
             total_cost = total_cost + cost
 
@@ -160,13 +160,11 @@ class AssemblyPart(MPTTModel):
         blank=False,
         db_index=True,
     )
-    revision = models.ForeignKey(
+    # Allowed Part Revisions for this BOM slot. Empty means any Revision.
+    revisions = models.ManyToManyField(
         "parts.Revision",
         related_name="assembly_parts",
-        on_delete=models.SET_NULL,
-        null=True,
         blank=True,
-        db_index=True,
     )
     parent = TreeForeignKey(
         "self",
@@ -233,7 +231,7 @@ class AssemblyPart(MPTTModel):
         total_cost = 0
         for item in tree:
             # .first() is the newest Revision (Meta ordering is -created_at)
-            revision = item.revision or item.part.revisions.first()
+            revision = item.get_costing_revision()
             cost = revision.unit_cost if revision else 0
             total_cost = total_cost + cost
         return total_cost
@@ -242,18 +240,26 @@ class AssemblyPart(MPTTModel):
         tree = self.get_descendants(include_self=True)
         return tree
 
-    # --- Revision-aware eligibility of Inventory for this BOM slot (Item 6) ---
-    # When a Revision is pinned on the slot, only Inventory of that exact
-    # Revision is eligible. When no Revision is pinned (legacy slots), every
+    # Revision used for costing: the newest allowed Revision when the slot
+    # restricts Revisions, else the Part's newest Revision (Meta ordering is
+    # -created_at).
+    def get_costing_revision(self):
+        return self.revisions.first() or self.part.revisions.first()
+
+    # --- Revision-aware eligibility of Inventory for this BOM slot ---
+    # When Revisions are selected on the slot, only Inventory of one of those
+    # Revisions is eligible. When none are selected (legacy slots), every
     # Revision is eligible - nothing is hidden.
     def inventory_revision_filter(self):
-        if self.revision_id:
-            return models.Q(revision=self.revision_id)
+        ids = list(self.revisions.values_list("id", flat=True))
+        if ids:
+            return models.Q(revision__in=ids)
         return models.Q()
 
     # Note: Inventory.revision is nullable (legacy items), so an item with no
-    # Revision does NOT satisfy a slot that pins one.
+    # Revision does NOT satisfy a slot that restricts Revisions.
     def accepts_inventory_revision(self, inventory_item):
-        if not self.revision_id:
+        ids = {r.id for r in self.revisions.all()}
+        if not ids:
             return True
-        return inventory_item.revision_id == self.revision_id
+        return inventory_item.revision_id in ids

@@ -92,9 +92,9 @@ def test_pinned_slot_shows_only_matching_revision(slot_setup):
     assembly_part = AssemblyPart.objects.create(
         assembly_revision=slot_setup["assembly_revision"],
         part=slot_setup["part"],
-        revision=slot_setup["rev_a"],
         order="w",
     )
+    assembly_part.revisions.add(slot_setup["rev_a"])
     assert _available_items(assembly_part, slot_setup) == {"ITEM-A"}
 
 
@@ -102,7 +102,6 @@ def test_unpinned_slot_hides_nothing(slot_setup):
     assembly_part = AssemblyPart.objects.create(
         assembly_revision=slot_setup["assembly_revision"],
         part=slot_setup["part"],
-        revision=None,
         order="w",
     )
     assert _available_items(assembly_part, slot_setup) == {
@@ -116,16 +115,83 @@ def test_accepts_inventory_revision_helper(slot_setup):
     pinned = AssemblyPart.objects.create(
         assembly_revision=slot_setup["assembly_revision"],
         part=slot_setup["part"],
-        revision=slot_setup["rev_a"],
         order="w",
     )
+    pinned.revisions.add(slot_setup["rev_a"])
     legacy = AssemblyPart.objects.create(
         assembly_revision=slot_setup["assembly_revision"],
         part=slot_setup["part"],
-        revision=None,
         order="w2",
     )
     assert pinned.accepts_inventory_revision(slot_setup["item_a"]) is True
     assert pinned.accepts_inventory_revision(slot_setup["item_b"]) is False
     assert pinned.accepts_inventory_revision(slot_setup["item_none"]) is False
     assert legacy.accepts_inventory_revision(slot_setup["item_b"]) is True
+
+
+def test_multi_revision_slot_and_build_flag(slot_setup):
+    ap = AssemblyPart.objects.create(
+        assembly_revision=slot_setup["assembly_revision"],
+        part=slot_setup["part"],
+        order="multi",
+    )
+    ap.revisions.set([slot_setup["rev_a"], slot_setup["rev_b"]])
+    assert _available_items(ap, slot_setup) == {"ITEM-A", "ITEM-B"}
+
+    item_b = slot_setup["item_b"]
+    item_b.assembly_part = ap
+    item_b.build = slot_setup["build"]
+    assert item_b.has_revision_mismatch() is False
+    # Removing B from the slot flags the already-built unit; it stays attached.
+    ap.revisions.remove(slot_setup["rev_b"])
+    assert item_b.has_revision_mismatch() is True
+
+
+def test_build_lists_revision_mismatch_items(slot_setup):
+    ap = AssemblyPart.objects.create(
+        assembly_revision=slot_setup["assembly_revision"],
+        part=slot_setup["part"],
+        order="mismatch",
+    )
+    ap.revisions.set([slot_setup["rev_a"], slot_setup["rev_b"]])
+    build = slot_setup["build"]
+    for key in ("item_a", "item_b", "item_none"):
+        item = slot_setup[key]
+        item.build, item.assembly_part = build, ap
+        item.save()
+    assert build.get_revision_mismatch_items() == [slot_setup["item_none"]]
+
+    # Shrinking the slot to {A} flags B as well; the items stay attached.
+    ap.revisions.set([slot_setup["rev_a"]])
+    flagged = {i.serial_number for i in build.get_revision_mismatch_items()}
+    assert flagged == {"ITEM-B", "ITEM-NONE"}
+
+    # Empty set = any revision: nothing flagged.
+    ap.revisions.clear()
+    assert build.get_revision_mismatch_items() == []
+
+
+def test_navtree_build_ids_match_per_build_check(slot_setup):
+    ap = AssemblyPart.objects.create(
+        assembly_revision=slot_setup["assembly_revision"],
+        part=slot_setup["part"],
+        order="nav",
+    )
+    build = slot_setup["build"]
+    for key in ("item_a", "item_b", "item_none"):
+        item = slot_setup[key]
+        item.build, item.assembly_part = build, ap
+        item.save()
+
+    assert Build.ids_with_revision_mismatch() == set()  # empty set = any
+    ap.revisions.set([slot_setup["rev_a"], slot_setup["rev_b"]])
+    assert Build.ids_with_revision_mismatch() == {build.id}  # blank item
+    ap.revisions.set([slot_setup["rev_a"]])
+    assert Build.ids_with_revision_mismatch() == {build.id}
+    slot_setup["item_b"].build = None
+    slot_setup["item_b"].assembly_part = None
+    slot_setup["item_b"].save()
+    slot_setup["item_none"].build = None
+    slot_setup["item_none"].assembly_part = None
+    slot_setup["item_none"].save()
+    assert Build.ids_with_revision_mismatch() == set()  # only BAT-A (allowed) left
